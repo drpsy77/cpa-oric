@@ -29,6 +29,7 @@ cb_clr  sta $00,x
         sta $0400,x
         inx
         bne cb_clr
+        sta HIST                ; historique des lignes vide (A = 0)
 
         jsr ram_test            ; teste la TPA et la remplit de $00 (BRK)
         jsr video_vars_text
@@ -768,6 +769,7 @@ pgo
 ; scroll : remonte les lignes 2..27 d'un cran, efface la ligne 27
 scroll
 .(
+        inc scr_n               ; pour l'édition de ligne (rline.s)
         ldx con_first
 loop    lda line_lo,x
         sta ZP_SCR

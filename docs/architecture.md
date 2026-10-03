@@ -16,7 +16,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 |---|---|---|---|
 | BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque | `src/bios.s`, `src/disk.s` | commun (disque : `-DDISK`) |
 | BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
-| CCP | prompt `A>` et commandes internes | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/TYPE/PUT/DO… : disque |
+| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/TYPE/PUT/DO… : disque |
 | Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
 | Programmes | fichiers `.COM` chargés en `$0500` | `progs/*.s` | disque (la ROM pourra en intégrer un) |
 
@@ -60,7 +60,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 | N° | Fonction | Versions |
 |---|---|---|
-| 0-12 | console et système, comme CP/M 2.2 | les deux |
+| 0-12 | console et système, comme CP/M 2.2 ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) | disque ; la ROM renvoie `$FF` |
 | 26 | adresse DMA | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
@@ -82,8 +82,8 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 |---|---|---|
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
-| `$B400-$BFDF` | police, police secondaire (sauvegarde des menus), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670`, puis tampons (ligne de commande, DO, PUT), variables du BDOS `$FD00`, tampon de secteur `$FE00` | ROM : code jusqu'à `$E19C` environ, reste libre |
+| `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4AD`), puis tampons (ligne de commande, DO, PUT), variables du BDOS `$FD00`, tampon de secteur `$FE00` | ROM : code jusqu'à `$E36A` environ, reste libre |
 
 ## 4. Construire et tester
 

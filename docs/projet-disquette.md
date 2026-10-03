@@ -11,9 +11,12 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F153`, marge 1,3 Ko jusqu'à `$F670`) :
+**Système** (`$C000-$F4AD`, marge 451 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
+- lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
+  historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
+  fichiers par ESC (partie commune, puis liste des noms possibles) ;
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
 - mode SPLIT (240 × 128 + 11 lignes de texte), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ) ;
@@ -27,7 +30,8 @@ HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue,
 désassembleur symbolique, pas à pas), COPY, GTEST, HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, SPLIT, GTEST,
-LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur place, DO, le son.
+LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur place, DO, le son,
+l'édition de ligne (flèches, historique, complétion par ESC).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -38,6 +42,16 @@ LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur pla
 - HEX écrit sur place (accès direct) au lieu de réécrire tout le fichier ; quitter une fenêtre
   modifiée d'un gros fichier l'écrit.
 - DEBUG se place en `$8400-$9FFF` et abaisse le haut de la TPA (plafond `$02A9`).
+- Édition de ligne dans le BDOS (fonction 10) et non dans le CCP : LOGO et DEBUG en profitent
+  aussi, et la ROM l'a (sans la complétion). Coût : 834 octets résidents. La ligne est éditée
+  dans `$BA00` (126 caractères au plus) et l'historique est en `$BA80-$BB7F` : fin du jeu de
+  caractères alternatif, que les menus n'utilisent qu'au début (98 octets au plus aujourd'hui,
+  512 possibles). Un seul historique pour le CCP et les programmes.
+- Complétion par ESC (comme le `filec` du C-shell ; ESC est à la place de TAB) : CTRL-I vaut
+  `$09`, la flèche droite. Elle lit le répertoire directement (`dir_get`), sans toucher au DMA
+  ni au FCB des programmes ; seule une recherche 17/18 en cours chez l'appelant serait perdue.
+  Pas de jokers ; les noms sont complétés en minuscules quand les majuscules sont coupées.
+- Flèches : gauche `$08` n'efface plus (DEL le fait), bas `$0A` ne valide plus la ligne.
 
 ## Suite prévue (par priorité)
 
@@ -55,7 +69,8 @@ LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur pla
 
 ## Contraintes à garder en tête
 
-- 1,3 Ko libres dans le système : tout ajout résident se justifie, le reste va en `.COM`.
+- 451 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+  (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
 - Ne rien changer au contrat d'interface (`docs/architecture.md`) sans penser à la version ROM.
