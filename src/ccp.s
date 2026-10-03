@@ -436,7 +436,8 @@ msg_help
         .asc "DO file [p1..p9]  run file.BAT",13,10
 #endif
         .asc "Keys: CTRL-T caps, CTRL-X kill,",13,10
-        .asc "      CTRL-C reboot, DEL erase",13,10,0
+        .asc "      CTRL-C reboot, DEL erase,",13,10
+        .asc "      <- -> edit, up/down history",13,10,0
 msg_mem
         .asc "0000-00DF zero page (free)",13,10
         .asc "0200      WBOOT  0203 BDOS",13,10

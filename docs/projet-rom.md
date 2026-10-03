@@ -15,11 +15,13 @@ même table BIOS, mêmes fonctions BDOS (console, graphisme 115, son 116), charg
 ## État actuel de la ROM (`build/cpa.rom`)
 
 Construite par `build.sh` à partir des sources communes, sans `-DDISK`. Elle occupe
-`$C000-$E19C` environ (8,6 Ko) : **près de 7,5 Ko libres**.
+`$C000-$E36A` environ (8,9 Ko) : **près de 7,3 Ko libres**.
 
 Elle contient : BIOS (console, clavier, IRQ, reprise après plantage, test de la RAM), menus,
 graphisme SPLIT (BDOS 115, sauf GSAVE/GLOAD), son (BDOS 116), CCP avec HELP (interne, en anglais),
-VER, CLS, MEM, DUMP, POKE, GO, SPLIT, TEXT, GCLS, commandes graphiques, ECHO, PAUSE. Les
+VER, CLS, MEM, DUMP, POKE, GO, SPLIT, TEXT, GCLS, commandes graphiques, ECHO, PAUSE. La
+lecture de ligne (BDOS 10) a l'édition par les flèches et l'historique, comme la disquette
+(pas la complétion, qui lit le répertoire). Les
 fonctions fichiers du BDOS renvoient `$FF`, DIR répond « No disk in the ROM version. ».
 
 Essai : Oricutron avec `ORIC_ROM=cpa` (copier `build/cpa.rom` dans `roms/cpa.rom`) ; sur le

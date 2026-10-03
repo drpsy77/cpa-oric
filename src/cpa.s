@@ -66,6 +66,7 @@ bios_table
 
 #include "bios.s"
 #include "bdos.s"
+#include "rline.s"
 #include "ccp.s"
 #include "menu.s"
 #include "gfx.s"

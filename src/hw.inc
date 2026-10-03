@@ -228,6 +228,29 @@ s_lo        = $02C3
 s_hi        = $02C4
 s_vol       = $02C5
 s_d         = $02C6
+; édition de ligne (BDOS 10, src/rline.s)
+rl_pos      = $02C7     ; position du curseur dans la ligne
+rl_cnt      = $02C8     ; longueur de la ligne
+rl_max      = $02C9     ; longueur maximale (79 au plus)
+rl_sx       = $02CA     ; colonne et ligne d'écran du début de la ligne
+rl_sy       = $02CB
+rl_sc       = $02CC     ; valeur de scr_n quand rl_sy était juste
+rl_old      = $02CD     ; longueur affichée
+rl_hix      = $02CE     ; rang dans l'historique (0 = ligne en cours)
+rl_t        = $02CF
+scr_n       = $02D0     ; compteur de défilements (incrémenté par scroll)
+cp_ws       = $02D1     ; complétion : début du mot
+cp_n        = $02D2     ; nombre de noms trouvés
+cp_cl       = $02D3     ; longueur du préfixe commun
+cp_mode     = $02D4     ; bit 7 : afficher les noms au lieu de les comparer
+cp_col      = $02D5     ; colonne de la liste
+cp_pl       = $02D6     ; longueur du prompt recopié
+cp_txt      = $02D7     ; 13 octets : nom de l'entrée en cours (« NOM.TYP »,0)
+cp_com      = $02E4     ; 13 octets : préfixe commun
+rl_pr       = $02F1     ; 15 octets : prompt recopié de l'écran
+RLB         = $BA00     ; tampon d'édition (128 octets) } fin du jeu de caractères
+HIST        = $BA80     ; historique (256 octets)      } alternatif, inutilisé
+RLMAX       = 126     ; (<HIST + RLMAX + 1 < 256)
 page_on     = $02A3     ; 1 = pause quand l'écran est plein (public)
 img_fcb     = $02A4     ; 2 octets : FCB de GSAVE/GLOAD
 img_dma     = $02A6     ; 2 octets : DMA de l'appelant

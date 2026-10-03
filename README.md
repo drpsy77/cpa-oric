@@ -87,8 +87,31 @@ ERA et REN répondent `File R/O` ; EDIT et HEX refusent d'enregistrer un fichier
 Les programmes passent par la fonction 30 du BDOS (bit 7 de l'octet 9 du FCB = R/O, de
 l'octet 10 = SYS).
 
-Touches : CTRL-T bascule les majuscules, DEL efface, CTRL-X efface la ligne,
-CTRL-C en début de ligne fait un démarrage à chaud. Le bouton RESET revient au CCP.
+Touches : CTRL-T bascule les majuscules, CTRL-C en début de ligne fait un démarrage à
+chaud. Le bouton RESET revient au CCP.
+
+**Édition de la ligne, historique, complétion.** Au prompt `A>` comme dans les programmes qui
+lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
+
+| Touche | Effet |
+|---|---|
+| ← / → | déplacer le curseur dans la ligne ; ce qu'on tape s'insère |
+| ↑ / ↓ | lignes déjà validées (historique), de la plus récente à la plus ancienne |
+| ESC | compléter le nom de fichier qui se termine au curseur |
+| DEL / CTRL-D | effacer à gauche / sous le curseur |
+| CTRL-A / CTRL-E | début / fin de la ligne |
+| CTRL-X | effacer toute la ligne |
+
+L'historique garde les dernières lignes (256 octets, une vingtaine de commandes courtes) ; il
+survit au démarrage à chaud, et une ligne identique à la précédente n'y entre pas deux fois.
+
+La complétion s'inspire du `filec` du C-shell, qui complétait déjà par ESC — touche placée sur
+l'Oric à l'endroit de la touche TAB d'un clavier de PC. `TYPE REA` + ESC donne
+`TYPE README.TXT ` (avec l'espace, prêt pour la suite). Si plusieurs fichiers conviennent, ESC
+ajoute la partie commune (`DIR HELL` → `DIR HELLO.`) ; si rien ne peut être ajouté, ESC
+affiche les noms possibles et réécrit la ligne en dessous. Sans majuscules (CTRL-T), le nom
+est complété en minuscules. Seuls les noms de fichiers sont complétés (pas les commandes
+internes) ; un mot vide + ESC montre tout le disque.
 
 **Pause en fin d'écran.** Quand une commande remplit la console (27 lignes en mode texte,
 11 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
@@ -579,18 +602,20 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 | `$00E0-$00FF` | page zéro système |
 | `$0200` / `$0203` | `JMP WBOOT` / `JMP BDOS` |
 | `$0206` / `$0209` | vecteurs IRQ / NMI en RAM, détournables |
-| `$0210-$02A9` | variables du système (console, clavier, menus, test RAM, graphisme, pagination `$02A3`, plafond de la TPA `$02A9`) |
+| `$0210-$02FF` | variables du système (console, clavier, menus, test RAM, graphisme, pagination `$02A3`, plafond de la TPA `$02A9`, édition de ligne) |
 | `$0400-$04FF` | page de base : tampon de commande, FCB `$045C`/`$046C`, DMA `$0480` |
 | `$0500-$B3FF` | TPA (44 800 octets) |
 | `$B400-$B7FF` | jeu de caractères |
-| `$B800-$BB7F` | jeu alternatif (inutilisé en mode texte) : sauvegarde de l'écran sous les menus |
+| `$B800-$B9FF` | jeu alternatif (inutilisé en mode texte) : sauvegarde de l'écran sous les menus |
+| `$BA00-$BA7F` | ligne en cours d'édition (BDOS 10) |
+| `$BA80-$BB7F` | historique des lignes |
 | `$BB80-$BFDF` | écran texte |
-| `$C000-$F1xx` | CP/A (RAM overlay), environ 12,3 Ko |
+| `$C000-$F4xx` | CP/A (RAM overlay), environ 13,2 Ko |
 | `$F670-$F7BF` | ligne de commande d'origine, script DO (FCB, enregistrement, paramètres) |
 | `$F7C0-$FCFF` | PUT : sauvegarde d'état et tampon de 1 280 octets |
 | `$FD00-$FEFF` | variables du BDOS et tampon de secteur |
 
-Il reste environ 1,3 Ko libres dans la RAM overlay (entre la fin du code et `$F670`) pour de futures commandes internes.
+Il reste environ 450 octets libres dans la RAM overlay (entre la fin du code et `$F670`) pour de futures fonctions résidentes.
 
 ## Format de la disquette
 

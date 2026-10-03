@@ -68,9 +68,19 @@ h_0
         .asc "-------",13,10
         .asc "FUNCT         | menus deroulants",13,10
         .asc "CTRL-T        | majuscules oui/non",13,10
+        .asc "<- ->         | deplace dans la ligne",13,10
+        .asc "              |   (on tape en",13,10
+        .asc "              |   insertion)",13,10
+        .asc "haut bas      | lignes deja tapees",13,10
+        .asc "              |   (historique)",13,10
+        .asc "ESC           | complete un nom de",13,10
+        .asc "              |   fichier ; 2 fois :",13,10
+        .asc "              |   les noms possibles",13,10
+        .asc "DEL ^D        | efface a gauche /",13,10
+        .asc "              |   sous",13,10
+        .asc "^A ^E         | debut / fin de ligne",13,10
         .asc "CTRL-X        | efface la ligne",13,10
         .asc "CTRL-C        | redemarrage a chaud",13,10
-        .asc "DEL           | efface a gauche",13,10
         .asc "RESET         | retour au prompt",13,10
         .byt 0
 h_1
