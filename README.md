@@ -74,10 +74,38 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 |---|---|
 | `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG` |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
+| `STAT [afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets ; sans paramètre : place libre sur le disque |
+| `MEM` | carte de la mémoire (taille de la TPA selon le mode texte ou SPLIT) |
+| `POKE adr bb [bb...]` | écrit des octets en mémoire (hexadécimal, `$` facultatif) |
+| `GO adr [paramètres]` | lance le code en `adr` comme un `.COM` (un `RTS` ramène au prompt) |
 
-Dans la version disquette, `HELP`, `MEM`, `DUMP`, `POKE` et `GO` ne sont plus internes : l'aide
-est dans `HELP.COM` (plus complète, et sans prendre de place dans le système), et DEBUG fait
-le travail du moniteur. La version ROM, qui n'a pas de disque, les garde en interne.
+Dans la version disquette, `HELP`, `MEM`, `DUMP`, `POKE` et `GO` ne sont plus internes, pour
+laisser la place au BDOS : l'aide est dans `HELP.COM` (plus complète), `MEM`, `POKE` et `GO`
+sont des `.COM`, et DEBUG fait le travail de `DUMP`. La version ROM, qui n'a pas de disque, les
+garde en interne.
+
+**POKE et GO en version disquette.** Comme tout `.COM`, ils sont chargés en `$0500` : chacun
+tient en une page (`$0500-$05FF`), donc tout ce qui est à partir de `$0600` est préservé d'un
+appel à l'autre. Un petit programme tapé avec plusieurs POKE commence donc en `$0600` :
+
+    A>POKE 0600 A9 41 A2 02 20 03 02 60
+    A>GO 0600
+    A
+
+Un seul POKE peut aussi écrire en `$0500` (pour un `SAVE` juste après) : il décode d'abord tous
+les octets, puis les copie depuis la page zéro (`$D0-$DD`), par-dessus lui-même. Le POKE suivant
+écraserait ces octets en se chargeant. `GO adr NOM.EXT` transmet la suite de la ligne au code
+lancé : ligne de paramètres en `$0480` et FCB1 rempli avec le premier paramètre (FCB2 vide,
+comme sous DEBUG).
+
+**Taille d'un fichier (STAT).** Le répertoire CP/M ne compte que des enregistrements de
+128 octets. STAT lit le dernier et retire les `^Z` (`$1A`) qui le complètent, comme le font
+EDIT, PUT, LOGO et l'outil PC `mkdisk.py` : la taille en octets est exacte pour ces fichiers. Un
+fichier binaire dont les derniers octets valent réellement `$1A` paraît un peu plus court.
+
+    A>STAT *.TXT
+    Fichier       Enreg  Blocs Octets
+    README  .TXT     42      3   5271
 
 **Attributs de fichier.** Comme sous CP/M 2.2, deux bits du nom de fichier servent
 d'attributs : R/O (lecture seule : le fichier ne peut être ni effacé, ni renommé, ni écrit,
@@ -349,6 +377,7 @@ Programmes fournis sur la disquette :
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM` et
   `CPA.INC`.
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
+- `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, décrits plus haut.
 
 ## LOGO
 
