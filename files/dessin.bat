@@ -1,0 +1,14 @@
+; DESSIN.BAT : demo des commandes graphiques
+; usage : DO DESSIN texte
+SPLIT
+PEN 1
+BOX 0 0 239 126
+CIRCLE 60 64 40
+CIRCLE 60 64 20
+FBOX 140 20 220 60
+PEN 2
+FBOX 160 40 200 100
+PEN 1
+LINE 0 126 239 0
+GTEXT 2 114 $1
+ECHO Fini. GSAVE DESSIN pour le garder.
