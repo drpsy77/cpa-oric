@@ -97,6 +97,17 @@ h_1
         .asc "DEBUG nom [param]",13,10
         .asc "              | debogueur",13,10
         .asc "COPY src dst  | copie un fichier",13,10
+        .asc "STAT [afn]    | taille : enreg.,",13,10
+        .asc "              |   blocs de 2 Ko,",13,10
+        .asc "              |   octets ; seul :",13,10
+        .asc "              |   place libre",13,10
+        .asc "MEM           | carte de la memoire",13,10
+        .asc "POKE adr bb.. | ecrit en memoire",13,10
+        .asc "              |   (code a lancer :",13,10
+        .asc "              |   0600 et +)",13,10
+        .asc "GO adr [param]",13,10
+        .asc "              | lance le code (RTS =",13,10
+        .asc "              |   retour)",13,10
         .asc "GTEST         | demo graphique",13,10
         .asc "HELLO [param] | exemple de .COM",13,10
         .byt 0
@@ -205,4 +216,6 @@ h_7
         .asc "BB80-BFDF     | ecran texte",13,10
         .asc "C000-FFFF     | CP/A (RAM overlay)",13,10
         .asc "DEBUG         | se place en 8400-9FFF",13,10
+        .asc "MEM           | cette carte, selon le",13,10
+        .asc "              |   mode",13,10
         .byt 0

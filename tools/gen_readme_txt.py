@@ -69,6 +69,10 @@ SECTIONS = [
   ("ASM nom", "NOM.ASM -> NOM.COM et NOM.SYM"),
   ("DEBUG nom [param]", "debogueur"),
   ("COPY src dst", "copie un fichier"),
+  ("STAT [afn]", "taille : enreg., blocs de 2 Ko, octets ; seul : place libre"),
+  ("MEM", "carte de la memoire"),
+  ("POKE adr bb..", "ecrit en memoire (code a lancer : 0600 et +)"),
+  ("GO adr [param]", "lance le code (RTS = retour)"),
   ("GTEST", "demo graphique"),
   ("HELLO [param]", "exemple de .COM"),
  ]),
@@ -137,6 +141,7 @@ SECTIONS = [
   ("BB80-BFDF", "ecran texte"),
   ("C000-FFFF", "CP/A (RAM overlay)"),
   ("DEBUG", "se place en 8400-9FFF"),
+  ("MEM", "cette carte, selon le mode"),
  ]),
  ("DEBUG", [
   ("R [reg=v]", "registres (A X Y S PC P, N V D I Z C)"),

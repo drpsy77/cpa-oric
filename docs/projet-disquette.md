@@ -28,17 +28,28 @@ données, communiquer (réseau par le LOCI).
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
 HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
-désassembleur symbolique, pas à pas), COPY, GTEST, HELLO.
+désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
+octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
+HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, SPLIT, GTEST,
 LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur place, DO, le son,
 l'édition de ligne (flèches, historique, complétion par ESC), le mode SPLIT avec la bascule
-en `$BFDF` (premier octet `$A000` visible, ligne 27 vide).
+en `$BFDF` (premier octet `$A000` visible, ligne 27 vide), STAT, MEM, POKE et GO.
 
 ## Choix déjà faits (et pourquoi)
 
-- HELP, MEM, DUMP, POKE, GO ne sont plus internes : HELP.COM et DEBUG les remplacent, la place
-  libérée sert au BDOS.
+- HELP, MEM, DUMP, POKE, GO ne sont plus internes, la place libérée sert au BDOS. HELP.COM
+  remplace HELP, DEBUG remplace DUMP. MEM, POKE et GO sont revenus en `.COM` : DEBUG ne
+  démarre qu'avec un programme à charger, il ne pouvait pas en tenir lieu.
+- POKE.COM et GO.COM tiennent chacun dans `$0500-$05FF` (2 enregistrements) : à partir de
+  `$0600`, la mémoire est préservée d'un appel à l'autre. POKE décode tous les octets avant
+  d'écrire, puis copie depuis la page zéro (`$D0-$DD`) : un POKE en `$0500` suivi d'un SAVE
+  marche. GO passe la suite de la ligne au code lancé (`$0480`, FCB1), comme DEBUG.
+- STAT.COM (nom de CP/M) donne la taille en octets en retirant les `^Z` du dernier
+  enregistrement : le répertoire CP/M 2.2 n'a pas de compteur d'octets. Exact pour les textes
+  et pour les fichiers copiés par `mkdisk.py`. La place libre est calculée d'après les entrées
+  du répertoire (le BDOS n'a pas la fonction 27 de CP/M, et on ne l'ajoute pas pour ça).
 - PUT n'écrit jamais sur le disque pendant un affichage : tampon de 1 280 octets vidé à l'entrée
   de l'appel BDOS suivant, état du système de fichiers sauvé puis rendu.
 - HEX écrit sur place (accès direct) au lieu de réécrire tout le fichier ; quitter une fenêtre
