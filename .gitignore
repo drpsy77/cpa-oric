@@ -1,0 +1,11 @@
+# construction : seules les images prêtes à l'emploi sont gardées
+build/*
+!build/cpa.dsk
+!build/cpa.rom
+progs/*.err
+tools/xa
+tools/pylib/
+tools/oricutron/
+_to_delete/
+__pycache__/
+.DS_Store
