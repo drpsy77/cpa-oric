@@ -1,0 +1,58 @@
+diff --git a/main.c b/main.c
+index a47cd0c..8dbda6d 100644
+--- a/main.c
++++ b/main.c
+@@ -1759,9 +1759,53 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+ }
+ 
+ /* Tasks to do once per emulated frame */
++
++/* --- test hook (Claude): ORIC_KEYS / ORIC_KEYS_AT / ORIC_DUMP / ORIC_DUMP_AT --- */
++extern void ay_keypress(struct ay8912 *ay, SDL_COMPAT_KEY key, SDL_bool down);
++static void test_hook(struct machine *oric)
++{
++  static long fr = 0; static int idx = 0; static int phase = 0; static int dumped = 0;
++  static int shifted = 0;
++  const char *keys = getenv("ORIC_KEYS");
++  long kat = getenv("ORIC_KEYS_AT") ? atol(getenv("ORIC_KEYS_AT")) : 150;
++  long dat = getenv("ORIC_DUMP_AT") ? atol(getenv("ORIC_DUMP_AT")) : -1;
++  fr++;
++  static long pause_until = 0;
++  if (keys && fr >= kat && keys[idx] && fr >= pause_until) {
++    int c = (unsigned char)keys[idx];
++    if (c == '|') { pause_until = fr + 150; idx++; return; }   /* | = pause de 3 s */
++    if (c == 0x1c) { shifted |= 2; idx++; return; }   /* préfixe CTRL */
++    if (c == 6) { oric->cpu.nmi = SDL_TRUE; oric->cpu.nmicount = 2; idx++; pause_until = fr + 50; return; } /* bouton RESET */
++    SDL_COMPAT_KEY k; int needshift = 0;
++    if (c == '\n') k = SDLK_RETURN;
++    else if (c == '~') k = SDLK_BACKSPACE;   /* ~ = DEL */
++    else if (c == ' ') k = SDLK_SPACE;
++    else if (c >= 'A' && c <= 'Z') { k = c + 32; needshift = 1; }
++    else if (c == '$') { k = '4'; needshift = 1; }
++    else if (c == ':') { k = ';'; needshift = 1; }
++    else if (c == '*') { k = '8'; needshift = 1; }
++    else if (c == '#') { k = '3'; needshift = 1; }
++    else if (c == 1) k = SDLK_LEFT;
++    else if (c == 2) k = SDLK_RIGHT;
++    else if (c == 3) k = SDLK_UP;
++    else if (c == 4) k = SDLK_DOWN;
++    else if (c == 5) k = SDLK_LALT;   /* FUNCT */
++    else k = c;
++    if (phase == 0) { if (shifted & 2) ay_keypress(&oric->ay, SDLK_LCTRL, SDL_TRUE); if (needshift) { ay_keypress(&oric->ay, SDLK_LSHIFT, SDL_TRUE); shifted |= 1; } ay_keypress(&oric->ay, k, SDL_TRUE); }
++    if (phase == 4) { ay_keypress(&oric->ay, k, SDL_FALSE); if (shifted & 1) ay_keypress(&oric->ay, SDLK_LSHIFT, SDL_FALSE); if (shifted & 2) ay_keypress(&oric->ay, SDLK_LCTRL, SDL_FALSE); shifted = 0; }
++    if (++phase >= 8) { phase = 0; idx++; }
++  }
++  if (!dumped && dat >= 0 && fr >= dat && getenv("ORIC_DUMP")) {
++    FILE *f = fopen(getenv("ORIC_DUMP"), "wb"); int a;
++    if (f) { for (a = 0; a < 0x10000; a++) fputc((a>=0x300&&a<0x400)?0:oric->cpu.read(&oric->cpu, a), f); fclose(f); }
++    dumped = 1;
++  }
++}
++
+ void once_per_frame(struct machine *oric)
+ {
+   int i;
++  test_hook(oric);
+ 
+   if(oric->diskautosave)
+   {
