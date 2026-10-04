@@ -15,7 +15,7 @@ même table BIOS, mêmes fonctions BDOS (console, graphisme 115, son 116), charg
 ## État actuel de la ROM (`build/cpa.rom`)
 
 Construite par `build.sh` à partir des sources communes, sans `-DDISK`. Elle occupe
-`$C000-$E36A` environ (8,9 Ko) : **près de 7,3 Ko libres**.
+`$C000-$E3A0` environ (8,9 Ko) : **près de 7,3 Ko libres**.
 
 Elle contient : BIOS (console, clavier, IRQ, reprise après plantage, test de la RAM), menus,
 graphisme SPLIT (BDOS 115, sauf GSAVE/GLOAD), son (BDOS 116), CCP avec HELP (interne, en anglais),

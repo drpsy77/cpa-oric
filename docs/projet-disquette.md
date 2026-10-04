@@ -11,14 +11,15 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F4AD`, marge 451 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F4BF`, marge 433 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
   historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
   fichiers par ESC (partie commune, puis liste des noms possibles) ;
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
-- mode SPLIT (240 × 128 + 11 lignes de texte), graphisme BDOS 115, images `.IMG` ;
+- mode SPLIT (240 × 128 + barre + 10 lignes de texte ; bascule en `$BFDF` comme le BASIC, `$A000`
+  utilisable), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ) ;
 - CCP : DIR, DIRS, TYPE, ERA, REN, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
   FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
@@ -31,7 +32,8 @@ désassembleur symbolique, pas à pas), COPY, GTEST, HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, SPLIT, GTEST,
 LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur place, DO, le son,
-l'édition de ligne (flèches, historique, complétion par ESC).
+l'édition de ligne (flèches, historique, complétion par ESC), le mode SPLIT avec la bascule
+en `$BFDF` (premier octet `$A000` visible, ligne 27 vide).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -52,6 +54,10 @@ l'édition de ligne (flèches, historique, complétion par ESC).
   ni au FCB des programmes ; seule une recherche 17/18 en cours chez l'appelant serait perdue.
   Pas de jokers ; les noms sont complétés en minuscules quand les majuscules sont coupées.
 - Flèches : gauche `$08` n'efface plus (DEL le fait), bas `$0A` ne valide plus la ligne.
+- SPLIT : l'attribut HIRES n'est plus en `$BB80` (il masquait l'octet `$A000` dans Oricutron, et
+  toute la ligne de points 0 sur le vrai circuit, qui change de mode à la ligne suivante) mais en
+  `$BFDF`, comme le BASIC. Prix : la ligne de texte 27 ne contient que des attributs, la console
+  SPLIT passe de 11 à 10 lignes (variable `con_last`). Seul `$B3D8` (retour au texte) reste pris.
 
 ## Suite prévue (par priorité)
 
@@ -69,7 +75,7 @@ l'édition de ligne (flèches, historique, complétion par ESC).
 
 ## Contraintes à garder en tête
 
-- 451 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 433 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
