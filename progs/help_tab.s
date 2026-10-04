@@ -33,7 +33,7 @@ h_default
         .asc "              |   arrete)",13,10
         .asc "ECHO texte    | affiche le texte",13,10
         .asc "PAUSE [texte] | attend une touche",13,10
-        .asc "SPLIT         | image + 11 lignes",13,10
+        .asc "SPLIT         | image + 10 lignes",13,10
         .asc "TEXT          | texte seul",13,10
         .asc "GCLS          | efface l'image",13,10
         .asc "PEN m         | 0 efface 1 trace 2",13,10

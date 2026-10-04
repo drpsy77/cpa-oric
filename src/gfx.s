@@ -2,17 +2,22 @@
 ;  gfx.s — mode SPLIT et primitives graphiques (BDOS fonction 115)
 ;
 ;  Mode SPLIT : lignes de points 0-127 en haute résolution (240 x 128),
-;  puis 12 lignes de texte : barre de menus (ligne 16) et console
-;  (lignes 17 à 27). Deux attributs suffisent :
-;     $1E en $BB80 : la trame commence en texte, la première case lue
-;                    fait passer en haute résolution
+;  puis du texte : barre de menus (ligne 16) et console (lignes 17 à 26).
+;  Deux attributs suffisent, comme le HIRES du BASIC tout l'octet $A000
+;  reste utilisable :
+;     $1E en $BFDF : dernière case de l'écran (ligne de texte 27), passe
+;                    en haute résolution pour la trame suivante. La ligne
+;                    27 ne contient que des attributs : le vrai circuit
+;                    change de mode à la ligne de points suivante, et ses 7
+;                    dernières lignes de points seraient dessinées avec la
+;                    police du mode HIRES ($9800, dans la TPA).
 ;     $1A en $B3D8 : première case de la ligne de points 127, retour au
 ;                    texte. Le vrai circuit vidéo ne change de mode qu'à
 ;                    la ligne suivante : placé sur la ligne 127, l'attribut
 ;                    agit pile à la ligne 128, première ligne de la barre.
 ;                    (Oricutron change de mode tout de suite : la fin de la
 ;                    ligne 127 montre alors la ligne de texte 15, vide.)
-;  Les lignes de texte 0 et 15 sont gardées vides pour cette raison.
+;  La ligne de texte 15 est gardée vide pour cette raison.
 ;  La police du mode texte ($B400) et l'écran texte ($BB80) restent en
 ;  place. La TPA s'arrête en $9FFF (tpa_top = $A000).
 ;
@@ -245,6 +250,8 @@ video_vars_text
         sta bar_row
         lda #FIRST_ROW
         sta con_first
+        lda #LAST_ROW
+        sta con_last
         lda #<SCREEN
         sta ZP_BAR
         lda #>SCREEN
@@ -270,7 +277,7 @@ video_text
         jsr cur_off_sys
         jsr video_vars_text
         lda #ATTR_TEXT50
-        sta SCREEN              ; plus de bascule en haut d'écran
+        sta SCREEN+LAST_ROW*40+COLS-1 ; plus de bascule en fin d'écran
         jsr cls_body
         jsr draw_status
         jmp cur_on_sys
@@ -283,6 +290,8 @@ video_split
         sta bar_row
         lda #SPLIT_BAR+1
         sta con_first
+        lda #LAST_ROW-1
+        sta con_last
         lda #<(SCREEN+SPLIT_BAR*40)
         sta ZP_BAR
         lda #>(SCREEN+SPLIT_BAR*40)
@@ -295,26 +304,26 @@ video_split
         lda #ATTR_TEXT50        ; retour au texte à la ligne de points 128
         sta IMG_SWITCH
         sta IMG_END
-        jsr blank_rows          ; lignes de texte 0 et 15 vides
+        lda #" "                ; ligne de texte 15 vide (lue par
+        ldy #COLS-1             ; Oricutron en fin de ligne de points 127)
+br1     sta SCREEN+15*40,y
+        dey
+        bpl br1
         ldx #SPLIT_BAR
         jsr clear_row
         jsr cls_body
         jsr draw_status
-        lda #ATTR_HIRES         ; et bascule en haute résolution en haut
-        sta SCREEN
-        jmp cur_on_sys
-
-; blank_rows : vide les lignes de texte 0 (sauf sa première case) et 15,
-;   lues par le circuit vidéo autour des changements de mode
-blank_rows
-        lda #" "
-        ldy #COLS-1
-br1     sta SCREEN,y
-        sta SCREEN+15*40,y
+        ldx #LAST_ROW           ; ligne 27 : attributs seulement (papier,
+        jsr clear_row           ; encre, puis $08 = rien à dessiner)
+        lda #8
+        ldy #COLS-2
+br2     sta SCREEN+LAST_ROW*40,y
         dey
-        bne br1
-        sta SCREEN+15*40
-        rts
+        cpy #FIRST_COL
+        bcs br2
+        lda #ATTR_HIRES         ; et bascule en haute résolution en fin de trame
+        sta SCREEN+LAST_ROW*40+COLS-1
+        jmp cur_on_sys
 
 ; curseur caché pendant les changements de mode
 cur_off_sys

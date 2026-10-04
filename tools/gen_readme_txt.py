@@ -45,7 +45,7 @@ SECTIONS = [
   ("DO fic [p1..p9]", "lance FIC.BAT ($1..$9 = parametres, ESC arrete)"),
   ("ECHO texte", "affiche le texte"),
   ("PAUSE [texte]", "attend une touche"),
-  ("SPLIT", "image + 11 lignes"),
+  ("SPLIT", "image + 10 lignes"),
   ("TEXT", "texte seul"),
   ("GCLS", "efface l'image"),
   ("PEN m", "0 efface 1 trace 2 inv."),

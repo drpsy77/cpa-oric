@@ -114,7 +114,7 @@ est complété en minuscules. Seuls les noms de fichiers sont complétés (pas l
 internes) ; un mot vide + ESC montre tout le disque.
 
 **Pause en fin d'écran.** Quand une commande remplit la console (27 lignes en mode texte,
-11 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
+10 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
 ` -- Suite : une touche (^C stop) -- `. Une touche continue, CTRL-C abandonne et revient au
 prompt. Cela vaut pour `HELP`, `TYPE`, `DIR`, `DUMP`… et pour les programmes qui affichent par
 le BDOS ou le BIOS. Un programme qui ne veut pas de pause met `$02A3` à 0 (variable publique,
@@ -183,7 +183,7 @@ l'écrasement du système en RAM (version disque) obligent à redémarrer compl�
 ## Mode SPLIT : image et texte
 
 `SPLIT` partage l'écran en deux : une image de 240 × 128 points en haute résolution
-en haut, et 12 lignes de texte en dessous (la barre de menus puis 11 lignes de console).
+en haut, et du texte en dessous (la barre de menus puis 10 lignes de console).
 Le prompt, les commandes et les menus continuent de fonctionner sous l'image.
 `TEXT` revient au mode texte, et `GCLS` efface l'image.
 
@@ -192,9 +192,13 @@ mode SPLIT si besoin (la console n'est pas effacée si on y est déjà). Le fich
 copie brute de `$A000-$B3FF` : 5 120 octets, attributs de couleur compris. On peut ainsi
 préparer des images (avec LOGO, ou un programme de dessin) et les recharger dans un jeu.
 
-Comment ça marche : la trame commence en mode texte. La toute première case lue (`$BB80`)
-contient l'attribut `$1E`, qui fait passer en haute résolution. La première case de la ligne
-de points 128 (`$B400`) contient `$1A`, qui fait revenir au texte. L'image (`$A000-$B3FF`)
+Comment ça marche : comme avec le `HIRES` du BASIC, la dernière case de l'écran (`$BFDF`)
+contient l'attribut `$1E`, qui fait commencer la trame suivante en haute résolution : tout
+l'octet `$A000` est donc visible et utilisable. La première case de la ligne de points 127
+(`$B3D8`, seul octet de l'image qui ne sert pas aux points) contient `$1A`, qui fait revenir au
+texte à la ligne 128. La dernière ligne de texte ne contient que des attributs (elle reste
+vide) : le vrai circuit vidéo change de mode à la ligne de points suivante, et la fin de cette
+ligne serait dessinée avec la police du mode HIRES, qui n'existe pas ici. L'image (`$A000-$B3FF`)
 s'arrête juste avant la police du mode texte (`$B400`), si bien qu'aucune zone ne se
 chevauche. Pendant le mode SPLIT, la TPA s'arrête en `$9FFF` (variable publique `$020C`).
 
@@ -615,7 +619,7 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 | `$F7C0-$FCFF` | PUT : sauvegarde d'état et tampon de 1 280 octets |
 | `$FD00-$FEFF` | variables du BDOS et tampon de secteur |
 
-Il reste environ 450 octets libres dans la RAM overlay (entre la fin du code et `$F670`) pour de futures fonctions résidentes.
+Il reste environ 430 octets libres dans la RAM overlay (entre la fin du code et `$F670`) pour de futures fonctions résidentes.
 
 ## Format de la disquette
 

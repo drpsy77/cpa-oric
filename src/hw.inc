@@ -100,6 +100,7 @@ pf_len      = $022D
 ccp_cnt     = $022E
 dec_val     = $0240     ; 2 octets
 dec_flag    = $0242
+con_last    = $0243     ; dernière ligne de la console (27, 26 en SPLIT)
 
 ; --- Page de base ($0400) ---
 CMDBUF      = $0400     ; [max][long][caractères…][0]

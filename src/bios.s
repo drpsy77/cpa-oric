@@ -710,13 +710,12 @@ put_printable
 pp_ok   rts
 
 line_down
-        inc cur_y
         lda cur_y
-        cmp #LAST_ROW+1
+        cmp con_last
+        bcs ld_sc
+        inc cur_y
         bcc ld_pg
-        lda #LAST_ROW
-        sta cur_y
-        jsr scroll
+ld_sc   jsr scroll
 ld_pg   lda page_on             ; écran plein depuis la dernière touche ?
         beq ld_ok
 #ifdef DISK
@@ -724,7 +723,7 @@ ld_pg   lda page_on             ; écran plein depuis la dernière touche ?
         bne ld_ok
 #endif
         inc page_cnt
-        lda #LAST_ROW
+        lda con_last
         sec
         sbc con_first
         cmp page_cnt
@@ -736,7 +735,7 @@ ld_ok   rts
 ;   (appelée depuis conout : interruptions masquées, curseur caché)
 page_pause
 .(
-        ldx #LAST_ROW
+        ldx con_last
         lda line_lo,x
         sta ZP_SCR
         lda line_hi,x
@@ -754,7 +753,7 @@ pwait   cli                     ; le clavier fonctionne par interruption
         jsr conin_key
         sei
         pha
-        ldx #LAST_ROW
+        ldx con_last
         jsr clear_row
         pla
         cmp #3                  ; CTRL-C : abandon, retour au système
@@ -766,7 +765,7 @@ pgo
         rts
 .)
 
-; scroll : remonte les lignes 2..27 d'un cran, efface la ligne 27
+; scroll : remonte la console d'une ligne, efface la dernière (con_last)
 scroll
 .(
         inc scr_n               ; pour l'édition de ligne (rline.s)
@@ -786,9 +785,8 @@ cp      lda (ZP_SCR2),y
         cpy #FIRST_COL
         bcs cp
         inx
-        cpx #LAST_ROW
+        cpx con_last
         bne loop
-        ldx #LAST_ROW
         jmp clear_row
 .)
 
@@ -820,9 +818,9 @@ cls_body
 .(
         ldx con_first
 loop    jsr clear_row
+        cpx con_last
         inx
-        cpx #LAST_ROW+1
-        bne loop
+        bcc loop
         lda #FIRST_COL
         sta cur_x
         lda con_first
