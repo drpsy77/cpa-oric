@@ -34,10 +34,10 @@ octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du co
 HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
-STAT, MEM, POKE et GO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans LOGO ;
+STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans LOGO ;
 la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF`. DEBUG démarre, mais
 n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai Oric : ASM (jamais
-lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture sur place, DO, le son,
+lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture sur place, le son,
 le déplacement dans la ligne (← →), LISCAR et TOUCHE? dans LOGO.
 
 ## Choix déjà faits (et pourquoi)
