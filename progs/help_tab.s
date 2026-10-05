@@ -169,6 +169,22 @@ h_4
         .asc "ABS x         | valeur absolue",13,10
         .asc "QUOTIENT a b  | division entiere ;",13,10
         .asc "              |   RESTE a b : reste",13,10
+        .asc 34,"MOT  [A B]   | mot, liste (DONNE ",34,"L",13,10
+        .asc "              |   [A B])",13,10
+        .asc "PR SP x       | premier / sauf le",13,10
+        .asc "              |   premier",13,10
+        .asc "DER SD x      | dernier / sauf le",13,10
+        .asc "              |   dernier",13,10
+        .asc "ITEM n x      | n-ieme element",13,10
+        .asc "COMPTE x      | nombre d'elements",13,10
+        .asc "MOT a b       | colle deux mots",13,10
+        .asc "PH a b  LISTE a b",13,10
+        .asc "              | phrase / liste de",13,10
+        .asc "              |   deux",13,10
+        .asc "VIDE? MOT? LISTE?",13,10
+        .asc "              | 1 ou 0 ; aussi",13,10
+        .asc "              |   NOMBRE? MEMBRE? a b",13,10
+        .asc "EXEC [..]     | execute une liste",13,10
         .asc "LISCAR        | attend une touche,",13,10
         .asc "              |   rend son code",13,10
         .asc "TOUCHE?       | 1 si une touche",13,10

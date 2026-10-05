@@ -1,0 +1,10 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "E15
+Mot ou liste vide
+?  CHARGE "E16
+Il faut un nombre
+?  CHARGE "E17
+Il faut un mot
+?  CHARGE "E18
+Mot ou liste vide
+?  QUITTE

@@ -152,6 +152,22 @@ ENT x  ARRONDI x
 ABS x         | valeur absolue
 QUOTIENT a b  | division entiere ;
               |   RESTE a b : reste
+"MOT  [A B]   | mot, liste (DONNE "L
+              |   [A B])
+PR SP x       | premier / sauf le
+              |   premier
+DER SD x      | dernier / sauf le
+              |   dernier
+ITEM n x      | n-ieme element
+COMPTE x      | nombre d'elements
+MOT a b       | colle deux mots
+PH a b  LISTE a b
+              | phrase / liste de
+              |   deux
+VIDE? MOT? LISTE?
+              | 1 ou 0 ; aussi
+              |   NOMBRE? MEMBRE? a b
+EXEC [..]     | execute une liste
 LISCAR        | attend une touche,
               |   rend son code
 TOUCHE?       | 1 si une touche

@@ -34,11 +34,12 @@ octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du co
 HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
-STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans LOGO ;
-la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF`. DEBUG démarre, mais
-n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai Oric : ASM (jamais
-lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture sur place, le son,
-le déplacement dans la ligne (← →), LISCAR, TOUCHE?, les nombres décimaux et la tortue avec des décimaux dans LOGO.
+STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans
+LOGO, ← → dans LOGO ; la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF` ; dans LOGO,
+les décimaux et la tortue avec des décimaux (vitesse jugée meilleure que le BASIC). DEBUG
+démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai
+Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
+sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes.
 
 ## Choix déjà faits (et pourquoi)
 
@@ -93,6 +94,17 @@ le déplacement dans la ligne (← →), LISCAR, TOUCHE?, les nombres décimaux 
   plus. Conséquence : les dessins changent d'un point par endroits (DEMO, et l'heptagone de
   `360 / 7` se referme). XCOR, YCOR, CAP : entier si la tortue est sur un point entier, sinon
   arrondis à 2 décimales (la précision est de 1/256).
+- LOGO, lot 5 : les mots et listes sont des textes dans un tas (`progs/ltxt_inc.s`), qui
+  descend de memtop pendant que les procédures montent. Compactage à la manière du BASIC
+  Microsoft : le texte encore désigné le plus haut monte contre memtop, et ainsi de suite.
+  Deux règles le rendent sûr : un résultat est toujours une copie (jamais un morceau d'un
+  autre texte), et seules comptent les variables, les arguments et la pile de valeurs ; une
+  primitive qui réserve de la place y empile d'abord ses textes. Une liste est rangée
+  normalisée : une espace entre éléments, aucune après `[` ni avant `]`. EXECUTE copie la
+  liste dans une pile à part de 512 octets (`xstack`), que le compactage ne touche pas.
+  Un mot cité va jusqu'au blanc ou au crochet (`"-3.5`). LISTE est une fonction dans une
+  expression et reste la commande d'affichage d'une procédure en début de ligne. Les
+  booléens restent 1 et 0 (VRAI et FAUX viendront si on en a besoin).
 - LOGO : DONNE gardait le nom de la variable dans `p3` pendant l'évaluation, que la recherche
   des fonctions (HASARD, CAP...) écrase : `DONNE "X CAP` créait une variable au mauvais nom.
   Le nom est maintenant gardé sur la pile du 6502.
@@ -118,14 +130,15 @@ le déplacement dans la ligne (← →), LISCAR, TOUCHE?, les nombres décimaux 
    | 2 | valeurs typées (6 octets), pile de valeurs, variables et paramètres typés | élevée | ~300 o (+530 o de variables) | **fait** (le tas passe au lot 5) |
    | 3 | décimaux : 4 opérations, comparaisons, lecture/affichage, conversions, promotion, QUOTIENT, RESTE, ENT, ARRONDI, ABS | élevée | 2,7 Ko | **fait** |
    | 4 | tortue et décimaux (conversions, cap fractionnaire, contrôles de plage) | moyenne | 460 o | **fait** |
-   | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | ~1,1-1,4 Ko + tas | à faire |
+   | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | 2,9 Ko + 0,6 Ko de zones | **fait** |
    | 6 | LISLISTE (et LISMOT) ; LISCAR rendra alors un caractère (code par ASCII) | faible | ~150 o + 128 o | à faire |
    | 7 | RACINE, SIN, COS, ARCTAN ; en option LN, EXP, PUISSANCE (+~500 o) | moyenne | ~700 o | à faire |
    | 8 | option : RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | à décider |
 
-   Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko (10,8 Ko aujourd'hui), zone libre
-   ~21 Ko en SPLIT partagée entre procédures et textes (24 Ko aujourd'hui, 28 Ko avant le
-   lot 2).
+   Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko, zone libre ~21 Ko en SPLIT
+   partagée entre procédures et textes. Après le lot 5 : LOGO.COM 13,8 Ko (le lot 5 a coûté
+   le double de l'estimation), zone libre 20,5 Ko (28 Ko avant le lot 2) ; les lots 6 et 7
+   devraient garder LOGO sous 14,6 Ko.
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 
