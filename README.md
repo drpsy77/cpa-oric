@@ -423,9 +423,16 @@ Un calcul entre entiers reste entier tant qu'il tient entre -32768 et 32767 ; si
 en décimal (`32767 + 1` donne 32768, `1000 * 1000` donne 1000000). `/` est une vraie
 division : `7 / 2` donne 3.5, `6 / 3` donne 2. `ECRIS` affiche au plus 9 chiffres, sans zéros
 inutiles, en notation E au-delà de 999999999 ou en dessous de 0.00001. Les commandes qui
-attendent un entier (`AV`, `REPETE`, `NOTE`...) arrondissent au plus proche (`REPETE 2.6`
+attendent un entier (`REPETE`, `NOTE`, `ATTENDS`...) arrondissent au plus proche (`REPETE 2.6`
 répète 3 fois) ; au-delà de 32767 : `Nombre trop grand`. `SI` est vrai pour tout nombre non
 nul.
+
+**La tortue et les décimaux.** `AV`, `RE`, `DR`, `GA`, `FIXECAP` et `FIXEXY` acceptent des
+décimaux : la position et le cap sont gardés au 1/256 près (de pas ou de degré), et le sinus,
+lu dans une table au 1/65536, est interpolé entre deux degrés. `REPETE 7 [AV 30 DR 360 / 7]`
+se referme, `DR 0.5` tourne d'un demi-degré. `XCOR`, `YCOR` et `CAP` rendent un entier quand
+la tortue est sur un point entier, sinon un décimal arrondi à 2 décimales (`FIXECAP 30 AV 100`
+donne `86.6` pour `YCOR`). Une position au-delà de -32768..32767 donne `Nombre trop grand`.
 
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
 une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortue, Aide) tape

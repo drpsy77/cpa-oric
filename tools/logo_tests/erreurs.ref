@@ -17,12 +17,4 @@ Trop de niveaux K
 ?  CHARGE "E8
 0
 Que faire de cela ?
-?  CHARGE "E9
-Nombre trop grand
-?  CHARGE "E10
-Nombre trop grand
-?  CHARGE "E11
-Division par zero
-?  CHARGE "E12
-Division par zero
 ?  QUITTE

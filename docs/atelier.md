@@ -100,7 +100,7 @@ affiche les deux écrans et finit par « OK : l'atelier fonctionne ».
 Cette procédure a été essayée de bout en bout sur un Linux vierge (Ubuntu 24.04 sur PC). Sur le
 Pi, seules les durées changent : comptez quelques minutes pour compiler Oricutron, et plusieurs
 minutes pour `test_asm.sh` (environ 1 min 20 s sur le PC de Claude) et `test_logo.sh` (environ
-7 min).
+13 min).
 
 Quand le correctif de test change (`tools/oricutron-testhook.patch`), il faut recompiler
 Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.

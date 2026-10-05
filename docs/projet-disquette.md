@@ -38,7 +38,7 @@ STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de 
 la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF`. DEBUG démarre, mais
 n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai Oric : ASM (jamais
 lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture sur place, le son,
-le déplacement dans la ligne (← →), LISCAR, TOUCHE? et les nombres décimaux dans LOGO.
+le déplacement dans la ligne (← →), LISCAR, TOUCHE?, les nombres décimaux et la tortue avec des décimaux dans LOGO.
 
 ## Choix déjà faits (et pourquoi)
 
@@ -86,6 +86,13 @@ le déplacement dans la ligne (← →), LISCAR, TOUCHE? et les nombres décimau
   (`0.5 * 4` vaut 2, de type décimal) : l'affichage est le même, et les primitives qui veulent
   un entier arrondissent. En attendant le lot 4, la tortue reçoit elle aussi un entier
   arrondi ; l'arbre de DEMO a ainsi un niveau de plus (10,67 n'est plus tronqué à 10).
+- LOGO, lot 4 : la tortue reçoit des décimaux en virgule fixe (1/256) ; le cap a un octet de
+  fraction (`headf`). La table de sinus passe de 256 * sin à 65536 * sin (16 bits ; 90° est
+  traité à part, sinus = 1 exactement) : sans cela, `FIXECAP 30 AV 100` plaçait YCOR à 86.72
+  au lieu de 86.60, ce que les décimaux rendaient visible. Écart mesuré sur 14 caps : 0,006 au
+  plus. Conséquence : les dessins changent d'un point par endroits (DEMO, et l'heptagone de
+  `360 / 7` se referme). XCOR, YCOR, CAP : entier si la tortue est sur un point entier, sinon
+  arrondis à 2 décimales (la précision est de 1/256).
 - LOGO : DONNE gardait le nom de la variable dans `p3` pendant l'évaluation, que la recherche
   des fonctions (HASARD, CAP...) écrase : `DONNE "X CAP` créait une variable au mauvais nom.
   Le nom est maintenant gardé sur la pile du 6502.
@@ -110,14 +117,14 @@ le déplacement dans la ligne (← →), LISCAR, TOUCHE? et les nombres décimau
    | 1 | LISCAR, TOUCHE? | faible | ~60 o | **fait** |
    | 2 | valeurs typées (6 octets), pile de valeurs, variables et paramètres typés | élevée | ~300 o (+530 o de variables) | **fait** (le tas passe au lot 5) |
    | 3 | décimaux : 4 opérations, comparaisons, lecture/affichage, conversions, promotion, QUOTIENT, RESTE, ENT, ARRONDI, ABS | élevée | 2,7 Ko | **fait** |
-   | 4 | tortue et décimaux (conversions, cap fractionnaire, contrôles de plage) | moyenne | ~250 o | à faire |
+   | 4 | tortue et décimaux (conversions, cap fractionnaire, contrôles de plage) | moyenne | 460 o | **fait** |
    | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | ~1,1-1,4 Ko + tas | à faire |
    | 6 | LISLISTE (et LISMOT) ; LISCAR rendra alors un caractère (code par ASCII) | faible | ~150 o + 128 o | à faire |
    | 7 | RACINE, SIN, COS, ARCTAN ; en option LN, EXP, PUISSANCE (+~500 o) | moyenne | ~700 o | à faire |
    | 8 | option : RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | à décider |
 
-   Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko (10,3 Ko aujourd'hui), zone libre
-   ~21 Ko en SPLIT partagée entre procédures et textes (24,5 Ko aujourd'hui, 28 Ko avant le
+   Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko (10,8 Ko aujourd'hui), zone libre
+   ~21 Ko en SPLIT partagée entre procédures et textes (24 Ko aujourd'hui, 28 Ko avant le
    lot 2).
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
