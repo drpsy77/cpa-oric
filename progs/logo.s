@@ -13,7 +13,7 @@
 ;
 ;  Commandes : AVANCE/AV, RECULE/RE, DROITE/DR, GAUCHE/GA, LEVECRAYON/LC,
 ;  BAISSECRAYON/BC, GOMME, INVERSE, CACHETORTUE/CT, MONTRETORTUE/MT,
-;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, REPETE, SI, STOP,
+;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, REPETE, SI, STOP, RENDS,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
 ;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
@@ -23,7 +23,10 @@
 ;  L'interpréteur lit directement le texte (lignes tapées, corps des
 ;  procédures). Les listes [ ] et les procédures s'exécutent grâce à une
 ;  pile de contextes en mémoire : pas de récursion sur la pile du 6502,
-;  ce qui permet des procédures récursives profondes.
+;  ce qui permet des procédures récursives profondes. Une procédure
+;  appelée dans une expression (fonction, RENDS) fait tourner une boucle
+;  d'exécution depuis l'évaluateur : la pile du 6502 des expressions en
+;  attente est alors rangée dans une zone à part (spill, call_func).
 ; =====================================================================
 
 #include "cpa.inc"
@@ -145,10 +148,12 @@ FR_REP  = 1             ;   fin liste(2), compteur(2), marque des locales
 FR_LIST = 2
 FR_PROC = 3
 FR_EXEC = 4             ; EXECUTE : compteur = xsp à rendre
+FR_FUNC = 5             ; procédure appelée dans une expression (RENDS)
+                        ;   FR_PROC et FR_FUNC : compteur = enregistrement
 VAR_SIZE = 16           ; variable : nom (10 octets), valeur (6)
 NAMELEN = 10
 VAL_SIZE = 6            ; valeur : type (1), contenu (5)
-VS_N    = 24            ; profondeur de la pile de valeurs
+VS_N    = 40            ; profondeur de la pile de valeurs
 T_INT   = 1             ; entier 16 bits signé (contenu : 2 octets)
 T_DEC   = 2             ; décimal « à la Oric » (5 octets, fp_inc.s)
 T_WORD  = 3             ; mot : adresse et longueur d'un texte du tas
@@ -261,17 +266,10 @@ reset_frames
         sta xsp
         lda #>xstack
         sta xsp+1
-; argv_clr : arguments vides (le compactage du tas ne doit pas les lire)
-argv_clr
-        ldx #MAXPAR*VAL_SIZE-VAL_SIZE
-        lda #0
-ac0     sta argv,x
-        txa
-        sec
-        sbc #VAL_SIZE
-        tax
-        lda #0
-        bcs ac0
+        lda #<spill             ; aucune fonction en cours
+        sta ssp
+        lda #>spill
+        sta ssp+1
         rts
 
 ; error : message A/Y, retour au prompt
@@ -790,14 +788,26 @@ top_frame
         rts
 
 ; pop_frame : retire le contexte du dessus et reprend la suite
+;   (une fonction qui arrive à sa fin sans RENDS est une erreur)
 pop_frame
         jsr top_frame
+        ldy #0
+        lda (p1),y
+        cmp #FR_FUNC
+        bne pop_p1
+        lda #<e_noret
+        ldy #>e_noret
+        jmp fr_error
+; pop_p1 : retire le contexte p1 (le dessus)
+pop_p1
         jsr x_rest
         ldy #0
         lda (p1),y
-        cmp #FR_PROC
+        cmp #FR_PROC            ; FR_PROC et FR_FUNC : les locales
+        beq pf0                 ; disparaissent
+        cmp #FR_FUNC
         bne pf1
-        ldy #11
+pf0     ldy #11
         lda (p1),y
         sta nloc
 pf1     ldy #1
@@ -920,8 +930,10 @@ more    jsr top_frame
         ldy #0
         lda (p1),y
         cmp #FR_PROC
+        beq pop
+        cmp #FR_FUNC            ; STOP dans une fonction : erreur
         bne drop
-        jmp pop_frame
+pop     jmp pop_frame
 drop    jsr x_rest
         lda p1
         sta fsp
@@ -1396,15 +1408,19 @@ n3      cmp #TK_WORD
         jsr lookup
         bcs unk
         jmp (p3)
-unk     lda tnam
+unk     lda cname               ; procédure de l'utilisateur : fonction
+        pha                     ; (le nom de la commande en cours est
+        lda cname+1             ; gardé pour ses messages)
+        pha
+        lda clen
+        pha
+        lda tnam
         sta cname
         lda tnam+1
         sta cname+1
         lda tlen
         sta clen
-        lda #<e_unknown
-        ldy #>e_unknown
-        jmp error
+        jmp call_func
 bad     lda #0
         sta clen
         lda #<e_value
@@ -1980,16 +1996,6 @@ l       iny
         rts
 .)
 
-; arg_off : Y = X * VAL_SIZE (place de l'argument X dans argv), X préservé
-arg_off
-        txa
-        asl
-        sta tmp
-        asl
-        adc tmp
-        tay
-        rts
-
 ; put_val : affiche la valeur courante
 put_val
 .(
@@ -2455,12 +2461,18 @@ p_fcap  jsr eval_fix
         sta headf
         jmp turn
 p_fxy   jsr eval_fix
-        ldx #2
-pfx1    lda fxv,x
-        sta gx,x
+        ldx #2                  ; x sur la pile : l'évaluation de y peut
+pfx1    lda fxv,x               ; appeler une fonction qui fait FIXEXY
+        pha
         dex
         bpl pfx1
-        jsr eval_fix            ; gx = x, fxv = y
+        jsr eval_fix
+        ldx #0
+pfx2    pla                     ; gx = x, fxv = y
+        sta gx,x
+        inx
+        cpx #3
+        bne pfx2
         jmp goto_xy0
 
 p_repete
@@ -3729,9 +3741,177 @@ out     pla
         rts
 .)
 
-; call_proc : appel d'une procédure de l'utilisateur
+; call_proc : appel d'une procédure de l'utilisateur en instruction
 ;   (le jeton courant est son nom ; cname/clen le désignent)
 call_proc
+        lda #FR_PROC
+        pha
+        jsr proc_setup
+        pla
+        jmp push_frame
+
+; call_func : appel d'une procédure dans une expression (primary, qui a
+;   empilé le cname de l'appelant). Le corps tourne dans une boucle run
+;   à part ; RENDS la quitte et revient à l'appelant de primary avec la
+;   valeur dans vt/val. La pile du 6502, de savsp au sommet (expressions
+;   en attente), est rangée dans spill : chaque niveau repart de savsp,
+;   la profondeur n'est limitée que par spill, les contextes et la pile
+;   de valeurs.
+call_func
+.(
+        lda #FR_FUNC
+        pha
+        jsr proc_setup
+        pla
+        jsr push_frame
+        tsx                     ; longueur à ranger : savsp - S
+        stx tmp
+        sec
+        lda savsp
+        sbc tmp
+        sta tmp+1
+        lda ssp                 ; p2 = début, p1 = octet de longueur
+        sta p2
+        clc
+        adc tmp+1
+        sta p1
+        lda ssp+1
+        sta p2+1
+        adc #0
+        sta p1+1
+        lda p1
+        cmp #<(spill_end-1)
+        lda p1+1
+        sbc #>(spill_end-1)
+        bcc ok
+        lda #0
+        sta clen
+        lda #<e_deep
+        ldy #>e_deep
+        jmp error
+ok      ldy #0
+        ldx tmp
+cp      lda $0101,x
+        sta (p2),y
+        inx
+        iny
+        cpy tmp+1
+        bne cp
+        tya
+        sta (p2),y
+        clc
+        lda p1
+        adc #1
+        sta ssp
+        lda p1+1
+        adc #0
+        sta ssp+1
+        ldx savsp
+        txs
+        jmp run                 ; ne revient que par RENDS (ou une erreur)
+.)
+
+; RENDS x : termine la fonction en cours en rendant x
+p_rends
+.(
+        jsr eval
+loop    lda fsp                 ; dépile jusqu'au contexte de la fonction
+        cmp fbase
+        bne more
+        lda fsp+1
+        cmp fbase+1
+        bne more
+        lda #0
+        sta clen
+        lda #<e_rtop
+        ldy #>e_rtop
+        jmp error
+more    jsr top_frame
+        ldy #0
+        lda (p1),y
+        cmp #FR_FUNC
+        beq out
+        cmp #FR_PROC            ; procédure appelée en instruction
+        bne drop
+        lda #<e_unused
+        ldy #>e_unused
+        jmp fr_error
+drop    jsr x_rest
+        lda p1
+        sta fsp
+        lda p1+1
+        sta fsp+1
+        jmp loop
+out     jsr pop_p1              ; locales rendues, suite de l'expression
+        sec                     ; reprend la pile du 6502 rangée par
+        lda ssp                 ; call_func
+        sbc #1
+        sta p2
+        lda ssp+1
+        sbc #0
+        sta p2+1
+        ldy #0
+        lda (p2),y
+        sta tmp+1
+        sec
+        lda p2
+        sbc tmp+1
+        sta p2
+        sta ssp
+        lda p2+1
+        sbc #0
+        sta p2+1
+        sta ssp+1
+        sec
+        lda savsp
+        sbc tmp+1
+        tax
+        txs
+        ldy #0
+cb      lda (p2),y
+        sta $0101,x
+        inx
+        iny
+        cpy tmp+1
+        bne cb
+        pla                     ; nom de la commande de l'appelant
+        sta clen
+        pla
+        sta cname+1
+        pla
+        sta cname
+        rts
+.)
+
+; fr_error : erreur A/Y suivie du nom de la procédure du contexte p1
+fr_error
+        pha
+        tya
+        pha
+        ldy #9
+        lda (p1),y
+        sta hdr
+        iny
+        lda (p1),y
+        sta hdr+1
+        jsr rec_name
+        lda tnam
+        sta cname
+        lda tnam+1
+        sta cname+1
+        lda tlen
+        sta clen
+        pla
+        tay
+        pla
+        jmp error
+
+; proc_setup : prépare l'appel de la procédure cname/clen (le jeton
+;   courant est son nom) : évalue les arguments, crée les locales ;
+;   lstart/lend = corps, cnt = enregistrement, fmark = locales d'avant.
+;   Les arguments passent par la pile de valeurs : leur évaluation peut
+;   appeler une fonction, qui se sert aussi de hdr, parn, pcount...
+proc_setup
 .(
         jsr find_proc           ; tp est juste après le nom (préservé)
         bcc found
@@ -3739,45 +3919,58 @@ call_proc
         ldy #>e_unknown
         jmp error
 found   jsr advance             ; jeton suivant : le premier argument
-        ; paramètres de l'en-tête : :A :B ... jusqu'au CR
-        jsr hdr_params          ; pcount, parn/parl ; p2 = début du corps
-        lda nloc
-        sta fmark
-        jsr argv_clr
-        ldx #0                  ; évalue les arguments dans le contexte appelant
-ev      cpx pcount
-        beq bind
-        txa
+        jsr hdr_params          ; pcount
+        lda hdr
+        pha
+        lda hdr+1
+        pha
+        lda pcount
+        pha
+        tax
+ev      txa                     ; X = arguments restant à évaluer
+        beq evd
         pha
         jsr eval
+        jsr vpush
         pla
         tax
-        jsr arg_off             ; argument X -> argv
-        lda vt
-        sta argv,y
-        txa
-        pha
-        ldx #0
-ac      lda val,x
-        sta argv+1,y
-        iny
-        inx
-        cpx #VAL_SIZE-1
-        bne ac
+        dex
+        jmp ev
+evd     pla
+        sta pcount
         pla
-        tax
-        inx
-        bne ev
-bind    ldx #0                  ; crée les variables locales
-bl      cpx pcount
-        beq body
+        sta hdr+1
+        pla
+        sta hdr
+        jsr hdr_params          ; parn, parl, bodyst de cette procédure
         lda nloc
-        cmp #MAXLOC
+        sta fmark
+        clc
+        adc pcount
+        cmp #MAXLOC+1
         bcc room
         lda #<e_deep
         ldy #>e_deep
         jmp error
-room    txa
+room    lda pcount              ; tmp2 = vsp - pcount * 6 : 1er argument
+        asl
+        sta tmp
+        asl
+        adc tmp
+        sta tmp
+        sec
+        lda vsp
+        sbc tmp
+        sta vsp
+        sta tmp2
+        lda vsp+1
+        sbc #0
+        sta vsp+1
+        sta tmp2+1
+        ldx #0                  ; crée les variables locales
+bl      cpx pcount
+        beq body
+        txa
         pha
         lda parn_lo,x
         sta tnam
@@ -3790,27 +3983,29 @@ room    txa
         ldy #>locals
         jsr entry_addr
         jsr set_name
-        pla
-        tax
-        txa
-        pha
-        jsr arg_off             ; argv -> variable locale
-        tya
-        tax
-        ldy #NAMELEN
-bc      lda argv,x
+        clc
+        lda p2
+        adc #NAMELEN
+        sta p2
+        bcc bv
+        inc p2+1
+bv      ldy #VAL_SIZE-1         ; valeur : de la pile de valeurs
+bc      lda (tmp2),y
         sta (p2),y
-        inx
-        iny
-        cpy #NAMELEN+VAL_SIZE
-        bne bc
+        dey
+        bpl bc
+        clc
+        lda tmp2
+        adc #VAL_SIZE
+        sta tmp2
+        bcc bn
+        inc tmp2+1
+bn      inc nloc
         pla
         tax
-        inc nloc
         inx
         bne bl
-body    jsr argv_clr
-        jsr rec_end             ; corps : de bodyst à hend - 3 ("FIN")
+body    jsr rec_end             ; corps : de bodyst à hend - 3 ("FIN")
         lda bodyst
         sta lstart
         lda bodyst+1
@@ -3822,8 +4017,11 @@ body    jsr argv_clr
         lda hend+1
         sbc #0
         sta lend+1
-        lda #FR_PROC
-        jmp push_frame
+        lda hdr
+        sta cnt
+        lda hdr+1
+        sta cnt+1
+        rts
 .)
 
 ; hdr_params : lit les paramètres de l'en-tête hdr
@@ -4500,6 +4698,8 @@ dec_hi  .byt >10000,>1000,>100,>10
 #include "ltxt_inc.s"
 
 prims
+        .asc "RENDS",0
+        .word p_rends
         .asc "EXECUTE",0
         .word p_exec
         .asc "EXEC",0
@@ -4785,7 +4985,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "MOT PHRASE LISTE PREMIER DERNIER",13,10
           .asc "SAUFPREMIER SAUFDERNIER ITEM",13,10
           .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
-          .asc "MEMBRE?  EXECUTE [..]",13,10
+          .asc "MEMBRE?  EXECUTE [..]  RENDS x",13,10
           .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
@@ -4810,6 +5010,9 @@ e_pour    .asc "POUR seulement au debut d'une ligne",0
 e_name    .asc "Il faut un nom apres POUR",0
 e_disk    .asc "Erreur disque",0
 e_nofile  .asc "Fichier introuvable",0
+e_noret   .asc "Rien n'a ete rendu par",0
+e_unused  .asc "Que faire de ce que rend",0
+e_rtop    .asc "RENDS seulement dans une procedure",0
 
 #include "logo_tab.s"
 
@@ -4829,8 +5032,8 @@ bodyst  = tipxy+4
 ld_tok  = bodyst+2
 ld_end  = ld_tok+2
 ld_fb   = ld_end+2
-argv    = ld_fb+2       ; arguments évalués d'un appel (valeurs de 6 octets)
-parn_lo = argv+MAXPAR*VAL_SIZE
+ssp     = ld_fb+2       ; haut de la zone de débordement de la pile (2)
+parn_lo = ssp+2
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR
@@ -4861,5 +5064,7 @@ xsp     = capy+1        ; haut de la pile d'EXECUTE (2)
 xstack  = xsp+2         ; textes en cours d'EXECUTE
 xstack_end= xstack+512
 llbuf   = xstack_end    ; ligne lue par LISLISTE, LISMOT (128)
-procbase = (llbuf+128+255)/256*256   ; procédures, puis le tas des textes
+spill   = llbuf+128     ; pile du 6502 des expressions en attente d'une
+spill_end = spill+640   ;   fonction (RENDS)
+procbase = (spill_end+255)/256*256   ; procédures, puis le tas des textes
 

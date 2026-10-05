@@ -1,0 +1,48 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "T12
+FACT defini.
+FIBO defini.
+CARRE defini.
+SOMME defini.
+INVERSE.M defini.
+SUITE defini.
+UN defini.
+MONTRE defini.
+PROF defini.
+MILIEU defini.
+120
+3628800
+2.43290201E18
+144
+25
+13
+RUOJNOB
+12 11 10 9 8 7 6 5 4 3 2 1
+3
+49
+2
+25
+36
+3
+3
+OUI
+35
+25
+25
+50 10
+Charge.
+?  CHARGE "E22
+RIEN defini.
+4
+Rien n'a ete rendu par RIEN
+?  CHARGE "E23
+STOPPE defini.
+Rien n'a ete rendu par STOPPE
+?  CHARGE "E24
+VAL defini.
+Que faire de ce que rend VAL
+?  CHARGE "E25
+RENDS seulement dans une procedure
+?  CHARGE "E26
+Trop de niveaux
+?  QUITTE
