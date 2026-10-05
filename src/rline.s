@@ -41,6 +41,9 @@ m       sta rl_max
         sty rl_cnt
         sty rl_old
         sty rl_hix
+        lda lst_echo            ; pas d'écho imprimante pendant l'édition :
+        ora #$80                ; la ligne est imprimée par k_ret
+        sta lst_echo
         jsr rl_here
 key     jsr conin_raw
         ldx #RL_NKEYS-1
@@ -66,14 +69,14 @@ disp    txa
         rts
 .)
 
-;       RETURN <-  ->  haut bas DEL ^D  ^A  ^E  ^X  ^C  (ESC)
-rl_keys .byt $0D,$08,$09,$0B,$0A,$7F,$04,$01,$05,$18,$03
+;       RETURN <-  ->  haut bas DEL ^D  ^A  ^E  ^X  ^C  ^P  (ESC)
+rl_keys .byt $0D,$08,$09,$0B,$0A,$7F,$04,$01,$05,$18,$03,$10
 #ifdef DISK
         .byt $1B
 #endif
 RL_NKEYS = * - rl_keys
 rl_vecs .word k_ret-1,k_left-1,k_right-1,k_up-1,k_down-1,k_del-1,k_fdel-1
-        .word k_home-1,k_end-1,k_kill-1,k_brk-1
+        .word k_home-1,k_end-1,k_kill-1,k_brk-1,k_prt-1
 #ifdef DISK
         .word k_cpl-1
 #endif
@@ -217,6 +220,13 @@ k_end
         lda rl_cnt
 ke_s    sta rl_pos
         bpl rl_goto
+; CTRL-P : copie de la console à l'imprimante, oui / non
+k_prt
+        lda lst_echo
+        eor #1
+        sta lst_echo
+        rts
+
 k_brk
         lda rl_cnt
         bne kl_r
@@ -287,6 +297,18 @@ k_ret
         pla                     ; quitte read_line directement
         pla
         jsr k_end
+        lda lst_echo            ; fin de l'édition ; CTRL-P : la ligne
+        and #1                  ; finale à l'imprimante
+        sta lst_echo
+        beq np
+        ldx #0
+lp      cpx rl_cnt
+        beq np
+        lda RLB,x
+        jsr bios_list
+        inx
+        bne lp
+np
         ldx rl_cnt
         txa
         ldy #1

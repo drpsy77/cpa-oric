@@ -27,6 +27,7 @@ SCREEN      = $BB80
 
 ; Fonctions du BDOS
 F_CONOUT    = 2
+F_LIST      = 5         ; A = caractère à imprimer (Centronics)
 F_PRINT     = 9
 F_OPEN      = 15
 F_CLOSE     = 16

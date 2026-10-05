@@ -42,7 +42,7 @@ bios_table
         jmp conin_raw           ; $C009 CONIN
         jmp conout              ; $C00C CONOUT
         jmp bios_list           ; $C00F LIST
-        jmp bios_list           ; $C012 PUNCH
+        jmp bios_punch          ; $C012 PUNCH
         jmp bios_reader         ; $C015 READER
 #ifdef DISK
         jmp disk_home           ; $C018 HOME
