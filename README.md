@@ -415,7 +415,8 @@ décimaux (voir plus bas).
 | `AIDE`, `QUITTE` / `AUREVOIR` | aide, retour à CP/A (l'image reste) |
 
 Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`,
-`LISCAR`, `TOUCHE?`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
+`LISCAR`, `TOUCHE?`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
+tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
 de `a`). Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR` (la
 dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.

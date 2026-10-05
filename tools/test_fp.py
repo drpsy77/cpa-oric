@@ -27,7 +27,7 @@ mpu = MPU()
 mem = mpu.memory
 for i, b in enumerate(code):
     mem[0x1000 + i] = b
-ADD, SUB, MUL, DIV, CMP, ITOF, TOINT, TRUNC, RND, PARSE, PRINT = range(0x1000, 0x1021, 3)
+ADD, SUB, MUL, DIV, CMP, ITOF, TOINT, TRUNC, RND, PARSE, PRINT, SQRT, EXP, LN, SIN, COS, ATN, SIND, COSD, ATND = range(0x1000, 0x103C, 3)
 
 def call(addr):
     mem[0x0200:0x0203] = [0x20, addr & 255, addr >> 8]
@@ -246,6 +246,46 @@ for i in range(N + len(limites)):
     if abs(got - x) / abs(x) > F(1, 10 ** 8) * F(6, 10):    # 9 chiffres, dernier à 1 près
         bad('affichage de %r : %r' % (float(x), txt))
 print('affichage : vérifié (%d nombres, dont %d autour des puissances de 10)' % (N + len(fixed) + len(limites), len(limites)))
+
+# --- fonctions --------------------------------------------------------------
+import math
+def fun(addr, x):
+    b = encode(F(x)); setnum(0x280, b); call(addr)
+    return decode(b), decode(mem[0x290:0x295]), mem[0x2FE]
+def rel_ulp(got, ref):
+    return float(abs(F(got) - F(ref)) / ulp(F(ref))) if ref else float(abs(got))
+fz = {}
+def check(name, addr, f, xs, tol, absolute=False, grow=0):
+    w = 0
+    for x in xs:
+        xv, got, err = fun(addr, x)
+        if err: bad('%s(%r) : erreur %d' % (name, float(xv), err)); continue
+        ref = f(float(xv))
+        e = (abs(float(got) - ref) * 2 ** 32) if absolute else rel_ulp(got, ref)
+        lim = tol + grow * abs(float(xv))   # radians et degrés : l'erreur de la
+        w = max(w, e)                        # réduction croît avec l'argument
+        if e > lim: bad('%s(%r) = %r, attendu %r (%.2f)' % (name, float(xv), float(got), ref, e))
+    fz[name] = round(w, 2)
+R = random.random
+M = N // 2
+check('RACINE', SQRT, math.sqrt, [R() * 10 ** random.randint(-30, 30) for i in range(M)] + [1, 2, 4, 9, 100, 0.25], 1.01)
+check('EXP', EXP, math.exp, [(R() - .5) * 170 for i in range(M)] + [0, 1, -1, 0.5, 10], 3)
+check('LN', LN, math.log, [R() * 10 ** random.randint(-30, 30) for i in range(M)] + [1, 2, 10, 0.5, math.e], 3)
+check('SIN', SIN, math.sin, [(R() - .5) * 100 for i in range(M)] + [0, 1, -1, 3], 2, True, 1.5)
+check('COS', COS, math.cos, [(R() - .5) * 100 for i in range(M)] + [0, 1, -1, 3], 2, True, 1.5)
+check('ARCTAN', ATN, math.atan, [(R() - .5) * 10 ** random.randint(-3, 5) for i in range(M)] + [0, 1, -1, 0.2679, 1e10], 3)
+check('SIN degres', SIND, lambda d: math.sin(math.radians(d)), [(R() - .5) * 1000 for i in range(M)], 2, True, 1 / 45)
+check('ARCTAN degres', ATND, lambda x: math.degrees(math.atan(x)), [(R() - .5) * 100 for i in range(M)], 4)
+print('fonctions : écart maximal (ulp ; SIN, COS : en 2^-32 absolu)', fz)
+for name, addr, x, want in [('SIN', SIND, 30, F(1, 2)), ('SIN', SIND, 90, 1), ('SIN', SIND, 180, 0), ('COS', COSD, 90, 0),
+                            ('COS', COSD, 0, 1), ('SIN', SIND, -90, -1), ('COS', COSD, 360, 1), ('ARCTAN', ATND, 1, 45)]:
+    xv, got, err = fun(addr, x)
+    if abs(got - want) > F(1, 10 ** 9) * max(1, abs(F(want))): bad('%s %s degrés = %r au lieu de %s' % (name, x, float(got), want))
+for name, addr, x in [('RACINE', SQRT, -1), ('LN', LN, 0), ('LN', LN, -2)]:
+    if fun(addr, x)[2] != 3: bad('%s(%s) : calcul impossible non signalé' % (name, x))
+if fun(EXP, 100)[2] != 1: bad('EXP 100 : dépassement non signalé')
+if fun(EXP, -100)[1] != 0: bad('EXP -100 : devrait donner 0')
+print('valeurs remarquables et erreurs : vérifiées')
 
 print('ECHECS : %d' % fails if fails else 'fp_inc.s : tout est conforme')
 sys.exit(1 if fails else 0)

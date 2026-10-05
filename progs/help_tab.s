@@ -166,6 +166,12 @@ h_4
         .asc "ENT x  ARRONDI x",13,10
         .asc "              | partie entiere /",13,10
         .asc "              |   entier proche",13,10
+        .asc "RACINE x      | racine carree",13,10
+        .asc "SIN COS ARCTAN",13,10
+        .asc "              | en degres (SIN 30 =",13,10
+        .asc "              |   0.5)",13,10
+        .asc "LN x  EXP x   | logarithme /",13,10
+        .asc "              |   exponentielle",13,10
         .asc "ABS x         | valeur absolue",13,10
         .asc "QUOTIENT a b  | division entiere ;",13,10
         .asc "              |   RESTE a b : reste",13,10
