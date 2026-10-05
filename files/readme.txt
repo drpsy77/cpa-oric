@@ -149,6 +149,12 @@ CHARGEIMAGE "N
 ENT x  ARRONDI x
               | partie entiere /
               |   entier proche
+RACINE x      | racine carree
+SIN COS ARCTAN
+              | en degres (SIN 30 =
+              |   0.5)
+LN x  EXP x   | logarithme /
+              |   exponentielle
 ABS x         | valeur absolue
 QUOTIENT a b  | division entiere ;
               |   RESTE a b : reste

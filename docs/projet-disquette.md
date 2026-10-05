@@ -39,7 +39,8 @@ LOGO, ← → dans LOGO ; la complétion des noms par ESC ; le mode SPLIT avec l
 les décimaux et la tortue avec des décimaux (vitesse jugée meilleure que le BASIC). DEBUG
 démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai
 Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
-sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE.
+sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
+les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP.
 
 ## Choix déjà faits (et pourquoi)
 
@@ -110,6 +111,14 @@ sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLI
   réutilisent la normalisation des listes. Une touche tapée avant la lecture est oubliée.
   ESC n'interrompt pas pendant la lecture (il complète un nom de fichier, comme au prompt).
   LISCAR rend désormais un caractère : `ASCII LISCAR` donne le code, `CAR n` l'inverse.
+- LOGO, lot 7 : les fonctions sont dans `fp_inc.s` (utilisables par d'autres programmes) :
+  séries de Taylor à coefficients exacts sur un petit intervalle, évaluées par Horner.
+  RACINE par Newton ; EXP par 2^n e^u avec la réduction de Cody et Waite (LN 2 en deux
+  parties) ; LN par 2 atanh((m - 1) / (m + 1)) ; SIN et COS en quarts de tour (les angles
+  remarquables tombent juste : COS 90 = 0) ; ARCTAN par 1/x et la formule de 30°. Écarts
+  mesurés par `tools/test_fp.py` : RACINE 0,5 ulp, EXP 0,9, LN 1,75, ARCTAN 1,5 ; SIN en
+  degrés 1,5E-9. En radians (`fp_sin`, `fp_cos`, inutilisés par LOGO), l'erreur croît avec
+  l'argument : 1E-8 vers 50 radians. PUISSANCE n'est pas prévue : elle s'écrit en Logo.
 - LOGO : DONNE gardait le nom de la variable dans `p3` pendant l'évaluation, que la recherche
   des fonctions (HASARD, CAP...) écrase : `DONNE "X CAP` créait une variable au mauvais nom.
   Le nom est maintenant gardé sur la pile du 6502.
@@ -137,13 +146,13 @@ sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLI
    | 4 | tortue et décimaux (conversions, cap fractionnaire, contrôles de plage) | moyenne | 460 o | **fait** |
    | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | 2,9 Ko + 0,6 Ko de zones | **fait** |
    | 6 | LISLISTE (et LISMOT) ; LISCAR rend un caractère (ASCII, CAR) | faible | 275 o + 128 o | **fait** |
-   | 7 | RACINE, SIN, COS, ARCTAN ; en option LN, EXP, PUISSANCE (+~500 o) | moyenne | ~700 o | à faire |
+   | 7 | RACINE, SIN, COS, ARCTAN, LN, EXP (PUISSANCE : écrite en Logo si besoin) | moyenne | 1,4 Ko | **fait** |
    | 8 | option : RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | à décider |
 
    Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko, zone libre ~21 Ko en SPLIT
-   partagée entre procédures et textes. Après le lot 5 : LOGO.COM 13,8 Ko (le lot 5 a coûté
-   le double de l'estimation), zone libre 20,5 Ko (28 Ko avant le lot 2) ; les lots 6 et 7
-   devraient garder LOGO sous 14,6 Ko.
+   partagée entre procédures et textes. Après le lot 7 : LOGO.COM 15,4 Ko (les lots 5 et 7
+   ont coûté le double de l'estimation), zone libre 20 Ko en SPLIT (28 Ko avant le lot 2).
+   Reste l'option RENDS (lot 8).
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 

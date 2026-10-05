@@ -1695,6 +1695,38 @@ d       jsr load2               ; q = ENT (a / b)
 r       rts
 .)
 
+;RACINE, EXP, LN, SIN, COS, ARCTAN (angles en degrés) : résultat décimal
+f_racine
+        lda #<fp_sqrt
+        ldy #>fp_sqrt
+        bne fmath
+f_exp   lda #<fp_exp
+        ldy #>fp_exp
+        bne fmath
+f_ln    lda #<fp_ln
+        ldy #>fp_ln
+        bne fmath
+f_sin   lda #<fp_sind
+        ldy #>fp_sind
+        bne fmath
+f_cos   lda #<fp_cosd
+        ldy #>fp_cosd
+        bne fmath
+f_atn   lda #<fp_atnd
+        ldy #>fp_atnd
+fmath   pha                     ; routine de fp_inc.s, gardée sur la pile :
+        tya                     ; l'argument peut appeler une autre fonction
+        pha
+        jsr arg1
+        jsr val_fac
+        pla
+        sta p3+1
+        pla
+        sta p3
+        jsr fm_call
+        jmp fac_val
+fm_call jmp (p3)
+
 ; arg1 : lit l'argument d'une fonction ; arg2 : ses deux arguments (lv, val)
 arg1    jsr advance
         jsr sum
@@ -2053,6 +2085,10 @@ fp_err_big
 fp_err_div
         lda #<e_div
         ldy #>e_div
+        bne fpe
+fp_err_dom
+        lda #<e_dom
+        ldy #>e_dom
 fpe     ldx #0
         stx clen
         jmp error
@@ -4572,6 +4608,18 @@ funcs   .asc "HASARD",0
         .word f_xcor
         .asc "YCOR",0
         .word f_ycor
+        .asc "RACINE",0
+        .word f_racine
+        .asc "EXP",0
+        .word f_exp
+        .asc "LN",0
+        .word f_ln
+        .asc "SIN",0
+        .word f_sin
+        .asc "COS",0
+        .word f_cos
+        .asc "ARCTAN",0
+        .word f_atn
         .asc "LISLISTE",0
         .word f_lisliste
         .asc "LL",0
@@ -4733,6 +4781,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "ASCII x  CAR n",13,10
           .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
           .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
+          .asc "RACINE SIN COS ARCTAN LN EXP",13,10
           .asc "MOT PHRASE LISTE PREMIER DERNIER",13,10
           .asc "SAUFPREMIER SAUFDERNIER ITEM",13,10
           .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
@@ -4748,6 +4797,7 @@ e_novar   .asc "Pas de valeur pour",0
 e_div     .asc "Division par zero",0
 e_notnum  .asc "Il faut un nombre",0
 e_big     .asc "Nombre trop grand",0
+e_dom     .asc "Calcul impossible",0
 e_empty   .asc "Mot ou liste vide",0
 e_word    .asc "Il faut un mot",0
 e_list    .asc "Il faut une liste [ ] apres",0

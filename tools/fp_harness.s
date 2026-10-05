@@ -2,7 +2,7 @@
 ; Chaque entrée de la table appelle une routine sur des nombres rangés en
 ; mémoire : A en $0280, B en $0288, résultat en $0290.
 ; putc écrit en $0300 (index en $02FF) ; les erreurs mettent un code en
-; $02FE (1 trop grand, 2 division par zéro) et sautent à $0203 (arrêt).
+; $02FE (1 trop grand, 2 division par zéro, 3 calcul impossible) et sautent à $0203 (arrêt).
 FP_ZP   = $90
 NA      = $0280
 NB      = $0288
@@ -20,6 +20,15 @@ NR      = $0290
         jmp t_rnd               ; $1018
         jmp t_parse             ; $101B
         jmp t_print             ; $101E
+        jmp t_sqrt              ; $1021
+        jmp t_exp               ; $1024
+        jmp t_ln                ; $1027
+        jmp t_sin               ; $102A
+        jmp t_cos               ; $102D
+        jmp t_atn               ; $1030
+        jmp t_sind              ; $1033
+        jmp t_cosd              ; $1036
+        jmp t_atnd              ; $1039
 
 ldab    lda #<NA                ; ARG = A, FAC = B
         sta fpt
@@ -87,6 +96,34 @@ t_parse lda #$00
 t_print jsr lda_a
         jmp fp_print
 
+t_sqrt  jsr lda_a
+        jsr fp_sqrt
+        jmp str
+t_exp   jsr lda_a
+        jsr fp_exp
+        jmp str
+t_ln    jsr lda_a
+        jsr fp_ln
+        jmp str
+t_sin   jsr lda_a
+        jsr fp_sin
+        jmp str
+t_cos   jsr lda_a
+        jsr fp_cos
+        jmp str
+t_atn   jsr lda_a
+        jsr fp_atn
+        jmp str
+t_sind  jsr lda_a
+        jsr fp_sind
+        jmp str
+t_cosd  jsr lda_a
+        jsr fp_cosd
+        jmp str
+t_atnd  jsr lda_a
+        jsr fp_atnd
+        jmp str
+
 putc    stx $02FD
         ldx $02FF
         sta $0300,x
@@ -99,6 +136,10 @@ fp_err_big
         jmp $0203
 fp_err_div
         lda #2
+        sta $02FE
+        jmp $0203
+fp_err_dom
+        lda #3
         sta $02FE
         jmp $0203
 

@@ -6,6 +6,7 @@
 ;    putc         affiche le caractère A (A, X, Y conservés)
 ;    fp_err_big   appelé (JMP) si un résultat est trop grand
 ;    fp_err_div   appelé (JMP) pour une division par zéro
+;    fp_err_dom   appelé (JMP) pour un calcul impossible (RACINE -1, LN 0)
 ;
 ;  Format rangé (5 octets, comme le BASIC de l'Oric) : e, m0, m1, m2, m3.
 ;    e = 0 : zéro. Sinon la valeur est (-1)^s * 0.1mmm...(binaire) * 2^(e-128),
@@ -1124,3 +1125,535 @@ fp_d0   .byt $00,$80,$40,$A0,$10,$E8,$64,$0A,$01
 fp_d1   .byt $E1,$96,$42,$86,$27,$03,$00,$00,$00
 fp_d2   .byt $F5,$98,$0F,$01,$00,$00,$00,$00,$00
 fp_d3   .byt $05,$00,$00,$00,$00,$00,$00,$00,$00
+
+; ---------------------------------------------------------------------
+; Fonctions : RACINE, EXP, LN, SIN, COS, ARCTAN (résultat dans FAC).
+; Il faut aussi fp_err_dom (calcul impossible : racine d'un négatif,
+; logarithme d'un nombre <= 0).
+;   fp_sqrt  fp_exp  fp_ln          fp_sin  fp_cos  fp_atn  (radians)
+;   fp_sind  fp_cosd  fp_atnd       (degrés)
+; Séries de Taylor sur un petit intervalle (coefficients exacts 1/n!...),
+; évaluées par Horner (fp_poly).
+; ---------------------------------------------------------------------
+; fp_ldm, fp_stm : FAC = nombre rangé en A/Y ; nombre rangé en A/Y = FAC
+fp_ldm  sta fpt
+        sty fpt+1
+        jmp fp_ldfac
+fp_stm  sta fpt
+        sty fpt+1
+        jmp fp_stfac
+; fp_mulm, fp_addm, fp_subm, fp_divm : FAC = FAC op nombre rangé en A/Y
+fp_mulm jsr fp_arg_m
+        jmp fp_mul
+fp_addm jsr fp_arg_m
+        jmp fp_add
+fp_subm jsr fp_arg_m
+        jmp fp_sub
+fp_divm jsr fp_arg_m
+        jmp fp_div
+fp_arg_m                        ; ARG = FAC, FAC = nombre en A/Y
+        pha
+        tya
+        pha
+        jsr fp_toarg
+        pla
+        tay
+        pla
+        jmp fp_ldm
+
+; fp_poly : FAC = P(fp_m3), table A/Y : n, puis n+1 coefficients du plus
+;   haut degré au plus bas (5 octets chacun)
+fp_poly
+.(
+        sta fp_pp
+        sty fp_pp+1
+        sta fpt
+        sty fpt+1
+        ldy #0
+        lda (fpt),y
+        sta fp_pn
+        jsr nxt
+        jsr fp_ldm              ; premier coefficient
+l       lda #<fp_m3
+        ldy #>fp_m3
+        jsr fp_mulm
+        jsr nxt5
+        jsr fp_addm
+        dec fp_pn
+        bne l
+        rts
+nxt5    clc                     ; coefficient suivant : A/Y
+        lda fp_pp
+        adc #4
+        sta fp_pp
+        bcc nxt
+        inc fp_pp+1
+nxt     inc fp_pp
+        bne n1
+        inc fp_pp+1
+n1      lda fp_pp
+        ldy fp_pp+1
+        rts
+.)
+
+; fp_sqrt : racine carrée (Newton : g = (g + x / g) / 2, 6 fois)
+fp_sqrt
+.(
+        lda fe
+        beq r
+        lda fsg
+        bpl ok
+        jmp fp_err_dom
+ok      lda #<fp_m1             ; x
+        ldy #>fp_m1
+        jsr fp_stm
+        lda fe                  ; départ : exposant divisé par 2
+        sec
+        sbc #128
+        cmp #$80
+        ror
+        clc
+        adc #128
+        sta fe
+        lda #6
+        sta fp_pn
+l       lda #<fp_m2             ; g
+        ldy #>fp_m2
+        jsr fp_stm
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_ldm
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_divm             ; x / g
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_addm             ; + g
+        dec fe                  ; / 2
+        dec fp_pn
+        bne l
+r       rts
+.)
+
+; fp_exp : e^x = 2^n * e^u, n = arrondi de x / LN 2, u = x - n * LN 2
+;   (réduction de Cody et Waite : LN 2 en une partie haute de 24 bits,
+;   dont le produit par n est exact, et une partie basse ; |u| <= 0,35)
+fp_exp
+.(
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm              ; x
+        lda #<fp_klog2e
+        ldy #>fp_klog2e
+        jsr fp_mulm             ; y = x / LN 2
+        lda fe
+        cmp #128+8              ; |y| >= 128 : trop grand ou presque nul
+        bcc ok
+        lda fsg
+        bmi z
+        jmp fp_err_big
+z       jmp fp_zero
+ok      jsr fp_toint            ; n = y arrondi
+        sta fp_pe
+        ldy #0
+        cmp #$80
+        bcc pi
+        dey
+pi      jsr fp_itof
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_stm              ; n
+        lda #<fp_kln2h
+        ldy #>fp_kln2h
+        jsr fp_mulm             ; n * LN2 haut (exact)
+        jsr fp_neg
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_addm             ; x - n * LN2 haut
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_ldm
+        lda #<fp_kln2l
+        ldy #>fp_kln2l
+        jsr fp_mulm             ; n * LN2 bas
+        jsr fp_neg
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_addm             ; u
+        lda #<fp_m3
+        ldy #>fp_m3
+        jsr fp_stm
+        lda #<fp_texp           ; e^u
+        ldy #>fp_texp
+        jsr fp_poly
+        clc                     ; * 2^n
+        lda fp_pe
+        bmi m
+        adc fe
+        bcs big
+        sta fe
+        rts
+m       adc fe
+        bcc z
+        beq z
+        sta fe
+        rts
+big     jmp fp_err_big
+.)
+
+; fp_ln : ln x = e * LN 2 + ln m, m dans [0,707 ; 1,414[ ;
+;   ln m = z * P(z^2), z = (m - 1) / (m + 1)
+fp_ln
+.(
+        lda fe
+        beq bad
+        lda fsg
+        bpl ok
+bad     jmp fp_err_dom
+ok      lda fe
+        sec
+        sbc #128
+        sta fp_pe               ; exposant
+        lda #128
+        sta fe                  ; m dans [0,5 ; 1[
+        jsr fp_toarg
+        lda #<fp_ksqh
+        ldy #>fp_ksqh
+        jsr fp_ldm
+        jsr fp_cmp              ; m < RACINE 0,5 : m * 2
+        bpl hi
+        inc ae
+        dec fp_pe
+hi      jsr fp_tofac
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm              ; m
+        lda #<fp_kone
+        ldy #>fp_kone
+        jsr fp_subm
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_stm              ; m - 1
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_ldm
+        lda #<fp_kone
+        ldy #>fp_kone
+        jsr fp_addm             ; m + 1
+        jsr fp_toarg
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_ldm
+        jsr fp_swap
+        jsr fp_div              ; z
+        jsr zpoly
+        lda #<fp_tln
+        ldy #>fp_tln
+        jsr fp_poly
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_mulm             ; ln m
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm
+        lda fp_pe               ; + e * LN 2
+        ldy #0
+        cmp #$80
+        bcc pe
+        dey
+pe      jsr fp_itof
+        lda #<fp_kln2
+        ldy #>fp_kln2
+        jsr fp_mulm
+        lda #<fp_m1
+        ldy #>fp_m1
+        jmp fp_addm
+.)
+
+; zpoly : fp_m2 = FAC (z), fp_m3 = z^2
+zpoly   lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_stm
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_mulm
+        lda #<fp_m3
+        ldy #>fp_m3
+        jmp fp_stm
+
+; fp_sin, fp_cos (radians) ; fp_sind, fp_cosd (degrés)
+fp_sin  lda #<fp_k2pi
+        ldy #>fp_k2pi
+        jsr fp_mulm
+        ldx #0
+        beq fp_sinq
+fp_cos  lda #<fp_k2pi
+        ldy #>fp_k2pi
+        jsr fp_mulm
+        ldx #1
+        bne fp_sinq
+fp_sind ldx #0
+        beq sd1
+fp_cosd ldx #1
+sd1     txa
+        pha
+        lda #<fp_k90
+        ldy #>fp_k90
+        jsr fp_divm
+        pla
+        tax
+; fp_sinq : sinus de FAC quarts de tour (X = 1 : cosinus)
+fp_sinq
+.(
+        stx fp_pq
+        lda #0                  ; t < 0 : sin(-t) = -sin t, cos(-t) = cos t
+        sta fp_ps
+        lda fsg
+        bpl tpos
+        lda #0
+        sta fsg
+        txa
+        bne tpos
+        lda #2                  ; sinus : signe inversé à la fin
+        sta fp_ps
+tpos    lda fe                  ; t = FAC modulo 4
+        beq z0
+        sec
+        sbc #2
+        bcc z0
+        beq z0
+        sta fe                  ; t / 4
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm
+        jsr fp_trunc
+        jsr fp_neg
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_addm             ; partie fractionnaire, dans ]-1 ; 1[
+        lda fsg
+        bpl f1
+        lda #<fp_kone
+        ldy #>fp_kone
+        jsr fp_addm
+f1      lda fe
+        beq z0
+        clc
+        adc #2
+        sta fe                  ; * 4 : t dans [0 ; 4[
+z0      lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm
+        jsr fp_trunc
+        jsr fp_toint            ; q
+        clc
+        adc fp_pq
+        and #3
+        sta fp_pq
+        lda #<fp_m1             ; r = t - partie entière de t
+        ldy #>fp_m1
+        jsr fp_ldm
+        jsr fp_trunc
+        jsr fp_neg
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_addm
+        lda #<fp_kpi2           ; theta = r * PI / 2
+        ldy #>fp_kpi2
+        jsr fp_mulm
+        jsr zpoly               ; fp_m2 = theta, fp_m3 = theta^2
+        lda fp_pq
+        lsr
+        bcc s
+        lda #<fp_tcos           ; quart impair : cosinus
+        ldy #>fp_tcos
+        jsr fp_poly
+        jmp sg
+s       lda #<fp_tsin
+        ldy #>fp_tsin
+        jsr fp_poly
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_mulm
+sg      lda fp_pq               ; quarts 2 et 3 : négatif
+        eor fp_ps
+        and #2
+        beq r
+        jmp fp_neg
+r       rts
+.)
+
+; fp_atn : arctangente (radians) ; fp_atnd : en degrés
+fp_atnd jsr fp_atn
+        lda #<fp_kdeg
+        ldy #>fp_kdeg
+        jmp fp_mulm
+fp_atn
+.(
+        lda fsg
+        sta fp_pq               ; signe
+        lda #0
+        sta fsg
+        sta fp_pe               ; bit 0 : 1/x, bit 1 : + PI/6
+        jsr fp_toarg            ; x > 1 : 1 / x
+        lda #<fp_kone
+        ldy #>fp_kone
+        jsr fp_ldm
+        jsr fp_cmp
+        bmi n1
+        beq n1
+        jsr fp_swap             ; ARG = 1, FAC = x : 1 / x
+        jsr fp_div
+        inc fp_pe
+        jmp n2
+n1      jsr fp_tofac
+n2      jsr fp_toarg            ; x > TAN 15 : (x RACINE 3 - 1) / (x + RACINE 3)
+        lda #<fp_kt15
+        ldy #>fp_kt15
+        jsr fp_ldm
+        jsr fp_cmp
+        pha
+        jsr fp_tofac
+        pla
+        bmi sm
+        beq sm
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_stm
+        lda #<fp_ksq3
+        ldy #>fp_ksq3
+        jsr fp_mulm
+        lda #<fp_kone
+        ldy #>fp_kone
+        jsr fp_subm
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_stm
+        lda #<fp_m1
+        ldy #>fp_m1
+        jsr fp_ldm
+        lda #<fp_ksq3
+        ldy #>fp_ksq3
+        jsr fp_addm
+        jsr fp_toarg
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_ldm
+        jsr fp_swap
+        jsr fp_div
+        lda fp_pe
+        ora #2
+        sta fp_pe
+sm      jsr zpoly
+        lda #<fp_tatn
+        ldy #>fp_tatn
+        jsr fp_poly
+        lda #<fp_m2
+        ldy #>fp_m2
+        jsr fp_mulm             ; atn z
+        lda fp_pe
+        and #2
+        beq a1
+        lda #<fp_kpi6
+        ldy #>fp_kpi6
+        jsr fp_addm
+a1      lda fp_pe
+        lsr
+        bcc a2
+        jsr fp_neg              ; PI / 2 - a
+        lda #<fp_kpi2
+        ldy #>fp_kpi2
+        jsr fp_addm
+a2      lda fp_pq
+        bpl r
+        jmp fp_neg
+r       rts
+.)
+
+; travail
+fp_m1   .dsb 5,0
+fp_m2   .dsb 5,0
+fp_m3   .dsb 5,0
+fp_pp   .dsb 2,0
+fp_pn   .dsb 1,0
+fp_pe   .dsb 1,0
+fp_pq   .dsb 1,0
+fp_ps   .dsb 1,0
+
+; constantes et coefficients (générés : python3, fractions exactes)
+fp_klog2e
+        .byt $81,$38,$AA,$3B,$29   ; 1/LN 2
+fp_kln2h
+        .byt $80,$31,$72,$17,$00   ; LN 2, partie haute (24 bits)
+fp_kln2l
+        .byt $68,$77,$D1,$CF,$7A   ; LN 2, partie basse
+fp_kln2
+        .byt $80,$31,$72,$17,$F8   ; LN 2
+fp_ksqh
+        .byt $80,$35,$04,$F3,$34   ; RACINE 0,5
+fp_kone
+        .byt $81,$00,$00,$00,$00   ; 1
+fp_kpi2
+        .byt $81,$49,$0F,$DA,$A2   ; PI / 2
+fp_k2pi
+        .byt $80,$22,$F9,$83,$6E   ; 2 / PI
+fp_kpi6
+        .byt $80,$06,$0A,$91,$C1   ; PI / 6
+fp_ksq3
+        .byt $81,$5D,$B3,$D7,$43   ; RACINE 3
+fp_kt15
+        .byt $7F,$09,$30,$A2,$F5   ; TAN 15 degres
+fp_k90
+        .byt $87,$34,$00,$00,$00   ; 90
+fp_kdeg
+        .byt $86,$65,$2E,$E0,$D3   ; 180 / PI
+fp_texp      .byt 11                ; e^u, u < 0,7 (Taylor)
+        .byt $67,$57,$32,$2B,$40   ; 1/11!
+        .byt $6B,$13,$F2,$7D,$BC   ; 1/10!
+        .byt $6E,$38,$EF,$1D,$2B   ; 1/9!
+        .byt $71,$50,$0D,$00,$D0   ; 1/8!
+        .byt $74,$50,$0D,$00,$D0   ; 1/7!
+        .byt $77,$36,$0B,$60,$B6   ; 1/6!
+        .byt $7A,$08,$88,$88,$89   ; 1/5!
+        .byt $7C,$2A,$AA,$AA,$AB   ; 1/4!
+        .byt $7E,$2A,$AA,$AA,$AB   ; 1/3!
+        .byt $80,$00,$00,$00,$00   ; 1/2!
+        .byt $81,$00,$00,$00,$00   ; 1/1!
+        .byt $81,$00,$00,$00,$00   ; 1/0!
+fp_tsin      .byt 7                ; sin t / t en t^2
+        .byt $58,$D7,$3F,$9F,$3A   ; -1/15!
+        .byt $60,$30,$92,$30,$9D   ; 1/13!
+        .byt $67,$D7,$32,$2B,$40   ; -1/11!
+        .byt $6E,$38,$EF,$1D,$2B   ; 1/9!
+        .byt $74,$D0,$0D,$00,$D0   ; -1/7!
+        .byt $7A,$08,$88,$88,$89   ; 1/5!
+        .byt $7E,$AA,$AA,$AA,$AB   ; -1/3!
+        .byt $81,$00,$00,$00,$00   ; 1/1!
+fp_tcos      .byt 7                ; cos t en t^2
+        .byt $5C,$C9,$CB,$A5,$46   ; -1/14!
+        .byt $64,$0F,$76,$C7,$80   ; 1/12!
+        .byt $6B,$93,$F2,$7D,$BC   ; -1/10!
+        .byt $71,$50,$0D,$00,$D0   ; 1/8!
+        .byt $77,$B6,$0B,$60,$B6   ; -1/6!
+        .byt $7C,$2A,$AA,$AA,$AB   ; 1/4!
+        .byt $80,$80,$00,$00,$00   ; -1/2!
+        .byt $81,$00,$00,$00,$00   ; 1/0!
+fp_tln      .byt 5                ; ln m = z * P(z^2)
+        .byt $7E,$3A,$2E,$8B,$A3   ; 2/11
+        .byt $7E,$63,$8E,$38,$E4   ; 2/9
+        .byt $7F,$12,$49,$24,$92   ; 2/7
+        .byt $7F,$4C,$CC,$CC,$CD   ; 2/5
+        .byt $80,$2A,$AA,$AA,$AB   ; 2/3
+        .byt $82,$00,$00,$00,$00   ; 2/1
+fp_tatn      .byt 7                ; atn z = z * P(z^2)
+        .byt $7D,$88,$88,$88,$89   ; -1/15
+        .byt $7D,$1D,$89,$D8,$9E   ; 1/13
+        .byt $7D,$BA,$2E,$8B,$A3   ; -1/11
+        .byt $7D,$63,$8E,$38,$E4   ; 1/9
+        .byt $7E,$92,$49,$24,$92   ; -1/7
+        .byt $7E,$4C,$CC,$CC,$CD   ; 1/5
+        .byt $7F,$AA,$AA,$AA,$AB   ; -1/3
+        .byt $81,$00,$00,$00,$00   ; 1/1

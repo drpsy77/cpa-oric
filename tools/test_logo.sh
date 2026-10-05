@@ -113,6 +113,16 @@ run erreurs3 'PUT OUT.TXT LOGO
 ' 2200
 check erreurs3
 
+echo "== fonctions : RACINE, SIN, COS, ARCTAN, LN, EXP"
+run maths 'PUT OUT.TXT LOGO
+|| charge "t11
+|||||||| charge "e19
+| charge "e20
+| charge "e21
+| quitte
+' 3800
+check maths
+
 echo "== lecture au clavier : LISLISTE, LISMOT, ASCII, CAR"
 run lecture 'PUT OUT.TXT LOGO
 || charge "t10
