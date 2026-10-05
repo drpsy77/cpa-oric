@@ -396,6 +396,7 @@ décimaux (voir plus bas).
 | `CACHETORTUE` / `CT`, `MONTRETORTUE` / `MT` | cacher, montrer la tortue |
 | `VIDEECRAN` / `VE`, `NETTOIE`, `ORIGINE` | effacer et revenir au centre, effacer, revenir au centre |
 | `FIXECAP n`, `FIXEXY x y` | cap absolu, position absolue (centre = 0 0, y vers le haut) |
+| `ECRANTEXTE`, `ECRANMIXTE` | passer en écran texte (26 lignes, sans image ni tortue), revenir à l'image et à la tortue |
 | `REPETE n [ ... ]` | répéter une liste |
 | `SI condition [ ... ] [ ... ]` | condition, avec une liste « sinon » facultative |
 | `POUR NOM :A :B` ... `FIN` | définir une procédure (paramètres facultatifs) |
@@ -476,6 +477,15 @@ lu dans une table au 1/65536, est interpolé entre deux degrés. `REPETE 7 [AV 3
 se referme, `DR 0.5` tourne d'un demi-degré. `XCOR`, `YCOR` et `CAP` rendent un entier quand
 la tortue est sur un point entier, sinon un décimal arrondi à 2 décimales (`FIXECAP 30 AV 100`
 donne `86.6` pour `YCOR`). Une position au-delà de -32768..32767 donne `Nombre trop grand`.
+
+**Écran texte.** Pour un programme qui n'écrit que du texte (calculs décimaux, mots et
+listes), `ECRANTEXTE` (menu Tortue, « Ecran texte ») donne tout l'écran au texte : 26 lignes
+au lieu de 10. L'image reste en mémoire : `ECRANMIXTE` la remet, avec la tortue là où elle
+était. En écran texte, les commandes qui bougent la tortue ou touchent l'image (`AV`, `RE`,
+`DR`, `GA`, `FIXECAP`, `FIXEXY`, `ORIGINE`, `VE`, `NETTOIE`, `SAUVEIMAGE`, `CHARGEIMAGE`)
+donnent `Impossible en ecran texte : AV` ; `LC`, `BC`, `GOMME`, `INVERSE`, `CT`, `MT` restent
+permises (elles servent au retour), et `XCOR`, `YCOR`, `CAP` répondent toujours. La place
+pour les procédures et les textes ne change pas.
 
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
 une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortue, Aide) tape

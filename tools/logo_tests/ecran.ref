@@ -1,0 +1,17 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "T13
+1.41421356
+LIGNE
+LIGNE
+LIGNE
+0
+0
+Charge.
+?  CHARGE "E27
+Impossible en ecran texte : AV
+?  CHARGE "E28
+Impossible en ecran texte : CHARGEIMAGE
+?  ECRANMIXTE
+?  ECRIS 1
+1
+?  QUITTE

@@ -28,7 +28,7 @@ données, communiquer (réseau par le LOCI).
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
 HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
 LISCAR / TOUCHE?, valeurs typées, nombres décimaux, mots et listes, fonctions de l'utilisateur
-avec RENDS), ASM
+avec RENDS, écran texte), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
@@ -41,7 +41,8 @@ les décimaux et la tortue avec des décimaux (vitesse jugée meilleure que le B
 démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai
 Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
 sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
-les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, et RENDS (FACT, FIBO, profondeur).
+les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
+ECRANTEXTE et ECRANMIXTE (avec le menu Tortue).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -145,6 +146,18 @@ les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, et RENDS (FACT, FIBO, profondeu
   messages. Coût : 424 octets de code, 1 Ko de zones (zone libre en SPLIT : 18,2 Ko
   au lieu de 19,2).
 
+- LOGO, lot 9 : écran texte. ECRANTEXTE passe le système en mode texte (BDOS 115, mode 0)
+  après avoir effacé la tortue ; ECRANMIXTE revient en SPLIT sans effacer l'image (mode 2) ;
+  les deux réinstallent la barre de menus de LOGO (le changement de mode remet celle du
+  système). Une variable `tmode` : `need_img` donne `Impossible en ecran texte :` au début
+  de AV, RE, DR, GA, FIXECAP, FIXEXY, ORIGINE, VE, NETTOIE, SAUVEIMAGE, CHARGEIMAGE ;
+  `turtle_show` ne dessine pas. LC, BC, GOMME, INVERSE, CT, MT restent permises (elles ne
+  dessinent rien et préparent le retour). `memtop` reste à `$A000` : l'image est gardée et
+  rien n'est à déplacer au retour ; agrandir la zone de 5 Ko en texte demanderait de
+  reloger le tas à chaque ECRANMIXTE (~150 octets, à faire si la place manque un jour).
+  Menu Tortue : « Ecran texte », « Ecran mixte ». Coût : 229 octets (zone libre 17,9 Ko :
+  le code a franchi une page).
+
 ## Suite prévue (par priorité)
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (en cours, un commit par livraison). Choix :
@@ -170,13 +183,13 @@ les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, et RENDS (FACT, FIBO, profondeu
    | 6 | LISLISTE (et LISMOT) ; LISCAR rend un caractère (ASCII, CAR) | faible | 275 o + 128 o | **fait** |
    | 7 | RACINE, SIN, COS, ARCTAN, LN, EXP (PUISSANCE : écrite en Logo si besoin) | moyenne | 1,4 Ko | **fait** |
    | 8 | RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | 424 o + 1 Ko de zones | **fait** |
-   | 9 | mode texte : ECRANTEXTE / ECRANMIXTE, erreur pour les primitives graphiques, `memtop` reste à `$A000` | faible | ~150-250 o | décidé, à faire |
+   | 9 | mode texte : ECRANTEXTE / ECRANMIXTE, erreur pour les primitives graphiques, `memtop` reste à `$A000` | faible | 229 o | **fait** |
    | 10 | aller-retour avec EDIT : BDOS 47 « Chain » (comme CP/M 3, ~50 o résidents, ajout au contrat accepté), EDITE dans LOGO (état dans `LOGO.$$$`), article « Retour » dans EDIT | moyenne | ~600 o | décidé, à faire |
 
    Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko, zone libre ~21 Ko en SPLIT
    partagée entre procédures et textes. Après le lot 7 : LOGO.COM 15,4 Ko (les lots 5 et 7
    ont coûté le double de l'estimation), zone libre 20 Ko en SPLIT (28 Ko avant le lot 2).
-   Après le lot 8 : LOGO.COM 15,8 Ko, zone libre 18,2 Ko en SPLIT.
+   Après le lot 9 : LOGO.COM 16 Ko, zone libre 17,9 Ko (en SPLIT comme en texte).
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 

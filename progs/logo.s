@@ -13,7 +13,8 @@
 ;
 ;  Commandes : AVANCE/AV, RECULE/RE, DROITE/DR, GAUCHE/GA, LEVECRAYON/LC,
 ;  BAISSECRAYON/BC, GOMME, INVERSE, CACHETORTUE/CT, MONTRETORTUE/MT,
-;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, REPETE, SI, STOP, RENDS,
+;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, ECRANTEXTE, ECRANMIXTE,
+;  REPETE, SI, STOP, RENDS,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
 ;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
@@ -194,7 +195,7 @@ ok      lda #<procbase
         sta hp+1
         lda #0
         sta capf
-        lda #0
+        sta tmode
         sta nloc
         sta ngl
         sta defmode
@@ -2416,14 +2417,18 @@ bad     lda #<e_bracket
         jmp error
 .)
 
-p_av    jsr eval_fix
+p_av    jsr need_img
+        jsr eval_fix
         jmp move
-p_re    jsr eval_fix
+p_re    jsr need_img
+        jsr eval_fix
         jsr neg_fx
         jmp move
-p_dr    jsr eval_fix
+p_dr    jsr need_img
+        jsr eval_fix
         jmp turn
-p_ga    jsr eval_fix
+p_ga    jsr need_img
+        jsr eval_fix
         jsr neg_fx
         jmp turn
 p_lc    lda #0
@@ -2444,23 +2449,28 @@ p_ct    lda #0
 p_mt    lda #1
         sta tvis
         rts
-p_ve    jsr gfx_cls
+p_ve    jsr need_img
+        jsr gfx_cls
         jmp home
-p_net   jmp gfx_cls
-p_orig  ldx #2
+p_net   jsr need_img
+        jmp gfx_cls
+p_orig  jsr need_img
+        ldx #2
         lda #0
 po1     sta gx,x
         sta fxv,x
         dex
         bpl po1
         jmp goto_xy0
-p_fcap  jsr eval_fix
+p_fcap  jsr need_img
+        jsr eval_fix
         lda #0
         sta head
         sta head+1
         sta headf
         jmp turn
-p_fxy   jsr eval_fix
+p_fxy   jsr need_img
+        jsr eval_fix
         ldx #2                  ; x sur la pile : l'évaluation de y peut
 pfx1    lda fxv,x               ; appeler une fonction qui fait FIXEXY
         pha
@@ -2674,6 +2684,41 @@ p_pour  lda #<e_pour
 p_quitte
         jsr turtle_hide
         jmp WBOOT
+
+; ECRANTEXTE : écran texte de 26 lignes, sans image ni tortue (les
+;   primitives de la tortue y donnent une erreur) ; l'image reste en
+;   mémoire. ECRANMIXTE : retour au mode SPLIT avec l'image d'avant.
+;   La zone des procédures et des textes ne change pas ($A000 au plus).
+p_etexte
+        lda tmode
+        bne em_r
+        jsr turtle_hide
+        lda #<gq_text
+        ldy #>gq_text
+        ldx #1
+em_set  stx tmode
+        ldx #F_GFX
+        jsr BDOS
+        lda #<lg_bar            ; le changement de mode remet la barre
+        ldy #>lg_bar            ; du système
+        jmp B_MENUBAR
+em_r    rts
+p_emixte
+        lda tmode
+        beq em_r
+        lda #<gq_keep
+        ldy #>gq_keep
+        ldx #0
+        beq em_set
+
+; need_img : erreur si l'écran est en mode texte
+need_img
+        lda tmode
+        bne ni_err
+        rts
+ni_err  lda #<e_text
+        ldy #>e_text
+        jmp error
 
 p_aide  lda #<m_aide
         ldy #>m_aide
@@ -3323,6 +3368,7 @@ no      rts
 ; --- dessin de la tortue (triangle en mode inverse) ---
 turtle_show
         lda tdrawn
+        ora tmode               ; pas de tortue en écran texte
         bne ts_r
         jsr turtle_draw
         lda #1
@@ -4421,6 +4467,7 @@ p_cimage
 img_op
 .(
         pha
+        jsr need_img
         jsr make_fcb
         pla
         sta gblk
@@ -4740,6 +4787,10 @@ prims
         .word p_mt
         .asc "MT",0
         .word p_mt
+        .asc "ECRANTEXTE",0
+        .word p_etexte
+        .asc "ECRANMIXTE",0
+        .word p_emixte
         .asc "VIDEECRAN",0
         .word p_ve
         .asc "VE",0
@@ -4886,6 +4937,8 @@ funcs   .asc "HASARD",0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_split .byt G_MODE,1,0,0,0,0
+gq_text  .byt G_MODE,0,0,0,0,0
+gq_keep  .byt G_MODE,2,0,0,0,0
 
 ; barre de menus : les articles tapent des commandes
 lg_bar  .byt 3
@@ -4913,7 +4966,7 @@ mn_fic  .byt 7,12
         .asc "Quitter",0
         .byt MA_TYPE
         .word ty_quitte
-mn_tor  .byt 5,12
+mn_tor  .byt 7,12
         .asc "Tortue",0
         .asc "Efface ecran",0
         .byt MA_TYPE
@@ -4930,6 +4983,12 @@ mn_tor  .byt 5,12
         .asc "Leve crayon",0
         .byt MA_TYPE
         .word ty_lc
+        .asc "Ecran texte",0
+        .byt MA_TYPE
+        .word ty_etxt
+        .asc "Ecran mixte",0
+        .byt MA_TYPE
+        .word ty_emix
 mn_aid  .byt 1,10
         .asc "Aide",0
         .asc "Primitives",0
@@ -4958,6 +5017,10 @@ ty_ct     .byt $18
           .asc "CT",13,0
 ty_mt     .byt $18
           .asc "MT",13,0
+ty_etxt   .byt $18
+          .asc "ECRANTEXTE",13,0
+ty_emix   .byt $18
+          .asc "ECRANMIXTE",13,0
 ty_lc     .byt $18
           .asc "LC",13,0
 ty_aide   .byt $18
@@ -4971,6 +5034,7 @@ m_saved   .asc "Sauve.",13,10,0
 m_loaded  .asc "Charge.",13,10,0
 m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "CT MT VE NETTOIE ORIGINE",13,10
+          .asc "ECRANTEXTE  ECRANMIXTE",13,10
           .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
           .asc "NOTE n d (37 = do)  BRUIT d  SILENCE",13,10
           .asc "REPETE n [..]  SI c [..] [..]  STOP",13,10
@@ -5013,6 +5077,7 @@ e_nofile  .asc "Fichier introuvable",0
 e_noret   .asc "Rien n'a ete rendu par",0
 e_unused  .asc "Que faire de ce que rend",0
 e_rtop    .asc "RENDS seulement dans une procedure",0
+e_text    .asc "Impossible en ecran texte :",0
 
 #include "logo_tab.s"
 
@@ -5033,7 +5098,8 @@ ld_tok  = bodyst+2
 ld_end  = ld_tok+2
 ld_fb   = ld_end+2
 ssp     = ld_fb+2       ; haut de la zone de débordement de la pile (2)
-parn_lo = ssp+2
+tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)
+parn_lo = tmode+1
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR
