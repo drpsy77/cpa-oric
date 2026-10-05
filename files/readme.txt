@@ -138,6 +138,7 @@ SI c [..] [..]
               | condition
 POUR NOM :A ... FIN
               | definit une procedure
+RENDS x       | la procedure rend x
 EC x          | ecrit
 SAUVE "N      | procedures -> N.LOG
 CHARGE "N     | charge N.LOG

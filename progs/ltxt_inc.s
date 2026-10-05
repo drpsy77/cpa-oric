@@ -16,9 +16,9 @@
 ;  - chaque texte a son bloc : un résultat est toujours une copie, jamais
 ;    un morceau d'un autre texte (deux valeurs peuvent désigner le même
 ;    bloc entier, jamais une partie) ;
-;  - seules comptent les valeurs des variables, des arguments (argv, type 0
-;    hors d'un appel) et de la pile de valeurs ; val et lv n'en font pas
-;    partie. Une primitive qui réserve de la place (halloc) met d'abord ses
+;  - seules comptent les valeurs des variables et de la pile de valeurs
+;    (où passent aussi les arguments d'un appel) ; val et lv n'en font pas
+;    partie ; une fonction qui rend un texte le laisse dans val. Une primitive qui réserve de la place (halloc) met d'abord ses
 ;    textes sur la pile de valeurs, et relit leurs adresses après.
 ; =====================================================================
 
@@ -121,10 +121,6 @@ dscan
         jsr reg
         lda #VAL_SIZE
         sta dstr
-        lda #<argv
-        ldx #>argv
-        ldy #MAXPAR
-        jsr reg
         sec                     ; pile de valeurs : (vsp - vstack) / 6
         lda vsp
         sbc #<vstack

@@ -155,6 +155,7 @@ h_4
         .asc "              | condition",13,10
         .asc "POUR NOM :A ... FIN",13,10
         .asc "              | definit une procedure",13,10
+        .asc "RENDS x       | la procedure rend x",13,10
         .asc "EC x          | ecrit",13,10
         .asc "SAUVE ",34,"N      | procedures -> N.LOG",13,10
         .asc "CHARGE ",34,"N     | charge N.LOG",13,10

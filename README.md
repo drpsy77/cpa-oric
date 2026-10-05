@@ -400,6 +400,7 @@ décimaux (voir plus bas).
 | `SI condition [ ... ] [ ... ]` | condition, avec une liste « sinon » facultative |
 | `POUR NOM :A :B` ... `FIN` | définir une procédure (paramètres facultatifs) |
 | `STOP` | sortir de la procédure |
+| `RENDS x` | sortir de la procédure en rendant x : elle devient une fonction (voir plus bas) |
 | `DONNE "X n`, `:X` | variable globale, valeur d'une variable ou d'un paramètre |
 | `ECRIS n` / `EC`, `ECRIS "mot`, `ECRIS [texte]` | afficher |
 | `ATTENDS n` | attendre n cinquantièmes de seconde |
@@ -451,6 +452,23 @@ compte comme ce nombre (`"12 + 1` donne 13), et un nombre devient un mot là où
 `LISTE` est la fonction ci-dessus ; en début de ligne, `LISTE "NOM` affiche toujours une
 procédure. Les mots et listes occupent le haut de la mémoire libre, les procédures le bas ;
 quand la place manque, LOGO récupère celle des textes qui ne servent plus.
+
+**Fonctions de l'utilisateur.** Une procédure qui se termine par `RENDS x` s'emploie dans une
+expression, comme `RACINE` :
+
+    POUR FACT :N
+    SI :N < 2 [RENDS 1]
+    RENDS :N * FACT :N - 1
+    FIN
+    ? ECRIS FACT 10
+    3628800
+
+Elle peut rendre un nombre, un mot ou une liste, s'appeler elle-même et servir d'argument à
+une autre (`ECRIS SOMME CARRE 3 CARRE 4`). Une fonction qui arrive à `FIN` (ou à `STOP`) sans
+`RENDS` donne `Rien n'a ete rendu par NOM` ; une procédure appelée comme une commande ne doit
+pas faire `RENDS` (`Que faire de ce que rend NOM`). Les fonctions qui s'appellent elles-mêmes
+vont jusqu'à une quarantaine de niveaux (`Trop de niveaux` au-delà) ; les procédures appelées
+comme des commandes, elles, peuvent s'appeler beaucoup plus profondément.
 
 **La tortue et les décimaux.** `AV`, `RE`, `DR`, `GA`, `FIXECAP` et `FIXEXY` acceptent des
 décimaux : la position et le cap sont gardés au 1/256 près (de pas ou de degré), et le sinus,
