@@ -185,8 +185,14 @@ h_4
         .asc "              | 1 ou 0 ; aussi",13,10
         .asc "              |   NOMBRE? MEMBRE? a b",13,10
         .asc "EXEC [..]     | execute une liste",13,10
-        .asc "LISCAR        | attend une touche,",13,10
-        .asc "              |   rend son code",13,10
+        .asc "LISLISTE      | lit une ligne ->",13,10
+        .asc "              |   liste (LL)",13,10
+        .asc "LISMOT        | lit une ligne -> mot",13,10
+        .asc "LISCAR        | attend une touche ->",13,10
+        .asc "              |   caractere",13,10
+        .asc "ASCII x  CAR n",13,10
+        .asc "              | code d'un caractere /",13,10
+        .asc "              |   caractere",13,10
         .asc "TOUCHE?       | 1 si une touche",13,10
         .asc "              |   attend, 0 sinon",13,10
         .asc "NOTE n d      | joue la note n (37 =",13,10
