@@ -12,7 +12,7 @@ Raspberry Pi 400. Il dit aussi à quoi sert chaque machine.
 | **Mac** | éditer, `git`, lien avec Claude | rien à installer : on ne porte rien sur macOS |
 | **Oric Atmos + LOCI** | essai final sur le vrai matériel | timing, son et écran réels |
 
-Les fichiers circulent par Codeberg : `git push` depuis une machine, `git pull` sur une autre.
+Les fichiers circulent par GitHub : `git push` depuis une machine, `git pull` sur une autre.
 Les images prêtes à l'emploi (`build/cpa.dsk`, `build/cpa.rom`) sont dans le dépôt : Windows et
 le LOCI n'ont donc jamais besoin de construire quoi que ce soit.
 
@@ -27,9 +27,10 @@ outils, et suit toujours la même boucle.
    le système disque, l'amorce et les programmes `.COM`, puis fabrique la disquette avec
    `tools/mkdisk.py`. Le script contrôle aussi les tailles (ROM de 16 Ko, système disque qui
    s'arrête avant `$F670`).
-2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, environ 50 lignes dans `main.c`). Le
+2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, environ 60 lignes dans `main.c`). Le
    correctif lit des variables d'environnement à chaque trame (1/50 s) :
-   - `ORIC_KEYS` : texte tapé touche par touche, comme sur le clavier de l'Oric ;
+   - `ORIC_KEYS` : texte tapé touche par touche, comme sur le clavier de l'Oric (les caractères
+     obtenus avec SHIFT, comme `" + ( ) < > ? $ *`, sont tapés avec SHIFT) ;
    - `ORIC_KEYS_AT` : trame où la frappe commence ;
    - `ORIC_DUMP` / `ORIC_DUMP_AT` : fichier et trame du vidage des 64 Ko de mémoire.
 
@@ -75,7 +76,7 @@ D'où les essais sur matériel notés dans `docs/projet-disquette.md`.
 Une seule commande installe tout **dans le dépôt** (`tools/xa`, `tools/pylib/`,
 `tools/oricutron/`, tous ignorés par git). Ton Oricutron déjà compilé n'est pas modifié.
 
-    git clone https://codeberg.org/<ton-compte>/CPA_ORIC.git cpa-oric
+    git clone https://github.com/drpsy77/cpa-oric.git cpa-oric
     cd cpa-oric
     ./tools/setup_linux.sh ~/chemin/vers/ton/oricutron/roms
 
@@ -98,7 +99,11 @@ affiche les deux écrans et finit par « OK : l'atelier fonctionne ».
 
 Cette procédure a été essayée de bout en bout sur un Linux vierge (Ubuntu 24.04 sur PC). Sur le
 Pi, seules les durées changent : comptez quelques minutes pour compiler Oricutron, et plusieurs
-minutes pour `test_asm.sh` (environ 1 min 20 s sur le PC de Claude).
+minutes pour `test_asm.sh` (environ 1 min 20 s sur le PC de Claude) et `test_logo.sh` (environ
+7 min).
+
+Quand le correctif de test change (`tools/oricutron-testhook.patch`), il faut recompiler
+Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 
 ## 4. Les commandes de l'atelier
 
@@ -107,6 +112,7 @@ minutes pour `test_asm.sh` (environ 1 min 20 s sur le PC de Claude).
 | `./build.sh` | construit `build/cpa.rom`, `build/cpa.dsk`, `build/progs/*.COM` et les `.sym` |
 | `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur) |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
+| `tools/test_logo.sh` | LOGO.COM : scénarios `tools/logo_tests/*.log` comparés aux `.ref` (texte, images) ; `REF=1` réécrit les références |
 | `tools/run_test.sh TOUCHES TRAME SORTIE` | émulateur piloté : frappe, vidage, capture |
 | `python3 tools/screen.py SORTIE.mem` | écran texte du vidage |
 | `python3 tools/run_com.py DOSSIER PROG.COM args` | `.COM` dans un 6502 simulé (BDOS minimal) |

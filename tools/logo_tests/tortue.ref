@@ -1,0 +1,16 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "DEMO
+CARRE defini.
+POLY defini.
+ETOILE defini.
+FLEUR defini.
+SPIRALE defini.
+ARBRE defini.
+DEMO defini.
+Charge.
+?  CHARGE "T2
+-93
+-53
+45
+Charge.
+?  QUITTE

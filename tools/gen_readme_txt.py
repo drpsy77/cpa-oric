@@ -112,6 +112,8 @@ SECTIONS = [
   ("CHARGE \"N", "charge N.LOG"),
   ("SAUVEIMAGE \"N", "dessin -> N.IMG"),
   ("CHARGEIMAGE \"N", "charge N.IMG"),
+  ("LISCAR", "attend une touche, rend son code"),
+  ("TOUCHE?", "1 si une touche attend, 0 sinon"),
   ("NOTE n d", "joue la note n (37 = do) pendant d/50 s"),
   ("BRUIT d", "bruit pendant d/50 s"),
   ("SILENCE", "coupe le son"),

@@ -93,6 +93,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     ./build.sh                       # build/cpa.rom, build/cpa.dsk (+ contrôles de taille)
     tools/smoke_test.sh              # construction + démarrage disquette et ROM dans l'émulateur
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
+    tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
 
 - `build.sh` refuse un système disque qui dépasse `$F670` et une ROM qui ne fait pas 16 Ko.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
@@ -117,7 +118,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT) et
   `progs/help_tab.s` (HELP.COM) à partir d'une seule liste.
 - Git : un commit par livraison, message en français, testé avant. Le dépôt est publié sur
-  Codeberg (dépôt `CPA_ORIC`).
+  GitHub (https://github.com/drpsy77/cpa-oric).
 
 ## 6. Organisation du dépôt
 

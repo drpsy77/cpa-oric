@@ -159,6 +159,10 @@ h_4
         .asc "SAUVEIMAGE ",34,"N | dessin -> N.IMG",13,10
         .asc "CHARGEIMAGE ",34,"N",13,10
         .asc "              | charge N.IMG",13,10
+        .asc "LISCAR        | attend une touche,",13,10
+        .asc "              |   rend son code",13,10
+        .asc "TOUCHE?       | 1 si une touche",13,10
+        .asc "              |   attend, 0 sinon",13,10
         .asc "NOTE n d      | joue la note n (37 =",13,10
         .asc "              |   do) pendant d/50 s",13,10
         .asc "BRUIT d       | bruit pendant d/50 s",13,10
