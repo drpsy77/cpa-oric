@@ -94,6 +94,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/smoke_test.sh              # construction + démarrage disquette et ROM dans l'émulateur
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
+    python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
 
 - `build.sh` refuse un système disque qui dépasse `$F670` et une ROM qui ne fait pas 16 Ko.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
@@ -105,6 +106,8 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 
 ## 5. Conventions
 
+- Fichiers `progs/*_tab.s` (tables) et `progs/*_inc.s` (bibliothèques) : inclus par un
+  programme, jamais assemblés seuls.
 - Assembleur : syntaxe `xa` de l'OSDK. Les programmes de `progs/` restent dans le sous-ensemble
   compris par ASM.COM (pas de `&étiquette`, pas de `#define`) : `tools/test_asm.sh` le vérifie.
   Le système (`src/`) peut utiliser tout `xa`.

@@ -35,7 +35,7 @@ $XA -o ../build/boot.bin -e ../build/boot.err boot.s
 cd ..
 [ "$(wc -c < build/boot.bin)" -eq 768 ] || { echo "boot.bin doit faire 768 octets"; exit 1; }
 
-for p in $(ls progs/*.s | grep -v _tab.s); do
+for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   n=$(basename "$p" .s | tr a-z A-Z)
   (cd progs && $XA -o ../build/progs/$n.COM -e ../build/progs/$n.err $(basename "$p"))
 done

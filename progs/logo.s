@@ -2,10 +2,11 @@
 ;  LOGO.COM — Logo en français pour CP/A (mode SPLIT)
 ;
 ;  La tortue dessine dans l'image (240 x 128) ; on tape les commandes
-;  sous l'image. Nombres entiers (16 bits signés).
+;  sous l'image. Nombres entiers (16 bits signés) et décimaux « à la Oric »
+;  (5 octets, fp_inc.s) : un calcul passe en décimal quand il le faut.
 ;
-;  Valeurs typées : une valeur occupe 6 octets, un octet de type (T_INT
-;  aujourd'hui ; décimal, mot et liste prévus) et 5 octets de contenu.
+;  Valeurs typées : une valeur occupe 6 octets, un octet de type (T_INT,
+;  T_DEC ; mot et liste prévus) et 5 octets de contenu.
 ;  La valeur courante est dans vt/val ; l'évaluateur range les valeurs
 ;  intermédiaires sur une pile de valeurs (vstack), pas sur la pile du
 ;  6502. Variables et paramètres gardent une valeur complète.
@@ -16,6 +17,7 @@
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
 ;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
+;  ENT ARRONDI ABS QUOTIENT RESTE
 ;
 ;  L'interpréteur lit directement le texte (lignes tapées, corps des
 ;  procédures). Les listes [ ] et les procédures s'exécutent grâce à une
@@ -91,6 +93,11 @@ lvt     = $7E           ; valeur de gauche d'une opération : type
 lv      = $7F           ;   et contenu (5 octets)
 vsp     = $84           ; pile de valeurs (2 octets)
 pkey    = $86           ; touche lue par check_esc, gardée pour LISCAR
+opc     = $87           ; opérateur en cours
+nst     = $88           ; début du nombre lu (2 octets)
+tnt     = $8A           ; type du nombre lu : T_INT (tnum) ou T_DEC (tnf)
+tnf     = $8B           ; nombre décimal lu (5 octets)
+FP_ZP   = $90           ; page zéro de fp_inc.s ($90-$BF)
 
 TK_END  = 0
 TK_NUM  = 1
@@ -110,6 +117,7 @@ NAMELEN = 10
 VAL_SIZE = 6            ; valeur : type (1), contenu (5)
 VS_N    = 24            ; profondeur de la pile de valeurs
 T_INT   = 1             ; entier 16 bits signé (contenu : 2 octets)
+T_DEC   = 2             ; décimal « à la Oric » (5 octets, fp_inc.s)
 MAXLOC  = 100
 MAXGL   = 32
 MAXPAR  = 8
@@ -455,6 +463,9 @@ neg_literal
         bne no
 yes     jsr inc_tp
         jsr scan_num
+        lda tnt
+        cmp #T_INT
+        bne d
         sec
         lda #0
         sbc tnum
@@ -464,26 +475,55 @@ yes     jsr inc_tp
         sta tnum+1
         clc
         rts
+d       lda tnf                 ; décimal : bit de signe (sauf zéro)
+        beq r
+        lda tnf+1
+        eor #$80
+        sta tnf+1
+r       clc
+        rts
 no      sec
         rts
 .)
 
-; scan_num : lit un nombre décimal en tp -> tnum, jeton TK_NUM
+; scan_num : lit un nombre en tp -> jeton TK_NUM. Entier (tnt = T_INT,
+;   tnum) s'il tient sur 16 bits sans point ni exposant ; sinon décimal
+;   (tnt = T_DEC, tnf : 5 octets), lu par fp_parse
 scan_num
 .(
-        lda #0                  ; nombre
+        lda tp                  ; début du nombre
+        sta nst
+        lda tp+1
+        sta nst+1
+        lda #0
         sta tnum
         sta tnum+1
 num     jsr at_end
         bcs ndone
         ldy #0
         lda (tp),y
+        cmp #"."
+        beq flt
+        cmp #"E"
+        beq ex
         sec
         sbc #"0"
         cmp #10
         bcs ndone
         pha
-        lda tnum                ; tnum = tnum * 10 + chiffre
+        lda tnum+1              ; plus de 3276 (ou 3276 puis 8, 9) :
+        cmp #>3276              ; ne tient plus sur 16 bits
+        bcc ok
+        bne big
+        lda tnum
+        cmp #<3276
+        bcc ok
+        bne big
+        pla
+        pha
+        cmp #8
+        bcs big
+ok      lda tnum                ; tnum = tnum * 10 + chiffre
         sta tmp
         lda tnum+1
         sta tmp+1
@@ -508,10 +548,51 @@ num     jsr at_end
         inc tnum+1
 nn      jsr inc_tp
         jmp num
-ndone   lda #TK_NUM
+big     pla
+flt     jmp scan_dec
+ex      ldy #1                  ; E, [+ -], chiffre : exposant
+        lda (tp),y
+        cmp #"+"
+        beq e1
+        cmp #"-"
+        bne e2
+e1      iny
+e2      lda (tp),y
+        sec
+        sbc #"0"
+        cmp #10
+        bcc flt
+ndone   lda #T_INT
+        sta tnt
+        lda #TK_NUM
         sta ttype
         rts
 .)
+
+; scan_dec : relit le nombre depuis nst avec fp_parse -> tnf
+scan_dec
+        lda nst
+        sta fpt
+        lda nst+1
+        sta fpt+1
+        jsr fp_parse            ; FAC ; Y = caractères lus
+        tya
+        clc
+        adc nst
+        sta tp
+        lda nst+1
+        adc #0
+        sta tp+1
+        lda #<tnf
+        sta fpt
+        lda #>tnf
+        sta fpt+1
+        jsr fp_stfac
+        lda #T_DEC
+        sta tnt
+        lda #TK_NUM
+        sta ttype
+        rts
 
 ; scan_word : tnam = tp, avance tant que le caractère fait partie d'un mot
 scan_word
@@ -788,12 +869,23 @@ word    lda tnam                ; mémorise le nom de la commande
         lda tlen
         sta clen
         lda #<prims             ; primitive ?
+        ldy #>prims
+        jsr lookup
+        bcs user
+        jsr advance             ; consomme le nom ; le jeton suivant est le 1er argument
+        jmp (p3)
+user    jmp call_proc
+.)
+
+; lookup : cherche le mot tnam/tlen dans la table A/Y (nom, 0, adresse ;
+;   0 à la fin). C=0 trouvé, p3 = adresse ; C=1 sinon
+lookup
+.(
         sta p2
-        lda #>prims
-        sta p2+1
+        sty p2+1
 find    ldy #0
         lda (p2),y
-        beq user
+        beq no
         lda p2
         ldy p2+1
         jsr word_is
@@ -822,13 +914,17 @@ fa      iny
         iny
         lda (p2),y
         sta p3+1
-        jsr advance             ; consomme le nom ; le jeton suivant est le 1er argument
-        jmp (p3)
-user    jmp call_proc
+        clc
+        rts
+no      sec
+        rts
 .)
 
 ; ---------------------------------------------------------------------
-; Expressions (résultat dans val)
+; Expressions (résultat dans vt/val)
+;   Deux entiers donnent un entier tant que le résultat tient sur 16 bits ;
+;   sinon, ou dès qu'un décimal s'en mêle, le calcul se fait en décimal
+;   (fp_inc.s). / donne un décimal si la division ne tombe pas juste.
 ; ---------------------------------------------------------------------
 eval
 .(
@@ -848,43 +944,58 @@ cmpop   pha
         jsr advance
         jsr sum
         jsr vpop_l              ; lv = gauche, val = droite
-        jsr need_int2
-        lda lv                  ; tmp = gauche
-        sta tmp
-        lda lv+1
-        sta tmp+1
+        jsr need_num2
+        jsr compare             ; A = $FF (<), 0 (=), 1 (>)
+        tax
         pla
         cmp #"="
         bne lt
-        lda tmp
-        cmp val
-        bne false
-        lda tmp+1
-        cmp val+1
-        bne false
-true    lda #1
-        bne set
+        txa
+        beq true
 false   lda #0
+        beq set
+true    lda #1
 set     sta val
         lda #0
         sta val+1
+        lda #T_INT
+        sta vt
 r       rts
 lt      cmp #"<"
         bne gt
-        jsr cmp_s               ; tmp < val ?
-        bmi true
-        bpl false
-gt      lda val                 ; tmp > val  <=>  val < tmp
-        ldx tmp
+        cpx #$FF
+        beq true
+        bne false
+gt      cpx #1
+        beq true
+        bne false
+.)
+
+; compare : A = $FF si gauche < droite, 0 si égales, 1 si gauche > droite
+compare
+.(
+        jsr both_int
+        bcs flt
+        lda lv
         sta tmp
-        stx val
-        lda val+1
-        ldx tmp+1
+        lda lv+1
         sta tmp+1
-        stx val+1
-        jsr cmp_s
-        bmi true
-        bpl false
+        lda tmp
+        cmp val
+        bne ne
+        lda tmp+1
+        cmp val+1
+        bne ne
+        lda #0
+        rts
+ne      jsr cmp_s               ; N=1 si tmp < val
+        bmi lt
+        lda #1
+        rts
+lt      lda #$FF
+        rts
+flt     jsr load2               ; ARG = gauche, FAC = droite
+        jmp fp_cmp
 .)
 
 ; cmp_s : N=1 si tmp < val (signé)
@@ -914,29 +1025,42 @@ op      pha
         jsr advance
         jsr term
         jsr vpop_l
-        jsr need_int2
-        lda lv
-        sta tmp
-        lda lv+1
-        sta tmp+1
+        jsr need_num2
         pla
+        sta opc
+        jsr both_int
+        bcs flt
+        lda opc
         cmp #"+"
         bne minus
         clc
-        lda tmp
+        lda lv
         adc val
-        sta val
-        lda tmp+1
+        tax
+        lda lv+1
         adc val+1
+        bvs flt                 ; débordement : en décimal
         sta val+1
+        stx val
         jmp loop
 minus   sec
-        lda tmp
+        lda lv
         sbc val
-        sta val
-        lda tmp+1
+        tax
+        lda lv+1
         sbc val+1
+        bvs flt
         sta val+1
+        stx val
+        jmp loop
+flt     jsr load2
+        lda opc
+        cmp #"+"
+        beq ad
+        jsr fp_sub
+        jmp st
+ad      jsr fp_add
+st      jsr fac_val
         jmp loop
 r       rts
 .)
@@ -957,7 +1081,49 @@ op      pha
         jsr advance
         jsr unary
         jsr vpop_l
-        jsr need_int2
+        jsr need_num2
+        pla
+        sta opc
+        jsr both_int
+        bcs flt
+        lda opc
+        cmp #"*"
+        bne divi
+        jsr ld_mamb
+        jsr smul                ; mr = produit sur 32 bits
+        lda mr+1                ; tient sur 16 bits si mr+2 et mr+3
+        and #$80                ; prolongent le signe
+        beq p0
+        lda #$FF
+p0      cmp mr+2
+        bne big
+        cmp mr+3
+        bne big
+        lda mr
+        sta val
+        lda mr+1
+        sta val+1
+        jmp loop
+big     jsr i32_fac             ; produit exact, en décimal
+        jsr fac_val
+        jmp loop
+divi    jsr idiv                ; division entière exacte ?
+        bcs flt
+        jmp loop
+flt     jsr load2
+        lda opc
+        cmp #"*"
+        beq mu
+        jsr fp_div
+        jmp st
+mu      jsr fp_mul
+st      jsr fac_val
+        jmp loop
+r       rts
+.)
+
+; ld_mamb : ma = gauche (lv), mb = droite (val)
+ld_mamb
         lda lv
         sta ma
         lda lv+1
@@ -966,18 +1132,60 @@ op      pha
         sta mb
         lda val+1
         sta mb+1
-        pla
-        cmp #"*"
-        bne divi
-        jsr smul
-        lda mr
+        rts
+
+; idiv : val = lv / val (entiers) si la division tombe juste ; C=1 sinon
+;   (val inchangée), ou si le diviseur est nul, ou pour -32768 / -1
+idiv
+.(
+        lda val
+        ora val+1
+        beq no
+        lda val
+        sta tmp2
+        lda val+1
+        sta tmp2+1
+        jsr ld_mamb
+        jsr sdiv
+        lda mr+2                ; reste
+        ora mr+3
+        bne back
+        lda sign                ; quotient positif mais bit 15 à 1
+        bmi ok
+        lda val+1
+        bmi back
+ok      clc
+        rts
+back    lda tmp2
         sta val
-        lda mr+1
+        lda tmp2+1
         sta val+1
-        jmp loop
-divi    jsr sdiv
-        jmp loop
-r       rts
+no      sec
+        rts
+.)
+
+; i32_fac : FAC = mr (entier signé de 32 bits, octet bas en mr)
+i32_fac
+.(
+        ldx #3
+c       lda mr,x
+        sta ft,x
+        dex
+        bpl c
+        lda ft+3
+        bpl pos
+        sec
+        ldx #0
+        ldy #4
+n       lda #0
+        sbc ft,x
+        sta ft,x
+        inx
+        dey
+        bne n
+        jsr fp_u32tof
+        jmp fp_neg
+pos     jmp fp_u32tof
 .)
 
 unary
@@ -990,9 +1198,32 @@ unary
         bne prim
         jsr advance
         jsr unary
-        jsr need_int
-        jmp neg_val
+        jmp negate
 prim    jmp primary
+.)
+
+; negate : val = -val (entier ou décimal ; -(-32768) devient décimal)
+negate
+.(
+        jsr need_num
+        lda vt
+        cmp #T_INT
+        bne d
+        lda val+1
+        cmp #$80
+        bne neg_val
+        lda val
+        bne neg_val
+        ldy val+1               ; -32768 -> 32768 décimal
+        jsr fp_itof
+        jsr fp_neg
+        jmp fac_val
+d       lda val                 ; décimal : bit de signe (sauf zéro)
+        beq r
+        lda val+1
+        eor #$80
+        sta val+1
+r       rts
 .)
 
 neg_val
@@ -1010,11 +1241,22 @@ primary
         lda ttype
         cmp #TK_NUM
         bne n1
+        lda tnt
+        cmp #T_INT
+        bne flt
         lda tnum
         sta val
         lda tnum+1
         sta val+1
         jmp int_adv
+flt     ldx #4                  ; nombre décimal du texte
+c       lda tnf,x
+        sta val,x
+        dex
+        bpl c
+        lda #T_DEC
+        sta vt
+        jmp advance
 n1      cmp #TK_VAR
         bne n2
         jsr get_var
@@ -1036,55 +1278,11 @@ n2      cmp #TK_OP
         jmp advance
 n3      cmp #TK_WORD
         bne pbad
-        lda #<w_hasard
-        ldy #>w_hasard
-        jsr word_is
-        bne f2
-        jsr advance
-        jsr sum
-        jsr need_int
-        jmp random
-f2      lda #<w_cap
-        ldy #>w_cap
-        jsr word_is
-        bne f3
-        lda head
-        sta val
-        lda head+1
-        sta val+1
-        jmp int_adv
-f3      lda #<w_xcor
-        ldy #>w_xcor
-        jsr word_is
-        bne f4
-        lda tx+1
-        ldx tx+2
-        ldy tx
-        jmp cor
-f4      lda #<w_ycor
-        ldy #>w_ycor
-        jsr word_is
-        bne f5
-        lda ty+1
-        ldx ty+2
-        ldy ty
-cor     cpy #$80                ; arrondi
-        adc #0
-        sta val
-        txa
-        adc #0
-        sta val+1
-        jmp int_adv
-f5      lda #<w_liscar
-        ldy #>w_liscar
-        jsr word_is
-        bne f6
-        jmp f_liscar
-f6      lda #<w_touche
-        ldy #>w_touche
-        jsr word_is
-        bne unk
-        jmp f_touche
+        lda #<funcs             ; fonction ?
+        ldy #>funcs
+        jsr lookup
+        bcs unk
+        jmp (p3)
 unk     lda tnam
         sta cname
         lda tnam+1
@@ -1101,6 +1299,33 @@ bad     lda #0
         jmp error
 .)
 
+; ---------------------------------------------------------------------
+; Fonctions (le jeton courant est leur nom)
+; ---------------------------------------------------------------------
+f_hasard
+        jsr arg1
+        jsr to_int
+        jmp random
+
+f_cap   lda head
+        sta val
+        lda head+1
+        sta val+1
+        jmp int_adv
+
+f_xcor  lda tx+1
+        ldx tx+2
+        ldy tx
+        jmp cor
+f_ycor  lda ty+1
+        ldx ty+2
+        ldy ty
+cor     cpy #$80                ; arrondi
+        adc #0
+        sta val
+        txa
+        adc #0
+        sta val+1
 ; int_adv : la valeur courante est un entier ; passe au jeton suivant
 int_adv lda #T_INT
         sta vt
@@ -1136,23 +1361,162 @@ z       stx val
         jmp int_adv
 .)
 
+; ENT x : partie entière (vers zéro) ; ARRONDI x : entier le plus proche
+f_ent
+        jsr arg1
+        lda vt
+        cmp #T_INT
+        beq fe_r
+        jsr val_fac
+        jsr fp_trunc
+        jmp fac_val
+f_arrondi
+        jsr arg1
+        lda vt
+        cmp #T_INT
+        beq fe_r
+        jsr val_fac
+        jsr fp_rnd
+        jmp fac_val
+fe_r    rts
+
+; ABS x
+f_abs
+.(
+        jsr arg1
+        lda vt
+        cmp #T_INT
+        bne d
+        lda val+1
+        bpl r
+        jmp negate
+d       lda val+1
+        and #$7F
+        sta val+1
+r       rts
+.)
+
+; QUOTIENT a b : division entière (vers zéro)
+f_quotient
+.(
+        jsr arg2
+        jsr both_int
+        bcs d
+        lda val
+        ora val+1
+        beq d                   ; division par zéro : message de fp_div
+        lda val
+        sta tmp2
+        lda val+1
+        sta tmp2+1
+        jsr ld_mamb
+        jsr sdiv
+        lda sign                ; -32768 / -1 : en décimal
+        bmi r
+        lda val+1
+        bpl r
+        lda tmp2
+        sta val
+        lda tmp2+1
+        sta val+1
+d       jsr load2
+        jsr fp_div
+        jsr fp_trunc
+        jmp fac_val
+r       rts
+.)
+
+; RESTE a b : a - b * QUOTIENT a b (du signe de a)
+f_reste
+.(
+        jsr arg2
+        jsr both_int
+        bcs d
+        lda val
+        ora val+1
+        beq d
+        jsr ld_mamb
+        jsr sdiv                ; reste (valeur absolue) en mr+2
+        lda mr+2
+        sta val
+        lda mr+3
+        sta val+1
+        lda lv+1
+        bpl r
+        jmp neg_val
+d       jsr load2               ; q = ENT (a / b)
+        jsr fp_div
+        jsr fp_trunc
+        jsr fp_toarg
+        jsr val_fac             ; q * b
+        jsr fp_mul
+        jsr fp_toarg
+        jsr lv_fac              ; a - q * b
+        jsr fp_swap
+        jsr fp_sub
+        jmp fac_val
+r       rts
+.)
+
+; arg1 : lit l'argument d'une fonction ; arg2 : ses deux arguments (lv, val)
+arg1    jsr advance
+        jsr sum
+        jmp need_num
+arg2    jsr advance
+        jsr sum
+        jsr vpush
+        jsr sum
+        jsr vpop_l
+        jmp need_num2
+
 ; ---------------------------------------------------------------------
 ; Valeurs typées
 ; ---------------------------------------------------------------------
-; eval_int : évalue une expression qui doit être un nombre entier
+; eval_int : évalue une expression et la ramène à un entier (arrondi)
 eval_int
         jsr eval
-; need_int : la valeur courante doit être un entier
-need_int
+; to_int : la valeur courante devient un entier (un décimal est arrondi ;
+;   erreur s'il dépasse -32768..32767)
+to_int
+.(
+        jsr need_num
         lda vt
         cmp #T_INT
-        bne not_num
-        rts
-; need_int2 : la valeur de gauche (lvt) et la valeur courante aussi
-need_int2
-        lda lvt
+        beq r
+        jsr val_fac
+        jsr fp_toint
+        bcs big
+        sta val
+        sty val+1
+        lda #T_INT
+        sta vt
+r       rts
+big     jmp fp_err_big
+.)
+; truth : A <> 0 si la valeur courante (nombre) n'est pas nulle
+truth
+.(
+        jsr need_num
+        lda vt
         cmp #T_INT
-        beq need_int
+        bne d
+        lda val
+        ora val+1
+        rts
+d       lda val                 ; exposant d'un décimal : 0 pour zéro
+        rts
+.)
+; need_num : la valeur courante doit être un nombre (entier ou décimal)
+need_num
+        lda vt
+        cmp #T_DEC+1
+        bcs not_num
+        rts
+; need_num2 : la valeur de gauche (lvt) et la valeur courante aussi
+need_num2
+        lda lvt
+        cmp #T_DEC+1
+        bcc need_num
 not_num lda #0
         sta clen
         lda #<e_notnum
@@ -1253,8 +1617,84 @@ arg_off
 
 ; put_val : affiche la valeur courante
 put_val
-        jsr need_int
+.(
+        lda vt
+        cmp #T_INT
+        bne d
         jmp put_num
+d       jsr val_fac
+        jmp fp_print
+.)
+
+; both_int : C=0 si la valeur de gauche et la valeur courante sont entières
+both_int
+.(
+        lda lvt
+        cmp #T_INT
+        bne n
+        lda vt
+        cmp #T_INT
+        bne n
+        clc
+        rts
+n       sec
+        rts
+.)
+
+; val_fac : FAC = valeur courante ; lv_fac : FAC = valeur de gauche
+val_fac
+.(
+        lda vt
+        cmp #T_INT
+        bne d
+        lda val
+        ldy val+1
+        jmp fp_itof
+d       lda #<val
+        sta fpt
+        lda #>val
+        sta fpt+1
+        jmp fp_ldfac
+.)
+lv_fac
+.(
+        lda lvt
+        cmp #T_INT
+        bne d
+        lda lv
+        ldy lv+1
+        jmp fp_itof
+d       lda #<lv
+        sta fpt
+        lda #>lv
+        sta fpt+1
+        jmp fp_ldfac
+.)
+; load2 : ARG = valeur de gauche, FAC = valeur courante
+load2   jsr lv_fac
+        jsr fp_toarg
+        jmp val_fac
+; fac_val : valeur courante = FAC (décimal)
+fac_val lda #<val
+        sta fpt
+        lda #>val
+        sta fpt+1
+        jsr fp_stfac
+        lda #T_DEC
+        sta vt
+        rts
+
+; fp_err_big, fp_err_div : erreurs de fp_inc.s
+fp_err_big
+        lda #<e_big
+        ldy #>e_big
+        bne fpe
+fp_err_div
+        lda #<e_div
+        ldy #>e_div
+fpe     ldx #0
+        stx clen
+        jmp error
 
 ; random : val = nombre au hasard entre 0 et val-1
 random
@@ -1642,9 +2082,8 @@ r       rts
 
 p_si
 .(
-        jsr eval_int
-        lda val
-        ora val+1
+        jsr eval
+        jsr truth
         sta tmp2                ; condition
         jsr need_list
         lda lstart
@@ -3504,6 +3943,9 @@ dec_hi  .byt >10000,>1000,>100,>10
 ; ---------------------------------------------------------------------
 ; Tables
 ; ---------------------------------------------------------------------
+; nombres décimaux (FP_ZP, putc, fp_err_big et fp_err_div sont définis ici)
+#include "fp_inc.s"
+
 prims
         .asc "AVANCE",0
         .word p_av
@@ -3601,12 +4043,29 @@ prims
 
 w_pour   .asc "POUR",0
 w_fin    .asc "FIN",0
-w_hasard .asc "HASARD",0
-w_cap    .asc "CAP",0
-w_xcor   .asc "XCOR",0
-w_ycor   .asc "YCOR",0
-w_liscar .asc "LISCAR",0
-w_touche .asc "TOUCHE?",0
+funcs   .asc "HASARD",0
+        .word f_hasard
+        .asc "CAP",0
+        .word f_cap
+        .asc "XCOR",0
+        .word f_xcor
+        .asc "YCOR",0
+        .word f_ycor
+        .asc "LISCAR",0
+        .word f_liscar
+        .asc "TOUCHE?",0
+        .word f_touche
+        .asc "ENT",0
+        .word f_ent
+        .asc "ARRONDI",0
+        .word f_arrondi
+        .asc "ABS",0
+        .word f_abs
+        .asc "QUOTIENT",0
+        .word f_quotient
+        .asc "RESTE",0
+        .word f_reste
+        .byt 0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_split .byt G_MODE,1,0,0,0,0
@@ -3702,6 +4161,8 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
           .asc "XCOR YCOR  + - * / ( ) = < >",13,10
           .asc "LISCAR (code touche)  TOUCHE?",13,10
+          .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
+          .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
           .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
@@ -3712,6 +4173,7 @@ e_value   .asc "Il manque une valeur",0
 e_novar   .asc "Pas de valeur pour",0
 e_div     .asc "Division par zero",0
 e_notnum  .asc "Il faut un nombre",0
+e_big     .asc "Nombre trop grand",0
 e_list    .asc "Il faut une liste [ ] apres",0
 e_bracket .asc "Il manque un ] apres",0
 e_deep    .asc "Trop de niveaux",0
