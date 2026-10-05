@@ -159,6 +159,14 @@ h_4
         .asc "SAUVEIMAGE ",34,"N | dessin -> N.IMG",13,10
         .asc "CHARGEIMAGE ",34,"N",13,10
         .asc "              | charge N.IMG",13,10
+        .asc "3.14  2E-7    | decimaux (9 chiffres)",13,10
+        .asc "              |   ; 7 / 2 = 3.5",13,10
+        .asc "ENT x  ARRONDI x",13,10
+        .asc "              | partie entiere /",13,10
+        .asc "              |   entier proche",13,10
+        .asc "ABS x         | valeur absolue",13,10
+        .asc "QUOTIENT a b  | division entiere ;",13,10
+        .asc "              |   RESTE a b : reste",13,10
         .asc "LISCAR        | attend une touche,",13,10
         .asc "              |   rend son code",13,10
         .asc "TOUCHE?       | 1 si une touche",13,10

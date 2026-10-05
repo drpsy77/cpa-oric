@@ -58,9 +58,20 @@ run erreurs 'PUT OUT.TXT LOGO
 | charge "e6
 | charge "e7
 ||| charge "e8
+| charge "e9
+| charge "e10
+| charge "e11
+| charge "e12
 | quitte
-' 3200
+' 4300
 check erreurs
+
+echo "== nombres décimaux"
+run decimaux 'PUT OUT.TXT LOGO
+|| charge "t5
+|||||||| quitte
+' 3000
+check decimaux
 
 echo "== clavier : LISCAR, TOUCHE?, DONNE"
 run clavier 'PUT OUT.TXT LOGO

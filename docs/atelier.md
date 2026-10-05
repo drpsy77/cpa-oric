@@ -112,6 +112,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `./build.sh` | construit `build/cpa.rom`, `build/cpa.dsk`, `build/progs/*.COM` et les `.sym` |
 | `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur) |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
+| `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |
 | `tools/test_logo.sh` | LOGO.COM : scénarios `tools/logo_tests/*.log` comparés aux `.ref` (texte, images) ; `REF=1` réécrit les références |
 | `tools/run_test.sh TOUCHES TRAME SORTIE` | émulateur piloté : frappe, vidage, capture |
 | `python3 tools/screen.py SORTIE.mem` | écran texte du vidage |

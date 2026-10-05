@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 T=$(mktemp -d)
-cp progs/cpa.inc progs/*_tab.s "$T/"
+cp progs/cpa.inc progs/*_tab.s progs/*_inc.s "$T/"
 (cd progs && $XA -o "$T/ASM.COM" asm.s)
 ok=0; ko=0
 for p in hello copy gtest hex edit logo debug help set poke go mem stat asm; do

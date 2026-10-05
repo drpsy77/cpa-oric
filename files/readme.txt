@@ -142,6 +142,14 @@ CHARGE "N     | charge N.LOG
 SAUVEIMAGE "N | dessin -> N.IMG
 CHARGEIMAGE "N
               | charge N.IMG
+3.14  2E-7    | decimaux (9 chiffres)
+              |   ; 7 / 2 = 3.5
+ENT x  ARRONDI x
+              | partie entiere /
+              |   entier proche
+ABS x         | valeur absolue
+QUOTIENT a b  | division entiere ;
+              |   RESTE a b : reste
 LISCAR        | attend une touche,
               |   rend son code
 TOUCHE?       | 1 si une touche

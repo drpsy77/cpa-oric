@@ -384,7 +384,8 @@ Programmes fournis sur la disquette :
     A>LOGO
 
 C'est un Logo en français. La tortue dessine dans l'image du mode SPLIT (LOGO y passe tout seul),
-et on tape les commandes sous l'image, après le prompt `?`. Les nombres sont des entiers.
+et on tape les commandes sous l'image, après le prompt `?`. Les nombres sont des entiers ou des
+décimaux (voir plus bas).
 
 | Commande | Effet |
 |---|---|
@@ -411,8 +412,21 @@ et on tape les commandes sous l'image, après le prompt `?`. Les nombres sont de
 | `AIDE`, `QUITTE` / `AUREVOIR` | aide, retour à CP/A (l'image reste) |
 
 Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`,
-`LISCAR` et `TOUCHE?`. Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR`
-(la dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
+`LISCAR`, `TOUCHE?`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
+2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
+de `a`). Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR` (la
+dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
+
+**Nombres.** Les nombres décimaux s'écrivent avec un point : `3.14`, `0.5`, `1.5E-7`, `6E23`.
+Ils sont « à la Oric » : 5 octets, environ 9 chiffres significatifs, de 1E-38 à 1E38 environ.
+Un calcul entre entiers reste entier tant qu'il tient entre -32768 et 32767 ; sinon il passe
+en décimal (`32767 + 1` donne 32768, `1000 * 1000` donne 1000000). `/` est une vraie
+division : `7 / 2` donne 3.5, `6 / 3` donne 2. `ECRIS` affiche au plus 9 chiffres, sans zéros
+inutiles, en notation E au-delà de 999999999 ou en dessous de 0.00001. Les commandes qui
+attendent un entier (`AV`, `REPETE`, `NOTE`...) arrondissent au plus proche (`REPETE 2.6`
+répète 3 fois) ; au-delà de 32767 : `Nombre trop grand`. `SI` est vrai pour tout nombre non
+nul.
+
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
 une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortue, Aide) tape
 les commandes à la place de l'utilisateur.
@@ -429,8 +443,9 @@ de contextes en mémoire, pas par la pile du 6502. La récursion peut donc aller
 120 niveaux, avec 100 paramètres actifs et 32 variables globales.
 
 Chaque valeur (variable, paramètre, résultat intermédiaire d'un calcul) est typée : un octet
-de type et 5 octets de contenu. Aujourd'hui seuls les entiers existent ; les nombres décimaux,
-les mots et les listes viendront s'y ranger (voir `docs/projet-disquette.md`).
+de type et 5 octets de contenu : un entier, ou un décimal (bibliothèque `progs/fp_inc.s`,
+réutilisable par d'autres programmes). Les mots et les listes viendront s'y ranger (voir
+`docs/projet-disquette.md`).
 
 ## L'éditeur hexadécimal HEX
 
