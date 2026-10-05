@@ -135,6 +135,17 @@ run rends 'PUT OUT.TXT LOGO
 ' 9000
 check rends
 
+echo "== écran texte : ECRANTEXTE, ECRANMIXTE"
+run ecran 'PUT OUT.TXT LOGO
+|| charge "t13
+||| charge "e27
+| charge "e28
+| ecranmixte
+| ecris 1
+| quitte
+' 2600
+check ecran
+
 echo "== lecture au clavier : LISLISTE, LISMOT, ASCII, CAR"
 run lecture 'PUT OUT.TXT LOGO
 || charge "t10
@@ -172,8 +183,21 @@ run dessin 'LOGO
 |||| charge "t2
 ' 3600
 image dessin
-if [ -n "$REF" ]; then cp "$T/images" "$D/images.ref"; echo "référence écrite : images"
-elif diff "$D/images.ref" "$T/images"; then echo "identiques : images (DEMO, T2)"
+# l'image est la même après un passage par l'écran texte
+run carre 'LOGO
+|| repete 4 [av 40 dr 90]
+' 1200
+run carre_t 'LOGO
+|| charge "t13
+' 1500
+image carre
+image carre_t
+if [ "$(sed -n 's/^carre //p' "$T/images")" != "$(sed -n 's/^carre_t //p' "$T/images")" ]
+then echo "DIFFERENT : image changée par l'écran texte"; ko=$((ko+1))
+else echo "identiques : image avant et après l'écran texte"; fi
+grep -v '^carre' "$T/images" > "$T/images2"
+if [ -n "$REF" ]; then cp "$T/images2" "$D/images.ref"; echo "référence écrite : images"
+elif diff "$D/images.ref" "$T/images2"; then echo "identiques : images (DEMO, T2)"
 else echo "DIFFERENT : images"; ko=$((ko+1)); fi
 
 rm -rf "$T"

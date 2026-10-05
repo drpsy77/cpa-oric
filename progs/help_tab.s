@@ -150,6 +150,8 @@ h_4
         .asc "LC  BC        | leve / baisse stylo",13,10
         .asc "CT  MT        | cache / montre",13,10
         .asc "VE  ORIGINE   | vide ecran / centre",13,10
+        .asc "ECRANTEXTE    | tout en texte",13,10
+        .asc "ECRANMIXTE    | retour a l'image",13,10
         .asc "REPETE n [..] | repete la liste",13,10
         .asc "SI c [..] [..]",13,10
         .asc "              | condition",13,10

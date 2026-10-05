@@ -133,6 +133,8 @@ DR n  GA n    | droite / gauche
 LC  BC        | leve / baisse stylo
 CT  MT        | cache / montre
 VE  ORIGINE   | vide ecran / centre
+ECRANTEXTE    | tout en texte
+ECRANMIXTE    | retour a l'image
 REPETE n [..] | repete la liste
 SI c [..] [..]
               | condition
