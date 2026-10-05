@@ -33,11 +33,12 @@ désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrem
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
 HELLO.
 
-**Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, SPLIT, GTEST,
-LOGO, STAT, MEM, POKE et GO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture
-sur place, DO, le son, l'édition de ligne (flèches, historique, complétion par ESC), le mode
-SPLIT avec la bascule en `$BFDF` (premier octet `$A000` visible, ligne 27 vide), LISCAR et
-TOUCHE? dans LOGO.
+**Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
+STAT, MEM, POKE et GO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans LOGO ;
+la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF`. DEBUG démarre, mais
+n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai Oric : ASM (jamais
+lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture sur place, DO, le son,
+le déplacement dans la ligne (← →), LISCAR et TOUCHE? dans LOGO.
 
 ## Choix déjà faits (et pourquoi)
 
