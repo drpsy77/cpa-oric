@@ -43,6 +43,8 @@ F_RREAD     = 33        ; lecture directe (enregistrement R0-R1 du FCB)
 F_RWRITE    = 34        ; écriture directe
 F_FSIZE     = 35        ; taille en enregistrements -> R0-R1
 F_SETRND    = 36        ; R0-R1 <- position séquentielle
+F_CHAIN     = 47        ; A/Y = ligne de commande (0 à la fin) : le CCP
+                        ;   l'exécute après la fin du programme
 FCB_R0      = 33        ; octets 33-35 du FCB : R0, R1, R2
 
 ; Actions des menus

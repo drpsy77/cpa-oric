@@ -122,7 +122,22 @@ memset  pla
         sta cliplen+1
         sta hasname
         sta msgp+1
-        lda #<ed_bar
+        ldx TAIL                ; /L : lancé par EDITE de LOGO
+sl      dex
+        bmi nol
+        lda TAIL+1,x
+        cmp #"L"
+        bne sl
+        lda TAIL,x
+        cmp #"/"
+        bne sl
+        inc retl
+        ldx #6                  ; « Quitter » devient « Retour »
+rt      lda s_retour,x
+        sta it_quit,x
+        dex
+        bpl rt
+nol     lda #<ed_bar
         ldy #>ed_bar
         jsr B_MENUBAR
         ldx #F_CONOUT           ; efface l'écran
@@ -2170,7 +2185,59 @@ r       rts
 
 k_quit
 .(
-        lda modif
+        lda retl
+        beq q
+        lda modif               ; Retour à LOGO : enregistre d'abord
+        beq back
+        jsr save_file
+        lda modif               ; échec (message affiché) : on reste
+        beq back
+        rts
+back    jsr cur_hide
+        lda wassplit
+        beq ln
+        ldx #F_GFX
+        lda #<gq_split
+        ldy #>gq_split
+        jsr BDOS
+ln      ldx #0                  ; « LOGO NOM.TYP /R »
+        ldy #1
+l1      lda s_logo,x
+        sta msgbuf,x
+        inx
+        cpx #5
+        bne l1
+l2      lda fcb_main,y
+        cmp #" "
+        beq l3
+        sta msgbuf,x
+        inx
+l3      iny
+        cpy #9
+        bne l2
+        lda #"."
+        sta msgbuf,x
+        inx
+l4      lda fcb_main,y
+        cmp #" "
+        beq l5
+        sta msgbuf,x
+        inx
+l5      iny
+        cpy #12
+        bne l4
+        ldy #0
+l6      lda s_retr,y
+        sta msgbuf,x
+        inx
+        iny
+        cpy #4
+        bne l6
+        ldx #F_CHAIN
+        lda #<msgbuf
+        ldy #>msgbuf
+        jmp BDOS
+q       lda modif
         beq go
         lda #<q_quit
         ldy #>q_quit
@@ -2581,7 +2648,7 @@ mn_fic  .byt 6,14
         .asc "Enreg. sous...",0
         .byt MA_TYPE
         .word c_saveas
-        .asc "Quitter",0
+it_quit .asc "Quitter",0
         .byt MA_TYPE
         .word c_quit
 
@@ -2630,6 +2697,9 @@ mn_opt  .byt 3,14
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_text  .byt G_MODE,0,0,0,0,0
 gq_split .byt G_MODE,2,0,0,0,0
+s_retour .asc "Retour "
+s_logo   .asc "LOGO "
+s_retr   .asc " /R",0
 
 c_new    .byt $81,0
 c_open   .byt $82,0
@@ -2695,6 +2765,7 @@ q_yn      .asc "Remplacer ? O/N/T(ous)/Esc",0
 ; ---------------------------------------------------------------------
 ; Variables
 ; ---------------------------------------------------------------------
+retl    .byt 0              ; 1 : lancé par LOGO (EDITE), Quitter = Retour
 crow2   .byt 0
 stpos   .byt 0
 mark2   .word 0

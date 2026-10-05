@@ -354,6 +354,8 @@ Menus :
 - **Fichier** : Nouveau, Ouvrir..., Insérer..., Enregistrer, Enreg. sous..., Quitter. Le système
   demande confirmation avant de perdre des modifications. Insérer... ajoute le contenu d'un autre
   fichier texte à l'endroit du curseur (le curseur se retrouve après le texte inséré).
+  Lancé depuis LOGO par `EDITE`, EDIT montre Retour au lieu de Quitter : il enregistre le texte
+  s'il a changé et revient dans LOGO (voir LOGO).
 - **Edition** : Marquer, Copier, Couper, Coller, Eff. paragr. Le presse-papiers fait 4 Ko au plus.
   On marque un bout du bloc, on déplace le curseur à l'autre bout, puis on copie ou on coupe.
 - **Chercher** : Chercher..., Suivant, Remplacer.... Pour chaque occurrence, on répond
@@ -411,6 +413,7 @@ décimaux (voir plus bas).
 | `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer, charger les procédures (`NOM.LOG`) |
+| `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
 | `NOTE n d`, `BRUIT d`, `SILENCE` | joue la note n (1 à 96, 37 = do central, 46 = la 440 Hz, 0 = silence) ou un bruit pendant d cinquantièmes de seconde ; coupe le son |
@@ -477,6 +480,15 @@ lu dans une table au 1/65536, est interpolé entre deux degrés. `REPETE 7 [AV 3
 se referme, `DR 0.5` tourne d'un demi-degré. `XCOR`, `YCOR` et `CAP` rendent un entier quand
 la tortue est sur un point entier, sinon un décimal arrondi à 2 décimales (`FIXECAP 30 AV 100`
 donne `86.6` pour `YCOR`). Une position au-delà de -32768..32767 donne `Nombre trop grand`.
+
+**Modifier ses procédures avec EDIT.** `EDITE "NOM` (menu Fichier, « Editer... ») enregistre
+toutes les procédures dans `NOM.LOG` et ouvre ce fichier dans EDIT. Le menu Fichier d'EDIT
+propose alors Retour : le fichier est enregistré s'il a changé, LOGO revient avec ses
+variables, ses mots et listes, la tortue, le dessin et le mode d'écran, et recharge `NOM.LOG`
+(les procédures sont celles du fichier). L'état de LOGO passe par le fichier `LOGO.$$$`,
+effacé au retour. Un programme en cours s'arrête. On peut aussi lancer `LOGO NOM`, qui charge
+`NOM.LOG` dès le démarrage. Le passage d'un programme à l'autre utilise la fonction 47 du
+BDOS (voir « Appel du BDOS »).
 
 **Écran texte.** Pour un programme qui n'écrit que du texte (calculs décimaux, mots et
 listes), `ECRANTEXTE` (menu Tortue, « Ecran texte ») donne tout l'écran au texte : 26 lignes
@@ -692,8 +704,15 @@ ordinaires. C'est ce que fait l'éditeur.
 | | | 36 | R0-R1 <- position séquentielle courante |
 | 13 | réinitialiser les disques | 24 / 25 | disques connectés / disque courant |
 | 14 | choisir le disque (A: seul) | 26 | adresse DMA (enregistrements de 128 octets) |
+| | | 47 | CHAIN : A/Y = ligne de commande (0 à la fin) ; ne revient pas |
 
 Le FCB a le format CP/M 2.2 sur 36 octets.
+
+**Enchaîner deux programmes.** La fonction 47 (comme celle de CP/M 3) termine le programme
+et fait exécuter une ligne par le CCP, comme si on l'avait tapée : elle s'affiche après `A>`
+puis s'exécute, avant la ligne suivante d'un script DO en cours. Sous CP/M 3 la ligne est au
+DMA ; ici elle est donnée par A/Y (78 caractères au plus). Exemple : LOGO lance
+`EDIT NOM.LOG /L`, et EDIT revient par `LOGO NOM.LOG /R`.
 
 **Accès direct.** Les fonctions 33 à 36 lisent et écrivent l'enregistrement de 128 octets dont
 le numéro est en R0-R1 (octets 33 et 34 du FCB, R2 à 0), sans tout relire depuis le début.

@@ -15,6 +15,18 @@ prompt  lda #"A"
         jsr conout
         lda #">"
         jsr conout
+        lda chain_on            ; ligne laissée par CHAIN (BDOS 47) ?
+        beq nochain
+        lda #0
+        sta chain_on
+        tax
+chs     cpx CMDBUF+1            ; affichée, comme une ligne de script
+        beq scr
+        lda CMDBUF+2,x
+        jsr conout
+        inx
+        bne chs
+nochain
 #ifdef DISK
         jsr scr_line            ; une ligne de script DO ?
         bcc scr

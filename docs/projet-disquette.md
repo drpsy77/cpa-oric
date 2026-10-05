@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F4BF`, marge 433 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F4F5`, marge 379 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
@@ -28,7 +28,7 @@ données, communiquer (réseau par le LOCI).
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
 HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
 LISCAR / TOUCHE?, valeurs typées, nombres décimaux, mots et listes, fonctions de l'utilisateur
-avec RENDS, écran texte), ASM
+avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
@@ -42,7 +42,8 @@ démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essaye
 Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
 sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
 les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
-ECRANTEXTE et ECRANMIXTE (avec le menu Tortue).
+ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), EDITE et le Retour d'EDIT (temps d'écriture
+et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Choix déjà faits (et pourquoi)
 
@@ -158,9 +159,30 @@ ECRANTEXTE et ECRANMIXTE (avec le menu Tortue).
   Menu Tortue : « Ecran texte », « Ecran mixte ». Coût : 229 octets (zone libre 17,9 Ko :
   le code a franchi une page).
 
+- Enchaînement de programmes : BDOS 47 CHAIN (numéro et rôle de CP/M 3 ; la ligne est donnée
+  par A/Y au lieu du DMA). La ligne est recopiée dans `CMDBUF` ($0400, qu'un démarrage à
+  chaud ne touche pas), `chain_on` ($0244, page 2, remis à 0 au démarrage à froid) est mis à 1,
+  puis démarrage à chaud ; le CCP affiche la ligne après `A>` et l'exécute avant toute ligne
+  d'un script DO. Dans le BDOS commun (la ROM l'a aussi, pour ses commandes internes). Coût :
+  54 octets résidents (marge 379 octets).
+- LOGO, lot 10 : EDITE "NOM fait SAUVE, range l'état dans `LOGO.$$$` puis enchaîne sur
+  `EDIT NOM.LOG /L`. État : en-tête (« LGS1 », hp, memtop, mode d'écran), variables globales
+  (512 octets), tas des textes (de hp arrondi à 128 jusqu'à memtop), page zéro `$00-$FF`
+  (relue en dernier dans lbuf et llbuf, recopiée d'un coup : tant qu'elle n'est pas recopiée,
+  les globales et le tas relus ne sont désignés par rien, un fichier incomplet est sans
+  danger). Les procédures ne sont pas dans l'état : elles reviennent par CHARGE du fichier
+  modifié, préparé par `args` comme une ligne tapée au prompt (`autold`). Le contexte
+  d'exécution n'est pas gardé : EDITE arrête un programme en cours, on revient au prompt.
+  En écran texte, EDITE repasse en SPLIT avant d'enchaîner : EDIT garde l'image quand il part
+  du mode SPLIT (sinon son presse-papiers l'écraserait) ; LOGO remet l'écran texte au retour.
+  `LOGO NOM` (sans /R) charge `NOM.LOG` au démarrage. EDIT : avec `/L` dans ses paramètres,
+  l'article Quitter devient Retour (le texte du menu est réécrit en mémoire) ; Retour
+  enregistre si le texte a changé (en cas d'échec, on reste dans EDIT) et enchaîne sur
+  `LOGO NOM.LOG /R`. Coût : LOGO 785 octets (zone libre 17,2 Ko), EDIT 160 octets.
+
 ## Suite prévue (par priorité)
 
-0. **LOGO : nombres décimaux, saisie, mots et listes** (en cours, un commit par livraison). Choix :
+0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
    - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
      en interne deux types, entier 16 bits et décimal ; un entier qui déborde devient décimal,
      `/` est une division exacte (QUOTIENT et RESTE pour la division entière) ; point décimal ;
@@ -184,12 +206,12 @@ ECRANTEXTE et ECRANMIXTE (avec le menu Tortue).
    | 7 | RACINE, SIN, COS, ARCTAN, LN, EXP (PUISSANCE : écrite en Logo si besoin) | moyenne | 1,4 Ko | **fait** |
    | 8 | RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | 424 o + 1 Ko de zones | **fait** |
    | 9 | mode texte : ECRANTEXTE / ECRANMIXTE, erreur pour les primitives graphiques, `memtop` reste à `$A000` | faible | 229 o | **fait** |
-   | 10 | aller-retour avec EDIT : BDOS 47 « Chain » (comme CP/M 3, ~50 o résidents, ajout au contrat accepté), EDITE dans LOGO (état dans `LOGO.$$$`), article « Retour » dans EDIT | moyenne | ~600 o | décidé, à faire |
+   | 10 | aller-retour avec EDIT : BDOS 47 « Chain » (comme CP/M 3, ajout au contrat accepté), EDITE dans LOGO (état dans `LOGO.$$$`), article « Retour » dans EDIT | moyenne | 54 o résidents, LOGO 785 o, EDIT 160 o | **fait** |
 
    Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko, zone libre ~21 Ko en SPLIT
    partagée entre procédures et textes. Après le lot 7 : LOGO.COM 15,4 Ko (les lots 5 et 7
    ont coûté le double de l'estimation), zone libre 20 Ko en SPLIT (28 Ko avant le lot 2).
-   Après le lot 9 : LOGO.COM 16 Ko, zone libre 17,9 Ko (en SPLIT comme en texte).
+   Après le lot 10 : LOGO.COM 16,8 Ko, zone libre 17,2 Ko (en SPLIT comme en texte).
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 
@@ -207,7 +229,7 @@ ECRANTEXTE et ECRANMIXTE (avec le menu Tortue).
 
 ## Contraintes à garder en tête
 
-- 433 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 379 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
