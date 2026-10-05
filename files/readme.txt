@@ -168,8 +168,14 @@ VIDE? MOT? LISTE?
               | 1 ou 0 ; aussi
               |   NOMBRE? MEMBRE? a b
 EXEC [..]     | execute une liste
-LISCAR        | attend une touche,
-              |   rend son code
+LISLISTE      | lit une ligne ->
+              |   liste (LL)
+LISMOT        | lit une ligne -> mot
+LISCAR        | attend une touche ->
+              |   caractere
+ASCII x  CAR n
+              | code d'un caractere /
+              |   caractere
 TOUCHE?       | 1 si une touche
               |   attend, 0 sinon
 NOTE n d      | joue la note n (37 =

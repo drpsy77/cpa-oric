@@ -113,6 +113,17 @@ run erreurs3 'PUT OUT.TXT LOGO
 ' 2200
 check erreurs3
 
+echo "== lecture au clavier : LISLISTE, LISMOT, ASCII, CAR"
+run lecture 'PUT OUT.TXT LOGO
+|| charge "t10
+|||bonjour  le [petit   monde]
+||   deux mots  
+||21 3
+||a||z||
+|| quitte
+' 4600
+check lecture
+
 echo "== clavier : LISCAR, TOUCHE?, DONNE"
 run clavier 'PUT OUT.TXT LOGO
 || charge "t3

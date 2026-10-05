@@ -17,6 +17,7 @@
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
 ;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
+;  LISLISTE LISMOT ASCII CAR
 ;  ENT ARRONDI ABS QUOTIENT RESTE
 ;
 ;  L'interpréteur lit directement le texte (lignes tapées, corps des
@@ -1444,7 +1445,8 @@ int_adv lda #T_INT
         sta vt
         jmp advance
 
-; LISCAR : attend une touche et rend son code (ESC interrompt)
+; LISCAR : attend une touche et rend le caractère (mot d'un caractère) ;
+;   ESC interrompt
 f_liscar
 .(
         lda pkey                ; touche déjà lue par check_esc ?
@@ -1455,9 +1457,131 @@ f_liscar
         jmp esc_err
 have    ldx #0
         stx pkey
+        jsr char_word
+        jmp advance
+.)
+
+; char_word : valeur courante = mot fait du caractère A
+char_word
+        sta nbuf
+        lda #<nbuf
+        sta ts
+        lda #>nbuf
+        sta ts+1
+        lda #1
+        sta tl
+        lda #0
+        sta tl+1
+        lda #T_WORD
+        jmp mk_text
+
+; ASCII x : code du premier caractère ; CAR n : mot du caractère de code n
+f_ascii
+.(
+        jsr arg1t
+        jsr top_txt
+        lda #6
+        jsr vdrop
+        lda tl
+        ora tl+1
+        bne ok
+        jmp err_empty
+ok      ldy #0
+        lda (ts),y
         sta val
-        stx val+1
-        jmp int_adv
+        sty val+1
+        lda #T_INT
+        sta vt
+        rts
+.)
+f_car
+        jsr arg1
+        jsr to_int
+        lda val
+        jmp char_word
+
+; LISLISTE : lit une ligne au clavier -> liste ; LISMOT : -> mot (sans les
+;   blancs du début et de la fin). La ligne passe en majuscules.
+f_lisliste
+        jsr read_ll
+        jsr lit_list
+        jmp advance
+f_lismot
+.(
+        jsr read_ll
+b1      lda lstart              ; blancs du début
+        cmp lend
+        beq w
+        ldy #0
+        lda (lstart),y
+        cmp #" "+1
+        bcs b2
+        inc lstart
+        bne b1
+        inc lstart+1
+        jmp b1
+b2      ldy #0                  ; blancs de la fin (lstart < lend ici)
+        lda lend
+        bne b3
+        dec lend+1
+b3      dec lend
+        lda (lend),y
+        cmp #" "+1
+        bcc b2
+        inc lend
+        bne w
+        inc lend+1
+w       sec
+        lda lend
+        sbc lstart
+        sta tl
+        lda #0
+        sta tl+1
+        lda lstart
+        sta ts
+        lda lstart+1
+        sta ts+1
+        lda #T_WORD
+        jsr mk_text
+        jmp advance
+.)
+
+; read_ll : lit une ligne (BDOS 10) dans llbuf, en majuscules ;
+;   lstart, lend = la ligne
+read_ll
+.(
+        lda #0                  ; une touche tapée avant ne compte pas
+        sta pkey
+        lda #126
+        sta llbuf
+        ldx #10
+        lda #<llbuf
+        ldy #>llbuf
+        jsr BDOS
+        jsr crlf
+        lda #<(llbuf+2)
+        sta lstart
+        lda #>(llbuf+2)
+        sta lstart+1
+        clc
+        lda lstart
+        adc llbuf+1
+        sta lend
+        lda lstart+1
+        adc #0
+        sta lend+1
+        ldx llbuf+1             ; majuscules
+        beq r
+up      lda llbuf+1,x
+        cmp #"a"
+        bcc n
+        cmp #"z"+1
+        bcs n
+        and #$DF
+        sta llbuf+1,x
+n       dex
+        bne up
+r       rts
 .)
 
 ; TOUCHE? : 1 si une touche attend d'être lue par LISCAR, 0 sinon
@@ -4448,6 +4572,16 @@ funcs   .asc "HASARD",0
         .word f_xcor
         .asc "YCOR",0
         .word f_ycor
+        .asc "LISLISTE",0
+        .word f_lisliste
+        .asc "LL",0
+        .word f_lisliste
+        .asc "LISMOT",0
+        .word f_lismot
+        .asc "ASCII",0
+        .word f_ascii
+        .asc "CAR",0
+        .word f_car
         .asc "LISCAR",0
         .word f_liscar
         .asc "TOUCHE?",0
@@ -4595,7 +4729,8 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "POUR NOM :A ... FIN  DONNE ",$22,"X n",13,10
           .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
           .asc "XCOR YCOR  + - * / ( ) = < >",13,10
-          .asc "LISCAR (code touche)  TOUCHE?",13,10
+          .asc "LISLISTE LISMOT LISCAR TOUCHE?",13,10
+          .asc "ASCII x  CAR n",13,10
           .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
           .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
           .asc "MOT PHRASE LISTE PREMIER DERNIER",13,10
@@ -4675,5 +4810,6 @@ capy    = brt+1
 xsp     = capy+1        ; haut de la pile d'EXECUTE (2)
 xstack  = xsp+2         ; textes en cours d'EXECUTE
 xstack_end= xstack+512
-procbase = (xstack_end+255)/256*256   ; procédures, puis le tas des textes
+llbuf   = xstack_end    ; ligne lue par LISLISTE, LISMOT (128)
+procbase = (llbuf+128+255)/256*256   ; procédures, puis le tas des textes
 

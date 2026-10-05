@@ -403,8 +403,11 @@ décimaux (voir plus bas).
 | `DONNE "X n`, `:X` | variable globale, valeur d'une variable ou d'un paramètre |
 | `ECRIS n` / `EC`, `ECRIS "mot`, `ECRIS [texte]` | afficher |
 | `ATTENDS n` | attendre n cinquantièmes de seconde |
-| `LISCAR` | attend une touche et rend son code (`DONNE "C LISCAR`) |
+| `LISLISTE` / `LL` | lit une ligne au clavier et la rend en liste (`DONNE "R LISLISTE`) ; la ligne passe en majuscules |
+| `LISMOT` | lit une ligne et la rend en un seul mot (sans les blancs du début et de la fin) |
+| `LISCAR` | attend une touche et rend le caractère (`ASCII LISCAR` pour son code) |
 | `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
+| `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer, charger les procédures (`NOM.LOG`) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
