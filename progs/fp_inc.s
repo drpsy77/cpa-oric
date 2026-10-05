@@ -937,9 +937,9 @@ p       lda fe                  ; estimation : d = (e - 129) * 0,30
         adc #1                  ; C=0 ici : valeur absolue
 ep      jsr fp_m77              ; A = |e - 129| * 77 / 256
         plp
-        bcs dp
+        bcs dpp
         eor #$FF                ; négatif : - (A + 1)
-dp      sta fde                 ; d = exposant décimal du premier chiffre
+dpp     sta fde                 ; d = exposant décimal du premier chiffre
         lda #8                  ; ramène FAC vers 1E8..1E9
         sec
         sbc fde

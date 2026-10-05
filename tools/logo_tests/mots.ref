@@ -1,0 +1,69 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "T8
+A B [C D] E
+A
+E
+B [C D] E
+A B [C D]
+C D
+C
+4
+B
+R
+ONJOUR
+BONJOU
+J
+7
+BONJOUR
+X12
+A B C
+A B C D
+Z
+A [B C]
+[A] [B]
+1
+0
+1
+1
+0
+1
+1
+0
+1
+1
+0
+1
+1
+13
+-5
+1
+0
+1
+0
+1
+1
+5
+3
+3
+A B
+A [B C]
+0
+
+
+5
+6
+OK
+OK
+9
+DOUBLE defini.
+ABAB
+INV defini.
+C
+B
+A
+REMPLIS defini.
+10 9 8 7 6 5 4 3 2 1
+10
+11
+Charge.
+?  QUITTE

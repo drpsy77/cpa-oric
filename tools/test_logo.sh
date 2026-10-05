@@ -89,6 +89,30 @@ run tortue_dec 'PUT OUT.TXT LOGO
 ' 4400
 check tortue_dec
 
+echo "== mots et listes"
+run mots 'PUT OUT.TXT LOGO
+|| charge "t8
+|||||||||| quitte
+' 3400
+check mots
+
+echo "== mots et listes : compactage du tas (environ 2 min)"
+run endurance 'PUT OUT.TXT LOGO
+|| charge "t9
+||||||||||||||||||||||||||||||| quitte
+' 6000
+check endurance
+
+echo "== messages d'erreur des mots et listes"
+run erreurs3 'PUT OUT.TXT LOGO
+|| charge "e15
+| charge "e16
+| charge "e17
+| charge "e18
+| quitte
+' 2200
+check erreurs3
+
 echo "== clavier : LISCAR, TOUCHE?, DONNE"
 run clavier 'PUT OUT.TXT LOGO
 || charge "t3

@@ -55,7 +55,7 @@ SDL_AUDIODRIVER=dummy ORIC_KEYS="$KEYS" ORIC_KEYS_AT=${ORIC_KEYS_AT:-100} \
   ./Oricutron-sdl2 -m atmos -w "$@" > "$OUT.log" 2>&1 &
 PID=$!
 i=0
-while [ ! -f "$OUT.mem" ] && [ $i -lt 900 ]; do
+while [ ! -f "$OUT.mem" ] && [ $i -lt 3000 ]; do
   kill -0 $PID 2>/dev/null || break   # émulateur arrêté (ROM absente...)
   sleep 0.1; i=$((i+1))
 done

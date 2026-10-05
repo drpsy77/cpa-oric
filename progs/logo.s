@@ -100,6 +100,29 @@ FP_ZP   = $90           ; page zéro de fp_inc.s ($90-$BF)
 sf      = $22           ; sinm : fraction de l'angle (1/256 de degré)
 sd      = $23           ; mul_ds : signe du résultat
 sone    = $0F           ; sinm : 1 si |sinus| = 1
+hp      = $00           ; bas du tas des textes (2 octets)
+hn      = $02           ; halloc : taille demandée (2)
+hptr    = $04           ;   bloc obtenu (2)
+gtop    = $06           ; gc : haut de la partie compactée (2)
+glim    = $08           ;   bas du tas avant compactage (2)
+gbest   = $0A           ;   texte choisi (2)
+glen    = $0C           ;   et sa longueur (2)
+gfnd    = $0E           ;   1 si un texte a été trouvé
+dp      = $D0           ; dscan : valeur visitée (2)
+dcnt    = $D2
+dstr    = $D3
+gdst    = $D4           ; gc : nouvelle adresse du texte (2)
+cbv     = $D6           ; dscan : routine appelée (2)
+ts      = $D8           ; texte source (2)
+tl      = $DA           ; longueur (2)
+td      = $DC           ; destination (2)
+capf    = $DE           ; bit 7 : putc écrit dans nbuf
+ncap    = $DF           ;   nombre de caractères écrits
+scp     = $2E           ; parcours d'une liste (ma) : position
+sce     = $30           ;   fin (mb)
+els     = $32           ;   début de l'élément (mr)
+eln     = $34           ;   longueur de l'élément (mr+2)
+elo     = $20           ;   écart depuis le début du texte (p3)
 headf   = $C0           ; fraction du cap (1/256 de degré)
 angf    = $C1           ; fraction de l'angle ang
 dst3    = $C2           ; distance en virgule fixe (1/256, bas, haut)
@@ -120,12 +143,15 @@ FR_SIZE = 12            ; contexte : type, retour(2), fin(2), début liste(2),
 FR_REP  = 1             ;   fin liste(2), compteur(2), marque des locales
 FR_LIST = 2
 FR_PROC = 3
+FR_EXEC = 4             ; EXECUTE : compteur = xsp à rendre
 VAR_SIZE = 16           ; variable : nom (10 octets), valeur (6)
 NAMELEN = 10
 VAL_SIZE = 6            ; valeur : type (1), contenu (5)
 VS_N    = 24            ; profondeur de la pile de valeurs
 T_INT   = 1             ; entier 16 bits signé (contenu : 2 octets)
 T_DEC   = 2             ; décimal « à la Oric » (5 octets, fp_inc.s)
+T_WORD  = 3             ; mot : adresse et longueur d'un texte du tas
+T_LIST  = 4             ; liste : idem (éléments séparés par une espace)
 MAXLOC  = 100
 MAXGL   = 32
 MAXPAR  = 8
@@ -156,8 +182,12 @@ ok      lda #<procbase
         sta pend+1
         lda TPA_TOP
         sta memtop
+        sta hp                  ; tas des textes vide
         lda TPA_TOP+1
         sta memtop+1
+        sta hp+1
+        lda #0
+        sta capf
         lda #0
         sta nloc
         sta ngl
@@ -226,6 +256,21 @@ reset_frames
         sta vsp
         lda #>vstack
         sta vsp+1
+        lda #<xstack
+        sta xsp
+        lda #>xstack
+        sta xsp+1
+; argv_clr : arguments vides (le compactage du tas ne doit pas les lire)
+argv_clr
+        ldx #MAXPAR*VAL_SIZE-VAL_SIZE
+        lda #0
+ac0     sta argv,x
+        txa
+        sec
+        sbc #VAL_SIZE
+        tax
+        lda #0
+        bcs ac0
         rts
 
 ; error : message A/Y, retour au prompt
@@ -429,7 +474,7 @@ n3      cmp #":"
 n4      cmp #$22
         bne n5
         jsr inc_tp
-        jsr scan_word
+        jsr scan_qword
         lda #TK_QUOTE
         sta ttype
         rts
@@ -633,6 +678,32 @@ loop    jsr at_end
 done    rts
 .)
 
+; scan_qword : mot après un guillemet : jusqu'à un blanc, [ ou ] (il peut
+;   contenir - + . etc. : "-3.5 est un mot)
+scan_qword
+.(
+        lda tp
+        sta tnam
+        lda tp+1
+        sta tnam+1
+        lda #0
+        sta tlen
+loop    jsr at_end
+        bcs done
+        ldy #0
+        lda (tp),y
+        cmp #" "+1
+        bcc done
+        cmp #"["
+        beq done
+        cmp #"]"
+        beq done
+        inc tlen
+        jsr inc_tp
+        jmp loop
+done    rts
+.)
+
 ; is_op : Z=1 si A est un opérateur (A préservé)
 is_op
 .(
@@ -720,6 +791,7 @@ top_frame
 ; pop_frame : retire le contexte du dessus et reprend la suite
 pop_frame
         jsr top_frame
+        jsr x_rest
         ldy #0
         lda (p1),y
         cmp #FR_PROC
@@ -744,6 +816,22 @@ pf1     ldy #1
         lda p1+1
         sta fsp+1
         jmp advance
+
+; x_rest : si le contexte p1 est un EXECUTE, xsp reprend sa valeur d'avant
+x_rest
+.(
+        ldy #0
+        lda (p1),y
+        cmp #FR_EXEC
+        bne r
+        ldy #9
+        lda (p1),y
+        sta xsp
+        iny
+        lda (p1),y
+        sta xsp+1
+r       rts
+.)
 
 ; push_frame : A = type ; cnt = compteur ; lstart/lend = texte à exécuter
 ;   le jeton courant (tokst) est la suite à reprendre
@@ -833,7 +921,8 @@ more    jsr top_frame
         cmp #FR_PROC
         bne drop
         jmp pop_frame
-drop    lda p1
+drop    jsr x_rest
+        lda p1
         sta fsp
         lda p1+1
         sta fsp+1
@@ -952,13 +1041,21 @@ cmpop   pha
         jsr advance
         jsr sum
         jsr vpop_l              ; lv = gauche, val = droite
+        pla
+        cmp #"="
+        bne ord
+        jsr equal               ; = : nombres ou textes
+        bne true
+        beq false
+ord     pha
         jsr need_num2
         jsr compare             ; A = $FF (<), 0 (=), 1 (>)
         tax
         pla
-        cmp #"="
-        bne lt
-        txa
+        cmp #"<"
+        beq lt0
+        jmp gt
+lt0     cpx #$FF
         beq true
 false   lda #0
         beq set
@@ -1266,9 +1363,16 @@ c       lda tnf,x
         sta vt
         jmp advance
 n1      cmp #TK_VAR
-        bne n2
+        bne nq
         jsr get_var
         jmp advance
+nq      cmp #TK_QUOTE
+        bne nl
+        jmp lit_word
+nl      cmp #TK_LBR
+        bne n2
+        jsr need_list
+        jmp lit_list
 pbad    jmp bad
 n2      cmp #TK_OP
         bne n3
@@ -1618,14 +1722,19 @@ d       lda val                 ; exposant d'un décimal : 0 pour zéro
 .)
 ; need_num : la valeur courante doit être un nombre (entier ou décimal)
 need_num
-        lda vt
-        cmp #T_DEC+1
+        jsr try_num
         bcs not_num
         rts
 ; need_num2 : la valeur de gauche (lvt) et la valeur courante aussi
 need_num2
         lda lvt
         cmp #T_DEC+1
+        bcc need_num
+        jsr swap_l
+        jsr try_num
+        php
+        jsr swap_l
+        plp
         bcc need_num
 not_num lda #0
         sta clen
@@ -1732,8 +1841,26 @@ put_val
         cmp #T_INT
         bne d
         jmp put_num
-d       jsr val_fac
+d       cmp #T_DEC
+        bne t
+        jsr val_fac
         jmp fp_print
+t       jsr txt_v               ; mot ou liste : ses caractères
+l       lda tl
+        ora tl+1
+        beq r
+        ldy #0
+        lda (ts),y
+        jsr putc
+        inc ts
+        bne a1
+        inc ts+1
+a1      lda tl
+        bne a2
+        dec tl+1
+a2      dec tl
+        jmp l
+r       rts
 .)
 
 ; both_int : C=0 si la valeur de gauche et la valeur courante sont entières
@@ -2237,38 +2364,9 @@ p_stop  lda #1
         rts
 
 p_ecris
-.(
-        lda ttype
-        cmp #TK_QUOTE
-        bne n1
-        jsr put_tok
-        jsr advance
-        jmp crlf
-n1      cmp #TK_LBR
-        bne n2
-        jsr need_list
-        lda lstart
-        sta p2
-        lda lstart+1
-        sta p2+1
-pl      lda p2
-        cmp lend
-        bne pc
-        lda p2+1
-        cmp lend+1
-        beq done
-pc      ldy #0
-        lda (p2),y
-        jsr putc
-        inc p2
-        bne pl
-        inc p2+1
-        jmp pl
-done    jmp crlf
-n2      jsr eval
+        jsr eval
         jsr put_val
         jmp crlf
-.)
 
 p_donne
 .(
@@ -3224,7 +3322,19 @@ wbyte
 .(
         pha
         lda wp+1
-        cmp memtop+1
+        cmp hp+1
+        bcc ok
+        txa                     ; compacte le tas et réessaie
+        pha
+        tya
+        pha
+        jsr hcompact
+        pla
+        tay
+        pla
+        tax
+        lda wp+1
+        cmp hp+1
         bcc ok
         pla
         lda #0
@@ -3473,6 +3583,7 @@ found   jsr advance             ; jeton suivant : le premier argument
         jsr hdr_params          ; pcount, parn/parl ; p2 = début du corps
         lda nloc
         sta fmark
+        jsr argv_clr
         ldx #0                  ; évalue les arguments dans le contexte appelant
 ev      cpx pcount
         beq bind
@@ -3538,7 +3649,8 @@ bc      lda argv,x
         inc nloc
         inx
         bne bl
-body    jsr rec_end             ; corps : de bodyst à hend - 3 ("FIN")
+body    jsr argv_clr
+        jsr rec_end             ; corps : de bodyst à hend - 3 ("FIN")
         lda bodyst
         sta lstart
         lda bodyst+1
@@ -4106,7 +4218,9 @@ end     sec
 ; ---------------------------------------------------------------------
 ; Affichage
 ; ---------------------------------------------------------------------
-putc    pha
+putc    bit capf
+        bmi pcap
+        pha
         txa
         pha
         tya
@@ -4120,6 +4234,13 @@ putc    pha
         pla
         tax
         pla
+        rts
+
+pcap    sty capy                ; as_text : le caractère va dans nbuf
+        ldy ncap
+        sta nbuf,y
+        inc ncap
+        ldy capy
         rts
 
 puts
@@ -4215,8 +4336,14 @@ dec_hi  .byt >10000,>1000,>100,>10
 ; ---------------------------------------------------------------------
 ; nombres décimaux (FP_ZP, putc, fp_err_big et fp_err_div sont définis ici)
 #include "fp_inc.s"
+; mots et listes
+#include "ltxt_inc.s"
 
 prims
+        .asc "EXECUTE",0
+        .word p_exec
+        .asc "EXEC",0
+        .word p_exec
         .asc "AVANCE",0
         .word p_av
         .asc "AV",0
@@ -4335,6 +4462,44 @@ funcs   .asc "HASARD",0
         .word f_quotient
         .asc "RESTE",0
         .word f_reste
+        .asc "MOT",0
+        .word f_mot
+        .asc "PHRASE",0
+        .word f_phrase
+        .asc "PH",0
+        .word f_phrase
+        .asc "LISTE",0
+        .word f_liste
+        .asc "PREMIER",0
+        .word f_premier
+        .asc "PR",0
+        .word f_premier
+        .asc "DERNIER",0
+        .word f_dernier
+        .asc "DER",0
+        .word f_dernier
+        .asc "SAUFPREMIER",0
+        .word f_sp
+        .asc "SP",0
+        .word f_sp
+        .asc "SAUFDERNIER",0
+        .word f_sd
+        .asc "SD",0
+        .word f_sd
+        .asc "ITEM",0
+        .word f_item
+        .asc "COMPTE",0
+        .word f_compte
+        .asc "VIDE?",0
+        .word f_videp
+        .asc "MOT?",0
+        .word f_motp
+        .asc "LISTE?",0
+        .word f_listep
+        .asc "NOMBRE?",0
+        .word f_nombrep
+        .asc "MEMBRE?",0
+        .word f_membrep
         .byt 0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
@@ -4433,6 +4598,10 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "LISCAR (code touche)  TOUCHE?",13,10
           .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
           .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
+          .asc "MOT PHRASE LISTE PREMIER DERNIER",13,10
+          .asc "SAUFPREMIER SAUFDERNIER ITEM",13,10
+          .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
+          .asc "MEMBRE?  EXECUTE [..]",13,10
           .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
@@ -4444,6 +4613,8 @@ e_novar   .asc "Pas de valeur pour",0
 e_div     .asc "Division par zero",0
 e_notnum  .asc "Il faut un nombre",0
 e_big     .asc "Nombre trop grand",0
+e_empty   .asc "Mot ou liste vide",0
+e_word    .asc "Il faut un mot",0
 e_list    .asc "Il faut une liste [ ] apres",0
 e_bracket .asc "Il manque un ] apres",0
 e_deep    .asc "Trop de niveaux",0
@@ -4488,5 +4659,21 @@ frames  = locals+MAXLOC*VAR_SIZE
 frames_end= frames+120*FR_SIZE
 vstack  = frames_end    ; pile de valeurs de l'évaluateur
 vstack_end= vstack+VS_N*VAL_SIZE
-procbase = (vstack_end+255)/256*256   ; procédures : jusqu'au haut de la TPA
+gl_v    = globals+NAMELEN       ; valeur de la 1re variable globale
+lo_v    = locals+NAMELEN        ;   et locale
+s_t     = vstack_end    ; deux valeurs de la pile lues par ld_sa, ld_sb (10)
+nbuf    = s_t+10        ; nombre écrit en texte, mot lu comme nombre (32)
+nlen    = nbuf+32
+nlast   = nlen+1
+npend   = nlast+1
+nwr     = npend+1
+bw      = nwr+1         ; build2 : crochets autour des listes
+bsp     = bw+1          ;   mode de l'espace
+bsp2    = bsp+1         ;   1 si espace
+brt     = bsp2+1        ;   type du résultat
+capy    = brt+1
+xsp     = capy+1        ; haut de la pile d'EXECUTE (2)
+xstack  = xsp+2         ; textes en cours d'EXECUTE
+xstack_end= xstack+512
+procbase = (xstack_end+255)/256*256   ; procédures, puis le tas des textes
 

@@ -427,6 +427,27 @@ attendent un entier (`REPETE`, `NOTE`, `ATTENDS`...) arrondissent au plus proche
 répète 3 fois) ; au-delà de 32767 : `Nombre trop grand`. `SI` est vrai pour tout nombre non
 nul.
 
+**Mots et listes.** `"BONJOUR` est un mot (il va jusqu'au prochain blanc ou crochet :
+`"-3.5` aussi), `[UN DEUX [TROIS]]` une liste ; les deux se rangent dans des variables
+(`DONNE "L [A B C]`) et se passent aux procédures. Fonctions :
+
+| Fonction | Résultat |
+|---|---|
+| `PREMIER x` / `PR`, `DERNIER x` / `DER` | premier, dernier élément (ou caractère d'un mot) |
+| `SAUFPREMIER x` / `SP`, `SAUFDERNIER x` / `SD` | tout sauf le premier, sauf le dernier |
+| `ITEM n x`, `COMPTE x` | n-ième élément ; nombre d'éléments (ou de caractères) |
+| `MOT a b` | mot fait de a puis b (`MOT "BON "JOUR`) |
+| `PHRASE a b` / `PH` | liste des éléments de a puis de b |
+| `LISTE a b` | liste de deux éléments (une liste reste une sous-liste) |
+| `VIDE? x`, `MOT? x`, `LISTE? x`, `NOMBRE? x`, `MEMBRE? a b` | 1 ou 0 |
+
+`EXECUTE [ECRIS 5 AV 10]` (ou `EXEC`) exécute une liste. Un mot qui a l'écriture d'un nombre
+compte comme ce nombre (`"12 + 1` donne 13), et un nombre devient un mot là où il en faut un
+(`COMPTE 12345` donne 5). `=` compare aussi les mots et les listes. Dans une expression,
+`LISTE` est la fonction ci-dessus ; en début de ligne, `LISTE "NOM` affiche toujours une
+procédure. Les mots et listes occupent le haut de la mémoire libre, les procédures le bas ;
+quand la place manque, LOGO récupère celle des textes qui ne servent plus.
+
 **La tortue et les décimaux.** `AV`, `RE`, `DR`, `GA`, `FIXECAP` et `FIXEXY` acceptent des
 décimaux : la position et le cap sont gardés au 1/256 près (de pas ou de degré), et le sinus,
 lu dans une table au 1/65536, est interpolé entre deux degrés. `REPETE 7 [AV 30 DR 360 / 7]`
