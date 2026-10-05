@@ -77,7 +77,8 @@ HEX fic       | editeur hexadecimal
 SET afn [opt] | attributs : RO RW SYS
               |   DIR (sans opt : les
               |   affiche)
-LOGO          | Logo et sa tortue
+LOGO [fic]    | Logo et sa tortue
+              |   (charge fic.LOG)
 ASM nom       | NOM.ASM -> NOM.COM et
               |   NOM.SYM
 DEBUG nom [param]
@@ -111,6 +112,9 @@ DEL ^D        | efface avant / sous
 FUNCT         | menus Fichier (dont
               |   Inserer), Edition,
               |   Chercher, Options
+Retour        | (lance par EDITE de
+              |   LOGO) enregistre et
+              |   revient
 
 HEX
 ---
@@ -144,6 +148,8 @@ RENDS x       | la procedure rend x
 EC x          | ecrit
 SAUVE "N      | procedures -> N.LOG
 CHARGE "N     | charge N.LOG
+EDITE "N      | N.LOG dans EDIT, puis
+              |   Retour
 SAUVEIMAGE "N | dessin -> N.IMG
 CHARGEIMAGE "N
               | charge N.IMG

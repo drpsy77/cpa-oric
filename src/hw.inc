@@ -101,6 +101,7 @@ ccp_cnt     = $022E
 dec_val     = $0240     ; 2 octets
 dec_flag    = $0242
 con_last    = $0243     ; dernière ligne de la console (27, 26 en SPLIT)
+chain_on    = $0244     ; 1 = CMDBUF contient une ligne laissée par CHAIN (47)
 
 ; --- Page de base ($0400) ---
 CMDBUF      = $0400     ; [max][long][caractères…][0]

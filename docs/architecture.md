@@ -52,6 +52,7 @@ PUNCH et READER sont réservées au port série (réseau, version disquette).
 | `$021B` | compteur 50 Hz (mot) |
 | `$02A3` | 1 = pause en fin d'écran |
 | `$02A9` | plafond de la TPA (page ; 0 = aucun), remis à 0 au démarrage à chaud |
+| `$0244` | 1 = une ligne laissée par CHAIN attend dans `$0400` (interne au système) |
 
 Les autres variables de la page 2 sont internes (liste complète : `src/hw.inc`). La partie
 publique est dans `progs/cpa.inc`, que tout programme inclut.
@@ -63,10 +64,11 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 | 0-12 | console et système, comme CP/M 2.2 ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) | disque ; la ROM renvoie `$FF` |
 | 26 | adresse DMA | les deux |
+| 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
 | 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-6 | les deux |
 
-Numéros libres pour l'avenir : 37-114 et 117 et suivants. Une fonction ajoutée existe dans les
+Numéros libres pour l'avenir : 37-46, 48-114 et 117 et suivants. Une fonction ajoutée existe dans les
 deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 
 ### Programmes `.COM`
@@ -83,7 +85,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
 | `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4BF`), puis tampons (ligne de commande, DO, PUT), variables du BDOS `$FD00`, tampon de secteur `$FE00` | ROM : code jusqu'à `$E3A0` environ, reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4F5`), puis tampons (ligne de commande, DO, PUT), variables du BDOS `$FD00`, tampon de secteur `$FE00` | ROM : code jusqu'à `$E3A0` environ, reste libre |
 
 ## 4. Construire et tester
 

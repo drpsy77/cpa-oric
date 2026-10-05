@@ -91,7 +91,8 @@ h_1
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10
         .asc "              |   DIR (sans opt : les",13,10
         .asc "              |   affiche)",13,10
-        .asc "LOGO          | Logo et sa tortue",13,10
+        .asc "LOGO [fic]    | Logo et sa tortue",13,10
+        .asc "              |   (charge fic.LOG)",13,10
         .asc "ASM nom       | NOM.ASM -> NOM.COM et",13,10
         .asc "              |   NOM.SYM",13,10
         .asc "DEBUG nom [param]",13,10
@@ -126,6 +127,9 @@ h_2
         .asc "FUNCT         | menus Fichier (dont",13,10
         .asc "              |   Inserer), Edition,",13,10
         .asc "              |   Chercher, Options",13,10
+        .asc "Retour        | (lance par EDITE de",13,10
+        .asc "              |   LOGO) enregistre et",13,10
+        .asc "              |   revient",13,10
         .byt 0
 h_3
         .asc "HEX",13,10
@@ -161,6 +165,8 @@ h_4
         .asc "EC x          | ecrit",13,10
         .asc "SAUVE ",34,"N      | procedures -> N.LOG",13,10
         .asc "CHARGE ",34,"N     | charge N.LOG",13,10
+        .asc "EDITE ",34,"N      | N.LOG dans EDIT, puis",13,10
+        .asc "              |   Retour",13,10
         .asc "SAUVEIMAGE ",34,"N | dessin -> N.IMG",13,10
         .asc "CHARGEIMAGE ",34,"N",13,10
         .asc "              | charge N.IMG",13,10

@@ -1,0 +1,12 @@
+ 1|..? CHARGE "ESSAI.LOG                   |
+ 2|..NEUF defini.                          |
+ 3|..CARRE defini.                         |
+ 4|..Charge.                               |
+ 5|..?  ECRIS :L                           |
+ 6|..A B C                                 |
+ 7|..?  NEUF                               |
+ 8|..99                                    |
+ 9|..?  ECRIS CAP                          |
+10|..45                                    |
+11|..?  AV 10                              |
+12|..Impossible en ecran texte : AV        |

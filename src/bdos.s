@@ -21,8 +21,10 @@ bd_np
         bne bd_snd
         jmp gfx_call
 bd_snd  cpx #SND_FUNC
-        bne bd_std
+        bne bd_ch
         jmp snd_call
+bd_ch   cpx #CHAIN_FUNC
+        beq f_chain
 bd_std  cpx #BDOS_NFUNC
         bcs bdos_bad
         txa
@@ -38,6 +40,29 @@ bd_std  cpx #BDOS_NFUNC
 bdos_bad
         lda #$FF
         rts
+
+; ---------------------------------------------------------------------
+; 47 CHAIN : termine le programme et fait exécuter une ligne de commande
+;   par le CCP, comme si on l'avait tapée (la fonction 47 de CP/M 3 ; ici
+;   la ligne est donnée par A/Y, terminée par 0, 78 caractères au plus).
+;   Ne revient pas : démarrage à chaud, puis le CCP affiche et exécute
+;   la ligne avant tout script DO en cours.
+; ---------------------------------------------------------------------
+CHAIN_FUNC = 47
+f_chain
+.(
+        ldy #0                  ; copie dans CMDBUF (une ligne en $0480
+cp      lda (ZP_PTR),y          ; peut s'y recopier : la destination est
+        beq end                 ; plus bas)
+        sta CMDBUF+2,y
+        iny
+        cpy #CMDMAX
+        bne cp
+end     sty CMDBUF+1
+        lda #1
+        sta chain_on
+        jmp wboot
+.)
 
 bdos_tab
         .word f_wboot-1         ; 0  réinitialisation système
