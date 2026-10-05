@@ -143,8 +143,10 @@ h_3
 h_4
         .asc "LOGO",13,10
         .asc "----",13,10
-        .asc "AV n  RE n    | avance / recule",13,10
+        .asc "AV n  RE n    | avance / recule (n",13,10
+        .asc "              |   decimal admis)",13,10
         .asc "DR n  GA n    | droite / gauche",13,10
+        .asc "              |   (degres, 0.5 admis)",13,10
         .asc "LC  BC        | leve / baisse stylo",13,10
         .asc "CT  MT        | cache / montre",13,10
         .asc "VE  ORIGINE   | vide ecran / centre",13,10

@@ -58,13 +58,21 @@ run erreurs 'PUT OUT.TXT LOGO
 | charge "e6
 | charge "e7
 ||| charge "e8
-| charge "e9
+| quitte
+' 3400
+check erreurs
+
+echo "== messages d'erreur des nombres"
+run erreurs2 'PUT OUT.TXT LOGO
+|| charge "e9
 | charge "e10
 | charge "e11
 | charge "e12
+| charge "e13
+| charge "e14
 | quitte
-' 4300
-check erreurs
+' 2600
+check erreurs2
 
 echo "== nombres décimaux"
 run decimaux 'PUT OUT.TXT LOGO
@@ -72,6 +80,14 @@ run decimaux 'PUT OUT.TXT LOGO
 |||||||| quitte
 ' 3000
 check decimaux
+
+echo "== tortue et décimaux : cap fractionnaire, distances, précision"
+run tortue_dec 'PUT OUT.TXT LOGO
+|| charge "t6
+|||||||||| charge "t7
+|||||| quitte
+' 4400
+check tortue_dec
 
 echo "== clavier : LISCAR, TOUCHE?, DONNE"
 run clavier 'PUT OUT.TXT LOGO

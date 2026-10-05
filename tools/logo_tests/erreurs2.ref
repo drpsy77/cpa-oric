@@ -1,0 +1,14 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "E9
+Nombre trop grand
+?  CHARGE "E10
+Nombre trop grand
+?  CHARGE "E11
+Division par zero
+?  CHARGE "E12
+Division par zero
+?  CHARGE "E13
+Nombre trop grand
+?  CHARGE "E14
+Nombre trop grand
+?  QUITTE

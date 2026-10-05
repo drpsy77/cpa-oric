@@ -49,7 +49,7 @@ mb      = $30
 mr      = $32           ; 4 octets
 tx      = $36           ; position de la tortue : 3 octets (1/256, bas, haut)
 ty      = $39
-head    = $3C           ; cap en degrés (0 = haut, sens horaire)
+head    = $3C           ; cap en degrés (0 = haut, sens horaire), + headf
 x0      = $3E           ; coordonnées écran 16 bits signées
 y0      = $40
 x1      = $42
@@ -77,7 +77,6 @@ cname   = $60           ; nom de la commande en cours (adresse, longueur)
 clen    = $62
 tdrawn  = $63
 fmark   = $64
-dist    = $65
 ang     = $67
 wp      = $69           ; écriture d'une procédure
 rstart  = $6B
@@ -98,6 +97,15 @@ nst     = $88           ; début du nombre lu (2 octets)
 tnt     = $8A           ; type du nombre lu : T_INT (tnum) ou T_DEC (tnf)
 tnf     = $8B           ; nombre décimal lu (5 octets)
 FP_ZP   = $90           ; page zéro de fp_inc.s ($90-$BF)
+sf      = $22           ; sinm : fraction de l'angle (1/256 de degré)
+sd      = $23           ; mul_ds : signe du résultat
+sone    = $0F           ; sinm : 1 si |sinus| = 1
+headf   = $C0           ; fraction du cap (1/256 de degré)
+angf    = $C1           ; fraction de l'angle ang
+dst3    = $C2           ; distance en virgule fixe (1/256, bas, haut)
+fxv     = $C5           ; nombre en virgule fixe (1/256, bas, haut)
+gx      = $C8           ; FIXEXY : x en virgule fixe (3 octets)
+mp      = $CB           ; produit de mul_ds (5 octets, jusqu'à $CF)
 
 TK_END  = 0
 TK_NUM  = 1
@@ -1307,25 +1315,26 @@ f_hasard
         jsr to_int
         jmp random
 
-f_cap   lda head
-        sta val
+f_cap   lda headf
+        sta fxv
+        lda head
+        sta fxv+1
         lda head+1
-        sta val+1
-        jmp int_adv
-
-f_xcor  lda tx+1
-        ldx tx+2
-        ldy tx
+        sta fxv+2
         jmp cor
-f_ycor  lda ty+1
-        ldx ty+2
-        ldy ty
-cor     cpy #$80                ; arrondi
-        adc #0
-        sta val
-        txa
-        adc #0
-        sta val+1
+f_xcor  ldx #2
+xc      lda tx,x
+        sta fxv,x
+        dex
+        bpl xc
+        bmi cor
+f_ycor  ldx #2
+yc      lda ty,x
+        sta fxv,x
+        dex
+        bpl yc
+cor     jsr fix_val
+        jmp advance
 ; int_adv : la valeur courante est un entier ; passe au jeton suivant
 int_adv lda #T_INT
         sta vt
@@ -1493,6 +1502,107 @@ to_int
 r       rts
 big     jmp fp_err_big
 .)
+; eval_fix : évalue un nombre et le met en virgule fixe dans fxv
+;   (1/256, bas, haut ; arrondi au 1/256 ; erreur hors de -32768..32767)
+eval_fix
+.(
+        jsr eval
+        jsr need_num
+        lda vt
+        cmp #T_INT
+        bne d
+        lda #0
+        sta fxv
+        lda val
+        sta fxv+1
+        lda val+1
+        sta fxv+2
+        rts
+d       jsr val_fac
+        lda fe
+        beq z
+        clc                     ; * 256
+        adc #8
+        bcs big
+        sta fe
+        jsr fp_rnd
+        lda fe
+        beq z
+        cmp #128+24             ; |x| >= 2^23 : trop grand
+        bcs big
+        jsr fp_tou32
+        lda fm+3
+        sta fxv
+        lda fm+2
+        sta fxv+1
+        lda fm+1
+        sta fxv+2
+        lda fsg
+        bpl r
+        jmp neg_fx
+z       lda #0
+        sta fxv
+        sta fxv+1
+        sta fxv+2
+r       rts
+big     jmp fp_err_big
+.)
+
+; neg_fx : fxv = -fxv
+neg_fx
+.(
+        sec
+        ldx #0
+        ldy #3
+l       lda #0
+        sbc fxv,x
+        sta fxv,x
+        inx
+        dey
+        bne l
+        rts
+.)
+
+; fix_val : valeur courante = fxv ; entier s'il n'a pas de fraction, sinon
+;   décimal arrondi à 2 décimales (la précision est de 1/256)
+fix_val
+.(
+        lda fxv
+        bne d
+        lda fxv+1
+        sta val
+        lda fxv+2
+        sta val+1
+        lda #T_INT
+        sta vt
+        rts
+d       ldx #2                  ; mr = fxv étendu à 32 bits
+c       lda fxv,x
+        sta mr,x
+        dex
+        bpl c
+        lda fxv+2
+        and #$80
+        beq p
+        lda #$FF
+p       sta mr+3
+        jsr i32_fac             ; en 1/256
+        jsr fp_toarg
+        ldx #2
+        jsr fp_ldpow            ; * 100
+        jsr fp_mul
+        lda fe
+        sec
+        sbc #8                  ; / 256
+        sta fe
+        jsr fp_rnd
+        jsr fp_toarg
+        ldx #2
+        jsr fp_ldpow
+        jsr fp_div              ; / 100
+        jmp fac_val
+.)
+
 ; truth : A <> 0 si la valeur courante (nombre) n'est pas nulle
 truth
 .(
@@ -2013,15 +2123,15 @@ bad     lda #<e_bracket
         jmp error
 .)
 
-p_av    jsr eval_int
+p_av    jsr eval_fix
         jmp move
-p_re    jsr eval_int
-        jsr neg_val
+p_re    jsr eval_fix
+        jsr neg_fx
         jmp move
-p_dr    jsr eval_int
+p_dr    jsr eval_fix
         jmp turn
-p_ga    jsr eval_int
-        jsr neg_val
+p_ga    jsr eval_fix
+        jsr neg_fx
         jmp turn
 p_lc    lda #0
         sta pdown
@@ -2044,23 +2154,26 @@ p_mt    lda #1
 p_ve    jsr gfx_cls
         jmp home
 p_net   jmp gfx_cls
-p_orig  lda #0
-        sta val
-        sta val+1
-        sta ang
-        sta ang+1
+p_orig  ldx #2
+        lda #0
+po1     sta gx,x
+        sta fxv,x
+        dex
+        bpl po1
         jmp goto_xy0
-p_fcap  jsr eval_int
+p_fcap  jsr eval_fix
         lda #0
         sta head
         sta head+1
+        sta headf
         jmp turn
-p_fxy   jsr eval_int
-        lda val
-        sta ang
-        lda val+1
-        sta ang+1
-        jsr eval_int            ; ang = x, val = y
+p_fxy   jsr eval_fix
+        ldx #2
+pfx1    lda fxv,x
+        sta gx,x
+        dex
+        bpl pfx1
+        jsr eval_fix            ; gx = x, fxv = y
         jmp goto_xy0
 
 p_repete
@@ -2308,17 +2421,21 @@ h1      sta tx,x
         bpl h1
         sta head
         sta head+1
+        sta headf
         rts
 
-; turn : cap += val, ramené entre 0 et 359
+; turn : cap += fxv (degrés en virgule fixe), ramené dans 0..359,996
 turn
 .(
         clc
+        lda headf
+        adc fxv
+        sta headf
         lda head
-        adc val
+        adc fxv+1
         sta head
         lda head+1
-        adc val+1
+        adc fxv+2
         sta head+1
 neg     lda head+1              ; négatif : + 360
         bpl pos
@@ -2348,13 +2465,18 @@ sub     sec
 r       rts
 .)
 
-; sin256 : val = 256 * sin(A/X = angle 0..359)
-sin256
+; sinm : sinus de l'angle A/X + angf / 256 (entier 0..359), en grandeur et
+;   signe : val = 65536 * |sin| (16 bits), sone = 1 si |sin| = 1 (val = 0),
+;   sign = 1 si négatif. Entre deux degrés, la table est interpolée.
+sinm
 .(
         sta tmp
         stx tmp+1
+        lda angf
+        sta sf
         lda #0
         sta sign
+        sta sone
         lda tmp+1               ; >= 180 : -sin(a - 180)
         bne big
         lda tmp
@@ -2368,21 +2490,92 @@ big     sec
         sbc #0
         sta tmp+1
         inc sign
-q12     lda tmp                 ; 0..179
-        cmp #91
+q12     lda tmp                 ; 0..179 (+ fraction)
+        cmp #90
         bcc look
-        lda #180
+        bne mir
+        lda sf                  ; 90 tout rond : sinus = 1
+        beq one
+mir     lda sf                  ; au-delà de 90 : sin(180 - a)
+        beq m0
+        lda #179                ; avec fraction : 179 - a, 256 - f
         sec
         sbc tmp
-look    tax
+        sta tmp
+        lda #0
+        sec
+        sbc sf
+        sta sf
+        jmp look
+m0      lda #180
+        sec
+        sbc tmp
+        sta tmp
+        cmp #90
+        beq one
+look    ldx tmp
         lda sin_lo,x
         sta val
         lda sin_hi,x
         sta val+1
-        lda sign
+        lda sf
         beq r
-        jmp neg_val
+        sec                     ; écart avec le degré suivant (modulo
+        lda sin_lo+1,x          ; 65536 : la valeur 0 de 90 vaut 65536)
+        sbc sin_lo,x
+        sta mp
+        lda sin_hi+1,x
+        sbc sin_hi,x
+        sta mp+1
+        jsr mulf                ; * f / 256 -> A (bas), X (haut)
+        clc
+        adc val
+        sta val
+        txa
+        adc val+1
+        sta val+1
+        bcc r
+one     lda #0                  ; |sin| = 1
+        sta val
+        sta val+1
+        inc sone
 r       rts
+.)
+
+; mulf : A (bas), X (haut) = (mp..mp+1 * sf + 128) / 256 (sf est détruit)
+mulf
+.(
+        lda #0
+        sta mr
+        sta mr+1
+        sta mr+2
+        ldy #8
+l       asl mr
+        rol mr+1
+        rol mr+2
+        asl sf
+        bcc n
+        clc
+        lda mr
+        adc mp
+        sta mr
+        lda mr+1
+        adc mp+1
+        sta mr+1
+        bcc n
+        inc mr+2
+n       dey
+        bne l
+        lda mr
+        cmp #$80
+        lda mr+1
+        adc #0
+        pha
+        lda mr+2
+        adc #0
+        tax
+        pla
+        rts
 .)
 
 ; norm_ang : ramène A/X (angle 16 bits >= 0) dans 0..359 -> A/X
@@ -2410,23 +2603,16 @@ r       lda tmp
         rts
 .)
 
-; delta : dist (16 bits) dans la direction ang -> ajout à (ma24x, ma24y)
-;   résultat : dxv (3 octets) et dyv (3 octets)
+; delta : distance dst3 dans la direction ang (+ angf)
+;   -> dxv, dyv (3 octets, 1/256)
 delta
+.(
         lda ang                 ; dx = dist * sin(ang)
         ldx ang+1
-        jsr sin256
-        lda dist
-        sta ma
-        lda dist+1
-        sta ma+1
-        lda val
-        sta mb
-        lda val+1
-        sta mb+1
-        jsr smul
+        jsr sinm
+        jsr mul_ds
         ldx #2
-dl1     lda mr,x
+dl1     lda mp+2,x
         sta dxv,x
         dex
         bpl dl1
@@ -2439,22 +2625,101 @@ dl1     lda mr,x
         tax
         tya
         jsr norm_ang
-        jsr sin256
-        lda dist
-        sta ma
-        lda dist+1
-        sta ma+1
-        lda val
-        sta mb
-        lda val+1
-        sta mb+1
-        jsr smul
+        jsr sinm
+        jsr mul_ds
         ldx #2
-dl2     lda mr,x
+dl2     lda mp+2,x
         sta dyv,x
         dex
         bpl dl2
         rts
+.)
+
+; mul_ds : mp+2..mp+4 = dst3 * sinus (résultat de sinm), arrondi au 1/256
+mul_ds
+.(
+        lda sign                ; signe du résultat dans sd (bit 7)
+        beq s0
+        lda #$80
+s0      eor dst3+2
+        sta sd
+        ldx #2                  ; |dst3| -> mr
+c       lda dst3,x
+        sta mr,x
+        dex
+        bpl c
+        lda dst3+2
+        bpl pa
+        sec
+        ldx #0
+        ldy #3
+na      lda #0
+        sbc mr,x
+        sta mr,x
+        inx
+        dey
+        bne na
+pa      lda sone                ; sinus = 1 : la distance elle-même
+        beq mul
+        ldx #2
+c1      lda mr,x
+        sta mp+2,x
+        dex
+        bpl c1
+        bmi sg
+mul     lda val
+        sta mb
+        lda val+1
+        sta mb+1
+        lda #0
+        sta mp+2
+        sta mp+3
+        sta mp+4
+        ldy #16
+l       lsr mb+1
+        ror mb
+        bcc n
+        clc
+        lda mp+2
+        adc mr
+        sta mp+2
+        lda mp+3
+        adc mr+1
+        sta mp+3
+        lda mp+4
+        adc mr+2
+        sta mp+4
+n       ror mp+4
+        ror mp+3
+        ror mp+2
+        ror mp+1
+        ror mp
+        dey
+        bne l
+        lda mp+1                ; arrondi au 1/256
+        cmp #$80
+        lda mp+2
+        adc #0
+        sta mp+2
+        lda mp+3
+        adc #0
+        sta mp+3
+        lda mp+4
+        adc #0
+        sta mp+4
+sg      lda sd
+        bpl r
+        sec
+        ldx #0
+        ldy #3
+ng      lda #0
+        sbc mp+2,x
+        sta mp+2,x
+        inx
+        dey
+        bne ng
+r       rts
+.)
 
 ; scr_of : position (tx/ty ou px/py 24 bits) -> x0/y0 écran
 ;   p_x/p_y : adresses des 3 octets dans posbuf
@@ -2501,17 +2766,20 @@ round24
         pla
         rts
 
-; move : avance de val pas
+; move : avance de fxv pas (virgule fixe)
 move
 .(
-        lda val
-        sta dist
-        lda val+1
-        sta dist+1
+        ldx #2
+d3      lda fxv,x
+        sta dst3,x
+        dex
+        bpl d3
         lda head
         sta ang
         lda head+1
         sta ang+1
+        lda headf
+        sta angf
         jsr delta
         jsr pos_from_t          ; point de départ
         jsr scr_pos
@@ -2525,6 +2793,7 @@ ax      lda tx,x
         inx
         dey
         bne ax
+        bvs big
         clc
         ldx #0
         ldy #3
@@ -2534,12 +2803,14 @@ ay      lda ty,x
         inx
         dey
         bne ay
+        bvs big                 ; hors de -32768..32767
         jsr pos_from_t
         jsr scr_pos
         lda pdown
         beq r
         jmp seg
 r       rts
+big     jmp fp_err_big
 .)
 
 pos_from_t
@@ -2563,23 +2834,19 @@ x1_to_x0
         sta y0+1
         rts
 
-; goto_xy0 : va en (ang, val) = (x, y) en traçant si le crayon est baissé
+; goto_xy0 : va en (gx, fxv) = (x, y) en traçant si le crayon est baissé
 goto_xy0
 .(
         jsr pos_from_t
         jsr scr_pos
         jsr x1_to_x0
-        lda #0
-        sta tx
-        sta ty
-        lda ang
-        sta tx+1
-        lda ang+1
-        sta tx+2
-        lda val
-        sta ty+1
-        lda val+1
-        sta ty+2
+        ldx #2
+c       lda gx,x
+        sta tx,x
+        lda fxv,x
+        sta ty,x
+        dex
+        bpl c
         jsr pos_from_t
         jsr scr_pos
         lda pdown
@@ -2825,9 +3092,12 @@ turtle_draw
 
 ; corner : point à la distance A, angle cap + X -> x1, y1
 corner
-        sta dist
+        sta dst3+1
         lda #0
-        sta dist+1
+        sta dst3
+        sta dst3+2
+        lda headf
+        sta angf
         txa
         clc
         adc head

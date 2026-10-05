@@ -99,8 +99,8 @@ SECTIONS = [
   ("ESC", "quitte"),
  ]),
  ("LOGO", [
-  ("AV n  RE n", "avance / recule"),
-  ("DR n  GA n", "droite / gauche"),
+  ("AV n  RE n", "avance / recule (n decimal admis)"),
+  ("DR n  GA n", "droite / gauche (degres, 0.5 admis)"),
   ("LC  BC", "leve / baisse stylo"),
   ("CT  MT", "cache / montre"),
   ("VE  ORIGINE", "vide ecran / centre"),
