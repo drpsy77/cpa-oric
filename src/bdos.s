@@ -70,7 +70,7 @@ bdos_tab
         .word f_conout-1        ; 2  écriture console
         .word f_reader-1        ; 3  lecteur auxiliaire
         .word f_none-1          ; 4  perforateur auxiliaire
-        .word f_none-1          ; 5  imprimante
+        .word bios_list-1       ; 5  imprimante (A = caractère)
         .word f_dirio-1         ; 6  E/S console directe
         .word f_none-1          ; 7  (octet IOBYTE)
         .word f_none-1          ; 8

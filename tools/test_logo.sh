@@ -117,10 +117,10 @@ echo "== fonctions : RACINE, SIN, COS, ARCTAN, LN, EXP"
 run maths 'PUT OUT.TXT LOGO
 || charge "t11
 |||||||| charge "e19
-| charge "e20
-| charge "e21
+|| charge "e20
+|| charge "e21
 | quitte
-' 3800
+' 4200
 check maths
 
 echo "== fonctions de l'utilisateur : RENDS (environ 3 min)"

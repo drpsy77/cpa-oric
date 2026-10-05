@@ -39,7 +39,9 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 `$C024` SETDMA, `$C027` READ, `$C02A` WRITE, `$C02D` MENUBAR.
 
 Les entrées existantes ne bougent jamais ; une nouvelle entrée s'ajoute à la fin (`$C030`…).
-PUNCH et READER sont réservées au port série (réseau, version disquette).
+LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 attendu 2 ms au
+plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservées au port série
+(réseau, version disquette).
 
 ### Vecteurs et page 2
 
@@ -53,6 +55,7 @@ PUNCH et READER sont réservées au port série (réseau, version disquette).
 | `$02A3` | 1 = pause en fin d'écran |
 | `$02A9` | plafond de la TPA (page ; 0 = aucun), remis à 0 au démarrage à chaud |
 | `$0244` | 1 = une ligne laissée par CHAIN attend dans `$0400` (interne au système) |
+| `$0245` | imprimante : bit 0 = CTRL-P actif, bit 7 = suspendu pendant l'édition d'une ligne (interne) |
 
 Les autres variables de la page 2 sont internes (liste complète : `src/hw.inc`). La partie
 publique est dans `progs/cpa.inc`, que tout programme inclut.
@@ -61,7 +64,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 | N° | Fonction | Versions |
 |---|---|---|
-| 0-12 | console et système, comme CP/M 2.2 ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
+| 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) | disque ; la ROM renvoie `$FF` |
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
@@ -85,7 +88,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
 | `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4F5`), puis tampons (ligne de commande, DO, PUT), variables du BDOS `$FD00`, tampon de secteur `$FE00` | ROM : code jusqu'à `$E3A0` environ, reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F55F`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
 
 ## 4. Construire et tester
 

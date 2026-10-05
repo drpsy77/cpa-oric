@@ -80,6 +80,9 @@ h_0
         .asc "              |   sous",13,10
         .asc "^A ^E         | debut / fin de ligne",13,10
         .asc "CTRL-X        | efface la ligne",13,10
+        .asc "CTRL-P        | imprimante oui/non",13,10
+        .asc "              |   (tout ce qui",13,10
+        .asc "              |   s'affiche)",13,10
         .asc "CTRL-C        | redemarrage a chaud",13,10
         .asc "RESET         | retour au prompt",13,10
         .byt 0

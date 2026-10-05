@@ -129,6 +129,7 @@ lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
 | CTRL-A / CTRL-E | début / fin de la ligne |
 | CTRL-X | effacer toute la ligne |
+| CTRL-P | imprimante : copier tout ce qui s'affiche, oui / non (voir plus bas) |
 
 L'historique garde les dernières lignes (256 octets, une vingtaine de commandes courtes) ; il
 survit au démarrage à chaud, et une ligne identique à la précédente n'y entre pas deux fois.
@@ -693,6 +694,7 @@ ordinaires. C'est ce que fait l'éditeur.
 | 0 | démarrage à chaud | 15 | ouvrir (A=$FF si absent) |
 | 1 | lire un caractère avec écho | 16 | fermer |
 | 2 | écrire le caractère A | 17 / 18 | chercher premier / suivant (entrée de 32 octets copiée au DMA) |
+| 5 | imprimer le caractère A (Centronics) | | |
 | 6 | E/S directe (`$FF` lire, `$FE` état) | 19 | effacer (jokers) |
 | 9 | chaîne terminée par `$` | 20 | lecture séquentielle (0 OK, 1 fin) |
 | 10 | lire une ligne (format CP/M) | 21 | écriture séquentielle (0 OK, 1 répertoire plein, 2 disque plein) |
@@ -707,6 +709,15 @@ ordinaires. C'est ce que fait l'éditeur.
 | | | 47 | CHAIN : A/Y = ligne de commande (0 à la fin) ; ne revient pas |
 
 Le FCB a le format CP/M 2.2 sur 36 octets.
+
+**Imprimante.** CP/A imprime sur le port Centronics de l'Oric (entrée LIST du BIOS, fonction
+5 du BDOS : A = caractère). CTRL-P, tapé pendant la saisie d'une ligne (au prompt, dans LOGO,
+DEBUG...), active ou coupe la copie à l'imprimante de tout ce qui s'affiche, comme sous CP/M :
+CTRL-P puis `TYPE README.TXT` imprime le fichier. Pendant l'édition d'une ligne, seule la
+ligne finale est imprimée (pas les retouches). Sans imprimante branchée, rien ne bloque :
+l'attente de l'accusé de réception est limitée à 2 ms environ par caractère. Dans Oricutron,
+ce qui est imprimé s'ajoute au fichier `printer_out.txt` de son dossier (imprimante activée
+par défaut). EDIT, qui dessine son écran directement, n'est pas copié.
 
 **Enchaîner deux programmes.** La fonction 47 (comme celle de CP/M 3) termine le programme
 et fait exécuter une ligne par le CCP, comme si on l'avait tapée : elle s'affiche après `A>`

@@ -72,6 +72,9 @@ wboot
         cld
         jsr hw_init
         jsr font_init
+        lda lst_echo            ; édition de ligne interrompue
+        and #1
+        sta lst_echo
         lda #0
         sta m_act
         sta top_cap             ; plus de débogueur résident
@@ -120,7 +123,7 @@ hw_init
         sta VIA_DDRA            ; port A en sortie (bus AY)
         lda #$F7
         sta VIA_DDRB            ; PB3 en entrée (clavier), le reste en sortie
-        lda #$00
+        lda #$10                ; strobe de l'imprimante (PB4) au repos
         sta VIA_ORB
         lda #PCR_IDLE
         sta VIA_PCR
@@ -577,8 +580,42 @@ conin_key
         pla
         rts
 
+; ---------------------------------------------------------------------
+; LIST : envoie A à l'imprimante (port Centronics de l'Oric). Octet sur le
+;   port A du VIA (bus partagé avec l'AY : interruptions coupées), front
+;   descendant du strobe PB4, puis attente de l'accusé (CA1) au plus 2 ms
+;   environ : sans imprimante, rien ne bloque. Oricutron écrit ce qu'il
+;   reçoit dans printer_out.txt. Préserve A, X, Y.
+; ---------------------------------------------------------------------
 bios_list
-        rts                     ; pas d'imprimante pour l'instant
+.(
+        php
+        sei
+        pha
+        sta VIA_ORA_NH
+        lda VIA_ORB
+        and #$EF                ; strobe à 0 : l'imprimante lit l'octet
+        sta VIA_ORB
+        ora #$10                ; repos à 1
+        sta VIA_ORB
+        pla
+        plp
+        pha
+        txa
+        pha
+        ldx #0
+wt      lda VIA_IFR             ; accusé (CA1) ?
+        and #$02
+        bne ack
+        dex
+        bne wt
+ack     sta VIA_IFR             ; (A = 2 : efface l'indicateur)
+        pla
+        tax
+        pla
+.)
+bios_punch
+        rts
 bios_reader
         lda #$1A                ; ^Z = fin de fichier
         rts
@@ -610,6 +647,11 @@ conout
 co_hidden
         tsx
         lda $0103,x
+        ldy lst_echo            ; CTRL-P : copie à l'imprimante (pas
+        cpy #1                  ; pendant l'édition d'une ligne)
+        bne co_nl
+        jsr bios_list
+co_nl
 #ifdef DISK
         ldy put_on              ; PUT : copie dans le tampon
         beq co_np

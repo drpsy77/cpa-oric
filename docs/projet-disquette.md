@@ -11,9 +11,10 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F4F5`, marge 379 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F55F`, marge 273 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
+- imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ;
 - lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
   historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
   fichiers par ESC (partie commune, puis liste des noms possibles) ;
@@ -180,6 +181,16 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   enregistre si le texte a changé (en cas d'échec, on reste dans EDIT) et enchaîne sur
   `LOGO NOM.LOG /R`. Coût : LOGO 785 octets (zone libre 17,2 Ko), EDIT 160 octets.
 
+- Imprimante : LIST du BIOS (l'entrée existait, vide ; PUNCH a maintenant sa propre entrée
+  vide). Octet sur le port A du VIA, partagé avec l'AY (interruptions coupées le temps de
+  l'écrire et de donner le strobe), front descendant de PB4 (désormais au repos à 1 ; kb_row
+  préserve les bits 3 à 7 de ORB), attente de l'accusé CA1 limitée à ~2 ms : sans imprimante
+  rien ne bloque. BDOS 5 pointe directement sur LIST. CTRL-P dans l'édition de ligne (BDOS 10)
+  bascule la copie de la console (`lst_echo`, `$0245`) ; pendant l'édition la copie est
+  suspendue (bit 7) et la ligne finale est imprimée par RETURN, pour ne pas imprimer les
+  retouches ; un démarrage à chaud lève la suspension. Oricutron écrit l'imprimé dans
+  `printer_out.txt` : `tools/smoke_test.sh` le vérifie. Coût : 106 octets résidents.
+
 ## Suite prévue (par priorité)
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
@@ -229,7 +240,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 379 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 273 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

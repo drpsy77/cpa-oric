@@ -28,6 +28,7 @@ SECTIONS = [
   ("DEL ^D", "efface a gauche / sous"),
   ("^A ^E", "debut / fin de ligne"),
   ("CTRL-X", "efface la ligne"),
+  ("CTRL-P", "imprimante oui/non (tout ce qui s'affiche)"),
   ("CTRL-C", "redemarrage a chaud"),
   ("RESET", "retour au prompt"),
  ]),
