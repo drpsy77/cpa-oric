@@ -147,14 +147,62 @@ les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP.
    | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | 2,9 Ko + 0,6 Ko de zones | **fait** |
    | 6 | LISLISTE (et LISMOT) ; LISCAR rend un caractère (ASCII, CAR) | faible | 275 o + 128 o | **fait** |
    | 7 | RACINE, SIN, COS, ARCTAN, LN, EXP (PUISSANCE : écrite en Logo si besoin) | moyenne | 1,4 Ko | **fait** |
-   | 8 | option : RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | à décider |
+   | 8 | RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | **décidé, à faire** (voir la note ci-dessous) |
 
    Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko, zone libre ~21 Ko en SPLIT
    partagée entre procédures et textes. Après le lot 7 : LOGO.COM 15,4 Ko (les lots 5 et 7
    ont coûté le double de l'estimation), zone libre 20 Ko en SPLIT (28 Ko avant le lot 2).
-   Reste l'option RENDS (lot 8).
+   Reste RENDS (lot 8), décidé.
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
+
+   **Note pour le lot 8 (RENDS), écrite avant de coder.**
+   - *Le problème.* Les procédures tournent sans récursion sur la pile du 6502 : `call_proc`
+     évalue les arguments, crée les variables locales et pousse un contexte `FR_PROC` sur la
+     pile de contextes (`frames`), puis la boucle `run` continue ; `pop_frame` reprend la suite
+     et rend les locales (`nloc`). L'évaluateur (`eval`, `sum`, `term`, `primary`), lui, est
+     récursif sur la pile du 6502. Une procédure appelée dans une expression (`ECRIS DOUBLE 3`)
+     doit donc faire tourner la boucle d'exécution *depuis* l'évaluateur, puis revenir dans
+     l'expression avec une valeur.
+   - *Approche envisagée.* Dans `primary`, un mot qui n'est pas une fonction mais une
+     procédure de l'utilisateur est appelé comme par `call_proc`, avec un nouveau type de
+     contexte `FR_FUNC` (marque de retour). L'appel garde `fbase` (et ce qu'il faut de l'état
+     du jeton) sur la pile du 6502, met `fbase` au niveau du nouveau contexte et lance `run`
+     en sous-programme. `RENDS expr` évalue l'expression, range le résultat, et dépile
+     jusqu'au `FR_FUNC` (comme STOP jusqu'au `FR_PROC`) en rendant les locales et xsp
+     (EXECUTE), puis fait sortir la boucle imbriquée ; l'appelant restaure `fbase` et reprend
+     l'expression au jeton qui suit les arguments. La valeur rendue est dans vt/val en
+     sortant (même discipline que les fonctions : l'appelant l'empile avant toute
+     réservation dans le tas).
+   - *Points à surveiller.*
+     1. Une procédure-fonction qui se termine sans RENDS : erreur claire (par exemple
+        « DOUBLE n'a rien rendu »), et STOP dans une fonction se comporte pareil.
+     2. Une procédure appelée en instruction qui fait RENDS : erreur, ou valeur ignorée
+        (à décider ; UCB Logo signale une erreur).
+     3. Erreurs : `error` remet la pile du 6502 à `savsp` et la pile de contextes à zéro
+        (`reset_frames`), ce qui défait aussi les appels imbriqués ; vérifier fbase, nloc, xsp,
+        vsp et argv (types remis à 0 : argv est une racine du compactage).
+     4. Pile du 6502 : chaque appel imbriqué empile l'évaluateur, `run` et l'instruction en
+        cours. Mesurer l'octet de pile consommé par niveau et limiter la profondeur des
+        fonctions (compteur, erreur « Trop de niveaux ») bien avant 256 octets. La récursion
+        profonde reste possible pour les procédures appelées en instruction.
+     5. Les arguments d'un appel de fonction sont évalués dans `argv`, qui est partagé : une
+        fonction appelée pendant l'évaluation des arguments d'une autre procédure écraserait
+        ses argv. Il faut sauver les argv déjà évalués (sur la pile de valeurs, qui est une
+        racine du compactage) ou évaluer les arguments directement sur la pile de valeurs.
+     6. Compactage du tas : une valeur rendue qui n'était désignée que par une locale n'est
+        plus une racine une fois les locales rendues ; elle n'est plus que dans val, donc
+        l'appelant doit l'empiler avant toute réservation (vérifier MOT, PHRASE, LISTE, ITEM,
+        les opérateurs et les arguments de procédure).
+     7. CHARGE (contexte `ld_*` unique), EXECUTE dans une fonction, une fonction dans
+        REPETE et SI, la récursion (`FACT :N` qui rend `:N * FACT :N - 1`), ESC pendant une
+        fonction.
+   - *Tests à écrire.* FACT et FIBO récursives ; une fonction sur les mots (inverser un mot en
+     rendant au lieu de faire DONNE) ; des fonctions imbriquées dans des arguments
+     (`ECRIS SOMME CARRE 3 CARRE 4`) ; une fonction qui rend une liste construite, puis le
+     test d'endurance du compactage avec des fonctions ; les erreurs (pas de RENDS, RENDS hors
+     d'une fonction, profondeur dépassée) ; tous les anciens scénarios doivent rester
+     identiques.
 
 1. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
    - pilote série dans le BIOS, branché sur PUNCH / READER : ACIA 6551 en `$0380` sur le LOCI
