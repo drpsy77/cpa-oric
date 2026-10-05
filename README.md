@@ -402,13 +402,17 @@ et on tape les commandes sous l'image, après le prompt `?`. Les nombres sont de
 | `DONNE "X n`, `:X` | variable globale, valeur d'une variable ou d'un paramètre |
 | `ECRIS n` / `EC`, `ECRIS "mot`, `ECRIS [texte]` | afficher |
 | `ATTENDS n` | attendre n cinquantièmes de seconde |
+| `LISCAR` | attend une touche et rend son code (`DONNE "C LISCAR`) |
+| `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer, charger les procédures (`NOM.LOG`) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
 | `NOTE n d`, `BRUIT d`, `SILENCE` | joue la note n (1 à 96, 37 = do central, 46 = la 440 Hz, 0 = silence) ou un bruit pendant d cinquantièmes de seconde ; coupe le son |
 | `AIDE`, `QUITTE` / `AUREVOIR` | aide, retour à CP/A (l'image reste) |
 
-Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR` et `YCOR`.
+Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`,
+`LISCAR` et `TOUCHE?`. Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR`
+(la dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
 une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortue, Aide) tape
 les commandes à la place de l'utilisateur.
@@ -423,6 +427,10 @@ Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut
 Le Logo lit directement le texte des procédures. Les listes et les appels passent par une pile
 de contextes en mémoire, pas par la pile du 6502. La récursion peut donc aller jusqu'à
 120 niveaux, avec 100 paramètres actifs et 32 variables globales.
+
+Chaque valeur (variable, paramètre, résultat intermédiaire d'un calcul) est typée : un octet
+de type et 5 octets de contenu. Aujourd'hui seuls les entiers existent ; les nombres décimaux,
+les mots et les listes viendront s'y ranger (voir `docs/projet-disquette.md`).
 
 ## L'éditeur hexadécimal HEX
 

@@ -4,12 +4,18 @@
 ;  La tortue dessine dans l'image (240 x 128) ; on tape les commandes
 ;  sous l'image. Nombres entiers (16 bits signés).
 ;
+;  Valeurs typées : une valeur occupe 6 octets, un octet de type (T_INT
+;  aujourd'hui ; décimal, mot et liste prévus) et 5 octets de contenu.
+;  La valeur courante est dans vt/val ; l'évaluateur range les valeurs
+;  intermédiaires sur une pile de valeurs (vstack), pas sur la pile du
+;  6502. Variables et paramètres gardent une valeur complète.
+;
 ;  Commandes : AVANCE/AV, RECULE/RE, DROITE/DR, GAUCHE/GA, LEVECRAYON/LC,
 ;  BAISSECRAYON/BC, GOMME, INVERSE, CACHETORTUE/CT, MONTRETORTUE/MT,
 ;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, REPETE, SI, STOP,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
-;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR
+;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
 ;
 ;  L'interpréteur lit directement le texte (lignes tapées, corps des
 ;  procédures). Les listes [ ] et les procédures s'exécutent grâce à une
@@ -30,7 +36,6 @@ tnum    = $1A           ; valeur d'un nombre / caractère d'un opérateur
 p1      = $1C
 p2      = $1E
 p3      = $20
-val     = $22
 tmp     = $24
 tmp2    = $26
 fsp     = $28           ; pile de contextes
@@ -80,6 +85,12 @@ cnt     = $71
 hdr     = $73
 hend    = $75
 pcount  = $77
+val     = $78           ; valeur courante : contenu (5 octets)
+vt      = $7D           ; et son type (T_INT...)
+lvt     = $7E           ; valeur de gauche d'une opération : type
+lv      = $7F           ;   et contenu (5 octets)
+vsp     = $84           ; pile de valeurs (2 octets)
+pkey    = $86           ; touche lue par check_esc, gardée pour LISCAR
 
 TK_END  = 0
 TK_NUM  = 1
@@ -94,8 +105,11 @@ FR_SIZE = 12            ; contexte : type, retour(2), fin(2), début liste(2),
 FR_REP  = 1             ;   fin liste(2), compteur(2), marque des locales
 FR_LIST = 2
 FR_PROC = 3
-VAR_SIZE = 12           ; variable : nom (10 octets), valeur (2)
+VAR_SIZE = 16           ; variable : nom (10 octets), valeur (6)
 NAMELEN = 10
+VAL_SIZE = 6            ; valeur : type (1), contenu (5)
+VS_N    = 24            ; profondeur de la pile de valeurs
+T_INT   = 1             ; entier 16 bits signé (contenu : 2 octets)
 MAXLOC  = 100
 MAXGL   = 32
 MAXPAR  = 8
@@ -165,6 +179,8 @@ rp1     lda #<m_prompt
         lda #<m_prompt2
         ldy #>m_prompt2
 rp2     jsr puts
+        lda #0                  ; touche non lue par le programme : oubliée
+        sta pkey
         lda #126
         sta lbuf
         ldx #10
@@ -190,6 +206,10 @@ reset_frames
         lda #>frames
         sta fsp+1
         sta fbase+1
+        lda #<vstack
+        sta vsp
+        lda #>vstack
+        sta vsp+1
         rts
 
 ; error : message A/Y, retour au prompt
@@ -732,13 +752,16 @@ drop    lda p1
 .)
 
 ; check_esc : ESC interrompt l'exécution
+;   (une autre touche est gardée dans pkey pour LISCAR et TOUCHE?)
 check_esc
         jsr B_CONST
         beq ce_r
         jsr B_CONIN
         cmp #$1B
-        bne ce_r
-        lda #0
+        beq esc_err
+        sta pkey
+        rts
+esc_err lda #0
         sta clen
         lda #<e_esc
         ldy #>e_esc
@@ -821,16 +844,15 @@ eval
         cmp #">"
         bne r
 cmpop   pha
-        lda val
-        pha
-        lda val+1
-        pha
+        jsr vpush
         jsr advance
         jsr sum
-        pla                     ; tmp = gauche, val = droite
-        sta tmp+1
-        pla
+        jsr vpop_l              ; lv = gauche, val = droite
+        jsr need_int2
+        lda lv                  ; tmp = gauche
         sta tmp
+        lda lv+1
+        sta tmp+1
         pla
         cmp #"="
         bne lt
@@ -888,16 +910,15 @@ loop    lda ttype
         cmp #"-"
         bne r
 op      pha
-        lda val
-        pha
-        lda val+1
-        pha
+        jsr vpush
         jsr advance
         jsr term
-        pla
-        sta tmp+1
-        pla
+        jsr vpop_l
+        jsr need_int2
+        lda lv
         sta tmp
+        lda lv+1
+        sta tmp+1
         pla
         cmp #"+"
         bne minus
@@ -932,16 +953,15 @@ loop    lda ttype
         cmp #"/"
         bne r
 op      pha
-        lda val
-        pha
-        lda val+1
-        pha
+        jsr vpush
         jsr advance
         jsr unary
-        pla
-        sta ma+1
-        pla
+        jsr vpop_l
+        jsr need_int2
+        lda lv
         sta ma
+        lda lv+1
+        sta ma+1
         lda val
         sta mb
         lda val+1
@@ -970,6 +990,7 @@ unary
         bne prim
         jsr advance
         jsr unary
+        jsr need_int
         jmp neg_val
 prim    jmp primary
 .)
@@ -993,7 +1014,7 @@ primary
         sta val
         lda tnum+1
         sta val+1
-        jmp advance
+        jmp int_adv
 n1      cmp #TK_VAR
         bne n2
         jsr get_var
@@ -1021,6 +1042,7 @@ n3      cmp #TK_WORD
         bne f2
         jsr advance
         jsr sum
+        jsr need_int
         jmp random
 f2      lda #<w_cap
         ldy #>w_cap
@@ -1030,7 +1052,7 @@ f2      lda #<w_cap
         sta val
         lda head+1
         sta val+1
-        jmp advance
+        jmp int_adv
 f3      lda #<w_xcor
         ldy #>w_xcor
         jsr word_is
@@ -1042,7 +1064,7 @@ f3      lda #<w_xcor
 f4      lda #<w_ycor
         ldy #>w_ycor
         jsr word_is
-        bne unk
+        bne f5
         lda ty+1
         ldx ty+2
         ldy ty
@@ -1052,7 +1074,17 @@ cor     cpy #$80                ; arrondi
         txa
         adc #0
         sta val+1
-        jmp advance
+        jmp int_adv
+f5      lda #<w_liscar
+        ldy #>w_liscar
+        jsr word_is
+        bne f6
+        jmp f_liscar
+f6      lda #<w_touche
+        ldy #>w_touche
+        jsr word_is
+        bne unk
+        jmp f_touche
 unk     lda tnam
         sta cname
         lda tnam+1
@@ -1068,6 +1100,161 @@ bad     lda #0
         ldy #>e_value
         jmp error
 .)
+
+; int_adv : la valeur courante est un entier ; passe au jeton suivant
+int_adv lda #T_INT
+        sta vt
+        jmp advance
+
+; LISCAR : attend une touche et rend son code (ESC interrompt)
+f_liscar
+.(
+        lda pkey                ; touche déjà lue par check_esc ?
+        bne have
+        jsr B_CONIN
+        cmp #$1B
+        bne have
+        jmp esc_err
+have    ldx #0
+        stx pkey
+        sta val
+        stx val+1
+        jmp int_adv
+.)
+
+; TOUCHE? : 1 si une touche attend d'être lue par LISCAR, 0 sinon
+f_touche
+.(
+        jsr check_esc           ; lit la touche qui attend (ESC interrompt)
+        ldx #0
+        lda pkey
+        beq z
+        inx
+z       stx val
+        lda #0
+        sta val+1
+        jmp int_adv
+.)
+
+; ---------------------------------------------------------------------
+; Valeurs typées
+; ---------------------------------------------------------------------
+; eval_int : évalue une expression qui doit être un nombre entier
+eval_int
+        jsr eval
+; need_int : la valeur courante doit être un entier
+need_int
+        lda vt
+        cmp #T_INT
+        bne not_num
+        rts
+; need_int2 : la valeur de gauche (lvt) et la valeur courante aussi
+need_int2
+        lda lvt
+        cmp #T_INT
+        beq need_int
+not_num lda #0
+        sta clen
+        lda #<e_notnum
+        ldy #>e_notnum
+        jmp error
+
+; vpush : empile la valeur courante (vt, val) sur la pile de valeurs
+vpush
+.(
+        lda vsp
+        cmp #<vstack_end
+        lda vsp+1
+        sbc #>vstack_end
+        bcc ok
+        lda #0
+        sta clen
+        lda #<e_deep
+        ldy #>e_deep
+        jmp error
+ok      ldy #0
+        lda vt
+        sta (vsp),y
+cp      lda val,y
+        iny
+        sta (vsp),y
+        cpy #VAL_SIZE-1
+        bne cp
+        clc
+        lda vsp
+        adc #VAL_SIZE
+        sta vsp
+        bcc r
+        inc vsp+1
+r       rts
+.)
+
+; vpop_l : dépile une valeur dans lvt, lv
+vpop_l
+.(
+        sec
+        lda vsp
+        sbc #VAL_SIZE
+        sta vsp
+        bcs n
+        dec vsp+1
+n       ldy #0
+        lda (vsp),y
+        sta lvt
+cp      iny
+        lda (vsp),y
+        sta lvt,y
+        cpy #VAL_SIZE-1
+        bne cp
+        rts
+.)
+
+; st_val : range la valeur courante dans l'entrée de variable p2
+st_val
+.(
+        ldy #NAMELEN
+        lda vt
+        sta (p2),y
+        ldx #0
+l       iny
+        lda val,x
+        sta (p2),y
+        inx
+        cpx #VAL_SIZE-1
+        bne l
+        rts
+.)
+
+; ld_val : valeur courante = valeur de l'entrée de variable p2
+ld_val
+.(
+        ldy #NAMELEN
+        lda (p2),y
+        sta vt
+        ldx #0
+l       iny
+        lda (p2),y
+        sta val,x
+        inx
+        cpx #VAL_SIZE-1
+        bne l
+        rts
+.)
+
+; arg_off : Y = X * VAL_SIZE (place de l'argument X dans argv), X préservé
+arg_off
+        txa
+        asl
+        sta tmp
+        asl
+        adc tmp
+        tay
+        rts
+
+; put_val : affiche la valeur courante
+put_val
+        jsr need_int
+        jmp put_num
 
 ; random : val = nombre au hasard entre 0 et val-1
 random
@@ -1334,13 +1521,7 @@ get_var
 .(
         jsr find_var
         bcs nf
-        ldy #NAMELEN
-        lda (p2),y
-        sta val
-        iny
-        lda (p2),y
-        sta val+1
-        rts
+        jmp ld_val
 nf      lda tnam
         sta cname
         lda tnam+1
@@ -1392,14 +1573,14 @@ bad     lda #<e_bracket
         jmp error
 .)
 
-p_av    jsr eval
+p_av    jsr eval_int
         jmp move
-p_re    jsr eval
+p_re    jsr eval_int
         jsr neg_val
         jmp move
-p_dr    jsr eval
+p_dr    jsr eval_int
         jmp turn
-p_ga    jsr eval
+p_ga    jsr eval_int
         jsr neg_val
         jmp turn
 p_lc    lda #0
@@ -1429,22 +1610,22 @@ p_orig  lda #0
         sta ang
         sta ang+1
         jmp goto_xy0
-p_fcap  jsr eval
+p_fcap  jsr eval_int
         lda #0
         sta head
         sta head+1
         jmp turn
-p_fxy   jsr eval
+p_fxy   jsr eval_int
         lda val
         sta ang
         lda val+1
         sta ang+1
-        jsr eval                ; ang = x, val = y
+        jsr eval_int            ; ang = x, val = y
         jmp goto_xy0
 
 p_repete
 .(
-        jsr eval
+        jsr eval_int
         lda val
         sta cnt
         lda val+1
@@ -1461,7 +1642,7 @@ r       rts
 
 p_si
 .(
-        jsr eval
+        jsr eval_int
         lda val
         ora val+1
         sta tmp2                ; condition
@@ -1533,7 +1714,7 @@ pc      ldy #0
         jmp pl
 done    jmp crlf
 n2      jsr eval
-        jsr put_num
+        jsr put_val
         jmp crlf
 .)
 
@@ -1545,14 +1726,20 @@ p_donne
         lda #<e_quote
         ldy #>e_quote
         jmp error
-ok      lda tnam                ; garde le nom
-        sta p3
+ok      lda tnam                ; garde le nom sur la pile : l'évaluation
+        pha                     ; se sert de p3 (word_is)
         lda tnam+1
-        sta p3+1
+        pha
         lda tlen
-        sta pcount
+        pha
         jsr advance
         jsr eval
+        pla
+        sta pcount
+        pla
+        sta p3+1
+        pla
+        sta p3
         lda tnam
         pha
         lda tnam+1
@@ -1578,12 +1765,7 @@ room    lda #<globals
         jsr entry_addr
         inc ngl
         jsr set_name
-set     ldy #NAMELEN
-        lda val
-        sta (p2),y
-        iny
-        lda val+1
-        sta (p2),y
+set     jsr st_val
         pla
         sta tlen
         pla
@@ -1595,7 +1777,7 @@ set     ldy #NAMELEN
 
 p_attends
 .(
-        jsr eval
+        jsr eval_int
         lda SYS_TICKS
         sta tmp
         lda SYS_TICKS+1
@@ -1619,10 +1801,10 @@ r       rts
 ; NOTE n d : joue la note n (1-96, 37 = do central, 0 = silence) pendant
 ; d cinquantièmes de seconde, sur la voix 0, et attend la fin
 p_note
-        jsr eval
+        jsr eval_int
         lda val
         pha
-        jsr eval
+        jsr eval_int
         pla
         sta gblk+2
         lda #S_NOTE
@@ -1630,7 +1812,7 @@ p_note
         jmp sn_go
 ; BRUIT d : bruit blanc pendant d cinquantièmes de seconde
 p_bruit
-        jsr eval
+        jsr eval_int
         lda #S_NOISE
         sta gblk
         lda #8                  ; période du bruit
@@ -2590,10 +2772,20 @@ ev      cpx pcount
         jsr eval
         pla
         tax
-        lda val
-        sta argv_lo,x
-        lda val+1
-        sta argv_hi,x
+        jsr arg_off             ; argument X -> argv
+        lda vt
+        sta argv,y
+        txa
+        pha
+        ldx #0
+ac      lda val,x
+        sta argv+1,y
+        iny
+        inx
+        cpx #VAL_SIZE-1
+        bne ac
+        pla
+        tax
         inx
         bne ev
 bind    ldx #0                  ; crée les variables locales
@@ -2620,12 +2812,20 @@ room    txa
         jsr set_name
         pla
         tax
+        txa
+        pha
+        jsr arg_off             ; argv -> variable locale
+        tya
+        tax
         ldy #NAMELEN
-        lda argv_lo,x
+bc      lda argv,x
         sta (p2),y
+        inx
         iny
-        lda argv_hi,x
-        sta (p2),y
+        cpy #NAMELEN+VAL_SIZE
+        bne bc
+        pla
+        tax
         inc nloc
         inx
         bne bl
@@ -3405,6 +3605,8 @@ w_hasard .asc "HASARD",0
 w_cap    .asc "CAP",0
 w_xcor   .asc "XCOR",0
 w_ycor   .asc "YCOR",0
+w_liscar .asc "LISCAR",0
+w_touche .asc "TOUCHE?",0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_split .byt G_MODE,1,0,0,0,0
@@ -3499,6 +3701,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "POUR NOM :A ... FIN  DONNE ",$22,"X n",13,10
           .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
           .asc "XCOR YCOR  + - * / ( ) = < >",13,10
+          .asc "LISCAR (code touche)  TOUCHE?",13,10
           .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
@@ -3508,6 +3711,7 @@ e_unknown .asc "Je ne connais pas",0
 e_value   .asc "Il manque une valeur",0
 e_novar   .asc "Pas de valeur pour",0
 e_div     .asc "Division par zero",0
+e_notnum  .asc "Il faut un nombre",0
 e_list    .asc "Il faut une liste [ ] apres",0
 e_bracket .asc "Il manque un ] apres",0
 e_deep    .asc "Trop de niveaux",0
@@ -3537,9 +3741,8 @@ bodyst  = tipxy+4
 ld_tok  = bodyst+2
 ld_end  = ld_tok+2
 ld_fb   = ld_end+2
-argv_lo = ld_fb+2
-argv_hi = argv_lo+MAXPAR
-parn_lo = argv_hi+MAXPAR
+argv    = ld_fb+2       ; arguments évalués d'un appel (valeurs de 6 octets)
+parn_lo = argv+MAXPAR*VAL_SIZE
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR
@@ -3551,5 +3754,7 @@ globals = fbuf+130
 locals  = globals+MAXGL*VAR_SIZE
 frames  = locals+MAXLOC*VAR_SIZE
 frames_end= frames+120*FR_SIZE
-procbase = (frames_end+255)/256*256   ; procédures : jusqu'au haut de la TPA
+vstack  = frames_end    ; pile de valeurs de l'évaluateur
+vstack_end= vstack+VS_N*VAL_SIZE
+procbase = (vstack_end+255)/256*256   ; procédures : jusqu'au haut de la TPA
 

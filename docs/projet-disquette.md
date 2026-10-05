@@ -26,16 +26,18 @@ données, communiquer (réseau par le LOCI).
   `.BAT` avec `$1`-`$9`), ECHO, PAUSE.
 
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
-HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons), ASM
+HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
+LISCAR / TOUCHE?, valeurs typées), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
 HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, SPLIT, GTEST,
-LOGO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture sur place, DO, le son,
-l'édition de ligne (flèches, historique, complétion par ESC), le mode SPLIT avec la bascule
-en `$BFDF` (premier octet `$A000` visible, ligne 27 vide), STAT, MEM, POKE et GO.
+LOGO, STAT, MEM, POKE et GO. Restent à essayer sur le vrai Oric : ASM, DEBUG, HEX en écriture
+sur place, DO, le son, l'édition de ligne (flèches, historique, complétion par ESC), le mode
+SPLIT avec la bascule en `$BFDF` (premier octet `$A000` visible, ligne 27 vide), LISCAR et
+TOUCHE? dans LOGO.
 
 ## Choix déjà faits (et pourquoi)
 
@@ -69,8 +71,46 @@ en `$BFDF` (premier octet `$A000` visible, ligne 27 vide), STAT, MEM, POKE et GO
   toute la ligne de points 0 sur le vrai circuit, qui change de mode à la ligne suivante) mais en
   `$BFDF`, comme le BASIC. Prix : la ligne de texte 27 ne contient que des attributs, la console
   SPLIT passe de 11 à 10 lignes (variable `con_last`). Seul `$B3D8` (retour au texte) reste pris.
+- LOGO, lot 2 : les valeurs intermédiaires de l'évaluateur passent par une pile de valeurs
+  (24 valeurs de 6 octets) au lieu de la pile du 6502 ; c'est elle, avec les variables et les
+  paramètres, qui servira de racine au compactage du tas. Le tas lui-même attend le lot 5 :
+  avant les mots, rien ne l'utiliserait et il ne pourrait pas être essayé.
+- LOGO : une touche lue par le test d'ESC pendant l'exécution est gardée (`pkey`) pour LISCAR et
+  TOUCHE? au lieu d'être jetée ; on ne garde que la dernière, oubliée au retour au prompt.
+- LOGO : DONNE gardait le nom de la variable dans `p3` pendant l'évaluation, que la recherche
+  des fonctions (HASARD, CAP...) écrase : `DONNE "X CAP` créait une variable au mauvais nom.
+  Le nom est maintenant gardé sur la pile du 6502.
 
 ## Suite prévue (par priorité)
+
+0. **LOGO : nombres décimaux, saisie, mots et listes** (en cours, un commit par livraison). Choix :
+   - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
+     en interne deux types, entier 16 bits et décimal ; un entier qui déborde devient décimal,
+     `/` est une division exacte (QUOTIENT et RESTE pour la division entière) ; point décimal ;
+   - la tortue garde ses calculs entiers et sa virgule fixe : un décimal est converti à l'entrée
+     des primitives (distances et coordonnées au 1/256, cap fractionnaire avec interpolation du
+     sinus, arrondi au plus proche pour REPETE, NOTE, ATTENDS ; erreur hors de portée) ;
+   - valeur = 6 octets (type + 5 octets) ; mots et listes = adresse et longueur d'un texte dans
+     un tas qui descend du haut de la mémoire, les procédures montant du bas ; compactage du tas
+     (racines : variables, paramètres, pile de valeurs) ;
+   - une liste est un texte entre crochets ; une sous-liste est un groupe `[...]` (PREMIER le
+     rend entier, par comptage des crochets). Listes emboîtables sans cellules ; EXECUTE gratuit.
+
+   | Lot | Contenu | Complexité | Code | État |
+   |---|---|---|---|---|
+   | 1 | LISCAR, TOUCHE? | faible | ~60 o | **fait** |
+   | 2 | valeurs typées (6 octets), pile de valeurs, variables et paramètres typés | élevée | ~300 o (+530 o de variables) | **fait** (le tas passe au lot 5) |
+   | 3 | décimaux : 4 opérations, comparaisons, lecture/affichage, conversions, promotion, QUOTIENT, RESTE, ENT, ARRONDI, ABS | élevée | ~2-2,3 Ko | à faire |
+   | 4 | tortue et décimaux (conversions, cap fractionnaire, contrôles de plage) | moyenne | ~250 o | à faire |
+   | 5 | mots et listes : tas et compactage, MOT, PHRASE, LISTE, PREMIER, DERNIER, SAUFPREMIER, SAUFDERNIER, ITEM, COMPTE, VIDE?, MOT?, NOMBRE?, LISTE?, MEMBRE?, `=` sur les textes, ECRIS et EXECUTE de listes ; un mot qui a l'air d'un nombre compte comme un nombre | élevée | ~1,1-1,4 Ko + tas | à faire |
+   | 6 | LISLISTE (et LISMOT) ; LISCAR rendra alors un caractère (code par ASCII) | faible | ~150 o + 128 o | à faire |
+   | 7 | RACINE, SIN, COS, ARCTAN ; en option LN, EXP, PUISSANCE (+~500 o) | moyenne | ~700 o | à faire |
+   | 8 | option : RENDS (procédures qui renvoient une valeur ; l'évaluateur est récursif, les procédures non) | élevée | ~400-600 o | à décider |
+
+   Mémoire visée après les lots 1 à 7 : LOGO.COM ~13-14 Ko (7,6 Ko aujourd'hui), zone libre
+   ~21 Ko en SPLIT partagée entre procédures et textes (27 Ko aujourd'hui, 28 Ko avant le lot 2).
+   Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
+   volontairement un résultat (par exemple `7 / 2` au lot 3).
 
 1. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
    - pilote série dans le BIOS, branché sur PUNCH / READER : ACIA 6551 en `$0380` sur le LOCI

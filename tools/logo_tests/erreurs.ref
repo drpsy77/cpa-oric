@@ -1,0 +1,20 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "E1
+Pas de valeur pour INCONNU
+?  CHARGE "E2
+Division par zero
+?  CHARGE "E3
+Je ne connais pas TRUC
+?  CHARGE "E4
+Il manque une valeur
+?  CHARGE "E5
+Il manque une valeur
+?  CHARGE "E6
+Il faut une liste [ ] apres REPETE
+?  CHARGE "E7
+K defini.
+Trop de niveaux K
+?  CHARGE "E8
+0
+Que faire de cela ?
+?  QUITTE

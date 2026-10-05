@@ -1,0 +1,16 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "T3
+0
+65
+ATT defini.
+90
+54
+7
+Charge.
+?  CHARGE "T4
+81
+5
+7
+0
+Charge.
+?  QUITTE
