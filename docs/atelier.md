@@ -212,7 +212,10 @@ correctif ou ce fichier change, ou à la main (onglet Actions, « Oricutron macO
 workflow). L'archive se télécharge dans l'onglet Actions, dernière exécution, artefact
 `Oricutron-CPA-macOS`. Mode d'emploi : `tools/LISEZMOI-mac.txt`, copié dans l'archive (les
 ROMs `basic11b.rom` et `microdis.rom` sont à ajouter, l'application n'étant pas signée il faut
-lever la quarantaine au premier lancement).
+lever la quarantaine au premier lancement). Le rendu logiciel est réglé par défaut
+(`rendermode = soft`) : avec SDL2, Oricutron demandait la surface de la fenêtre avant de créer
+le contexte OpenGL, ce qui plante sous macOS (`glMatrixMode` sur un contexte nul) ; le
+correctif inverse l'ordre sur Mac, mais ce chemin est moins éprouvé.
 
 ## 6. Ce qui ne se trouve que chez Claude
 

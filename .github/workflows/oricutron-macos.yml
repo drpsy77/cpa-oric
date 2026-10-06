@@ -62,7 +62,10 @@ jobs:
           codesign --force --deep -s - $D/Oricutron.app
           # Oricutron cherche roms/, images/ et oricutron.cfg à côté de l'application
           cp -R images roms $D/
-          sed 's/^disktype = none/disktype = microdisc/' oricutron.cfg > $D/oricutron.cfg
+          # Atmos + Microdisc ; rendu logiciel par défaut (OpenGL : rendermode = opengl)
+          sed -e 's/^disktype = none/disktype = microdisc/' \
+              -e 's/^rendermode = opengl/rendermode = soft/' oricutron.cfg > $D/oricutron.cfg
+          grep -E '^(machine|disktype|rendermode)' $D/oricutron.cfg
           cp ReadMe.txt $D/
           cp ../tools/LISEZMOI-mac.txt $D/
           otool -L $C/MacOS/Oricutron

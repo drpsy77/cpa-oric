@@ -194,3 +194,26 @@ index a47cd0c..60f78e5 100644
  
    if(oric->diskautosave)
    {
+diff --git a/system_sdl.c b/system_sdl.c
+index a6dc439..8eeacae 100644
+--- a/system_sdl.c
++++ b/system_sdl.c
+@@ -505,8 +505,18 @@ SDL_Surface* SDL_COMPAT_SetVideoMode(int width, int height, int bitsperpixel, Ui
+ 
+   if(flags & SDL_WINDOW_OPENGL)
+   {
++#ifdef __APPLE__
++    /* macOS : la surface de la fenêtre empêche la création du contexte
++       OpenGL (glMatrixMode plantait sur un contexte nul). Contexte d'abord,
++       et une surface ordinaire, qui ne sert qu'aux dimensions. */
++    g_glcontext = SDL_GL_CreateContext(g_window);
++    if(!g_glcontext) return NULL;
++    g_screen = SDL_CreateRGBSurface(0, g_width, g_height, 32,
++                                    RMASK, GMASK, BMASK, AMASK);
++#else
+     g_screen = SDL_GetWindowSurface(g_window);
+     g_glcontext = SDL_GL_CreateContext(g_window);
++#endif
+ 
+     SDL_GL_SetSwapInterval(1);
+   }
