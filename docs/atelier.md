@@ -9,7 +9,7 @@ Raspberry Pi 400. Il dit aussi à quoi sert chaque machine.
 |---|---|---|
 | **Raspberry Pi 400** | atelier complet : construction, tests automatiques, émulateur piloté par script | c'est un Linux, comme l'environnement de Claude : les mêmes scripts y tournent sans adaptation |
 | **Windows 11 (UTM)** | jouer avec CP/A dans Oricutron, à la main | ton usage habituel ; aucun outil à ajouter |
-| **Mac** | éditer, `git`, lien avec Claude | rien à installer : on ne porte rien sur macOS |
+| **Mac** | éditer, `git`, lien avec Claude ; jouer avec CP/A dans Oricutron pour Mac (§ 5 bis) | Oricutron est compilé par GitHub, rien à compiler sur le Mac |
 | **Oric Atmos + LOCI** | essai final sur le vrai matériel | timing, son et écran réels |
 
 Les fichiers circulent par GitHub : `git push` depuis une machine, `git pull` sur une autre.
@@ -27,12 +27,19 @@ outils, et suit toujours la même boucle.
    le système disque, l'amorce et les programmes `.COM`, puis fabrique la disquette avec
    `tools/mkdisk.py`. Le script contrôle aussi les tailles (ROM de 16 Ko, système disque qui
    s'arrête avant `$F670`).
-2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, environ 60 lignes dans `main.c`). Le
+2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, surtout dans `main.c`). Le
    correctif lit des variables d'environnement à chaque trame (1/50 s) :
    - `ORIC_KEYS` : texte tapé touche par touche, comme sur le clavier de l'Oric (les caractères
      obtenus avec SHIFT, comme `" + ( ) < > ? $ *`, sont tapés avec SHIFT) ;
    - `ORIC_KEYS_AT` : trame où la frappe commence ;
    - `ORIC_DUMP` / `ORIC_DUMP_AT` : fichier et trame du vidage des 64 Ko de mémoire.
+   - `ORIC_PASTE` / `ORIC_PASTE_AT` : texte collé comme par F12, et trame du collage.
+
+   Il change aussi le collage du presse-papiers (F12) : d'origine, Oricutron ne livre le texte
+   qu'à la routine clavier de la ROM BASIC (adresse `$EB78`), que CP/A n'utilise pas. Le texte
+   est maintenant tapé sur la matrice du clavier simulé (tables de `src/tables.s`), environ 6
+   caractères par seconde, ce qui marche avec tout logiciel. En CP/A disquette (ROM masquée),
+   le collage tient compte du verrouillage des majuscules (`$021A`) pour garder la casse.
 
    L'émulateur tourne dans un écran virtuel (Xvfb), sans son.
 3. **`tools/screen.py`** lit l'écran texte (`$BB80`) dans le vidage et l'affiche en texte. Claude
@@ -193,8 +200,19 @@ Rien à construire : les images sont dans le dépôt.
    la place de `basic11b` (fichier `oricutron.cfg` : `atmosrom = 'roms/cpa'`). Pense à remettre
    `basic11b` ensuite.
 
-Le correctif de test n'est pas nécessaire sous Windows : il ne sert qu'aux scénarios
-automatiques, qui tournent sur le Pi.
+Le correctif de test n'est pas nécessaire sous Windows pour les scénarios automatiques, qui
+tournent sur le Pi ; sans lui, le collage F12 ne marche pas dans CP/A.
+
+## 5 bis. Mac : Oricutron compilé par GitHub
+
+Le fichier `.github/workflows/oricutron-macos.yml` fait compiler par GitHub, sur un Mac Apple
+Silicon, Oricutron à la même version que les tests, avec le correctif ci-dessus (donc le
+collage F12 qui marche dans CP/A) et SDL2 inclus dans l'application. Il se lance quand le
+correctif ou ce fichier change, ou à la main (onglet Actions, « Oricutron macOS », Run
+workflow). L'archive se télécharge dans l'onglet Actions, dernière exécution, artefact
+`Oricutron-CPA-macOS`. Mode d'emploi : `tools/LISEZMOI-mac.txt`, copié dans l'archive (les
+ROMs `basic11b.rom` et `microdis.rom` sont à ajouter, l'application n'étant pas signée il faut
+lever la quarantaine au premier lancement).
 
 ## 6. Ce qui ne se trouve que chez Claude
 
