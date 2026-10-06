@@ -21,9 +21,8 @@ Installation
 CP/A
 ----
 oricutron.cfg est réglé sur Atmos + Microdisc, avec le rendu logiciel
-(rendermode = soft), qui marche à coup sûr. Le rendu OpenGL (rendermode =
-opengl : lissage, lignes de balayage) est corrigé pour le Mac mais moins
-éprouvé ; en cas de plantage, revenir à soft. Insérer build/cpa.dsk
+(rendermode = soft). Le rendu OpenGL (rendermode = opengl : lissage, lignes
+de balayage) est corrigé pour le Mac et marche aussi. Insérer build/cpa.dsk
 (menu F1, ou glisser l'image sur la fenêtre selon la version), puis RESET.
 
 Copier-coller
