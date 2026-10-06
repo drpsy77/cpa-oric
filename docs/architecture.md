@@ -109,6 +109,16 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - Matériel : essayé sur Oric Atmos + LOCI (version disquette). Les couleurs des menus sont
   meilleures sur un vrai écran que dans certains émulateurs.
 
+**Quels tests pour quel changement** (proportionnés au risque ; `test_logo.sh` dure ~25 min) :
+
+| Changement | Tests |
+|---|---|
+| Toujours | `./build.sh` (taille, marge) et `tools/test_asm.sh` |
+| Système (BIOS, BDOS, CCP, menus) | en plus : essai Oricutron ciblé sur ce qui change, `tools/smoke_test.sh` |
+| LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
+| `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
+| Avant un commit de version, ou sur demande | tout |
+
 ## 5. Conventions
 
 - Fichiers `progs/*_tab.s` (tables) et `progs/*_inc.s` (bibliothèques) : inclus par un
