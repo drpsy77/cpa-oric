@@ -51,7 +51,7 @@ if [ ! -x oricutron/Oricutron-sdl2 ]; then
   git checkout -q $ORIC_COMMIT
   git apply "$TOOLS/oricutron-testhook.patch"
   mkdir -p b && cd b
-  cmake -DUSE_SDL2=ON .. >cmake.log
+  cmake -DUSE_SDL2=ON -DCMAKE_C_FLAGS="-D__CBCOPY__ -D__CBPASTE__" .. >cmake.log   # F11 / F12
   make -j"$(nproc)" >make.log 2>&1 || { tail -20 make.log; exit 1; }
   cp Oricutron-sdl2 ..
   cd "$TOOLS"

@@ -1,0 +1,35 @@
+Oricutron pour Mac (Apple Silicon), avec le correctif de CP/A
+==============================================================
+
+Fabriqué par GitHub (.github/workflows/oricutron-macos.yml du dépôt cpa-oric)
+à partir des sources d'Oricutron et de tools/oricutron-testhook.patch.
+
+Installation
+------------
+1. Décompresser l'archive : un dossier Oricutron-CPA.
+2. Copier dans Oricutron-CPA/roms les deux ROMs qui ne sont pas fournies :
+   basic11b.rom et microdis.rom (par exemple depuis tools/oricutron/roms
+   du dépôt, ou depuis l'Oricutron de l'OSDK).
+3. L'application n'est pas signée par un développeur reconnu : avant le
+   premier lancement, dans le Terminal :
+       xattr -dr com.apple.quarantine ~/chemin/Oricutron-CPA
+   (ou : clic droit sur Oricutron.app, Ouvrir ; puis Réglages Système,
+   Confidentialité et sécurité, « Ouvrir quand même »).
+4. Garder Oricutron.app dans le dossier Oricutron-CPA : il y cherche roms/,
+   images/ et oricutron.cfg.
+
+CP/A
+----
+oricutron.cfg est réglé sur Atmos + Microdisc. Insérer build/cpa.dsk
+(menu F1, ou glisser l'image sur la fenêtre selon la version), puis RESET.
+
+Copier-coller
+-------------
+F12 (ou le menu) colle le presse-papiers du Mac en tapant les touches du
+clavier simulé : cela marche dans CP/A, LOGO, EDIT et BASIC. Environ 6
+caractères par seconde. Dans CP/A disquette, la casse est respectée
+quel que soit le voyant A / a. Les caractères absents du clavier de l'Oric
+(accents, ~, `) sont ignorés. F11 copie l'écran texte de l'Oric.
+Pour un fichier entier (MATH.LOG...), mieux vaut le mettre sur la disquette :
+    python3 tools/mkdisk.py put build/cpa.dsk MATH.LOG MATH.LOG
+(Oricutron fermé, ou la disquette éjectée).

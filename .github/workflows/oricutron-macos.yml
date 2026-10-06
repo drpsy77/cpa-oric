@@ -1,0 +1,74 @@
+# Compile Oricutron pour macOS (Apple Silicon) avec le correctif de CP/A
+# (tools/oricutron-testhook.patch : collage F12 par le clavier simulé,
+# crochet de test). Résultat : onglet Actions du dépôt, artefact
+# « Oricutron-CPA-macOS » (une archive .tar.gz, qui garde les droits
+# d'exécution). Mode d'emploi : tools/LISEZMOI-mac.txt (copié dans l'archive).
+name: Oricutron macOS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/oricutron-testhook.patch
+      - tools/LISEZMOI-mac.txt
+      - .github/workflows/oricutron-macos.yml
+
+env:
+  ORIC_COMMIT: 002279fce9fa756d1d63cdc40ae97939eb7de7ed   # même version que tools/setup_linux.sh
+  SDL_TAG: release-2.30.11
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils
+        run: brew install dylibbundler
+
+      # SDL2 compilé depuis ses sources : la formule sdl2 de Homebrew peut être
+      # remplacée par sdl2-compat (SDL3), on ne dépend pas de ce choix
+      - name: SDL2
+        run: |
+          git clone -q --depth 1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git sdl-src
+          cmake -S sdl-src -B sdl-build -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX="$PWD/sdl" -DSDL_TEST=OFF >/dev/null
+          cmake --build sdl-build -j"$(sysctl -n hw.ncpu)" >/dev/null
+          cmake --install sdl-build >/dev/null
+          echo "$PWD/sdl/bin" >> "$GITHUB_PATH"
+
+      - name: Oricutron et correctif CP/A
+        run: |
+          git clone -q https://github.com/pete-gordon/oricutron.git oric
+          cd oric
+          git checkout -q "$ORIC_COMMIT"
+          git apply ../tools/oricutron-testhook.patch
+          make -j"$(sysctl -n hw.ncpu)" SDL_LIB=sdl2
+
+      - name: Application
+        run: |
+          set -e
+          cd oric
+          D=Oricutron-CPA
+          C=$D/Oricutron.app/Contents
+          mkdir -p $C/MacOS $C/Resources $C/libs
+          cp oricutron $C/MacOS/Oricutron
+          echo 'APPL????' > $C/PkgInfo
+          sed "s/@@VERSION@@/1.2/g" Info.plist > $C/Info.plist
+          cp XCode/Oricutron/Oricutron/winicon.icns $C/Resources/
+          # SDL2 dans l'application : rien à installer sur le Mac
+          dylibbundler -od -b -x $C/MacOS/Oricutron -d $C/libs/ -p @executable_path/../libs/ \
+                       -s "$GITHUB_WORKSPACE/sdl/lib" </dev/null
+          codesign --force --deep -s - $D/Oricutron.app
+          # Oricutron cherche roms/, images/ et oricutron.cfg à côté de l'application
+          cp -R images roms $D/
+          sed 's/^disktype = none/disktype = microdisc/' oricutron.cfg > $D/oricutron.cfg
+          cp ReadMe.txt $D/
+          cp ../tools/LISEZMOI-mac.txt $D/
+          otool -L $C/MacOS/Oricutron
+          tar czf ../Oricutron-CPA-macOS.tar.gz $D
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Oricutron-CPA-macOS
+          path: Oricutron-CPA-macOS.tar.gz
