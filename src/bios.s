@@ -526,7 +526,7 @@ nocaps
         lda caps
         eor #1
         sta caps
-        jmp draw_caps
+        jmp draw_flags
 
 push    ldx kb_head
         lda ZP_IRQ
@@ -879,28 +879,26 @@ draw_status
         ldy #>sys_bar
         jmp menu_install
 
-draw_caps                       ; (appelée aussi depuis l'IRQ : CTRL-T)
+; draw_flags : voyants au bout de la barre (couleur : attribut de la
+; colonne 34). Colonne 37 : A = majuscules verrouillées, a = minuscules ;
+; colonne 38 : P = copie de la console à l'imprimante (CTRL-P), sinon espace
+draw_flags                      ; (appelée aussi depuis l'IRQ : CTRL-T)
 .(
-        ldy #38
-        ldx #3
-        lda caps
-        beq off
-on      lda caps_text,x
+        lda #"a"
+        ldy caps
+        beq lc
+        lda #"A"
+lc      ldy #37
         sta (ZP_BAR),y
-        dey
-        dex
-        bpl on
-        rts
-off     lda #" "
-o1      sta (ZP_BAR),y
-        dey
-        dex
-        bpl o1
+        lda lst_echo
+        lsr
+        lda #" "
+        bcc np
+        lda #"P"
+np      iny
+        sta (ZP_BAR),y
         rts
 .)
-
-caps_text
-        .asc "CAPS"
 
 ; ---------------------------------------------------------------------
 ; Utilitaires d'affichage (A/Y = adresse d'une chaîne terminée par 0)

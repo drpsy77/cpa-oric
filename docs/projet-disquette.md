@@ -11,10 +11,12 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F55F`, marge 273 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F56A`, marge 262 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
-- imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ;
+- imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
+  l'article Imprimante du menu Systeme ;
+- voyants au bout de la barre de menus : `A` / `a` (majuscules / minuscules), `P` (imprimante) ;
 - lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
   historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
   fichiers par ESC (partie commune, puis liste des noms possibles) ;
@@ -190,6 +192,17 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   suspendue (bit 7) et la ligne finale est imprimée par RETURN, pour ne pas imprimer les
   retouches ; un démarrage à chaud lève la suspension. Oricutron écrit l'imprimé dans
   `printer_out.txt` : `tools/smoke_test.sh` le vérifie. Coût : 106 octets résidents.
+- Voyants de la barre : le texte `CAPS` (colonnes 35-38), peu parlant et sans place pour
+  l'imprimante, est remplacé par deux voyants toujours visibles : colonne 37 `A` (majuscules
+  verrouillées) ou `a` (minuscules), colonne 38 `P` quand la copie à l'imprimante (bit 0 de
+  `lst_echo`) est active. Les colonnes 35-36 restent libres (voyant réseau plus tard).
+  Le verrouillage des majuscules est gardé : le CCP et LOGO passent leurs lignes en
+  majuscules, mais les fonctions 1 et 10 du BDOS rendent ce qui est tapé (comme CP/M), et le
+  clavier de l'Oric donne des minuscules sans SHIFT (EDIT, sources pour ASM...).
+  Un article Imprimante dans le menu Systeme (et non Clavier, réservé au rythme des touches)
+  appelle la même routine que CTRL-P, qui ne marche que pendant la lecture d'une ligne.
+  `draw_flags` remplace `draw_caps`, appelée par la barre (tous les programmes), CTRL-T,
+  CTRL-P et les menus. Coût : 11 octets résidents.
 
 ## Suite prévue (par priorité)
 
@@ -240,7 +253,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 273 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 262 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

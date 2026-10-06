@@ -115,7 +115,8 @@ ERA et REN répondent `File R/O` ; EDIT et HEX refusent d'enregistrer un fichier
 Les programmes passent par la fonction 30 du BDOS (bit 7 de l'octet 9 du FCB = R/O, de
 l'octet 10 = SYS).
 
-Touches : CTRL-T bascule les majuscules, CTRL-C en début de ligne fait un démarrage à
+Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
+la barre de menus), CTRL-C en début de ligne fait un démarrage à
 chaud. Le bouton RESET revient au CCP.
 
 **Édition de la ligne, historique, complétion.** Au prompt `A>` comme dans les programmes qui
@@ -129,7 +130,7 @@ lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
 | CTRL-A / CTRL-E | début / fin de la ligne |
 | CTRL-X | effacer toute la ligne |
-| CTRL-P | imprimante : copier tout ce qui s'affiche, oui / non (voir plus bas) |
+| CTRL-P | imprimante : copier tout ce qui s'affiche, oui / non (voyant `P` ; voir plus bas) |
 
 L'historique garde les dernières lignes (256 octets, une vingtaine de commandes courtes) ; il
 survit au démarrage à chaud, et une ligne identique à la précédente n'y entre pas deux fois.
@@ -295,8 +296,11 @@ décomptée par l'interruption à 50 Hz : le programme continue pendant que la n
 
 ## Menus déroulants
 
-La ligne d'état sert de barre de menus : **Systeme**, **Fichiers** (version disque seulement),
-**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules) et **Clavier**. Le moteur est réécrit d'après le projet
+La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante,
+Redemarrer), **Fichiers** (version disque seulement),
+**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules) et **Clavier**. Au bout
+de la barre, deux voyants : `A` (majuscules verrouillées) ou `a` (minuscules), puis `P` quand
+la copie à l'imprimante est active. Le moteur est réécrit d'après le projet
 [Menus](https://github.com/drpsy77/Menus) de Pierre Garnier, dont il reprend l'ergonomie,
 les couleurs et le format de table.
 
@@ -712,7 +716,8 @@ Le FCB a le format CP/M 2.2 sur 36 octets.
 
 **Imprimante.** CP/A imprime sur le port Centronics de l'Oric (entrée LIST du BIOS, fonction
 5 du BDOS : A = caractère). CTRL-P, tapé pendant la saisie d'une ligne (au prompt, dans LOGO,
-DEBUG...), active ou coupe la copie à l'imprimante de tout ce qui s'affiche, comme sous CP/M :
+DEBUG...), ou l'article Imprimante du menu Systeme, active ou coupe la copie à l'imprimante
+de tout ce qui s'affiche, comme sous CP/M (voyant `P` au bout de la barre) :
 CTRL-P puis `TYPE README.TXT` imprime le fichier. Pendant l'édition d'une ligne, seule la
 ligne finale est imprimée (pas les retouches). Sans imprimante branchée, rien ne bloque :
 l'attente de l'accusé de réception est limitée à 2 ms environ par caractère. Dans Oricutron,

@@ -9,6 +9,8 @@ TOUCHES
 -------
 FUNCT         | menus deroulants
 CTRL-T        | majuscules oui/non
+              |   (voyant A ou a au
+              |   bout de la barre)
 <- ->         | deplace dans la ligne
               |   (on tape en
               |   insertion)
@@ -23,7 +25,9 @@ DEL ^D        | efface a gauche /
 CTRL-X        | efface la ligne
 CTRL-P        | imprimante oui/non
               |   (tout ce qui
-              |   s'affiche)
+              |   s'affiche ; voyant
+              |   P ; aussi menu
+              |   Systeme)
 CTRL-C        | redemarrage a chaud
 RESET         | retour au prompt
 

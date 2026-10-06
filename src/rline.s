@@ -220,12 +220,13 @@ k_end
         lda rl_cnt
 ke_s    sta rl_pos
         bpl rl_goto
-; CTRL-P : copie de la console à l'imprimante, oui / non
+; CTRL-P : copie de la console à l'imprimante, oui / non (aussi
+; l'article Imprimante du menu Systeme) ; voyant P de la barre
 k_prt
         lda lst_echo
         eor #1
         sta lst_echo
-        rts
+        jmp draw_flags
 
 k_brk
         lda rl_cnt
