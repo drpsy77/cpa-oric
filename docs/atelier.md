@@ -215,7 +215,8 @@ ROMs `basic11b.rom` et `microdis.rom` sont à ajouter, l'application n'étant pa
 lever la quarantaine au premier lancement). Le rendu logiciel est réglé par défaut
 (`rendermode = soft`) : avec SDL2, Oricutron demandait la surface de la fenêtre avant de créer
 le contexte OpenGL, ce qui plante sous macOS (`glMatrixMode` sur un contexte nul) ; le
-correctif inverse l'ordre sur Mac, mais ce chemin est moins éprouvé.
+correctif inverse l'ordre sur Mac. Essayé par Pierre : les deux rendus (soft et opengl) et le
+collage F12 marchent.
 
 ## 6. Ce qui ne se trouve que chez Claude
 

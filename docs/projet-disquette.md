@@ -239,16 +239,50 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 
-1. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
+1. **LOGO en modules** (« bibliothèques dynamiques », idée du dictionnaire de Forth : on ne
+   charge que les mots du contexte). Constat : LOGO.COM fait 16,8 Ko et laisse 17,2 Ko à
+   l'utilisateur ; tout est chargé, même ce qui ne sert pas. Tout se fait dans LOGO.COM :
+   ni le système ni le contrat d'interface ne changent.
+   - Noyau : interpréteur, nombres (décimaux compris, ils servent partout), variables,
+     procédures, fichiers. Modules sur la disquette (`.LGM`), chargés par `CHARGEMODULE "NOM`,
+     rendus par `OUBLIEMODULE` ; chaque module apporte sa table de primitives, consultée
+     après celle du noyau.
+   - Table d'accès au noyau (sauts vers ~20 routines : évaluer un entier, erreurs, cacher la
+     tortue, BDOS...) : les modules ne dépendent pas des adresses internes de LOGO.
+   - Relocation à la manière des PRL de MP/M : le module est assemblé à deux adresses, un outil
+     Python en tire une carte d'un bit par octet à corriger, le chargeur de LOGO l'applique
+     (~60-80 octets). Plusieurs modules peuvent être chargés à la fois.
+   - Coût estimé dans le noyau : 250-350 octets. Gain : sortir les fonctions (1,4 Ko), les mots
+     et listes (2,9 Ko + 0,6 Ko de zones), EDITE (~0,8 Ko), peut-être le texte de l'aide :
+     noyau visé 10-12 Ko, 4 à 6 Ko rendus à l'utilisateur qui n'a pas besoin de tout.
+   - Points délicats : la frontière noyau / modules ; un programme sauvé déclare ses modules
+     (ligne `CHARGEMODULE` en tête) ; `test_logo.sh` charge les modules.
+
+   | Lot | Contenu | Complexité | État |
+   |---|---|---|---|
+   | A | mécanisme : table d'accès, chargeur avec relocation, CHARGEMODULE / OUBLIEMODULE, outil Python de fabrication ; validé en sortant les fonctions mathématiques dans un module (tests LOGO identiques) | élevée | à faire |
+   | B | module `GRAPHE` : primitives du BDOS 115/116 que LOGO n'expose pas — POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point), SON voix note volume durée, ENVELOPPE ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o | moyenne | à faire |
+   | C | selon le gain mesuré : sortir les listes, EDITE, l'aide | moyenne | à voir |
+   | D | plus tard, si besoin : procédures converties en jetons à la définition (vitesse, place ; LISTE et EDITE retraduisent) | élevée | piste |
+
+   Écarté pour l'instant : une primitive générique `.SYSTEME n [liste]` (seules les fonctions
+   115 et 116 s'y prêtent, les autres demandent des adresses ; risques : quitter LOGO, mode
+   d'écran désynchronisé, traces de la tortue). À reconsidérer avec PEEK / POKE, « pour experts ».
+
+2. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
    - pilote série dans le BIOS, branché sur PUNCH / READER : ACIA 6551 en `$0380` sur le LOCI
      (`$031C` dans Oricutron), adresse dans une variable, ~150 octets ;
    - `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés) ;
    - `tools/xfer_server.py` : serveur XMODEM sur le Mac ;
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
-2. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
+3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
    (son dans les scripts) ou `PLAY.COM` (partition texte) ; ne pas perdre la frappe anticipée
    pendant `NOTE`/`ATTENDS` dans LOGO ; raccourci clavier pour « Insérer » dans EDIT.
-3. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
+   Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
+   hors de la disquette construite pour l'instant.
+   Revue complète du son : le volume maximal de l'AY est agressif et rien ne permet de le régler
+   (NOTE et BRUIT de LOGO jouent au volume 12) ; `SON` du lot B prendra un volume.
+4. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
    données simple sur l'accès direct.
 
 ## Contraintes à garder en tête
