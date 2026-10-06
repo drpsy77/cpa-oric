@@ -447,7 +447,8 @@ msg_help
         .asc "PUT file cmd  output of cmd to file",13,10
         .asc "DO file [p1..p9]  run file.BAT",13,10
 #endif
-        .asc "Keys: CTRL-T caps, CTRL-X kill,",13,10
+        .asc "Keys: CTRL-T caps (A/a), CTRL-P",13,10
+        .asc "      printer (P), CTRL-X kill,",13,10
         .asc "      CTRL-C reboot, DEL erase,",13,10
         .asc "      <- -> edit, up/down history",13,10,0
 msg_mem

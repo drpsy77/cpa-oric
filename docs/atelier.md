@@ -141,7 +141,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   | `\|` | pause de 3 s dans la frappe |
 
   Majuscules et `$ : * # " > < ( )` sont tapés avec SHIFT automatiquement. L'Oric démarre en
-  CAPS : une minuscule s'affiche en majuscule et une majuscule (avec SHIFT) en minuscule. Pour les
+  majuscules (voyant `A`) : une minuscule s'affiche en majuscule et une majuscule (avec SHIFT) en minuscule. Pour les
   commandes, cela ne change rien ; pour du texte, tape en minuscules.
 - **TRAME** : instant du vidage (50 trames par seconde). L'émulateur s'arrête juste après.
 - **SORTIE** : préfixe des résultats `SORTIE.mem` (64 Ko), `SORTIE.png`, `SORTIE.log`.

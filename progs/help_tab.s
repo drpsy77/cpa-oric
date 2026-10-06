@@ -68,6 +68,8 @@ h_0
         .asc "-------",13,10
         .asc "FUNCT         | menus deroulants",13,10
         .asc "CTRL-T        | majuscules oui/non",13,10
+        .asc "              |   (voyant A ou a au",13,10
+        .asc "              |   bout de la barre)",13,10
         .asc "<- ->         | deplace dans la ligne",13,10
         .asc "              |   (on tape en",13,10
         .asc "              |   insertion)",13,10
@@ -82,7 +84,9 @@ h_0
         .asc "CTRL-X        | efface la ligne",13,10
         .asc "CTRL-P        | imprimante oui/non",13,10
         .asc "              |   (tout ce qui",13,10
-        .asc "              |   s'affiche)",13,10
+        .asc "              |   s'affiche ; voyant",13,10
+        .asc "              |   P ; aussi menu",13,10
+        .asc "              |   Systeme)",13,10
         .asc "CTRL-C        | redemarrage a chaud",13,10
         .asc "RESET         | retour au prompt",13,10
         .byt 0

@@ -148,7 +148,7 @@ end     ldy m_tmp
         sta (ZP_BAR),y
         ldy #34
         sta (ZP_BAR),y
-        jmp draw_caps
+        jmp draw_flags
 .)
 
 ; ---------------------------------------------------------------------
@@ -599,7 +599,7 @@ m_caps
         lda caps
         eor #1
         sta caps
-        jmp draw_caps
+        jmp draw_flags
 
 m_kfast
         lda #12
@@ -631,7 +631,7 @@ sys_bar
         .word mn_sys, mn_ecr, mn_clv
 #endif
 
-mn_sys  .byt 4,10
+mn_sys  .byt 5,10
         .asc "Systeme",0
         .asc "Version",0
         .byt MA_TYPE
@@ -642,6 +642,9 @@ mn_sys  .byt 4,10
         .asc "Memoire",0
         .byt MA_TYPE
         .word ty_mem
+        .asc "Imprimante",0
+        .byt MA_CALL
+        .word k_prt
         .asc "Redemarrer",0
         .byt MA_CALL
         .word m_reboot
