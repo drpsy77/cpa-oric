@@ -88,7 +88,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
 | `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F65D`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4F6`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (libres : `$FD42-$FD7F`, `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -101,7 +101,8 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
 
-- `build.sh` refuse un système disque qui dépasse `$F670` et une ROM qui ne fait pas 16 Ko.
+- `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
+  vecteurs (`$FFFA`) et une ROM qui ne fait pas 16 Ko ; il affiche les deux marges.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
   `tools/oricutron-testhook.patch` ; `DSK=` pour la disquette, `ORIC_ROM=cpa` pour la ROM) et
   `tools/screen.py` (texte de l'écran).

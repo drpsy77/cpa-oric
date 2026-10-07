@@ -146,7 +146,7 @@ internes) ; un mot vide + ESC montre tout le disque.
 
 **Pause en fin d'écran.** Quand une commande remplit la console (27 lignes en mode texte,
 10 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
-` -- Suite : une touche (^C stop) -- `. Une touche continue, CTRL-C abandonne et revient au
+` -- Suite (^C stop) -- `. Une touche continue, CTRL-C abandonne et revient au
 prompt. Cela vaut pour `HELP`, `TYPE`, `DIR`, `DUMP`… et pour les programmes qui affichent par
 le BDOS ou le BIOS. Un programme qui ne veut pas de pause met `$02A3` à 0 (variable publique,
 remise à 1 au démarrage à froid).
@@ -862,8 +862,9 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 | `$F670-$F7BF` | ligne de commande d'origine, script DO (FCB, enregistrement, paramètres) |
 | `$F7C0-$FCFF` | PUT : sauvegarde d'état et tampon de 1 280 octets |
 | `$FD00-$FEFF` | variables du BDOS et tampon de secteur |
+| `$FF00-$FFF9` | CP/A : tables (lignes de l'écran, clavier) ; place pour de petites routines |
 
-Il reste environ 430 octets libres dans la RAM overlay (entre la fin du code et `$F670`) pour de futures fonctions résidentes.
+Il reste environ 440 octets libres dans la RAM overlay pour de futures fonctions résidentes : 378 entre la fin du code et `$F670`, 66 à la fin de la page `$FF00`.
 
 ## Format de la disquette
 

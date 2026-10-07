@@ -20,7 +20,8 @@
 ;  $0500-$B3FF  TPA, zone des programmes utilisateur (44 800 octets)
 ;  $B400-$BB7F  jeux de caractères
 ;  $BB80-$BFDF  écran texte 40x28
-;  $C000-$FFFF  cette ROM
+;  $C000-$FFFF  cette ROM (version disquette : RAM overlay ; le code s'arrête
+;               avant $F670, la page $FF00-$FFF9 reçoit tables_ff.s)
 ;
 ;  Appel BDOS (depuis un programme) :
 ;      X = numéro de fonction (comme le registre C de CP/M)
@@ -83,6 +84,17 @@ bios_table
 #include "font.s"
 
 rom_end
+
+; ---------------------------------------------------------------------
+; Page $FF00-$FFF9 : chargée avec le système (version disquette), elle
+; n'est pas contiguë au code. Elle reçoit des tables et, plus tard, des
+; routines autonomes. Dans la version disquette, les zones de travail
+; ($F670-$FEFF) séparent les deux parties.
+; ---------------------------------------------------------------------
+        .dsb $FF00-*,$FF
+page_ff
+#include "tables_ff.s"
+ff_end
 
 ; ---------------------------------------------------------------------
 ; Remplissage et vecteurs matériels du 6502
