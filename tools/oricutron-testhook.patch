@@ -49,6 +49,76 @@ index 971c852..2808223 100644
      free(text);
    }
    return SDL_TRUE;
+diff --git a/keyboard.c b/keyboard.c
+index 90e24c6..30574e6 100644
+--- a/keyboard.c
++++ b/keyboard.c
+@@ -289,6 +289,30 @@ int kbd_init(struct machine *oric)
+ static SDL_bool defining_key_map = SDL_FALSE;
+ static struct kbdkey * current_key = NULL;
+ static SDL_bool release_keys = SDL_FALSE;
++/* CP/A : une touche du clavier dessiné reste enfoncée 3 trames au moins
++   (un toucher bref sur un écran tactile ne serait pas vu par une lecture du
++   clavier à 50 Hz), et les touches collantes (SHIFT, CTRL, FUNCT) sont
++   relâchées avec elle, pas à l'événement suivant (elles l'étaient avant
++   même que l'Oric ait vu la touche). */
++static int cpa_kframe = 0, cpa_kdown = -1;
++static SDL_COMPAT_KEY cpa_kkey;
++static SDL_bool cpa_kup = SDL_FALSE, cpa_kmods = SDL_FALSE;
++static struct machine *cpa_koric = NULL;
++static void cpa_key_release(void)
++{
++  ay_keypress(&cpa_koric->ay, cpa_kkey, SDL_FALSE);
++  if(cpa_kmods) release_keys = SDL_TRUE;
++  cpa_kdown = -1; cpa_kup = SDL_FALSE; cpa_kmods = SDL_FALSE;
++}
++void cpa_kbd_tick(void)   /* une fois par trame (main.c) */
++{
++  cpa_kframe++;
++  if(cpa_kdown >= 0 && cpa_kup && cpa_kframe - cpa_kdown >= 3)
++  {
++    cpa_key_release();
++    keyboard_event(NULL, cpa_koric, NULL);   /* relâche aussi les touches collantes */
++  }
++}
+ 
+ 
+ // This is the event handler for when you are in the menus
+@@ -327,6 +351,7 @@ SDL_bool keyboard_event(SDL_Event *ev, struct machine *oric, SDL_bool *needrende
+ 
+     release_keys = SDL_FALSE;
+   }
++  if(ev == NULL) return done;
+ 
+   x = -1;
+   y = -1;
+@@ -448,8 +473,12 @@ SDL_bool keyboard_event(SDL_Event *ev, struct machine *oric, SDL_bool *needrende
+               case MACH_ORIC1_16K:
+               case MACH_ATMOS:
+               default:
++                if(cpa_kdown >= 0) cpa_key_release();   /* touche précédente */
+                 ay_keypress(&oric->ay, current_key->keysim, SDL_TRUE);
+-                break;
++                cpa_koric = oric; cpa_kkey = current_key->keysim;
++                cpa_kdown = cpa_kframe; cpa_kup = SDL_FALSE; cpa_kmods = SDL_TRUE;
++                current_key = NULL;
++                return done;   /* collantes relâchées avec la touche */
+             }
+ 
+             // start releasing mod keys if need be
+@@ -460,6 +489,12 @@ SDL_bool keyboard_event(SDL_Event *ev, struct machine *oric, SDL_bool *needrende
+       break;
+ 
+     case SDL_MOUSEBUTTONUP:
++      if(cpa_kdown >= 0 && !defining_key_map)
++      {
++        if(cpa_kframe - cpa_kdown >= 3) { cpa_key_release(); keyboard_event(NULL, oric, NULL); }
++        else cpa_kup = SDL_TRUE;   /* relâchée par cpa_kbd_tick */
++        break;
++      }
+       if((current_key == NULL) || (defining_key_map))
+         break;
+ 
 diff --git a/machine.c b/machine.c
 index 00b7b0e..a068b5a 100644
 --- a/machine.c
@@ -63,13 +133,14 @@ index 00b7b0e..a068b5a 100644
                          0xff, 0x00, 0xff,
                          0x00, 0xff, 0xff,
 diff --git a/main.c b/main.c
-index a47cd0c..e8117f3 100644
+index a47cd0c..c049951 100644
 --- a/main.c
 +++ b/main.c
-@@ -1759,9 +1759,152 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1759,154 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
++void cpa_kbd_tick(void);   /* keyboard.c : maintien des touches du clavier dessiné */
 +
 +/* --- collage (F12, menu) pour CP/A : le presse-papiers est tapé sur la
 +   matrice du clavier simulé, ce qui marche avec tout logiciel (CP/A, LOGO,
@@ -216,9 +287,56 @@ index a47cd0c..e8117f3 100644
    int i;
 +  test_hook(oric);
 +  cpa_paste_tick(oric);
++  cpa_kbd_tick();
  
    if(oric->diskautosave)
    {
+@@ -2102,6 +2247,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+   emscripten_fetch_close(fetch); // Also free data on failure.
+ }
+ 
++#ifdef CPA_WWW
++/* CP/A : boutons de la page (coller, RESET, enregistrer la disquette) */
++void EMSCRIPTEN_KEEPALIVE cpa_www_paste(const char *text) { cpa_paste(text); }
++void EMSCRIPTEN_KEEPALIVE cpa_www_reset(void)
++{
++  gCtx->oric.cpu.nmi = SDL_TRUE;   /* bouton RESET de l'Atmos : NMI */
++  gCtx->oric.cpu.nmicount = 2;
++}
++int EMSCRIPTEN_KEEPALIVE cpa_www_flush(void)   /* écrit la disquette modifiée */
++{
++  int i, n = 0;
++  for (i = 0; i < 4; i++)
++    if (gCtx->oric.wddisk.disk[i] && gCtx->oric.wddisk.disk[i]->modified) {
++      diskimage_save(&gCtx->oric, gCtx->oric.wddisk.disk[i]->filename, i);
++      n++;
++    }
++  return n;
++}
++#endif
++
+ void EMSCRIPTEN_KEEPALIVE www_async_dload()
+ {
+ 
+@@ -2192,6 +2357,10 @@ int main(int argc, char* argv[])
+ #ifdef WWW
+   // save the context to a global
+   gCtx = &ctx;
++#ifdef CPA_WWW
++  /* CP/A : /readwritefs est déjà monté et relu par la page (Module.preRun),
++     avant init(), pour que les ROMs et la disquette y soient trouvées */
++#else
+   // create read-write fs
+   EM_ASM(
+     FS.mkdir('/readwritefs');
+@@ -2207,6 +2376,7 @@ int main(int argc, char* argv[])
+   });
+   );
+ 
++#endif
+   emscripten_set_main_loop_arg(loop_handler, &ctx, -1, 0);
+ #else
+   loop_handler(&ctx);
 diff --git a/system_sdl.c b/system_sdl.c
 index a6dc439..8eeacae 100644
 --- a/system_sdl.c

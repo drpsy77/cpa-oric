@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="CP/A">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Oricutron CP/A</title>
+<!-- Page de l'Oricutron web de CP/A (tools/web/shell.html, dépôt cpa-oric).
+     Les ROMs et la disquette restent dans la mémoire du navigateur
+     (IndexedDB, dossier /readwritefs de l'émulateur) : rien n'est envoyé. -->
+<style>
+  :root { --fond:#111; --texte:#ddd; --bouton:#2a2a2a; --bord:#444; --accent:#e0b000; }
+  html, body { margin:0; background:var(--fond); color:var(--texte);
+    font:15px -apple-system, system-ui, sans-serif; }
+  body { padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  #barre { display:flex; flex-wrap:wrap; gap:6px; padding:6px 8px; justify-content:center; }
+  #barre button, #roms button { background:var(--bouton); color:var(--texte);
+    border:1px solid var(--bord); border-radius:8px; padding:8px 12px; font:inherit;
+    -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+  #barre button:active { background:#444; }
+  #barre button.rouge { color:#f77; }
+  canvas { display:block; width:100% !important; height:auto !important;
+    max-width:640px; margin:0 auto; touch-action:none; image-rendering:pixelated;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; outline:none; }
+  #etat { text-align:center; padding:4px 8px; min-height:1.3em; color:#999; font-size:13px; }
+  #roms { display:none; max-width:520px; margin:16px auto; padding:0 16px; line-height:1.45; }
+  #roms h1 { font-size:20px; color:var(--accent); margin:8px 0; }
+  #roms code { color:var(--accent); }
+  #coller { display:none; max-width:600px; margin:6px auto; padding:0 8px; }
+  #coller textarea { width:100%; box-sizing:border-box; height:7em; background:#000;
+    color:var(--texte); border:1px solid var(--bord); border-radius:8px; font:14px monospace; }
+  #coller div { display:flex; gap:6px; justify-content:flex-end; margin-top:4px; }
+  input[type=file] { display:none; }
+</style>
+</head>
+<body>
+
+<div id="roms">
+  <h1>Oricutron pour CP/A</h1>
+  <p>Il faut d'abord les deux ROMs de l'Oric : <code>basic11b.rom</code> (16 Ko)
+  et <code>microdis.rom</code> (8 Ko). Elles ne sont pas fournies avec cette page.</p>
+  <p>Mets-les dans l'app Fichiers (iCloud Drive par exemple), puis choisis-les
+  ensemble ou l'une après l'autre. Elles restent dans ce navigateur : il ne
+  faudra plus les donner.</p>
+  <p><button id="b-roms">Choisir les ROMs…</button></p>
+  <p id="roms-etat"></p>
+</div>
+
+<div id="barre" style="display:none">
+  <button id="b-coller">Coller</button>
+  <button id="b-reset" class="rouge">RESET</button>
+  <button id="b-ouvrir">Ouvrir .dsk…</button>
+  <button id="b-enreg">Enregistrer .dsk</button>
+  <button id="b-origine">CP/A d'origine</button>
+</div>
+<div id="coller">
+  <textarea id="t-coller" placeholder="Colle ici le texte (appui long, Coller), puis Taper"></textarea>
+  <div><button id="b-annuler">Annuler</button><button id="b-taper">Taper</button></div>
+</div>
+
+<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<div id="etat">Chargement…</div>
+
+<input type="file" id="f-roms" multiple>
+<input type="file" id="f-dsk">
+
+<script>
+var RW = '/readwritefs', DSK = RW + '/cpa.dsk';
+var etat = document.getElementById('etat');
+function $(id) { return document.getElementById(id); }
+function dire(t) { etat.textContent = t; }
+function existe(p) { try { return FS.analyzePath(p).exists; } catch (e) { return false; } }
+function sauver(fin) { FS.syncfs(false, function (err) { if (err) dire('Erreur d\'écriture : ' + err); if (fin) fin(); }); }
+function romsOk() { return existe(RW + '/roms/basic11b.rom') && existe(RW + '/roms/microdis.rom'); }
+
+var Module = {
+  canvas: $('canvas'),
+  print: function (t) { console.log(t); },
+  printErr: function (t) { console.warn(t); },
+  setStatus: function (t) { if (t) dire(t); },
+  preRun: [function () {
+    // /readwritefs : mémoire du navigateur, relue avant le démarrage
+    FS.mkdir(RW);
+    FS.mount(IDBFS, {}, RW);
+    addRunDependency('cpa-fs');
+    FS.syncfs(true, function () {
+      try { FS.mkdir(RW + '/roms'); } catch (e) {}
+      var suite = function () {
+        if (romsOk()) { removeRunDependency('cpa-fs'); return; }
+        $('roms').style.display = 'block';   // on attend les ROMs
+        dire('');
+      };
+      if (existe(DSK)) { suite(); return; }
+      dire('Chargement de cpa.dsk…');
+      fetch('cpa.dsk', { cache: 'no-store' }).then(function (r) { return r.arrayBuffer(); })
+        .then(function (b) { FS.writeFile(DSK, new Uint8Array(b)); sauver(suite); })
+        .catch(function (e) { dire('cpa.dsk introuvable : ' + e); });
+    });
+  }],
+  postRun: [function () {
+    $('roms').style.display = 'none';
+    $('barre').style.display = 'flex';
+    dire('Deux doigts sur l\'écran : menu d\'Oricutron');
+  }]
+};
+
+// --- ROMs : reconnues à leur taille (16 Ko BASIC 1.1, 8 Ko Microdisc) ---
+$('b-roms').onclick = function () { $('f-roms').click(); };
+$('f-roms').onchange = function () {
+  var fichiers = Array.prototype.slice.call(this.files), reste = fichiers.length;
+  if (!reste) return;
+  fichiers.forEach(function (f) {
+    f.arrayBuffer().then(function (b) {
+      var nom = b.byteLength === 16384 ? 'basic11b' : b.byteLength === 8192 ? 'microdis' : null;
+      if (nom) FS.writeFile(RW + '/roms/' + nom + '.rom', new Uint8Array(b));
+      else $('roms-etat').textContent = f.name + ' : taille inattendue, ignoré';
+      if (--reste) return;
+      sauver(function () {
+        var manque = [];
+        if (!existe(RW + '/roms/basic11b.rom')) manque.push('basic11b.rom');
+        if (!existe(RW + '/roms/microdis.rom')) manque.push('microdis.rom');
+        if (manque.length) { $('roms-etat').textContent = 'Il manque encore : ' + manque.join(', '); return; }
+        removeRunDependency('cpa-fs');
+      });
+    });
+  });
+  this.value = '';
+};
+
+// --- Coller : presse-papiers si possible, sinon zone de texte ---
+function taper(t) { if (t) Module.ccall('cpa_www_paste', null, ['string'], [t]); }
+$('b-coller').onclick = function () {
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(taper, function () { $('coller').style.display = 'block'; });
+  } else $('coller').style.display = 'block';
+};
+$('b-taper').onclick = function () { taper($('t-coller').value); $('t-coller').value = ''; $('coller').style.display = 'none'; };
+$('b-annuler').onclick = function () { $('coller').style.display = 'none'; };
+
+$('b-reset').onclick = function () { Module.ccall('cpa_www_reset', null, [], []); };
+
+// --- Disquette ---
+function recharger(octets, quoi) {
+  FS.writeFile(DSK, octets);
+  sauver(function () { dire(quoi + ' : redémarrage…'); location.reload(); });
+}
+$('b-ouvrir').onclick = function () { $('f-dsk').click(); };
+$('f-dsk').onchange = function () {
+  var f = this.files[0]; this.value = '';
+  if (!f) return;
+  if (!confirm('Remplacer la disquette en cours par ' + f.name + ' ?\n(pense à l\'enregistrer avant)')) return;
+  f.arrayBuffer().then(function (b) { recharger(new Uint8Array(b), f.name); });
+};
+$('b-origine').onclick = function () {
+  if (!confirm('Remettre la disquette CP/A d\'origine ?\nTes fichiers sur la disquette en cours seront perdus (enregistre-la avant).')) return;
+  fetch('cpa.dsk', { cache: 'no-store' }).then(function (r) { return r.arrayBuffer(); })
+    .then(function (b) { recharger(new Uint8Array(b), 'cpa.dsk'); });
+};
+$('b-enreg').onclick = function () {
+  Module.ccall('cpa_www_flush', 'number', [], []);   // écrit ce qui n'est pas encore écrit
+  var octets = FS.readFile(DSK);
+  var d = new Date(), nom = 'cpa-' + d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) +
+    ('0' + d.getDate()).slice(-2) + '-' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + '.dsk';
+  var fichier = new File([octets], nom, { type: 'application/octet-stream' });
+  sauver();
+  if (navigator.canShare && navigator.canShare({ files: [fichier] })) {
+    navigator.share({ files: [fichier] }).catch(function () {});   // iPhone : « Enregistrer dans Fichiers »
+    return;
+  }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(fichier); a.download = nom;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+};
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

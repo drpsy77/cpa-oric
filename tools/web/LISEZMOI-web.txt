@@ -1,0 +1,43 @@
+Oricutron pour le web (iPhone, iPad, Mac), avec le correctif de CP/A
+====================================================================
+
+Adresse : https://drpsy77.github.io/cpa-oric/
+Fabriqué par GitHub (.github/workflows/oricutron-web.yml) à partir des
+sources d'Oricutron, de tools/oricutron-testhook.patch et de tools/web/.
+
+Premier lancement
+-----------------
+La page demande les deux ROMs, qui ne sont pas publiées : basic11b.rom
+(16 Ko) et microdis.rom (8 Ko). Les mettre dans l'app Fichiers (iCloud
+Drive...), toucher « Choisir les ROMs... », puis les choisir. Elles sont
+gardées dans le navigateur (IndexedDB) : on ne les redonne plus.
+Attention : sur iPhone, la page ajoutée à l'écran d'accueil a sa propre
+mémoire, séparée de Safari : il faut y redonner les ROMs une fois.
+
+Clavier
+-------
+Le clavier de l'Atmos est dessiné sous l'écran : on tape au doigt.
+SHIFT, CTRL et FUNCT sont collantes : les toucher, puis la touche.
+Un clavier Bluetooth marche aussi. Deux doigts sur l'écran : menu
+d'Oricutron.
+
+Boutons
+-------
+Coller            tape le presse-papiers sur l'Oric (~15 caractères/s) ;
+                  si Safari refuse, une zone de texte s'ouvre : y coller,
+                  puis « Taper »
+RESET             bouton RESET de l'Atmos
+Ouvrir .dsk...    remplace la disquette par une image choisie dans Fichiers
+Enregistrer .dsk  copie la disquette (iPhone : « Enregistrer dans Fichiers »)
+CP/A d'origine    remet la disquette CP/A livrée avec la page
+
+La disquette est gardée dans le navigateur entre deux visites (ce que CP/A
+écrit y est enregistré tout seul). Elle disparaît si on efface les données
+du site dans Safari : l'enregistrer dans Fichiers de temps en temps.
+
+Chez soi, sans GitHub Pages
+---------------------------
+L'artefact « Oricutron-CPA-web » (onglet Actions) contient le même site :
+    cd dossier_du_site && python3 -m http.server 8000
+puis http://localhost:8000 dans un navigateur.
+Pour compiler soi-même : tools/web/build_web.sh (il faut Emscripten).

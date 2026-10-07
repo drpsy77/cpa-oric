@@ -1,0 +1,67 @@
+# Compile Oricutron pour le web (Emscripten) avec le correctif de CP/A et
+# publie la page sur GitHub Pages : https://drpsy77.github.io/cpa-oric/
+# (à ouvrir dans Safari sur iPhone ; mode d'emploi : tools/web/LISEZMOI-web.txt).
+# Aucune ROM n'est publiée : la page les demande au premier lancement et les
+# garde dans le navigateur. Le même site est aussi dans l'artefact
+# « Oricutron-CPA-web », pour le servir chez soi (python3 -m http.server).
+name: Oricutron web
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/oricutron-testhook.patch
+      - tools/web/**
+      - build/cpa.dsk
+      - .github/workflows/oricutron-web.yml
+
+env:
+  ORIC_COMMIT: 002279fce9fa756d1d63cdc40ae97939eb7de7ed   # même version que tools/setup_linux.sh
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mymindstorm/setup-emsdk@v14
+
+      - name: Oricutron et correctif CP/A
+        run: |
+          git clone -q https://github.com/pete-gordon/oricutron.git oric
+          cd oric
+          git checkout -q "$ORIC_COMMIT"
+          git apply ../tools/oricutron-testhook.patch
+
+      - name: Compilation
+        run: |
+          tools/web/build_web.sh oric site
+          cp tools/web/LISEZMOI-web.txt site/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Oricutron-CPA-web
+          path: site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
