@@ -205,9 +205,28 @@ ASCII x  CAR n
               |   caractere
 TOUCHE?       | 1 si une touche
               |   attend, 0 sinon
-NOTE n d      | joue la note n (37 =
-              |   do) pendant d/50 s
-BRUIT d       | bruit pendant d/50 s
+SON v n vol d | note n (37 = do, 0 =
+              |   rien) sur la voix v
+              |   (0-2), volume 0-15
+              |   (16 = enveloppe),
+              |   d/50 s (0 : sans
+              |   fin)
+SONF v p vol d
+              | son de periode p
+              |   (0-4095)
+BRUITV v p vol d
+              | bruit de periode p
+              |   (0-31)
+ENVELOPPE f p | forme 0-15, periode
+              |   0-65535
+MELANGE v s b | son et bruit de la
+              |   voix (1 / 0)
+ENSEMBLE [..] | les voix de la liste
+              |   partent ensemble
+ATTENDSSON v  | attend la fin (255 :
+              |   toutes)
+JOUE? v       | 1 si la voix joue
+              |   encore
 SILENCE       | coupe le son
 AIDE          | liste complete
 QUITTE        | retour a CP/A

@@ -341,8 +341,9 @@ ROM) l'ont.
 La durée est en cinquantièmes de seconde (0 : la note tient jusqu'à la suivante). Elle est
 décomptée par l'interruption à 50 Hz : le programme continue pendant que la note joue, et
 `WAIT` ou `STATUS` servent à se synchroniser. Le clavier passant lui aussi par l'AY, les
-écritures dans le circuit sont faites interruptions masquées. Dans LOGO : `NOTE n d`,
-`BRUIT d` et `SILENCE`.
+écritures dans le circuit sont faites interruptions masquées. Dans LOGO : `SON`, `SONF`,
+`BRUITV`, `ENVELOPPE`, `MELANGE`, `ENSEMBLE`, `ATTENDSSON`, `JOUE?` et `SILENCE` (voir
+« Le son dans LOGO »).
 
 **Départ simultané (SYNC).** Après `SYNC 0`, NOTE, NOISE et TONE règlent la période et le
 mélangeur de la voix tout de suite, mais la coupent et retiennent son volume et sa durée ; ENV
@@ -356,8 +357,6 @@ préparées restent muettes), SILENCE aussi.
 l'inverse. MIXER, donné ensuite, choisit son et bruit librement, y compris les deux à la fois
 sur la même voix (bruitages). Le générateur de bruit et l'enveloppe sont uniques dans l'AY :
 leur période est commune aux trois voix.
-
-    REPETE 2 [NOTE 37 20 NOTE 41 20 NOTE 44 20 NOTE 49 40]
 
 ## Menus déroulants
 
@@ -486,15 +485,42 @@ décimaux (voir plus bas).
 | `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
-| `NOTE n d`, `BRUIT d`, `SILENCE` | joue la note n (1 à 96, 37 = do central, 46 = la 440 Hz, 0 = silence) ou un bruit pendant d cinquantièmes de seconde ; coupe le son |
+| `SON v n vol d`, `SONF`, `BRUITV`, `ENVELOPPE`, `MELANGE`, `ENSEMBLE`, `ATTENDSSON`, `SILENCE` | le son : voir « Le son dans LOGO » plus bas |
 | `AIDE`, `QUITTE` / `AUREVOIR` | aide, retour à CP/A (l'image reste) |
 
 Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`,
-`LISCAR`, `TOUCHE?`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
+`LISCAR`, `TOUCHE?`, `JOUE? v`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
 tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
 de `a`). Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR` (la
 dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
+
+**Le son dans LOGO.** Les trois voix de l'AY (0, 1, 2) jouent pendant que le programme
+continue ; chaque durée est en cinquantièmes de seconde (0 à 255 ; 0 : la note tient jusqu'à
+la suivante sur la voix, ou jusqu'à `SILENCE`). Une valeur hors limites donne `Valeur hors
+limites :` suivi de la commande. ESC et toute erreur coupent le son.
+
+| Primitive | Effet |
+|---|---|
+| `SON v n vol d` | note n sur la voix v : 1 à 96, 37 = do central, 46 = la 440 Hz (n = 12 × (octave − 1) + demi-ton + 1, do = 0), 0 = silence pendant d ; volume 0 à 15, 16 = la voix suit l'enveloppe |
+| `SONF v p vol d` | son de période brute p (0 à 4095) : fréquence = 62 500 / p Hz (p = 142 : la 440 Hz) |
+| `BRUITV v p vol d` | bruit sur la voix v, période p (0 à 31 ; le générateur de bruit est commun aux trois voix) |
+| `ENVELOPPE f p` | forme f (0 à 15, celles de l'AY : 0 descente, 4 montée, 8 dents de scie, 10 triangle...), période p (0 à 65535, en 256 µs) ; une seule enveloppe pour toutes les voix de volume 16 |
+| `MELANGE v s b` | son (s) et bruit (b) de la voix v, 1 = oui, 0 = non, les deux à la fois possibles ; à donner après `SON`, `SONF` ou `BRUITV`, qui le règlent |
+| `ENSEMBLE [ ... ]` | les voix réglées dans la liste partent toutes au même instant à la fin de la liste (accord, attaque commune) ; aussi après un `STOP` ou un `RENDS` dans la liste |
+| `ATTENDSSON v` | attend la fin de la voix v, ou de toutes avec 255 ; ESC interrompt |
+| `JOUE? v` | 1 si la voix v (255 : l'une des trois) joue encore, 0 sinon ; une note sans fin (durée 0) ne compte pas |
+| `SILENCE` | coupe les trois voix |
+
+    SON 0 37 12 20 ATTENDSSON 0
+    REPETE 2 [SON 0 37 12 20 ATTENDSSON 0 SON 0 41 12 20 ATTENDSSON 0]
+    ENVELOPPE 0 2000
+    ENSEMBLE [SON 0 37 16 100 SON 1 41 16 100 SON 2 44 16 100]
+    BRUITV 0 20 15 50 MELANGE 0 1 1
+
+L'accord de do majeur part d'un coup et s'éteint avec l'enveloppe ; la dernière ligne mêle une
+note et du bruit sur la voix 0. `NOTE` et `BRUIT` des versions précédentes n'existent plus :
+`NOTE 37 20` s'écrit `SON 0 37 12 20 ATTENDSSON 0`.
 
 **Nombres.** Les nombres décimaux s'écrivent avec un point : `3.14`, `0.5`, `1.5E-7`, `6E23`.
 Ils sont « à la Oric » : 5 octets, environ 9 chiffres significatifs, de 1E-38 à 1E38 environ.
@@ -502,7 +528,7 @@ Un calcul entre entiers reste entier tant qu'il tient entre -32768 et 32767 ; si
 en décimal (`32767 + 1` donne 32768, `1000 * 1000` donne 1000000). `/` est une vraie
 division : `7 / 2` donne 3.5, `6 / 3` donne 2. `ECRIS` affiche au plus 9 chiffres, sans zéros
 inutiles, en notation E au-delà de 999999999 ou en dessous de 0.00001. Les commandes qui
-attendent un entier (`REPETE`, `NOTE`, `ATTENDS`...) arrondissent au plus proche (`REPETE 2.6`
+attendent un entier (`REPETE`, `SON`, `ATTENDS`...) arrondissent au plus proche (`REPETE 2.6`
 répète 3 fois) ; au-delà de 32767 : `Nombre trop grand`. `SI` est vrai pour tout nombre non
 nul.
 

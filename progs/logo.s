@@ -17,7 +17,8 @@
 ;  REPETE, SI, STOP, RENDS,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, EDITE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
-;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE?
+;  Son : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON, SILENCE
+;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE? JOUE?
 ;  LISLISTE LISMOT ASCII CAR
 ;  ENT ARRONDI ABS QUOTIENT RESTE
 ;
@@ -150,6 +151,7 @@ FR_LIST = 2
 FR_PROC = 3
 FR_EXEC = 4             ; EXECUTE : compteur = xsp à rendre
 FR_FUNC = 5             ; procédure appelée dans une expression (RENDS)
+FR_ENS  = 6             ; ENSEMBLE : les voix partent quand il est retiré
                         ;   FR_PROC et FR_FUNC : compteur = enregistrement
 VAR_SIZE = 16           ; variable : nom (10 octets), valeur (6)
 NAMELEN = 10
@@ -198,6 +200,7 @@ ok      lda #<procbase
         sta tmode
         sta autold
         sta ldon
+        sta ensd
         sta nloc
         sta ngl
         sta defmode
@@ -302,8 +305,10 @@ er1     jsr crlf
         sta defmode
 er2     lda #0
         sta ldon                ; un CHARGE en cours est abandonné
+        sta ensd                ; un ENSEMBLE aussi
         sta nloc
         sta stopf
+        jsr p_silence           ; le son est coupé
         ldx savsp
         txs
         jmp repl
@@ -837,11 +842,14 @@ pf1     ldy #1
         sta fsp+1
         jmp advance
 
-; x_rest : si le contexte p1 est un EXECUTE, xsp reprend sa valeur d'avant
+; x_rest : si le contexte p1 est un EXECUTE, xsp reprend sa valeur d'avant ;
+;   un ENSEMBLE (fin de la liste, STOP, RENDS) fait partir les voix
 x_rest
 .(
         ldy #0
         lda (p1),y
+        cmp #FR_ENS
+        beq ens
         cmp #FR_EXEC
         bne r
         ldy #9
@@ -851,6 +859,13 @@ x_rest
         lda (p1),y
         sta xsp+1
 r       rts
+ens     dec ensd                ; le dernier ENSEMBLE retiré :
+        bne r
+        lda #1                  ; SYNC 1, départ simultané
+        sta gblk+1
+        lda #S_SYNC
+        sta gblk
+        jmp snd
 .)
 
 ; push_frame : A = type ; cnt = compteur ; lstart/lend = texte à exécuter
@@ -2638,44 +2653,191 @@ loop    jsr check_esc
 r       rts
 .)
 
-; NOTE n d : joue la note n (1-96, 37 = do central, 0 = silence) pendant
-; d cinquantièmes de seconde, sur la voix 0, et attend la fin
-p_note
-        jsr eval_int
-        lda val
+; ---------------------------------------------------------------------
+; Son (fonction 116 du BDOS). Les notes jouent pendant que le programme
+;   continue ; ESC ou une erreur coupe tout (error).
+; ---------------------------------------------------------------------
+; SON voix note volume durée : voix 0-2, note 0-96 (37 = do central,
+;   0 = silence), volume 0-15 (16 = enveloppe), durée en 1/50 s (0-255,
+;   0 = sans fin) ; BRUITV voix période volume durée : bruit (période 0-31)
+p_son   lda #S_NOTE
+        ldx #96
+        bne snd4
+p_bruitv
+        lda #S_NOISE
+        ldx #31
+; snd4 : opération A, voix, 2e argument de 0 à X, volume, durée
+snd4    pha
+        txa
+        pha
+        lda #2
+        jsr arg_b               ; voix
+        tay
+        pla
+        tax
+        tya
+        pha
+        txa
+        jsr arg_b               ; note ou période
+        pha
+        lda #16
+        jsr arg_b               ; volume
+        pha
+        lda #255
+        jsr arg_b               ; durée
+        ldx #4
+        bne sn_pop
+; SONF voix période volume durée : période brute 0-4095 (125 kHz / période)
+p_sonf
+        lda #S_TONE
+        pha
+        lda #2
+        jsr arg_b
         pha
         jsr eval_int
-        pla
-        sta gblk+2
-        lda #S_NOTE
-        sta gblk
-        jmp sn_go
-; BRUIT d : bruit blanc pendant d cinquantièmes de seconde
-p_bruit
-        jsr eval_int
-        lda #S_NOISE
-        sta gblk
-        lda #8                  ; période du bruit
-        sta gblk+2
-sn_go   lda #12                 ; volume
-        sta gblk+3
-        lda #0
-        sta gblk+1              ; voix 0
-        lda val+1               ; durée : 255 au plus
-        beq sn_d1
+        lda val+1
+        cmp #16
+        bcs sn_rng
+        lda val
+        pha
+        lda val+1
+        pha
+        lda #16
+        jsr arg_b
+        pha
         lda #255
-        sta val
-sn_d1   lda val
-        beq sn_r                ; durée nulle : rien
-        sta gblk+4
-        jsr snd
-sn_wait jsr check_esc           ; attend la fin, ESC interrompt
-        lda #S_STATUS
+        jsr arg_b
+        ldx #5
+; sn_pop : gblk+X = A, puis gblk+X-1..gblk = valeurs empilées ; appel
+sn_pop  sta gblk,x
+        dex
+        bmi sn_go
+        pla
+        jmp sn_pop
+; sn_stat : A = voix qui jouent (bits)
+sn_stat lda #S_STATUS
+        sta gblk
+sn_go   jmp snd
+; ENVELOPPE forme période : forme 0-15, période 0-65535 (256 us)
+p_env
+.(
+        lda #S_ENV
+        pha
+        lda #15
+        jsr arg_b
+        pha
+        jsr eval                ; période : entier sans signe de 16 bits
+        jsr need_num
+        jsr val_fac
+        jsr fp_rnd
+        lda fe
+        beq z
+        lda fsg
+        bmi sn_rng
+        lda fe
+        cmp #128+17
+        bcs sn_rng
+        jsr fp_tou32
+        lda fm+3
+        ldx fm+2
+        .byt $2C                ; (BIT abs : saute le LDX suivant)
+z       ldx #0                  ; (A = 0)
+        sta gblk+2
+        stx gblk+3
+        pla
+        sta gblk+1
+        pla
+        sta gblk
+        bne sn_go
+.)
+; MELANGE voix son bruit : 1 = oui, 0 = non (les deux à la fois possibles)
+p_melange
+        lda #S_MIXER
+        pha
+        lda #2
+        jsr arg_b
+        pha
+        lda #1
+        jsr arg_b
+        pha
+        lda #1
+        jsr arg_b
+        ldx #3
+        bne sn_pop
+sn_rng  jmp e_rng
+; ATTENDSSON voix : attend la fin de la voix (0-2) ou de toutes (255) ;
+;   une note sans fin (durée 0) ne compte pas ; ESC interrompt
+p_attson
+.(
+        jsr voix_b
+        sta tmp
+loop    jsr check_esc
+        jsr sn_stat
+        and tmp
+        bne loop
+        rts
+.)
+; JOUE? voix : 1 si la voix (0-2, 255 : l'une des trois) joue encore
+f_joue
+        jsr arg1
+        jsr voix_v
+        sta tmp
+        jsr sn_stat
+        ldx #0
+        and tmp
+        beq fj0
+        inx
+fj0     stx val
+        lda #0
+        sta val+1
+        lda #T_INT
+        sta vt
+        rts
+; voix_b : évalue une voix (0-2, ou 255 : toutes) -> A = masque des voix
+voix_b  jsr eval
+voix_v  jsr to_int
+        lda #255
+        jsr rng_b
+        cmp #3
+        bcc vb1
+        cmp #255
+        bne e_rng
+        lda #7
+        rts
+vb1     tax
+        lda vbits,x
+        rts
+vbits   .byt 1,2,4
+; ENSEMBLE [liste] : la liste prépare les voix (SON, SONF, BRUITV,
+;   ENVELOPPE), qui partent toutes au même instant à la fin de la liste
+;   (x_rest) ; un ENSEMBLE dans un autre est compris dans le premier
+p_ensemble
+.(
+        jsr need_list
+        lda ensd
+        bne in
+        sta gblk+1              ; SYNC 0 : préparation
+        lda #S_SYNC
         sta gblk
         jsr snd
-        and #1
-        bne sn_wait
-sn_r    rts
+in      inc ensd
+        lda #FR_ENS
+        jmp push_frame
+.)
+; arg_b : évalue un entier de 0 à A, rendu dans A (sinon erreur)
+arg_b   pha
+        jsr eval_int
+        pla
+; rng_b : A = val si 0 <= val <= A (entier), sinon erreur
+rng_b   ldx val+1
+        bne e_rng
+        cmp val
+        bcc e_rng
+        lda val
+        rts
+e_rng   lda #<e_range
+        ldy #>e_range
+        jmp error
 
 p_silence
         lda #S_SILENCE
@@ -5076,6 +5238,8 @@ loop    lda (p3),y
         jsr putc
         iny
         bne loop
+        inc p3+1                ; texte de plus de 255 caractères (AIDE)
+        bne loop
 r       rts
 .)
 
@@ -5237,10 +5401,20 @@ prims
         .word p_donne
         .asc "ATTENDS",0
         .word p_attends
-        .asc "NOTE",0
-        .word p_note
-        .asc "BRUIT",0
-        .word p_bruit
+        .asc "SONF",0
+        .word p_sonf
+        .asc "SON",0
+        .word p_son
+        .asc "BRUITV",0
+        .word p_bruitv
+        .asc "ENVELOPPE",0
+        .word p_env
+        .asc "MELANGE",0
+        .word p_melange
+        .asc "ATTENDSSON",0
+        .word p_attson
+        .asc "ENSEMBLE",0
+        .word p_ensemble
         .asc "SILENCE",0
         .word p_silence
         .asc "POUR",0
@@ -5305,6 +5479,8 @@ funcs   .asc "HASARD",0
         .word f_liscar
         .asc "TOUCHE?",0
         .word f_touche
+        .asc "JOUE?",0
+        .word f_joue
         .asc "ENT",0
         .word f_ent
         .asc "ARRONDI",0
@@ -5466,7 +5642,10 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "CT MT VE NETTOIE ORIGINE",13,10
           .asc "ECRANTEXTE  ECRANMIXTE",13,10
           .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
-          .asc "NOTE n d (37 = do)  BRUIT d  SILENCE",13,10
+          .asc "SON v n vol d (37 = do)  SILENCE",13,10
+          .asc "SONF v p vol d  BRUITV v p vol d",13,10
+          .asc "ENVELOPPE f p  MELANGE v son bruit",13,10
+          .asc "ENSEMBLE [..]  ATTENDSSON v  JOUE? v",13,10
           .asc "REPETE n [..]  SI c [..] [..]  STOP",13,10
           .asc "POUR NOM :A ... FIN  DONNE ",$22,"X n",13,10
           .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
@@ -5509,6 +5688,7 @@ e_noret   .asc "Rien n'a ete rendu par",0
 e_unused  .asc "Que faire de ce que rend",0
 e_rtop    .asc "RENDS seulement dans une procedure",0
 e_text    .asc "Impossible en ecran texte :",0
+e_range   .asc "Valeur hors limites :",0
 m_lost    .asc "Etat de LOGO.$$$ perdu",13,10,0
 
 #include "logo_tab.s"
@@ -5534,7 +5714,8 @@ tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)
 autold  = tmode+1       ; 1 : la ligne de fbuf sera exécutée au prompt
 rwop    = autold+1      ; r_recs / w_recs : bit 7 = lecture
 ldon    = rwop+1        ; 1 = CHARGE en cours (fichier ouvert dans fcb)
-parn_lo = ldon+1
+ensd    = ldon+1        ; ENSEMBLE en cours (niveaux)
+parn_lo = ensd+1
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR

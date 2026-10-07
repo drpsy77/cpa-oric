@@ -222,9 +222,28 @@ h_4
         .asc "              |   caractere",13,10
         .asc "TOUCHE?       | 1 si une touche",13,10
         .asc "              |   attend, 0 sinon",13,10
-        .asc "NOTE n d      | joue la note n (37 =",13,10
-        .asc "              |   do) pendant d/50 s",13,10
-        .asc "BRUIT d       | bruit pendant d/50 s",13,10
+        .asc "SON v n vol d | note n (37 = do, 0 =",13,10
+        .asc "              |   rien) sur la voix v",13,10
+        .asc "              |   (0-2), volume 0-15",13,10
+        .asc "              |   (16 = enveloppe),",13,10
+        .asc "              |   d/50 s (0 : sans",13,10
+        .asc "              |   fin)",13,10
+        .asc "SONF v p vol d",13,10
+        .asc "              | son de periode p",13,10
+        .asc "              |   (0-4095)",13,10
+        .asc "BRUITV v p vol d",13,10
+        .asc "              | bruit de periode p",13,10
+        .asc "              |   (0-31)",13,10
+        .asc "ENVELOPPE f p | forme 0-15, periode",13,10
+        .asc "              |   0-65535",13,10
+        .asc "MELANGE v s b | son et bruit de la",13,10
+        .asc "              |   voix (1 / 0)",13,10
+        .asc "ENSEMBLE [..] | les voix de la liste",13,10
+        .asc "              |   partent ensemble",13,10
+        .asc "ATTENDSSON v  | attend la fin (255 :",13,10
+        .asc "              |   toutes)",13,10
+        .asc "JOUE? v       | 1 si la voix joue",13,10
+        .asc "              |   encore",13,10
         .asc "SILENCE       | coupe le son",13,10
         .asc "AIDE          | liste complete",13,10
         .asc "QUITTE        | retour a CP/A",13,10
