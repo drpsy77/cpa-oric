@@ -467,7 +467,7 @@ décimaux (voir plus bas).
 | `LISCAR` | attend une touche et rend le caractère (`ASCII LISCAR` pour son code) |
 | `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
-| `SAUVE "NOM`, `CHARGE "NOM` | enregistrer, charger les procédures (`NOM.LOG`) |
+| `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) |
 | `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
@@ -577,25 +577,26 @@ puis, à chaque étape, le fichier de cette étape, oublié quand on la quitte. 
 globales passent d'une étape à l'autre. Exemple (essayé) : `NOYAU.LOG` contient
 
     POUR JEU
-    DONNE "S 1
+    DONNE "N 1
     REPETE 3 [ETAPE]
     ECRIS "FIN
     FIN
     POUR ETAPE
-    SI :S = 1 [CHARGE "S1]
-    SI :S = 2 [CHARGE "S2]
-    SI :S = 3 [CHARGE "S3]
+    CHARGE MOT "S :N
     SALLE
     OUBLIE "SALLE
     FIN
 
 et `S1.LOG`, `S2.LOG`, `S3.LOG` définissent chacun une procédure `SALLE`, qui fait l'étape et
-choisit la suivante (`DONNE "S 2`). On lance `LOGO NOYAU`, puis `JEU`. Trois règles :
+choisit la suivante (`DONNE "N 2`). On lance `LOGO NOYAU`, puis `JEU`. Le nom donné à
+`CHARGE` (comme à `SAUVE`, `SAUVEIMAGE`, `CHARGEIMAGE` et `EDITE`) peut être calculé : `"S1`,
+`:F`, `MOT "S :N`... Un fichier d'étape peut charger son image (`CHARGEIMAGE "SALLE1`). Deux
+règles :
 
-- `CHARGE` veut un nom écrit en toutes lettres (`CHARGE "S1`), pas une variable
-  (`CHARGE :S` est refusé) : d'où une ligne `SI` par fichier.
-- Pas de `CHARGE` dans un fichier lui-même chargé : la fin du premier fichier serait perdue,
-  et le programme qui l'avait chargé s'arrêterait sans message.
+- Pas de `CHARGE`, de `SAUVE` ni d'`EDITE` pendant un `CHARGE` (dans le fichier chargé, ou
+  dans une procédure qu'il appelle) : ils prendraient le fichier en cours de lecture. LOGO
+  le refuse (`Interdit pendant CHARGE : CHARGE`) et revient au prompt. C'est le noyau qui
+  enchaîne les chargements, une fois chaque fichier fini.
 - C'est le noyau, chargé en premier et jamais oublié, qui charge et oublie les étapes. Oublier
   la procédure en cours, ou une procédure chargée avant elle, déplacerait en mémoire le texte
   qui est en train de s'exécuter.
