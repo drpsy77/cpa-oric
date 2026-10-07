@@ -49,11 +49,24 @@ index 971c852..2808223 100644
      free(text);
    }
    return SDL_TRUE;
+diff --git a/machine.c b/machine.c
+index 00b7b0e..a068b5a 100644
+--- a/machine.c
++++ b/machine.c
+@@ -86,7 +86,7 @@ extern struct osdmenuitem mainitems[];
+ Uint8 oricpalette[] = { 0x00, 0x00, 0x00,
+                         0xff, 0x00, 0x00,
+                         0x00, 0xff, 0x00,
+-                        0xff, 0xff, 0x00,
++                        0xe0, 0xb0, 0x00,   /* jaune d'or (CP/A) : lisible sur blanc */
+                         0x00, 0x00, 0xff,
+                         0xff, 0x00, 0xff,
+                         0x00, 0xff, 0xff,
 diff --git a/main.c b/main.c
-index a47cd0c..60f78e5 100644
+index a47cd0c..e8117f3 100644
 --- a/main.c
 +++ b/main.c
-@@ -1759,9 +1759,140 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1759,152 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -106,13 +119,19 @@ index a47cd0c..60f78e5 100644
 +      oric->via.write_port_b(&oric->via, 0x08, 0x00);
 +  }
 +}
-+/* un caractère par 8 trames (touche 4 trames enfoncée), 16 après RETURN :
-+   environ 6 caractères par seconde */
++/* Cadence : la touche reste 2 trames enfoncée (le clavier est lu à 50 Hz,
++   une lecture complète au moins), puis 1 trame relâchée ; SHIFT est posé une
++   trame avant la touche (une lecture à cheval sur deux trames ne doit pas
++   voir la touche sans SHIFT). 2 trames relâchées avant une touche identique
++   à la précédente (« ll », « 00 »), pour que le relâchement soit vu.
++   Environ 15 caractères par seconde ; après RETURN, une pause laisse le
++   logiciel traiter la ligne (plus longue sous BASIC, qui ne garde qu'une
++   touche d'avance). */
 +static void cpa_paste_tick(struct machine *oric)
 +{
-+  static int phase = 0, key = -1, shift = 0, wait = 0;
++  static int phase = 0, key = -1, shift = 0, wait = 0, lastkey = -1, len = 0;
 +  int i, c;
-+  if (!cpa_pbuf || cpa_ppos >= cpa_plen) return;
++  if (!cpa_pbuf || cpa_ppos >= cpa_plen) { lastkey = -1; return; }
 +  if (wait > 0) { wait--; return; }
 +  if (phase == 0) {
 +    c = (unsigned char)cpa_pbuf[cpa_ppos];
@@ -120,18 +139,24 @@ index a47cd0c..60f78e5 100644
 +    for (i = 0; i < 64 && key < 0; i++) if (cpa_knorm[i] == c) key = i;
 +    for (i = 0; i < 64 && key < 0; i++) if (cpa_kshift[i] == c) { key = i; shift = 1; }
 +    if (key < 0) { cpa_ppos++; return; }
++    if (key == lastkey) { lastkey = -1; return; }   /* une trame relâchée de plus */
 +    /* CP/A disquette (ROM masquée) : son verrouillage des majuscules ($021A = 1)
 +       inverse la casse des lettres ; on l'inverse d'avance pour coller le texte tel quel */
 +    if (!oric->romon && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 +        && oric->cpu.read(&oric->cpu, 0x21A) == 1) shift = !shift;
-+    if (shift) cpa_matrix(oric, 36, 1);   /* SHIFT une trame avant la touche */
++    len = shift ? 4 : 3;
++    if (shift) cpa_matrix(oric, 36, 1);
++    else       cpa_matrix(oric, key, 1);
 +  }
-+  if (phase == 1) cpa_matrix(oric, key, 1);
-+  if (phase == 5) cpa_matrix(oric, key, 0);
-+  if (phase == 6 && shift) cpa_matrix(oric, 36, 0);
-+  if (++phase >= 8) {
++  if (phase == 1 && shift) cpa_matrix(oric, key, 1);
++  if (phase == len - 1) {
++    cpa_matrix(oric, key, 0);
++    if (shift) cpa_matrix(oric, 36, 0);
++  }
++  if (++phase >= len) {
 +    phase = 0;
-+    if (cpa_pbuf[cpa_ppos] == '\r') wait = 8;
++    lastkey = key;
++    if (cpa_pbuf[cpa_ppos] == '\r') wait = oric->romon ? 25 : 8;
 +    cpa_ppos++;
 +  }
 +}

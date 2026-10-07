@@ -37,9 +37,11 @@ outils, et suit toujours la même boucle.
 
    Il change aussi le collage du presse-papiers (F12) : d'origine, Oricutron ne livre le texte
    qu'à la routine clavier de la ROM BASIC (adresse `$EB78`), que CP/A n'utilise pas. Le texte
-   est maintenant tapé sur la matrice du clavier simulé (tables de `src/tables.s`), environ 6
-   caractères par seconde, ce qui marche avec tout logiciel. En CP/A disquette (ROM masquée),
+   est maintenant tapé sur la matrice du clavier simulé (tables de `src/tables.s`), environ 15
+   caractères par seconde (touche 2 trames enfoncée, 1 relâchée ; SHIFT une trame avant), ce qui
+   marche avec tout logiciel. En CP/A disquette (ROM masquée),
    le collage tient compte du verrouillage des majuscules (`$021A`) pour garder la casse.
+   Enfin, le jaune de la palette est un jaune d'or (`$E0B000`), lisible sur fond blanc.
 
    L'émulateur tourne dans un écran virtuel (Xvfb), sans son.
 3. **`tools/screen.py`** lit l'écran texte (`$BB80`) dans le vidage et l'affiche en texte. Claude
