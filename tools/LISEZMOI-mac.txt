@@ -38,5 +38,5 @@ Pour un fichier entier (MATH.LOG...), mieux vaut le mettre sur la disquette :
 
 Couleurs
 --------
-Le jaune est un jaune d'or (plus lisible sur fond blanc que le jaune vif
-d'origine).
+Le jaune est adouci (#FFF426 au lieu de #FFFF00) : plus lisible sur fond
+blanc que le jaune vif d'origine.
