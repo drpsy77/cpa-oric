@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F56A`, marge 262 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F57C`, marge 244 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -204,6 +204,14 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   `draw_flags` remplace `draw_caps`, appelée par la barre (tous les programmes), CTRL-T,
   CTRL-P et les menus. Coût : 11 octets résidents.
 
+- Lancement d'un programme : le CCP n'accepte que `NOM`, `NOM.COM` (ou `d:NOM.COM`). Avant,
+  un type explicite était chargé tel quel : `DESSIN.BAT` tapé au prompt exécutait le texte en
+  `$0500` (BRK en `$203A`, constaté sur le vrai Oric). Tout autre type donne maintenant
+  `NOM.EXT?`, comme CP/M 2.2. Coût : 18 octets résidents. Piste notée : lancer un script par
+  son nom (`NOM` -> `NOM.BAT` si `NOM.COM` est absent, comme `.SUB` dans CP/M 3), à ce même
+  endroit ; reste à choisir si un script appelé dans un script remplace l'appelant (comme DO
+  aujourd'hui) ou y revient.
+
 ## Suite prévue (par priorité)
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
@@ -287,7 +295,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 262 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 244 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

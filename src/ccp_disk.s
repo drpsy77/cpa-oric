@@ -583,9 +583,9 @@ run_transient
         stx ccp_tail
         jsr has_wild
         bcc nowild
-        rts
-nowild  ldy #9
-        lda (ZP_CFCB),y
+notcom  rts                     ; joker, ou type autre que COM : NOM.EXT?
+nowild  ldy #9                  ; type vide : COM ; autre que COM : refusé
+        lda (ZP_CFCB),y         ; (un texte serait exécuté comme du code)
         cmp #" "
         bne hasext
         lda #"C"
@@ -596,7 +596,15 @@ nowild  ldy #9
         iny
         lda #"M"
         sta (ZP_CFCB),y
-hasext  ldx #15
+        bne open                ; toujours pris
+hasext  ldx #2
+ckext   lda (ZP_CFCB),y
+        cmp com_ext,x
+        bne notcom
+        iny
+        dex
+        bpl ckext
+open    ldx #15
         lda #<CCP_FCB
         ldy #>CCP_FCB
         jsr bdos
@@ -655,6 +663,7 @@ tend    lda #0
         jsr TPA_START
         jmp wboot
 fail    jmp wboot
+com_ext .asc "MOC"              ; lu à l'envers (X de 2 à 0)
 .)
 
 no_file
