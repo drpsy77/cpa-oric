@@ -10,6 +10,7 @@ Raspberry Pi 400. Il dit aussi à quoi sert chaque machine.
 | **Raspberry Pi 400** | atelier complet : construction, tests automatiques, émulateur piloté par script | c'est un Linux, comme l'environnement de Claude : les mêmes scripts y tournent sans adaptation |
 | **Windows 11 (UTM)** | jouer avec CP/A dans Oricutron, à la main | ton usage habituel ; aucun outil à ajouter |
 | **Mac** | éditer, `git`, lien avec Claude ; jouer avec CP/A dans Oricutron pour Mac (§ 5 bis) | Oricutron est compilé par GitHub, rien à compiler sur le Mac |
+| **iPhone, iPad** | jouer avec CP/A dans Oricutron pour le web (§ 5 ter) | page publiée par GitHub Pages, ROMs gardées dans le navigateur |
 | **Oric Atmos + LOCI** | essai final sur le vrai matériel | timing, son et écran réels |
 
 Les fichiers circulent par GitHub : `git push` depuis une machine, `git pull` sur une autre.
@@ -42,6 +43,9 @@ outils, et suit toujours la même boucle.
    marche avec tout logiciel. En CP/A disquette (ROM masquée),
    le collage tient compte du verrouillage des majuscules (`$021A`) pour garder la casse.
    Enfin, le jaune de la palette est un jaune d'or (`$E0B000`), lisible sur fond blanc.
+   Sur le clavier dessiné (« Show keyboard »), une touche reste enfoncée 3 trames au moins, et
+   SHIFT, CTRL, FUNCT collantes sont relâchées avec elle : un toucher bref sur un écran tactile
+   est vu par CP/A, qui lit le clavier à 50 Hz.
 
    L'émulateur tourne dans un écran virtuel (Xvfb), sans son.
 3. **`tools/screen.py`** lit l'écran texte (`$BB80`) dans le vidage et l'affiche en texte. Claude
@@ -219,6 +223,28 @@ lever la quarantaine au premier lancement). Le rendu logiciel est réglé par d�
 le contexte OpenGL, ce qui plante sous macOS (`glMatrixMode` sur un contexte nul) ; le
 correctif inverse l'ordre sur Mac. Essayé par Pierre : les deux rendus (soft et opengl) et le
 collage F12 marchent.
+
+## 5 ter. iPhone : Oricutron pour le web
+
+`.github/workflows/oricutron-web.yml` compile Oricutron avec Emscripten (même version, même
+correctif, compilé avec `-DWWW -DCPA_WWW`) par `tools/web/build_web.sh`, et publie le site sur
+GitHub Pages : https://drpsy77.github.io/cpa-oric/ (et dans l'artefact `Oricutron-CPA-web`).
+La page (`tools/web/shell.html`) :
+
+- ne publie aucune ROM : elle les demande au premier lancement (choix dans Fichiers, reconnues
+  à leur taille) et les garde, avec la disquette, dans `/readwritefs`, monté sur IndexedDB et
+  relu **avant** le démarrage de l'émulateur (Module.preRun) ;
+- démarre sur `cpa.dsk`, copiée depuis `build/cpa.dsk` à la première visite ; ce que CP/A
+  écrit est gardé (`diskautosave`, puis `FS.syncfs`) ;
+- affiche le clavier dessiné de l'Atmos (`show_keyboard`), touches collantes ;
+- ajoute des boutons : Coller (fonction `cpa_www_paste`), RESET (`cpa_www_reset`, NMI),
+  Ouvrir / Enregistrer la disquette (`cpa_www_flush` écrit d'abord ce qui est en attente ;
+  sur iPhone, feuille de partage « Enregistrer dans Fichiers »), CP/A d'origine.
+
+Mode d'emploi : `tools/web/LISEZMOI-web.txt`. Essayé dans Chromium en mode iPhone 13 : choix des
+ROMs, démarrage, frappe au doigt (touchers brefs, SHIFT collant, lettres doublées), collage,
+enregistrement, rechargement (ROMs et disquette retrouvées). Pour compiler chez soi, il faut
+Emscripten ; sans accès direct à GitHub pour ses « ports », `EMCC_LOCAL_PORTS=sdl2=<SDL2>`.
 
 ## 6. Ce qui ne se trouve que chez Claude
 
