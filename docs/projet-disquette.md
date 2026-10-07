@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F5B1`, marge 191 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F5E2`, marge 142 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -26,7 +26,8 @@ données, communiquer (réseau par le LOCI).
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ) ;
 - CCP : DIR, DIRS, TYPE, ERA, REN, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
   FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
-  `.BAT` avec `$1`-`$9`, lancés aussi par leur nom), ECHO, PAUSE.
+  `.BAT` avec `$1`-`$9`, lancés aussi par leur nom, appel de script à script par XDO.COM),
+  ECHO, PAUSE.
 
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
 HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
@@ -34,8 +35,8 @@ LISCAR / TOUCHE?, valeurs typées, nombres décimaux, mots et listes, fonctions 
 avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
-octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), COPY, GTEST,
-HELLO.
+octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), XDO (appel
+de script à script), COPY, GTEST, HELLO.
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
 STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans
@@ -211,10 +212,23 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   lancé par son nom passe par DO (`cmd_do`, reprise du nom à `ccp_pos`) : `NOM a b` équivaut à
   `DO NOM a b`, y compris par CHAIN. L'existence de `NOM.BAT` est vérifiée avec le FCB du CCP
   avant d'appeler DO, pour qu'une commande inconnue dans un script n'arrête pas ce script.
-  Pas d'appel de script à script : un script lancé dans un script (par DO ou par son nom)
-  remplace le premier, comme DO jusqu'ici. Empiler les contextes coûterait ~120 octets par
-  niveau, trop pour cette machine ; si le besoin vient, ce sera un « compilateur » `.BAT` ->
-  `.COM` (voir la suite prévue). Coût total : 71 octets résidents.
+  Coût : 53 octets résidents.
+- Appel de script à script, à la demande (« JIT ») : DO appelé pendant un script (par DO ou par
+  le nom) ne remplace plus le script en cours mais enchaîne (CHAIN) sur `XDO NOM paramètres`.
+  XDO.COM lit l'état de l'appelant dans les zones de DO (rendues publiques dans `cpa.inc` :
+  `SCR_ON`, `SCR_IDX`, `SCR_FCB`, `SCR_BUF`, `SCR_PAR`, `ORIG_LINE`), lit le script appelé et la
+  fin de l'appelant en mémoire (TPA), remplace les `$1`-`$9` de chacun par ses propres
+  paramètres en doublant les `$` des textes recopiés, écrit `$$$.BAT` et enchaîne sur
+  `DO $$$`. Tout est lu avant d'écrire : l'appelant peut être `$$$.BAT` lui-même, et les appels
+  s'emboîtent sans limite autre que la TPA (« Scripts trop longs »). Un script sans appel ne
+  coûte rien de plus ; le script appelé est relu à chaque appel (pas de recompilation). Écartés :
+  empiler les contextes dans le système (~120 octets par niveau), un développement préalable
+  de tout script (écriture sur le disque à chaque lancement), un compilateur `.BAT` -> `.COM`
+  (un `.COM` lancé par un `.COM` l'écrase en `$0500`, et le résultat serait figé). Limites :
+  une disquette protégée en écriture empêche les appels ; la ligne d'appel est tronquée à 78
+  caractères (CHAIN) ; modifier l'appelant pendant qu'il tourne n'est pas sûr ; sans XDO.COM,
+  la ligne d'appel est sautée. Toute erreur de XDO arrête le script. Coût : 49 octets
+  résidents, XDO.COM 1 271 octets.
 
 ## Suite prévue (par priorité)
 
@@ -287,8 +301,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    - `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés) ;
    - `tools/xfer_server.py` : serveur XMODEM sur le Mac ;
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
-3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; un programme qui
-   « compile » un `.BAT` en `.COM` (enchaînement de scripts, si le besoin vient) ; commande `NOTE` au prompt
+3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
    (son dans les scripts) ou `PLAY.COM` (partition texte) ; ne pas perdre la frappe anticipée
    pendant `NOTE`/`ATTENDS` dans LOGO ; raccourci clavier pour « Insérer » dans EDIT.
    Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
@@ -300,7 +313,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 191 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 142 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

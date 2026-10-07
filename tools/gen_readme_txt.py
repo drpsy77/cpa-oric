@@ -71,6 +71,7 @@ SECTIONS = [
   ("DEBUG nom [param]", "debogueur"),
   ("COPY src dst", "copie un fichier"),
   ("STAT [afn]", "taille : enreg., blocs de 2 Ko, octets ; seul : place libre"),
+  ("XDO nom [param]", "script appele par un script (lance par le CCP)"),
   ("MEM", "carte de la memoire"),
   ("POKE adr bb..", "ecrit en memoire (code a lancer : 0600 et +)"),
   ("GO adr [param]", "lance le code (RTS = retour)"),

@@ -6,13 +6,35 @@
 ;  par « ; » sont ignorées. $1 à $9 sont remplacés par les paramètres
 ;  donnés à DO, $$ par $. Les programmes lancés par le script lisent le
 ;  clavier normalement. ESC au clavier entre deux lignes arrête le
-;  script, de même qu'ESC pendant un PAUSE. Un DO dans un script passe
-;  au nouveau script.
+;  script, de même qu'ESC pendant un PAUSE. Un script appelé par un
+;  script (DO NOM, ou NOM seul) passe par XDO.COM, qui écrit $$$.BAT
+;  (le script appelé, puis la fin de l'appelant) : l'appelant reprend
+;  après la ligne d'appel. Si XDO.COM manque, la ligne est sautée.
 ; =====================================================================
 
 cmd_do
 .(
-        lda #<scr_fcb
+        lda scr_on              ; appelé par un script : XDO.COM fait
+        beq alone               ; suivre le script appelé de la fin de
+        ldx ccp_pos             ; celui-ci ($$$.BAT), puis DO $$$
+        jsr skip_spaces
+        ldy #0
+xh      lda xdo_cmd,y
+        sta DEF_DMA,y
+        iny
+        cpy #4
+        bne xh
+xl      lda ORIGBUF,x           ; « XDO NOM paramètres »
+        sta DEF_DMA,y
+        beq xgo
+        inx
+        iny
+        bpl xl
+xgo     lda #<DEF_DMA
+        ldy #>DEF_DMA
+        ldx #47                 ; CHAIN : ne revient pas
+        jmp bdos
+alone   lda #<scr_fcb
         sta ZP_CFCB
         lda #>scr_fcb
         sta ZP_CFCB+1
@@ -59,6 +81,7 @@ done    lda #128
         sta scr_on
         rts
 syn     jmp syntax_err
+xdo_cmd .asc "XDO "
 .)
 
 ; scr_getc : caractère suivant du script. C=1 en fin de fichier

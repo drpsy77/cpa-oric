@@ -88,3 +88,12 @@ S_ENV       = 3         ; forme, période lo, période hi
 S_WAIT      = 4         ; voix (255 : toutes)
 S_STATUS    = 5         ; -> A : bits des voix qui jouent
 S_TONE      = 6         ; voix, période lo, hi, vol, durée
+
+; Script DO en cours (version disquette, pour XDO.COM) : ces zones du
+; système gardent l'état du script entre deux lignes
+SCR_ON      = $02AF     ; 1 = script en cours
+SCR_IDX     = $02B0     ; position dans SCR_BUF (128 : enregistrement à lire)
+SCR_FCB     = $F6C0     ; FCB du script, ouvert (36 octets)
+SCR_BUF     = $F6E4     ; enregistrement en cours (128 octets)
+SCR_PAR     = $F764     ; paramètres $1-$9, séparés par des espaces (80 octets)
+ORIG_LINE   = $F670     ; ligne de commande en cours, casse d'origine, 0 à la fin

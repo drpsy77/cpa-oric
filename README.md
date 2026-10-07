@@ -78,6 +78,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 | `MEM` | carte de la mémoire (taille de la TPA selon le mode texte ou SPLIT) |
 | `POKE adr bb [bb...]` | écrit des octets en mémoire (hexadécimal, `$` facultatif) |
 | `GO adr [paramètres]` | lance le code en `adr` comme un `.COM` (un `RTS` ramène au prompt) |
+| `XDO NOM [p1 ... p9]` | appel d'un script par un script ; lancé par le CCP, pas à taper (voir DO) |
 
 Dans la version disquette, `HELP`, `MEM`, `DUMP`, `POKE` et `GO` ne sont plus internes, pour
 laisser la place au BDOS : l'aide est dans `HELP.COM` (plus complète), `MEM`, `POKE` et `GO`
@@ -171,8 +172,14 @@ commencent par `;` sont ignorées. `$1` à `$9` sont remplacés par les paramèt
 (`$$` donne `$`). Un script se lance aussi par son nom, comme un programme : `NOM [p1 ... p9]`
 exécute `NOM.BAT` s'il n'y a pas de `NOM.COM` (`NOM.BAT` tapé en entier aussi ; un autre type
 que COM ou BAT est refusé). Les programmes lancés par le script lisent le clavier normalement,
-et un script lancé dans un script (par DO ou par son nom) remplace le premier : on n'y revient
-pas. ESC tapé entre deux lignes, ou pendant un `PAUSE`,
+et un script peut en appeler un autre (par DO ou par son nom) : à la fin du script appelé,
+l'appelant reprend à la ligne suivante. C'est `XDO.COM` qui s'en charge, au moment de l'appel
+seulement : il écrit `$$$.BAT`, fait du script appelé (avec ses paramètres) suivi de la fin de
+l'appelant (avec les siens), puis enchaîne sur `DO $$$` ; on voit passer `A>XDO ...` et
+`A>DO $$$`. Le script appelé est relu à chaque appel : rien à recompiler quand on le modifie.
+Un script qui n'en appelle pas d'autre ne passe pas par XDO. Il faut une disquette où l'on peut
+écrire ; sans `XDO.COM`, la ligne d'appel est sautée (`XDO?`). Un script qui modifie un script
+déjà en cours d'exécution (l'appelant) n'est pas sûr. ESC tapé entre deux lignes, ou pendant un `PAUSE`,
 arrête le script. `ECHO texte` affiche un texte et `PAUSE [texte]` attend une touche. La pause
 en fin d'écran repart à zéro à chaque ligne du script. Exemple sur la disquette : `DESSIN.BAT`.
 
@@ -387,7 +394,7 @@ Programmes fournis sur la disquette :
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM` et
   `CPA.INC`.
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
-- `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, décrits plus haut.
+- `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits plus haut.
 
 ## LOGO
 

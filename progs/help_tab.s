@@ -110,6 +110,10 @@ h_1
         .asc "              |   blocs de 2 Ko,",13,10
         .asc "              |   octets ; seul :",13,10
         .asc "              |   place libre",13,10
+        .asc "XDO nom [param]",13,10
+        .asc "              | script appele par un",13,10
+        .asc "              |   script (lance par",13,10
+        .asc "              |   le CCP)",13,10
         .asc "MEM           | carte de la memoire",13,10
         .asc "POKE adr bb.. | ecrit en memoire",13,10
         .asc "              |   (code a lancer :",13,10
