@@ -620,13 +620,15 @@ bios_punch
 bios_reader
         lda #$1A                ; ^Z = fin de fichier
         rts
-bios_setdma
+#ifndef DISK
+bios_setdma                     ; version disque : bios_dskbuf (disk.s)
         sta dma
         sty dma+1
         rts
 bios_disk_stub
-        lda #1                  ; erreur : pas encore de pilote disque
+        lda #1                  ; erreur : pas de disque dans la version ROM
         rts
+#endif
 
 ; ---------------------------------------------------------------------
 ; Console
@@ -950,10 +952,9 @@ pn_dig  adc #"0"
 
 msg_banner
         .asc "CP/A 0.9 - Control Program for Atmos",13,10
-        .asc "TPA $0500-$B3FF, BDOS: JSR $0203",13,10
         .asc "Type HELP for commands.",13,10,0
 msg_more
-        .asc " -- Suite : une touche (^C stop) -- ",0
+        .asc " -- Suite (^C stop) -- ",0
 msg_reset
         .asc "*RESET* at ",0
 msg_brk

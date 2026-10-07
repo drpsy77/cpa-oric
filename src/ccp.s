@@ -82,29 +82,32 @@ some    stx ccp_pos
         sta ZP_PTR2
         lda #>cmd_table
         sta ZP_PTR2+1
+        ; une entrée : le nom, dernier caractère avec le bit 7, puis l'adresse
 entry   ldy #0
         lda (ZP_PTR2),y
         beq unknown             ; fin de table
         ldx ccp_pos
 cmpc    lda (ZP_PTR2),y
-        beq endname
+        and #$7F
         cmp CMDBUF+2,x
-        bne nomatch
+        bne skipl
         inx
+        lda (ZP_PTR2),y
         iny
-        bne cmpc
-endname lda CMDBUF+2,x          ; le mot tapé doit s'arrêter ici
+        asl                     ; C = bit 7 : fin du nom
+        bcc cmpc
+        lda CMDBUF+2,x          ; le mot tapé doit s'arrêter ici
         beq match
         cmp #" "
         beq match
-nomatch ldy #0                  ; avance jusqu'à l'entrée suivante
-skipl   lda (ZP_PTR2),y
-        beq skipped
+        bne skipped             ; (Y est déjà sur l'adresse)
+skipl   lda (ZP_PTR2),y         ; avance jusqu'au dernier caractère du nom
         iny
-        bne skipl
+        asl
+        bcc skipl
 skipped tya
         clc
-        adc #3                  ; 0 de fin + adresse
+        adc #2                  ; adresse
         adc ZP_PTR2
         sta ZP_PTR2
         bcc entry
@@ -112,7 +115,6 @@ skipped tya
         bne entry
 
 match   stx ccp_pos             ; position des arguments
-        iny
         lda (ZP_PTR2),y
         sta ccp_vec
         iny
@@ -199,75 +201,107 @@ none    sec
 ; ---------------------------------------------------------------------
 cmd_table
 #ifndef DISK
-        .asc "HELP",0           ; version disque : HELP.COM
+        .asc "HEL"           ; version disque : HELP.COM
+        .byt "P"|$80
         .word cmd_help
-        .asc "?",0
+        .byt "?"|$80
         .word cmd_help
-        .asc "MEM",0
+        .asc "ME"
+        .byt "M"|$80
         .word cmd_mem
-        .asc "DUMP",0           ; version disque : DEBUG.COM
+        .asc "DUM"           ; version disque : DEBUG.COM
+        .byt "P"|$80
         .word cmd_dump
-        .asc "POKE",0
+        .asc "POK"
+        .byt "E"|$80
         .word cmd_poke
-        .asc "GO",0
+        .asc "G"
+        .byt "O"|$80
         .word cmd_go
 #endif
-        .asc "VER",0
+        .asc "VE"
+        .byt "R"|$80
         .word cmd_ver
-        .asc "CLS",0
+        .asc "CL"
+        .byt "S"|$80
         .word cmd_cls
-        .asc "DIR",0
+        .asc "DI"
+        .byt "R"|$80
         .word cmd_dir
 #ifdef DISK
-        .asc "DIRS",0
+        .asc "DIR"
+        .byt "S"|$80
         .word cmd_dirs
 #endif
-        .asc "A:",0
+        .asc "A"
+        .byt ":"|$80
         .word cmd_nop
-        .asc "SPLIT",0
+        .asc "SPLI"
+        .byt "T"|$80
         .word cmd_split
-        .asc "TEXT",0
+        .asc "TEX"
+        .byt "T"|$80
         .word cmd_text
-        .asc "GCLS",0
+        .asc "GCL"
+        .byt "S"|$80
         .word cmd_gcls
-        .asc "PEN",0
+        .asc "PE"
+        .byt "N"|$80
         .word cmd_pen
-        .asc "PLOT",0
+        .asc "PLO"
+        .byt "T"|$80
         .word cmd_plot
-        .asc "LINE",0
+        .asc "LIN"
+        .byt "E"|$80
         .word cmd_line
-        .asc "BOX",0
+        .asc "BO"
+        .byt "X"|$80
         .word cmd_box
-        .asc "FBOX",0
+        .asc "FBO"
+        .byt "X"|$80
         .word cmd_fbox
-        .asc "CIRCLE",0
+        .asc "CIRCL"
+        .byt "E"|$80
         .word cmd_circle
-        .asc "GTEXT",0
+        .asc "GTEX"
+        .byt "T"|$80
         .word cmd_gtext
-        .asc "ATTR",0
+        .asc "ATT"
+        .byt "R"|$80
         .word cmd_attr
-        .asc "POINT",0
+        .asc "POIN"
+        .byt "T"|$80
         .word cmd_point
-        .asc "ECHO",0
+        .asc "ECH"
+        .byt "O"|$80
         .word cmd_echo
-        .asc "PAUSE",0
+        .asc "PAUS"
+        .byt "E"|$80
         .word cmd_pause
 #ifdef DISK
-        .asc "TYPE",0
+        .asc "TYP"
+        .byt "E"|$80
         .word cmd_type
-        .asc "ERA",0
+        .asc "ER"
+        .byt "A"|$80
         .word cmd_era
-        .asc "REN",0
+        .asc "RE"
+        .byt "N"|$80
         .word cmd_ren
-        .asc "SAVE",0
+        .asc "SAV"
+        .byt "E"|$80
         .word cmd_save
-        .asc "GSAVE",0
+        .asc "GSAV"
+        .byt "E"|$80
         .word cmd_gsave
-        .asc "GLOAD",0
+        .asc "GLOA"
+        .byt "D"|$80
         .word cmd_gload
-        .asc "PUT",0
+        .asc "PU"
+        .byt "T"|$80
         .word cmd_put
-        .asc "DO",0
+        .asc "D"
+        .byt "O"|$80
         .word cmd_do
 #endif
         .byt 0
