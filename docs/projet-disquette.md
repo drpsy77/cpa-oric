@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F5E2`, marge 142 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F65D`, marge 19 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -23,7 +23,8 @@ données, communiquer (réseau par le LOCI).
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
 - mode SPLIT (240 × 128 + barre + 10 lignes de texte ; bascule en `$BFDF` comme le BASIC, `$A000`
   utilisable), graphisme BDOS 115, images `.IMG` ;
-- son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ) ;
+- son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ, départ simultané des voix,
+  mélangeur son et bruit par voix) ;
 - CCP : DIR, DIRS, TYPE, ERA, REN, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
   FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
   `.BAT` avec `$1`-`$9`, lancés aussi par leur nom, appel de script à script par XDO.COM),
@@ -194,6 +195,21 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   `Interdit pendant CHARGE :`. SAUVEIMAGE et CHARGEIMAGE restent permis : ils gardent le FCB
   du CHARGE en cours sur la pile du 6502 le temps de l'opération (un fichier d'étape charge
   son image). Coût : LOGO.COM +134 octets (16 967).
+- Son, opérations 7 et 8 de la fonction 116 (ajout au contrat accepté par Pierre ; les deux
+  versions) : SYNC (0 préparation, 1 départ, 2 abandon), pour la synchronisation des voix que
+  le BASIC obtient par PLAY ; MIXER (son et bruit d'une voix, les deux à la fois possibles).
+  En préparation, NOTE, NOISE et TONE écrivent période et mélangeur tout de suite, coupent la
+  voix (volume 0, durée 0) et retiennent volume et durée (`s_pvol`, `s_pdur`) ; ENV écrit la
+  période et retient l'écriture du registre 13, qui relance l'enveloppe. Le départ écrit,
+  interruptions masquées, le registre 13 si besoin puis les volumes et les durées des voix
+  préparées. Retenir aussi périodes et mélangeur aurait demandé une copie des 14 registres :
+  la page 2 n'a que 10 octets libres (`$0246-$024F`, 8 pris : `s_hold`, `s_pvol`, `s_pdur`,
+  `s_penv`). Effet : une voix qui jouait encore change de note quelques millisecondes avant
+  le départ (elle est coupée dès sa préparation). Le départ ne relance l'enveloppe que si
+  ENV a été donné pendant la préparation. Coût : 123 octets résidents (165 pour les ajouts,
+  42 regagnés en réécrivant SILENCE, WAIT et le mélangeur de NOTE et NOISE) ; essayé dans
+  Oricutron par un programme qui relit les registres de l'AY. Il ne reste que 19 octets dans
+  le système : le pilote série (~150 octets) demandera de libérer de la place.
 - Imprimante : LIST du BIOS (l'entrée existait, vide ; PUNCH a maintenant sa propre entrée
   vide). Octet sur le port A du VIA, partagé avec l'AY (interruptions coupées le temps de
   l'écrire et de donner le strobe), front descendant de PB4 (désormais au repos à 1 ; kb_row
@@ -317,13 +333,16 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
    hors de la disquette construite pour l'instant.
    Revue complète du son : le volume maximal de l'AY est agressif et rien ne permet de le régler
-   (NOTE et BRUIT de LOGO jouent au volume 12) ; `SON` du lot B prendra un volume.
+   (NOTE et BRUIT de LOGO jouent au volume 12) ; `SON` du lot B prendra un volume. Lot B, partie
+   son, décidée avec Pierre : `SON voix note volume durée`, `SONF` (période brute), `BRUITV`,
+   `ENVELOPPE`, `MELANGE`, `ATTENDSSON`, `JOUE?`, `ENSEMBLE [liste]` (SYNC), SILENCE après ESC
+   ou une erreur ; `NOTE` et `BRUIT` supprimés. Estimé +435 octets dans LOGO.COM.
 4. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
    données simple sur l'accès direct.
 
 ## Contraintes à garder en tête
 
-- 142 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 19 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

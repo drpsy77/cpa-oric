@@ -69,7 +69,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
-| 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-6 | les deux |
+| 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-8 (7 SYNC : départ simultané des voix, 8 MIXER : son et bruit d'une voix) | les deux |
 
 Numéros libres pour l'avenir : 37-46, 48-114 et 117 et suivants. Une fonction ajoutée existe dans les
 deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
@@ -88,7 +88,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
 | `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F5E2`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F65D`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
 
 ## 4. Construire et tester
 
