@@ -60,7 +60,7 @@ SECTIONS = [
   ("POINT x y", "affiche 1 si allume"),
   ("GSAVE fic", "sauve l'image (.IMG)"),
   ("GLOAD fic", "charge l'image"),
-  ("NOM [param]", "lance NOM.COM"),
+  ("NOM [param]", "lance NOM.COM, sinon NOM.BAT"),
  ]),
  ("PROGRAMMES", [
   ("EDIT [fic]", "editeur de texte"),
