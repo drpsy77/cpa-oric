@@ -149,6 +149,7 @@ hw_ay1  jsr ay_write
         sta s_dur
         sta s_dur+1
         sta s_dur+2
+        sta s_hold              ; préparation (SYNC 0) abandonnée
         ldx #11                 ; vecteurs en RAM
 hw_vec  lda ram_vectors,x
         sta V_WBOOT,x

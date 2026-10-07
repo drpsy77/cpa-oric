@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F65D`, marge 19 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F660`, marge 16 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -31,7 +31,8 @@ données, communiquer (réseau par le LOCI).
   ECHO, PAUSE.
 
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
-HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
+HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, son sur les trois
+voix de l'AY avec enveloppe, bruit, mélangeur et départ simultané, clavier
 LISCAR / TOUCHE?, valeurs typées, nombres décimaux, mots et listes, fonctions de l'utilisateur
 avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
@@ -45,7 +46,8 @@ LOGO, ← → dans LOGO ; la complétion des noms par ESC ; le mode SPLIT avec l
 les décimaux et la tortue avec des décimaux (vitesse jugée meilleure que le BASIC). DEBUG
 démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai
 Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
-sur place, le son, et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
+sur place, le son (dans LOGO : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON,
+JOUE?, et la coupure par ESC), et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
 les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
 ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), EDITE et le Retour d'EDIT (temps d'écriture
 et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
@@ -208,8 +210,34 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   le départ (elle est coupée dès sa préparation). Le départ ne relance l'enveloppe que si
   ENV a été donné pendant la préparation. Coût : 123 octets résidents (165 pour les ajouts,
   42 regagnés en réécrivant SILENCE, WAIT et le mélangeur de NOTE et NOISE) ; essayé dans
-  Oricutron par un programme qui relit les registres de l'AY. Il ne reste que 19 octets dans
+  Oricutron par un programme qui relit les registres de l'AY. Il ne restait que 19 octets dans
   le système : le pilote série (~150 octets) demandera de libérer de la place.
+- LOGO, lot B, partie son (décidée avec Pierre) : `SON voix note volume durée`, `SONF`
+  (période brute 0-4095), `BRUITV` (bruit sur une voix, période 0-31), `ENVELOPPE forme
+  période` (période 0-65535 : un entier au-delà de 32767 arrive en décimal, il est arrondi et
+  converti à part), `MELANGE voix son bruit`, `ATTENDSSON voix` (255 : toutes), `JOUE? voix`
+  (fonction), `ENSEMBLE [liste]` ; `NOTE` et `BRUIT` supprimés (aucun test ni fichier de la
+  disquette ne s'en servait). Toute valeur hors limites est une erreur (`Valeur hors limites :`
+  suivi de la commande) plutôt qu'un écrêtage silencieux comme le faisait `NOTE` (durée > 255).
+  Les arguments sont gardés sur la pile du 6502 jusqu'à l'appel (une fonction de l'utilisateur
+  appelée dans un argument peut elle-même jouer un son et réutiliser `gblk`). `SON` rend la main
+  tout de suite : ESC et toute erreur font `SILENCE` (dans `error`), sinon une note sans fin
+  continuerait au prompt. `ENSEMBLE` : SYNC 0, puis la liste dans un contexte `FR_ENS` ; SYNC 1
+  quand ce contexte est retiré, quelle qu'en soit la raison (fin de la liste, `STOP`, `RENDS` :
+  `x_rest` les voit toutes) ; un compteur (`ensd`) fait qu'un ENSEMBLE dans un autre est compris
+  dans le premier ; une erreur remet le compteur à 0 et SILENCE abandonne la préparation.
+  `JOUE?` et `ATTENDSSON` reposent sur STATUS, qui ne compte que les notes minutées : une note
+  sans fin (durée 0) ne « joue » pas pour eux (sinon `ATTENDSSON` ne rendrait jamais la main).
+  Système : le démarrage à chaud remet `s_hold` à 0 (3 octets, marge 16) ; sans cela, un
+  programme qui quittait pendant une préparation (`ENSEMBLE [... QUITTE]`) laissait le son
+  muet pour tous les programmes suivants. Corrigé au passage : `puts` de LOGO s'arrêtait à 255
+  caractères, AIDE était coupée depuis longtemps (au milieu de la ligne `SI`) ; `puts` passe
+  maintenant à la page suivante. Coût : LOGO.COM +460 octets (17 427), dont 104 pour les 3
+  lignes d'AIDE en plus et 4 pour `puts` ; zone libre réduite d'une page (`procbase` `$5E00`
+  -> `$5F00`).
+  Essayé dans Oricutron en relisant les registres de l'AY (crochet de test modifié localement
+  pour vider les 14 registres en `$0300`) : périodes, volumes, enveloppe 40000, mélangeur,
+  ENSEMBLE imbriqué avec STOP, erreurs de plage, ESC pendant ATTENDSSON.
 - Imprimante : LIST du BIOS (l'entrée existait, vide ; PUNCH a maintenant sa propre entrée
   vide). Octet sur le port A du VIA, partagé avec l'AY (interruptions coupées le temps de
   l'écrire et de donner le strobe), front descendant de PB4 (désormais au repos à 1 ; kb_row
@@ -312,7 +340,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
    | Lot | Contenu | Complexité | État |
    |---|---|---|---|
-   | B | primitives du BDOS 115/116 que LOGO n'expose pas, directement dans LOGO.COM (sans modules) : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point), SON voix note volume durée, ENVELOPPE ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o, pris à la place de l'utilisateur | moyenne | à faire |
+   | B | primitives du BDOS 115/116 que LOGO n'expose pas, directement dans LOGO.COM (sans modules). Son : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON, JOUE? (NOTE et BRUIT supprimés), +460 o. Graphisme : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o, pris à la place de l'utilisateur | moyenne | son **fait**, graphisme à faire |
    | E | `CHARGE` accepte un nom calculé (`CHARGE :S`, `CHARGE MOT "S :N`) : plus besoin d'une ligne `SI` par fichier | faible | **fait** |
    | F | `CHARGE` dans un fichier chargé : l'état du premier chargement (FCB, tampon, reprise) était écrasé, la fin du fichier perdue et le programme appelant arrêté sans message ; maintenant refusé par un message | faible | **fait** |
    | D | plus tard, si besoin : procédures converties en jetons à la définition (vitesse, place ; LISTE et EDITE retraduisent) | élevée | piste |
@@ -332,17 +360,14 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    pendant `NOTE`/`ATTENDS` dans LOGO ; raccourci clavier pour « Insérer » dans EDIT.
    Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
    hors de la disquette construite pour l'instant.
-   Revue complète du son : le volume maximal de l'AY est agressif et rien ne permet de le régler
-   (NOTE et BRUIT de LOGO jouent au volume 12) ; `SON` du lot B prendra un volume. Lot B, partie
-   son, décidée avec Pierre : `SON voix note volume durée`, `SONF` (période brute), `BRUITV`,
-   `ENVELOPPE`, `MELANGE`, `ATTENDSSON`, `JOUE?`, `ENSEMBLE [liste]` (SYNC), SILENCE après ESC
-   ou une erreur ; `NOTE` et `BRUIT` supprimés. Estimé +435 octets dans LOGO.COM.
+   Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
+   au prompt ou `PLAY.COM`.
 4. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
    données simple sur l'accès direct.
 
 ## Contraintes à garder en tête
 
-- 19 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 16 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
