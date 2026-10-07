@@ -231,7 +231,11 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   Limite de fond, constatée par Pierre (`SCRIPT.BAT` qui se rappelle avec `($1+4)`) : les
   scripts n'ont ni calcul, ni variable, ni condition ; `$n` est un remplacement de texte. L'appel
   de script à script sert donc à réutiliser des suites de commandes, pas à programmer : un
-  script récursif ne s'arrête que par ESC. Calculer, répéter, décider : LOGO ou un `.COM`. Coût : 49 octets
+  script récursif ne s'arrête que par ESC. Calculer, répéter, décider : LOGO ou un `.COM`.
+  Alternative documentée dans le README (idée de Pierre) : le script lance `LOGO NOM`, dont
+  `NOM.LOG` définit ses procédures, les appelle et finit par `QUITTE` ; l'image reste intacte
+  en SPLIT et le script continue dessus (essayé dans Oricutron : `PELOUSE.BAT` + `HERBE.LOG`).
+  Manque : passer des paramètres du script à LOGO (`LOGO NOM` ne prend que le nom). Coût : 49 octets
   résidents, XDO.COM 1 271 octets.
 
 ## Suite prévue (par priorité)
