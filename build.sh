@@ -29,6 +29,9 @@ done
 # le code du système disque doit s'arrêter avant ses zones de travail ($F670 : DO et PUT, puis $FD00)
 END=$(grep -E " rom_end$" build/cpa_sys.sym | cut -d' ' -f1)
 python3 -c "import sys; e=int('$END',16); print('Fin du code disque : %04X (marge %d octets)' % (e, 0xF670-e)); sys.exit(e>0xF670)"
+# la page $FF00 doit s'arrêter avant les vecteurs du 6502 ($FFFA)
+FFEND=$(grep -E " ff_end$" build/cpa_sys.sym | cut -d' ' -f1)
+python3 -c "import sys; e=int('$FFEND',16); print('Page FF00 : fin %04X (marge %d octets)' % (e, 0xFFFA-e)); sys.exit(e>0xFFFA)"
 
 cd boot
 $XA -o ../build/boot.bin -e ../build/boot.err boot.s

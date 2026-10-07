@@ -27,7 +27,7 @@ outils, et suit toujours la même boucle.
 1. **`xa`** (l'assembleur de l'OSDK), compilé depuis ses sources. `./build.sh` assemble la ROM,
    le système disque, l'amorce et les programmes `.COM`, puis fabrique la disquette avec
    `tools/mkdisk.py`. Le script contrôle aussi les tailles (ROM de 16 Ko, système disque qui
-   s'arrête avant `$F670`).
+   s'arrête avant `$F670`, page `$FF00` qui n'atteint pas les vecteurs).
 2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, surtout dans `main.c`). Le
    correctif lit des variables d'environnement à chaque trame (1/50 s) :
    - `ORIC_KEYS` : texte tapé touche par touche, comme sur le clavier de l'Oric (les caractères

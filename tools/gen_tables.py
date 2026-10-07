@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Génère src/tables.s : adresses des lignes écran et tables clavier."""
+"""Génère les tables du système :
+  src/tables.s     tables du mode SPLIT (adresses des lignes de points, colonne et
+                   masque de chaque x), dans la zone du code ;
+  src/tables_ff.s  adresses des lignes de l'écran texte et tables du clavier,
+                   placées dans la page $FF00 (voir src/cpa.s).
+Usage : gen_tables.py [src/tables.s]  (tables_ff.s est écrit à côté)"""
 import sys
 
 SCREEN = 0xBB80
@@ -42,12 +47,16 @@ def table(name, data):
 
 def main(path):
     assert len(NORM) == 64 and len(SHIFT) == 64
-    L = ["; Généré par tools/gen_tables.py — ne pas éditer à la main", ""]
-    L.append("line_lo")
-    L.append("        .byt " + ",".join("$%02X" % ((SCREEN + 40*r) & 0xFF) for r in range(28)))
-    L.append("line_hi")
-    L.append("        .byt " + ",".join("$%02X" % ((SCREEN + 40*r) >> 8) for r in range(28)))
-    L.append("")
+    HEAD = ["; Généré par tools/gen_tables.py — ne pas éditer à la main", ""]
+    F = list(HEAD)
+    F.append("line_lo")
+    F.append("        .byt " + ",".join("$%02X" % ((SCREEN + 40*r) & 0xFF) for r in range(28)))
+    F.append("line_hi")
+    F.append("        .byt " + ",".join("$%02X" % ((SCREEN + 40*r) >> 8) for r in range(28)))
+    F.append("")
+    F += table("keymap_norm", NORM)
+    F += table("keymap_shift", SHIFT)
+    L = list(HEAD)
     # mode SPLIT : adresse de chaque ligne de points, colonne et masque de chaque x
     L.append("")
     L.append("g_ylo")
@@ -62,10 +71,8 @@ def main(path):
     L.append("g_xbit")
     for r in range(0, 240, 20):
         L.append("        .byt " + ",".join("$%02X" % (0x20 >> (x % 6)) for x in range(r, r+20)))
-    L.append("")
-    L += table("keymap_norm", NORM)
-    L += table("keymap_shift", SHIFT)
     open(path, "w").write("\n".join(L) + "\n")
+    open(path.replace("tables.s", "tables_ff.s"), "w").write("\n".join(F) + "\n")
 
 if __name__ == "__main__":
     main(sys.argv[1] if len(sys.argv) > 1 else "src/tables.s")

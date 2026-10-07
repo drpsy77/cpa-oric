@@ -11,7 +11,8 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F660`, marge 16 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F4F9`, marge 375 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
+octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -228,7 +229,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   dans le premier ; une erreur remet le compteur à 0 et SILENCE abandonne la préparation.
   `JOUE?` et `ATTENDSSON` reposent sur STATUS, qui ne compte que les notes minutées : une note
   sans fin (durée 0) ne « joue » pas pour eux (sinon `ATTENDSSON` ne rendrait jamais la main).
-  Système : le démarrage à chaud remet `s_hold` à 0 (3 octets, marge 16) ; sans cela, un
+  Système : le démarrage à chaud remet `s_hold` à 0 (3 octets) ; sans cela, un
   programme qui quittait pendant une préparation (`ENSEMBLE [... QUITTE]`) laissait le son
   muet pour tous les programmes suivants. Corrigé au passage : `puts` de LOGO s'arrêtait à 255
   caractères, AIDE était coupée depuis longtemps (au milieu de la ligne `SI`) ; `puts` passe
@@ -238,6 +239,12 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   Essayé dans Oricutron en relisant les registres de l'AY (crochet de test modifié localement
   pour vider les 14 registres en `$0300`) : périodes, volumes, enveloppe 40000, mélangeur,
   ENSEMBLE imbriqué avec STOP, erreurs de plage, ESC pendant ATTENDSSON.
+- Fusion de la branche « place résidente » (pistes A à F) avec le lot B (son) : marge 375
+  octets (378 - 3 pour la remise à 0 de `s_hold`). La bannière plus courte d'une ligne décale
+  la pagination de la console : dans `tools/test_logo.sh`, deux frappes simulées tombaient
+  pendant un accès disque et perdaient SHIFT (`"` lu `'`, `:` lu `;`) ; une pause de plus
+  avant ces frappes suffit (artefact du crochet de test, qui appuie SHIFT et la touche dans la
+  même trame : une frappe humaine n'est pas concernée).
 - Imprimante : LIST du BIOS (l'entrée existait, vide ; PUNCH a maintenant sa propre entrée
   vide). Octet sur le port A du VIA, partagé avec l'AY (interruptions coupées le temps de
   l'écrire et de donner le strobe), front descendant de PB4 (désormais au repos à 1 ; kb_row
@@ -291,6 +298,25 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   en SPLIT et le script continue dessus (essayé dans Oricutron : `PELOUSE.BAT` + `HERBE.LOG`).
   Manque : passer des paramètres du script à LOGO (`LOGO NOM` ne prend que le nom). Coût : 49 octets
   résidents, XDO.COM 1 271 octets.
+
+- Revue de place (octobre 2026), avant le pilote série. Mesure par module et par routine
+  (fichier `.sym`) : les plus gros postes sont fs.s (1 961 o), bios.s (1 796), gfx.s (1 595),
+  menu.s (1 402), ccp_disk.s (1 383), rline.s (1 026), tables.s (920) et la police (768).
+  Pistes retenues par Pierre (A à F, sans risque) : la page `$FF00-$FFF9`, déjà chargée avec le
+  système et vide, reçoit les tables de l'écran texte et du clavier (`src/tables_ff.s`,
+  184 octets ; `gen_tables.py` écrit les deux fichiers, `build.sh` contrôle les deux marges) ;
+  bannière sans la ligne TPA/BDOS (elle est dans HELP et MEM), pause « -- Suite (^C stop) -- »,
+  message de PUT en anglais court comme les autres messages du CCP ; SAVE lit son nombre par
+  `get_byte` (celui des commandes graphiques) et `parse_dec` disparaît ; table des commandes
+  internes sans 0 de fin (dernier caractère avec le bit 7) ; routines `def_pos`, `def_chk`,
+  `pf_chk` pour la suite cf_def / parse_fcb / check_name répétée dans le CCP ;
+  `bios_setdma` et `bios_disk_stub` réservés à la ROM. Gain : 359 octets dans la zone du code,
+  66 encore libres dans la page `$FF00`. Pistes gardées en réserve (risque faible à moyen) :
+  G, tables g_ylo/g_yhi calculées au démarrage dans `$B400-$B4FF` (police des codes 0-31,
+  jamais affichée ; ~230 o) ; H, masque de point calculé au lieu de g_xbit (~220 o, un peu plus
+  lent) ; I, test de RAM réduit à un remplissage, test complet en `.COM` (~105 o) ; J, TYPE, ERA
+  et REN en `.COM` (~290 o, transparents pour les scripts). Écartées : commandes graphiques en
+  `.COM` (scripts ralentis), compression du clavier ou de la police, complétion ESC.
 
 ## Suite prévue (par priorité)
 
@@ -351,7 +377,8 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 2. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
    - pilote série dans le BIOS, branché sur PUNCH / READER : ACIA 6551 en `$0380` sur le LOCI
-     (`$031C` dans Oricutron), adresse dans une variable, ~150 octets ;
+     (`$031C` dans Oricutron), adresse dans une variable, ~150 octets (place : zone du code ;
+     variables en `$FD42-$FD7F`, libres et remises à zéro au démarrage à froid) ;
    - `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés) ;
    - `tools/xfer_server.py` : serveur XMODEM sur le Mac ;
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
@@ -367,8 +394,9 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 16 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
-  (le pilote série prévu en demande ~150).
+- 375 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
+  justifie, le reste va en `.COM` (le pilote série prévu en demande ~150). Réserve si besoin :
+  pistes G à J de la revue de place (~840 octets).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
 - Ne rien changer au contrat d'interface (`docs/architecture.md`) sans penser à la version ROM.
