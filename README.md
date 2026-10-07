@@ -210,6 +210,31 @@ niveau suivant, `LINE (10+4) 100 (10+4) 110` n'est pas compris ; le script se ra
 sans fin avec un paramètre de plus en plus long, jusqu'à ESC. Pour calculer, répéter ou décider,
 il faut un programme : LOGO (`REPETE`, variables, `SI`) ou un `.COM`.
 
+**L'alternative : confier le calcul à LOGO, depuis le script.** Le script garde ce qu'il fait
+bien (enchaîner des commandes et des programmes) et LOGO fait le reste. Deux propriétés le
+permettent : `LOGO NOM` charge `NOM.LOG` au démarrage et `CHARGE` exécute les lignes du fichier
+qui ne sont pas des procédures, donc un programme peut se lancer seul et finir par `QUITTE` ;
+et en sortant de LOGO, l'image reste intacte, en mode SPLIT : le script continue sur le même
+dessin, et les commandes graphiques du CCP peuvent le compléter. Exemple :
+
+    ; PELOUSE.BAT
+    SPLIT
+    CIRCLE 120 30 20
+    LOGO HERBE
+    GTEXT 2 114 Pelouse finie
+
+    POUR HERBE :N
+    REPETE :N [AV 10 RE 10 LC DR 90 AV 4 GA 90 BC]
+    FIN
+    LC FIXEXY -110 -40 BC
+    HERBE 50
+    QUITTE
+
+(la seconde partie est `HERBE.LOG`). Le cercle tracé par le CCP, les 50 brins tracés par LOGO
+et le texte ajouté ensuite par le script restent ensemble à l'écran. Le script ne peut pas
+passer de paramètre à LOGO (`LOGO NOM` ne prend que le nom du fichier) : les valeurs sont dans
+`NOM.LOG`, qu'on peut avoir écrit avec EDIT.
+
 ## Démarrage et reprise après plantage
 
 Au démarrage à froid, CP/A teste la RAM des programmes comme le fait la ROM de l'Atmos :
