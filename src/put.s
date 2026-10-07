@@ -218,8 +218,7 @@ cmd_put
         lda #36
         sta pf_len
         ldx ccp_pos
-        jsr parse_fcb
-        jsr check_name
+        jsr pf_chk
         bcs bad
         jsr skip_spaces         ; une commande doit suivre
         lda CMDBUF+2,x
@@ -259,4 +258,4 @@ bad     jmp syntax_err
 .)
 
 msg_putlost
-        .asc "PUT : sortie trop longue, fin perdue",13,10,0
+        .asc "PUT: end lost (too long)",13,10,0

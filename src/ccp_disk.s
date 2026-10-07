@@ -154,6 +154,21 @@ is_empty
 ie_yes  sec
         rts
 
+; def_pos : analyse le nom à la position ccp_pos dans le FCB par défaut
+; def_chk : idem, puis check_name (C=1 si vide ou joker)
+; pf_chk  : parse_fcb (FCB et position X déjà fixés), puis check_name
+;   X = position après le nom (check_name ne touche pas X)
+def_chk
+        jsr def_pos
+        jmp check_name
+pf_chk
+        jsr parse_fcb
+        jmp check_name
+def_pos
+        jsr cf_def
+        ldx ccp_pos
+        jmp parse_fcb
+
 cf_def
         lda #<DEF_FCB
         sta ZP_CFCB
@@ -220,40 +235,6 @@ nxt     inx
         jmp conout
 .)
 
-; parse_dec : nombre décimal (0-255) à la position X -> dec_val, C=1 si absent
-parse_dec
-.(
-        jsr skip_spaces
-        lda #0
-        sta dec_val
-        sta hex_cnt
-loop    lda CMDBUF+2,x
-        sec
-        sbc #"0"
-        cmp #10
-        bcs end
-        sta ZP_T1
-        lda dec_val
-        asl
-        asl
-        clc
-        adc dec_val
-        asl
-        clc
-        adc ZP_T1
-        sta dec_val
-        inc hex_cnt
-        inx
-        bne loop
-end     lda hex_cnt
-        cmp #1
-        bcc none
-        clc
-        rts
-none    sec
-        rts
-.)
-
 ; ---------------------------------------------------------------------
 ; DIR [afn]
 ; ---------------------------------------------------------------------
@@ -266,9 +247,7 @@ cmd_dir
 dir_go
         sta dir_all
 .(
-        jsr cf_def
-        ldx ccp_pos
-        jsr parse_fcb
+        jsr def_pos
         jsr is_empty
         bcc named
         ldy #1                  ; pas de nom : *.*
@@ -343,10 +322,7 @@ free    jsr count_free          ; espace libre en Ko = blocs * 2
 ; ---------------------------------------------------------------------
 cmd_type
 .(
-        jsr cf_def
-        ldx ccp_pos
-        jsr parse_fcb
-        jsr check_name
+        jsr def_chk
         bcs syn
         jsr dma_default
         ldx #15
@@ -381,9 +357,7 @@ syn     jmp syntax_err
 ; ---------------------------------------------------------------------
 cmd_era
 .(
-        jsr cf_def
-        ldx ccp_pos
-        jsr parse_fcb
+        jsr def_pos
         jsr is_empty
         bcs syn
         jsr all_wild
@@ -423,8 +397,7 @@ cmd_ren
         lda #16
         sta pf_len
         ldx ccp_pos
-        jsr parse_fcb
-        jsr check_name
+        jsr pf_chk
         bcs syn
         jsr skip_spaces
         lda CMDBUF+2,x
@@ -432,8 +405,7 @@ cmd_ren
         bne syn
         inx
         jsr cf_def
-        jsr parse_fcb
-        jsr check_name
+        jsr pf_chk
         bcs syn
         ; le nouveau nom ne doit pas exister
         jsr dma_default
@@ -469,9 +441,8 @@ syn     jmp syntax_err
 cmd_save
 .(
         ldx ccp_pos
-        jsr parse_dec
+        jsr get_byte            ; A = dec_val
         bcs syn
-        lda dec_val
         beq syn
         lda tpa_top+1           ; au plus jusqu'au haut de la TPA
         sec
@@ -482,8 +453,7 @@ cmd_save
         bcs syn
         sta ccp_cnt
         jsr cf_def
-        jsr parse_fcb
-        jsr check_name
+        jsr pf_chk
         bcs syn
         ldx #19                 ; remplace un fichier existant
         jsr bdos_def
@@ -555,10 +525,7 @@ gs_r    rts
 
 ; img_name : nom de fichier -> DEF_FCB, A/Y = DEF_FCB, C=1 si incorrect
 img_name
-        jsr cf_def
-        ldx ccp_pos
-        jsr parse_fcb
-        jsr check_name
+        jsr def_chk
         lda #<DEF_FCB
         ldy #>DEF_FCB
         rts
