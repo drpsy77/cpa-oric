@@ -227,7 +227,11 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   (un `.COM` lancé par un `.COM` l'écrase en `$0500`, et le résultat serait figé). Limites :
   une disquette protégée en écriture empêche les appels ; la ligne d'appel est tronquée à 78
   caractères (CHAIN) ; modifier l'appelant pendant qu'il tourne n'est pas sûr ; sans XDO.COM,
-  la ligne d'appel est sautée. Toute erreur de XDO arrête le script. Coût : 49 octets
+  la ligne d'appel est sautée. Toute erreur de XDO arrête le script.
+  Limite de fond, constatée par Pierre (`SCRIPT.BAT` qui se rappelle avec `($1+4)`) : les
+  scripts n'ont ni calcul, ni variable, ni condition ; `$n` est un remplacement de texte. L'appel
+  de script à script sert donc à réutiliser des suites de commandes, pas à programmer : un
+  script récursif ne s'arrête que par ESC. Calculer, répéter, décider : LOGO ou un `.COM`. Coût : 49 octets
   résidents, XDO.COM 1 271 octets.
 
 ## Suite prévue (par priorité)

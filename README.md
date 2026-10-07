@@ -195,6 +195,21 @@ en fin d'écran repart à zéro à chaque ligne du script. Exemple sur la disque
 `ECHO`, `GTEXT` et les paramètres de DO gardent les minuscules telles qu'elles sont tapées
 (le reste de la ligne de commande passe en majuscules).
 
+**Limites des scripts.** Un script n'est qu'une suite de commandes, comme tapées au clavier :
+il n'y a ni calcul, ni variable, ni condition, ni boucle. `$1` à `$9` sont remplacés par le
+texte des paramètres, sans rien évaluer : `($1+4)` devient `(10+4)`, que les commandes ne
+comprennent pas. Un script qui s'appelle lui-même ne s'arrête jamais de lui-même (il n'y a pas
+de condition pour sortir) : seul ESC l'arrête. Exemple qui ne marche pas :
+
+    ; SCRIPT.BAT : trait en $1, puis le suivant 4 points plus loin ?
+    LINE $1 100 $1 110
+    SCRIPT ($1+4)
+
+La première ligne trace bien le trait en 10, mais la deuxième passe `(10+4)` tel quel. Au
+niveau suivant, `LINE (10+4) 100 (10+4) 110` n'est pas compris ; le script se rappelle ensuite
+sans fin avec un paramètre de plus en plus long, jusqu'à ESC. Pour calculer, répéter ou décider,
+il faut un programme : LOGO (`REPETE`, variables, `SI`) ou un `.COM`.
+
 ## Démarrage et reprise après plantage
 
 Au démarrage à froid, CP/A teste la RAM des programmes comme le fait la ROM de l'Atmos :
