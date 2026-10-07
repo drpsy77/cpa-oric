@@ -232,6 +232,11 @@ s_lo        = $02C3
 s_hi        = $02C4
 s_vol       = $02C5
 s_d         = $02C6
+s_hold      = $0246     ; op 7 : bit 7 = préparation, bit 6 = enveloppe à
+                        ;   relancer, bits 0-2 = voix préparées
+s_pvol      = $0247     ; 3 octets : volumes des voix préparées
+s_pdur      = $024A     ; 3 octets : leurs durées
+s_penv      = $024D     ; dernière forme d'enveloppe (registre 13)
 ; édition de ligne (BDOS 10, src/rline.s)
 rl_pos      = $02C7     ; position du curseur dans la ligne
 rl_cnt      = $02C8     ; longueur de la ligne

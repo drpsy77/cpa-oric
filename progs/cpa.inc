@@ -88,6 +88,8 @@ S_ENV       = 3         ; forme, période lo, période hi
 S_WAIT      = 4         ; voix (255 : toutes)
 S_STATUS    = 5         ; -> A : bits des voix qui jouent
 S_TONE      = 6         ; voix, période lo, hi, vol, durée
+S_SYNC      = 7         ; mode : 0 préparation, 1 départ simultané, 2 abandon
+S_MIXER     = 8         ; voix, son (0/1), bruit (0/1)
 
 ; Script DO en cours (version disquette, pour XDO.COM) : ces zones du
 ; système gardent l'état du script entre deux lignes

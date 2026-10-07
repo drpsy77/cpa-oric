@@ -335,12 +335,27 @@ ROM) l'ont.
 | 4 | WAIT | voix (255 : toutes) — attend la fin des notes |
 | 5 | STATUS | → A : un bit par voix qui joue encore |
 | 6 | TONE | voix, période lo, période hi (0-4095), volume, durée |
+| 7 | SYNC | mode : 0 préparation, 1 départ, 2 abandon (voir plus bas) |
+| 8 | MIXER | voix, son (0/1), bruit (0/1) — les deux à la fois sont possibles |
 
 La durée est en cinquantièmes de seconde (0 : la note tient jusqu'à la suivante). Elle est
 décomptée par l'interruption à 50 Hz : le programme continue pendant que la note joue, et
 `WAIT` ou `STATUS` servent à se synchroniser. Le clavier passant lui aussi par l'AY, les
 écritures dans le circuit sont faites interruptions masquées. Dans LOGO : `NOTE n d`,
 `BRUIT d` et `SILENCE`.
+
+**Départ simultané (SYNC).** Après `SYNC 0`, NOTE, NOISE et TONE règlent la période et le
+mélangeur de la voix tout de suite, mais la coupent et retiennent son volume et sa durée ; ENV
+règle la période de l'enveloppe et retient son départ. `SYNC 1` fait alors partir toutes les
+voix préparées dans le même instant, interruptions masquées (quelques microsecondes d'écart),
+et relance l'enveloppe si elle a été réglée pendant la préparation : les voix commencent
+ensemble et, à durée égale, s'arrêtent au même top de 50 Hz. `SYNC 2` abandonne (les voix
+préparées restent muettes), SILENCE aussi.
+
+**Mélangeur (MIXER).** NOTE et TONE mettent le son de la voix et coupent son bruit, NOISE
+l'inverse. MIXER, donné ensuite, choisit son et bruit librement, y compris les deux à la fois
+sur la même voix (bruitages). Le générateur de bruit et l'enveloppe sont uniques dans l'AY :
+leur période est commune aux trois voix.
 
     REPETE 2 [NOTE 37 20 NOTE 41 20 NOTE 44 20 NOTE 49 40]
 
