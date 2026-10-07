@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F57C`, marge 244 octets jusqu'à `$F670`) :
+**Système** (`$C000-$F5B1`, marge 191 octets jusqu'à `$F670`) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
 - imprimante sur le port Centronics (LIST, BDOS 5), copie de la console par CTRL-P ou par
@@ -26,7 +26,7 @@ données, communiquer (réseau par le LOCI).
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ) ;
 - CCP : DIR, DIRS, TYPE, ERA, REN, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
   FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
-  `.BAT` avec `$1`-`$9`), ECHO, PAUSE.
+  `.BAT` avec `$1`-`$9`, lancés aussi par leur nom), ECHO, PAUSE.
 
 **Programmes** : HELP (aide par rubriques), SET (attributs), EDIT (éditeur, insertion de fichier),
 HEX (éditeur hexa par fenêtres, écriture sur place), LOGO (français, tortue, sons, clavier
@@ -204,13 +204,17 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   `draw_flags` remplace `draw_caps`, appelée par la barre (tous les programmes), CTRL-T,
   CTRL-P et les menus. Coût : 11 octets résidents.
 
-- Lancement d'un programme : le CCP n'accepte que `NOM`, `NOM.COM` (ou `d:NOM.COM`). Avant,
-  un type explicite était chargé tel quel : `DESSIN.BAT` tapé au prompt exécutait le texte en
-  `$0500` (BRK en `$203A`, constaté sur le vrai Oric). Tout autre type donne maintenant
-  `NOM.EXT?`, comme CP/M 2.2. Coût : 18 octets résidents. Piste notée : lancer un script par
-  son nom (`NOM` -> `NOM.BAT` si `NOM.COM` est absent, comme `.SUB` dans CP/M 3), à ce même
-  endroit ; reste à choisir si un script appelé dans un script remplace l'appelant (comme DO
-  aujourd'hui) ou y revient.
+- Lancement d'un programme : le CCP cherche `NOM.COM`, puis `NOM.BAT` (comme `.SUB` dans
+  CP/M 3) ; `NOM.COM` et `NOM.BAT` tapés en entier sont acceptés, tout autre type donne
+  `NOM.EXT?` comme CP/M 2.2. Avant, un type explicite était chargé tel quel : `DESSIN.BAT` tapé
+  au prompt exécutait le texte en `$0500` (BRK en `$203A`, constaté sur le vrai Oric). Un script
+  lancé par son nom passe par DO (`cmd_do`, reprise du nom à `ccp_pos`) : `NOM a b` équivaut à
+  `DO NOM a b`, y compris par CHAIN. L'existence de `NOM.BAT` est vérifiée avec le FCB du CCP
+  avant d'appeler DO, pour qu'une commande inconnue dans un script n'arrête pas ce script.
+  Pas d'appel de script à script : un script lancé dans un script (par DO ou par son nom)
+  remplace le premier, comme DO jusqu'ici. Empiler les contextes coûterait ~120 octets par
+  niveau, trop pour cette machine ; si le besoin vient, ce sera un « compilateur » `.BAT` ->
+  `.COM` (voir la suite prévue). Coût total : 71 octets résidents.
 
 ## Suite prévue (par priorité)
 
@@ -283,7 +287,8 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    - `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés) ;
    - `tools/xfer_server.py` : serveur XMODEM sur le Mac ;
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
-3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
+3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; un programme qui
+   « compile » un `.BAT` en `.COM` (enchaînement de scripts, si le besoin vient) ; commande `NOTE` au prompt
    (son dans les scripts) ou `PLAY.COM` (partition texte) ; ne pas perdre la frappe anticipée
    pendant `NOTE`/`ATTENDS` dans LOGO ; raccourci clavier pour « Insérer » dans EDIT.
    Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
@@ -295,7 +300,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Contraintes à garder en tête
 
-- 244 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
+- 191 octets libres dans le système : tout ajout résident se justifie, le reste va en `.COM`
   (le pilote série prévu en demande ~150).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).

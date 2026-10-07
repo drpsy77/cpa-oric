@@ -65,7 +65,7 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 | `DO fichier [p1 ... p9]` | exécute les commandes de `FICHIER.BAT`, une par ligne |
 | `ECHO texte`, `PAUSE [texte]` | affiche un texte ; attend une touche (pour les scripts) |
 | `PEN`, `PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `POINT` | primitives graphiques (voir le mode SPLIT) |
-| `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute |
+| `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute ; à défaut, exécute le script `NOM.BAT` (comme `DO NOM [args]`) |
 | `VER`, `CLS` | version, effacement de l'écran |
 
 Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP :
@@ -168,8 +168,11 @@ déborder le tampon : la fin serait perdue, et un message le signale.
 **Scripts : DO.** `DO NOM [p1 ... p9]` lit `NOM.BAT` et exécute ses lignes une à une, comme si on
 les tapait au prompt (chaque ligne est affichée après `A>`). Les lignes vides et celles qui
 commencent par `;` sont ignorées. `$1` à `$9` sont remplacés par les paramètres donnés à DO
-(`$$` donne `$`). Les programmes lancés par le script lisent le clavier normalement, et un DO
-dans un script passe au nouveau script. ESC tapé entre deux lignes, ou pendant un `PAUSE`,
+(`$$` donne `$`). Un script se lance aussi par son nom, comme un programme : `NOM [p1 ... p9]`
+exécute `NOM.BAT` s'il n'y a pas de `NOM.COM` (`NOM.BAT` tapé en entier aussi ; un autre type
+que COM ou BAT est refusé). Les programmes lancés par le script lisent le clavier normalement,
+et un script lancé dans un script (par DO ou par son nom) remplace le premier : on n'y revient
+pas. ESC tapé entre deux lignes, ou pendant un `PAUSE`,
 arrête le script. `ECHO texte` affiche un texte et `PAUSE [texte]` attend une touche. La pause
 en fin d'écran repart à zéro à chaque ligne du script. Exemple sur la disquette : `DESSIN.BAT`.
 

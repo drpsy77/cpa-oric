@@ -56,7 +56,8 @@ h_default
         .asc "POINT x y     | affiche 1 si allume",13,10
         .asc "GSAVE fic     | sauve l'image (.IMG)",13,10
         .asc "GLOAD fic     | charge l'image",13,10
-        .asc "NOM [param]   | lance NOM.COM",13,10
+        .asc "NOM [param]   | lance NOM.COM, sinon",13,10
+        .asc "              |   NOM.BAT",13,10
         .asc "",13,10
         .asc "Autres sujets : HELP suivi de",13,10
         .asc "  TOUCHES PROGRAMMES EDIT HEX",13,10

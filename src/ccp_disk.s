@@ -564,8 +564,10 @@ img_name
         rts
 
 ; ---------------------------------------------------------------------
-; run_transient : charge NOM.COM en $0500 et l'exécute.
-;   Ne revient (RTS) que si le fichier est introuvable.
+; run_transient : charge NOM.COM en $0500 et l'exécute ; à défaut,
+;   lance le script NOM.BAT par DO (retour direct au prompt).
+;   Ne revient (RTS) que si rien n'est trouvé, ou si le type n'est
+;   ni COM ni BAT.
 ;   Avant le lancement : FCB1 en $045C, FCB2 en $046C, ligne de
 ;   paramètres en $0480 (longueur puis caractères), DMA = $0480.
 ;   Le programme revient au système par RTS ou JMP $0200.
@@ -583,32 +585,31 @@ run_transient
         stx ccp_tail
         jsr has_wild
         bcc nowild
-notcom  rts                     ; joker, ou type autre que COM : NOM.EXT?
-nowild  ldy #9                  ; type vide : COM ; autre que COM : refusé
-        lda (ZP_CFCB),y         ; (un texte serait exécuté comme du code)
-        cmp #" "
+notcom  rts                     ; joker, ou type ni COM ni BAT : NOM.EXT?
+nowild  ldy #9                  ; type vide : COM, puis BAT si absent ;
+        lda (ZP_CFCB),y         ; autre type que COM ou BAT : refusé (un
+        cmp #" "                ; texte serait exécuté comme du code)
         bne hasext
-        lda #"C"
-        sta (ZP_CFCB),y
-        iny
-        lda #"O"
-        sta (ZP_CFCB),y
-        iny
-        lda #"M"
-        sta (ZP_CFCB),y
-        bne open                ; toujours pris
-hasext  ldx #2
-ckext   lda (ZP_CFCB),y
-        cmp com_ext,x
+        ldx #0
+        jsr set_type            ; NOM.COM
+        jsr open_ccp
+        bne found
+        ldx #3                  ; NOM.COM absent : NOM.BAT
+        jsr set_type
+        jmp try_bat
+hasext  ldx #0
+        jsr cmp_type
+        beq opencom
+        ldx #3
+        jsr cmp_type
         bne notcom
-        iny
-        dex
-        bpl ckext
-open    ldx #15
-        lda #<CCP_FCB
-        ldy #>CCP_FCB
-        jsr bdos
-        cmp #$FF
+try_bat jsr open_ccp            ; script : comme DO NOM [p1..p9]
+        beq notcom
+        jsr cmd_do              ; reprend le nom à ccp_pos (type BAT)
+        pla                     ; retour direct au prompt
+        pla
+        jmp ccp
+opencom jsr open_ccp
         bne found
         rts
 found   lda #<TPA_START
@@ -663,8 +664,43 @@ tend    lda #0
         jsr TPA_START
         jmp wboot
 fail    jmp wboot
-com_ext .asc "MOC"              ; lu à l'envers (X de 2 à 0)
 .)
+
+; set_type / cmp_type : type du FCB (ZP_CFCB) <- / comparé à COM (X=0)
+;   ou BAT (X=3). cmp_type : Z=1 si égal.
+set_type
+.(
+        ldy #9
+loop    lda type_tab,x
+        sta (ZP_CFCB),y
+        inx
+        iny
+        cpy #12
+        bne loop
+        rts
+.)
+cmp_type
+.(
+        ldy #9
+loop    lda type_tab,x
+        cmp (ZP_CFCB),y
+        bne r
+        inx
+        iny
+        cpy #12
+        bne loop
+r       rts
+.)
+type_tab .asc "COMBAT"
+
+; open_ccp : ouvre CCP_FCB, Z=1 si introuvable
+open_ccp
+        ldx #15
+        lda #<CCP_FCB
+        ldy #>CCP_FCB
+        jsr bdos
+        cmp #$FF
+        rts
 
 no_file
         lda #<msg_nofile

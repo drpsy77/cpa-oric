@@ -18,7 +18,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 | BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
 | CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/TYPE/PUT/DO… : disque |
 | Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
-| Programmes | fichiers `.COM` chargés en `$0500` | `progs/*.s` | disque (la ROM pourra en intégrer un) |
+| Programmes | fichiers `.COM` chargés en `$0500` (un nom sans `.COM` se rabat sur le script `.BAT`) | `progs/*.s` | disque (la ROM pourra en intégrer un) |
 
 **Règle de placement** (pour toute nouvelle fonction) :
 
@@ -88,7 +88,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
 | `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F57C`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F5B1`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00`, tampon de secteur `$FE00`, page `$FF00-$FFF9` apparemment libre (aucune référence dans les sources), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, reste libre |
 
 ## 4. Construire et tester
 
