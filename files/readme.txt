@@ -96,6 +96,10 @@ STAT [afn]    | taille : enreg.,
               |   blocs de 2 Ko,
               |   octets ; seul :
               |   place libre
+XDO nom [param]
+              | script appele par un
+              |   script (lance par
+              |   le CCP)
 MEM           | carte de la memoire
 POKE adr bb.. | ecrit en memoire
               |   (code a lancer :
