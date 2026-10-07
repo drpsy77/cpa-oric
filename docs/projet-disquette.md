@@ -184,6 +184,16 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   enregistre si le texte a changé (en cas d'échec, on reste dans EDIT) et enchaîne sur
   `LOGO NOM.LOG /R`. Coût : LOGO 785 octets (zone libre 17,2 Ko), EDIT 160 octets.
 
+- LOGO, lots E et F : `make_fcb` (SAUVE, CHARGE, EDITE, SAUVEIMAGE, CHARGEIMAGE) prend un
+  `"NOM` comme avant, ou sinon évalue une expression, qui doit donner un mot non vide (un
+  nombre est pris comme mot : `CHARGE 7` cherche `7.LOG`). Un CHARGE imbriqué n'est pas
+  permis mais refusé : le permettre demandait de sauver ~300 octets par niveau (FCB, tampon
+  d'enregistrement, ligne en cours), et le besoin est couvert par le noyau qui enchaîne les
+  chargements. Variable `ldon` (1 pendant un CHARGE, remise à 0 à la fin, au démarrage et par
+  toute erreur) ; `ld_check` en tête de SAUVE (donc d'EDITE) et de CHARGE donne
+  `Interdit pendant CHARGE :`. SAUVEIMAGE et CHARGEIMAGE restent permis : ils gardent le FCB
+  du CHARGE en cours sur la pile du 6502 le temps de l'opération (un fichier d'étape charge
+  son image). Coût : LOGO.COM +134 octets (16 967).
 - Imprimante : LIST du BIOS (l'entrée existait, vide ; PUNCH a maintenant sa propre entrée
   vide). Octet sur le port A du VIA, partagé avec l'AY (interruptions coupées le temps de
   l'écrire et de donner le strobe), front descendant de PB4 (désormais au repos à 1 ; kb_row
@@ -287,8 +297,8 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    | Lot | Contenu | Complexité | État |
    |---|---|---|---|
    | B | primitives du BDOS 115/116 que LOGO n'expose pas, directement dans LOGO.COM (sans modules) : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point), SON voix note volume durée, ENVELOPPE ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o, pris à la place de l'utilisateur | moyenne | à faire |
-   | E | `CHARGE` accepte un nom calculé (`CHARGE :S`, `CHARGE MOT "S :N`) : plus besoin d'une ligne `SI` par fichier | faible | à faire |
-   | F | `CHARGE` dans un fichier chargé : aujourd'hui l'état du premier chargement (FCB, tampon, reprise) est écrasé, la fin du premier fichier est perdue et le programme appelant s'arrête sans message ; soit le permettre (état sauvé sur une pile, profondeur limitée), soit le refuser par un message | faible | à faire |
+   | E | `CHARGE` accepte un nom calculé (`CHARGE :S`, `CHARGE MOT "S :N`) : plus besoin d'une ligne `SI` par fichier | faible | **fait** |
+   | F | `CHARGE` dans un fichier chargé : l'état du premier chargement (FCB, tampon, reprise) était écrasé, la fin du fichier perdue et le programme appelant arrêté sans message ; maintenant refusé par un message | faible | **fait** |
    | D | plus tard, si besoin : procédures converties en jetons à la définition (vitesse, place ; LISTE et EDITE retraduisent) | élevée | piste |
 
    Écarté pour l'instant : une primitive générique `.SYSTEME n [liste]` (seules les fonctions

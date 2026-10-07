@@ -197,6 +197,7 @@ ok      lda #<procbase
         sta capf
         sta tmode
         sta autold
+        sta ldon
         sta nloc
         sta ngl
         sta defmode
@@ -300,6 +301,7 @@ er1     jsr crlf
         lda #0
         sta defmode
 er2     lda #0
+        sta ldon                ; un CHARGE en cours est abandonné
         sta nloc
         sta stopf
         ldx savsp
@@ -4655,13 +4657,36 @@ p_oubtout
 ; make_fcb : "NOM -> fcb
 make_fcb
 .(
-        lda ttype
+        lda ttype               ; "NOM : le nom du jeton
         cmp #TK_QUOTE
-        beq ok
-        lda #<e_quote
+        bne calc
+        lda tnam
+        sta ts
+        lda tnam+1
+        sta ts+1
+        lda tlen
+        sta tl
+        jsr fill
+        jmp advance
+calc    jsr sum                 ; sinon une expression : un mot
+        jsr as_text             ; (un nombre est pris comme mot)
+        lda vt
+        cmp #T_WORD
+        bne bad
+        lda val+3
+        bne bad
+        lda val+2
+        beq bad
+        sta tl
+        lda val
+        sta ts
+        lda val+1
+        sta ts+1
+        jmp fill
+bad     lda #<e_quote
         ldy #>e_quote
         jmp error
-ok      lda #0
+fill    lda #0                  ; ts/tl -> fcb (type LOG par défaut)
         sta fcbext
         ldx #35
 z       sta fcb,x
@@ -4680,9 +4705,9 @@ sp      sta fcb,x
         sta fcb+11
         ldy #0
         ldx #1
-nm      cpy tlen
+nm      cpy tl
         beq done
-        lda (tnam),y
+        lda (ts),y
         iny
         cmp #"."
         beq ext
@@ -4697,17 +4722,27 @@ ext     ldx #9
         sta fcb+9
         sta fcb+10
         sta fcb+11
-ex      cpy tlen
+ex      cpy tl
         beq done
-        lda (tnam),y
+        lda (ts),y
         iny
         cpx #12
         bcs ex
         sta fcb,x
         inx
         bne ex
-done    jmp advance
+done    rts
 .)
+
+; ld_check : erreur si un CHARGE est en cours (SAUVE, CHARGE et EDITE
+;   prendraient son FCB et son tampon : la suite du fichier serait perdue)
+ld_check
+        lda ldon
+        bne ldc_err
+        rts
+ldc_err lda #<e_inload
+        ldy #>e_inload
+        jmp error
 
 bdos_fcb
         lda #<fcb
@@ -4716,6 +4751,7 @@ bdos_fcb
 
 p_sauve
 .(
+        jsr ld_check
         jsr make_fcb
         ldx #F_DELETE
         jsr bdos_fcb
@@ -4831,8 +4867,15 @@ p_cimage
         lda #G_GLOAD
 img_op
 .(
-        pha
+        sta tmp3                ; opération
         jsr need_img
+        ldx #35                 ; garde le FCB d'un CHARGE en cours (une
+sv      lda fcb,x               ; image chargée par un fichier .LOG)
+        pha
+        dex
+        bpl sv
+        lda tmp3
+        pha
         jsr make_fcb
         pla
         sta gblk
@@ -4858,11 +4901,18 @@ keep    lda #<fcb
 bad     lda #<e_disk
         ldy #>e_disk
         jmp error
-ok      rts
+ok      ldx #0                  ; rend le FCB gardé
+rs      pla
+        sta fcb,x
+        inx
+        cpx #36
+        bne rs
+        rts
 .)
 
 p_charge
 .(
+        jsr ld_check
         jsr make_fcb
         lda tokst               ; reprise après le chargement
         sta ld_tok
@@ -4887,6 +4937,7 @@ p_charge
         jmp error
 ok      lda #128
         sta ridx
+        sta ldon                ; CHARGE en cours
         lda #0
         sta reof
 line    ldx #0                  ; assemble une ligne dans fbuf
@@ -4910,7 +4961,9 @@ eof     cpx #0                  ; dernière ligne sans CR
         lda #0
         sta fbuf,x
         jsr ld_line
-done    ldx #F_SETDMA
+done    lda #0
+        sta ldon
+        ldx #F_SETDMA
         lda #<DEF_DMA
         ldy #>DEF_DMA
         jsr BDOS
@@ -5447,6 +5500,7 @@ e_deep    .asc "Trop de niveaux",0
 e_mem     .asc "Memoire pleine",0
 e_esc     .asc "Interrompu",0
 e_quote   .asc "Il faut un nom avec ",$22," apres",0
+e_inload  .asc "Interdit pendant CHARGE :",0
 e_pour    .asc "POUR seulement au debut d'une ligne",0
 e_name    .asc "Il faut un nom apres POUR",0
 e_disk    .asc "Erreur disque",0
@@ -5479,7 +5533,8 @@ ssp     = ld_fb+2       ; haut de la zone de débordement de la pile (2)
 tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)
 autold  = tmode+1       ; 1 : la ligne de fbuf sera exécutée au prompt
 rwop    = autold+1      ; r_recs / w_recs : bit 7 = lecture
-parn_lo = rwop+1
+ldon    = rwop+1        ; 1 = CHARGE en cours (fichier ouvert dans fcb)
+parn_lo = ldon+1
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR
