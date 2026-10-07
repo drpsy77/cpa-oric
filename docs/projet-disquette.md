@@ -273,30 +273,22 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    Chaque lot passe `tools/test_logo.sh` ; ses références ne changent que là où le lot change
    volontairement un résultat (par exemple `7 / 2` au lot 3).
 
-1. **LOGO en modules** (« bibliothèques dynamiques », idée du dictionnaire de Forth : on ne
-   charge que les mots du contexte). Constat : LOGO.COM fait 16,8 Ko et laisse 17,2 Ko à
-   l'utilisateur ; tout est chargé, même ce qui ne sert pas. Tout se fait dans LOGO.COM :
-   ni le système ni le contrat d'interface ne changent.
-   - Noyau : interpréteur, nombres (décimaux compris, ils servent partout), variables,
-     procédures, fichiers. Modules sur la disquette (`.LGM`), chargés par `CHARGEMODULE "NOM`,
-     rendus par `OUBLIEMODULE` ; chaque module apporte sa table de primitives, consultée
-     après celle du noyau.
-   - Table d'accès au noyau (sauts vers ~20 routines : évaluer un entier, erreurs, cacher la
-     tortue, BDOS...) : les modules ne dépendent pas des adresses internes de LOGO.
-   - Relocation à la manière des PRL de MP/M : le module est assemblé à deux adresses, un outil
-     Python en tire une carte d'un bit par octet à corriger, le chargeur de LOGO l'applique
-     (~60-80 octets). Plusieurs modules peuvent être chargés à la fois.
-   - Coût estimé dans le noyau : 250-350 octets. Gain : sortir les fonctions (1,4 Ko), les mots
-     et listes (2,9 Ko + 0,6 Ko de zones), EDITE (~0,8 Ko), peut-être le texte de l'aide :
-     noyau visé 10-12 Ko, 4 à 6 Ko rendus à l'utilisateur qui n'a pas besoin de tout.
-   - Points délicats : la frontière noyau / modules ; un programme sauvé déclare ses modules
-     (ligne `CHARGEMODULE` en tête) ; `test_logo.sh` charge les modules.
+1. **LOGO : primitives graphiques, chargement par étapes.** Les modules (« bibliothèques
+   dynamiques » : noyau, table d'accès, modules `.LGM` relogés comme les PRL de MP/M) sont
+   **mis de côté**. Raison : ils ne rendaient que 4 à 6 Ko pris au code de LOGO, alors que ce
+   qui grossit dans un grand projet, ce sont les procédures et les textes de l'utilisateur ; et
+   pour ceux-là, le chargement par étapes existe déjà sans rien coûter : un fichier `.LOG` peut
+   contenir n'importe quelles lignes (CHARGE les exécute), OUBLIE rend la place (les procédures
+   suivantes sont recopiées vers le bas), les variables globales restent. En mode interactif,
+   l'utilisateur n'a pas besoin de beaucoup de mémoire. Essayé dans Oricutron : un noyau qui
+   enchaîne trois salles, chacune dans son fichier (exemple dans le README, « Un grand
+   programme par étapes »). L'étude des modules reste dans l'historique git (commit 0702b64).
 
    | Lot | Contenu | Complexité | État |
    |---|---|---|---|
-   | A | mécanisme : table d'accès, chargeur avec relocation, CHARGEMODULE / OUBLIEMODULE, outil Python de fabrication ; validé en sortant les fonctions mathématiques dans un module (tests LOGO identiques) | élevée | à faire |
-   | B | module `GRAPHE` : primitives du BDOS 115/116 que LOGO n'expose pas — POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point), SON voix note volume durée, ENVELOPPE ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o | moyenne | à faire |
-   | C | selon le gain mesuré : sortir les listes, EDITE, l'aide | moyenne | à voir |
+   | B | primitives du BDOS 115/116 que LOGO n'expose pas, directement dans LOGO.COM (sans modules) : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point), SON voix note volume durée, ENVELOPPE ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte. Estimé 350-400 o, pris à la place de l'utilisateur | moyenne | à faire |
+   | E | `CHARGE` accepte un nom calculé (`CHARGE :S`, `CHARGE MOT "S :N`) : plus besoin d'une ligne `SI` par fichier | faible | à faire |
+   | F | `CHARGE` dans un fichier chargé : aujourd'hui l'état du premier chargement (FCB, tampon, reprise) est écrasé, la fin du premier fichier est perdue et le programme appelant s'arrête sans message ; soit le permettre (état sauvé sur une pile, profondeur limitée), soit le refuser par un message | faible | à faire |
    | D | plus tard, si besoin : procédures converties en jetons à la définition (vitesse, place ; LISTE et EDITE retraduisent) | élevée | piste |
 
    Écarté pour l'instant : une primitive générique `.SYSTEME n [liste]` (seules les fonctions

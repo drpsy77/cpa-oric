@@ -569,6 +569,37 @@ Le Logo lit directement le texte des procédures. Les listes et les appels passe
 de contextes en mémoire, pas par la pile du 6502. La récursion peut donc aller jusqu'à
 120 niveaux, avec 100 paramètres actifs et 32 variables globales.
 
+**Un grand programme par étapes.** Un fichier `.LOG` peut contenir n'importe quelles lignes
+de Logo, pas seulement des procédures : `CHARGE` les exécute toutes, comme si on les tapait.
+Et `OUBLIE "NOM` rend vraiment la place de la procédure. Un programme trop grand pour la
+mémoire (un jeu d'aventure, par exemple) se découpe donc en étapes : un noyau chargé une fois,
+puis, à chaque étape, le fichier de cette étape, oublié quand on la quitte. Les variables
+globales passent d'une étape à l'autre. Exemple (essayé) : `NOYAU.LOG` contient
+
+    POUR JEU
+    DONNE "S 1
+    REPETE 3 [ETAPE]
+    ECRIS "FIN
+    FIN
+    POUR ETAPE
+    SI :S = 1 [CHARGE "S1]
+    SI :S = 2 [CHARGE "S2]
+    SI :S = 3 [CHARGE "S3]
+    SALLE
+    OUBLIE "SALLE
+    FIN
+
+et `S1.LOG`, `S2.LOG`, `S3.LOG` définissent chacun une procédure `SALLE`, qui fait l'étape et
+choisit la suivante (`DONNE "S 2`). On lance `LOGO NOYAU`, puis `JEU`. Trois règles :
+
+- `CHARGE` veut un nom écrit en toutes lettres (`CHARGE "S1`), pas une variable
+  (`CHARGE :S` est refusé) : d'où une ligne `SI` par fichier.
+- Pas de `CHARGE` dans un fichier lui-même chargé : la fin du premier fichier serait perdue,
+  et le programme qui l'avait chargé s'arrêterait sans message.
+- C'est le noyau, chargé en premier et jamais oublié, qui charge et oublie les étapes. Oublier
+  la procédure en cours, ou une procédure chargée avant elle, déplacerait en mémoire le texte
+  qui est en train de s'exécuter.
+
 Chaque valeur (variable, paramètre, résultat intermédiaire d'un calcul) est typée : un octet
 de type et 5 octets de contenu : un entier, ou un décimal (bibliothèque `progs/fp_inc.s`,
 réutilisable par d'autres programmes). Les mots et les listes viendront s'y ranger (voir
