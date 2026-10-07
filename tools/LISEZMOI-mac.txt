@@ -28,10 +28,15 @@ de balayage) est corrigé pour le Mac et marche aussi. Insérer build/cpa.dsk
 Copier-coller
 -------------
 F12 (ou le menu) colle le presse-papiers du Mac en tapant les touches du
-clavier simulé : cela marche dans CP/A, LOGO, EDIT et BASIC. Environ 6
+clavier simulé : cela marche dans CP/A, LOGO, EDIT et BASIC. Environ 15
 caractères par seconde. Dans CP/A disquette, la casse est respectée
 quel que soit le voyant A / a. Les caractères absents du clavier de l'Oric
 (accents, ~, `) sont ignorés. F11 copie l'écran texte de l'Oric.
 Pour un fichier entier (MATH.LOG...), mieux vaut le mettre sur la disquette :
     python3 tools/mkdisk.py put build/cpa.dsk MATH.LOG MATH.LOG
 (Oricutron fermé, ou la disquette éjectée).
+
+Couleurs
+--------
+Le jaune est un jaune d'or (plus lisible sur fond blanc que le jaune vif
+d'origine).
