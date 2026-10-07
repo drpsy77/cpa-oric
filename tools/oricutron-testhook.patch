@@ -120,7 +120,7 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..a068b5a 100644
+index 00b7b0e..2ac267c 100644
 --- a/machine.c
 +++ b/machine.c
 @@ -86,7 +86,7 @@ extern struct osdmenuitem mainitems[];
@@ -128,7 +128,7 @@ index 00b7b0e..a068b5a 100644
                          0xff, 0x00, 0x00,
                          0x00, 0xff, 0x00,
 -                        0xff, 0xff, 0x00,
-+                        0xe0, 0xb0, 0x00,   /* jaune d'or (CP/A) : lisible sur blanc */
++                        0xff, 0xf4, 0x26,   /* jaune adouci (CP/A) : plus lisible sur blanc */
                          0x00, 0x00, 0xff,
                          0xff, 0x00, 0xff,
                          0x00, 0xff, 0xff,

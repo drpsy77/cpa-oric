@@ -42,7 +42,7 @@ outils, et suit toujours la même boucle.
    caractères par seconde (touche 2 trames enfoncée, 1 relâchée ; SHIFT une trame avant), ce qui
    marche avec tout logiciel. En CP/A disquette (ROM masquée),
    le collage tient compte du verrouillage des majuscules (`$021A`) pour garder la casse.
-   Enfin, le jaune de la palette est un jaune d'or (`$E0B000`), lisible sur fond blanc.
+   Enfin, le jaune de la palette est adouci (`#FFF426` au lieu de `#FFFF00`), plus lisible sur fond blanc.
    Sur le clavier dessiné (« Show keyboard »), une touche reste enfoncée 3 trames au moins, et
    SHIFT, CTRL, FUNCT collantes sont relâchées avec elle : un toucher bref sur un écran tactile
    est vu par CP/A, qui lit le clavier à 50 Hz.
