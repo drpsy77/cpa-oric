@@ -375,15 +375,15 @@ lecteur dès que c'est possible.
 
 | Lot | Contenu | Code | État |
 |---|---|---|---|
-| L1 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | à faire |
-| L2 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L1). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | à faire (un seul lecteur : plus tard) |
-| L3 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
-| L4 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
-| L5 ? | **Export et import par le LOCI** (voir 6 plus bas) : à placer dans l'ordre par Pierre | ~0,5-1 Ko par `.COM`, rien de résident | étude faite |
+| L1 | **Échange de fichiers avec la clé USB du LOCI** (voir 6 plus bas) : `EXPORT fic [nom]`, `IMPORT nom [fic]`, `USBDIR` ; en tête, à la demande de Pierre | ~0,5-1 Ko par `.COM`, rien de résident | étude faite |
+| L2 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | à faire |
+| L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | à faire (un seul lecteur : plus tard) |
+| L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
+| L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
 
-Conséquence du principe ci-dessus : la piste J de la revue de place (TYPE, ERA et REN en
-`.COM`) est **écartée** : avec un seul lecteur, une disquette de données sans ces `.COM` ne
-pourrait plus les utiliser. Restent H et I (~325 octets).
+La piste J de la revue de place (TYPE, ERA et REN en `.COM`) reste possible (avis de Pierre) :
+ces commandes ne sont pas critiques, le système fonctionne sans elles ; marquées SYS, elles
+seront recopiées sur chaque disquette par `DISKCOPY /S`.
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
    - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
@@ -454,7 +454,7 @@ pourrait plus les utiliser. Restent H et I (~325 octets).
    hors de la disquette construite pour l'instant.
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
-4. Lecteurs : FORMAT et DISKCOPY (lots L1 et L2) ; DISKCOPY avec un seul lecteur ensuite ;
+4. Lecteurs : FORMAT et DISKCOPY (lots L2 et L3) ; DISKCOPY avec un seul lecteur ensuite ;
    `COPY *.* B:` (jokers dans COPY, comme PIP) si le besoin vient.
 5. Pistes : base de données simple sur l'accès direct.
 6. **Échange de fichiers avec la clé USB du LOCI** (étude, octobre 2026). Le LOCI dérive du
@@ -473,14 +473,14 @@ pourrait plus les utiliser. Restent H et I (~325 octets).
    Tout en `.COM`, rien de résident, marche avec un seul lecteur. À vérifier sur le vrai LOCI
    (pas d'émulation de la MIA dans Oricutron ; l'émulateur Phosphoric dit émuler le LOCI) :
    écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est monté comme lecteur
-   Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; drapeaux d'ouverture.
+   Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; drapeaux d'ouverture. Lot L1.
 
 ## Contraintes à garder en tête
 
 - 192 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
   justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
   plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H à J
-  de la revue de place (~615 octets).
+  de la revue de place (~615 octets ; J, TYPE, ERA et REN en `.COM`, acceptée par Pierre).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
 - Ne rien changer au contrat d'interface (`docs/architecture.md`) sans penser à la version ROM.
