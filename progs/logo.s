@@ -14,6 +14,8 @@
 ;  Commandes : AVANCE/AV, RECULE/RE, DROITE/DR, GAUCHE/GA, LEVECRAYON/LC,
 ;  BAISSECRAYON/BC, GOMME, INVERSE, CACHETORTUE/CT, MONTRETORTUE/MT,
 ;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, ECRANTEXTE, ECRANMIXTE,
+;  Dessin (coordonnées de la tortue) : POINT, TRAIT, RECTANGLE, PAVE,
+;  CERCLE, ETIQUETTE, FIXECOULEUR ; fonction ALLUME?
 ;  REPETE, SI, STOP, RENDS,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, EDITE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
@@ -1805,8 +1807,10 @@ big     jmp fp_err_big
 ; eval_fix : évalue un nombre et le met en virgule fixe dans fxv
 ;   (1/256, bas, haut ; arrondi au 1/256 ; erreur hors de -32768..32767)
 eval_fix
-.(
         jsr eval
+; to_fix : la valeur courante (un nombre) en virgule fixe dans fxv
+to_fix
+.(
         jsr need_num
         lda vt
         cmp #T_INT
@@ -2507,6 +2511,339 @@ pfx2    pla                     ; gx = x, fxv = y
         cpx #3
         bne pfx2
         jmp goto_xy0
+
+; ---------------------------------------------------------------------
+; Dessin : coordonnées de la tortue (centre 0 0, y vers le haut), la
+;   tortue ne bouge pas ; mode du crayon (trace, GOMME, INVERSE) mais
+;   crayon levé ou non ; découpé aux bords de l'image. La tortue est
+;   déjà cachée pendant l'exécution d'une ligne (repl).
+; ---------------------------------------------------------------------
+; eval_pt : évalue x et y -> x1, y1 (coordonnées de l'écran, 16 bits)
+eval_pt
+        jsr eval_fix
+; pt_fix : x = fxv, puis évalue y -> x1, y1
+pt_fix
+.(
+        ldx #2                  ; x sur la pile (y peut appeler une
+k1      lda fxv,x               ; fonction qui dessine)
+        pha
+        dex
+        bpl k1
+        jsr eval_fix
+        ldx #2
+k2      lda fxv,x
+        sta posy,x
+        dex
+        bpl k2
+        ldx #0
+k3      pla
+        sta posx,x
+        inx
+        cpx #3
+        bne k3
+        jmp scr_pos
+.)
+
+; eval_pt2 : deux points -> (x0, y0) et (x1, y1)
+eval_pt2
+.(
+        jsr eval_pt
+        ldx #3
+k1      lda x1,x
+        pha
+        dex
+        bpl k1
+        jsr eval_pt
+        ldx #0
+k2      pla
+        sta x0,x
+        inx
+        cpx #4
+        bne k2
+        rts
+.)
+
+; in_img : C=0 si (x1, y1) est dans l'image
+in_img
+.(
+        lda x1+1
+        ora y1+1
+        bne no
+        lda x1
+        cmp #240
+        bcs no
+        lda y1
+        cmp #128
+no      rts
+.)
+
+; POINT x y
+p_point jsr need_img
+        jsr eval_pt
+        ldx #3
+pp1     lda x1,x
+        sta ldx_,x              ; ldx_, ldy_ : plot_l
+        dex
+        bpl pp1
+        jmp plot_l
+
+; TRAIT x1 y1 x2 y2
+p_trait jsr need_img
+        jsr eval_pt2
+        jmp seg
+
+; RECTANGLE x1 y1 x2 y2 : quatre traits
+p_rect
+.(
+        jsr need_img
+        jsr eval_pt2
+        ldx #7
+c       lda x0,x                ; rbox : xa ya xb yb
+        sta rbox,x
+        dex
+        bpl c
+        ldx #0
+side    ldy #0
+pt      lda rtab,x              ; un côté : quatre coordonnées de rbox
+        stx rtmp
+        tax
+        lda rbox,x
+        sta x0,y
+        lda rbox+1,x
+        sta x0+1,y
+        ldx rtmp
+        inx
+        iny
+        iny
+        cpy #8
+        bne pt
+        stx rtmp
+        jsr seg
+        ldx rtmp
+        cpx #16
+        bne side
+        rts
+rtab    .byt 0,2,4,2, 4,2,4,6, 4,6,0,6, 0,6,0,2
+.)
+
+; PAVE x1 y1 x2 y2 : rectangle plein, borné à l'image
+p_pave
+.(
+        jsr need_img
+        jsr eval_pt2
+        lda #239
+        ldx #0
+        jsr bound
+        bcs r
+        lda #127
+        ldx #2
+        jsr bound
+        bcs r
+        lda #G_FBOX
+        sta gblk
+        lda x0
+        sta gblk+1
+        lda y0
+        sta gblk+2
+        lda x1
+        sta gblk+3
+        lda y1
+        sta gblk+4
+        jmp gfx
+r       rts
+.)
+
+; bound : la paire (x0+X, x0+X+4) mise dans l'ordre et bornée à 0..A
+;   -> C=1 si elle est entièrement hors de 0..A
+bound
+.(
+        sta rlim
+        sec                     ; v1 < v0 (signés) : échange
+        lda x0+4,x
+        sbc x0,x
+        lda x0+5,x
+        sbc x0+1,x
+        bvc n
+        eor #$80
+n       bpl ord
+        ldy #2
+sw      lda x0,x
+        pha
+        lda x0+4,x
+        sta x0,x
+        pla
+        sta x0+4,x
+        inx
+        dey
+        bne sw
+        dex
+        dex
+ord     lda x0+5,x              ; v1 < 0 : hors
+        bmi out
+        lda x0+1,x              ; v0 < 0 : 0
+        bpl v0p
+        lda #0
+        sta x0,x
+        sta x0+1,x
+v0p     bne out                 ; v0 > 255 : hors
+        lda rlim
+        cmp x0,x
+        bcc out                 ; v0 > A : hors
+        lda x0+5,x              ; v1 > A : A
+        bne cl
+        lda rlim
+        cmp x0+4,x
+        bcs ok
+cl      lda rlim
+        sta x0+4,x
+        lda #0
+        sta x0+5,x
+ok      clc
+        rts
+out     sec
+        rts
+.)
+
+; CERCLE r : cercle autour de la tortue (rayon 0 à 127) ; rien si la
+;   tortue est hors de l'image
+p_cercle
+.(
+        jsr need_img
+        lda #127
+        jsr arg_b
+        sta gblk+3
+        jsr tur_scr
+        bcs r
+        lda #G_CIRCLE
+        sta gblk
+        lda x1
+        sta gblk+1
+        lda y1
+        sta gblk+2
+        jmp gfx
+r       rts
+.)
+
+; tur_scr : position de la tortue -> x1, y1 ; C=1 hors de l'image
+tur_scr jsr pos_from_t
+        jsr scr_pos
+        jmp in_img
+
+; ETIQUETTE x : écrit x (comme ECRIS, sans aller à la ligne) dans
+;   l'image, à droite de la tortue et posé sur sa ligne
+p_etiq
+.(
+        jsr need_img
+        jsr eval
+        jsr as_text             ; un nombre devient un mot
+        jsr txt_v
+        ldy #0
+c       lda tl+1
+        bne one
+        cpy tl
+        beq e
+one     cpy #40
+        beq e
+        lda (ts),y
+        sta llbuf,y
+        iny
+        bne c
+e       lda #0
+        sta llbuf,y
+        jsr tur_scr
+        bcs r
+        lda x1                  ; colonne : x / 6
+        ldx #0
+d6      cmp #6
+        bcc d6e
+        sbc #6
+        inx
+        bne d6
+d6e     stx gblk+1
+        lda y1                  ; haut du texte : y - 7, ou 0
+        sec
+        sbc #7
+        bcs yok
+        lda #0
+yok     sta gblk+2
+        lda #<llbuf
+        sta gblk+3
+        lda #>llbuf
+        sta gblk+4
+        lda #G_TEXT
+        sta gblk
+        jmp gfx
+r       rts
+.)
+
+; FIXECOULEUR v : attribut v (encre 0-7, papier 16-23) en tête de
+;   chaque ligne de l'image (colonne 0 : ses 6 points deviennent la
+;   couleur, le dessin ne l'efface pas)
+p_fcoul
+.(
+        jsr need_img
+        lda #23
+        jsr arg_b
+        cmp #8
+        bcc ok
+        cmp #16
+        bcs ok
+        jmp e_rng
+ok      sta gblk+4
+        lda #G_ATTR
+        sta gblk
+        lda #0
+        sta gblk+1
+        sta gblk+2
+        lda #127
+        sta gblk+3
+        jmp gfx
+.)
+
+; ALLUME? x y : 1 si le point est allumé, 0 sinon (ou hors de l'image)
+f_allume
+.(
+        jsr need_img
+        jsr advance
+        jsr sum
+        jsr to_fix
+        ldx #2
+k1      lda fxv,x
+        pha
+        dex
+        bpl k1
+        jsr sum
+        jsr to_fix
+        ldx #2
+k2      lda fxv,x
+        sta posy,x
+        dex
+        bpl k2
+        ldx #0
+k3      pla
+        sta posx,x
+        inx
+        cpx #3
+        bne k3
+        jsr scr_pos
+        ldx #0
+        jsr in_img
+        bcs z
+        lda #G_POINT
+        sta gblk
+        lda x1
+        sta gblk+1
+        lda y1
+        sta gblk+2
+        jsr gfx
+        tax
+z       stx val
+        lda #0
+        sta val+1
+        lda #T_INT
+        sta vt
+        rts
+.)
 
 p_repete
 .(
@@ -5410,6 +5747,20 @@ prims
         .word p_fcap
         .asc "FIXEXY",0
         .word p_fxy
+        .asc "POINT",0
+        .word p_point
+        .asc "TRAIT",0
+        .word p_trait
+        .asc "RECTANGLE",0
+        .word p_rect
+        .asc "PAVE",0
+        .word p_pave
+        .asc "CERCLE",0
+        .word p_cercle
+        .asc "ETIQUETTE",0
+        .word p_etiq
+        .asc "FIXECOULEUR",0
+        .word p_fcoul
         .asc "REPETE",0
         .word p_repete
         .asc "SI",0
@@ -5474,6 +5825,8 @@ funcs   .asc "HASARD",0
         .word f_cap
         .asc "XCOR",0
         .word f_xcor
+        .asc "ALLUME?",0
+        .word f_allume
         .asc "YCOR",0
         .word f_ycor
         .asc "RACINE",0
@@ -5665,6 +6018,8 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "CT MT VE NETTOIE ORIGINE",13,10
           .asc "ECRANTEXTE  ECRANMIXTE",13,10
           .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
+          .asc "POINT x y  TRAIT RECTANGLE PAVE x y x y",13,10
+          .asc "CERCLE r  ETIQUETTE x  FIXECOULEUR v",13,10
           .asc "SON v n vol d (37 = do)  SILENCE",13,10
           .asc "SONF v p vol d  BRUITV v p vol d",13,10
           .asc "ENVELOPPE f p  MELANGE v son bruit",13,10
@@ -5765,7 +6120,10 @@ bsp     = bw+1          ;   mode de l'espace
 bsp2    = bsp+1         ;   1 si espace
 brt     = bsp2+1        ;   type du résultat
 capy    = brt+1
-xsp     = capy+1        ; haut de la pile d'EXECUTE (2)
+rbox    = capy+1        ; RECTANGLE : xa ya xb yb (8)
+rtmp    = rbox+8
+rlim    = rtmp+1        ; PAVE : borne
+xsp     = rlim+1        ; haut de la pile d'EXECUTE (2)
 xstack  = xsp+2         ; textes en cours d'EXECUTE
 xstack_end= xstack+512
 llbuf   = xstack_end    ; ligne lue par LISLISTE, LISMOT (128)

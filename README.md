@@ -333,7 +333,7 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 | Commande | Effet |
 |---|---|
 | `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, à la racine) |
-| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF |
+| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
 | `USBDIR [chemin]` | liste un dossier de la clé (la racine par défaut) : nom et taille, `<REP>` pour un dossier |
 
     A>EXPORT LETTRE.TXT
@@ -601,6 +601,11 @@ décimaux (voir plus bas).
 | `CACHETORTUE` / `CT`, `MONTRETORTUE` / `MT` | cacher, montrer la tortue |
 | `VIDEECRAN` / `VE`, `NETTOIE`, `ORIGINE` | effacer et revenir au centre, effacer, revenir au centre |
 | `FIXECAP n`, `FIXEXY x y` | cap absolu, position absolue (centre = 0 0, y vers le haut) |
+| `POINT x y`, `TRAIT x1 y1 x2 y2` | un point, un trait (coordonnées de la tortue) |
+| `RECTANGLE x1 y1 x2 y2`, `PAVE x1 y1 x2 y2` | rectangle (deux coins opposés), rectangle plein |
+| `CERCLE r` | cercle de rayon r (0 à 127) autour de la tortue |
+| `ETIQUETTE x` | écrit x (nombre, mot ou liste, comme `ECRIS`) dans l'image, à droite de la tortue et posé sur sa ligne |
+| `FIXECOULEUR v` | couleur de toute l'image : encre 0 à 7 (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc) ou papier 16 à 23 |
 | `ECRANTEXTE`, `ECRANMIXTE` | passer en écran texte (26 lignes, sans image ni tortue), revenir à l'image et à la tortue |
 | `REPETE n [ ... ]` | répéter une liste |
 | `SI condition [ ... ] [ ... ]` | condition, avec une liste « sinon » facultative |
@@ -622,7 +627,19 @@ décimaux (voir plus bas).
 | `SON v n vol d`, `SONF`, `BRUITV`, `ENVELOPPE`, `MELANGE`, `ENSEMBLE`, `ATTENDSSON`, `SILENCE` | le son : voir « Le son dans LOGO » plus bas |
 | `AIDE`, `QUITTE` / `AUREVOIR` | aide, retour à CP/A (l'image reste) |
 
-Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`,
+**Dessiner sans la tortue.** `POINT`, `TRAIT`, `RECTANGLE`, `PAVE`, `CERCLE` et `ETIQUETTE`
+prennent les coordonnées de la tortue (centre 0 0, y vers le haut) mais ne la déplacent pas.
+Ils suivent le mode du crayon (`GOMME`, `INVERSE`), même crayon levé, et sont découpés aux
+bords de l'image ; `CERCLE` et `ETIQUETTE` ne dessinent rien si la tortue est hors de
+l'image. `FIXECOULEUR` pose la couleur en tête de chaque ligne de l'image : ses 6 premiers
+points (la colonne 0) deviennent la couleur, que le dessin n'efface pas. `ALLUME? x y` rend 1
+si le point est allumé, 0 sinon. Tous refusent l'écran texte (`ECRANTEXTE`).
+
+    VE CERCLE 40 RECTANGLE -40 -40 40 40 TRAIT -40 -40 40 40
+    ETIQUETTE [BONJOUR] FIXECOULEUR 3
+    SI ALLUME? 0 0 [ECRIS "ALLUME]
+
+Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`, `ALLUME? x y`,
 `LISCAR`, `TOUCHE?`, `JOUE? v`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
 tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
