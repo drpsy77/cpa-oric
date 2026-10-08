@@ -82,6 +82,8 @@ do_file
 z       sta fcb,y
         dey
         bpl z
+        lda FCB1                ; lecteur donné (STAT B:NOM)
+        sta fcb
         ldy #10
 cp      lda (ptr),y             ; nom sans les attributs
         and #$7F
@@ -187,7 +189,8 @@ free
 q       sta fcb,y
         dey
         bne q
-        sty fcb                 ; lecteur 0
+        lda FCB1                ; lecteur donné (STAT B:), sinon courant
+        sta fcb
         sty used
         sty pad
         lda #"?"
@@ -206,7 +209,25 @@ nb      iny
         ldx #F_SNEXT
         jsr BDOS
         jmp loop
-done    lda #<m_free
+done    ldx #F_CURDSK           ; lecteur illisible : rien de plus
+        jsr BDOS
+        ldx fcb
+        beq cur
+        dex
+        txa
+cur     tax                     ; lecteur (0 = A:)
+        lda #0
+        sec
+msk     rol
+        dex
+        bpl msk
+        sta cnt
+        ldx #F_LOGIN
+        jsr BDOS
+        and cnt
+        bne ok
+        rts
+ok      lda #<m_free
         ldy #>m_free
         jsr puts
         lda #NBLK               ; en Ko : blocs libres * 2

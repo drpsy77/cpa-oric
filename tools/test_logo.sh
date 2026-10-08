@@ -68,10 +68,10 @@ run erreurs2 'PUT OUT.TXT LOGO
 | charge "e10
 | charge "e11
 | charge "e12
-| charge "e13
+|| charge "e13
 | charge "e14
 | quitte
-' 2600
+' 2800
 check erreurs2
 
 echo "== nombres décimaux"

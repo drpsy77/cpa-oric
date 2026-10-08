@@ -47,7 +47,7 @@ bios_table
         jmp bios_reader         ; $C015 READER
 #ifdef DISK
         jmp disk_home           ; $C018 HOME
-        jmp f_seldsk            ; $C01B SELDSK  (A = lecteur, seul 0)
+        jmp drv_select          ; $C01B SELDSK  A = lecteur (0-3) -> A=0, $FF
         jmp bios_settrk         ; $C01E SETTRK  (sans effet : adressage par LSN)
         jmp bios_setsec         ; $C021 SETSEC  A/Y = n° de secteur logique
         jmp bios_dskbuf         ; $C024 SETDMA  A/Y = tampon de 256 octets

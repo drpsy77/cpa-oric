@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F4F9`, marge 375 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
+**Système** (`$C000-$F5B0`, marge 192 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
 octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
@@ -22,6 +22,9 @@ octets jusqu'aux vecteurs) :
   historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
   fichiers par ESC (partie commune, puis liste des noms possibles) ;
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
+- quatre lecteurs A: à D: (Microdisc, LOCI, Oricutron) : `B:` au prompt, article « Lecteur
+  suivant » du menu Systeme, lecteur dans tout nom de fichier, programme cherché sur A: s'il
+  n'est pas sur le lecteur courant, lecteur vide ou absent sans blocage ;
 - mode SPLIT (240 × 128 + barre + 10 lignes de texte ; bascule en `$BFDF` comme le BASIC, `$A000`
   utilisable), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ, départ simultané des voix,
@@ -239,6 +242,49 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   Essayé dans Oricutron en relisant les registres de l'AY (crochet de test modifié localement
   pour vider les 14 registres en `$0300`) : périodes, volumes, enveloppe 40000, mélangeur,
   ENSEMBLE imbriqué avec STOP, erreurs de plage, ESC pendant ATTENDSSON.
+- Lecteurs A: à D: (demandés par Pierre : 4, comme le LOCI, Oricutron et le Microdisc ; menu
+  qui passe au lecteur suivant). Pas de changement du contrat : les fonctions 14, 24 et 25 et
+  l'entrée SELDSK existaient (A: seul) ; l'octet 0 du FCB suit CP/M (0 = courant, 1 = A:).
+  - Pilote (`disk.s`) : lecteur dans les bits 5-6 de `$0314` ; le WD1793 n'a qu'un registre de
+    piste, rangé par lecteur (`dsk_trk`) au changement (`md_sel`). Après un changement, un
+    déplacement de tête est toujours fait : Oricutron n'a qu'une position de tête pour tous
+    ses lecteurs (constaté : sans cela, B: était lu sur la piste où était resté A:) ; sur le vrai
+    matériel, c'est une vérification de piste. Un lecteur vide ou absent ne répond jamais
+    (Oricutron laisse la lecture en attente, comme le vrai contrôleur) : attente du premier
+    octet limitée à ~0,7 s (DRQ guetté par une boucle de 11 cycles : ~18 cycles entre DRQ et la
+    lecture, 23 pour l'écriture, sous les 32 µs d'un octet), attentes des déplacements à
+    ~3 s, puis Force Interrupt et échec sans nouvel essai. Le lecteur des accès est
+    `buf_drv`, celui du secteur en cache : un secteur modifié est toujours réécrit sur son
+    lecteur.
+  - Système de fichiers (`fs.s`) : `set_fcb`, au début de chaque fonction, choisit le lecteur
+    (`drv_select`) ; une carte d'allocation par lecteur (4 x 22 octets en `$FD00`, `alv_index`
+    ajoute `alv_off`), faite d'après le répertoire à la première utilisation depuis le dernier
+    démarrage à chaud (`log_vec`), sans perdre une recherche 17/18 en cours. Lecteur inconnu ou
+    illisible : la fonction rend `$FF`. 18 reprend le lecteur de 17. Variables du disque
+    déplacées en `$FD58-$FD7F` (même ordre : PUT sauve toujours deux blocs de 12 octets),
+    `dsk_trk` en `$FDA4`. Démarrage à chaud : le lecteur courant est gardé et relu, retour en
+    A: s'il ne répond plus. Changer de disquette demande un CTRL-C, comme sous CP/M.
+  - CCP : `X:` seul change de lecteur (`X:?` si absent) ; invite `B>` ; un `.COM` sans lecteur
+    absent du lecteur courant est cherché sur A: (`open_com`, comme la recherche de CP/M 3) ;
+    DO fixe le lecteur de son script à l'ouverture (un `A:` dans un script de B: ne change pas
+    sa lecture) ; DIR d'un lecteur illisible ne donne pas de place libre. Complétion par ESC
+    sur le lecteur tapé (`B:NO` + ESC). Menu : « Lecteur suivant » tape `X:` (comme les autres
+    articles qui tapent une commande ; dans un programme, ce texte arrive au programme).
+    Choix : un lecteur absent arrête le cycle du menu (il répond `B:?`, on tape `C:`).
+  - Programmes : STAT prend le lecteur de son paramètre (et ne donne pas de place libre pour
+    un lecteur illisible) ; EDIT garde le lecteur de « Ouvrir », « Insérer », « Enreg. sous »
+    et le transmet à LOGO au Retour ; LOGO accepte `"B:NOM` (SAUVE, CHARGE, EDITE, images) ;
+    ASM cherche les `#include` sur le lecteur de la source. COPY marchait déjà.
+  - Coût résident mesuré : ~414 octets (pilote et système de fichiers ~260, CCP ~78, complétion
+    et menu ~71, corrections après essais ~10), le double de l'estimation (~210). Place
+    trouvée par la piste G de la revue (tables `g_ylo` / `g_yhi` calculées par `font_init`
+    dans `$B400-$B4FF`, glyphes des codes 0-31 jamais affichés : +231 octets ; l'octet
+    `IMG_END` qui y était écrit ne servait plus) et l'écriture inutile de `fs_err`. Marge
+    192 octets. LOGO.COM +44 octets (17 471) : zone libre réduite d'une page (`procbase`
+    `$6000`). Essayé dans Oricutron avec 1 à 4 disquettes : DIR, TYPE, COPY, SAVE, REN, ERA,
+    STAT, programme lancé depuis B: et depuis A: quand on est sur B:, script DO, complétion,
+    menu A->B->C->D->A, lecteur vide, LOGO (CHARGE, SAUVE, EDITE et Retour sur B:), ASM et
+    EDIT sur B:.
 - Fusion de la branche « place résidente » (pistes A à F) avec le lot B (son) : marge 375
   octets (378 - 3 pour la remise à 0 de `s_hold`). La bannière plus courte d'une ligne décale
   la pagination de la console : dans `tools/test_logo.sh`, deux frappes simulées tombaient
@@ -313,7 +359,7 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   `bios_setdma` et `bios_disk_stub` réservés à la ROM. Gain : 359 octets dans la zone du code,
   66 encore libres dans la page `$FF00`. Pistes gardées en réserve (risque faible à moyen) :
   G, tables g_ylo/g_yhi calculées au démarrage dans `$B400-$B4FF` (police des codes 0-31,
-  jamais affichée ; ~230 o) ; H, masque de point calculé au lieu de g_xbit (~220 o, un peu plus
+  jamais affichée ; ~230 o ; **faite** avec les lecteurs, +231 o) ; H, masque de point calculé au lieu de g_xbit (~220 o, un peu plus
   lent) ; I, test de RAM réduit à un remplissage, test complet en `.COM` (~105 o) ; J, TYPE, ERA
   et REN en `.COM` (~290 o, transparents pour les scripts). Écartées : commandes graphiques en
   `.COM` (scripts ralentis), compression du clavier ou de la police, complétion ESC.
@@ -378,7 +424,8 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 2. **Réseau par le LOCI** (matériel décrit dans `docs/loci-modem-wifi.md`, pas encore acheté) :
    - pilote série dans le BIOS, branché sur PUNCH / READER : ACIA 6551 en `$0380` sur le LOCI
      (`$031C` dans Oricutron), adresse dans une variable, ~150 octets (place : zone du code ;
-     variables en `$FD42-$FD7F`, libres et remises à zéro au démarrage à froid) ;
+     variables en `$FDA8-$FDAF` et `$FDF8-$FDFF`, libres et remises à zéro au démarrage à
+     froid) ;
    - `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés) ;
    - `tools/xfer_server.py` : serveur XMODEM sur le Mac ;
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
@@ -389,14 +436,18 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    hors de la disquette construite pour l'instant.
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
-4. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
+4. Lecteurs : `FORMAT.COM` pour préparer une disquette de données sur l'Oric (écriture de
+   pistes du WD1793, ~800 octets estimés, donc sans doute le double ; pas urgent avec le LOCI,
+   `mkdisk.py new` le fait sur le PC) ; plus tard une copie de disquette entière.
+5. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
    données simple sur l'accès direct.
 
 ## Contraintes à garder en tête
 
-- 375 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
-  justifie, le reste va en `.COM` (le pilote série prévu en demande ~150). Réserve si besoin :
-  pistes G à J de la revue de place (~840 octets).
+- 192 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
+  justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
+  plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H à J
+  de la revue de place (~615 octets).
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
 - Ne rien changer au contrat d'interface (`docs/architecture.md`) sans penser à la version ROM.

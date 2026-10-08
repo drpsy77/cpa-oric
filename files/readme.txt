@@ -1,7 +1,9 @@
 CP/A 0.9 - AIDE-MEMOIRE
 -----------------------
 afn           | nom, jokers * et ?
-fic           | nom de fichier
+fic           | nom de fichier,
+              |   lecteur facultatif
+              |   (B:NOM.TXT)
 adr bb        | hexa : 0500 A9
 [...]         | facultatif
 
@@ -36,6 +38,12 @@ COMMANDES
 HELP [sujet]  | aide (HELP.COM)
 VER           | version
 CLS           | efface l'ecran
+B:            | lecteur courant (A: a
+              |   D:) ; aussi menu
+              |   Systeme, Lecteur
+              |   suivant ; un .COM
+              |   absent est cherche
+              |   sur A:
 DIR [afn]     | liste des fichiers
 DIRS [afn]    | idem, fichiers SYS
               |   compris
@@ -92,7 +100,8 @@ ASM nom       | NOM.ASM -> NOM.COM et
 DEBUG nom [param]
               | debogueur
 COPY src dst  | copie un fichier
-STAT [afn]    | taille : enreg.,
+STAT [d:][afn]
+              | taille : enreg.,
               |   blocs de 2 Ko,
               |   octets ; seul :
               |   place libre

@@ -54,7 +54,11 @@ ZP_IRQP     = $FC       ; pointeur pour le curseur (IRQ ou SEI)
 
 ; --- Mode vidéo ---
 IMG_BASE    = $A000     ; image du mode SPLIT : 240 x 128 points
-IMG_END     = $B400     ; (la ligne de points 128 tombe sur la police)
+IMG_END     = $B400     ; fin de l'image (la ligne de points 128 tomberait sur
+                        ; la police)
+g_ylo       = $B400     ; adresse de chaque ligne de points (bas, haut),
+g_yhi       = $B480     ;   calculée par font_init à la place des glyphes
+                        ;   des codes 0-31, jamais affichés (attributs)
 IMG_LINES   = 128
 IMG_SWITCH  = IMG_BASE+127*40 ; 1re case de la ligne 127 : retour au texte
 SPLIT_BAR   = 16        ; ligne de la barre de menus en mode SPLIT
@@ -137,36 +141,45 @@ DIR_ENT     = 128       ; blocs 0 et 1 : 128 entrées de 32 octets
 ALV_LEN     = 22        ; (NBLK+7)/8
 
 ; --- RAM système dans la RAM overlay (au-dessus du code) ---
-ALV         = $FD00     ; carte d'allocation
-dsk_lsn     = $FD20     ; 2 octets
-dsk_buf     = $FD22     ; 2 octets
-dsk_cyl     = $FD24
-dsk_side    = $FD25
-dsk_sec     = $FD26
-dsk_op      = $FD27
-dsk_try     = $FD28
-fs_lsn      = $FD2A     ; 2 octets
-buf_lsn     = $FD2C     ; 2 octets
-buf_ok      = $FD2E
-dir_i       = $FD2F
-fs_rec      = $FD30
-fs_blk      = $FD31
-fs_half     = $FD32
-fs_t0       = $FD33
-fs_t1       = $FD34
-fs_found    = $FD35
-m_anyex     = $FD36
-srch_fcb    = $FD37     ; 2 octets
-fs_idx      = $FD39
-fs_err      = $FD3A
-buf_dirty   = $FD3B
-fs_ro       = $FD3C     ; un fichier protégé a été épargné
-dir_all     = $FD3D     ; DIRS : montre aussi les fichiers SYS
-fs_rex      = $FD3E     ; accès direct : extent et enregistrement visés
-fs_rcr      = $FD3F
-fs_szl      = $FD40     ; taille (fonction 35)
-fs_szh      = $FD41
+NDRV        = 4         ; lecteurs A: à D: (Microdisc, LOCI, Oricutron)
+ALV         = $FD00     ; cartes d'allocation des 4 lecteurs (4 x ALV_LEN = 88)
+dsk_lsn     = $FD58     ; 2 octets
+dsk_buf     = $FD5A     ; 2 octets
+dsk_cyl     = $FD5C
+dsk_side    = $FD5D
+dsk_sec     = $FD5E
+dsk_op      = $FD5F
+dsk_try     = $FD60
+dsk_to      = $FD61     ; délai d'attente du contrôleur (compteur)
+fs_lsn      = $FD62     ; 2 octets
+buf_lsn     = $FD64     ; 2 octets
+buf_ok      = $FD66
+dir_i       = $FD67
+fs_rec      = $FD68
+fs_blk      = $FD69
+fs_half     = $FD6A
+fs_t0       = $FD6B
+fs_t1       = $FD6C
+fs_found    = $FD6D
+m_anyex     = $FD6E
+srch_fcb    = $FD6F     ; 2 octets
+fs_idx      = $FD71
+fs_err      = $FD72     ; (inutilisé)
+buf_dirty   = $FD73
+fs_ro       = $FD74     ; un fichier protégé a été épargné
+dir_all     = $FD75     ; DIRS : montre aussi les fichiers SYS
+fs_rex      = $FD76     ; accès direct : extent et enregistrement visés
+fs_rcr      = $FD77
+fs_szl      = $FD78     ; taille (fonction 35)
+fs_szh      = $FD79
+cur_drv     = $FD7A     ; lecteur courant (0 = A:), gardé au démarrage à chaud
+act_drv     = $FD7B     ; lecteur du système de fichiers (carte ALV + alv_off)
+alv_off     = $FD7C     ; act_drv * ALV_LEN
+log_vec     = $FD7D     ; bit n : lecteur n lu depuis le dernier démarrage à chaud
+buf_drv     = $FD7E     ; lecteur du secteur de SECBUF, et des accès du pilote
+phy_drv     = $FD7F     ; lecteur dont la piste est dans FDC_TRK
 CCP_FCB     = $FD80     ; FCB privé du CCP (36 octets)
+dsk_trk     = $FDA4     ; piste de chaque lecteur (4 octets ; $FDA8-$FDAF libres)
 CCP_FCB2    = $FDB0     ; FCB de travail (REN)
 SECBUF      = $FE00     ; tampon de secteur (256 octets)
 #endif

@@ -14,6 +14,7 @@
 #
 # Variables :
 #   DSK=fichier.dsk   démarre sur cette disquette (copiée : l'original ne change pas)
+#   DSKB, DSKC, DSKD  disquettes des lecteurs B: à D: (copiées en SORTIE.b.dsk...)
 #   ORIC_ROM=cpa      démarre sur build/cpa.rom au lieu de la ROM BASIC 1.1
 #   SHOW=1            montre la fenêtre (sinon écran virtuel Xvfb)
 #   ORICUTRON=dossier Oricutron avec le crochet de test (défaut tools/oricutron)
@@ -32,6 +33,13 @@ ROM=${ORIC_ROM:-basic11b}
 [ "$ROM" = cpa ] && cp "$HERE/build/cpa.rom" "$ORIC/roms/cpa.rom"
 if [ -n "$DSK" ]; then
   cp "$DSK" "$OUT.dsk"
+  # lecteurs B: à D: (copies SORTIE.b.dsk...), remplis dans l'ordre
+  for l in d c b; do
+    eval "f=\$DSK$(echo $l | tr a-z A-Z)"
+    [ -n "$f" ] || continue
+    cp "$f" "$OUT.$l.dsk"
+    set -- -d "$OUT.$l.dsk" "$@"
+  done
   set -- -k microdisc -d "$OUT.dsk" "$@"
 fi
 

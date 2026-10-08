@@ -38,6 +38,9 @@ F_READ      = 20
 F_WRITE     = 21
 F_MAKE      = 22
 F_RENAME    = 23
+F_SELDSK    = 14        ; A = lecteur (0 = A:) devient le lecteur courant
+F_LOGIN     = 24        ; -> A : lecteurs lus (bit 0 = A:)
+F_CURDSK    = 25        ; -> A : lecteur courant (0 = A:)
 F_SETDMA    = 26
 F_ATTRIB    = 30        ; bit 7 de t1 = R/O, de t2 = SYS
 F_RREAD     = 33        ; lecture directe (enregistrement R0-R1 du FCB)

@@ -1099,7 +1099,8 @@ inc_ok
 cl      sta fcb_inc,x
         dex
         bne cl
-        stx fcb_inc
+        lda fcb_src             ; même lecteur que la source
+        sta fcb_inc
         ldx #1
 nm      jsr peek
         beq bad

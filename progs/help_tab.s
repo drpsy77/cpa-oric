@@ -17,6 +17,12 @@ h_default
         .asc "HELP [sujet]  | aide (HELP.COM)",13,10
         .asc "VER           | version",13,10
         .asc "CLS           | efface l'ecran",13,10
+        .asc "B:            | lecteur courant (A: a",13,10
+        .asc "              |   D:) ; aussi menu",13,10
+        .asc "              |   Systeme, Lecteur",13,10
+        .asc "              |   suivant ; un .COM",13,10
+        .asc "              |   absent est cherche",13,10
+        .asc "              |   sur A:",13,10
         .asc "DIR [afn]     | liste des fichiers",13,10
         .asc "DIRS [afn]    | idem, fichiers SYS",13,10
         .asc "              |   compris",13,10
@@ -106,7 +112,8 @@ h_1
         .asc "DEBUG nom [param]",13,10
         .asc "              | debogueur",13,10
         .asc "COPY src dst  | copie un fichier",13,10
-        .asc "STAT [afn]    | taille : enreg.,",13,10
+        .asc "STAT [d:][afn]",13,10
+        .asc "              | taille : enreg.,",13,10
         .asc "              |   blocs de 2 Ko,",13,10
         .asc "              |   octets ; seul :",13,10
         .asc "              |   place libre",13,10

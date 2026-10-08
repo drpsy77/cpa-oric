@@ -619,6 +619,25 @@ m_kset  sta kb_delay
 m_reboot
         jmp wboot
 
+#ifdef DISK
+; m_drive : tape « X: » pour passer au lecteur suivant (A B C D A...)
+m_drive
+        ldx cur_drv
+        inx
+        txa
+        and #NDRV-1
+        clc
+        adc #"A"
+        sta ty_drv+1            ; (le système est en RAM)
+        lda #<ty_drv
+        sta ZP_M2
+        lda #>ty_drv
+        sta ZP_M2+1
+        jmp kb_inject
+ty_drv  .byt $18
+        .asc "A:",13,0
+#endif
+
 ; ---------------------------------------------------------------------
 ; Barre de menus du système
 ; ---------------------------------------------------------------------
@@ -631,7 +650,11 @@ sys_bar
         .word mn_sys, mn_ecr, mn_clv
 #endif
 
+#ifdef DISK
+mn_sys  .byt 6,15
+#else
 mn_sys  .byt 5,10
+#endif
         .asc "Systeme",0
         .asc "Version",0
         .byt MA_TYPE
@@ -645,6 +668,11 @@ mn_sys  .byt 5,10
         .asc "Imprimante",0
         .byt MA_CALL
         .word k_prt
+#ifdef DISK
+        .asc "Lecteur suivant",0
+        .byt MA_CALL
+        .word m_drive
+#endif
         .asc "Redemarrer",0
         .byt MA_CALL
         .word m_reboot

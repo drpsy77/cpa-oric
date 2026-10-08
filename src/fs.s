@@ -10,6 +10,12 @@
 ;  (EXM=1 comme CP/M) ; EX = dernier extent logique, RC = nombre
 ;  d'enregistrements de 128 octets dans ce dernier extent.
 ;
+;  Lecteurs A: à D: (NDRV) : même format sur chacun ; une carte
+;  d'allocation par lecteur (ALV + alv_off), faite d'après le répertoire
+;  à la première utilisation depuis le dernier démarrage à chaud (drv_select).
+;  Chaque fonction choisit le lecteur d'après l'octet 0 du FCB
+;  (0 = lecteur courant, 1 = A:...) ; le secteur en cache garde son lecteur.
+;
 ;  FCB (36 octets) : 0 lecteur, 1-11 nom, 12 EX, 13 S1, 14 S2, 15 RC,
 ;     16-31 blocs, 32 CR (enregistrement courant), 33-35 R0-R2
 ; =====================================================================
@@ -36,12 +42,17 @@ read_lsn
         lda buf_lsn+1
         cmp fs_lsn+1
         bne load
+        lda buf_drv
+        cmp act_drv
+        bne load
         clc
         rts
 load    jsr flush
         bcs err
         lda #0
         sta buf_ok
+        lda act_drv
+        sta buf_drv
         lda fs_lsn
         sta dsk_lsn
         sta buf_lsn
@@ -62,6 +73,8 @@ err     rts
 claim_lsn
         jsr flush
         bcs cl_r
+        lda act_drv
+        sta buf_drv
         lda fs_lsn
         sta buf_lsn
         lda fs_lsn+1
@@ -99,8 +112,6 @@ io_err
         lda #0
         sta buf_ok
         sta buf_dirty
-        lda #1
-        sta fs_err
         lda #<msg_ioerr
         ldy #>msg_ioerr
         jsr print_z
@@ -231,6 +242,8 @@ alv_index
         lsr
         lsr
         lsr
+        clc
+        adc alv_off             ; carte du lecteur act_drv
         tay
         rts
 
@@ -294,8 +307,10 @@ used    inc fs_t0
 .)
 
 ; ---------------------------------------------------------------------
-; Fonction 13 : réinitialisation du système disque
-;   Recalibre, reconstruit la carte d'allocation, DMA = $0480.
+; Fonction 13 : réinitialisation du système disque (démarrage à chaud)
+;   Les cartes d'allocation seront refaites à la première utilisation
+;   de chaque lecteur ; le lecteur courant est lu tout de suite (s'il
+;   ne répond pas, retour en A:). DMA = $0480.
 ; ---------------------------------------------------------------------
 fs_reset
 .(
@@ -303,23 +318,51 @@ fs_reset
         lda #0
         sta buf_ok
         sta buf_dirty
-        sta fs_err
-        jsr disk_home
+        sta log_vec
         lda #<DEF_DMA
         sta dma
         lda #>DEF_DMA
         sta dma+1
-        ldx #ALV_LEN-1
+        lda cur_drv
+        jsr drv_select
+        bcc r
         lda #0
-clr     sta ALV,x
-        dex
-        bpl clr
-        lda #0
-        jsr alv_set
-        lda #1
-        jsr alv_set
+        sta cur_drv
+        jmp drv_select
+r       rts
+.)
+
+; drv_select : lecteur A (0-3) pour le système de fichiers ; carte
+;   d'allocation faite d'après le répertoire à la première utilisation.
+;   C=0, A=0 si OK ; C=1, A=$FF si lecteur inconnu ou illisible.
+;   (BIOS SELDSK ; une recherche 17/18 en cours n'est pas perdue)
+drv_select
+.(
+        cmp #NDRV
+        bcs bad
+        cmp act_drv
+        beq same
+        sta act_drv
+        tax
+        lda alv_ofs,x
+        sta alv_off
+same    ldx act_drv
+        lda bitmask,x
+        and log_vec
+        bne ok
+        lda dir_i
+        pha
+        ldy alv_off
+        ldx #ALV_LEN
         lda #0
         sta dir_i
+clr     sta ALV,y
+        iny
+        dex
+        bne clr
+        ldy alv_off
+        lda #3                  ; blocs 0 et 1 : le répertoire
+        sta ALV,y
 entry   jsr dir_get
         bcs err
         ldy #0
@@ -341,10 +384,21 @@ next    inc dir_i
         lda dir_i
         cmp #DIR_ENT
         bne entry
-        lda #0
+        pla
+        sta dir_i
+        ldx act_drv
+        lda bitmask,x
+        ora log_vec
+        sta log_vec
+ok      lda #0
+        clc
         rts
-err     lda #$FF
+err     pla
+        sta dir_i
+bad     lda #$FF
+        sec
         rts
+alv_ofs .byt 0,ALV_LEN,2*ALV_LEN,3*ALV_LEN
 .)
 
 ; ---------------------------------------------------------------------
@@ -453,10 +507,11 @@ f_sfirst
         sta dir_i
         beq snext_int
 f_snext
-        lda srch_fcb
-        sta ZP_FCB
+        lda srch_fcb            ; même lecteur que la recherche 17
+        sta ZP_PTR
         lda srch_fcb+1
-        sta ZP_FCB+1
+        sta ZP_PTR+1
+        jsr set_fcb
 snext_int
 .(
         lda #0
@@ -1129,12 +1184,29 @@ f_setrnd
         rts
 
 ; ---------------------------------------------------------------------
+; set_fcb : ZP_FCB = paramètre ; choisit le lecteur de l'octet 0 du FCB
+;   (0 : lecteur courant). Lecteur inconnu ou illisible : la fonction
+;   en cours se termine, A = $FF (set_fcb est appelée à son début)
 set_fcb
+.(
         lda ZP_PTR
         sta ZP_FCB
         lda ZP_PTR+1
         sta ZP_FCB+1
+        ldy #0
+        lda (ZP_FCB),y
+        sec
+        sbc #1                  ; 0 -> C=0 : lecteur courant
+        bcs sel
+        lda cur_drv
+sel     jsr drv_select
+        bcs bad
         rts
+bad     pla
+        pla
+        lda #$FF
+        rts
+.)
 
 set_dmap
         lda dma
@@ -1143,13 +1215,20 @@ set_dmap
         sta ZP_DMAP+1
         rts
 
-; Fonction 14 : sélection du lecteur (seul A: existe)
+; Fonction 14 : lecteur courant <- A (0-3) ; A = 0, ou $FF si inconnu
+;   ou illisible (le lecteur courant ne change pas)
 f_seldsk
-        cmp #0
-        bne fsd_bad
+        jsr drv_select
+        bcs fsd_r               ; A = $FF
+        lda bdos_a
+        sta cur_drv
         lda #0
+fsd_r   rts
+; Fonction 24 : lecteurs lus (bit 0 = A:) ; 25 : lecteur courant
+f_login lda log_vec
         rts
-fsd_bad lda #$FF
+f_curdsk
+        lda cur_drv
         rts
 
 msg_ioerr
