@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Génère les tables du système :
-  src/tables.s     tables du mode SPLIT (adresses des lignes de points, colonne et
-                   masque de chaque x), dans la zone du code ;
+  src/tables.s     tables du mode SPLIT (colonne et masque de chaque x), dans la
+                   zone du code ;
   src/tables_ff.s  adresses des lignes de l'écran texte et tables du clavier,
                    placées dans la page $FF00 (voir src/cpa.s).
 Usage : gen_tables.py [src/tables.s]  (tables_ff.s est écrit à côté)"""
@@ -59,12 +59,8 @@ def main(path):
     L = list(HEAD)
     # mode SPLIT : adresse de chaque ligne de points, colonne et masque de chaque x
     L.append("")
-    L.append("g_ylo")
-    for r in range(0, 128, 16):
-        L.append("        .byt " + ",".join("$%02X" % ((0xA000 + 40*y) & 0xFF) for y in range(r, r+16)))
-    L.append("g_yhi")
-    for r in range(0, 128, 16):
-        L.append("        .byt " + ",".join("$%02X" % ((0xA000 + 40*y) >> 8) for y in range(r, r+16)))
+    # (g_ylo / g_yhi, adresses des lignes de points, sont calculées par
+    # font_init dans $B400-$B4FF : voir src/bios.s)
     L.append("g_xcol")
     for r in range(0, 240, 20):
         L.append("        .byt " + ",".join("%d" % (x // 6) for x in range(r, r+20)))

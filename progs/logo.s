@@ -2921,7 +2921,15 @@ ed3     lda #<fbuf
 
 ; fcb_text : écrit le nom de fcb (NOM.TYP, sans blancs) en fbuf+X
 fcb_text
-        ldy #1
+        lda fcb                 ; lecteur donné : « B: »
+        beq ft0
+        ora #$40
+        sta fbuf,x
+        inx
+        lda #":"
+        sta fbuf,x
+        inx
+ft0     ldy #1
 ft1     lda fcb,y
         cmp #" "
         beq ft2
@@ -4865,8 +4873,23 @@ sp      sta fcb,x
         sta fcb+10
         lda #"G"
         sta fcb+11
-        ldy #0
-        ldx #1
+        ldy #0                  ; « B: » devant le nom : lecteur
+        lda tl
+        cmp #3
+        bcc nod
+        iny
+        lda (ts),y
+        cmp #":"
+        bne nod0
+        dey
+        lda (ts),y
+        sec
+        sbc #"@"
+        sta fcb
+        ldy #2
+        .byt $2C                ; (BIT abs : saute le LDY suivant)
+nod0    ldy #0
+nod     ldx #1
 nm      cpy tl
         beq done
         lda (ts),y

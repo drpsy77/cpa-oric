@@ -157,7 +157,9 @@ hw_vec  lda ram_vectors,x
         bpl hw_vec
         rts
 
-; font_init : recopie la police (96 caractères à partir du code 32)
+; font_init : recopie la police (96 caractères à partir du code 32),
+;   puis calcule à la place des codes 0-31 les adresses des 128 lignes
+;   de points du mode SPLIT (g_ylo, g_yhi : $A000 + 40 * y)
 font_init
 .(
         lda #<font_data
@@ -178,6 +180,20 @@ loop    lda (ZP_PTR),y
         inc ZP_PTR2+1
         dex
         bne loop
+        stx ZP_PTR              ; (X = 0) <IMG_BASE
+        lda #>IMG_BASE
+        sta ZP_PTR+1
+yl      lda ZP_PTR
+        sta g_ylo,x
+        clc
+        adc #40
+        sta ZP_PTR
+        lda ZP_PTR+1
+        sta g_yhi,x
+        adc #0
+        sta ZP_PTR+1
+        inx
+        bpl yl                  ; 128 lignes
         rts
 .)
 

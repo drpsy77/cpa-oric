@@ -63,7 +63,12 @@ ext     ldx #15
         cmp #$FF
         bne found
         jmp no_file
-found   ldx ccp_cnt             ; paramètres : la suite de la ligne
+found   lda scr_fcb             ; lecteur du script fixé : une ligne
+        bne fd                  ; « B: » du script ne change pas sa lecture
+        ldx cur_drv
+        inx
+        stx scr_fcb
+fd      ldx ccp_cnt             ; paramètres : la suite de la ligne
         jsr skip_spaces
         ldy #0
 cp      lda ORIGBUF,x       ; paramètres tels que tapés

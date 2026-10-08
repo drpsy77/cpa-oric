@@ -303,7 +303,6 @@ video_split
         jsr cap_top
         lda #ATTR_TEXT50        ; retour au texte à la ligne de points 128
         sta IMG_SWITCH
-        sta IMG_END
         lda #" "                ; ligne de texte 15 vide (lue par
         ldy #COLS-1             ; Oricutron en fin de ligne de points 127)
 br1     sta SCREEN+15*40,y

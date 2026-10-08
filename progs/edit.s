@@ -2207,6 +2207,14 @@ l1      lda s_logo,x
         inx
         cpx #5
         bne l1
+        lda fcb_main            ; lecteur du document : « B: »
+        beq l2
+        ora #$40
+        sta msgbuf,x
+        inx
+        lda #":"
+        sta msgbuf,x
+        inx
 l2      lda fcb_main,y
         cmp #" "
         beq l3
@@ -2270,7 +2278,7 @@ tn1     lda fcb_new,x
         sta dirty
         rts
 
-; parse_name : inbuf -> fcb_new (NOM.EXT en majuscules). C=1 si invalide
+; parse_name : inbuf -> fcb_new ([D:]NOM.EXT en majuscules). C=1 si invalide
 parse_name
 .(
         ldx #35
@@ -2287,9 +2295,14 @@ sp      sta fcb_new,x
         lda inlen
         cmp #2
         bcc nodrv
-        lda inbuf+1             ; A: devant le nom : ignoré
+        lda inbuf+1             ; B: devant le nom : lecteur
         cmp #":"
         bne nodrv
+        lda inbuf
+        jsr upc
+        sec
+        sbc #"@"
+        sta fcb_new
         ldy #2
 nodrv   ldx #1
 nm      cpy inlen

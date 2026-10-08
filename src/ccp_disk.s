@@ -304,6 +304,11 @@ end     lda dec_flag
 nocr    lda ccp_cnt
         bne free
         jsr no_file
+        ldx act_drv             ; lecteur illisible : pas de place libre
+        lda bitmask,x
+        and log_vec
+        bne free
+        rts
 free    jsr count_free          ; espace libre en Ko = blocs * 2
         asl
         tax
@@ -559,7 +564,7 @@ nowild  ldy #9                  ; type vide : COM, puis BAT si absent ;
         bne hasext
         ldx #0
         jsr set_type            ; NOM.COM
-        jsr open_ccp
+        jsr open_com
         bne found
         ldx #3                  ; NOM.COM absent : NOM.BAT
         jsr set_type
@@ -576,7 +581,7 @@ try_bat jsr open_ccp            ; script : comme DO NOM [p1..p9]
         pla                     ; retour direct au prompt
         pla
         jmp ccp
-opencom jsr open_ccp
+opencom jsr open_com
         bne found
         rts
 found   lda #<TPA_START
@@ -659,6 +664,25 @@ loop    lda type_tab,x
 r       rts
 .)
 type_tab .asc "COMBAT"
+
+; open_com : comme open_ccp ; un programme sans lecteur donné qui n'est
+;   pas sur le lecteur courant est cherché sur A: (disquette système)
+open_com
+.(
+        jsr open_ccp
+        bne r
+        lda cur_drv
+        beq r                   ; (Z=1 : introuvable)
+        lda CCP_FCB
+        bne nf
+        inc CCP_FCB             ; A:
+        jsr open_ccp
+        bne r
+        dec CCP_FCB             ; (Z=1)
+r       rts
+nf      lda #0
+        rts
+.)
 
 ; open_ccp : ouvre CCP_FCB, Z=1 si introuvable
 open_ccp

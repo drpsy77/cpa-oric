@@ -90,8 +90,8 @@ bdos_tab
         .word f_write-1         ; 21 écriture séquentielle
         .word f_make-1          ; 22 création
         .word f_rename-1        ; 23 renommage
-        .word f_one-1           ; 24 disques connectés (A: seul)
-        .word f_none-1          ; 25 disque courant (A:)
+        .word f_login-1         ; 24 lecteurs lus (bit 0 = A:)
+        .word f_curdsk-1        ; 25 lecteur courant
 #else
         .word f_disk-1          ; 13 réinitialisation disques
         .word f_disk-1          ; 14 sélection disque
@@ -144,10 +144,6 @@ f_reader
 
 f_none
         lda #0
-        rts
-
-f_one
-        lda #1
         rts
 
 f_disk

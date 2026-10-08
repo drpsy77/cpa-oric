@@ -164,6 +164,7 @@ Variables utiles :
 | Variable | Effet |
 |---|---|
 | `DSK=build/cpa.dsk` | démarre sur la disquette. Elle est copiée, car Oricutron réécrit l'image : l'original ne change pas |
+| `DSKB=b.dsk` (`DSKC`, `DSKD`) | disquettes des lecteurs B: à D:, copiées en `SORTIE.b.dsk`... (on y relit ce qui a été écrit). Les lecteurs sont remplis dans l'ordre : avec `DSKB` seul, C: et D: sont vides (essai d'un lecteur absent) |
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |

@@ -47,6 +47,10 @@ démarrer dessus. CP/A a été essayé sur un vrai Oric Atmos avec un LOCI : dé
 EDIT, PUT, DIR, SPLIT, GTEST et LOGO fonctionnent (ASM et DEBUG restent à essayer). Les
 couleurs des menus, peu lisibles dans certains émulateurs, sont nettes sur un vrai écran.
 
+**Plusieurs lecteurs.** La version disquette gère quatre lecteurs, `A:` à `D:`, comme le
+contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
+`oricutron -m atmos -k microdisc -d build/cpa.dsk -d donnees.dsk`). Voir « Lecteurs A: à D: ».
+
 La disquette contient `README.TXT`, un aide-mémoire de toutes les commandes et de leurs
 paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 
@@ -67,6 +71,7 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 | `PEN`, `PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `POINT` | primitives graphiques (voir le mode SPLIT) |
 | `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute ; à défaut, exécute le script `NOM.BAT` (comme `DO NOM [args]`) |
 | `VER`, `CLS` | version, effacement de l'écran |
+| `B:` (`A:` à `D:`) | change de lecteur courant (version disquette) ; l'invite devient `B>` |
 
 Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP :
 
@@ -74,7 +79,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 |---|---|
 | `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG` |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
-| `STAT [afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets ; sans paramètre : place libre sur le disque |
+| `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets ; sans paramètre : place libre sur le disque |
 | `MEM` | carte de la mémoire (taille de la TPA selon le mode texte ou SPLIT) |
 | `POKE adr bb [bb...]` | écrit des octets en mémoire (hexadécimal, `$` facultatif) |
 | `GO adr [paramètres]` | lance le code en `adr` comme un `.COM` (un `RTS` ramène au prompt) |
@@ -107,6 +112,28 @@ fichier binaire dont les derniers octets valent réellement `$1A` paraît un peu
     A>STAT *.TXT
     Fichier       Enreg  Blocs Octets
     README  .TXT     42      3   5271
+
+## Lecteurs A: à D:
+
+Tout nom de fichier peut commencer par un lecteur : `DIR B:`, `TYPE B:LETTRE.TXT`,
+`COPY LETTRE.TXT B:`, `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (le `.COM`,
+le `.SYM` et les `#include` sont sur le lecteur de la source), et dans LOGO `CHARGE "B:JEU`.
+Sans lecteur, c'est le lecteur courant, choisi par `B:` au prompt ou par l'article **Lecteur
+suivant** du menu Systeme (A, B, C, D, puis A). Un programme tapé sans lecteur
+qui n'est pas sur le lecteur courant est cherché sur `A:` : depuis `B>`, `EDIT`, `LOGO` ou
+`STAT` se lancent depuis la disquette système.
+
+Chaque lecteur a la même organisation de disquette. Une disquette de données (sans système)
+se prépare sur le PC : `python3 tools/mkdisk.py new donnees.dsk [fichiers...]` ; les pistes du
+système y restent inutilisées (334 Ko pour les fichiers). Sur le LOCI, monter l'image sur le
+lecteur B, C ou D.
+
+Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
+un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
+de disquette, faire CTRL-C avant d'écrire dessus. Le lecteur courant est gardé au démarrage à
+chaud (retour en `A:` s'il ne répond plus). Un lecteur vide ou absent ne bloque pas l'Oric :
+après moins d'une seconde, `BDOS: disk I/O error`, et `B:` répond `B:?` sans changer de
+lecteur. Un script DO continue de se lire sur sa disquette même s'il change de lecteur.
 
 **Attributs de fichier.** Comme sous CP/M 2.2, deux bits du nom de fichier servent
 d'attributs : R/O (lecture seule : le fichier ne peut être ni effacé, ni renommé, ni écrit,
@@ -361,7 +388,7 @@ leur période est commune aux trois voix.
 ## Menus déroulants
 
 La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante,
-Redemarrer), **Fichiers** (version disque seulement),
+Lecteur suivant, Redemarrer), **Fichiers** (version disque seulement),
 **Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules) et **Clavier**. Au bout
 de la barre, deux voyants : `A` (majuscules verrouillées) ou `a` (minuscules), puis `P` quand
 la copie à l'imprimante est active. Le moteur est réécrit d'après le projet
@@ -481,7 +508,7 @@ décimaux (voir plus bas).
 | `LISCAR` | attend une touche et rend le caractère (`ASCII LISCAR` pour son code) |
 | `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
-| `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) |
+| `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) et commencer par un lecteur (`CHARGE "B:JEU`) |
 | `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
@@ -831,11 +858,12 @@ ordinaires. C'est ce que fait l'éditeur.
 | | | 33 / 34 | lecture / écriture directe de l'enregistrement R0-R1 (FCB+33) |
 | | | 35 | taille du fichier en enregistrements -> R0-R1 |
 | | | 36 | R0-R1 <- position séquentielle courante |
-| 13 | réinitialiser les disques | 24 / 25 | disques connectés / disque courant |
-| 14 | choisir le disque (A: seul) | 26 | adresse DMA (enregistrements de 128 octets) |
+| 13 | réinitialiser les disques | 24 / 25 | lecteurs lus (bit 0 = A:) / lecteur courant (0 = A:) |
+| 14 | lecteur courant <- A (0-3 ; `$FF` si absent) | 26 | adresse DMA (enregistrements de 128 octets) |
 | | | 47 | CHAIN : A/Y = ligne de commande (0 à la fin) ; ne revient pas |
 
-Le FCB a le format CP/M 2.2 sur 36 octets.
+Le FCB a le format CP/M 2.2 sur 36 octets ; son octet 0 est le lecteur (0 = lecteur courant,
+1 = A: ... 4 = D:). Un lecteur absent ou illisible fait échouer la fonction (`$FF`).
 
 **Imprimante.** CP/A imprime sur le port Centronics de l'Oric (entrée LIST du BIOS, fonction
 5 du BDOS : A = caractère). CTRL-P, tapé pendant la saisie d'une ligne (au prompt, dans LOGO,
@@ -864,7 +892,7 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 ## Table BIOS (adresses fixes)
 
 `$C000` BOOT, `$C003` WBOOT, `$C006` CONST, `$C009` CONIN, `$C00C` CONOUT, `$C00F` LIST,
-`$C012` PUNCH, `$C015` READER, `$C018` HOME, `$C01B` SELDSK, `$C01E` SETTRK (sans effet),
+`$C012` PUNCH, `$C015` READER, `$C018` HOME, `$C01B` SELDSK (A = lecteur 0-3), `$C01E` SETTRK (sans effet),
 `$C021` SETSEC (A/Y = n° de secteur logique), `$C024` SETDMA (tampon de 256 octets),
 `$C027` READ, `$C02A` WRITE (A=0 OK), `$C02D` MENUBAR (A/Y = barre de menus).
 
@@ -879,7 +907,8 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 | `$0210-$02FF` | variables du système (console, clavier, menus, test RAM, graphisme, pagination `$02A3`, plafond de la TPA `$02A9`, édition de ligne) |
 | `$0400-$04FF` | page de base : tampon de commande, FCB `$045C`/`$046C`, DMA `$0480` |
 | `$0500-$B3FF` | TPA (44 800 octets) |
-| `$B400-$B7FF` | jeu de caractères |
+| `$B400-$B4FF` | (glyphes des codes 0-31, jamais affichés) adresses des lignes de points du mode SPLIT, calculées au démarrage |
+| `$B500-$B7FF` | jeu de caractères |
 | `$B800-$B9FF` | jeu alternatif (inutilisé en mode texte) : sauvegarde de l'écran sous les menus |
 | `$BA00-$BA7F` | ligne en cours d'édition (BDOS 10) |
 | `$BA80-$BB7F` | historique des lignes |
@@ -887,10 +916,10 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 | `$C000-$F4xx` | CP/A (RAM overlay), environ 13,2 Ko |
 | `$F670-$F7BF` | ligne de commande d'origine, script DO (FCB, enregistrement, paramètres) |
 | `$F7C0-$FCFF` | PUT : sauvegarde d'état et tampon de 1 280 octets |
-| `$FD00-$FEFF` | variables du BDOS et tampon de secteur |
+| `$FD00-$FEFF` | variables du BDOS (dont les cartes d'allocation des 4 lecteurs) et tampon de secteur |
 | `$FF00-$FFF9` | CP/A : tables (lignes de l'écran, clavier) ; place pour de petites routines |
 
-Il reste environ 440 octets libres dans la RAM overlay pour de futures fonctions résidentes : 375 entre la fin du code et `$F670`, 66 à la fin de la page `$FF00`.
+Il reste environ 260 octets libres dans la RAM overlay pour de futures fonctions résidentes : 192 entre la fin du code et `$F670`, 66 à la fin de la page `$FF00`.
 
 ## Format de la disquette
 
@@ -915,11 +944,13 @@ pour que ses données et son entrée de répertoire soient à jour sur la disque
     python3 tools/mkdisk.py put build/cpa.dsk monprog.com
     python3 tools/mkdisk.py get build/cpa.dsk NOTES.TXT notes.txt
     python3 tools/mkdisk.py era build/cpa.dsk NOTES.TXT
+    python3 tools/mkdisk.py new donnees.dsk [fichiers...]    # disquette de données (B: à D:)
 
 Autres fichiers dans `tools/` :
 - `gen_font.py` : police 6×8 originale ;
 - `gen_tables.py` : tables écran et clavier ;
-- `run_test.sh` et `screen.py` : tests automatiques dans Oricutron ;
+- `run_test.sh` et `screen.py` : tests automatiques dans Oricutron (`DSKB=`... pour monter les
+  lecteurs B: à D:) ;
 - `test_asm.sh` : non-régression d'ASM (chaque programme assemblé par ASM.COM doit être
   identique à sa version `xa`) ;
 - `run_com.py` : exécute un `.COM` dans un 6502 simulé (module Python `py65`), avec un BDOS
@@ -932,7 +963,8 @@ Autres fichiers dans `tools/` :
 
 ## Limites connues
 
-- Un seul lecteur (A:), pas de zones utilisateur.
+- Quatre lecteurs (A: à D:), pas de zones utilisateur ; pas encore de FORMAT sur l'Oric (les
+  disquettes de données se préparent avec `mkdisk.py`).
 - Les interruptions sont coupées pendant un transfert de secteur. Une touche frappée pendant un accès
   disque peut donc être perdue.
 - Essayé sur un Oric Atmos avec LOCI ; pas encore sur Cumulus ni sur un vrai Microdisc.

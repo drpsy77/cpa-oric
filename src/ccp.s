@@ -11,7 +11,13 @@ ccp
         cmp #FIRST_COL          ; n'est pas déjà en début de ligne
         beq prompt
         jsr crlf
+#ifdef DISK
+prompt  lda cur_drv             ; lecteur courant
+        clc
+        adc #"A"
+#else
 prompt  lda #"A"
+#endif
         jsr conout
         lda #">"
         jsr conout
@@ -76,6 +82,25 @@ ccp_run
         bne some
         jmp ccp                 ; ligne vide
 some    stx ccp_pos
+#ifdef DISK
+        lda CMDBUF+3,x          ; « X: » seul : changement de lecteur
+        cmp #":"
+        bne tbl
+        lda CMDBUF+4,x
+        beq drv
+        cmp #" "
+        bne tbl
+drv     lda CMDBUF+2,x
+        sec
+        sbc #"A"
+        ldx #14
+        jsr bdos
+        cmp #0
+        beq dok
+        jmp uk0                 ; « X:? »
+dok     jmp ccp
+tbl
+#endif
 
         ; recherche dans la table des commandes internes
         lda #<cmd_table
@@ -127,7 +152,7 @@ unknown
 #ifdef DISK
         jsr run_transient       ; ne revient que si NOM.COM est introuvable
 #endif
-        ldx ccp_pos             ; affiche le mot suivi de '?', comme CP/M
+uk0     ldx ccp_pos             ; affiche le mot suivi de '?', comme CP/M
 uk      lda CMDBUF+2,x
         beq ukq
         cmp #" "
@@ -233,9 +258,11 @@ cmd_table
         .byt "S"|$80
         .word cmd_dirs
 #endif
+#ifndef DISK
         .asc "A"
         .byt ":"|$80
         .word cmd_nop
+#endif
         .asc "SPLI"
         .byt "T"|$80
         .word cmd_split
@@ -306,8 +333,10 @@ cmd_table
 #endif
         .byt 0
 
+#ifndef DISK
 cmd_nop
         rts
+#endif
 
 ; SPLIT : image 240 x 128 en haut, texte en dessous
 cmd_split

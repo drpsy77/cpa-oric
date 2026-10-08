@@ -36,7 +36,9 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 
 `$C000` BOOT, `$C003` WBOOT, `$C006` CONST, `$C009` CONIN, `$C00C` CONOUT, `$C00F` LIST,
 `$C012` PUNCH, `$C015` READER, `$C018` HOME, `$C01B` SELDSK, `$C01E` SETTRK, `$C021` SETSEC,
-`$C024` SETDMA, `$C027` READ, `$C02A` WRITE, `$C02D` MENUBAR.
+`$C024` SETDMA, `$C027` READ, `$C02A` WRITE, `$C02D` MENUBAR. Version disquette : SELDSK
+prend A = lecteur (0-3) et rend A = 0, ou `$FF` si le lecteur est absent ou illisible ; READ et
+WRITE agissent sur ce lecteur.
 
 Les entrées existantes ne bougent jamais ; une nouvelle entrée s'ajoute à la fin (`$C030`…).
 LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 attendu 2 ms au
@@ -65,7 +67,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 | N° | Fonction | Versions |
 |---|---|---|
 | 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
-| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) | disque ; la ROM renvoie `$FF` |
+| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
@@ -87,8 +89,8 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 |---|---|---|
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
-| `$B400-$BFDF` | police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F4F9`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (libres : `$FD42-$FD7F`, `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F5B0`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDA8-$FDAF`, `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 

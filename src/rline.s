@@ -388,6 +388,16 @@ ws      dex
         cmp #":"
         bne ws
 wsd     stx cp_ws
+        lda cur_drv             ; « B:NOM » : répertoire de B:
+        ldy RLB-1,x
+        cpy #":"
+        bne drv
+        lda RLB-2,x
+        and #$DF
+        sec
+        sbc #"A"
+drv     jsr drv_select
+        bcs r
         lda #0
         sta cp_n
         sta cp_mode

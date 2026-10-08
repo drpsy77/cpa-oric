@@ -5,7 +5,13 @@
 ;  Interface (secteurs logiques de 256 octets, LSN 0..NSECT-1) :
 ;     dsk_lsn  : numéro de secteur logique (2 octets)
 ;     dsk_buf  : adresse du tampon de 256 octets
+;     buf_drv  : lecteur (0-3)
 ;     disk_read / disk_write -> A=0 si OK, A=1 si erreur (Z positionné)
+;  Le WD1793 n'a qu'un registre de piste pour les 4 lecteurs : il est
+;  rangé dans dsk_trk au changement de lecteur (drv_sel). Un lecteur
+;  vide ou absent ne répond jamais : les attentes ont un délai maximal
+;  (~0,7 s pour le premier octet d'un secteur, ~3 s pour un déplacement),
+;  puis la commande est interrompue (Force Interrupt) et l'accès échoue.
 ;  Correspondance LSN -> piste physique :
 ;     piste logique = LSN / 17 ; cylindre = piste/2 ; face = piste and 1
 ;     secteur = LSN mod 17 + 1
@@ -21,11 +27,32 @@ ST_ERRMASK  = $5C       ; protégé en écriture, non trouvé, CRC, perte de don
 fdc_issue
         sta FDC_CMD
         jsr fdc_delay
+; fdc_wait : attend que le contrôleur soit libre ; A = état / 2. Après
+;   ~3 s : commande interrompue, A = $FF et plus de nouvel essai
 fdc_wait
-        lda FDC_CMD
+.(
+        ldx #0
+        ldy #0
+        lda #4
+        sta dsk_to
+loop    lda FDC_CMD
         lsr                     ; bit 0 = occupé
-        bcs fdc_wait
-        rts
+        bcc fw_r
+        dey
+        bne loop
+        dex
+        bne loop
+        dec dsk_to
+        bne loop
+.)
+; fdc_abort : interrompt la commande en cours ; plus de nouvel essai
+fdc_abort
+        lda #$D0                ; Force Interrupt
+        sta FDC_CMD
+        lda #1
+        sta dsk_try
+        lda #$FF
+fw_r    rts
 
 fdc_delay
         ldy #8
@@ -33,18 +60,48 @@ fdd     dey
         bne fdd
         rts
 
-; disk_home : ramène la tête en piste 0
+; disk_home : ramène la tête du lecteur buf_drv en piste 0
 disk_home
         php
         sei
-        jsr fdc_wait
-        lda #MD_BASE
-        sta MD_CTRL
+        jsr md_sel
         lda #CMD_RESTORE
         jsr fdc_issue
         plp
         lda #0
         rts
+
+; md_sel : lecteur buf_drv et face dsk_side, contrôleur libre, registre
+;   de piste du lecteur (gardé dans dsk_trk au changement). C=1 si le
+;   lecteur a changé : l'appelant fait alors toujours un déplacement de
+;   tête, car Oricutron (et peut-être d'autres émulations) n'a qu'une
+;   position de tête pour tous les lecteurs
+md_sel
+.(
+        lda buf_drv
+        asl
+        ora dsk_side
+        asl
+        asl
+        asl
+        asl
+        ora #MD_BASE
+        sta MD_CTRL
+        jsr fdc_wait
+        lda buf_drv
+        cmp phy_drv
+        clc
+        beq r
+        ldx phy_drv
+        lda FDC_TRK
+        sta dsk_trk,x
+        ldx buf_drv
+        lda dsk_trk,x
+        sta FDC_TRK
+        stx phy_drv
+        sec                     ; C=1 : lecteur changé
+r       rts
+.)
 
 ; lsn_to_chs : dsk_lsn -> dsk_cyl, dsk_side, dsk_sec. C=1 si hors disque.
 lsn_to_chs
@@ -103,24 +160,17 @@ disk_write
 chs_ok  lda #4
         sta dsk_try
 retry
-        ; face et lecteur
-        lda dsk_side
-        asl
-        asl
-        asl
-        asl
-        ora #MD_BASE
-        sta MD_CTRL
-        ; positionnement si nécessaire
-        jsr fdc_wait
+        jsr md_sel              ; lecteur, face ; positionnement si nécessaire
         lda dsk_cyl
+        bcs seek                ; (lecteur changé : toujours)
         cmp FDC_TRK
         beq trk_ok
-        sta FDC_DATA
+seek    sta FDC_DATA
         lda #CMD_SEEK
         jsr fdc_issue
         and #$08                ; A = état décalé : bit 4 (erreur de seek) -> bit 3
-        bne error
+        beq trk_ok
+        jmp error
 trk_ok
         lda dsk_sec
         sta FDC_SEC
@@ -129,15 +179,28 @@ trk_ok
         lda dsk_buf+1
         sta ZP_DSK+1
         ldy #0
+        ldx #0
+        stx dsk_to
         lda dsk_op
         sta FDC_CMD
         cmp #CMD_WRITE
-        beq wr
+        beq ww
+        ; premier octet : attente limitée (~0,7 s), fin anticipée (INTRQ)
+        ; vue toutes les 256 boucles ; ~18 cycles entre DRQ et la lecture
+rw      lda MD_DRQ
+        bpl rd1
+        dex
+        bne rw
+        lda MD_CTRL
+        bpl fin
+        dec dsk_to
+        bne rw
+        beq tmo
 
         ; --- lecture : ~20 cycles max entre DRQ et la lecture (32 µs dispo)
 rd      lda MD_DRQ
         bmi rchk
-        lda FDC_DATA
+rd1     lda FDC_DATA
         sta (ZP_DSK),y
         iny
         bne rd
@@ -146,10 +209,20 @@ rchk    lda MD_CTRL             ; /INTRQ : commande terminée prématurément ?
         bmi rd
         bpl fin
 
-        ; --- écriture
+        ; --- écriture (premier octet : même attente que la lecture)
+ww      lda MD_DRQ
+        bpl wr1
+        dex
+        bne ww
+        lda MD_CTRL
+        bpl fin
+        dec dsk_to
+        bne ww
+tmo     jsr fdc_abort
+        jmp error
 wr      lda MD_DRQ
         bmi wchk
-        lda (ZP_DSK),y
+wr1     lda (ZP_DSK),y
         sta FDC_DATA
         iny
         bne wr
@@ -196,6 +269,7 @@ bios_read
 bios_write
         jsr bios_sync
         jmp disk_write
+; (le cache vidé, buf_drv reçoit le lecteur choisi par SELDSK)
 ; le cache du BDOS est vidé puis oublié avant un accès direct
 bios_sync
         lda dsk_lsn
@@ -209,6 +283,8 @@ bios_sync
         jsr flush
         lda #0
         sta buf_ok
+        lda act_drv
+        sta buf_drv
         pla
         sta dsk_buf+1
         pla
