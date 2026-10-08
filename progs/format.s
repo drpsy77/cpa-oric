@@ -216,15 +216,24 @@ sl      jsr progress
         ldy #>m_int
         jmp puts
 noesc   jsr patch
-        jsr selside
         lda side
         bne noseek
+        ; positionnement avec la face 1 choisie : Oricutron garde en cache
+        ; la disposition de la piste lue au positionnement (ou au
+        ; changement de face) et ne l'oublie pas après Write Track ; la
+        ; face 0 doit donc être relue d'après une autre piste en cache,
+        ; sinon une disquette d'un autre format (SEDORIC) semble illisible
+        ; après formatage. Sans effet sur un vrai lecteur et sur le LOCI.
+        inc side
+        jsr selside
+        dec side
         lda cyl
         sta FDC_DATA
         lda #CMD_SEEK
         jsr fcmd
         bcs absent
-noseek  jsr wtrack
+noseek  jsr selside
+        jsr wtrack
         bcs werr
         jsr vtrack
         bcs verr
