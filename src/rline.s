@@ -16,7 +16,10 @@
 ;    CTRL-C         sur une ligne vide : démarrage à chaud
 ;    ESC            (disque) complète le nom de fichier qui finit au
 ;                   curseur ; si plusieurs noms conviennent et que rien ne
-;                   peut être ajouté, les affiche puis réécrit la ligne
+;                   peut être ajouté, les affiche puis réécrit la ligne.
+;                   Premier mot d'une ligne du CCP (option CPLCMD) :
+;                   commandes internes, et programmes .COM / .BAT sans
+;                   leur type
 ;    RETURN         valide (la ligne entre dans l'historique)
 ;
 ;  L'historique HIST garde les lignes validées, la plus récente en tête :
@@ -388,6 +391,19 @@ ws      dex
         cmp #":"
         bne ws
 wsd     stx cp_ws
+#ifdef CPLCMD
+        ldy #0                  ; premier mot d'une ligne du CCP ? (pas
+        txa                     ; dans LOGO ni DEBUG)
+        bne cf
+        lda ZP_PTR
+        cmp #<CMDBUF
+        bne cf
+        lda ZP_PTR+1
+        cmp #>CMDBUF
+        bne cf
+        iny
+cf      sty cp_first
+#endif
         lda cur_drv             ; « B:NOM » : répertoire de B:
         ldy RLB-1,x
         cpy #":"
@@ -489,14 +505,41 @@ loop    jsr dir_get
         lda dir_i
         cmp #DIR_ENT
         bcc loop
-end     rts
+end
+#ifdef CPLCMD
+        lda cp_first            ; premier mot : aussi les commandes internes
+        beq r0
+        lda #0
+        sta cp_ti
+tl      ldx cp_ti               ; une entrée : nom (dernier caractère avec
+        lda cmd_table,x         ; le bit 7), adresse ; 0 à la fin
+        beq r0
+        ldy #0
+tc      lda cmd_table,x
+        and #$7F
+        sta cp_txt,y
+        iny
+        lda cmd_table,x
+        inx
+        asl
+        bcc tc
+        lda #0
+        sta cp_txt,y
+        inx                     ; adresse
+        inx
+        stx cp_ti
+        jsr cp_cand
+        jmp tl
+r0
+#endif
+rone    rts
 one     ldy #0
         lda (ZP_DIRP),y         ; utilisateur 0 ($E5 = libre)
-        bne r
+        bne rone
         ldy #FCB_EX
         lda (ZP_DIRP),y         ; premier extent seulement
         lsr
-        bne r
+        bne rone
         ldy #1                  ; nom -> cp_txt : « NOM.TYP »,0
         ldx #0
 fn      lda (ZP_DIRP),y
@@ -508,6 +551,14 @@ fn      lda (ZP_DIRP),y
 fs      iny
         cpy #9
         bne fn2
+#ifdef CPLCMD
+        lda cp_first            ; premier mot : .COM et .BAT seulement,
+        beq typ                 ; nommés sans leur type
+        jsr cp_cmdty
+        bcs rone
+        bcc fz
+typ
+#endif
         lda (ZP_DIRP),y
         and #$7F
         cmp #" "
@@ -519,7 +570,7 @@ fn2     cpy #12
         bne fn
 fz      lda #0
         sta cp_txt,x
-        ldx cp_ws               ; commence par le mot tapé ?
+cp_cand ldx cp_ws               ; commence par le mot tapé ?
         ldy #0
 cw      cpx rl_pos
         beq ok
@@ -571,4 +622,33 @@ pw      lda #0
         sta cp_col
         rts
 .)
+
+#ifdef CPLCMD
+; cp_cmdty : C=0 si l'entrée ZP_DIRP est de type COM ou BAT (X gardé)
+cp_cmdty
+.(
+        ldy #9
+c1      lda (ZP_DIRP),y
+        and #$7F
+        cmp type_tab-9,y        ; « COM »
+        bne b
+        iny
+        cpy #12
+        bne c1
+        clc
+        rts
+b       ldy #9
+c2      lda (ZP_DIRP),y
+        and #$7F
+        cmp type_tab-6,y        ; « BAT »
+        bne no
+        iny
+        cpy #12
+        bne c2
+        clc
+        rts
+no      sec
+        rts
+.)
+#endif
 #endif

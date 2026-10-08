@@ -18,9 +18,13 @@ mkdir -p build/progs
 python3 tools/gen_font.py src/font.s
 python3 tools/gen_tables.py src/tables.s
 
+# Options du système disque. CPLCMD : ESC complète aussi le premier mot
+# par les commandes internes et les .COM / .BAT (~120 octets résidents) ;
+# DISK_OPTS="" ./build.sh pour s'en passer.
+DISK_OPTS=${DISK_OPTS--DCPLCMD}
 cd src
 $XA -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
-$XA -DDISK -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
+$XA -DDISK $DISK_OPTS -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
 cd ..
 for f in build/cpa.rom build/cpa_sys.bin; do
   SIZE=$(wc -c < $f)

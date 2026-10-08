@@ -209,7 +209,7 @@ lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
 |---|---|
 | ← / → | déplacer le curseur dans la ligne ; ce qu'on tape s'insère |
 | ↑ / ↓ | lignes déjà validées (historique), de la plus récente à la plus ancienne |
-| ESC | compléter le nom de fichier qui se termine au curseur |
+| ESC | compléter le nom de fichier qui se termine au curseur ; en début de ligne, la commande |
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
 | CTRL-A / CTRL-E | début / fin de la ligne |
 | CTRL-X | effacer toute la ligne |
@@ -223,8 +223,15 @@ l'Oric à l'endroit de la touche TAB d'un clavier de PC. `TYPE REA` + ESC donne
 `TYPE README.TXT ` (avec l'espace, prêt pour la suite). Si plusieurs fichiers conviennent, ESC
 ajoute la partie commune (`DIR HELL` → `DIR HELLO.`) ; si rien ne peut être ajouté, ESC
 affiche les noms possibles et réécrit la ligne en dessous. Sans majuscules (CTRL-T), le nom
-est complété en minuscules. Seuls les noms de fichiers sont complétés (pas les commandes
-internes) ; un mot vide + ESC montre tout le disque.
+est complété en minuscules. Un mot vide + ESC montre tout le disque.
+
+**Premier mot : les commandes.** En début de ligne, ESC complète une commande : les
+commandes internes (`FB` → `FBOX `) et les programmes `.COM` et `.BAT` du lecteur courant,
+sans leur type (`ED` → `EDIT `, `DES` → `DESSIN `). `D` + ESC montre `DEBUG DISKCOPY DESSIN
+DIR DIRS DO`. Les autres fichiers ne sont pas proposés en début de ligne. Cette complétion
+coûte environ 120 octets dans le système ; elle est assemblée avec l'option `CPLCMD`, et
+`DISK_OPTS="" ./build.sh` construit un système sans elle (la complétion des noms de fichiers
+reste).
 
 **Pause en fin d'écran.** Quand une commande remplit la console (27 lignes en mode texte,
 10 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur

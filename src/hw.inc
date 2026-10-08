@@ -179,8 +179,10 @@ log_vec     = $FD7D     ; bit n : lecteur n lu depuis le dernier démarrage à c
 buf_drv     = $FD7E     ; lecteur du secteur de SECBUF, et des accès du pilote
 phy_drv     = $FD7F     ; lecteur dont la piste est dans FDC_TRK (aussi FORMAT.COM)
 CCP_FCB     = $FD80     ; FCB privé du CCP (36 octets)
-dsk_trk     = $FDA4     ; piste de chaque lecteur (4 octets ; $FDA8-$FDAF libres) ;
+dsk_trk     = $FDA4     ; piste de chaque lecteur (4 octets ; $FDAA-$FDAF libres) ;
                         ;   phy_drv et dsk_trk sont aussi tenus par FORMAT.COM
+cp_ti       = $FDA8     ; complétion des commandes : position dans cmd_table
+cp_first    = $FDA9     ; complétion : 1 = premier mot d'une ligne du CCP
 CCP_FCB2    = $FDB0     ; FCB de travail (REN)
 SECBUF      = $FE00     ; tampon de secteur (256 octets)
 #endif

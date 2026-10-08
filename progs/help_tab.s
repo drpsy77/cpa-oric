@@ -86,8 +86,11 @@ h_0
         .asc "haut bas      | lignes deja tapees",13,10
         .asc "              |   (historique)",13,10
         .asc "ESC           | complete un nom de",13,10
-        .asc "              |   fichier ; 2 fois :",13,10
-        .asc "              |   les noms possibles",13,10
+        .asc "              |   fichier (en debut",13,10
+        .asc "              |   de ligne : une",13,10
+        .asc "              |   commande) ; 2 fois",13,10
+        .asc "              |   : les noms",13,10
+        .asc "              |   possibles",13,10
         .asc "DEL ^D        | efface a gauche /",13,10
         .asc "              |   sous",13,10
         .asc "^A ^E         | debut / fin de ligne",13,10
