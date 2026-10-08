@@ -157,6 +157,11 @@ EXPORT fic [nom]
               | fic -> cle (nom : par
               |   defaut fic,
               |   minuscules gardees)
+EXPORT afn [dos]
+              | jokers : chaque
+              |   fichier sous son
+              |   nom, dans le
+              |   dossier dos
 IMPORT nom [fic]
               | cle -> fic (par
               |   defaut : nom coupe

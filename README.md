@@ -333,11 +333,13 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 | Commande | Effet |
 |---|---|
 | `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, à la racine) |
+| `EXPORT afn [dossier]` | avec des jokers (`*.LOG`, `B:*.*`) : chaque fichier sous son nom, en minuscules si le modèle a été tapé en minuscules, à la racine ou dans le dossier donné ; un `.DSK` est sauté, ESC arrête entre deux fichiers |
 | `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
 | `USBDIR [chemin]` | liste un dossier de la clé (la racine par défaut) : nom et taille, `<REP>` pour un dossier |
 
     A>EXPORT LETTRE.TXT
     A>EXPORT B:JEU.LOG 1:/oric/jeu.log
+    A>export *.log oric
     A>IMPORT notes.txt /T
     A>IMPORT docs/MATH.LOG B:
     A>USBDIR docs

@@ -521,6 +521,16 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     N, `*.LOG` confirmé, `*.COM` : 2 fichiers proposés et 21 protégés gardés, réponse autre
     que O = abandon, `/Q` dans un script), REN (renommage, nom existant, fichier protégé,
     introuvable, usage), PUT avec TYPE.
+- EXPORT avec jokers (octobre 2026) : `EXPORT afn [dossier]` — les noms sont relevés d'abord
+  (premier extent, 128 au plus, comme COPY), puis copiés un à un sous leur nom de CP/A
+  (`NOM.EXT`, sans les espaces), en minuscules si le modèle tapé en contient (lecteur mis à
+  part) : `export *.log` donne `demo.log`. Le 2e mot est alors un dossier (« / » ajouté
+  s'il manque ; `1:/ORIC`, `0:` admis), plus un nom. Un `.DSK` est sauté (« Refuse »), une
+  erreur de la clé arrête tout, ESC arrête entre deux fichiers ; fin : `n fichier(s)
+  exporte(s)`. La copie d'un fichier est devenue la routine `xone`, commune aux deux cas.
+  EXPORT.COM 1 741 octets. Essayé dans Oricutron (MIA simulée) : `*.ASM`, `*.log oric`,
+  `HELLO.* 1:/Oric/`, aucun fichier, nom seul inchangé ; contenus identiques.
+
 - EDIT, lot L5 (octobre 2026) : raccourci `^L` pour Insérer... (`^K`, proposé dans la
   backlog, n'était pas libre : c'est le code de la flèche haut, `$0B`) et impression : article
   « Imprimer ^P » du menu Fichier et raccourci `^P` (libre dans EDIT : le CTRL-P du système
@@ -688,7 +698,7 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    (signature en `$03B0`) ; écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est
    monté comme lecteur Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; les drapeaux
    d'ouverture ; le lecteur par défaut (sans `1:`) avec et sans hub ; la vitesse.
-   Suites possibles : jokers (`EXPORT *.LOG`), conversion CR LF -> LF à l'EXPORT si le Mac
+   Jokers dans EXPORT : faits (octobre 2026, voir « Choix déjà faits »). Suites possibles : conversion CR LF -> LF à l'EXPORT si le Mac
    la demande, liste des appareils du LOCI (`opendir("")`).
 
 ## Contraintes à garder en tête
