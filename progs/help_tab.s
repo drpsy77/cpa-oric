@@ -112,7 +112,11 @@ h_1
         .asc "              |   NOM.SYM",13,10
         .asc "DEBUG nom [param]",13,10
         .asc "              | debogueur",13,10
-        .asc "COPY src dst  | copie un fichier",13,10
+        .asc "COPY src [dst]",13,10
+        .asc "              | copie, jokers admis :",13,10
+        .asc "              |   COPY *.COM B:, COPY",13,10
+        .asc "              |   *.TXT *.BAK, COPY",13,10
+        .asc "              |   B:*.LOG",13,10
         .asc "FORMAT X: [/Q]",13,10
         .asc "              | formate X: (A: : un",13,10
         .asc "              |   seul lecteur) ; /Q",13,10
@@ -123,14 +127,15 @@ h_1
         .asc "              |   sur d: (A: A: : un",13,10
         .asc "              |   seul lecteur) ; /T",13,10
         .asc "              |   tout, /V relecture,",13,10
-        .asc "              |   /S systeme et",13,10
-        .asc "              |   fichiers SYS",13,10
-        .asc "              |   seulement",13,10
+        .asc "              |   /S systeme",13,10
+        .asc "              |   seulement (SYSGEN)",13,10
         .asc "STAT [d:][afn]",13,10
         .asc "              | taille : enreg.,",13,10
         .asc "              |   blocs de 2 Ko,",13,10
-        .asc "              |   octets ; seul :",13,10
-        .asc "              |   place libre",13,10
+        .asc "              |   octets ; At : R",13,10
+        .asc "              |   protege, S systeme",13,10
+        .asc "              |   ; seul : place",13,10
+        .asc "              |   libre",13,10
         .asc "XDO nom [param]",13,10
         .asc "              | script appele par un",13,10
         .asc "              |   script (lance par",13,10
