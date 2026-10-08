@@ -8,6 +8,12 @@ WBOOT       = $0200     ; retour au système
 B_CONST     = $C006     ; A=$FF si une touche attend
 B_CONIN     = $C009     ; attend une touche (menus FUNCT gérés)
 B_CONOUT    = $C00C     ; affiche A
+B_HOME      = $C018     ; tête du lecteur des accès directs en piste 0
+B_SELDSK    = $C01B     ; A = lecteur (0-3) -> A = 0, $FF si absent/illisible
+B_SETSEC    = $C021     ; A/Y = secteur logique (LSN, 0-1427)
+B_SETDMA    = $C024     ; A/Y = tampon de 256 octets
+B_READ      = $C027     ; lit le secteur -> A = 0, 1 si erreur
+B_WRITE     = $C02A     ; écrit le secteur -> A = 0, 1 si erreur
 B_MENUBAR   = $C02D     ; installe la barre de menus A/Y
 
 ; Page de base
@@ -29,6 +35,7 @@ SCREEN      = $BB80
 F_CONOUT    = 2
 F_LIST      = 5         ; A = caractère à imprimer (Centronics)
 F_PRINT     = 9
+F_RESET     = 13        ; tampon écrit, lecteurs à relire (démarrage à chaud)
 F_OPEN      = 15
 F_CLOSE     = 16
 F_SFIRST    = 17

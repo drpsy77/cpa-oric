@@ -100,6 +100,11 @@ ASM nom       | NOM.ASM -> NOM.COM et
 DEBUG nom [param]
               | debogueur
 COPY src dst  | copie un fichier
+FORMAT X: [/Q]
+              | formate X: (A: : un
+              |   seul lecteur) ; /Q
+              |   : vide le
+              |   repertoire
 STAT [d:][afn]
               | taille : enreg.,
               |   blocs de 2 Ko,

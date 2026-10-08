@@ -124,9 +124,20 @@ qui n'est pas sur le lecteur courant est cherché sur `A:` : depuis `B>`, `EDIT`
 `STAT` se lancent depuis la disquette système.
 
 Chaque lecteur a la même organisation de disquette. Une disquette de données (sans système)
-se prépare sur le PC : `python3 tools/mkdisk.py new donnees.dsk [fichiers...]` ; les pistes du
-système y restent inutilisées (334 Ko pour les fichiers). Sur le LOCI, monter l'image sur le
-lecteur B, C ou D.
+se prépare sur l'Oric avec `FORMAT B:`, ou sur le PC : `python3 tools/mkdisk.py new
+donnees.dsk [fichiers...]` ; les pistes du système y restent inutilisées (336 Ko pour les
+fichiers). Sur le LOCI, monter l'image sur le lecteur B, C ou D.
+
+**FORMAT.** `FORMAT B:` formate la disquette du lecteur B: au format de CP/A (2 faces,
+42 pistes, 17 secteurs de 256 octets) : chaque piste est écrite d'un coup (commande Write
+Track du contrôleur), puis relue ; la progression s'affiche (`Piste 12 face 1`), ESC
+interrompt entre deux pistes. Une confirmation est demandée (`Tout B: sera efface. Suite
+(O/N) ?`). `FORMAT A:` marche avec un seul lecteur : il demande d'insérer la disquette à
+formater, puis de remettre la disquette système (le système reste en mémoire). `FORMAT B: /Q`
+vide seulement le répertoire d'une disquette déjà formatée : c'est instantané, et cela suffit
+pour une image du LOCI ou d'Oricutron. Les secteurs sont entrelacés (1, 10, 2, 11...) pour
+qu'un vrai lecteur Microdisc lise une piste en deux tours au lieu de dix-sept ; les images
+faites par `mkdisk.py` ne le sont pas, ce qui ne change rien sur le LOCI ni dans Oricutron.
 
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
 un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
@@ -519,6 +530,7 @@ Programmes fournis sur la disquette :
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits plus haut.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
+- `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 
 ## LOGO
 
@@ -1009,8 +1021,8 @@ Autres fichiers dans `tools/` :
 
 ## Limites connues
 
-- Quatre lecteurs (A: à D:), pas de zones utilisateur ; pas encore de FORMAT sur l'Oric (les
-  disquettes de données se préparent avec `mkdisk.py`).
+- Quatre lecteurs (A: à D:), pas de zones utilisateur ; pas encore de DISKCOPY (une
+  disquette système se prépare avec `mkdisk.py`).
 - Les interruptions sont coupées pendant un transfert de secteur. Une touche frappée pendant un accès
   disque peut donc être perdue.
 - Essayé sur un Oric Atmos avec LOCI ; pas encore sur Cumulus ni sur un vrai Microdisc.

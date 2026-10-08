@@ -177,9 +177,10 @@ act_drv     = $FD7B     ; lecteur du système de fichiers (carte ALV + alv_off)
 alv_off     = $FD7C     ; act_drv * ALV_LEN
 log_vec     = $FD7D     ; bit n : lecteur n lu depuis le dernier démarrage à chaud
 buf_drv     = $FD7E     ; lecteur du secteur de SECBUF, et des accès du pilote
-phy_drv     = $FD7F     ; lecteur dont la piste est dans FDC_TRK
+phy_drv     = $FD7F     ; lecteur dont la piste est dans FDC_TRK (aussi FORMAT.COM)
 CCP_FCB     = $FD80     ; FCB privé du CCP (36 octets)
-dsk_trk     = $FDA4     ; piste de chaque lecteur (4 octets ; $FDA8-$FDAF libres)
+dsk_trk     = $FDA4     ; piste de chaque lecteur (4 octets ; $FDA8-$FDAF libres) ;
+                        ;   phy_drv et dsk_trk sont aussi tenus par FORMAT.COM
 CCP_FCB2    = $FDB0     ; FCB de travail (REN)
 SECBUF      = $FE00     ; tampon de secteur (256 octets)
 #endif
