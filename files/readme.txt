@@ -93,6 +93,8 @@ NOM [param]   | lance NOM.COM, sinon
 
 PROGRAMMES
 ----------
+DIRS *.COM    | tous, caches (SYS)
+              |   compris
 EDIT [fic]    | editeur de texte
 HEX fic       | editeur hexadecimal
 SET afn [opt] | attributs : RO RW SYS
