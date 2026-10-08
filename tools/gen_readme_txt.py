@@ -71,6 +71,7 @@ SECTIONS = [
   ("ASM nom", "NOM.ASM -> NOM.COM et NOM.SYM"),
   ("DEBUG nom [param]", "debogueur"),
   ("COPY src dst", "copie un fichier"),
+  ("FORMAT X: [/Q]", "formate X: (A: : un seul lecteur) ; /Q : vide le repertoire"),
   ("STAT [d:][afn]", "taille : enreg., blocs de 2 Ko, octets ; seul : place libre"),
   ("XDO nom [param]", "script appele par un script (lance par le CCP)"),
   ("EXPORT fic [nom]", "copie sur la cle USB du LOCI (HELP USB)"),

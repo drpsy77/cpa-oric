@@ -113,6 +113,11 @@ h_1
         .asc "DEBUG nom [param]",13,10
         .asc "              | debogueur",13,10
         .asc "COPY src dst  | copie un fichier",13,10
+        .asc "FORMAT X: [/Q]",13,10
+        .asc "              | formate X: (A: : un",13,10
+        .asc "              |   seul lecteur) ; /Q",13,10
+        .asc "              |   : vide le",13,10
+        .asc "              |   repertoire",13,10
         .asc "STAT [d:][afn]",13,10
         .asc "              | taille : enreg.,",13,10
         .asc "              |   blocs de 2 Ko,",13,10
