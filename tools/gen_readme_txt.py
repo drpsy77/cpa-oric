@@ -86,6 +86,7 @@ SECTIONS = [
  ]),
  ("USB : CLE DU LOCI", [
   ("EXPORT fic [nom]", "fic -> cle (nom : par defaut fic, minuscules gardees)"),
+  ("EXPORT afn [dos]", "jokers : chaque fichier sous son nom, dans le dossier dos"),
   ("IMPORT nom [fic]", "cle -> fic (par defaut : nom coupe a 8.3 ; B: seul : sur B:)"),
   ("/T", "(IMPORT) texte : LF seul -> CR LF"),
   ("USBDIR [chemin]", "liste (taille, <REP> : dossier)"),

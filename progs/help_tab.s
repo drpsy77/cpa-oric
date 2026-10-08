@@ -367,6 +367,11 @@ h_8
         .asc "              | fic -> cle (nom : par",13,10
         .asc "              |   defaut fic,",13,10
         .asc "              |   minuscules gardees)",13,10
+        .asc "EXPORT afn [dos]",13,10
+        .asc "              | jokers : chaque",13,10
+        .asc "              |   fichier sous son",13,10
+        .asc "              |   nom, dans le",13,10
+        .asc "              |   dossier dos",13,10
         .asc "IMPORT nom [fic]",13,10
         .asc "              | cle -> fic (par",13,10
         .asc "              |   defaut : nom coupe",13,10
