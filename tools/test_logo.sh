@@ -208,9 +208,18 @@ image carre_t
 if [ "$(sed -n 's/^carre //p' "$T/images")" != "$(sed -n 's/^carre_t //p' "$T/images")" ]
 then echo "DIFFERENT : image changée par l'écran texte"; ko=$((ko+1))
 else echo "identiques : image avant et après l'écran texte"; fi
+echo "== dessin : POINT TRAIT RECTANGLE PAVE CERCLE ETIQUETTE FIXECOULEUR ALLUME?"
+run dessin2 'PUT OUT.TXT LOGO
+|| charge "t14
+|||| cercle 200
+| fixecouleur 10
+|| quitte
+' 3200
+check dessin2
+image dessin2
 grep -v '^carre' "$T/images" > "$T/images2"
 if [ -n "$REF" ]; then cp "$T/images2" "$D/images.ref"; echo "référence écrite : images"
-elif diff "$D/images.ref" "$T/images2"; then echo "identiques : images (DEMO, T2)"
+elif diff "$D/images.ref" "$T/images2"; then echo "identiques : images (DEMO, T2, T14)"
 else echo "DIFFERENT : images"; ko=$((ko+1)); fi
 
 rm -rf "$T"

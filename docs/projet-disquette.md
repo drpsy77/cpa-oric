@@ -58,7 +58,8 @@ Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), 
 sur place, le son (dans LOGO : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON,
 JOUE?, et la coupure par ESC), et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
 les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
-ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), EDITE et le Retour d'EDIT (temps d'écriture
+ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), le dessin du lot L4 (POINT, TRAIT,
+RECTANGLE, PAVE, CERCLE, ETIQUETTE, FIXECOULEUR, ALLUME?), EDITE et le Retour d'EDIT (temps d'écriture
 et de lecture de LOGO.$$$, image gardée), `LOGO NOM` ; EXPORT, IMPORT et USBDIR (jamais
 lancés sur le vrai LOCI : voir le lot L1 plus bas) ; FORMAT (lot L2 : sur le LOCI et sur un
 vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (lot LA).
@@ -520,6 +521,35 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     N, `*.LOG` confirmé, `*.COM` : 2 fichiers proposés et 21 protégés gardés, réponse autre
     que O = abandon, `/Q` dans un script), REN (renommage, nom existant, fichier protégé,
     introuvable, usage), PUT avec TYPE.
+- LOGO, lot L4 (graphisme, octobre 2026) : `POINT x y`, `TRAIT`, `RECTANGLE`, `PAVE` (deux
+  coins opposés), `CERCLE r`, `ETIQUETTE x`, `FIXECOULEUR v` et la fonction `ALLUME? x y`.
+  LOGO.COM 18 217 octets (+746) ; zone des procédures : `procbase` `$6000` -> `$6300`
+  (768 octets de moins pour l'utilisateur). Choix (« à confirmer » dans la backlog, décidés) :
+  - Coordonnées de la tortue (centre 0 0, y vers le haut, décimaux admis), comme `FIXEXY` ;
+    la tortue ne bouge pas. Les points passent par `scr_pos` (le calcul de la tortue) ; un
+    point est évalué avant le suivant et gardé sur la pile (une fonction peut dessiner).
+  - Mode du crayon (trace, `GOMME`, `INVERSE`) respecté, que le crayon soit levé ou non
+    (`LC` ne concerne que le trait de la tortue). La tortue est déjà cachée pendant
+    l'exécution d'une ligne (`repl`) : rien à faire de plus pour « cacher la tortue ».
+  - Découpage : `TRAIT` et `RECTANGLE` (quatre `TRAIT`) passent par `seg`, qui découpe aux
+    bords ; `PAVE` met ses coins dans l'ordre et les borne à l'image (rien s'il est dehors) ;
+    `CERCLE` (BDOS, centre sur 8 bits) et `ETIQUETTE` ne dessinent rien si la tortue est
+    hors de l'image, le BDOS découpant le reste. Rayon 0 à 127 (limite du BDOS), au-delà
+    `Valeur hors limites`.
+  - `ETIQUETTE` : la valeur écrite comme par `ECRIS` (un nombre passe par `as_text`), 40
+    caractères au plus, copiés dans `llbuf` ; colonne = x / 6, haut du texte = y - 7 (le
+    texte est posé sur la ligne de la tortue, à sa droite).
+  - `FIXECOULEUR v` : attribut (encre 0-7, papier 16-23 ; 8-15 refusés) en colonne 0 des
+    lignes 0 à 126 (la 127 porte le retour au texte) ; le BDOS ne trace jamais sur un octet
+    d'attribut, la couleur reste.
+  - `ALLUME? x y` : 0 hors de l'image.
+  - Tous refusent l'écran texte (`need_img`).
+  - Essayé dans Oricutron, et nouveau scénario de `tools/test_logo.sh` (`t14.log` : dessin,
+    `ALLUME?` sur un point, hors de l'image, sur un trait gommé, dans un pavé ; `CERCLE 200`
+    et `FIXECOULEUR 10` refusés ; empreinte de l'image).
+  - Constaté au passage : `CHARGE` ne lit pas un fichier aux lignes terminées par LF seul
+    (fichier du Mac) : `IMPORT /T` est indispensable pour un `.LOG` (signalé dans le README).
+
 - Complétion des commandes par ESC (octobre 2026, à la demande de Pierre, réversible) : en
   début de ligne du CCP (mot qui commence à la colonne 0 ; pas dans LOGO ni DEBUG, qui
   lisent aussi leurs lignes par la fonction 10), ESC propose les commandes internes (table
@@ -549,7 +579,7 @@ lecteur dès que c'est possible.
 | L2 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | **fait** (1 573 octets ; essayé dans Oricutron ; restent le LOCI et un vrai Microdisc) |
 | L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | **fait** (2 216 octets ; un seul lecteur fait aussi, sauf pour `/S` ; restent le LOCI et un vrai Microdisc) |
 | LA | **Attributs et copie « à la CP/M »** (décidé avec Pierre, octobre 2026, option C) : (1) la disquette livrée a ses commandes **R/O et visibles** (DIR les montre, comme sur une disquette CP/M) : HELP, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, MEM, POKE, GO, EXPORT, IMPORT, USBDIR, EDIT, HEX, LOGO, ASM, DEBUG, plus README.TXT et CPA.INC ; les exemples (HELLO, GTEST, leurs `.ASM`, DEMO.LOG, DESSIN.BAT) restent sans attribut (ASM doit pouvoir réécrire HELLO.COM) ; attributs posés par `mkdisk.py` (nouvelle option) depuis `build.sh` ; (2) **STAT** : colonne `R` (protégé) / `S` (système, caché de DIR) et résumé en fin de liste ; (3) **COPY avec jokers**, comme PIP : `COPY *.COM B:`, `COPY B:*.LOG` ; (4) **`DISKCOPY /S` réduit à SYSGEN** : amorçage et système (LSN 0-67) seulement, la copie des fichiers SYS disparaît (les fichiers : `COPY *.COM B:`) ; SYS ne veut plus dire que « caché de DIR » ; (5) messages : IMPORT et COPY sur un fichier protégé disent `Fichier protege` (aujourd'hui `Repertoire plein`, `Write error`) | COPY grossit (~0,5 Ko), DISKCOPY maigrit ; rien de résident | **fait** (essayé dans Oricutron ; restent le LOCI et un vrai Microdisc) |
-| L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
+| L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | **fait** (essayé dans Oricutron ; reste le vrai Oric) |
 | L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
 
 La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,

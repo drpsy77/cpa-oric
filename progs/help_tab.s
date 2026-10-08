@@ -206,6 +206,20 @@ h_4
         .asc "LC  BC        | leve / baisse stylo",13,10
         .asc "CT  MT        | cache / montre",13,10
         .asc "VE  ORIGINE   | vide ecran / centre",13,10
+        .asc "POINT x y     | un point (coordonnees",13,10
+        .asc "              |   de la tortue, qui",13,10
+        .asc "              |   ne bouge pas)",13,10
+        .asc "TRAIT x y x y | un trait ; RECTANGLE,",13,10
+        .asc "              |   PAVE (plein) :",13,10
+        .asc "              |   coins opposes",13,10
+        .asc "CERCLE r      | autour de la tortue",13,10
+        .asc "              |   (r 0-127)",13,10
+        .asc "ETIQUETTE x   | ecrit x dans l'image",13,10
+        .asc "              |   a la tortue",13,10
+        .asc "FIXECOULEUR v | encre 0-7 ou papier",13,10
+        .asc "              |   16-23 de l'image",13,10
+        .asc "ALLUME? x y   | 1 si le point est",13,10
+        .asc "              |   allume",13,10
         .asc "ECRANTEXTE    | tout en texte",13,10
         .asc "ECRANMIXTE    | retour a l'image",13,10
         .asc "REPETE n [..] | repete la liste",13,10

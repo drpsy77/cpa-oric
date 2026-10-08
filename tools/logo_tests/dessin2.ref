@@ -1,0 +1,13 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "T14
+DESSIN defini.
+1
+0
+0
+1
+Charge.
+?  CERCLE 200
+Valeur hors limites : CERCLE
+?  FIXECOULEUR 10
+Valeur hors limites : FIXECOULEUR
+?  QUITTE
