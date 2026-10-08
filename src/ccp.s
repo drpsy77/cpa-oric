@@ -306,15 +306,6 @@ cmd_table
         .byt "E"|$80
         .word cmd_pause
 #ifdef DISK
-        .asc "TYP"
-        .byt "E"|$80
-        .word cmd_type
-        .asc "ER"
-        .byt "A"|$80
-        .word cmd_era
-        .asc "RE"
-        .byt "N"|$80
-        .word cmd_ren
         .asc "SAV"
         .byt "E"|$80
         .word cmd_save

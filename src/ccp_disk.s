@@ -118,20 +118,6 @@ yes     sec
         rts
 .)
 
-; all_wild : C=1 si le nom est entièrement fait de jokers (*.*)
-all_wild
-.(
-        ldy #11
-loop    lda (ZP_CFCB),y
-        cmp #"?"
-        bne no
-        dey
-        bne loop
-        sec
-        rts
-no      clc
-        rts
-.)
 
 ; check_name : C=1 si le nom est vide ou contient un joker
 check_name
@@ -322,123 +308,8 @@ free    jsr count_free          ; espace libre en Ko = blocs * 2
         jmp print_z
 .)
 
-; ---------------------------------------------------------------------
-; TYPE fichier
-; ---------------------------------------------------------------------
-cmd_type
-.(
-        jsr def_chk
-        bcs syn
-        jsr dma_default
-        ldx #15
-        jsr bdos_def
-        cmp #$FF
-        beq nofile
-rec     ldx #20
-        jsr bdos_def
-        cmp #0
-        bne end
-        ldy #0
-ch      lda DEF_DMA,y
-        cmp #$1A                ; ^Z : fin de texte
-        beq end
-        jsr conout
-        iny
-        bpl ch
-        jsr const               ; une touche interrompt l'affichage
-        beq rec
-        jsr conin_raw
-end     lda cur_x               ; retour à la ligne seulement si nécessaire
-        cmp #FIRST_COL
-        beq endok
-        jmp crlf
-endok   rts
-nofile  jmp no_file
-syn     jmp syntax_err
-.)
-
-; ---------------------------------------------------------------------
-; ERA afn
-; ---------------------------------------------------------------------
-cmd_era
-.(
-        jsr def_pos
-        jsr is_empty
-        bcs syn
-        jsr all_wild
-        bcc go
-        lda #<msg_all
-        ldy #>msg_all
-        jsr print_z
-        jsr conin_raw
-        jsr conout
-        pha
-        jsr crlf
-        pla
-        and #$DF
-        cmp #"Y"
-        bne quit
-go      ldx #19
-        jsr bdos_def
-        cmp #$FE
-        beq ro
-        cmp #$FF
-        bne quit
-        jmp no_file
-ro      jmp file_ro
-quit    rts
-syn     jmp syntax_err
-.)
-
-; ---------------------------------------------------------------------
-; REN nouveau=ancien
-; ---------------------------------------------------------------------
-cmd_ren
-.(
-        lda #<CCP_FCB2
-        sta ZP_CFCB
-        lda #>CCP_FCB2
-        sta ZP_CFCB+1
-        lda #16
-        sta pf_len
-        ldx ccp_pos
-        jsr pf_chk
-        bcs syn
-        jsr skip_spaces
-        lda CMDBUF+2,x
-        cmp #"="
-        bne syn
-        inx
-        jsr cf_def
-        jsr pf_chk
-        bcs syn
-        ; le nouveau nom ne doit pas exister
-        jsr dma_default
-        ldx #17
-        lda #<CCP_FCB2
-        ldy #>CCP_FCB2
-        jsr bdos
-        cmp #$FF
-        bne exists
-        ldx #15
-cp      lda CCP_FCB2,x
-        sta DEF_FCB+16,x
-        dex
-        bpl cp
-        ldx #23
-        jsr bdos_def
-        cmp #$FE
-        beq ro
-        cmp #$FF
-        bne done
-        jmp no_file
-ro      jmp file_ro
-done    rts
-exists  lda #<msg_exists
-        ldy #>msg_exists
-        jmp print_z
-syn     jmp syntax_err
-.)
+; TYPE, ERA et REN sont des programmes (progs/type.s, era.s, ren.s) :
+; place libérée dans le système (piste J de la revue de place).
 
 ; ---------------------------------------------------------------------
 ; SAVE n fichier : enregistre n pages de 256 octets à partir de $0500
@@ -702,15 +573,6 @@ msg_free
         .asc "K free",13,10,0
 msg_nofile
         .asc "No file",13,10,0
-msg_all
-        .asc "ALL (Y/N)? ",0
-msg_exists
-        .asc "File exists",13,10,0
-file_ro lda #<msg_ro
-        ldy #>msg_ro
-        jmp print_z
-msg_ro
-        .asc "File R/O",13,10,0
 msg_dfull
         .asc "Disk full",13,10,0
 msg_dirfull

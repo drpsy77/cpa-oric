@@ -40,7 +40,7 @@ SECTIONS = [
   ("DIR [afn]", "liste des fichiers"),
   ("DIRS [afn]", "idem, fichiers SYS compris"),
   ("TYPE fic", "affiche un texte"),
-  ("ERA afn", "efface des fichiers"),
+  ("ERA afn [/Q]", "efface, apres confirmation (/Q : sans question)"),
   ("REN nouv=anc", "renomme"),
   ("SAVE n fic", "sauve n pages de 0500"),
   ("PUT fic cmd [param]", "lance cmd, copie sa sortie dans fic"),
