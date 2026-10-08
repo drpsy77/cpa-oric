@@ -173,6 +173,7 @@ Variables utiles :
 | `DSKB=b.dsk` (`DSKC`, `DSKD`) | disquettes des lecteurs B: à D:, copiées en `SORTIE.b.dsk`... (on y relit ce qui a été écrit). Les lecteurs sont remplis dans l'ordre : avec `DSKB` seul, C: et D: sont vides (essai d'un lecteur absent) |
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
+| `DISK_OPTS=""` (pour `build.sh`) | système sans la complétion des commandes par ESC (option `CPLCMD`, ~120 octets résidents) ; par défaut `-DCPLCMD` |
 | `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR) ; sans elle, ces commandes répondent `LOCI absent` |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |
 

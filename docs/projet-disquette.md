@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F486`, marge 490 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
+**Système** (`$C000-$F501`, marge 367 octets jusqu'à `$F670`, 490 sans l'option `CPLCMD` ; page `$FF00-$FFB7`, marge 66
 octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
@@ -20,7 +20,8 @@ octets jusqu'aux vecteurs) :
 - voyants au bout de la barre de menus : `A` / `a` (majuscules / minuscules), `P` (imprimante) ;
 - lecture de ligne (BDOS 10, `src/rline.s`) : curseur ← →, insertion, DEL / CTRL-D, CTRL-A / E,
   historique ↑ ↓ (256 octets, garde ses lignes au démarrage à chaud), complétion des noms de
-  fichiers par ESC (partie commune, puis liste des noms possibles) ;
+  fichiers par ESC (partie commune, puis liste des noms possibles), et en début de ligne des
+  commandes internes et des `.COM` / `.BAT` sans leur type (option `CPLCMD`) ;
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
 - quatre lecteurs A: à D: (Microdisc, LOCI, Oricutron) : `B:` au prompt, article « Lecteur
   suivant » du menu Systeme, lecteur dans tout nom de fichier, programme cherché sur A: s'il
@@ -519,6 +520,19 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     N, `*.LOG` confirmé, `*.COM` : 2 fichiers proposés et 21 protégés gardés, réponse autre
     que O = abandon, `/Q` dans un script), REN (renommage, nom existant, fichier protégé,
     introuvable, usage), PUT avec TYPE.
+- Complétion des commandes par ESC (octobre 2026, à la demande de Pierre, réversible) : en
+  début de ligne du CCP (mot qui commence à la colonne 0 ; pas dans LOGO ni DEBUG, qui
+  lisent aussi leurs lignes par la fonction 10), ESC propose les commandes internes (table
+  du CCP, `cmd_table`, relue telle quelle) et les fichiers `.COM` / `.BAT` du lecteur
+  courant, sans leur type ; les autres fichiers ne sont pas proposés. Le reste de la ligne
+  garde la complétion des noms de fichiers. Coût : 123 octets résidents (marge 490 -> 367),
+  et `cp_ti`, `cp_first` (`$FDA8-$FDA9`, octets libres après `dsk_trk`). Option d'assemblage `CPLCMD`
+  (`#ifdef` dans `src/rline.s`), mise par `build.sh` (`DISK_OPTS`, `-DCPLCMD` par défaut) :
+  `DISK_OPTS="" ./build.sh` donne un système sans elle, de même taille qu'avant (seules
+  deux cibles de branchement changent), et le commit est à part (`git revert` possible).
+  Écarté : chercher aussi sur A: depuis un autre lecteur (plus coûteux, peu utile).
+  Essayé dans Oricutron : `FB` -> `FBOX `, `ED` -> `EDIT `, `DES` -> `DESSIN `, `D` et `L`
+  (listes), `HEL` (HELLO et HELP), `TYPE REA` -> `TYPE README.TXT ` (inchangé).
 
 ## Suite prévue (par priorité)
 
@@ -540,8 +554,7 @@ lecteur dès que c'est possible.
 
 La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,
 voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par ESC des commandes
-(premier mot) suit, dans un commit à part et derrière une option d'assemblage, pour revenir
-en arrière facilement si la place manque.
+(premier mot) est faite aussi, dans un commit à part et derrière une option d'assemblage.
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
    - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
@@ -639,7 +652,7 @@ en arrière facilement si la place manque.
 
 ## Contraintes à garder en tête
 
-- 490 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
+- 367 octets libres dans la zone du code (490 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
   justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
   plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H et
   I de la revue de place (~325 octets) ; J (TYPE, ERA et REN en `.COM`) est faite.

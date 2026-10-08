@@ -24,7 +24,7 @@ SECTIONS = [
   ("CTRL-T", "majuscules oui/non (voyant A ou a au bout de la barre)"),
   ("<- ->", "deplace dans la ligne (on tape en insertion)"),
   ("haut bas", "lignes deja tapees (historique)"),
-  ("ESC", "complete un nom de fichier ; 2 fois : les noms possibles"),
+  ("ESC", "complete un nom de fichier (en debut de ligne : une commande) ; 2 fois : les noms possibles"),
   ("DEL ^D", "efface a gauche / sous"),
   ("^A ^E", "debut / fin de ligne"),
   ("CTRL-X", "efface la ligne"),

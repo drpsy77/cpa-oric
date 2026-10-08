@@ -19,8 +19,11 @@ CTRL-T        | majuscules oui/non
 haut bas      | lignes deja tapees
               |   (historique)
 ESC           | complete un nom de
-              |   fichier ; 2 fois :
-              |   les noms possibles
+              |   fichier (en debut
+              |   de ligne : une
+              |   commande) ; 2 fois
+              |   : les noms
+              |   possibles
 DEL ^D        | efface a gauche /
               |   sous
 ^A ^E         | debut / fin de ligne
