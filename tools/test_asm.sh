@@ -11,7 +11,7 @@ T=$(mktemp -d)
 cp progs/cpa.inc progs/*_tab.s progs/*_inc.s "$T/"
 (cd progs && $XA -o "$T/ASM.COM" asm.s)
 ok=0; ko=0
-for p in hello copy gtest hex edit logo debug help set poke go mem stat xdo export import usbdir format asm; do
+for p in hello copy gtest hex edit logo debug help set poke go mem stat xdo export import usbdir format diskcopy asm; do
   P=$(echo $p | tr a-z A-Z)
   cp progs/$p.s "$T/$P.ASM"
   (cd progs && $XA -o "$T/ref.bin" $p.s)

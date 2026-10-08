@@ -43,7 +43,8 @@ avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), XDO (appel
 de script à script), COPY, GTEST, HELLO ; EXPORT, IMPORT et USBDIR (échange de fichiers avec
-la clé USB du LOCI) ; FORMAT (formatage, un seul lecteur possible, `/Q` rapide).
+la clé USB du LOCI) ; FORMAT (formatage, un seul lecteur possible, `/Q` rapide) ; DISKCOPY
+(copie de disquette, un seul lecteur possible ; `/S` : système et fichiers SYS).
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
 STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans
@@ -57,7 +58,7 @@ les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
 ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), EDITE et le Retour d'EDIT (temps d'écriture
 et de lecture de LOGO.$$$, image gardée), `LOGO NOM` ; EXPORT, IMPORT et USBDIR (jamais
 lancés sur le vrai LOCI : voir le lot L1 plus bas) ; FORMAT (lot L2 : sur le LOCI et sur un
-vrai Microdisc).
+vrai Microdisc) ; DISKCOPY (lot L3).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -435,6 +436,34 @@ vrai Microdisc).
     de LOGO.COM sur la disquette formatée, `/Q`, refus de `/Q` sur une image vierge, réponse
     N, ESC, lecteur absent (`Lecteur C: absent ou vide`), `FORMAT A:`. Environ une minute
     dans Oricutron pour une disquette complète.
+- DISKCOPY.COM (lot L3, octobre 2026) : 2 216 octets (deux blocs), rien de résident.
+  Choix :
+  - Les secteurs passent par SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première
+    vraie utilisation : elles marchent), par tranches aussi grandes que la TPA (une page par
+    secteur, du haut du programme au haut de la TPA, `$020C` : ~165 secteurs en mode texte,
+    moins en SPLIT). SELDSK avant chaque passage d'un lecteur à l'autre ; il ne relit le
+    répertoire qu'au premier appel. La source et la destination sont vérifiées lisibles
+    avant la confirmation (`Destination illisible : FORMAT ?`).
+  - Sans `/T` : LSN 0-67, puis les blocs cités par le répertoire de la source (lu
+    directement, 16 secteurs ; blocs 0 et 1 toujours). Le reste de la destination garde son
+    ancien contenu, que plus rien ne désigne.
+  - `/S` : LSN 0-67, puis les fichiers SYS (extent 0 du répertoire de la source, 48 au plus)
+    copiés par le BDOS comme COPY.COM ; sur la destination, attributs levés (fonction 30),
+    fichier effacé, recopié, puis attributs de la source posés. Les autres fichiers ne
+    bougent pas (les secteurs 0-67 sont hors de la zone des fichiers). Deux lecteurs exigés :
+    avec un seul, il faudrait garder les fichiers en mémoire entre deux échanges.
+  - Un seul lecteur (`DISKCOPY A: A:`), fait dès ce lot pour la copie de secteurs : la
+    source puis la destination sont demandées à chaque tranche ; le tampon du BDOS est vidé
+    (fonction 13) avant le premier échange, et la disquette système est redemandée avant le
+    démarrage à chaud.
+  - Au passage, bug de SET corrigé : `SET B:NOM RO` changeait les attributs du fichier de
+    même nom sur le lecteur courant (le FCB de la fonction 30 avait toujours le lecteur 0) ;
+    il prend maintenant le lecteur demandé.
+  - Essayé dans Oricutron : copie sur une disquette formatée par FORMAT (secteurs utiles
+    identiques, la copie démarre), `/T /V` (1 428 secteurs identiques), `/S /V` (système
+    identique, COPY.COM protégé de la destination remplacé, fichiers de données gardés,
+    attributs recopiés), `A: A:` (échanges demandés à chaque tranche), destination non
+    formatée refusée, `/S` avec un seul lecteur refusé, ESC.
 
 ## Suite prévue (par priorité)
 
@@ -449,7 +478,7 @@ lecteur dès que c'est possible.
 |---|---|---|---|
 | L1 | **Échange de fichiers avec la clé USB du LOCI** (voir 6 plus bas) : `EXPORT fic [nom]`, `IMPORT nom [fic] [/T]`, `USBDIR [chemin]` ; en tête, à la demande de Pierre | 1-1,7 Ko par `.COM`, rien de résident | **fait** (essayé dans Oricutron avec la MIA simulée ; reste le vrai LOCI) |
 | L2 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | **fait** (1 573 octets ; essayé dans Oricutron ; restent le LOCI et un vrai Microdisc) |
-| L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | à faire (un seul lecteur : plus tard) |
+| L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | **fait** (2 216 octets ; un seul lecteur fait aussi, sauf pour `/S` ; restent le LOCI et un vrai Microdisc) |
 | L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
 | L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
 
@@ -526,8 +555,8 @@ seront recopiées sur chaque disquette par `DISKCOPY /S`.
    hors de la disquette construite pour l'instant.
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
-4. Lecteurs : DISKCOPY (lot L3 ; FORMAT, lot L2, est fait) ; DISKCOPY avec un seul lecteur ensuite ;
-   `COPY *.* B:` (jokers dans COPY, comme PIP) si le besoin vient.
+4. Lecteurs : FORMAT et DISKCOPY faits (lots L2 et L3) ; reste `DISKCOPY /S` avec un seul
+   lecteur, et `COPY *.* B:` (jokers dans COPY, comme PIP) si le besoin vient.
 5. Pistes : base de données simple sur l'accès direct.
 6. **Échange de fichiers avec la clé USB du LOCI** (étude, octobre 2026). Le LOCI dérive du
    Picocomputer 6502 (RP6502) : son « MIA » expose à l'Oric l'API du RIA, en `$03A0-$03B9`
