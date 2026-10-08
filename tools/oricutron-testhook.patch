@@ -1,3 +1,17 @@
+diff --git a/disk.c b/disk.c
+index 82b4354..a53dc9f 100644
+--- a/disk.c
++++ b/disk.c
+@@ -1494,6 +1494,9 @@ void wd17xx_write(struct machine *oric, struct wd17xx *wd, unsigned short addr,
+ #endif
+             wd->delayedint = 32;
+             wd->currentop = COP_NUFFINK;
++            /* CP/A : la piste a changé de disposition, le cache des
++               secteurs (diskimage_cachetrack) doit être refait */
++            wd->disk[wd->c_drive]->cachedtrack = -1;
+             // wd->r_status &= (~WSF_DRQ);
+             wd->r_status = 0;
+             wd->clrdrq(wd->drqarg);
 diff --git a/gui.h b/gui.h
 index 28fceac..aa5ef49 100644
 --- a/gui.h

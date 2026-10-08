@@ -440,6 +440,16 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     de LOGO.COM sur la disquette formatée, `/Q`, refus de `/Q` sur une image vierge, réponse
     N, ESC, lecteur absent (`Lecteur C: absent ou vide`), `FORMAT A:`. Environ une minute
     dans Oricutron pour une disquette complète.
+  - Correction (signalée par Pierre, disquette SEDORIC en B:) : « Relecture : erreur
+    secteur 01 » sur la face 0 de chaque piste. Oricutron garde en cache la disposition des
+    secteurs d'une piste (lue au positionnement ou au changement de face) et ne l'oubliait
+    pas après Write Track ; SEDORIC place ses secteurs ailleurs (premier en-tête à l'octet
+    108 de la piste, 72 pour CP/A), la relecture visait donc les anciennes positions. Les
+    disquettes déjà au format CP/A passaient (mêmes positions). Deux remèdes : FORMAT se
+    positionne avec la face 1 choisie (la face 0 est alors relue d'après une piste fraîche,
+    y compris avec l'Oricutron de l'OSDK, non corrigé) ; et le correctif d'Oricutron vide ce
+    cache à la fin de Write Track (`disk.c`). Essayé : la disquette SEDORIC de Pierre et sa
+    copie à moitié formatée, 84 pistes contrôlées.
 - DISKCOPY.COM (lot L3, octobre 2026) : 2 216 octets (deux blocs), rien de résident.
   Choix :
   - Les secteurs passent par SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première
