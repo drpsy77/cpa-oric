@@ -16,6 +16,8 @@
 #   DSK=fichier.dsk   démarre sur cette disquette (copiée : l'original ne change pas)
 #   DSKB, DSKC, DSKD  disquettes des lecteurs B: à D: (copiées en SORTIE.b.dsk...)
 #   ORIC_ROM=cpa      démarre sur build/cpa.rom au lieu de la ROM BASIC 1.1
+#   ORIC_LOCI=dossier interface du LOCI simulée, ce dossier tenant lieu de clé
+#                     USB (EXPORT, IMPORT, USBDIR)
 #   SHOW=1            montre la fenêtre (sinon écran virtuel Xvfb)
 #   ORICUTRON=dossier Oricutron avec le crochet de test (défaut tools/oricutron)
 #

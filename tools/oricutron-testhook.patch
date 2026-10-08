@@ -120,7 +120,7 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..2ac267c 100644
+index 00b7b0e..734c680 100644
 --- a/machine.c
 +++ b/machine.c
 @@ -86,7 +86,7 @@ extern struct osdmenuitem mainitems[];
@@ -132,6 +132,190 @@ index 00b7b0e..2ac267c 100644
                          0x00, 0x00, 0xff,
                          0xff, 0x00, 0xff,
                          0x00, 0xff, 0xff,
+@@ -502,6 +502,163 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+   oric->mem[addr&0x3fff] = data;
+ }
+ 
++/* --- CP/A : MIA du LOCI simulée (registres $03A0-$03BF), pour essayer
++   EXPORT, IMPORT et USBDIR sans le matériel. Active seulement si la
++   variable ORIC_LOCI donne un dossier, qui tient lieu de clé USB ("1:",
++   ou pas de lecteur) ; "0:" (mémoire interne) est son sous-dossier int.
++   Opérations faites d'un coup (pas d'attente) : 00 vide la pile, 14 open,
++   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire.
++   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
++#ifdef _WIN32
++#define mia_active(addr) 0
++#define mia_read(addr) 0
++#define mia_write(addr, data)
++#else
++#include <dirent.h>
++#include <strings.h>
++#include <sys/stat.h>
++static unsigned char mia_r[32];          /* $03A0-$03BF */
++static unsigned char mia_xs[513];        /* pile d'échange, mia_xs[512] = 0 */
++static int mia_xp = 512, mia_init = 0;
++static FILE *mia_f[16];
++static DIR *mia_d[4];
++static char mia_dpath[4][1024];
++
++static void mia_ret(int ax)
++{
++  mia_r[0x10] = 0xB8; mia_r[0x11] = 0x50; mia_r[0x12] = 0x00; mia_r[0x13] = 0xA9;
++  mia_r[0x14] = ax & 0xff; mia_r[0x15] = 0xA2; mia_r[0x16] = (ax >> 8) & 0xff; mia_r[0x17] = 0x60;
++  mia_r[0x0C] = mia_xs[mia_xp];
++}
++static void mia_err(int e)
++{
++  mia_xp = 512; mia_r[0x0D] = e; mia_r[0x0E] = 0; mia_ret(0xffff);
++}
++/* chemin de l'Oric -> chemin du PC (casse ignorée, comme FAT) ; 0 si refusé */
++static int mia_path(const char *p, char *out, int create)
++{
++  const char *root = getenv("ORIC_LOCI");
++  char comp[256];
++  int internal = 0;
++  if (p[0] >= '0' && p[0] <= '9' && p[1] == ':') { internal = (p[0] == '0'); p += 2; }
++  snprintf(out, 1024, "%s%s", root, internal ? "/int" : "");
++  while (*p) {
++    int n = 0;
++    while (*p == '/') p++;
++    if (!*p) break;
++    while (*p && *p != '/' && n < 255) comp[n++] = *p++;
++    comp[n] = 0;
++    if (!strcmp(comp, "..")) return 0;
++    if (!strcmp(comp, ".")) continue;
++    {
++      DIR *d = opendir(out); struct dirent *e; int found = 0;
++      if (d) {
++        while ((e = readdir(d)) != NULL)
++          if (!strcasecmp(e->d_name, comp)) { strcat(out, "/"); strcat(out, e->d_name); found = 1; break; }
++        closedir(d);
++      }
++      if (!found) {
++        if (*p || !create) { strcat(out, "/"); strcat(out, comp); return 2; }  /* absent */
++        strcat(out, "/"); strcat(out, comp);
++      }
++    }
++  }
++  return 1;
++}
++static void mia_op(unsigned char op)
++{
++  char path[1024];
++  int a = mia_r[0x14], i, n;
++  switch (op) {
++  case 0x00: mia_xp = 512; mia_ret(0); return;
++  case 0x14: {            /* open : A = drapeaux de cc65 */
++    const char *mode; int r;
++    for (i = 0; i < 16 && mia_f[i]; i++) ;
++    if (i == 16) { mia_err(5); return; }
++    r = mia_path((char *)&mia_xs[mia_xp], path, (a & 0x10) != 0);
++    mia_xp = 512;
++    if (!r) { mia_err(32 + 6); return; }
++    if ((a & 3) == 1) mode = "rb";
++    else if (a & 0x10) mode = (a & 0x20) ? "wb" : (a & 0x40) ? "ab" : "r+b";
++    else mode = "r+b";
++    if ((a & 0x10) && !(a & 0x20) && !(a & 0x40) && r == 2) mode = "w+b";
++    mia_f[i] = fopen(path, mode);
++    if (!mia_f[i]) { mia_err(32 + 4); return; }
++    mia_ret(i + 3); return; }
++  case 0x15:
++    if (a < 3 || a >= 19 || !mia_f[a - 3]) { mia_err(7); return; }
++    fclose(mia_f[a - 3]); mia_f[a - 3] = NULL; mia_ret(0); return;
++  case 0x16: {            /* read_xstack : compte sur la pile, A = fichier */
++    unsigned char buf[512];
++    int cnt = (mia_xp == 510) ? mia_xs[510] | (mia_xs[511] << 8) : (mia_xp == 511) ? mia_xs[511] : 0;
++    mia_xp = 512;
++    if (a < 3 || a >= 19 || !mia_f[a - 3] || cnt > 512) { mia_err(7); return; }
++    n = fread(buf, 1, cnt, mia_f[a - 3]);
++    mia_xp = 512 - n; memcpy(&mia_xs[mia_xp], buf, n);
++    mia_ret(n); return; }
++  case 0x18:              /* write_xstack */
++    n = 512 - mia_xp;
++    if (a < 3 || a >= 19 || !mia_f[a - 3]) { mia_err(7); return; }
++    n = fwrite(&mia_xs[mia_xp], 1, n, mia_f[a - 3]);
++    fflush(mia_f[a - 3]);
++    mia_xp = 512; mia_ret(n); return;
++  case 0x1B:
++    if (mia_path((char *)&mia_xs[mia_xp], path, 0) != 1 || remove(path)) { mia_err(32 + 4); return; }
++    mia_xp = 512; mia_ret(0); return;
++  case 0x80:              /* opendir ("" : liste des appareils, non simulée) */
++    if (!mia_xs[mia_xp]) { mia_err(4); return; }
++    for (i = 0; i < 4 && mia_d[i]; i++) ;
++    if (i == 4 || mia_path((char *)&mia_xs[mia_xp], path, 0) != 1) { mia_err(32 + 5); return; }
++    mia_xp = 512;
++    mia_d[i] = opendir(path);
++    if (!mia_d[i]) { mia_err(32 + 5); return; }
++    strcpy(mia_dpath[i], path);
++    mia_ret(64 + i); return;
++  case 0x81:
++    if (a < 64 || a >= 68 || !mia_d[a - 64]) { mia_err(7); return; }
++    closedir(mia_d[a - 64]); mia_d[a - 64] = NULL; mia_xp = 512; mia_ret(0); return;
++  case 0x82: {            /* readdir : 72 octets, comme struct dir_dirent */
++    struct dirent *e; unsigned char *d = &mia_xs[512 - 72];
++    if (a < 64 || a >= 68 || !mia_d[a - 64]) { mia_err(7); return; }
++    memset(d, 0, 72);
++    d[0] = a;
++    do e = readdir(mia_d[a - 64]); while (e && (!strcmp(e->d_name, ".") || !strcmp(e->d_name, "..")));
++    if (e) {
++      struct stat st; char full[2048];
++      strncpy((char *)d + 2, e->d_name, 63);
++      snprintf(full, sizeof full, "%s/%s", mia_dpath[a - 64], e->d_name);
++      if (!stat(full, &st)) {
++        if (S_ISDIR(st.st_mode)) d[66] = 0x10;
++        else { d[68] = st.st_size; d[69] = st.st_size >> 8; d[70] = st.st_size >> 16; d[71] = st.st_size >> 24; }
++      }
++    }
++    mia_xp = 512 - 72; mia_ret(0); return; }
++  default:
++    mia_err(13);
++  }
++}
++static int mia_active(unsigned short addr)
++{
++  if (addr < 0x3A0 || addr > 0x3BF || !getenv("ORIC_LOCI")) return 0;
++  if (!mia_init) { mia_init = 1; mia_xs[512] = 0; mia_ret(0xffff); }
++  return 1;
++}
++static void mia_write(unsigned short addr, unsigned char data)
++{
++  int i = addr - 0x3A0;
++  if (i == 0x0C) { if (mia_xp) mia_xs[--mia_xp] = data; mia_r[0x0C] = mia_xs[mia_xp]; }
++  else if (i == 0x0F) { mia_r[0x0F] = data; mia_op(data); }
++  else mia_r[i] = data;
++}
++static unsigned char mia_read(unsigned short addr)
++{
++  int i = addr - 0x3A0;
++  unsigned char v = mia_r[i];
++  if (i == 0x0C) { if (mia_xp < 512) mia_xp++; mia_r[0x0C] = mia_xs[mia_xp]; }
++  return v;
++}
++#endif
++
+ // Oric Atmos + microdisc
+ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
+ {
+@@ -517,7 +674,9 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+ 
+   if((addr & 0xff00) == 0x0300)
+   {
+-    if((addr >= 0x310) && (addr < 0x31c))
++    if(mia_active(addr))
++      mia_write(addr, data);
++    else if((addr >= 0x310) && (addr < 0x31c))
+       microdisc_write(&oric->md, addr, data);
+ 
+     else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
+@@ -918,6 +1077,8 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+ 
+   if((addr & 0xff00) == 0x0300)
+   {
++    if(mia_active(addr))
++      return mia_read(addr);
+     if((addr >= 0x310) && (addr < 0x31c))
+       return microdisc_read(&oric->md, addr);
+ 
 diff --git a/main.c b/main.c
 index a47cd0c..c049951 100644
 --- a/main.c

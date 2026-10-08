@@ -262,6 +262,48 @@ et le texte ajouté ensuite par le script restent ensemble à l'écran. Le scrip
 passer de paramètre à LOGO (`LOGO NOM` ne prend que le nom du fichier) : les valeurs sont dans
 `NOM.LOG`, qu'on peut avoir écrit avec EDIT.
 
+## Échange de fichiers avec la clé USB du LOCI
+
+Sur un Oric équipé d'un LOCI, trois commandes copient des fichiers entre CP/A et la clé USB
+du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC ni par
+`mkdisk.py` :
+
+| Commande | Effet |
+|---|---|
+| `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, à la racine) |
+| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF |
+| `USBDIR [chemin]` | liste un dossier de la clé (la racine par défaut) : nom et taille, `<REP>` pour un dossier |
+
+    A>EXPORT LETTRE.TXT
+    A>EXPORT B:JEU.LOG 1:/oric/jeu.log
+    A>IMPORT notes.txt /T
+    A>IMPORT docs/MATH.LOG B:
+    A>USBDIR docs
+
+Les noms de la clé peuvent avoir un chemin. Sans lecteur, c'est la première clé USB vue par
+le LOCI : c'est le plus sûr, car avec un hub la clé n'est pas forcément `1:` (le LOCI
+numérote les appareils USB). `0:` désigne la mémoire interne du LOCI (`USBDIR 0:`,
+`EXPORT X.TXT 0:X.TXT`). Un nom avec des espaces ne passe pas sur la ligne de commande :
+le renommer sur le Mac.
+
+- Un fichier du même nom est remplacé, sur la clé comme dans CP/A.
+- EXPORT retire les `^Z` (`$1A`) qui complètent le dernier enregistrement (même règle que
+  STAT) : un texte arrive à sa vraie taille ; les fins de ligne restent CR LF, que les
+  éditeurs du Mac lisent. IMPORT complète le dernier enregistrement par des `^Z`. Un binaire
+  fait l'aller-retour à l'identique, sauf s'il se termine réellement par des octets `$1A`.
+- EXPORT refuse un nom en `.DSK` : ce pourrait être l'image de disquette en service.
+- Si la disquette ou la clé est pleine, le fichier commencé est effacé (IMPORT) ou le message
+  le dit (EXPORT).
+- USBDIR ne montre ni les fichiers cachés ou système, ni ceux qui commencent par un point
+  (les `._NOM` que le Mac laisse sur les clés FAT). ESC ou CTRL-C arrête la liste.
+- Sans LOCI (Oricutron, Microdisc, Cumulus) : `LOCI absent : cle USB inaccessible`.
+  Les erreurs du LOCI s'affichent avec leur code : `Erreur USB 36 : introuvable`.
+
+Ces commandes passent par l'interface que le LOCI offre au 6502, celle du Picocomputer 6502
+(registres en `$03A0-$03BF`, détail dans `progs/loci_inc.s`). Pour les essayer sans le
+matériel, l'Oricutron de l'atelier simule cette interface sur un dossier du PC :
+`ORIC_LOCI=dossier` (voir « Outils »).
+
 ## Démarrage et reprise après plantage
 
 Au démarrage à froid, CP/A teste la RAM des programmes comme le fait la ROM de l'Atmos :
@@ -476,6 +518,7 @@ Programmes fournis sur la disquette :
   `CPA.INC`.
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits plus haut.
+- `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
 
 ## LOGO
 
@@ -959,7 +1002,10 @@ Autres fichiers dans `tools/` :
 - `gen_readme_txt.py` : textes d'aide, à partir d'une seule liste : `files/readme.txt` (`README.TXT`
   sur la disquette) et `progs/help_tab.s` (les rubriques de `HELP.COM`), 37 colonnes au plus ;
 - `gen_asm_tab.py` : table des mnémoniques et des opcodes de l'assembleur (`progs/asm_tab.s`) ;
-- `oricutron-testhook.patch` : frappe simulée et dump mémoire pour ces tests.
+- `oricutron-testhook.patch` : frappe simulée et dump mémoire pour ces tests ; avec la
+  variable `ORIC_LOCI=dossier`, l'interface du LOCI simulée sur ce dossier, qui tient lieu de
+  clé USB (`0:` est son sous-dossier `int`) : EXPORT, IMPORT et USBDIR marchent dans
+  l'émulateur (`ORIC_LOCI=/tmp/cle DSK=build/cpa.dsk tools/run_test.sh ...`).
 
 ## Limites connues
 
