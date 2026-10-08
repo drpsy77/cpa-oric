@@ -188,9 +188,14 @@ DEL ^D        | efface avant / sous
 ^O            | insere / remplace
 ^F ^G         | cherche / suivant
 ^S            | enregistre
+^L            | insere un fichier au
+              |   curseur
+^P            | imprime le texte (ESC
+              |   arrete)
 FUNCT         | menus Fichier (dont
-              |   Inserer), Edition,
-              |   Chercher, Options
+              |   Inserer, Imprimer),
+              |   Edition, Chercher,
+              |   Options
 Retour        | (lance par EDITE de
               |   LOGO) enregistre et
               |   revient

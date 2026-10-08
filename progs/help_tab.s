@@ -176,9 +176,14 @@ h_2
         .asc "^O            | insere / remplace",13,10
         .asc "^F ^G         | cherche / suivant",13,10
         .asc "^S            | enregistre",13,10
+        .asc "^L            | insere un fichier au",13,10
+        .asc "              |   curseur",13,10
+        .asc "^P            | imprime le texte (ESC",13,10
+        .asc "              |   arrete)",13,10
         .asc "FUNCT         | menus Fichier (dont",13,10
-        .asc "              |   Inserer), Edition,",13,10
-        .asc "              |   Chercher, Options",13,10
+        .asc "              |   Inserer, Imprimer),",13,10
+        .asc "              |   Edition, Chercher,",13,10
+        .asc "              |   Options",13,10
         .asc "Retour        | (lance par EDITE de",13,10
         .asc "              |   LOGO) enregistre et",13,10
         .asc "              |   revient",13,10

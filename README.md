@@ -548,12 +548,18 @@ Le texte peut atteindre environ 34 Ko.
 | CTRL-O | insertion / remplacement |
 | CTRL-F / CTRL-G | chercher / suivant (repart du début si besoin) |
 | CTRL-S | enregistrer |
+| CTRL-L | insérer un fichier au curseur (Fichier, Insérer...) |
+| CTRL-P | imprimer le texte (Fichier, Imprimer) |
 | FUNCT | menus |
 
 Menus :
-- **Fichier** : Nouveau, Ouvrir..., Insérer..., Enregistrer, Enreg. sous..., Quitter. Le système
-  demande confirmation avant de perdre des modifications. Insérer... ajoute le contenu d'un autre
-  fichier texte à l'endroit du curseur (le curseur se retrouve après le texte inséré).
+- **Fichier** : Nouveau, Ouvrir..., Insérer..., Enregistrer, Enreg. sous..., Imprimer, Quitter. Le
+  système demande confirmation avant de perdre des modifications. Insérer... ajoute le contenu
+  d'un autre fichier texte à l'endroit du curseur (le curseur se retrouve après le texte inséré).
+  Imprimer envoie tout le texte sur l'imprimante (port Centronics, fonction 5 du BDOS), un
+  paragraphe par ligne (CR LF à la fin de chacun) : l'imprimante coupe elle-même les lignes trop
+  longues. ESC arrête entre deux paragraphes. Sans imprimante rien ne bloque, mais chaque
+  caractère attend 2 ms l'accusé de réception (une vingtaine de secondes pour 10 Ko) : ESC.
   Lancé depuis LOGO par `EDITE`, EDIT montre Retour au lieu de Quitter : il enregistre le texte
   s'il a changé et revient dans LOGO (voir LOGO).
 - **Edition** : Marquer, Copier, Couper, Coller, Eff. paragr. Le presse-papiers fait 4 Ko au plus.

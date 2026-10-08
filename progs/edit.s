@@ -191,7 +191,7 @@ dispatch
         beq del
         cmp #$81
         bcc none
-        cmp #$92
+        cmp #$93
         bcs none
         sec
         sbc #$81
@@ -212,21 +212,21 @@ del     jmp k_del
 none    rts
 .)
 
-; tables de saut : codes de contrôle $00-$1F, puis codes de menu $81-$90
+; tables de saut : codes de contrôle $00-$1F, puis codes de menu $81-$92
 cvec_lo .byt <(k_none-1),<(k_home-1),<(k_none-1),<(k_pgdn-1),<(k_delr-1),<(k_end-1),<(k_find-1),<(k_next-1)
-        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_none-1),<(k_cr-1),<(k_none-1),<(k_ins-1)
-        .byt <(k_none-1),<(k_top-1),<(k_pgup-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
+        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_insert-1),<(k_cr-1),<(k_none-1),<(k_ins-1)
+        .byt <(k_print-1),<(k_top-1),<(k_pgup-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
         .byt <(k_none-1),<(k_delpara-1),<(k_bot-1),<(k_esc-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
 cvec_hi .byt >(k_none-1),>(k_home-1),>(k_none-1),>(k_pgdn-1),>(k_delr-1),>(k_end-1),>(k_find-1),>(k_next-1)
-        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_none-1),>(k_cr-1),>(k_none-1),>(k_ins-1)
-        .byt >(k_none-1),>(k_top-1),>(k_pgup-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
+        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_insert-1),>(k_cr-1),>(k_none-1),>(k_ins-1)
+        .byt >(k_print-1),>(k_top-1),>(k_pgup-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
         .byt >(k_none-1),>(k_delpara-1),>(k_bot-1),>(k_esc-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
 mvec_lo .byt <(k_new-1),<(k_open-1),<(k_save-1),<(k_saveas-1),<(k_quit-1),<(k_mark-1),<(k_copy-1),<(k_cut-1)
         .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wrap-1),<(k_ins-1),<(k_stats-1)
-        .byt <(k_insert-1)
+        .byt <(k_insert-1),<(k_print-1)
 mvec_hi .byt >(k_new-1),>(k_open-1),>(k_save-1),>(k_saveas-1),>(k_quit-1),>(k_mark-1),>(k_copy-1),>(k_cut-1)
         .byt >(k_paste-1),>(k_delpara-1),>(k_find-1),>(k_next-1),>(k_repl-1),>(k_wrap-1),>(k_ins-1),>(k_stats-1)
-        .byt >(k_insert-1)
+        .byt >(k_insert-1),>(k_print-1)
 
 k_none
 k_esc
@@ -2075,6 +2075,52 @@ bad     lda #<m_badname
 r       rts
 .)
 
+; k_print : imprime tout le texte (fonction 5 du BDOS, port Centronics),
+;   CR LF à la fin de chaque paragraphe ; ESC arrête (entre deux
+;   paragraphes). Sans imprimante rien ne bloque, mais chaque caractère
+;   attend son accusé 2 ms au plus (BIOS LIST)
+k_print
+.(
+        lda #0
+        sta t0
+        sta t0+1
+        sta tmpb                ; dernier caractère envoyé
+        jsr addr_of             ; ip : début du texte
+loop    jsr ip_end
+        beq done
+        ldy #0
+        lda (ip),y
+        cmp #CR
+        bne ch
+        jsr crlf_p
+        jsr B_CONST             ; ESC : arrêt
+        cmp #0
+        beq nx
+        jsr B_CONIN
+        cmp #27
+        bne nx
+        lda #<m_pstop
+        ldy #>m_pstop
+        jmp set_msg
+ch      jsr lst
+nx      jsr it_next
+        jmp loop
+done    lda tmpb                ; dernier paragraphe sans CR : fin de ligne
+        beq e
+        cmp #LF
+        beq e
+        jsr crlf_p
+e       lda #<m_pdone
+        ldy #>m_pdone
+        jmp set_msg
+crlf_p  lda #CR
+        jsr lst
+        lda #LF
+lst     sta tmpb
+        ldx #F_LIST
+        jmp BDOS
+.)
+
 ; k_insert : insère un fichier texte au curseur (CR LF -> CR, arrêt
 ; sur ^Z), le curseur se retrouve après le texte inséré
 k_insert
@@ -2644,7 +2690,7 @@ ct1     sta fcb_tmp,x
 ed_bar  .byt 4
         .word mn_fic, mn_edi, mn_chr, mn_opt
 
-mn_fic  .byt 6,14
+mn_fic  .byt 7,14
         .asc "Fichier",0
         .asc "Nouveau",0
         .byt MA_TYPE
@@ -2652,7 +2698,7 @@ mn_fic  .byt 6,14
         .asc "Ouvrir...",0
         .byt MA_TYPE
         .word c_open
-        .asc "Inserer...",0
+        .asc "Inserer... ^L",0
         .byt MA_TYPE
         .word c_insert
         .asc "Enregistrer ^S",0
@@ -2661,6 +2707,9 @@ mn_fic  .byt 6,14
         .asc "Enreg. sous...",0
         .byt MA_TYPE
         .word c_saveas
+        .asc "Imprimer    ^P",0
+        .byt MA_TYPE
+        .word c_print
 it_quit .asc "Quitter",0
         .byt MA_TYPE
         .word c_quit
@@ -2731,6 +2780,7 @@ c_wrap   .byt $8E,0
 c_ins    .byt $8F,0
 c_stats  .byt $90,0
 c_insert .byt $91,0
+c_print  .byt $92,0
 
 ; ---------------------------------------------------------------------
 ; Messages
@@ -2764,6 +2814,8 @@ q_quit    .asc "Texte modifie. Quitter (O/N) ?",0
 q_open    .asc "Ouvrir : ",0
 q_insert  .asc "Inserer : ",0
 m_nofile  .asc "Fichier introuvable",0
+m_pdone   .asc "Texte imprime",0
+m_pstop   .asc "Impression interrompue",0
 m_inserted .asc " car. inseres",0
 q_saveas  .asc "Enregistrer sous : ",0
 q_find    .asc "Chercher : ",0
