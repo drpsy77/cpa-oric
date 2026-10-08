@@ -63,6 +63,26 @@ index 971c852..2808223 100644
      free(text);
    }
    return SDL_TRUE;
+diff --git a/joystick.c b/joystick.c
+index 35e70cc..2613225 100644
+--- a/joystick.c
++++ b/joystick.c
+@@ -191,7 +191,14 @@ static SDL_bool dojoyevent(SDL_Event *ev, struct machine *oric, Sint32 mode, Uin
+       {
+         SDL_COMPAT_KEY *kbtab = mode == JOYMODE_KB1? oric->kbjoy1 : oric->kbjoy2;
+         int i, st = ev->type == SDL_KEYDOWN? 1 : 0;
+-        for(i=0; i< JOYSTATE_LAST; i++)
++        /* CP/A : kbjoy1/kbjoy2 n'ont que 7 touches (haut à fire3). La boucle
++           allait jusqu'à JOYSTATE_LAST (8) : kbjoy1[7] lisait kbjoy2[0], la
++           touche « haut » du jeu 2 ('W' dans oricutron.cfg), et avalait la
++           touche W même avec le jeu 2 inactif. Et seuls les événements
++           clavier ont un keysym : un clic de souris pouvait aussi être pris
++           pour une touche du joystick. */
++        if(ev->type != SDL_KEYDOWN && ev->type != SDL_KEYUP) break;
++        for(i=0; i< JOYSTATE_TYPE; i++)
+         {
+           if(ev->key.keysym.sym == kbtab[i])
+           {
 diff --git a/keyboard.c b/keyboard.c
 index 90e24c6..30574e6 100644
 --- a/keyboard.c
