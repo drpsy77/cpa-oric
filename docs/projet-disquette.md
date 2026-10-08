@@ -54,7 +54,7 @@ STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de 
 LOGO, ← → dans LOGO ; la complétion des noms par ESC ; le mode SPLIT avec la bascule en `$BFDF` ; dans LOGO,
 les décimaux et la tortue avec des décimaux (vitesse jugée meilleure que le BASIC). DEBUG
 démarre, mais n'a pas encore servi à déboguer pour de vrai. Restent à essayer sur le vrai
-Oric : ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
+Oric : l'impression depuis EDIT (`^P`) et `^L`, ASM (jamais lancé), DEBUG en usage réel (points d'arrêt, pas à pas), HEX en écriture
 sur place, le son (dans LOGO : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON,
 JOUE?, et la coupure par ESC), et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
 les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
@@ -521,6 +521,17 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     N, `*.LOG` confirmé, `*.COM` : 2 fichiers proposés et 21 protégés gardés, réponse autre
     que O = abandon, `/Q` dans un script), REN (renommage, nom existant, fichier protégé,
     introuvable, usage), PUT avec TYPE.
+- EDIT, lot L5 (octobre 2026) : raccourci `^L` pour Insérer... (`^K`, proposé dans la
+  backlog, n'était pas libre : c'est le code de la flèche haut, `$0B`) et impression : article
+  « Imprimer ^P » du menu Fichier et raccourci `^P` (libre dans EDIT : le CTRL-P du système
+  n'agit que pendant la lecture d'une ligne). Tout le texte, dans l'ordre, par la fonction 5
+  du BDOS ; CR LF à la fin de chaque paragraphe (l'imprimante coupe les lignes longues), et
+  à la fin d'un dernier paragraphe sans CR. ESC (`B_CONST` à chaque paragraphe) arrête :
+  « Impression interrompue ». Sans imprimante, LIST attend 2 ms par caractère puis continue
+  (rien ne bloque, ESC pour abréger). Menu Fichier : 7 articles. EDIT.COM ~110 octets de
+  plus. Essayé dans Oricutron : `printer_out.txt` identique au fichier enregistré par EDIT
+  (DEMO.LOG, 447 octets), `^L` insère DEMO.LOG, menu affiché.
+
 - LOGO, lot L4 (graphisme, octobre 2026) : `POINT x y`, `TRAIT`, `RECTANGLE`, `PAVE` (deux
   coins opposés), `CERCLE r`, `ETIQUETTE x`, `FIXECOULEUR v` et la fonction `ALLUME? x y`.
   LOGO.COM 18 217 octets (+746) ; zone des procédures : `procbase` `$6000` -> `$6300`
@@ -580,7 +591,7 @@ lecteur dès que c'est possible.
 | L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | **fait** (2 216 octets ; un seul lecteur fait aussi, sauf pour `/S` ; restent le LOCI et un vrai Microdisc) |
 | LA | **Attributs et copie « à la CP/M »** (décidé avec Pierre, octobre 2026, option C) : (1) la disquette livrée a ses commandes **R/O et visibles** (DIR les montre, comme sur une disquette CP/M) : HELP, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, MEM, POKE, GO, EXPORT, IMPORT, USBDIR, EDIT, HEX, LOGO, ASM, DEBUG, plus README.TXT et CPA.INC ; les exemples (HELLO, GTEST, leurs `.ASM`, DEMO.LOG, DESSIN.BAT) restent sans attribut (ASM doit pouvoir réécrire HELLO.COM) ; attributs posés par `mkdisk.py` (nouvelle option) depuis `build.sh` ; (2) **STAT** : colonne `R` (protégé) / `S` (système, caché de DIR) et résumé en fin de liste ; (3) **COPY avec jokers**, comme PIP : `COPY *.COM B:`, `COPY B:*.LOG` ; (4) **`DISKCOPY /S` réduit à SYSGEN** : amorçage et système (LSN 0-67) seulement, la copie des fichiers SYS disparaît (les fichiers : `COPY *.COM B:`) ; SYS ne veut plus dire que « caché de DIR » ; (5) messages : IMPORT et COPY sur un fichier protégé disent `Fichier protege` (aujourd'hui `Repertoire plein`, `Write error`) | COPY grossit (~0,5 Ko), DISKCOPY maigrit ; rien de résident | **fait** (essayé dans Oricutron ; restent le LOCI et un vrai Microdisc) |
 | L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | **fait** (essayé dans Oricutron ; reste le vrai Oric) |
-| L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
+| L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | **fait** (raccourci `^L`, pas `^K` qui est la flèche haut ; essayé dans Oricutron) |
 
 La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,
 voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par ESC des commandes

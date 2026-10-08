@@ -149,8 +149,8 @@ check ecran
 echo "== aller-retour avec EDIT : EDITE, Retour (environ 3 min)"
 # PUT ne survit pas au passage par EDIT : on compare le texte de l'écran.
 # Dans EDIT : une procédure tapée en tête, puis Fichier > Retour.
-K=$(printf 'LOGO\n||pour carre\nrepete 4 [av 30 dr 90]\nfin\n|donne "l [a b c]\n|carre dr 45\n|ecrantexte\n|edite "essai\n||||||pour neuf\recris 99\rfin\r||\005||\004|\004|\004|\004|\004|\004||\r|||||||||||||| ecris :l\n| neuf\n| ecris cap\n| av 10\n|')
-run edite "$K" 7900
+K=$(printf 'LOGO\n||pour carre\nrepete 4 [av 30 dr 90]\nfin\n|donne "l [a b c]\n|carre dr 45\n|ecrantexte\n|edite "essai\n||||||pour neuf\recris 99\rfin\r||\005||\004|\004|\004|\004|\004|\004|\004||\r|||||||||||||| ecris :l\n| neuf\n| ecris cap\n| av 10\n|')
+run edite "$K" 8100
 python3 tools/screen.py "$T/edite.mem" | sed -n '2,13p' > "$T/edite.out"
 check edite
 run logonom 'LOGO demo
