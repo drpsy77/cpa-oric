@@ -99,7 +99,11 @@ ASM nom       | NOM.ASM -> NOM.COM et
               |   NOM.SYM
 DEBUG nom [param]
               | debogueur
-COPY src dst  | copie un fichier
+COPY src [dst]
+              | copie, jokers admis :
+              |   COPY *.COM B:, COPY
+              |   *.TXT *.BAK, COPY
+              |   B:*.LOG
 FORMAT X: [/Q]
               | formate X: (A: : un
               |   seul lecteur) ; /Q
@@ -110,14 +114,15 @@ DISKCOPY s: d: [opt]
               |   sur d: (A: A: : un
               |   seul lecteur) ; /T
               |   tout, /V relecture,
-              |   /S systeme et
-              |   fichiers SYS
-              |   seulement
+              |   /S systeme
+              |   seulement (SYSGEN)
 STAT [d:][afn]
               | taille : enreg.,
               |   blocs de 2 Ko,
-              |   octets ; seul :
-              |   place libre
+              |   octets ; At : R
+              |   protege, S systeme
+              |   ; seul : place
+              |   libre
 XDO nom [param]
               | script appele par un
               |   script (lance par

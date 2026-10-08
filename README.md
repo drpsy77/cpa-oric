@@ -79,7 +79,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 |---|---|
 | `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG` |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
-| `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets ; sans paramètre : place libre sur le disque |
+| `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets, attributs (`R` protégé, `S` système) ; sans paramètre : place libre sur le disque |
 | `MEM` | carte de la mémoire (taille de la TPA selon le mode texte ou SPLIT) |
 | `POKE adr bb [bb...]` | écrit des octets en mémoire (hexadécimal, `$` facultatif) |
 | `GO adr [paramètres]` | lance le code en `adr` comme un `.COM` (un `RTS` ramène au prompt) |
@@ -110,8 +110,12 @@ EDIT, PUT, LOGO et l'outil PC `mkdisk.py` : la taille en octets est exacte pour 
 fichier binaire dont les derniers octets valent réellement `$1A` paraît un peu plus court.
 
     A>STAT *.TXT
-    Fichier       Enreg  Blocs Octets
-    README  .TXT     42      3   5271
+    Fichier       Enreg  Blocs Octets At
+    README  .TXT     79      5  10054 R
+    1 fichier(s), R : 1, S : 0
+
+La colonne `At` donne les attributs : `R` pour un fichier protégé (R/O), `S` pour un fichier
+système (caché de DIR). La dernière ligne compte les fichiers, les protégés et les cachés.
 
 ## Lecteurs A: à D:
 
@@ -148,15 +152,23 @@ la destination sont demandées tour à tour, une fois par tranche (4 échanges p
 disquette système, 9 avec `/T`).
 
 `DISKCOPY A: B: /S` rend la disquette de B: démarrable **sans toucher à ses fichiers**, comme
-SYSGEN sous CP/M : il copie l'amorçage et le système, puis les fichiers de A: marqués SYS,
-avec leurs attributs (un fichier du même nom sur B: est remplacé, même protégé). Marquer
-d'abord les commandes que l'on veut sur chaque disquette :
+SYSGEN sous CP/M : il ne copie que l'amorçage et le système (secteurs 0 à 67, hors de la zone
+des fichiers). Les commandes se copient ensuite avec COPY, comme avec PIP :
 
-    A>SET COPY.COM SYS
-    A>SET STAT.COM SYS
     A>DISKCOPY A: B: /S
+    A>COPY *.COM B:
 
-`/S` demande deux lecteurs.
+`DISKCOPY A: A: /S` marche aussi avec un seul lecteur.
+
+**COPY** copie un ou plusieurs fichiers, jokers admis, comme PIP : `COPY LETTRE.TXT
+LETTRE.BAK`, `COPY *.COM B:` (lecteur seul : mêmes noms), `COPY *.TXT *.BAK` (un `?` du
+modèle prend le caractère de la source), `COPY B:*.LOG` (sans destination : le lecteur
+courant). Chaque fichier copié est nommé, puis le nombre de copies. Les attributs ne sont
+pas recopiés (comme PIP) : la copie d'une commande protégée est modifiable. Un fichier de
+destination protégé est laissé (`fichier protege`), un fichier sur lui-même refusé (`meme
+fichier`) ; les autres fichiers du même nom sont remplacés. ESC arrête entre deux fichiers.
+COPY respecte le haut de la TPA (il marche aussi en mode SPLIT). Avec un seul lecteur, copier
+d'une disquette à l'autre n'est pas encore possible.
 
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
 un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
@@ -169,9 +181,18 @@ lecteur. Un script DO continue de se lire sur sa disquette même s'il change de 
 d'attributs : R/O (lecture seule : le fichier ne peut être ni effacé, ni renommé, ni écrit,
 ni remplacé) et SYS (fichier système : `DIR` ne le montre pas, `DIRS` oui ; il reste
 utilisable). `SET HELP.COM RO SYS` protège et cache, `SET HELP.COM RW DIR` revient en arrière.
-ERA et REN répondent `File R/O` ; EDIT et HEX refusent d'enregistrer un fichier protégé.
-Les programmes passent par la fonction 30 du BDOS (bit 7 de l'octet 9 du FCB = R/O, de
-l'octet 10 = SYS).
+ERA et REN répondent `File R/O` ; EDIT et HEX refusent d'enregistrer un fichier protégé,
+COPY et IMPORT répondent `fichier protege`. Les programmes passent par la fonction 30 du BDOS
+(bit 7 de l'octet 9 du FCB = R/O, de l'octet 10 = SYS). `STAT *.*` montre les attributs de
+tous les fichiers.
+
+Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
+ASM...), README.TXT et CPA.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
+effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
+copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, DESSIN.BAT) restent
+modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
+reste à la disposition de l'utilisateur.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C en début de ligne fait un démarrage à
@@ -539,7 +560,7 @@ si le disque est plein, l'enregistrement écrit d'abord `NOM.$$$`, puis remplace
 
 Programmes fournis sur la disquette :
 - `HELLO.COM` affiche ses arguments ;
-- `COPY.COM SOURCE DEST` copie un fichier par gros blocs, à travers le BDOS.
+- `COPY.COM src [dst]` copie des fichiers (jokers admis), par gros blocs, à travers le BDOS.
 - `EDIT.COM [fichier]`, l'éditeur de texte décrit ci-dessus.
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG`.
@@ -1019,6 +1040,7 @@ pour que ses données et son entrée de répertoire soient à jour sur la disque
     python3 tools/mkdisk.py put build/cpa.dsk monprog.com
     python3 tools/mkdisk.py get build/cpa.dsk NOTES.TXT notes.txt
     python3 tools/mkdisk.py era build/cpa.dsk NOTES.TXT
+    python3 tools/mkdisk.py attr build/cpa.dsk NOTES.TXT RO      # RO RW SYS DIR
     python3 tools/mkdisk.py new donnees.dsk [fichiers...]    # disquette de données (B: à D:)
 
 Autres fichiers dans `tools/` :
@@ -1042,7 +1064,7 @@ Autres fichiers dans `tools/` :
 ## Limites connues
 
 - Quatre lecteurs (A: à D:), pas de zones utilisateur.
-- `DISKCOPY /S` demande deux lecteurs.
+- COPY ne copie pas d'une disquette à l'autre avec un seul lecteur.
 - Les interruptions sont coupées pendant un transfert de secteur. Une touche frappée pendant un accès
   disque peut donc être perdue.
 - Essayé sur un Oric Atmos avec LOCI ; pas encore sur Cumulus ni sur un vrai Microdisc.

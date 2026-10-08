@@ -160,7 +160,13 @@ uok     sta fd
         ldy #>fcb
         ldx #F_DELETE
         jsr BDOS
-        lda #<fcb
+        cmp #$FE                ; fichier protégé (R/O) : laissé
+        bne del
+        lda #<m_ro
+        ldy #>m_ro
+        jsr lputs
+        jmp ucl
+del     lda #<fcb
         ldy #>fcb
         ldx #F_MAKE
         jsr BDOS
@@ -440,6 +446,7 @@ m_use   .asc "IMPORT nom [fic] [/T] : copie un",13,10
         .asc "/T : texte, LF seul -> CR LF",13,10,0
 m_name  .asc "Nom CP/A invalide : IMPORT nom fic",13,10,0
 m_dir   .asc "Repertoire plein",13,10,0
+m_ro    .asc "Fichier protege (SET fic RW)",13,10,0
 m_full  .asc "Disque plein",13,10,0
 m_sep   .asc " : ",0
 m_ok    .asc " octets",13,10,0

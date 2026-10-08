@@ -49,6 +49,14 @@ cp progs/hello.s build/src/HELLO.ASM
 cp progs/gtest.s build/src/GTEST.ASM
 cp progs/cpa.inc build/src/CPA.INC
 
+# commandes, applications et documentation protégées (R/O, visibles dans
+# DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
+# pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
+EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.bat"
+PROTEGES=""
+for f in build/progs/*.COM build/src/CPA.INC files/readme.txt; do
+  case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
+done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
-  build/progs/*.COM build/src/* files/*
+  --ro $PROTEGES --rw $EXEMPLES
 echo "OK : build/cpa.rom, build/cpa.dsk"

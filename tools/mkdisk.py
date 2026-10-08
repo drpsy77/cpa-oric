@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Outil de disquette CP/A (images MFM_DISK lues par Oricutron, Cumulus, LOCI).
 
-  mkdisk.py new  IMAGE --boot boot.bin --system cpa_sys.bin [fichiers...]
+  mkdisk.py new  IMAGE --boot boot.bin --system cpa_sys.bin [--ro|--rw] [fichiers...]
   mkdisk.py ls   IMAGE
   mkdisk.py get  IMAGE NOM.EXT [fichier_local]
   mkdisk.py put  IMAGE fichier_local [NOM.EXT]
   mkdisk.py era  IMAGE NOM.EXT
+  mkdisk.py attr IMAGE NOM.EXT RO|RW|SYS|DIR...
+
+Attributs (comme SET sur l'Oric) : bit 7 de t1 = R/O (protégé), de t2 =
+SYS (caché de DIR). Dans « new », --ro protège les fichiers qui suivent,
+--rw revient aux fichiers sans attribut. « ls » montre R/O et SYS.
 
 Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
 Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
@@ -203,6 +208,26 @@ class Disk:
             if rec >= nrec:
                 break
 
+    def set_attr(self, name, ro=None, sys_=None):
+        n = self.name83(name)
+        parts = self.find(n)
+        if not parts:
+            raise SystemExit("fichier introuvable : %s" % name)
+        for _, i, e in parts:
+            if ro is not None:
+                e[9] = (e[9] & 0x7F) | (0x80 if ro else 0)
+            if sys_ is not None:
+                e[10] = (e[10] & 0x7F) | (0x80 if sys_ else 0)
+            self.put_entry(i, e)
+
+    def attrs(self):
+        res = {}
+        for e in self.dir_entries():
+            if e[0] == 0:
+                nm = bytes(c & 0x7F for c in e[1:12]).decode("ascii")
+                res[nm] = (bool(e[9] & 0x80), bool(e[10] & 0x80))
+        return res
+
     def listing(self):
         files = {}
         for e in self.dir_entries():
@@ -221,14 +246,17 @@ def main(argv):
     if cmd == "new":
         boot = sysb = None
         files = []
+        ro = False
         i = 0
         while i < len(rest):
             if rest[i] == "--boot":
                 boot = open(rest[i + 1], "rb").read(); i += 2
             elif rest[i] == "--system":
                 sysb = open(rest[i + 1], "rb").read(); i += 2
+            elif rest[i] in ("--ro", "--rw"):
+                ro = rest[i] == "--ro"; i += 1
             else:
-                files.append(rest[i]); i += 1
+                files.append((rest[i], ro)); i += 1
         d = Disk()
         if boot:
             assert len(boot) == 768
@@ -239,15 +267,20 @@ def main(argv):
             for k in range(64):
                 d.sec[SYS_LSN + k] = sysb[k * 256:(k + 1) * 256]
         d.format_dir()
-        for f in files:
+        for f, f_ro in files:
             d.write_file(f, open(f, "rb").read())
+            if f_ro:
+                d.set_attr(f, ro=True)
         d.save(img)
         cmd = "ls"
     d = Disk.load(img)
     if cmd == "ls":
         files = d.listing()
+        at = d.attrs()
         for nm, rec in sorted(files.items()):
-            print("%s.%s %7d octets" % (nm[:8], nm[8:], rec * 128))
+            ro, sy = at.get(nm, (False, False))
+            print("%s.%s %7d octets %s %s" % (nm[:8], nm[8:], rec * 128,
+                                              "R/O" if ro else "R/W", "SYS" if sy else "DIR"))
         free = NBLK - len(d.used_blocks())
         print("%d fichier(s), %d Ko libres" % (len(files), free * 2))
     elif cmd == "get":
@@ -260,6 +293,18 @@ def main(argv):
         d.save(img)
     elif cmd == "era":
         d.erase(rest[0])
+        d.save(img)
+    elif cmd == "attr":
+        kw = {}
+        for o in rest[1:]:
+            o = o.upper()
+            if o in ("RO", "RW"):
+                kw["ro"] = o == "RO"
+            elif o in ("SYS", "DIR"):
+                kw["sys_"] = o == "SYS"
+            else:
+                raise SystemExit("attribut inconnu : %s (RO RW SYS DIR)" % o)
+        d.set_attr(rest[0], **kw)
         d.save(img)
     else:
         print(__doc__)

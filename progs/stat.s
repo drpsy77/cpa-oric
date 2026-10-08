@@ -2,7 +2,9 @@
 ;  STAT.COM — taille des fichiers, espace libre (comme STAT de CP/M)
 ;
 ;  STAT afn     pour chaque fichier : enregistrements de 128 octets,
-;               blocs de 2 Ko occupés, taille en octets
+;               blocs de 2 Ko occupés, taille en octets, attributs
+;               (R : protégé, R/O ; S : système, caché de DIR) ; à la
+;               fin, nombre de fichiers, de protégés et de cachés
 ;  STAT         espace libre sur le disque
 ;
 ;  Taille en octets : le répertoire CP/M ne compte que des
@@ -26,6 +28,8 @@ pad     = $1B           ; 1 = sur 6 colonnes
 sptr    = $1C           ; 2 octets
 recs    = $1E           ; 2 octets
 used    = $20           ; blocs occupés
+nro     = $21           ; fichiers protégés
+nsy     = $22           ; fichiers système (cachés de DIR)
 
 NBLK    = 168           ; blocs de données (170 moins le répertoire)
 
@@ -64,10 +68,12 @@ doall   lda #<m_head
         jsr puts
         lda #0
         sta i
+        sta nro
+        sta nsy
 each    lda i
         cmp cnt
         bne one
-        rts
+        jmp summary
 one     jsr name_ptr
         jsr do_file
         inc i
@@ -173,8 +179,52 @@ zero    sta num
         sta num+1
         sta num+2
 show    jsr pdec
-        jmp crlf
+        lda #" "                ; attributs : R (protégé), S (système)
+        jsr putc
+        ldy #8
+        lda (ptr),y
+        bpl nr
+        inc nro
+        lda #"R"
+        .byt $2C
+nr      lda #" "
+        jsr putc
+        iny
+        lda (ptr),y
+        bpl ns
+        inc nsy
+        lda #"S"
+        jsr putc
+ns      jmp crlf
 .)
+
+; summary : « 26 fichier(s), R : 20, S : 0 »
+summary
+.(
+        lda cnt
+        jsr pnum8
+        lda #<m_sum1
+        ldy #>m_sum1
+        jsr puts
+        lda nro
+        jsr pnum8
+        lda #<m_sum2
+        ldy #>m_sum2
+        jsr puts
+        lda nsy
+        jsr pnum8
+        lda #<m_sum3
+        ldy #>m_sum3
+        jmp puts
+.)
+
+; pnum8 : A en décimal, sans espaces
+pnum8   sta num
+        lda #0
+        sta num+1
+        sta num+2
+        sta pad
+        jmp pdec
 
 bdos_fcb
         lda #<fcb
@@ -394,7 +444,10 @@ loop    lda (sptr),y
 done    rts
 .)
 
-m_head  .asc "Fichier       Enreg  Blocs Octets",13,10,0
+m_head  .asc "Fichier       Enreg  Blocs Octets At",13,10,0
+m_sum1  .asc " fichier(s), R : ",0
+m_sum2  .asc ", S : ",0
+m_sum3  .asc 13,10,0
 m_none  .asc "Aucun fichier",13,10,0
 m_free  .asc "Libre : ",0
 m_free2 .asc " Ko (",0
