@@ -366,6 +366,25 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
 
 ## Suite prévue (par priorité)
 
+**Prochains lots, dans l'ordre voulu par Pierre** (une livraison testée et un commit par lot ;
+les coûts sont des estimations, et l'expérience montre qu'elles sont souvent dépassées du
+simple au double). Principe posé par Pierre : la plupart des possesseurs d'un vrai lecteur
+n'en ont qu'un ; les commandes de manipulation de fichiers doivent donc pouvoir être sur
+chaque disquette (d'où `DISKCOPY /S`), et une commande disque doit marcher avec un seul
+lecteur dès que c'est possible.
+
+| Lot | Contenu | Code | État |
+|---|---|---|---|
+| L1 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | à faire |
+| L2 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L1). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | à faire (un seul lecteur : plus tard) |
+| L3 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
+| L4 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
+| L5 ? | **Export et import par le LOCI** (voir 6 plus bas) : à placer dans l'ordre par Pierre | ~0,5-1 Ko par `.COM`, rien de résident | étude faite |
+
+Conséquence du principe ci-dessus : la piste J de la revue de place (TYPE, ERA et REN en
+`.COM`) est **écartée** : avec un seul lecteur, une disquette de données sans ces `.COM` ne
+pourrait plus les utiliser. Restent H et I (~325 octets).
+
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
    - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
      en interne deux types, entier 16 bits et décimal ; un entier qui déborde devient décimal,
@@ -431,16 +450,30 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
 3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
    (son dans les scripts) ou `PLAY.COM` (partition texte) ; ne pas perdre la frappe anticipée
-   pendant `NOTE`/`ATTENDS` dans LOGO ; raccourci clavier pour « Insérer » dans EDIT.
-   Imprimer le texte depuis EDIT. Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
+   pendant `NOTE`/`ATTENDS` dans LOGO (EDIT : lot L4). Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
    hors de la disquette construite pour l'instant.
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
-4. Lecteurs : `FORMAT.COM` pour préparer une disquette de données sur l'Oric (écriture de
-   pistes du WD1793, ~800 octets estimés, donc sans doute le double ; pas urgent avec le LOCI,
-   `mkdisk.py new` le fait sur le PC) ; plus tard une copie de disquette entière.
-5. Pistes : export direct d'un fichier vers la clé USB du LOCI (API MIA en `$03A0`) ; base de
-   données simple sur l'accès direct.
+4. Lecteurs : FORMAT et DISKCOPY (lots L1 et L2) ; DISKCOPY avec un seul lecteur ensuite ;
+   `COPY *.* B:` (jokers dans COPY, comme PIP) si le besoin vient.
+5. Pistes : base de données simple sur l'accès direct.
+6. **Échange de fichiers avec la clé USB du LOCI** (étude, octobre 2026). Le LOCI dérive du
+   Picocomputer 6502 (RP6502) : son « MIA » expose à l'Oric l'API du RIA, en `$03A0-$03B9`
+   (`loci-rom/src/asminc/loci.inc`) : `MIA_XSTACK` `$03AC` (pile d'échange de 512 octets : on
+   y écrit les octets en ordre inverse, on les y relit), `MIA_ERRNO` `$03AD`, `MIA_OP` `$03AF`
+   (écrire le numéro lance l'opération), `MIA_SPIN` `$03B0` (JSR : attend la fin),
+   `MIA_BUSY` `$03B2`, `MIA_A` `$03B4`, `MIA_X` `$03B6`, `MIA_SREG` `$03B8`. Opérations :
+   `$14` open (nom poussé sur la pile, A = drapeaux à la cc65 : 1 lecture, 2 écriture,
+   `$10` créer, `$20` tronquer, `$40` ajouter), `$15` close, `$16` read_xstack (256 octets au
+   plus), `$18` write_xstack, `$1A` lseek, `$1B` unlink, `$1C` rename, `$80`-`$82`
+   opendir / closedir / readdir, `$83` mkdir. Résultat dans A/X (X négatif : erreur, code dans
+   `MIA_ERRNO`). Chemins : `1:` est la clé USB (FAT, FatFs ; une 2e clé serait `2:`), `0:` la
+   mémoire interne du LOCI (littlefs). Plan : `EXPORT fic [nom]` (fichier CP/A -> `1:/NOM`,
+   les `^Z` de fin retirés pour un texte), `IMPORT nom [fic]`, et un `USBDIR` (liste de la clé).
+   Tout en `.COM`, rien de résident, marche avec un seul lecteur. À vérifier sur le vrai LOCI
+   (pas d'émulation de la MIA dans Oricutron ; l'émulateur Phosphoric dit émuler le LOCI) :
+   écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est monté comme lecteur
+   Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; drapeaux d'ouverture.
 
 ## Contraintes à garder en tête
 
