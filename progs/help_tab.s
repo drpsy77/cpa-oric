@@ -28,7 +28,9 @@ h_default
         .asc "DIRS [afn]    | idem, fichiers SYS",13,10
         .asc "              |   compris",13,10
         .asc "TYPE fic      | affiche un texte",13,10
-        .asc "ERA afn       | efface des fichiers",13,10
+        .asc "ERA afn [/Q]  | efface, apres",13,10
+        .asc "              |   confirmation (/Q :",13,10
+        .asc "              |   sans question)",13,10
         .asc "REN nouv=anc  | renomme",13,10
         .asc "SAVE n fic    | sauve n pages de 0500",13,10
         .asc "PUT fic cmd [param]",13,10

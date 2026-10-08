@@ -16,7 +16,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 |---|---|---|---|
 | BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque | `src/bios.s`, `src/disk.s` | commun (disque : `-DDISK`) |
 | BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
-| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/TYPE/PUT/DO… : disque |
+| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/PUT/DO… : disque (TYPE, ERA, REN : `.COM`) |
 | Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
 | Programmes | fichiers `.COM` chargés en `$0500` (un nom sans `.COM` se rabat sur le script `.BAT`) | `progs/*.s` | disque (la ROM pourra en intégrer un) |
 

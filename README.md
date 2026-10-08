@@ -60,9 +60,9 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 |---|---|
 | `DIR [afn]` | liste les fichiers (jokers `*` et `?`) et l'espace libre ; les fichiers SYS sont cachés |
 | `DIRS [afn]` | comme DIR, fichiers SYS compris |
-| `TYPE fichier` | affiche un fichier texte (une touche l'interrompt) |
-| `ERA afn` | efface (demande confirmation pour `*.*`) |
-| `REN nouveau=ancien` | renomme |
+| `TYPE fichier` | affiche un fichier texte (une touche l'interrompt) — TYPE.COM |
+| `ERA afn [/Q]` | efface : montre les fichiers visés et demande `Effacer n fichier(s) (O/N) ?` (les protégés sont gardés) ; `/Q` sans question, pour un script — ERA.COM |
+| `REN nouveau=ancien` | renomme — REN.COM |
 | `SAVE n fichier` | enregistre n pages de 256 octets à partir de `$0500` |
 | `GSAVE fichier`, `GLOAD fichier` | enregistre / charge l'image du mode SPLIT (type `.IMG` par défaut) |
 | `PUT fichier commande [paramètres]` | exécute la commande en copiant tout ce qu'elle affiche dans le fichier |
@@ -72,6 +72,10 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 | `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute ; à défaut, exécute le script `NOM.BAT` (comme `DO NOM [args]`) |
 | `VER`, `CLS` | version, effacement de l'écran |
 | `B:` (`A:` à `D:`) | change de lecteur courant (version disquette) ; l'invite devient `B>` |
+
+TYPE, ERA et REN sont des programmes (`.COM`, sur la disquette système) et non des commandes
+internes : cela libère près de 300 octets dans le système. On les tape de la même façon, y
+compris dans les scripts et après PUT ; depuis un autre lecteur, ils sont cherchés sur A:.
 
 Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP :
 
@@ -181,8 +185,8 @@ lecteur. Un script DO continue de se lire sur sa disquette même s'il change de 
 d'attributs : R/O (lecture seule : le fichier ne peut être ni effacé, ni renommé, ni écrit,
 ni remplacé) et SYS (fichier système : `DIR` ne le montre pas, `DIRS` oui ; il reste
 utilisable). `SET HELP.COM RO SYS` protège et cache, `SET HELP.COM RW DIR` revient en arrière.
-ERA et REN répondent `File R/O` ; EDIT et HEX refusent d'enregistrer un fichier protégé,
-COPY et IMPORT répondent `fichier protege`. Les programmes passent par la fonction 30 du BDOS
+ERA garde les fichiers protégés (et les compte), REN répond `Fichier protege` ; EDIT et HEX
+refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier protege`. Les programmes passent par la fonction 30 du BDOS
 (bit 7 de l'octet 9 du FCB = R/O, de l'octet 10 = SYS). `STAT *.*` montre les attributs de
 tous les fichiers.
 

@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F5B0`, marge 192 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
+**Système** (`$C000-$F486`, marge 490 octets jusqu'à `$F670` ; page `$FF00-$FFB7`, marge 66
 octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
@@ -29,7 +29,7 @@ octets jusqu'aux vecteurs) :
   utilisable), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ, départ simultané des voix,
   mélangeur son et bruit par voix) ;
-- CCP : DIR, DIRS, TYPE, ERA, REN, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
+- CCP : DIR, DIRS, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
   FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
   `.BAT` avec `$1`-`$9`, lancés aussi par leur nom, appel de script à script par XDO.COM),
   ECHO, PAUSE.
@@ -42,7 +42,8 @@ avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), XDO (appel
-de script à script), COPY (jokers admis, comme PIP), GTEST, HELLO ; EXPORT, IMPORT et USBDIR (échange de fichiers avec
+de script à script), COPY (jokers admis, comme PIP), TYPE, ERA (avec confirmation), REN,
+GTEST, HELLO ; EXPORT, IMPORT et USBDIR (échange de fichiers avec
 la clé USB du LOCI) ; FORMAT (formatage, un seul lecteur possible, `/Q` rapide) ; DISKCOPY
 (copie de disquette, un seul lecteur possible ; `/S` : système seul, comme SYSGEN).
 Disquette livrée : commandes et applications protégées (R/O) et visibles, exemples modifiables.
@@ -495,6 +496,29 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     (20 commandes identiques, sans attribut, système identique) ; COPY vers un fichier
     protégé, `*.ASM *.BAK`, nom unique, même fichier, aucun fichier, usage ; IMPORT sur
     README.TXT protégé.
+- Piste J (octobre 2026) : TYPE, ERA et REN quittent le CCP pour TYPE.COM (177 octets),
+  ERA.COM (674) et REN.COM (499), protégés sur la disquette livrée. Gain résident : 298
+  octets (marge 192 -> 490). Leurs messages passent en français (programmes), sauf ce que
+  le BDOS affiche. Retirés aussi du CCP : `all_wild`, les messages `ALL (Y/N)?`, `File
+  exists` et `File R/O`.
+  - TYPE : même conduite (arrêt au ^Z, une touche interrompt, retour à la ligne final si
+    besoin). Sans jokers.
+  - ERA : relève les fichiers visés (premier extent, 128 noms), les montre 3 par ligne comme
+    DIR, compte les protégés (gardés, puisque la fonction 19 les épargne), puis demande
+    `Effacer n fichier(s) (O/N) ?` — même pour un seul fichier (Pierre avait effacé un
+    fichier par erreur, nom complété par ESC). `/Q` : sans question, pour les scripts (un
+    script avec ERA sans `/Q` attend la réponse). L'effacement passe par la fonction 19 avec
+    le nom tapé (jokers compris).
+  - REN : syntaxe `nouveau=ancien` de CP/M 2.2, espaces admis autour de `=`, lecteur d'un
+    seul côté valant pour les deux ; refus si le nouveau nom existe, si l'ancien est protégé
+    ou introuvable.
+  - Les commandes restent utilisables dans les scripts, par PUT (`PUT OUT.TXT TYPE X`) et
+    depuis un autre lecteur (programme cherché sur A:). Le menu Fichiers tape toujours
+    `TYPE `, `REN `, `ERA `.
+  - Essayé dans Oricutron : TYPE (texte, sans nom, introuvable), ERA (un fichier refusé par
+    N, `*.LOG` confirmé, `*.COM` : 2 fichiers proposés et 21 protégés gardés, réponse autre
+    que O = abandon, `/Q` dans un script), REN (renommage, nom existant, fichier protégé,
+    introuvable, usage), PUT avec TYPE.
 
 ## Suite prévue (par priorité)
 
@@ -514,13 +538,10 @@ lecteur dès que c'est possible.
 | L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
 | L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | à faire |
 
-La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est retenue (avis de Pierre),
-en un lot après LA (prochain lot) : ces commandes ne sont pas critiques, le système fonctionne sans elles.
-ERA.COM y gagnera une **confirmation** : liste des fichiers visés, puis `Effacer (O/N) ?`
-(Pierre a déjà effacé un fichier par erreur, nom complété par ESC). Option à décider alors :
-la complétion par ESC du premier mot propose aussi les commandes internes (table du CCP) et
-seulement les `.COM` / `.BAT`, sans leur type (~70-110 octets résidents, payés par les ~290
-libérés).
+La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,
+voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par ESC des commandes
+(premier mot) suit, dans un commit à part et derrière une option d'assemblage, pour revenir
+en arrière facilement si la place manque.
 
 0. **LOGO : nombres décimaux, saisie, mots et listes** (lots 1 à 10 faits, un commit par livraison). Choix :
    - nombres « à la Oric » : flottant de 5 octets (exposant + mantisse de 32 bits, ~9 chiffres) ;
@@ -618,10 +639,10 @@ libérés).
 
 ## Contraintes à garder en tête
 
-- 192 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
+- 490 octets libres dans la zone du code et 66 dans la page `$FF00` : tout ajout résident se
   justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
-  plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H à J
-  de la revue de place (~615 octets ; J, TYPE, ERA et REN en `.COM`, acceptée par Pierre).
+  plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H et
+  I de la revue de place (~325 octets) ; J (TYPE, ERA et REN en `.COM`) est faite.
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
 - Ne rien changer au contrat d'interface (`docs/architecture.md`) sans penser à la version ROM.
