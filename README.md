@@ -139,6 +139,25 @@ pour une image du LOCI ou d'Oricutron. Les secteurs sont entrelacés (1, 10, 2, 
 qu'un vrai lecteur Microdisc lise une piste en deux tours au lieu de dix-sept ; les images
 faites par `mkdisk.py` ne le sont pas, ce qui ne change rien sur le LOCI ni dans Oricutron.
 
+**DISKCOPY.** `DISKCOPY A: B:` copie la disquette de A: sur celle de B: (déjà formatée) :
+amorçage et système, répertoire, puis seulement les blocs occupés par des fichiers ; `/T`
+copie les 1 428 secteurs, `/V` relit et compare chaque secteur écrit. La copie se fait par
+tranches d'environ 165 secteurs (la TPA), avec la progression (`Tranche 2 : ecriture`) ;
+ESC arrête entre deux tranches. `DISKCOPY A: A:` marche avec un seul lecteur : la source et
+la destination sont demandées tour à tour, une fois par tranche (4 échanges pour la
+disquette système, 9 avec `/T`).
+
+`DISKCOPY A: B: /S` rend la disquette de B: démarrable **sans toucher à ses fichiers**, comme
+SYSGEN sous CP/M : il copie l'amorçage et le système, puis les fichiers de A: marqués SYS,
+avec leurs attributs (un fichier du même nom sur B: est remplacé, même protégé). Marquer
+d'abord les commandes que l'on veut sur chaque disquette :
+
+    A>SET COPY.COM SYS
+    A>SET STAT.COM SYS
+    A>DISKCOPY A: B: /S
+
+`/S` demande deux lecteurs.
+
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
 un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
 de disquette, faire CTRL-C avant d'écrire dessus. Le lecteur courant est gardé au démarrage à
@@ -531,6 +550,7 @@ Programmes fournis sur la disquette :
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits plus haut.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
+- `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
 ## LOGO
 
@@ -1021,8 +1041,8 @@ Autres fichiers dans `tools/` :
 
 ## Limites connues
 
-- Quatre lecteurs (A: à D:), pas de zones utilisateur ; pas encore de DISKCOPY (une
-  disquette système se prépare avec `mkdisk.py`).
+- Quatre lecteurs (A: à D:), pas de zones utilisateur.
+- `DISKCOPY /S` demande deux lecteurs.
 - Les interruptions sont coupées pendant un transfert de secteur. Une touche frappée pendant un accès
   disque peut donc être perdue.
 - Essayé sur un Oric Atmos avec LOCI ; pas encore sur Cumulus ni sur un vrai Microdisc.

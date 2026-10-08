@@ -125,8 +125,8 @@ k2      lda ro
         and sys                 ; les deux à $FF : rien à écrire
         cmp #$FF
         beq show
-        ldx #0                  ; FCB : lecteur 0, nom avec ses attributs
-        stx fcb
+        lda FCB1                ; FCB : lecteur demandé, nom et attributs
+        sta fcb
         ldy #0
 cp      lda (ptr),y
         sta fcb+1,y

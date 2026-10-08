@@ -72,6 +72,7 @@ SECTIONS = [
   ("DEBUG nom [param]", "debogueur"),
   ("COPY src dst", "copie un fichier"),
   ("FORMAT X: [/Q]", "formate X: (A: : un seul lecteur) ; /Q : vide le repertoire"),
+  ("DISKCOPY s: d: [opt]", "copie la disquette s: sur d: (A: A: : un seul lecteur) ; /T tout, /V relecture, /S systeme et fichiers SYS seulement"),
   ("STAT [d:][afn]", "taille : enreg., blocs de 2 Ko, octets ; seul : place libre"),
   ("XDO nom [param]", "script appele par un script (lance par le CCP)"),
   ("EXPORT fic [nom]", "copie sur la cle USB du LOCI (HELP USB)"),

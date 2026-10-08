@@ -118,6 +118,14 @@ h_1
         .asc "              |   seul lecteur) ; /Q",13,10
         .asc "              |   : vide le",13,10
         .asc "              |   repertoire",13,10
+        .asc "DISKCOPY s: d: [opt]",13,10
+        .asc "              | copie la disquette s:",13,10
+        .asc "              |   sur d: (A: A: : un",13,10
+        .asc "              |   seul lecteur) ; /T",13,10
+        .asc "              |   tout, /V relecture,",13,10
+        .asc "              |   /S systeme et",13,10
+        .asc "              |   fichiers SYS",13,10
+        .asc "              |   seulement",13,10
         .asc "STAT [d:][afn]",13,10
         .asc "              | taille : enreg.,",13,10
         .asc "              |   blocs de 2 Ko,",13,10

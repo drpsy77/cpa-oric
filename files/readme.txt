@@ -105,6 +105,14 @@ FORMAT X: [/Q]
               |   seul lecteur) ; /Q
               |   : vide le
               |   repertoire
+DISKCOPY s: d: [opt]
+              | copie la disquette s:
+              |   sur d: (A: A: : un
+              |   seul lecteur) ; /T
+              |   tout, /V relecture,
+              |   /S systeme et
+              |   fichiers SYS
+              |   seulement
 STAT [d:][afn]
               | taille : enreg.,
               |   blocs de 2 Ko,
