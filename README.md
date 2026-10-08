@@ -8,6 +8,7 @@ Il existe deux variantes construites à partir des mêmes sources :
   et donc aussi pour le Cumulus et le LOCI. L'EPROM du Microdisc la démarre, puis le système se charge
   dans les 16 Ko de RAM overlay (`$C000-$FFFF`) cachés sous la ROM BASIC. Il n'y a aucune EPROM à graver,
   et l'espace des programmes reste intact.
+  Trois variantes par usage (LOGO, notes, assembleur) sont décrites dans « Attributs de fichier ».
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC. Elle donne la console et le moniteur,
   sans disque.
 
@@ -197,6 +198,25 @@ effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW
 copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, DESSIN.BAT) restent
 modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
 reste à la disposition de l'utilisateur.
+
+SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance toujours
+(un fichier renommé `.SYS` ne serait plus une commande : le CCP ne lance que `.COM` et `.BAT`).
+
+**Disquettes par usage.** `build.sh` fabrique aussi trois disquettes amorçables, plus légères
+à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
+FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR) sont protégées et **cachées** (SYS) : `DIR`
+ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
+y est partout, protégé et visible.
+
+| Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
+|---|---|---|---|
+| `build/cpa-logo.dsk` | EDIT, LOGO | | DEMO.LOG, DESSIN.BAT |
+| `build/cpa-notes.dsk` | EDIT | | |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, CPA.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+
+Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
+`B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont cherchés sur `A:`, et `DIR` ne montre que
+le travail en cours. `build/cpa.dsk` reste la disquette complète, tout visible.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C en début de ligne fait un démarrage à

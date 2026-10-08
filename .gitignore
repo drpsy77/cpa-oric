@@ -2,6 +2,9 @@
 build/*
 !build/cpa.dsk
 !build/cpa.rom
+!build/cpa-logo.dsk
+!build/cpa-notes.dsk
+!build/cpa-asm.dsk
 progs/*.err
 tools/xa
 tools/pylib/

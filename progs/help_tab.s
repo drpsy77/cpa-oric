@@ -106,6 +106,8 @@ h_0
 h_1
         .asc "PROGRAMMES",13,10
         .asc "----------",13,10
+        .asc "DIRS *.COM    | tous, caches (SYS)",13,10
+        .asc "              |   compris",13,10
         .asc "EDIT [fic]    | editeur de texte",13,10
         .asc "HEX fic       | editeur hexadecimal",13,10
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10

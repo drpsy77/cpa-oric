@@ -5,6 +5,7 @@
 #   build/boot.bin     secteurs d'amorçage Microdisc (3 x 256 octets)
 #   build/progs/*.COM  programmes d'exemple
 #   build/cpa.dsk      disquette amorçable (MFM_DISK, 2 faces, 42 pistes, 17 secteurs)
+#   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk  disquettes par usage
 set -e
 cd "$(dirname "$0")"
 # assembleur : $XA, sinon tools/xa s'il existe, sinon xa dans le PATH
@@ -63,4 +64,21 @@ for f in build/progs/*.COM build/src/CPA.INC files/readme.txt; do
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $PROTEGES --rw $EXEMPLES
-echo "OK : build/cpa.rom, build/cpa.dsk"
+
+# Disquettes par usage. Sur chacune : les commandes de base protégées et
+# cachées de DIR (SYS), EDIT et l'outil de la disquette protégés et visibles,
+# les exemples modifiables.
+P=build/progs
+BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
+  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM"
+theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
+  echo "== $1"
+  python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \
+    --ro --sys $BASE $3 --dir $P/EDIT.COM $2 --rw $4 | tail -1
+}
+theme build/cpa-logo.dsk "$P/LOGO.COM" "" "files/demo.log files/dessin.bat"
+theme build/cpa-notes.dsk "" "" ""
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM build/src/CPA.INC" \
+  "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
+  "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
+echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm}.dsk"

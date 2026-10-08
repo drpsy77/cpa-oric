@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Outil de disquette CP/A (images MFM_DISK lues par Oricutron, Cumulus, LOCI).
 
-  mkdisk.py new  IMAGE --boot boot.bin --system cpa_sys.bin [--ro|--rw] [fichiers...]
+  mkdisk.py new  IMAGE --boot boot.bin --system cpa_sys.bin [--ro|--rw] [--sys|--dir] [fichiers...]
   mkdisk.py ls   IMAGE
   mkdisk.py get  IMAGE NOM.EXT [fichier_local]
   mkdisk.py put  IMAGE fichier_local [NOM.EXT]
@@ -10,7 +10,8 @@
 
 Attributs (comme SET sur l'Oric) : bit 7 de t1 = R/O (protégé), de t2 =
 SYS (caché de DIR). Dans « new », --ro protège les fichiers qui suivent,
---rw revient aux fichiers sans attribut. « ls » montre R/O et SYS.
+--rw revient aux fichiers non protégés ; de même --sys cache les fichiers qui
+suivent, --dir les laisse visibles. « ls » montre R/O et SYS.
 
 Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
 Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
@@ -246,7 +247,7 @@ def main(argv):
     if cmd == "new":
         boot = sysb = None
         files = []
-        ro = False
+        ro = sy = False
         i = 0
         while i < len(rest):
             if rest[i] == "--boot":
@@ -255,8 +256,10 @@ def main(argv):
                 sysb = open(rest[i + 1], "rb").read(); i += 2
             elif rest[i] in ("--ro", "--rw"):
                 ro = rest[i] == "--ro"; i += 1
+            elif rest[i] in ("--sys", "--dir"):
+                sy = rest[i] == "--sys"; i += 1
             else:
-                files.append((rest[i], ro)); i += 1
+                files.append((rest[i], ro, sy)); i += 1
         d = Disk()
         if boot:
             assert len(boot) == 768
@@ -267,10 +270,10 @@ def main(argv):
             for k in range(64):
                 d.sec[SYS_LSN + k] = sysb[k * 256:(k + 1) * 256]
         d.format_dir()
-        for f, f_ro in files:
+        for f, f_ro, f_sys in files:
             d.write_file(f, open(f, "rb").read())
-            if f_ro:
-                d.set_attr(f, ro=True)
+            if f_ro or f_sys:
+                d.set_attr(f, ro=f_ro, sys_=f_sys)
         d.save(img)
         cmd = "ls"
     d = Disk.load(img)
