@@ -35,6 +35,12 @@ outils, et suit toujours la même boucle.
    - `ORIC_KEYS_AT` : trame où la frappe commence ;
    - `ORIC_DUMP` / `ORIC_DUMP_AT` : fichier et trame du vidage des 64 Ko de mémoire.
    - `ORIC_PASTE` / `ORIC_PASTE_AT` : texte collé comme par F12, et trame du collage.
+   - `ORIC_LOCI` : un dossier du PC. L'interface que le LOCI offre au 6502 (registres
+     `$03A0-$03BF`, celle du Picocomputer 6502) est alors simulée dans `machine.c`, avec ce
+     dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
+     opérations de fichiers et de répertoires sont simulées, et d'un coup (le vrai LOCI fait
+     attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT.
+     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel.
 
    Il change aussi le collage du presse-papiers (F12) : d'origine, Oricutron ne livre le texte
    qu'à la routine clavier de la ROM BASIC (adresse `$EB78`), que CP/A n'utilise pas. Le texte
@@ -167,6 +173,7 @@ Variables utiles :
 | `DSKB=b.dsk` (`DSKC`, `DSKD`) | disquettes des lecteurs B: à D:, copiées en `SORTIE.b.dsk`... (on y relit ce qui a été écrit). Les lecteurs sont remplis dans l'ordre : avec `DSKB` seul, C: et D: sont vides (essai d'un lecteur absent) |
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
+| `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR) ; sans elle, ces commandes répondent `LOCI absent` |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |
 
 Points à connaître :

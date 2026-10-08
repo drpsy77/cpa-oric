@@ -8,9 +8,10 @@ help_keys
         .asc "ASM",0
         .asc "DEBU",0
         .asc "MEMO",0
+        .asc "USB",0
         .byt 0
 help_ptrs
-        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7
+        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8
 h_default
         .asc "COMMANDES",13,10
         .asc "---------",13,10
@@ -67,7 +68,7 @@ h_default
         .asc "",13,10
         .asc "Autres sujets : HELP suivi de",13,10
         .asc "  TOUCHES PROGRAMMES EDIT HEX",13,10
-        .asc "  LOGO ASM DEBUG MEMOIRE",13,10
+        .asc "  LOGO ASM DEBUG MEMOIRE USB",13,10
         .asc "  (4 lettres suffisent)",13,10
         .byt 0
 h_0
@@ -121,6 +122,15 @@ h_1
         .asc "              | script appele par un",13,10
         .asc "              |   script (lance par",13,10
         .asc "              |   le CCP)",13,10
+        .asc "EXPORT fic [nom]",13,10
+        .asc "              | copie sur la cle USB",13,10
+        .asc "              |   du LOCI (HELP USB)",13,10
+        .asc "IMPORT nom [fic]",13,10
+        .asc "              | copie depuis la cle",13,10
+        .asc "              |   USB du LOCI",13,10
+        .asc "USBDIR [chemin]",13,10
+        .asc "              | fichiers de la cle",13,10
+        .asc "              |   USB du LOCI",13,10
         .asc "MEM           | carte de la memoire",13,10
         .asc "POKE adr bb.. | ecrit en memoire",13,10
         .asc "              |   (code a lancer :",13,10
@@ -307,4 +317,31 @@ h_7
         .asc "DEBUG         | se place en 8400-9FFF",13,10
         .asc "MEM           | cette carte, selon le",13,10
         .asc "              |   mode",13,10
+        .byt 0
+h_8
+        .asc "USB : CLE DU LOCI",13,10
+        .asc "-----------------",13,10
+        .asc "EXPORT fic [nom]",13,10
+        .asc "              | fic -> cle (nom : par",13,10
+        .asc "              |   defaut fic,",13,10
+        .asc "              |   minuscules gardees)",13,10
+        .asc "IMPORT nom [fic]",13,10
+        .asc "              | cle -> fic (par",13,10
+        .asc "              |   defaut : nom coupe",13,10
+        .asc "              |   a 8.3 ; B: seul :",13,10
+        .asc "              |   sur B:)",13,10
+        .asc "/T            | (IMPORT) texte : LF",13,10
+        .asc "              |   seul -> CR LF",13,10
+        .asc "USBDIR [chemin]",13,10
+        .asc "              | liste (taille, <REP>",13,10
+        .asc "              |   : dossier)",13,10
+        .asc "1:/DOCS/X.TXT | chemin sur la cle ;",13,10
+        .asc "              |   sans 1: : la",13,10
+        .asc "              |   premiere cle",13,10
+        .asc "0:X.TXT       | memoire interne du",13,10
+        .asc "              |   LOCI",13,10
+        .asc "^Z            | retires a l'EXPORT,",13,10
+        .asc "              |   ajoutes a l'IMPORT",13,10
+        .asc "X.DSK         | EXPORT refuse (image",13,10
+        .asc "              |   disque)",13,10
         .byt 0

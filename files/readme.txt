@@ -109,6 +109,15 @@ XDO nom [param]
               | script appele par un
               |   script (lance par
               |   le CCP)
+EXPORT fic [nom]
+              | copie sur la cle USB
+              |   du LOCI (HELP USB)
+IMPORT nom [fic]
+              | copie depuis la cle
+              |   USB du LOCI
+USBDIR [chemin]
+              | fichiers de la cle
+              |   USB du LOCI
 MEM           | carte de la memoire
 POKE adr bb.. | ecrit en memoire
               |   (code a lancer :
@@ -118,6 +127,32 @@ GO adr [param]
               |   retour)
 GTEST         | demo graphique
 HELLO [param] | exemple de .COM
+
+USB : CLE DU LOCI
+-----------------
+EXPORT fic [nom]
+              | fic -> cle (nom : par
+              |   defaut fic,
+              |   minuscules gardees)
+IMPORT nom [fic]
+              | cle -> fic (par
+              |   defaut : nom coupe
+              |   a 8.3 ; B: seul :
+              |   sur B:)
+/T            | (IMPORT) texte : LF
+              |   seul -> CR LF
+USBDIR [chemin]
+              | liste (taille, <REP>
+              |   : dossier)
+1:/DOCS/X.TXT | chemin sur la cle ;
+              |   sans 1: : la
+              |   premiere cle
+0:X.TXT       | memoire interne du
+              |   LOCI
+^Z            | retires a l'EXPORT,
+              |   ajoutes a l'IMPORT
+X.DSK         | EXPORT refuse (image
+              |   disque)
 
 EDIT
 ----

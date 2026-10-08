@@ -36,6 +36,18 @@ Pour un fichier entier (MATH.LOG...), mieux vaut le mettre sur la disquette :
     python3 tools/mkdisk.py put build/cpa.dsk MATH.LOG MATH.LOG
 (Oricutron fermé, ou la disquette éjectée).
 
+Clé USB du LOCI simulée
+-----------------------
+Les commandes EXPORT, IMPORT et USBDIR de CP/A parlent au LOCI. Oricutron
+peut simuler le LOCI avec un dossier du Mac pour clé USB : lancer
+l'application depuis le Terminal, dans le dossier Oricutron-CPA, avec la
+variable ORIC_LOCI :
+    cd ~/chemin/Oricutron-CPA
+    ORIC_LOCI=~/Oric/cle Oricutron.app/Contents/MacOS/Oricutron
+(le dossier ~/Oric/cle doit exister ; son sous-dossier int tient lieu de
+mémoire interne du LOCI, 0:). Lancée autrement, l'application ne simule
+pas le LOCI, et ces commandes répondent « LOCI absent ».
+
 Couleurs
 --------
 Le jaune est adouci (#FFF426 au lieu de #FFFF00) : plus lisible sur fond

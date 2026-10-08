@@ -42,7 +42,8 @@ avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 (assembleur 6502, identique à `xa` sur nos sources, écrit `.SYM`), DEBUG (moniteur,
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), XDO (appel
-de script à script), COPY, GTEST, HELLO.
+de script à script), COPY, GTEST, HELLO ; EXPORT, IMPORT et USBDIR (échange de fichiers avec
+la clé USB du LOCI).
 
 **Essayé sur matériel** (Oric Atmos + LOCI) : démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO,
 STAT, MEM, POKE, GO et DO ; l'historique des lignes (flèche haut) au prompt de CP/A et dans
@@ -54,7 +55,8 @@ sur place, le son (dans LOGO : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, 
 JOUE?, et la coupure par ESC), et dans LOGO : LISCAR, TOUCHE?, les mots et les listes, LISLISTE,
 les fonctions RACINE, SIN, COS, ARCTAN, LN, EXP, RENDS (FACT, FIBO, profondeur),
 ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), EDITE et le Retour d'EDIT (temps d'écriture
-et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
+et de lecture de LOGO.$$$, image gardée), `LOGO NOM` ; EXPORT, IMPORT et USBDIR (jamais
+lancés sur le vrai LOCI : voir le lot L1 plus bas).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -364,6 +366,40 @@ et de lecture de LOGO.$$$, image gardée), `LOGO NOM`.
   et REN en `.COM` (~290 o, transparents pour les scripts). Écartées : commandes graphiques en
   `.COM` (scripts ralentis), compression du clavier ou de la police, complétion ESC.
 
+- Échange avec la clé USB du LOCI (lot L1, octobre 2026) : trois `.COM`, `EXPORT fic [nom]`,
+  `IMPORT nom [fic] [/T]` et `USBDIR [chemin]`, rien de résident, et une bibliothèque commune
+  `progs/loci_inc.s` (appel de l'API de la MIA, pile d'échange, messages d'erreur, nombres sur
+  32 bits). Tailles : EXPORT 1 248 octets, IMPORT 1 661, USBDIR 994 (un bloc de 2 Ko
+  chacun ; les tampons sont après la fin du programme, hors du fichier). Choix :
+  - Le LOCI est reconnu au code que sa MIA place en `$03B0-$03B7` (CLV, BVC, LDA #, LDX #,
+    RTS) avant tout `JSR $03B0` : sans LOCI, ces adresses sont celles du VIA, et l'appel
+    planterait. Message `LOCI absent : cle USB inaccessible`.
+  - Chemins sans lecteur par défaut : FatFs du LOCI prend alors la première clé montée (son
+    lecteur courant), quel que soit son numéro (`1:`, ou `2:` derrière un hub, le LOCI
+    numérotant les appareils USB). `0:` (mémoire interne) et les chemins restent possibles.
+  - Noms tapés en minuscules gardés pour la clé : la casse d'origine vient de `ORIG_LINE`
+    (la ligne tapée), dont `TAIL` donne la longueur des paramètres.
+  - ^Z : EXPORT les retire du dernier enregistrement (règle de STAT), IMPORT les ajoute ; un
+    binaire fait l'aller-retour à l'identique sauf s'il finit par des `$1A`. Fins de ligne
+    gardées à l'EXPORT (CR LF, que le Mac lit) ; à l'IMPORT, l'option `/T` change un LF seul
+    en CR LF (sans elle, EDIT accepte déjà le LF seul, mais TYPE afficherait en escalier).
+    Pas de détection automatique texte/binaire : une option explicite, comme PIP.
+  - Par défaut, IMPORT coupe le nom de la clé à 8 + 3 caractères (plutôt que de refuser) et
+    affiche le nom obtenu ; un 2e mot réduit à `B:` garde ce nom sur ce lecteur.
+  - Un fichier existant est remplacé des deux côtés, comme COPY. EXPORT refuse un nom en
+    `.DSK` (on pourrait écraser l'image de disquette en service, le LOCI ne verrouillant pas
+    ses fichiers). Disque plein à l'IMPORT : le fichier commencé est effacé.
+  - Transferts par enregistrements de 128 octets (une opération de la MIA chacun) : simple,
+    et l'accès à la disquette reste le plus lent. EXPORT lit avec un enregistrement d'avance
+    pour reconnaître le dernier.
+  - Essais sans le matériel : le correctif d'Oricutron simule la MIA sur un dossier du PC
+    (`ORIC_LOCI=dossier`, `machine.c`, opérations de fichiers et de répertoires seulement,
+    faites d'un coup). Essayé ainsi : aller-retour à l'identique d'un binaire de 70 001 octets
+    et d'un `.COM`, textes avec `/T` (LF seul, et CR LF inchangé), noms longs, sous-dossier,
+    `0:`, `B:` seul, erreurs (fichier absent, nom invalide, disque plein, `.DSK`), et
+    `LOCI absent` sans la simulation. La simulation suit les sources du firmware
+    (loci-firmware, `src/mia/api/std.c` et `dir.c`), pas le vrai LOCI.
+
 ## Suite prévue (par priorité)
 
 **Prochains lots, dans l'ordre voulu par Pierre** (une livraison testée et un commit par lot ;
@@ -375,7 +411,7 @@ lecteur dès que c'est possible.
 
 | Lot | Contenu | Code | État |
 |---|---|---|---|
-| L1 | **Échange de fichiers avec la clé USB du LOCI** (voir 6 plus bas) : `EXPORT fic [nom]`, `IMPORT nom [fic]`, `USBDIR` ; en tête, à la demande de Pierre | ~0,5-1 Ko par `.COM`, rien de résident | étude faite |
+| L1 | **Échange de fichiers avec la clé USB du LOCI** (voir 6 plus bas) : `EXPORT fic [nom]`, `IMPORT nom [fic] [/T]`, `USBDIR [chemin]` ; en tête, à la demande de Pierre | 1-1,7 Ko par `.COM`, rien de résident | **fait** (essayé dans Oricutron avec la MIA simulée ; reste le vrai LOCI) |
 | L2 | **FORMAT.COM** : `FORMAT B:` formate au format CP/A (2 faces, 42 pistes, 17 secteurs de 256 octets) par la commande Write Track du WD1793 (image de piste MFM construite en TPA, ~6 250 octets : marques d'adresse, CRC écrits par le contrôleur, secteurs remplis de `$E5`), puis relit chaque piste (vérification) et écrit un répertoire vide. Confirmation « Tout X: sera efface (O/N) ». Marche avec un seul lecteur : `FORMAT A:` demande d'insérer la disquette à formater, puis de remettre la disquette système (le système reste en RAM ; le démarrage à chaud ne relit que le répertoire). Option `/Q` (formatage rapide) : répertoire vide seulement, pour une disquette déjà formatée (images du LOCI, et si l'émulation du LOCI n'a pas Write Track : à vérifier avant de coder, Oricutron l'a). À décider en codant : entrelacement des secteurs (vitesse sur un vrai Microdisc) | ~1 à 1,5 Ko, rien de résident | à faire |
 | L3 | **DISKCOPY.COM** : `DISKCOPY A: B:` copie une disquette entière par les entrées SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première vraie utilisation : à éprouver), par tranches de ~170 secteurs (TPA) : amorçage et système (LSN 0-67), répertoire, puis seulement les blocs occupés de la source ; `/T` copie tout, `/V` relit et compare. **`/S`** : rend une disquette démarrable sans toucher à ses fichiers (comme SYSGEN de CP/M) : amorçage et système, plus les fichiers de la source marqués SYS (`SET COPY.COM SYS`...), pour que chaque disquette ait ses commandes. Confirmation, ESC entre deux tranches, démarrage à chaud à la fin. La destination doit être formatée (L2). **À terme** : copie avec un seul lecteur (`DISKCOPY A: A:`, échange des disquettes à chaque tranche, ~9 échanges pour une disquette pleine, moins en ne copiant que les blocs occupés) | ~1 à 1,5 Ko, rien de résident | à faire (un seul lecteur : plus tard) |
 | L4 | **LOGO, lot B, partie graphisme** : POINT, TRAIT, RECTANGLE / PAVE, CERCLE, ETIQUETTE (texte à la position de la tortue), FIXECOULEUR (ATTR), ALLUME? (lire un point) ; coordonnées de la tortue (à confirmer) ; cachent la tortue, refusent l'écran texte | ~400-800 o, pris à la place de l'utilisateur | à faire |
@@ -470,10 +506,14 @@ seront recopiées sur chaque disquette par `DISKCOPY /S`.
    `MIA_ERRNO`). Chemins : `1:` est la clé USB (FAT, FatFs ; une 2e clé serait `2:`), `0:` la
    mémoire interne du LOCI (littlefs). Plan : `EXPORT fic [nom]` (fichier CP/A -> `1:/NOM`,
    les `^Z` de fin retirés pour un texte), `IMPORT nom [fic]`, et un `USBDIR` (liste de la clé).
-   Tout en `.COM`, rien de résident, marche avec un seul lecteur. À vérifier sur le vrai LOCI
-   (pas d'émulation de la MIA dans Oricutron ; l'émulateur Phosphoric dit émuler le LOCI) :
-   écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est monté comme lecteur
-   Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; drapeaux d'ouverture. Lot L1.
+   Tout en `.COM`, rien de résident, marche avec un seul lecteur. **Fait** (lot L1, voir
+   « Choix déjà faits »). Reste à vérifier sur le vrai LOCI (Oricutron n'a que notre
+   simulation ; l'émulateur Phosphoric dit émuler le LOCI) : la reconnaissance du LOCI
+   (signature en `$03B0`) ; écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est
+   monté comme lecteur Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; les drapeaux
+   d'ouverture ; le lecteur par défaut (sans `1:`) avec et sans hub ; la vitesse.
+   Suites possibles : jokers (`EXPORT *.LOG`), conversion CR LF -> LF à l'EXPORT si le Mac
+   la demande, liste des appareils du LOCI (`opendir("")`).
 
 ## Contraintes à garder en tête
 
