@@ -106,6 +106,7 @@ osv     = $4D
 kin     = $4E
 kst     = $4F
 osa     = $50           ; instruction à écrire (2 octets)
+kanim   = $52           ; 1 : ANIM traduit (NOM.ASM inclut ANIM.INC)
 
         *= $0500
 
@@ -160,6 +161,10 @@ c3      sta sfcb,y
         ldy #>m_nogrx
         jmp BDOS
 opened  jsr load_text
+        lda pe                  ; images .HIZ et animations : après le texte
+        sta h_zbuf
+        lda pe+1
+        sta h_zbuf+1
         lda #0
         sta cmode
         sta oopen
@@ -1605,6 +1610,69 @@ nf      lda #<m_noimg
 r       rts
 .)
 
+; ANIM nom [n] : animation .ANI en plein écran (n passages ; 0 ou
+;   rien : jusqu'à une touche ; ESC arrête le programme)
+c_anim
+.(
+        jsr animarg
+        lda h_lines
+        bne md
+        jsr h_full              ; depuis le texte : plein écran
+        jmp pl
+md      cmp #200
+        beq pl
+        lda #<a_mh              ; pas en SPLIT
+        ldy #>a_mh
+        jmp error
+pl      lda #<ifcb
+        ldy #>ifcb
+        ldx gd
+        jsr a_play
+        bcs er
+        cmp #27
+        bne r
+        lda #<m_esc
+        ldy #>m_esc
+        jmp stop_msg
+er      jsr a_msg
+        jmp error
+r       rts
+.)
+
+; animarg : nom (type ANI par défaut) -> ifcb, passages -> gd ; pour
+;   la traduction, le code des passages est écrit (A à l'exécution)
+animarg
+.(
+        jsr getnm
+        lda ifcb+9
+        cmp #" "
+        bne ty
+        ldy #2
+tc      lda a_sig,y
+        sta ifcb+9,y
+        dey
+        bpl tc
+ty      lda #0
+        sta gd
+        jsr skipsp
+        beq none
+        cmp #";"
+        beq none
+        lda cmode
+        bne kb
+        jsr getbyte
+        sta gd
+        jmp endline
+kb      jsr k_byte              ; traduction : constante ou calcul
+        jmp endline
+none    lda cmode
+        beq r
+        lda #<s_lda0
+        ldy #>s_lda0
+        jmp oi
+r       rts
+.)
+
 c_gsave
 .(
         jsr needgfx
@@ -1621,8 +1689,11 @@ c_gsave
 r       rts
 .)
 
-; getname : [d:]nom[.ext] de lbuf (X) -> ifcb ; erreur s'il manque
-getname
+; getname : [d:]nom[.ext] de lbuf (X) -> ifcb ; erreur s'il manque ;
+;   rien d'autre ensuite (getnm : X après le nom, la suite est permise)
+getname jsr getnm
+        jmp endline
+getnm
 .(
         jsr skipsp
         beq bad
@@ -1664,7 +1735,7 @@ n2      cpy gd
 end     lda ifcb+1
         cmp #" "
         beq bad
-        jmp endline
+        rts
 bad     jmp e_param
 .)
 
@@ -2094,6 +2165,7 @@ compile
         lda #0
         sta kn
         sta kn+1
+        sta kanim
         sta csp
 kloop   jsr B_CONST             ; ESC : arrêt
         beq krd
@@ -2157,8 +2229,16 @@ bl2     lda #0
         ldy #>s_bdata
         jsr os
         jmp bl
-bend    lda #<h_tail2
-        ldy #>h_tail2
+bend    lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
+        ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
+        jsr os                  ;  suivent le programme)
+        lda kanim
+        beq bnoa
+        lda #<h_tailA
+        ldy #>h_tailA
+        jsr os
+bnoa    lda #<h_tail3
+        ldy #>h_tail3
         jsr os
         jsr o_close
         jsr o_name              ; message : NOM.ASM ecrit
@@ -3193,6 +3273,13 @@ k_print jsr k_lexpr
 k_gload lda #<s_gload
         ldy #>s_gload
         jmp k_img
+k_anim  jsr animarg             ; passages dans A, puis l'appel et le nom
+        lda #1
+        sta kanim
+        lda #<s_anim
+        ldy #>s_anim
+        jsr oi
+        jmp k_fnm
 k_gsave lda #<s_gsave
         ldy #>s_gsave
 k_img
@@ -3204,7 +3291,12 @@ k_img
         pla
         tay
         pla
-        jsr oi
+        jmp oi_fnm
+.)
+oi_fnm  jsr oi
+; k_fnm : lecteur et nom de ifcb, écrits après l'appel (.byt, .asc)
+k_fnm
+.(
         jsr o_tab
         lda #<s_byt
         ldy #>s_byt
@@ -3601,6 +3693,8 @@ s_delay .asc "jsr g_delay",0
 s_print .asc "jsr g_print",0
 s_gload .asc "jsr g_gload",0
 s_gsave .asc "jsr g_gsave",0
+s_anim  .asc "jsr a_grx",0
+s_lda0  .asc "lda #0",0
 s_byte  .asc "jsr g_byte",0
 s_push  .asc "jsr g_push",0
 s_pop   .asc "jsr g_pop",0
@@ -3631,8 +3725,9 @@ h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
         .asc "        *= $0500",13,10
         .asc "        jsr g_init",13,10,0
 h_tail1 .asc "; boucles : compte, ou arrivee et pas",13,10,0
-h_tail2 .asc "#include ",34,"GRX.INC",34,13,10
-        .asc "#include ",34,"HIRES.INC",34,13,10,0
+h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
+h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
+h_tail3 .asc "#include ",34,"HIRES.INC",34,13,10,0
 t_asm   .asc "ASM"
 m_done  .asc ".ASM ecrit : ASM ",0
 
@@ -3934,6 +4029,10 @@ cmds
         .byt "D"|$80,0
         .word c_gload
         .word k_gload
+        .asc "ANI"
+        .byt "M"|$80,0
+        .word c_anim
+        .word k_anim
         .asc "GSAV"
         .byt "E"|$80,0
         .word c_gsave
@@ -3985,6 +4084,8 @@ ofcb    .dsb 36,0
 flim    .word 0
 fstep   .word 0
 
+a_fail  = error         ; (anim.inc : pour les programmes traduits)
+#include "anim.inc"
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc

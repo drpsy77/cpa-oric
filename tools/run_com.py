@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 """Exécute un .COM de CP/A dans un 6502 simulé (py65), avec un BDOS
 minimal sur un dossier du PC. Pour tester ASM.COM hors de l'émulateur.
-  run_com.py DOSSIER PROG.COM [ARGS]"""
+  run_com.py DOSSIER PROG.COM [ARGS]
+Variables :
+  INPUT=l1|l2   lignes lues par la fonction 10
+  DUMP=fichier  mémoire (64 Ko) écrite à la fin
+  PROF=adr      chronomètre la routine à cette adresse (hexa) : cycle de
+                départ et durée de chaque appel, écrits dans PROF_OUT
+                (défaut : prof.txt)
+Le compteur 50 Hz ($021B) avance toutes les 20 000 cycles (sans le coût
+de l'interruption)."""
 import sys, os
 # py65 installé par tools/setup_linux.sh dans tools/pylib
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pylib'))
@@ -26,6 +34,9 @@ def main():
         mem[a+1:a+9] = n.ljust(8)[:8].encode(); mem[a+9:a+12] = e.ljust(3)[:3].encode()
     words = args.split()
     setfcb(0x45C, words[0] if words else '')
+    if len(words) > 1:                  # FCB2 : 16 octets, comme le CCP
+        f1 = bytes(mem[0x45C:0x46C])
+        setfcb(0x46C, words[1]); mem[0x47C:0x480] = bytes(4); mem[0x45C:0x46C] = f1
     mem[0x480] = len(args); mem[0x481:0x481+len(args)] = args.encode()
     # ligne de commande d'origine ($F670, ORIG_LINE) : programme et paramètres
     orig = (os.path.splitext(os.path.basename(prog))[0] + ' ' + ' '.join(sys.argv[3:])).encode()
@@ -44,8 +55,22 @@ def main():
             if f.upper() == os.path.basename(p).upper(): return os.path.join(d, f)
         return None
     steps = 0
+    prof = int(os.environ['PROF'], 16) if os.environ.get('PROF') else None
+    calls = []
+    pstart = None
+    lastpc = 0
+    nexttick = 20000
     while True:
+        if m.processorCycles >= nexttick:
+            nexttick += 20000
+            t = (mem[0x21B] | mem[0x21C] << 8) + 1
+            mem[0x21B] = t & 255; mem[0x21C] = (t >> 8) & 255
         pc = m.pc
+        if prof is not None:
+            if pc == prof and pstart is None:
+                pstart = (m.processorCycles, m.sp)
+            if pstart is not None and m.sp == (pstart[1] + 2) & 255 and mem[lastpc] == 0x60:
+                calls.append((pstart[0], m.processorCycles - pstart[0])); pstart = None
         if pc == 0xFFF0: break
         if pc == 0xFFF3: print('\n*BRK* non intercepté'); break
         if pc in (0x203, 0xC006, 0xC009, 0xC00C):
@@ -92,8 +117,13 @@ def main():
             lo = mem[0x100 + ((m.sp + 1) & 255)]; hi = mem[0x100 + ((m.sp + 2) & 255)]
             m.sp = (m.sp + 2) & 255; m.pc = ((hi << 8) | lo) + 1
             continue
+        lastpc = m.pc
         m.step(); steps += 1
         if steps > int(os.environ.get("MAXSTEPS", "400000000")): print("trop long PC=%04X" % m.pc); break
+    if os.environ.get('DUMP'):
+        open(os.environ['DUMP'], 'wb').write(bytes(mem))
+    if prof is not None:
+        open(os.environ.get('PROF_OUT', 'prof.txt'), 'w').write(''.join('%d %d\n' % c for c in calls))
     sys.stdout.write(''.join(out).replace('\r', ''))
     print('[%d instructions]' % steps)
 main()

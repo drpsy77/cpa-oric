@@ -195,7 +195,7 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 tous les fichiers.
 
 Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT, CPA.INC, HIRES.INC et GRX.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+ASM...), README.TXT, CPA.INC, HIRES.INC, GRX.INC et ANIM.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
 copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`) restent
@@ -205,7 +205,7 @@ reste à la disposition de l'utilisateur.
 SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance toujours
 (un fichier renommé `.SYS` ne serait plus une commande : le CCP ne lance que `.COM` et `.BAT`).
 
-**Disquettes par usage.** `build.sh` fabrique aussi trois disquettes amorçables, plus légères
+**Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables, plus légères
 à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
 FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR) sont protégées et **cachées** (SYS) : `DIR`
 ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
@@ -215,7 +215,11 @@ y est partout, protégé et visible.
 |---|---|---|---|
 | `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim.dsk` | EDIT, VOIR, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+
+Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
+animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
 `B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont cherchés sur `A:`, et `DIR` ne montre que
@@ -600,14 +604,17 @@ ne peut se voir qu'à l'exécution (division par zéro, valeur hors de 0-255 cal
 sans numéro de ligne (`Erreur : division par zero`). Les erreurs de syntaxe et de blocs sont
 signalées par la traduction, avec la ligne, et `NOM.ASM` n'est alors pas écrit.
 
-## HIRES plein écran : VOIR, hires.inc, png2hir.py
+## HIRES plein écran : VOIR, hires.inc, png2hir.py, animations
 
 Le HIRES plein écran (240 × 200 points, `$A000-$BF3F`) recouvre la police (`$B400`) et l'écran
 texte (`$BB80`) : le système ne peut plus rien y afficher. Ce n'est donc pas un mode du système
 mais une règle : **le programme prend l'écran pour lui**, et rend la main proprement.
 
-- `VOIR NOM` affiche `NOM.HIR` en plein écran, ou `VOIR NOM.IMG` une image du mode SPLIT, et
-  revient au texte à la première touche.
+- `VOIR NOM` affiche `NOM.HIR` en plein écran, `VOIR NOM.HIZ` la même image compressée, ou
+  `VOIR NOM.IMG` une image du mode SPLIT, et revient au texte à la première touche.
+- `VOIR NOM.ANI [n]` joue une animation plein écran n fois (0 ou rien : jusqu'à une touche) ;
+  `ANIM NOM [n]` fait de même dans GRAPHER (interprété ou traduit par `/A`). Voir
+  « Animations » plus bas.
 - Une image `.HIR` est la copie brute de l'écran : 8 000 octets, le format usuel sur Oric.
   `GSAVE` dans GRAPHER en écrit ; `tools/png2hir.py image.png NOM.HIR` en fabrique une sur le
   Mac à partir d'une image quelconque (mise à l'échelle, noir et blanc tramé ; `--split` pour
@@ -627,6 +634,48 @@ ignorée (pas de menus), les voyants ne sont pas redessinés et le curseur est �
 reconnaît à l'attribut `$1E` dans la dernière case de l'écran (`$BFDF`) hors du mode SPLIT. Et
 si le programme se termine sans `h_text` (CTRL-C, plantage, oubli), le démarrage à chaud remet
 le mode texte, la police et un écran propre.
+
+### Images compressées et animations
+
+**Compression.** Une image `.HIZ` est compressée en LZSS (le compresseur d'un ancien projet
+OSDK de Pierre, gardé dans `archives/lzss-osdk/`) : environ 1,1 à 1,4 Ko pour un dessin au
+trait, 4 à 8 Ko pour une image tramée, au lieu de 8 000 octets. `h_load` la reconnaît à son
+type, la charge en mémoire libre (`h_zbuf`, après le programme) et la décompresse par
+`h_unz`. Fabrication : `tools/png2hir.py image.png NOM.HIZ --hiz` (ou `tools/lzhir.py c
+NOM.HIR NOM.HIZ`).
+
+**Animations.** Une animation `.ANI` est une suite d'images où chacune ne décrit que ce qui
+change depuis la précédente. Le format du flux reste celui du compresseur d'origine : une
+copie de distance 0 recopie l'octet sur lui-même (il est **gardé**), une distance
+« négative » prend l'octet plus loin, encore de l'image précédente. `h_unz` traite le saut
+sans rien copier, ce qui fait la vitesse. Mesures (6502 simulé, cycle près) : environ
+52 cycles par octet littéral, 18 par octet copié, ~105 par zone gardée quelle que soit sa
+longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
+
+| Démo (`cpa-anim.dsk`) | Taille | Décodage | Cadence |
+|---|---|---|---|
+| `CUBE.ANI` : cube au trait, 12 images (un quart de tour boucle) | 18,3 Ko | ~65 000 cycles | 10 images/s |
+| `BALLE.ANI` : ballon devant une image tramée, 30 images | 21,2 Ko | ~21 000 cycles | 25 images/s |
+| `VAISSEAU.ANI` : GIF animé passé par `mkanim.py`, 24 images | 12,5 Ko | ~21 000 cycles | 12,5 images/s |
+
+- Fabrication sur le Mac : `tools/mkanim.py FILM.ANI anim.gif [--seuil 128] [--delai N]
+  [--apercu voir.gif]` (ou une suite de PNG) ; le bilan donne la taille, le décodage estimé
+  (à 1 % près) et la cadence obtenue. `--seuil` est conseillé : le tramage change tout l'écran
+  d'une image à l'autre, et une vidéo tramée plein écran ne dépasse pas 2 à 3 images/s.
+  `--longue` donne un fichier plus petit mais plus lent. Les démos : `tools/anim_demos.py`.
+- L'animation entière est chargée en mémoire : ~34 Ko dans VOIR, ~22 Ko dans GRAPHER (après le
+  texte du `.GRX`). La 1re image est dessinée sur un écran effacé ; la dernière est suivie
+  d'une image de retour vers la 1re, pour boucler sans tout redessiner.
+- Cadence : chaque image a son délai (1/50 s) et part au top 50 Hz qui suit ; si le décodage
+  déborde, l'image attend le top suivant, sans dérive.
+- **Déchirure.** L'Oric n'a qu'un écran : une image se dessine pendant que le faisceau balaie.
+  Pendant l'animation, le timer de l'IRQ passe à 19 968 cycles (une trame vidéo) au lieu de
+  20 000 : la ligne de déchirure ne bouge plus. Les **flèches gauche et droite** la déplacent
+  de 8 lignes ; on la met là où rien ne change. Le timer est remis à la fin (et par le
+  démarrage à chaud).
+- Dans un programme : `#include "ANIM.INC"` **avant** `HIRES.INC` (qui reste à la fin), puis
+  `a_play` (A/Y = FCB, X = passages ; C=1 si erreur, `a_msg` donne le message). `GRAPHER /A`
+  n'inclut `ANIM.INC` que si le programme se sert d'ANIM.
 
 ## Le son (fonction 116 du BDOS)
 
@@ -1301,12 +1350,19 @@ Autres fichiers dans `tools/` :
   identique à sa version `xa`) ;
 - `run_com.py` : exécute un `.COM` dans un 6502 simulé (module Python `py65`), avec un BDOS
   minimal sur un dossier du PC. C'est ce qui sert à comparer ASM avec `xa` :
-  `python3 tools/run_com.py DOSSIER ASM.COM LOGO` ;
+  `python3 tools/run_com.py DOSSIER ASM.COM LOGO`. Le compteur 50 Hz avance toutes les 20 000
+  cycles ; `DUMP=fichier` écrit la mémoire à la fin, `PROF=adresse` chronomètre une routine ;
+- `test_anim.py` : décode chaque image des démos par `h_unz` dans le 6502 simulé, contre le
+  décodeur Python, et recale le modèle de coût de `lzhir.py` ;
 - `gen_readme_txt.py` : textes d'aide, à partir d'une seule liste : `files/readme.txt` (`README.TXT`
   sur la disquette) et `progs/help_tab.s` (les rubriques de `HELP.COM`), 37 colonnes au plus ;
 - `gen_asm_tab.py` : table des mnémoniques et des opcodes de l'assembleur (`progs/asm_tab.s`) ;
 - `png2hir.py` : image PNG ou JPEG -> `.HIR` (plein écran) ou `.IMG` (`--split`), noir et blanc
-  tramé (`--seuil N` sans trame, `--invert`, `--apercu F.png` ; module Pillow) ;
+  tramé (`--seuil N` sans trame, `--invert`, `--apercu F.png`, `--hiz` compressée ; module
+  Pillow) ;
+- `lzhir.py` : compression des images (`.HIZ`) et des animations (`.ANI`), et leur contrôle
+  (`lzhir.py i FILM.ANI` décrit une animation) ; `mkanim.py` : GIF animé ou suite d'images ->
+  `.ANI` ; `anim_demos.py` : les démos de `cpa-anim.dsk` (gardées dans `files/anim/`) ;
 - `oricutron-testhook.patch` : frappe simulée et dump mémoire pour ces tests ; avec la
   variable `ORIC_LOCI=dossier`, l'interface du LOCI simulée sur ce dossier, qui tient lieu de
   clé USB (`0:` est son sous-dossier `int`) : EXPORT, IMPORT et USBDIR marchent dans

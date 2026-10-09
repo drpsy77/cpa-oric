@@ -69,6 +69,10 @@ r       ldx g_sp
         rts
 .)
 
+; a_fail : erreur ou ESC dans ANIM (anim.inc, inclus seulement si le
+;   programme anime) : même arrêt que les autres erreurs
+a_fail  = g_stop
+
 ; g_stop : message A/Y (0 à la fin), puis fin du programme
 g_stop
         pha
@@ -482,8 +486,14 @@ g_gnum  jsr g_fmt
 
 ; g_str : (à appeler en premier par la routine) g_t <- adresse du texte
 ;   qui suit l'appel de la routine ; celle-ci reviendra après lui
-g_str
+; g_nm : de même pour un nom d'image (lecteur + 11 caractères, sans 0
+;   final : le lecteur courant s'écrit 0)
+g_nm    lda #11                 ; dernier octet du nom
+        bne g_st0
+g_str   lda #0                  ; texte : jusqu'au 0
+g_st0
 .(
+        sta g_ln
         pla                     ; notre retour
         sta g_ip
         pla
@@ -495,7 +505,8 @@ g_str
         inc g_t
         bne t1
         inc g_t+1
-t1      ldy #0                  ; fin du texte
+t1      ldy g_ln                ; fin du nom, ou du texte
+        bne e
 l       lda (g_t),y
         beq e
         iny
@@ -566,7 +577,7 @@ w       sec
 ;   GLOAD choisit le mode d'après le type (HIR par défaut)
 g_gload
 .(
-        jsr g_str
+        jsr g_nm
         jsr g_fcb
         lda h_lines
         bne mode
@@ -596,7 +607,7 @@ r       rts
 
 g_gsave
 .(
-        jsr g_str
+        jsr g_nm
         jsr g_fcb
         lda h_lines
         beq r
@@ -854,6 +865,7 @@ g_m_full  .asc "Erreur : disque plein",0
 
 g_num   .dsb 8,0
 g_fcbuf .dsb 36,0
+g_ln    .byt 0
 g_vlo   .dsb 24,0
 g_vhi   .dsb 24,0
 g_vars  .dsb 52,0

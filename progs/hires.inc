@@ -34,7 +34,15 @@
 ;    h_point   -> A = 1 si le point (h_x1, h_y1) est allumé
 ;    h_load    A/Y = FCB (type déjà mis) : en plein écran, image .HIR
 ;              (8 000 octets bruts, $A000-$BF3F) ; en SPLIT, image .IMG
-;              du système. -> A = 0, 1 fichier absent
+;              du système ; dans les deux modes, image compressée .HIZ
+;              (chargée en h_zbuf, puis h_unz). -> A = 0, 1 fichier
+;              absent, 3 trop grand pour la mémoire libre
+;    h_unz     A/Y = flux compressé (format de tools/lzhir.py) ->
+;              image (8 000 octets ; 5 120 en SPLIT) ; distance 0 =
+;              octets gardés (animations). -> A/Y = octet après le flux
+;    h_zread   hq = FCB : fichier entier en mémoire à partir de h_zbuf
+;              (mot, défaut h_free), jusqu'à $A000 au plus. -> A = 0
+;              (hs = fin des données), 1 absent, 3 trop grand
 ;    h_save    A/Y = FCB : même format selon le mode. -> A = 0, 2 plein
 ;    h_key     attend une touche -> A
 ;  x 0-239, y 0-199 (0-127 en SPLIT) ; hors de l'image, rien n'est
@@ -677,7 +685,36 @@ h_load
 .(
         sta hq
         sty hq+1
+        ldy #11                 ; type HIZ : image compressée
+hz_t    lda (hq),y
+        and #$7F
+        cmp hz_tz-9,y
+        bne hz_raw
+        dey
+        cpy #8
+        bne hz_t
+        lda h_lines             ; (pas en mode texte : l'image recouvrirait
+        beq hz_none             ;  la police et l'écran)
+        jsr h_zread
+        cmp #0
+        bne hz_zr
+        lda h_zbuf
+        ldy h_zbuf+1
+        jsr h_unz
         ldx h_lines
+        cpx #200
+        bne hz_zs
+        jsr h_bottom
+        lda #0
+hz_zr   rts
+hz_zs   lda #$1A                ; SPLIT : retour au texte à la ligne 127
+        sta H_SPLSW
+        lda #0
+        rts
+hz_none lda #1
+        rts
+hz_tz   .asc "HIZ"
+hz_raw  ldx h_lines
         cpx #200
         beq hz_full
         ldx #G_GLOAD            ; SPLIT : image du système (.IMG)
@@ -733,6 +770,168 @@ hz_wfail   ldx #F_CLOSE
         jsr h_bdf
         jsr h_dmaend
 hz_fail    lda #2
+        rts
+.)
+
+; h_zread : fichier (FCB hq) en mémoire à partir de h_zbuf, jusqu'à $A000
+h_zread
+.(
+        jsr h_fcb0
+        ldx #F_OPEN
+        jsr h_bdf
+        cmp #$FF
+        bne hz_o
+        lda #1
+        rts
+hz_o    lda h_zbuf
+        sta hs
+        lda h_zbuf+1
+        sta hs+1
+hz_rd   lda hs+1                ; place pour 128 octets sous l'image ?
+        cmp #>(H_IMG-128)
+        bcc hz_ok
+        bne hz_big
+        lda hs
+        cmp #$81
+        bcs hz_big
+hz_ok   jsr h_dma
+        ldx #F_READ
+        jsr h_bdf
+        cmp #0
+        bne hz_eof
+        clc
+        lda hs
+        adc #128
+        sta hs
+        bcc hz_rd
+        inc hs+1
+        jmp hz_rd
+hz_eof  jmp h_dmaend
+hz_big  jsr h_dmaend
+        lda #3
+        rts
+.)
+
+; h_unz : flux A/Y -> image, à partir de $A000 jusqu'à $BF40 (plein
+;   écran) ou $B400 (SPLIT). Groupes de 8 jetons après un octet de
+;   drapeaux (bit 0 d'abord) ; 1 : littéral ; 0 : distance (16 bits),
+;   longueur, copie depuis l'adresse en cours moins la distance (modulo
+;   65 536) ; distance 0 : octets gardés, rien n'est copié. Une copie ne
+;   dépasse jamais la fin de l'image (fichier abîmé).
+;   Page zéro : hp flux, hq image, hs source de copie, hc drapeaux,
+;   hc+1 jetons restants. -> A/Y = octet après le flux
+h_unz
+.(
+        sta hp
+        sty hp+1
+        lda #<H_IMG
+        sta hq
+        lda #>H_IMG
+        sta hq+1
+        ldx #>H_BOT             ; fin : plein écran $BF40, SPLIT $B400
+        lda #<H_BOT
+        ldy h_lines
+        cpy #128
+        bne hz_e
+        ldx #$B4
+        lda #0
+hz_e    sta h_zel
+        stx h_zeh
+        dex
+        stx h_zlh
+        ldy #0
+        sty hc+1
+hz_nx   dec hc+1                ; jeton suivant
+        bpl hz_hf
+        lda (hp),y              ; nouvel octet de drapeaux (Y = 0)
+        sta hc
+        inc hp
+        bne hz_r1
+        inc hp+1
+hz_r1   lda #7
+        sta hc+1
+hz_hf   lsr hc
+        bcc hz_cp
+        lda (hp),y              ; littéral
+        sta (hq),y
+        inc hp
+        bne hz_l1
+        inc hp+1
+hz_l1   inc hq
+        bne hz_l2
+        inc hq+1
+hz_l2   lda hq+1
+        cmp h_zeh
+        bcc hz_nx
+        lda hq
+        cmp h_zel
+        bcc hz_nx
+        bcs hz_fin
+hz_cp   lda (hp),y              ; distance, longueur
+        sta hs
+        iny
+        lda (hp),y
+        sta hs+1
+        iny
+        lda (hp),y
+        tax
+        bne hz_c0
+        inx                     ; longueur 0 (fichier abîmé) : 1
+hz_c0   clc
+        lda hp
+        adc #3
+        sta hp
+        bcc hz_c1
+        inc hp+1
+hz_c1   lda hq+1                ; loin de la fin : 256 octets au moins
+        cmp h_zlh
+        bcc hz_c2
+        sec                     ; reste = fin - adresse en cours
+        lda h_zel
+        sbc hq
+        tay
+        lda h_zeh
+        sbc hq+1
+        bne hz_c2               ; 256 ou plus : pas de borne
+        sty h_zt
+        cpx h_zt
+        bcc hz_c2
+        ldx h_zt                ; la copie s'arrête à la fin de l'image
+hz_c2   lda hs
+        ora hs+1
+        beq hz_sk
+        sec                     ; source = adresse en cours - distance
+        lda hq
+        sbc hs
+        sta hs
+        lda hq+1
+        sbc hs+1
+        sta hs+1
+        ldy #0
+hz_cb   lda (hs),y
+        sta (hq),y
+        iny
+        dex
+        bne hz_cb
+        tya
+        jmp hz_ad
+hz_sk   txa                     ; saut : octets gardés
+hz_ad   ldy #0
+        clc
+        adc hq
+        sta hq
+        bcc hz_tf
+        inc hq+1
+hz_tf   lda hq+1                ; fin de l'image ?
+        cmp h_zeh
+        bcc hz_j
+        bne hz_fin
+        lda hq
+        cmp h_zel
+        bcs hz_fin
+hz_j    jmp hz_nx
+hz_fin  lda hp
+        ldy hp+1
         rts
 .)
 
@@ -820,6 +1019,11 @@ h_dy    .word 0
 h_err   .word 0
 h_e2    .word 0
 h_blk   .byt 0,0,0,0,0,0
+h_zbuf  .word h_free
+h_zel   .byt 0
+h_zeh   .byt 0
+h_zt    .byt 0
+h_zlh   .byt 0
 h_end
 
 h_ylo   = h_end

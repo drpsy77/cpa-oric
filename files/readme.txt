@@ -88,8 +88,15 @@ GRAPHER nom [p]
               |   240x200 (HELP
               |   GRAPHER)
 VOIR nom      | affiche NOM.HIR
-              |   (plein ecran) ou
-              |   NOM.IMG, une touche
+              |   (plein ecran), .HIZ
+              |   (compressee) ou
+              |   .IMG, une touche
+VOIR nom.ANI [n]
+              | animation jouee n
+              |   fois (0 : jusqu'a
+              |   une touche) ;
+              |   fleches G D : ligne
+              |   de dechirure
 SET afn [opt] | attributs : RO RW SYS
               |   DIR (sans opt : les
               |   affiche)
@@ -209,7 +216,8 @@ GRAPHER nom /A
               |   NOM.ASM ; puis ASM
               |   NOM -> NOM.COM
               |   (avec CPA.INC
-              |   GRX.INC HIRES.INC)
+              |   GRX.INC HIRES.INC,
+              |   ANIM.INC si ANIM)
 HIRES         | plein ecran 240 x
               |   200, efface
 SPLIT         | 240 x 128, console
@@ -232,8 +240,11 @@ GTEXT col y texte
 ATTR col y1 y2 v
               | attribut : encre 0-7,
               |   papier 16-23
-GLOAD fic     | .HIR (HIRES) ou .IMG
-              |   (SPLIT)
+GLOAD fic     | .HIR ou .HIZ (HIRES),
+              |   .IMG (SPLIT)
+ANIM fic [n]  | animation .ANI en
+              |   HIRES, n fois (0 :
+              |   jusqu'a une touche)
 GSAVE fic     | idem, selon le mode
 WAIT          | attend une touche
 DELAY n       | attend n/50 s

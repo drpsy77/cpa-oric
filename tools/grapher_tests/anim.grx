@@ -1,0 +1,9 @@
+; ANIM : animation chargee apres le texte, jouee N fois, retour au texte
+N = 1
+ANIM CUBE N+1
+TEXT
+PRINT 12
+ANIM B:CUBE.ANI 1 ; lecteur et type explicites
+TEXT
+PRINT 34
+ANIM ABSENT

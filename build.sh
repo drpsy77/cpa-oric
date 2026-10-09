@@ -5,7 +5,7 @@
 #   build/boot.bin     secteurs d'amorçage Microdisc (3 x 256 octets)
 #   build/progs/*.COM  programmes d'exemple
 #   build/cpa.dsk      disquette amorçable (MFM_DISK, 2 faces, 42 pistes, 17 secteurs)
-#   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk  disquettes par usage
+#   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk, cpa-anim.dsk  disquettes par usage
 set -e
 cd "$(dirname "$0")"
 # assembleur : $XA, sinon tools/xa s'il existe, sinon xa dans le PATH
@@ -55,13 +55,14 @@ cp progs/gtest.s build/src/GTEST.ASM
 cp progs/cpa.inc build/src/CPA.INC
 cp progs/hires.inc build/src/HIRES.INC
 cp progs/grx.inc build/src/GRX.INC
+cp progs/anim.inc build/src/ANIM.INC
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
 EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg"
 PROTEGES=""
-for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC files/readme.txt; do
+for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
@@ -81,7 +82,17 @@ theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
 }
 theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx"
 theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC" \
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
-echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm}.dsk"
+# Animations : VOIR visible (il sort des commandes de base), GRAPHER et
+# ASM avec les bibliothèques (GRAPHER ANIMS /A) ; animations fabriquées
+# par tools/anim_demos.py et gardées dans files/anim/ (pas de Pillow ici)
+BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
+BASE_TOUT=$BASE
+BASE=$BASE_SANS_VOIR
+theme build/cpa-anim.dsk "$P/VOIR.COM $P/GRAPHER.COM $P/ASM.COM" \
+  "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC" \
+  "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
+BASE=$BASE_TOUT
+echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm,anim}.dsk"

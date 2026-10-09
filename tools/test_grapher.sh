@@ -3,7 +3,8 @@
 # tools/grapher_tests/*.grx est exécuté dans le 6502 simulé de
 # tools/run_com.py (mode texte : PRINT et messages d'erreur seulement),
 # et la sortie est comparée au fichier .ref ; puis il est traduit
-# (GRAPHER NOM /A), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC) et
+# (GRAPHER NOM /A), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
+# ANIM.INC ; CUBE.ANI pour ANIM) et
 # exécuté : messages de la traduction et sortie comparés au fichier .kref.
 #   tools/test_grapher.sh          compare aux références
 #   REF=1 tools/test_grapher.sh    réécrit les références (après vérification !)
@@ -16,6 +17,7 @@ RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
 cp build/progs/GRAPHER.COM "$T/"
 cp progs/cpa.inc "$T/CPA.INC"; cp progs/grx.inc "$T/GRX.INC"; cp progs/hires.inc "$T/HIRES.INC"
+cp progs/anim.inc "$T/ANIM.INC"; cp files/anim/CUBE.ANI "$T/"
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"

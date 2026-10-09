@@ -103,6 +103,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
     tools/test_grapher.sh            # GRAPHER.COM : calculs, boucles, erreurs (sans émulateur)
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
+    python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
   vecteurs (`$FFFA`) et une ROM qui ne fait pas 16 Ko ; il affiche les deux marges.
@@ -122,6 +123,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
 | GRAPHER.COM, `hires.inc` | en plus : `tools/test_grapher.sh`, essai Oricutron des exemples `.GRX` (dessin) |
+| VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
 
 ## 5. Conventions
@@ -130,7 +132,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
   disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
   pour ne gêner aucun programme. `progs/grx.inc` (`GRX.INC`) est la bibliothèque d'exécution
-  des programmes traduits par `GRAPHER NOM /A`.
+  des programmes traduits par `GRAPHER NOM /A`. `progs/anim.inc` (`ANIM.INC`) joue les
+  animations `.ANI` ; il s'inclut avant `HIRES.INC`, qui reste à la fin du programme (ses
+  tables suivent `h_end`), et utilise aussi les étiquettes internes `hz_`.
 - HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
   en `$BFDF` hors du mode SPLIT a l'écran pour lui ; le système le reconnaît (`hires_on`) et
   n'y dessine rien (FUNCT ignoré, voyants, curseur éteint par le programme) ; le démarrage à
