@@ -113,6 +113,14 @@ run erreurs3 'PUT OUT.TXT LOGO
 ' 2400
 check erreurs3
 
+echo "== CHARGE : ligne de plus de 126 caractères (erreur, pas de coupure)"
+run longue 'PUT OUT.TXT LOGO
+|| charge "e29
+| ecris "apres
+| quitte
+' 1800
+check longue
+
 echo "== fonctions : RACINE, SIN, COS, ARCTAN, LN, EXP"
 run maths 'PUT OUT.TXT LOGO
 || charge "t11
