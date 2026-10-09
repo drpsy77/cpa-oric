@@ -430,6 +430,12 @@ h_9
         .asc "PRINT expr    | affiche un nombre",13,10
         .asc "              |   (pas en HIRES)",13,10
         .asc "GNUM col y n  | nombre dans l'image",13,10
+        .asc "GRAPHER nom /A",13,10
+        .asc "              | traduit NOM.GRX en",13,10
+        .asc "              |   NOM.ASM ; puis ASM",13,10
+        .asc "              |   NOM -> NOM.COM",13,10
+        .asc "              |   (avec CPA.INC",13,10
+        .asc "              |   GRX.INC HIRES.INC)",13,10
         .asc "HIRES         | plein ecran 240 x",13,10
         .asc "              |   200, efface",13,10
         .asc "SPLIT         | 240 x 128, console",13,10

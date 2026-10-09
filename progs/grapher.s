@@ -48,6 +48,8 @@ T_REP   = 1
 T_FOR   = 2
 T_WHILE = 3
 T_CALL  = 4
+T_IF    = 5             ; (traduction seulement)
+T_SUB   = 6
 
 ; classes des commandes (pour sauter un bloc)
 K_LOOP  = 1             ; REPEAT FOR WHILE
@@ -82,6 +84,28 @@ rnd     = $2F           ; générateur pseudo-aléatoire (2 octets)
 vix     = $31           ; variable (0-25)
 vsp     = $32           ; pile des valeurs
 pe      = $33           ; fin du texte chargé (2 octets)
+; traduction (/A)
+ostr    = $35           ; texte à écrire (2 octets)
+kc      = $37           ; 1 : l'expression est la constante kv
+kv      = $38           ; (2 octets)
+oidx    = $3A           ; position dans obuf
+kn      = $3B           ; blocs numérotés (2 octets)
+kl      = $3D           ; bloc en cours (2 octets)
+ksuf    = $3F           ; suffixe d'étiquette (T, E, X)
+cmode   = $40           ; 1 : traduction en assembleur
+oopen   = $41           ; 1 : NOM.ASM ouvert
+klf     = $42           ; gauche d'une opération : constante ?
+lv      = $43           ;   sa valeur (2 octets)
+kop     = $45
+ksym    = $46           ; destination (3 octets)
+koff    = $49
+kvar    = $4A
+osx     = $4B
+osy     = $4C
+osv     = $4D
+kin     = $4E
+kst     = $4F
+osa     = $50           ; instruction à écrire (2 octets)
 
         *= $0500
 
@@ -136,6 +160,9 @@ c3      sta sfcb,y
         ldy #>m_nogrx
         jmp BDOS
 opened  jsr load_text
+        lda #0
+        sta cmode
+        sta oopen
         jsr get_params
         lda #0
         sta pkey
@@ -149,6 +176,9 @@ z1      sta vars,x
         sta cur
         lda #>ptext
         sta cur+1
+        lda cmode               ; /A : traduction en assembleur
+        beq next
+        jmp compile
 
 ; ---------------------------------------------------------------------
 ; Boucle : une ligne, puis sa commande
@@ -366,7 +396,22 @@ get_params
         ldx #0
         jsr skipw               ; GRAPHER
         jsr skipw               ; NOM
-        ldy #0
+        jsr sksp                ; /A : traduction
+        lda ORIG_LINE,x
+        cmp #"/"
+        bne par
+        lda ORIG_LINE+1,x
+        and #$DF
+        cmp #"A"
+        bne par
+        lda ORIG_LINE+2,x
+        beq opt
+        cmp #" "
+        bne par
+opt     inx
+        inx
+        inc cmode
+par     ldy #0
 loop    jsr sksp
         lda ORIG_LINE,x
         beq done
@@ -461,7 +506,7 @@ skip    lda (tbl),y             ; entrée suivante
         bne skip
 sk1     tya
         clc
-        adc #4                  ; dernière lettre, classe, adresse
+        adc #6                  ; dernière lettre, classe, deux adresses
         adc tbl
         sta tbl
         bcc look
@@ -592,10 +637,17 @@ wend    lda #0
         cmp #"="
         bne cmd
         lda word
+        ldy cmode
+        bne kas
         jmp assign
+kas     jmp k_assign
 cmd     jsr lookup
         bcs bad
+        lda cmode               ; traduction : la 2e adresse
+        beq int
         iny
+        iny
+int     iny
         lda (tbl),y
         sta lp
         iny
@@ -761,29 +813,31 @@ op      pha
         jsr e_cmp
         jsr popt
         pla
-        cmp #"&"
-        bne or
-        lda et
-        and ev
-        sta ev
-        lda et+1
-        and ev+1
-        sta ev+1
-        jmp loop
-or      lda et
-        ora ev
-        sta ev
-        lda et+1
-        ora ev+1
-        sta ev+1
+        jsr binop
         jmp loop
 r       rts
 .)
 
-; = <> < <= > >= : 1 si vrai, 0 sinon
+; e_cmp : = <> < <= > >= (une comparaison au plus)
 e_cmp
 .(
         jsr e_sum
+        jsr relop
+        bcs r
+        pha
+        jsr pushv
+        jsr ws
+        jsr e_sum
+        jsr popt
+        pla
+        jmp binop
+r       rts
+.)
+
+; relop : opérateur de comparaison en ex ? -> C=0, A = $81 à $86
+;   (= <> < <= > >=) et ex après lui ; C=1 sinon
+relop
+.(
         jsr ws
         jsr gch
         ldx #1
@@ -793,6 +847,7 @@ e_cmp
         beq lt
         cmp #">"
         beq gt
+        sec
         rts
 lt      inc ex
         jsr gch
@@ -813,11 +868,121 @@ gt      inc ex
         bne go
 one     inc ex
 go      txa
-        pha
+        ora #$80
+        clc
+        rts
+.)
+
+; + -
+e_sum
+.(
+        jsr e_term
+loop    jsr ws
+        jsr gch
+        cmp #"+"
+        beq op
+        cmp #"-"
+        bne r
+op      pha
+        inc ex
         jsr pushv
         jsr ws
-        jsr e_sum
+        jsr e_term
         jsr popt
+        pla
+        jsr binop
+        jmp loop
+r       rts
+.)
+
+; * / %
+e_term
+.(
+        jsr e_un
+loop    jsr ws
+        jsr gch
+        cmp #"*"
+        beq op
+        cmp #"/"
+        beq op
+        cmp #"%"
+        bne r
+op      pha
+        inc ex
+        jsr pushv
+        jsr ws
+        jsr e_un
+        jsr popt
+        pla
+        jsr binop
+        jmp loop
+r       rts
+.)
+
+; binop : ev <- et (op A) ev ; A = + - * / % & | ou $81-$86 (comparaisons)
+binop
+.(
+        cmp #$80
+        bcs b_cmp
+        cmp #"+"
+        beq b_add
+        cmp #"-"
+        beq b_sub
+        cmp #"*"
+        beq b_mul
+        cmp #"&"
+        beq b_and
+        cmp #"|"
+        beq b_or
+        pha                     ; / %
+        jsr sdiv
+        pla
+        cmp #"/"
+        beq r
+        lda mr
+        sta ev
+        lda mr+1
+        sta ev+1
+r       rts
+b_mul   jmp mul16
+b_cmp   and #$7F
+        tax
+        jmp cmpval
+b_add   clc
+        lda et
+        adc ev
+        sta ev
+        lda et+1
+        adc ev+1
+        sta ev+1
+        rts
+b_sub   sec
+        lda et
+        sbc ev
+        sta ev
+        lda et+1
+        sbc ev+1
+        sta ev+1
+        rts
+b_and   lda et
+        and ev
+        sta ev
+        lda et+1
+        and ev+1
+        sta ev+1
+        rts
+b_or    lda et
+        ora ev
+        sta ev
+        lda et+1
+        ora ev+1
+        sta ev+1
+        rts
+.)
+
+; cmpval : X = 1 =, 2 <>, 3 <, 4 <=, 5 >, 6 >= ; ev <- (et ? ev), 1 ou 0
+cmpval
+.(
         sec                     ; et - ev, signé
         lda et
         sbc ev
@@ -832,8 +997,6 @@ go      txa
         eor #$80
 nv      and #$80
         sta mt+1                ; $80 si et < ev
-        pla
-        tax
         lda #0
         sta ev+1
         cpx #1
@@ -875,80 +1038,6 @@ yes     lda #1
         rts
 .)
 
-; + -
-e_sum
-.(
-        jsr e_term
-loop    jsr ws
-        jsr gch
-        cmp #"+"
-        beq op
-        cmp #"-"
-        bne r
-op      pha
-        inc ex
-        jsr pushv
-        jsr ws
-        jsr e_term
-        jsr popt
-        pla
-        cmp #"+"
-        bne sub
-        clc
-        lda et
-        adc ev
-        sta ev
-        lda et+1
-        adc ev+1
-        sta ev+1
-        jmp loop
-sub     sec
-        lda et
-        sbc ev
-        sta ev
-        lda et+1
-        sbc ev+1
-        sta ev+1
-        jmp loop
-r       rts
-.)
-
-; * / %
-e_term
-.(
-        jsr e_un
-loop    jsr ws
-        jsr gch
-        cmp #"*"
-        beq op
-        cmp #"/"
-        beq op
-        cmp #"%"
-        bne r
-op      pha
-        inc ex
-        jsr pushv
-        jsr ws
-        jsr e_un
-        jsr popt
-        pla
-        cmp #"*"
-        bne div
-        jsr mul16
-        jmp loop
-div     pha
-        jsr sdiv
-        pla
-        cmp #"/"
-        beq loop                ; quotient dans ev
-        lda mr                  ; %
-        sta ev
-        lda mr+1
-        sta ev+1
-        jmp loop
-r       rts
-.)
-
 ; signe -
 e_un
 .(
@@ -978,12 +1067,107 @@ e_prim
         inc ex
         inc edep
         jsr e_or
-        jmp close               ; (close redescend edep)
+        jmp x_close             ; (x_close redescend edep)
 nopar   cmp #"0"
         bcc id
         cmp #"9"+1
         bcs id
-        lda #0                  ; nombre décimal
+        jmp parse_num
+id      jsr parse_id
+        cpx #1
+        bne func
+        jmp getv_kw             ; variable
+func    jsr find_fn
+        cmp #0
+        beq f_rnd
+        cmp #1
+        beq f_abs
+        cmp #2
+        beq f_point
+        jmp f_inkey
+f_rnd   jsr arg1
+        lda ev+1
+        bmi zero
+        ora ev
+        beq zero
+        jsr rand                ; et = hasard (0 à 32767), puis modulo
+        jsr udiv
+        lda mr
+        sta ev
+        lda mr+1
+        sta ev+1
+        rts
+zero    lda #0
+        sta ev
+        sta ev+1
+        rts
+f_abs   jsr arg1
+        lda ev+1
+        bpl ar
+        jmp neg_ev
+ar      rts
+f_point jsr x_open
+        jsr e_or                ; x
+        jsr pushv
+        jsr x_comma
+        jsr e_or                ; y
+        jsr x_close
+        jsr popt
+        lda h_lines             ; pas d'image : 0
+        beq zero
+        lda et+1
+        ora ev+1
+        bne zero
+        lda h_x1                ; paramètres de la commande gardés
+        pha
+        lda h_y1
+        pha
+        lda et
+        sta h_x1
+        lda ev
+        sta h_y1
+        jsr h_point
+        sta ev
+        pla
+        sta h_y1
+        pla
+        sta h_x1
+        lda #0
+        sta ev+1
+        rts
+f_inkey lda pkey                ; touche gardée par le test d'ESC
+        ldx #0
+        stx pkey
+        cmp #0
+        bne ik
+        jsr B_CONST
+        beq ik
+        jsr h_key
+ik      sta ev
+        lda #0
+        sta ev+1
+        rts
+arg1    jsr x_open
+        jsr e_or
+        jmp x_close
+.)
+
+; getv_kw : ev <- variable kw (une lettre)
+getv_kw lda kw
+        sec
+        sbc #"A"
+        asl
+        tay
+        lda vars,y
+        sta ev
+        lda vars+1,y
+        sta ev+1
+        rts
+
+; parse_num : nombre décimal en ex -> ev (32767 au plus)
+parse_num
+.(
+        lda #0
         sta ev
         sta ev+1
 num     jsr gch
@@ -1025,7 +1209,12 @@ n1      lda ev+1                ; 32767 au plus
 nend    rts
 big0    pla
 big     jmp e_expr
-id      ldx #0                  ; nom : variable (une lettre) ou fonction
+.)
+
+; parse_id : nom en ex (lettres, 6 au plus) -> kw, X = longueur
+parse_id
+.(
+        ldx #0
 idl     jsr gch
         jsr isalpha
         bcs idend
@@ -1039,19 +1228,15 @@ idend   cpx #0
         beq bad
         lda #0
         sta kw,x
-        cpx #1
-        bne func
-        lda kw                  ; variable
-        sec
-        sbc #"A"
-        asl
-        tay
-        lda vars,y
-        sta ev
-        lda vars+1,y
-        sta ev+1
         rts
-func    ldy #0                  ; recherche dans les fonctions
+bad     jmp e_expr
+.)
+
+; find_fn : kw parmi les fonctions -> A = numéro (0 RND, 1 ABS, 2 POINT,
+;   3 INKEY) ; erreur sinon
+find_fn
+.(
+        ldy #0
 fl      ldx #0
 fc      lda fnames,y
         beq bad
@@ -1064,13 +1249,8 @@ fc      lda fnames,y
         lda fnames,y            ; même longueur ?
         cmp #" "
         bne fskip
-        lda fnames+1,y          ; numéro de la fonction
-        beq f_rnd
-        cmp #1
-        beq f_abs
-        cmp #2
-        beq f_point
-        jmp f_inkey
+        lda fnames+1,y
+        rts
 fskip   lda fnames,y            ; nom suivant
         iny
         cmp #" "
@@ -1078,86 +1258,30 @@ fskip   lda fnames,y            ; nom suivant
         iny
         jmp fl
 bad     jmp e_expr
+.)
 
-f_rnd   jsr arg1
-        lda ev+1
-        bmi zero
-        ora ev
-        beq zero
-        jsr rand                ; et = hasard (0 à 32767), puis modulo
-        jsr udiv
-        lda mr
-        sta ev
-        lda mr+1
-        sta ev+1
-        rts
-zero    lda #0
-        sta ev
-        sta ev+1
-        rts
-f_abs   jsr arg1
-        lda ev+1
-        bpl ar
-        jmp neg_ev
-ar      rts
-f_point jsr open
-        jsr e_or                ; x
-        jsr pushv
-        jsr ws
-        jsr gch
-        cmp #","
-        bne bad
-        inc ex
-        jsr e_or                ; y
-        jsr close
-        jsr popt
-        lda h_lines             ; pas d'image : 0
-        beq zero
-        lda et+1
-        ora ev+1
-        bne zero
-        lda et
-        sta h_x1
-        lda ev
-        sta h_y1
-        jsr h_point
-        sta ev
-        lda #0
-        sta ev+1
-        rts
-f_inkey lda pkey                ; touche gardée par le test d'ESC
-        ldx #0
-        stx pkey
-        cmp #0
-        bne ik
-        jsr B_CONST
-        beq ik
-        jsr h_key
-ik      sta ev
-        lda #0
-        sta ev+1
-        rts
-
-; arg1 : (expression)
-arg1    jsr open
-        jsr e_or
-        jmp close
-open    jsr ws
+; x_open / x_close / x_comma : ( ) , attendus en ex
+x_open  jsr ws
         jsr gch
         cmp #"("
-        bne bad2
+        bne x_bad
         inc ex
         inc edep
         rts
-close   jsr ws
+x_close jsr ws
         jsr gch
         cmp #")"
-        bne bad2
+        bne x_bad
         inc ex
         dec edep
         rts
-bad2    jmp e_expr
-.)
+x_comma jsr ws
+        jsr gch
+        cmp #","
+        bne x_bad
+        inc ex
+        rts
+x_bad   jmp e_expr
 
 fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,0
 
@@ -1850,9 +1974,21 @@ none    lda #<m_noret
 
 ; CALL NOM : cherche « SUB NOM » dans tout le texte
 c_call
+        jsr sub_find
+        lda #T_CALL             ; retour à la ligne après CALL
+        jsr cs_push
+        jsr body
+        lda sk                  ; corps : ligne après SUB NOM
+        sta nxt
+        lda sk+1
+        sta nxt+1
+        rts
+
+; getsub : nom (lettres, chiffres, 8 au plus) en lbuf (X) -> cname
+getsub
 .(
         jsr skipsp
-        ldy #0                  ; nom cherché -> cname
+        ldy #0
 n       lda lbuf,x
         jsr isalpha
         bcc ok
@@ -1870,6 +2006,14 @@ nend    cpy #0
         beq bad
         lda #0
         sta cname,y
+        rts
+bad     jmp e_param
+.)
+
+; sub_find : nom en lbuf (X) ; sk <- ligne qui suit « SUB NOM »
+sub_find
+.(
+        jsr getsub
         jsr endline
         lda #<ptext
         sta sk
@@ -1914,19 +2058,1583 @@ cc1     cmp cname,x
         bne cmpn
 cend    lda cname,x
         bne line
-        lda #T_CALL             ; trouvé : retour à la ligne après CALL
-        jsr cs_push
-        jsr body
-        lda sk                  ; corps : ligne après SUB NOM
-        sta nxt
-        lda sk+1
-        sta nxt+1
         rts
 unk     lda #<m_nosub
         ldy #>m_nosub
         jmp error
-bad     jmp e_param
 .)
+
+; =====================================================================
+; Traduction en assembleur (GRAPHER NOM /A -> NOM.ASM)
+; =====================================================================
+; Chaque ligne devient un commentaire puis son code ; le dessin appelle
+; hires.inc, le reste la bibliothèque grx.inc. Une expression est
+; compilée avec son état (kc = 1 : constante kv pas encore écrite ;
+; kc = 0 : valeur dans g_ev à l'exécution) : les parties constantes
+; sont calculées ici.
+
+compile
+.(
+        jsr o_open
+        lda #<h_head1           ; en-tête
+        ldy #>h_head1
+        jsr os
+        jsr o_name
+        lda #<h_head2
+        ldy #>h_head2
+        jsr os
+        jsr o_name
+        lda #<h_head2b
+        ldy #>h_head2b
+        jsr os
+        jsr o_name
+        lda #<h_head3
+        ldy #>h_head3
+        jsr os
+        lda #0
+        sta kn
+        sta kn+1
+        sta csp
+kloop   jsr B_CONST             ; ESC : arrêt
+        beq krd
+        jsr h_key
+        cmp #27
+        bne krd
+        lda #<m_esc
+        ldy #>m_esc
+        jmp stop_msg
+krd     ldy #0
+        lda (cur),y
+        beq kend
+        jsr read_line
+        ldx #0                  ; la ligne en commentaire
+        jsr skipsp
+        beq kx
+        lda #";"
+        jsr oc
+        lda #" "
+        jsr oc
+        lda #<lbuf
+        ldy #>lbuf
+        jsr os
+        jsr ocrlf
+        jsr exec
+kx      lda nxt
+        sta cur
+        lda nxt+1
+        sta cur+1
+        jmp kloop
+kend    lda csp                 ; un bloc n'est pas fermé
+        beq ok
+        lda #0
+        sta word
+        lda #<m_open
+        ldy #>m_open
+        jmp error
+ok      lda #<s_jend            ; fin, puis les boucles et les inclusions
+        ldy #>s_jend
+        jsr oi
+        lda #<h_tail1
+        ldy #>h_tail1
+        jsr os
+        lda #0
+        sta kl
+        sta kl+1
+bl      lda kl                  ; B1 à Bn
+        cmp kn
+        bne bl1
+        lda kl+1
+        cmp kn+1
+        beq bend
+bl1     inc kl
+        bne bl2
+        inc kl+1
+bl2     lda #0
+        sta ksuf
+        lda #"B"
+        jsr o_lname
+        lda #<s_bdata
+        ldy #>s_bdata
+        jsr os
+        jmp bl
+bend    lda #<h_tail2
+        ldy #>h_tail2
+        jsr os
+        jsr o_close
+        jsr o_name              ; message : NOM.ASM ecrit
+        lda #<m_done
+        ldy #>m_done
+        jsr puts
+        jsr o_name
+        jsr crlf
+        jmp quit
+.)
+
+; o_name : nom du fichier source (sans le type) sur la sortie, ou sur la
+;   console après la fermeture du fichier
+o_name
+.(
+        ldx #1
+l       lda sfcb,x
+        cmp #" "
+        beq r
+        stx lx
+        ldy oopen
+        beq con
+        jsr oc
+        jmp nx
+con     jsr putc
+nx      ldx lx
+        inx
+        cpx #9
+        bne l
+r       rts
+.)
+
+; ---------------------------------------------------------------------
+; Fichier de sortie
+; ---------------------------------------------------------------------
+o_open
+.(
+        ldx #11                 ; NOM.ASM sur le lecteur de NOM.GRX
+l       lda sfcb,x
+        sta ofcb,x
+        dex
+        bpl l
+        ldx #2
+t       lda t_asm,x
+        sta ofcb+9,x
+        dex
+        bpl t
+        jsr o_fcb0
+        ldx #F_DELETE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+        jsr o_fcb0
+        ldx #F_MAKE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+        cmp #$FF
+        bne ok
+        lda #<m_full
+        ldy #>m_full
+        jmp error
+ok      lda #1
+        sta oopen
+        lda #0
+        sta oidx
+        rts
+.)
+
+o_fcb0
+.(
+        ldy #12
+        lda #0
+l       sta ofcb,y
+        iny
+        cpy #36
+        bne l
+        rts
+.)
+
+; oc : un caractère sur la sortie (X et Y gardés)
+oc
+.(
+        stx osx
+        sty osy
+        ldy oidx
+        sta obuf,y
+        iny
+        sty oidx
+        cpy #128
+        bne r
+        jsr o_flush
+r       ldx osx
+        ldy osy
+        rts
+.)
+
+o_flush
+.(
+        ldx #F_SETDMA
+        lda #<obuf
+        ldy #>obuf
+        jsr BDOS
+        ldx #F_WRITE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+        pha
+        ldx #F_SETDMA
+        lda #<DEF_DMA
+        ldy #>DEF_DMA
+        jsr BDOS
+        pla
+        bne full
+        lda #0
+        sta oidx
+        rts
+full    lda #<m_full
+        ldy #>m_full
+        jmp error
+.)
+
+o_close
+.(
+        lda oidx                ; dernier enregistrement complété par ^Z
+        beq c
+l       lda #$1A
+        jsr oc
+        lda oidx
+        bne l
+c       ldx #F_CLOSE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+        lda #0
+        sta oopen
+        rts
+.)
+
+; o_drop : erreur pendant la traduction : le fichier est effacé
+o_drop
+.(
+        lda oopen
+        beq r
+        lda #0
+        sta oopen
+        ldx #F_CLOSE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+        jsr o_fcb0
+        ldx #F_DELETE
+        lda #<ofcb
+        ldy #>ofcb
+        jsr BDOS
+r       rts
+.)
+
+; ---------------------------------------------------------------------
+; Écriture du texte assembleur
+; ---------------------------------------------------------------------
+; os : chaîne A/Y (0 à la fin) ; ocrlf : fin de ligne
+os
+.(
+        sta ostr
+        sty ostr+1
+        ldy #0
+l       lda (ostr),y
+        beq r
+        jsr oc
+        iny
+        bne l
+r       rts
+.)
+ocrlf   lda #13
+        jsr oc
+        lda #10
+        jmp oc
+
+; oi : instruction A/Y (« jsr h_line »), en retrait, puis fin de ligne
+oi      sta osa
+        sty osa+1
+        jsr o_tab
+        lda osa
+        ldy osa+1
+        jsr os
+        jmp ocrlf
+o_tab   lda #<s_tab
+        ldy #>s_tab
+        jmp os
+
+; ohex : A en hexadécimal ($xx)
+ohex
+.(
+        pha
+        lda #"$"
+        jsr oc
+        pla
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        jsr dig
+        pla
+        and #$0F
+dig     cmp #10
+        bcc d
+        adc #6
+d       adc #"0"
+        jmp oc
+.)
+
+; oimm : « op #$xx » : A/Y = début (« lda # »), osv = valeur
+oimm    sta osa
+        sty osa+1
+        jsr o_tab
+        lda osa
+        ldy osa+1
+        jsr os
+        lda osv
+        jsr ohex
+        jmp ocrlf
+
+; odec : kl en décimal (X gardé)
+odec
+.(
+        txa
+        pha
+        lda kl
+        sta gv
+        lda kl+1
+        sta gv+1
+        lda #0
+        sta gd
+        ldx #0
+dig     ldy #0
+sub     sec
+        lda gv
+        sbc d_lo,x
+        pha
+        lda gv+1
+        sbc d_hi,x
+        bcc dn
+        sta gv+1
+        pla
+        sta gv
+        iny
+        bne sub
+dn      pla
+        tya
+        bne show
+        lda gd
+        beq nx
+        tya
+show    ora #"0"
+        jsr oc
+        sta gd
+nx      inx
+        cpx #4
+        bne dig
+        lda gv
+        ora #"0"
+        jsr oc
+        pla
+        tax
+        rts
+.)
+
+; o_lab : étiquette A + numéro kl + suffixe ksuf (0 : aucun), en colonne 1
+o_lab   jsr o_lname
+        jmp ocrlf
+o_lname jsr oc
+        jsr odec
+        lda ksuf
+        beq ol_r
+        jmp oc
+ol_r    rts
+
+; o_jmp : « jmp L<kl><suffixe A> »
+o_jmp   sta ksuf
+        jsr o_tab
+        lda #<s_jmp
+        ldy #>s_jmp
+        jsr os
+        lda #"L"
+        jsr o_lname
+        jmp ocrlf
+
+; o_label : « L<kl><suffixe A> » en colonne 1
+o_label sta ksuf
+        lda #"L"
+        jmp o_lab
+
+; o_ab : « lda #<Bn » puis « ldy #>Bn »
+o_ab    lda #0
+        sta ksuf
+        jsr o_tab
+        lda #<s_ldalo
+        ldy #>s_ldalo
+        jsr os
+        lda #"B"
+        jsr o_lname
+        jsr ocrlf
+        jsr o_tab
+        lda #<s_ldyhi
+        ldy #>s_ldyhi
+        jsr os
+        lda #"B"
+        jsr o_lname
+        jmp ocrlf
+
+; o_skipz : « lda g_ev / ora g_ev+1 / bne *+5 / jmp L<kl><A> » (si nul)
+o_skipz pha
+        lda #<s_tst
+        ldy #>s_tst
+        jsr os
+        pla
+        jmp o_jmp
+
+; ---------------------------------------------------------------------
+; Destinations : ksym = « V_x », « Bn » ou un nom fixe ; koff = décalage
+; ---------------------------------------------------------------------
+; o_sym : nom de la destination, avec +koff
+o_sym
+.(
+        lda ksym
+        beq var
+        cmp #1
+        beq blk
+        lda ksym+1              ; nom fixe : adresse en ksym+1/+2
+        ldy ksym+2
+        jsr os
+        jmp off
+var     lda #<s_v
+        ldy #>s_v
+        jsr os
+        lda kvar
+        clc
+        adc #"A"
+        jsr oc
+        jmp off
+blk     lda #0
+        sta ksuf
+        lda #"B"
+        jsr o_lname
+off     lda koff
+        beq r
+        lda #"+"
+        jsr oc
+        lda koff
+        ora #"0"
+        jmp oc
+r       rts
+.)
+
+; o_store : « sta dest » (A/Y = début de l'instruction : « sta »)
+o_ins_sym
+        sta osa
+        sty osa+1
+        jsr o_tab
+        lda osa
+        ldy osa+1
+        jsr os
+        jsr o_sym
+        jmp ocrlf
+
+; o_st16 : résultat de l'expression (kc/kv ou g_ev) -> destination
+;   (16 bits, koff puis koff+1)
+o_st16
+.(
+        lda kc
+        beq dyn
+        lda #<s_ldai
+        ldy #>s_ldai
+        pha
+        lda kv
+        sta osv
+        pla
+        jsr oimm
+        jsr sta1
+        lda #<s_ldai
+        ldy #>s_ldai
+        pha
+        lda kv+1
+        sta osv
+        pla
+        jsr oimm
+        jmp sta2
+dyn     lda #<s_ldaev
+        ldy #>s_ldaev
+        jsr oi
+        jsr sta1
+        lda #<s_ldaev1
+        ldy #>s_ldaev1
+        jsr oi
+sta2    inc koff
+        jsr sta1
+        dec koff
+        rts
+sta1    lda #<s_sta
+        ldy #>s_sta
+        jmp o_ins_sym
+.)
+
+; dest_var / dest_blk / dest_fix : choix de la destination
+dest_var
+        sta kvar
+        lda #0
+        sta ksym
+        sta koff
+        rts
+dest_blk
+        lda #1
+        sta ksym
+        lda #0
+        sta koff
+        rts
+dest_fix                        ; A/Y = nom
+        sta ksym+1
+        sty ksym+2
+        lda #2
+        sta ksym
+        lda #0
+        sta koff
+        rts
+
+; k_mat : constante en attente -> g_ev (à l'exécution)
+k_mat
+.(
+        lda kc
+        beq r
+        lda #<s_gev
+        ldy #>s_gev
+        jsr dest_fix
+        jsr o_st16
+        lda #0
+        sta kc
+r       rts
+.)
+
+; ---------------------------------------------------------------------
+; Expressions
+; ---------------------------------------------------------------------
+k_pexpr lda #0
+        beq kpx
+k_lexpr lda #1
+kpx     sta edep
+        jsr skipsp
+        beq k_epar
+        cmp #";"
+        beq k_epar
+        stx ex
+        lda #0
+        sta vsp
+        jsr k_or
+        ldx ex
+        lda lbuf,x
+        beq kpok
+        cmp #" "
+        beq kpok
+        cmp #";"
+        bne k_eexp
+kpok    lda edep
+        beq kpr
+        jsr endline
+kpr     rts
+k_epar  jmp e_param
+k_eexp  jmp e_expr
+
+k_or
+.(
+        jsr k_cmp
+loop    jsr ws
+        jsr gch
+        cmp #"&"
+        beq op
+        cmp #"|"
+        bne r
+op      pha
+        inc ex
+        jsr k_left
+        jsr ws
+        jsr k_cmp
+        pla
+        jsr k_apply
+        jmp loop
+r       rts
+.)
+
+k_cmp
+.(
+        jsr k_sum
+        jsr relop
+        bcs r
+        pha
+        jsr k_left
+        jsr ws
+        jsr k_sum
+        pla
+        jmp k_apply
+r       rts
+.)
+
+k_sum
+.(
+        jsr k_term
+loop    jsr ws
+        jsr gch
+        cmp #"+"
+        beq op
+        cmp #"-"
+        bne r
+op      pha
+        inc ex
+        jsr k_left
+        jsr ws
+        jsr k_term
+        pla
+        jsr k_apply
+        jmp loop
+r       rts
+.)
+
+k_term
+.(
+        jsr k_un
+loop    jsr ws
+        jsr gch
+        cmp #"*"
+        beq op
+        cmp #"/"
+        beq op
+        cmp #"%"
+        bne r
+op      pha
+        inc ex
+        jsr k_left
+        jsr ws
+        jsr k_un
+        pla
+        jsr k_apply
+        jmp loop
+r       rts
+.)
+
+k_un
+.(
+        jsr ws
+        jsr gch
+        cmp #"-"
+        bne k_prim
+        inc ex
+        jsr k_un
+        lda kc
+        beq dyn
+        lda kv                  ; constante : opposée ici
+        sta ev
+        lda kv+1
+        sta ev+1
+        jsr neg_ev
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+        rts
+dyn     lda #<s_neg
+        ldy #>s_neg
+        jmp oi
+.)
+
+k_prim
+.(
+        jsr ws
+        jsr gch
+        cmp #"("
+        bne nopar
+        inc ex
+        inc edep
+        jsr k_or
+        jmp x_close
+nopar   cmp #"0"
+        bcc id
+        cmp #"9"+1
+        bcs id
+        jsr parse_num           ; nombre : constante
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+        lda #1
+        sta kc
+        rts
+id      jsr parse_id
+        cpx #1
+        bne func
+        lda kw                  ; variable -> g_ev
+        sec
+        sbc #"A"
+        jsr dest_var
+        lda #0
+        sta kc
+        lda #<s_ldai            ; (o_st16 à l'envers : var -> g_ev)
+        jsr ld_var
+        rts
+func    jsr find_fn
+        cmp #0
+        beq f_rnd
+        cmp #1
+        beq f_abs
+        cmp #2
+        beq f_point
+        lda #<s_inkey
+        ldy #>s_inkey
+        jmp dyn
+f_rnd   jsr x_open
+        jsr k_or
+        jsr x_close
+        jsr k_mat
+        lda #<s_rnd
+        ldy #>s_rnd
+        jmp dyn
+f_abs   jsr x_open
+        jsr k_or
+        jsr x_close
+        lda kc
+        beq ab
+        lda kv+1                ; constante : ici
+        bpl r
+        lda kv
+        sta ev
+        lda kv+1
+        sta ev+1
+        jsr neg_ev
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+r       rts
+ab      lda #<s_abs
+        ldy #>s_abs
+        jmp oi
+f_point jsr x_open
+        jsr k_or
+        jsr k_mat
+        lda #<s_push
+        ldy #>s_push
+        jsr oi
+        jsr x_comma
+        jsr k_or
+        jsr x_close
+        jsr k_mat
+        lda #<s_pop
+        ldy #>s_pop
+        jsr oi
+        lda #<s_point
+        ldy #>s_point
+dyn     jsr oi
+        lda #0
+        sta kc
+        rts
+.)
+
+; ld_var : g_ev <- variable kvar (« lda V_x / sta g_ev » ...)
+ld_var
+.(
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        lda #<s_stev
+        ldy #>s_stev
+        jsr oi
+        inc koff
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        lda #<s_stev1
+        ldy #>s_stev1
+        jmp oi
+.)
+
+; k_left : opérande de gauche gardé (constante ici, valeur sur la pile
+;   des valeurs à l'exécution)
+k_left
+.(
+        ldy vsp
+        cpy #NVS
+        bcs deep
+        lda kc
+        sta vs_f,y
+        lda kv
+        sta vs_lo,y
+        lda kv+1
+        sta vs_hi,y
+        inc vsp
+        lda kc
+        bne r
+        lda #<s_push
+        ldy #>s_push
+        jmp oi
+r       rts
+deep    jmp e_expr
+.)
+
+; k_apply : gauche (k_left) op A droite (kc/kv)
+k_apply
+.(
+        sta kop
+        dec vsp
+        ldy vsp
+        lda vs_f,y
+        sta klf
+        lda vs_lo,y
+        sta lv
+        lda vs_hi,y
+        sta lv+1
+        lda klf
+        beq lstk
+        lda kc
+        beq lcst
+        lda lv                  ; deux constantes : calcul ici
+        sta et
+        lda lv+1
+        sta et+1
+        lda kv
+        sta ev
+        lda kv+1
+        sta ev+1
+        lda kop
+        jsr binop
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+        rts
+lcst    lda #<s_ldai            ; gauche constante -> g_et
+        ldy #>s_ldai
+        pha
+        lda lv
+        sta osv
+        pla
+        jsr oimm
+        lda #<s_stet
+        ldy #>s_stet
+        jsr oi
+        lda #<s_ldai
+        ldy #>s_ldai
+        pha
+        lda lv+1
+        sta osv
+        pla
+        jsr oimm
+        lda #<s_stet1
+        ldy #>s_stet1
+        jsr oi
+        jmp eop
+lstk    jsr k_mat               ; gauche sur la pile des valeurs
+        lda #<s_pop
+        ldy #>s_pop
+        jsr oi
+eop     lda #0
+        sta kc
+        lda kop
+        bpl ar
+        and #$7F                ; comparaison : ldx #n / jsr g_cmp
+        sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+        lda #<s_cmp
+        ldy #>s_cmp
+        jmp oi
+ar      ldx #0                  ; opération -> sa routine
+f       lda ops,x
+        beq r
+        cmp kop
+        beq found
+        inx
+        inx
+        inx
+        bne f
+found   lda ops+1,x
+        ldy ops+2,x
+        jmp oi
+r       rts
+ops     .byt "+"
+        .word s_add
+        .byt "-"
+        .word s_sub
+        .byt "*"
+        .word s_mul
+        .byt "/"
+        .word s_div
+        .byt "%"
+        .word s_mod
+        .byt "&"
+        .word s_and
+        .byt "|"
+        .word s_or
+        .byt 0
+.)
+
+; k_byte : paramètre de 0 à 255 -> A (à l'exécution)
+k_byte
+.(
+        jsr k_pexpr
+        lda kc
+        beq dyn
+        lda kv+1                ; constante : vérifiée ici
+        bne bad
+        lda #<s_ldai
+        ldy #>s_ldai
+        pha
+        lda kv
+        sta osv
+        pla
+        jmp oimm
+bad     lda #<m_range
+        ldy #>m_range
+        jmp error
+dyn     lda #<s_byte
+        ldy #>s_byte
+        jmp oi
+.)
+
+; k_p : paramètre de 0 à 255 -> destination fixe A/Y (« h_x1 »)
+k_p     pha
+        tya
+        pha
+        jsr k_byte
+        pla
+        tay
+        pla
+        jsr dest_fix
+        lda #<s_sta
+        ldy #>s_sta
+        jmp o_ins_sym
+k_p2    lda #<s_hx1
+        ldy #>s_hx1
+        jsr k_p
+        lda #<s_hy1
+        ldy #>s_hy1
+        jmp k_p
+k_p4    jsr k_p2
+        lda #<s_hx2
+        ldy #>s_hx2
+        jsr k_p
+        lda #<s_hy2
+        ldy #>s_hy2
+        jsr k_p
+        jmp endline
+
+; o_text : texte de lbuf (X) jusqu'à la fin, en .byt (guillemets à part)
+o_text
+.(
+        stx lx
+        jsr o_tab
+        lda #<s_byt
+        ldy #>s_byt
+        jsr os
+        lda #0
+        sta kin                 ; dans une chaîne
+        sta kst                 ; quelque chose écrit
+l       ldx lx
+        lda lbuf,x
+        beq end
+        inc lx
+        cmp #34
+        beq num
+        cmp #" "
+        bcc num
+        pha
+        lda kin
+        bne in
+        jsr comma
+        lda #34
+        jsr oc
+        lda #1
+        sta kin
+in      pla
+        jsr oc
+        jmp l
+num     pha
+        jsr close
+        jsr comma
+        pla
+        jsr ohex
+        jmp l
+end     jsr close
+        jsr comma
+        lda #"0"
+        jsr oc
+        jmp ocrlf
+close   lda kin
+        beq cr
+        lda #34
+        jsr oc
+        lda #0
+        sta kin
+cr      rts
+comma   lda kst
+        beq kc1
+        lda #","
+        jmp oc
+kc1     lda #1
+        sta kst
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; Commandes traduites
+; ---------------------------------------------------------------------
+k_call0 jsr endline             ; A/Y : instruction seule (« jsr h_full »)
+        pla
+        tay
+        pla
+        jmp oi
+k_hires lda #<s_hires
+        pha
+        lda #>s_hires
+        pha
+        jmp k_call0
+k_split lda #<s_split
+        pha
+        lda #>s_split
+        pha
+        jmp k_call0
+k_text  lda #<s_text
+        pha
+        lda #>s_text
+        pha
+        jmp k_call0
+k_gcls  lda #<s_gcls
+        pha
+        lda #>s_gcls
+        pha
+        jmp k_call0
+k_wait  lda #<s_wait
+        pha
+        lda #>s_wait
+        pha
+        jmp k_call0
+k_end   lda #<s_jend
+        pha
+        lda #>s_jend
+        pha
+        jmp k_call0
+k_pen   jsr k_pexpr
+        lda kc                  ; constante : 0 à 2
+        beq kpen1
+        lda kv+1
+        bne kpen0
+        lda kv
+        cmp #3
+        bcc kpen1
+kpen0   jmp e_param
+kpen1   ldx #0
+        jsr k_rebyte
+        lda #<s_pen
+        ldy #>s_pen
+        jmp oi
+k_plot  jsr k_p2
+        jsr endline
+        lda #<s_plot
+        ldy #>s_plot
+        jmp oi
+k_line  jsr k_p4
+        lda #<s_line
+        ldy #>s_line
+        jmp oi
+k_box   jsr k_p4
+        lda #<s_box
+        ldy #>s_box
+        jmp oi
+k_fbox  jsr k_p4
+        lda #<s_fbox
+        ldy #>s_fbox
+        jmp oi
+k_circle
+        jsr k_p2
+        lda #<s_hr
+        ldy #>s_hr
+        jsr k_p
+        jsr endline
+        lda #<s_circle
+        ldy #>s_circle
+        jmp oi
+k_attr  jsr k_p2
+        lda #<s_hy2
+        ldy #>s_hy2
+        jsr k_p
+        jsr k_byte
+        jsr endline
+        lda #<s_attr
+        ldy #>s_attr
+        jmp oi
+k_gtext jsr k_p2                ; le texte suit l'appel
+        lda lbuf,x
+        beq kgt
+        inx
+kgt     stx lx
+        lda #<s_gtext
+        ldy #>s_gtext
+        jsr oi
+        ldx lx
+        jmp o_text
+k_echo  jsr skipsp
+        stx lx
+        lda #<s_echo
+        ldy #>s_echo
+        jsr oi
+        ldx lx
+        jmp o_text
+k_gnum  jsr k_p2
+        jsr k_pexpr
+        jsr endline
+        jsr k_mat
+        lda #<s_gnum
+        ldy #>s_gnum
+        jmp oi
+k_delay jsr k_pexpr
+        jsr endline
+        jsr k_mat
+        lda #<s_delay
+        ldy #>s_delay
+        jmp oi
+k_print jsr k_lexpr
+        jsr k_mat
+        lda #<s_print
+        ldy #>s_print
+        jmp oi
+k_gload lda #<s_gload
+        ldy #>s_gload
+        jmp k_img
+k_gsave lda #<s_gsave
+        ldy #>s_gsave
+k_img
+.(
+        pha
+        tya
+        pha
+        jsr getname             ; le nom (lecteur, 8 + 3) suit l'appel
+        pla
+        tay
+        pla
+        jsr oi
+        jsr o_tab
+        lda #<s_byt
+        ldy #>s_byt
+        jsr os
+        lda ifcb
+        jsr ohex
+        jsr ocrlf
+        jsr o_tab
+        lda #<s_asc
+        ldy #>s_asc
+        jsr os
+        ldx #1
+l       lda ifcb,x
+        jsr oc
+        inx
+        cpx #12
+        bne l
+        lda #34
+        jsr oc
+        jmp ocrlf
+.)
+
+; k_rebyte : (après k_pexpr) A <- valeur à l'exécution
+k_rebyte
+        lda kc
+        beq krb1
+        lda #<s_ldai
+        ldy #>s_ldai
+        pha
+        lda kv
+        sta osv
+        pla
+        jmp oimm
+krb1    lda #<s_byte
+        ldy #>s_byte
+        jmp oi
+
+; affectation : X sur le « = », A = lettre
+k_let   jsr getvar
+        jsr skipsp
+        cmp #"="
+        beq klet1
+        jmp e_param
+klet1   lda vix
+        clc
+        adc #"A"
+k_assign
+        sec
+        sbc #"A"
+        sta vix
+        inx
+        jsr k_lexpr
+        lda vix
+        jsr dest_var
+        jmp o_st16
+
+; k_newblk : nouveau bloc kl = ++kn, empilé avec le type A
+k_newblk
+.(
+        inc kn
+        bne n
+        inc kn+1
+n       ldy kn
+        sty kl
+        ldy kn+1
+        sty kl+1
+        jsr cs_push
+        lda kl
+        sta cs_al,y
+        lda kl+1
+        sta cs_ah,y
+        lda #0
+        sta cs_v,y
+        rts
+.)
+
+; k_top : sommet de la pile de contrôle -> Y, kl ; type dans A (0 : vide)
+k_top
+.(
+        ldy csp
+        beq none
+        dey
+        lda cs_al,y
+        sta kl
+        lda cs_ah,y
+        sta kl+1
+        lda cs_t,y
+        rts
+none    lda #0
+        rts
+.)
+
+k_repeat
+        lda #T_REP
+        jsr k_newblk
+        jsr k_pexpr
+        jsr endline
+        jsr dest_blk
+        jsr o_st16
+        lda #"T"
+        jsr o_label
+        jsr o_ab
+        lda #<s_rept
+        ldy #>s_rept
+        jsr oi
+        lda #<s_bcc
+        ldy #>s_bcc
+        jsr oi
+        lda #"E"
+        jmp o_jmp
+
+k_for
+.(
+        jsr getvar
+        lda vix
+        sta fvar
+        lda #T_FOR
+        jsr k_newblk
+        lda fvar
+        sta cs_v,y
+        jsr k_pexpr             ; départ -> variable
+        lda fvar
+        jsr dest_var
+        jsr o_st16
+        jsr k_pexpr             ; arrivée -> Bn
+        jsr dest_blk
+        jsr o_st16
+        lda #1                  ; pas : 1 par défaut
+        sta kc
+        sta kv
+        lda #0
+        sta kv+1
+        jsr skipsp
+        beq step
+        cmp #";"
+        beq step
+        jsr k_pexpr
+        lda kc
+        beq step
+        lda kv
+        ora kv+1
+        bne step
+        lda #<m_step
+        ldy #>m_step
+        jmp error
+step    jsr endline
+        jsr dest_blk            ; pas -> Bn+2
+        lda #2
+        sta koff
+        jsr o_st16
+        lda #"T"
+        jsr o_label
+        jsr o_ab
+        jsr o_ldxv
+        lda #<s_forok
+        ldy #>s_forok
+        jsr oi
+        lda #<s_bcc
+        ldy #>s_bcc
+        jsr oi
+        lda #"E"
+        jmp o_jmp
+.)
+
+; o_ldxv : « ldx #2*var » (variable de la boucle du sommet)
+o_ldxv  ldy csp
+        dey
+        lda cs_v,y
+        asl
+        sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jmp oimm
+
+k_while
+.(
+        lda #T_WHILE
+        jsr k_newblk
+        lda #"T"
+        jsr o_label
+        jsr k_lexpr
+        lda kc
+        beq dyn
+        lda kv
+        ora kv+1
+        bne r                   ; WHILE vrai : rien à tester
+        lda #"E"
+        jmp o_jmp
+dyn     lda #"E"
+        jmp o_skipz
+r       rts
+.)
+
+k_next
+.(
+        jsr k_top
+        cmp #T_REP
+        beq ok
+        cmp #T_FOR
+        beq ok
+        cmp #T_WHILE
+        beq ok
+        lda #<m_nofor
+        ldy #>m_nofor
+        jmp error
+ok      pha
+        lda #<s_brk
+        ldy #>s_brk
+        jsr oi
+        pla
+        cmp #T_FOR
+        bne back
+        jsr o_ab
+        jsr o_ldxv
+        lda #<s_fstep
+        ldy #>s_fstep
+        jsr oi
+        lda #<s_bcs
+        ldy #>s_bcs
+        jsr oi
+back    lda #"T"
+        jsr o_jmp
+        lda #"E"
+        jsr o_label
+        dec csp
+        rts
+.)
+
+k_if
+.(
+        lda #T_IF
+        jsr k_newblk
+        jsr k_lexpr
+        lda kc
+        beq dyn
+        lda kv
+        ora kv+1
+        bne r
+        lda #"X"
+        jmp o_jmp
+dyn     lda #"X"
+        jmp o_skipz
+r       rts
+.)
+
+k_else
+.(
+        jsr k_top
+        cmp #T_IF
+        bne bad
+        lda cs_v,y
+        bne bad
+        lda #1
+        sta cs_v,y
+        lda #"E"
+        jsr o_jmp
+        lda #"X"
+        jmp o_label
+bad     lda #<m_struct
+        ldy #>m_struct
+        jmp error
+.)
+
+k_endif
+.(
+        jsr k_top
+        cmp #T_IF
+        bne bad
+        lda cs_v,y
+        bne e
+        lda #"X"
+        jsr o_label
+e       lda #"E"
+        jsr o_label
+        dec csp
+        rts
+bad     lda #<m_struct
+        ldy #>m_struct
+        jmp error
+.)
+
+k_sub
+.(
+        jsr getsub              ; nom -> cname
+        jsr endline
+        lda #T_SUB
+        jsr k_newblk
+        lda #"E"                ; rencontré en chemin : sauté
+        jsr o_jmp
+        jsr o_pname
+        jmp ocrlf
+.)
+
+k_endsub
+.(
+        jsr k_top
+        cmp #T_SUB
+        bne bad
+        lda #<s_rts
+        ldy #>s_rts
+        jsr oi
+        lda #"E"
+        jsr o_label
+        dec csp
+        rts
+bad     lda #<m_struct
+        ldy #>m_struct
+        jmp error
+.)
+
+k_return
+.(
+        jsr endline
+        ldy csp                 ; dans un SUB ?
+l       dey
+        bmi bad
+        lda cs_t,y
+        cmp #T_SUB
+        bne l
+        lda #<s_rts
+        ldy #>s_rts
+        jmp oi
+bad     lda #<m_noret
+        ldy #>m_noret
+        jmp error
+.)
+
+k_call
+        jsr sub_find            ; vérifie que SUB NOM existe
+        jsr o_tab
+        lda #<s_jsr
+        ldy #>s_jsr
+        jsr os
+        jsr o_pname
+        jmp ocrlf
+
+; o_pname : « P_NOM »
+o_pname lda #<s_p
+        ldy #>s_p
+        jsr os
+        lda #<cname
+        ldy #>cname
+        jmp os
+
+; textes de l'assembleur produit
+s_tab   .asc "        ",0
+s_jmp   .asc "jmp ",0
+s_jsr   .asc "jsr ",0
+s_jend  .asc "jmp g_end",0
+s_ldalo .asc "lda #<",0
+s_ldyhi .asc "ldy #>",0
+s_ldai  .asc "lda #",0
+s_ldxi  .asc "ldx #",0
+s_lda   .asc "lda ",0
+s_sta   .asc "sta ",0
+s_ldaev .asc "lda g_ev",0
+s_ldaev1 .asc "lda g_ev+1",0
+s_stev  .asc "sta g_ev",0
+s_stev1 .asc "sta g_ev+1",0
+s_stet  .asc "sta g_et",0
+s_stet1 .asc "sta g_et+1",0
+s_gev   .asc "g_ev",0
+s_v     .asc "V_",0
+s_p     .asc "P_",0
+s_tst   .asc "        lda g_ev",13,10,"        ora g_ev+1",13,10
+        .asc "        bne *+5",13,10,0
+s_bcc   .asc "bcc *+5",0
+s_bcs   .asc "bcs *+5",0
+s_rts   .asc "rts",0
+s_byt   .asc ".byt ",0
+s_asc   .asc ".asc ",34,0
+s_bdata .asc "    .word 0,0",13,10,0
+s_hx1   .asc "h_x1",0
+s_hy1   .asc "h_y1",0
+s_hx2   .asc "h_x2",0
+s_hy2   .asc "h_y2",0
+s_hr    .asc "h_r",0
+s_hires .asc "jsr h_full",0
+s_split .asc "jsr h_split",0
+s_text  .asc "jsr h_text",0
+s_gcls  .asc "jsr g_cls",0
+s_wait  .asc "jsr g_wait",0
+s_pen   .asc "jsr h_pen",0
+s_plot  .asc "jsr h_plot",0
+s_line  .asc "jsr h_line",0
+s_box   .asc "jsr h_box",0
+s_fbox  .asc "jsr h_fbox",0
+s_circle .asc "jsr h_circle",0
+s_attr  .asc "jsr h_attr",0
+s_gtext .asc "jsr g_gtext",0
+s_echo  .asc "jsr g_echo",0
+s_gnum  .asc "jsr g_gnum",0
+s_delay .asc "jsr g_delay",0
+s_print .asc "jsr g_print",0
+s_gload .asc "jsr g_gload",0
+s_gsave .asc "jsr g_gsave",0
+s_byte  .asc "jsr g_byte",0
+s_push  .asc "jsr g_push",0
+s_pop   .asc "jsr g_pop",0
+s_neg   .asc "jsr g_neg",0
+s_rnd   .asc "jsr g_rnd",0
+s_abs   .asc "jsr g_abs",0
+s_point .asc "jsr g_point",0
+s_inkey .asc "jsr g_inkey",0
+s_cmp   .asc "jsr g_cmp",0
+s_add   .asc "jsr g_add",0
+s_sub   .asc "jsr g_sub",0
+s_mul   .asc "jsr g_mul",0
+s_div   .asc "jsr g_div",0
+s_mod   .asc "jsr g_mod",0
+s_and   .asc "jsr g_and",0
+s_or    .asc "jsr g_or",0
+s_rept  .asc "jsr g_rept",0
+s_forok .asc "jsr g_forok",0
+s_fstep .asc "jsr g_forstep",0
+s_brk   .asc "jsr g_brk",0
+h_head1 .asc "; ",0
+h_head2 .asc ".ASM : traduit de ",0
+h_head2b .asc ".GRX par GRAPHER /A",13,10
+        .asc "; ASM ",0
+h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
+        .asc "; HIRES.INC sur le meme lecteur)",13,10
+        .asc "#include ",34,"CPA.INC",34,13,10
+        .asc "        *= $0500",13,10
+        .asc "        jsr g_init",13,10,0
+h_tail1 .asc "; boucles : compte, ou arrivee et pas",13,10,0
+h_tail2 .asc "#include ",34,"GRX.INC",34,13,10
+        .asc "#include ",34,"HIRES.INC",34,13,10,0
+t_asm   .asc "ASM"
+m_done  .asc ".ASM ecrit : ASM ",0
 
 ; fmtnum : ev (signé) -> numbuf, chaîne décimale terminée par 0
 fmtnum
@@ -2026,7 +3734,8 @@ stop_msg
         pla
         jsr puts
         jsr crlf
-quit    ldx sav_sp
+quit    jsr o_drop
+        ldx sav_sp
         txs
         rts
 
@@ -2102,105 +3811,137 @@ done    jsr fmtnum
 
 ; ---------------------------------------------------------------------
 ; Table des commandes : nom (dernière lettre avec le bit 7), classe,
-; adresse ; les plus fréquentes d'abord (la recherche est séquentielle)
+; adresse pour l'exécution, adresse pour la traduction ; les plus fréquentes d'abord (la recherche est séquentielle)
 ; ---------------------------------------------------------------------
 cmds
         .asc "NEX"
         .byt "T"|$80,K_NEXT
         .word c_next
+        .word k_next
         .asc "I"
         .byt "F"|$80,K_IF
         .word c_if
+        .word k_if
         .asc "ENDI"
         .byt "F"|$80,K_ENDIF
         .word c_endif
+        .word k_endif
         .asc "ELS"
         .byt "E"|$80,K_ELSE
         .word c_else
+        .word k_else
         .asc "PLO"
         .byt "T"|$80,0
         .word c_plot
+        .word k_plot
         .asc "LIN"
         .byt "E"|$80,0
         .word c_line
+        .word k_line
         .asc "LE"
         .byt "T"|$80,0
         .word c_let
+        .word k_let
         .asc "FO"
         .byt "R"|$80,K_LOOP
         .word c_for
+        .word k_for
         .asc "REPEA"
         .byt "T"|$80,K_LOOP
         .word c_repeat
+        .word k_repeat
         .asc "WHIL"
         .byt "E"|$80,K_LOOP
         .word c_while
+        .word k_while
         .asc "CAL"
         .byt "L"|$80,0
         .word c_call
+        .word k_call
         .asc "ENDSU"
         .byt "B"|$80,K_ENDS
         .word c_return
+        .word k_endsub
         .asc "RETUR"
         .byt "N"|$80,0
         .word c_return
+        .word k_return
         .asc "SU"
         .byt "B"|$80,K_SUB
         .word c_sub
+        .word k_sub
         .asc "BO"
         .byt "X"|$80,0
         .word c_box
+        .word k_box
         .asc "FBO"
         .byt "X"|$80,0
         .word c_fbox
+        .word k_fbox
         .asc "CIRCL"
         .byt "E"|$80,0
         .word c_circle
+        .word k_circle
         .asc "PE"
         .byt "N"|$80,0
         .word c_pen
+        .word k_pen
         .asc "GTEX"
         .byt "T"|$80,0
         .word c_gtext
+        .word k_gtext
         .asc "GNU"
         .byt "M"|$80,0
         .word c_gnum
+        .word k_gnum
         .asc "ATT"
         .byt "R"|$80,0
         .word c_attr
+        .word k_attr
         .asc "GCL"
         .byt "S"|$80,0
         .word c_gcls
+        .word k_gcls
         .asc "PRIN"
         .byt "T"|$80,0
         .word c_print
+        .word k_print
         .asc "DELA"
         .byt "Y"|$80,0
         .word c_delay
+        .word k_delay
         .asc "WAI"
         .byt "T"|$80,0
         .word c_wait
+        .word k_wait
         .asc "ECH"
         .byt "O"|$80,0
         .word c_echo
+        .word k_echo
         .asc "HIRE"
         .byt "S"|$80,0
         .word c_hires
+        .word k_hires
         .asc "SPLI"
         .byt "T"|$80,0
         .word c_split
+        .word k_split
         .asc "TEX"
         .byt "T"|$80,0
         .word c_text
+        .word k_text
         .asc "GLOA"
         .byt "D"|$80,0
         .word c_gload
+        .word k_gload
         .asc "GSAV"
         .byt "E"|$80,0
         .word c_gsave
+        .word k_gsave
         .asc "EN"
         .byt "D"|$80,0
         .word c_end
+        .word k_end
         .byt 0
 
 t_grx   .asc "GRX"
@@ -2240,6 +3981,7 @@ kw      .dsb 9,0
 cname   .dsb 9,0
 numbuf  .dsb 8,0
 fvar    .byt 0
+ofcb    .dsb 36,0
 flim    .word 0
 fstep   .word 0
 
@@ -2257,6 +3999,8 @@ cs_bl   = cs_ah+NCS     ;   pas (FOR)
 cs_bh   = cs_bl+NCS
 vs_lo   = cs_bh+NCS     ; pile des valeurs
 vs_hi   = vs_lo+NVS
-rawbuf  = vs_hi+NVS
+vs_f    = vs_hi+NVS     ; (traduction : gauche constante ?)
+obuf    = vs_f+NVS      ; NOM.ASM : enregistrement en cours
+rawbuf  = obuf+128
 lbuf    = rawbuf+LMAX+1
 ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP

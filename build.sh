@@ -54,13 +54,14 @@ cp progs/hello.s build/src/HELLO.ASM
 cp progs/gtest.s build/src/GTEST.ASM
 cp progs/cpa.inc build/src/CPA.INC
 cp progs/hires.inc build/src/HIRES.INC
+cp progs/grx.inc build/src/GRX.INC
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
 EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg"
 PROTEGES=""
-for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC files/readme.txt; do
+for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
@@ -80,7 +81,7 @@ theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
 }
 theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx"
 theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM build/src/CPA.INC build/src/HIRES.INC" \
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm}.dsk"
