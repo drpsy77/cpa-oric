@@ -180,8 +180,21 @@ h_2
         .asc "^S            | enregistre",13,10
         .asc "^L            | insere un fichier au",13,10
         .asc "              |   curseur",13,10
-        .asc "^P            | imprime le texte (ESC",13,10
+        .asc "^P            | imprime le texte, mis",13,10
+        .asc "              |   en page (ESC",13,10
         .asc "              |   arrete)",13,10
+        .asc "^N            | paragraphe trop long",13,10
+        .asc "              |   suivant",13,10
+        .asc "C 127!        | (ligne d'etat)",13,10
+        .asc "              |   position dans le",13,10
+        .asc "              |   paragraphe ; ! :",13,10
+        .asc "              |   plus long que le",13,10
+        .asc "              |   maxi",13,10
+        .asc "EDIT.CFG      | par fichier : nom",13,10
+        .asc "              |   maxi [MOTS|CAR]",13,10
+        .asc "              |   [largeur impr.],",13,10
+        .asc "              |   ex. *.LOG 126 CAR",13,10
+        .asc "              |   80",13,10
         .asc "FUNCT         | menus Fichier (dont",13,10
         .asc "              |   Inserer, Imprimer),",13,10
         .asc "              |   Edition, Chercher,",13,10

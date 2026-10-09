@@ -202,6 +202,7 @@ ok      lda #<procbase
         sta tmode
         sta autold
         sta ldon
+        sta ernum
         sta ensd
         sta nloc
         sta ngl
@@ -300,7 +301,12 @@ error
         lda #" "
         jsr putc
         jsr put_cname
-er1     jsr crlf
+er1     lda ernum               ; numéro à afficher (CHARGE : ligne)
+        beq er1b
+        lda #0
+        sta ernum
+        jsr put_num
+er1b    jsr crlf
         lda defmode             ; définition en cours abandonnée
         beq er2
         lda #0
@@ -5462,6 +5468,9 @@ ok      lda #128
         sta ldon                ; CHARGE en cours
         lda #0
         sta reof
+        sta ld_n+1              ; numéro de ligne (comme L dans EDIT)
+        lda #1
+        sta ld_n
 line    ldx #0                  ; assemble une ligne dans fbuf
 gc      jsr getc
         bcs eof
@@ -5470,14 +5479,28 @@ gc      jsr getc
         cmp #CR
         beq eol
         cpx #126
-        bcs gc
+        bcs long
         sta fbuf,x
         inx
         bne gc
 eol     lda #0
         sta fbuf,x
         jsr ld_line
+        inc ld_n
+        bne line
+        inc ld_n+1
         jmp line
+long    lda ld_n                ; ligne trop longue : erreur et numéro,
+        sta val                 ; plutôt que la couper sans rien dire
+        lda ld_n+1
+        sta val+1
+        lda #1                  ; error affiche val
+        sta ernum
+        lda #0
+        sta clen
+        lda #<e_long
+        ldy #>e_long
+        jmp error
 eof     cpx #0                  ; dernière ligne sans CR
         beq done
         lda #0
@@ -6062,6 +6085,7 @@ e_pour    .asc "POUR seulement au debut d'une ligne",0
 e_name    .asc "Il faut un nom apres POUR",0
 e_disk    .asc "Erreur disque",0
 e_nofile  .asc "Fichier introuvable",0
+e_long    .asc "Ligne de plus de 126 car. : L ",0
 e_noret   .asc "Rien n'a ete rendu par",0
 e_unused  .asc "Que faire de ce que rend",0
 e_rtop    .asc "RENDS seulement dans une procedure",0
@@ -6087,7 +6111,9 @@ bodyst  = tipxy+4
 ld_tok  = bodyst+2
 ld_end  = ld_tok+2
 ld_fb   = ld_end+2
-ssp     = ld_fb+2       ; haut de la zone de débordement de la pile (2)
+ld_n    = ld_fb+2       ; CHARGE : numéro de la ligne lue (2)
+ernum   = ld_n+2        ; 1 : error affiche val après le message
+ssp     = ernum+1       ; haut de la zone de débordement de la pile (2)
 tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)
 autold  = tmode+1       ; 1 : la ligne de fbuf sera exécutée au prompt
 rwop    = autold+1      ; r_recs / w_recs : bit 7 = lecture

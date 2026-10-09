@@ -197,8 +197,21 @@ DEL ^D        | efface avant / sous
 ^S            | enregistre
 ^L            | insere un fichier au
               |   curseur
-^P            | imprime le texte (ESC
+^P            | imprime le texte, mis
+              |   en page (ESC
               |   arrete)
+^N            | paragraphe trop long
+              |   suivant
+C 127!        | (ligne d'etat)
+              |   position dans le
+              |   paragraphe ; ! :
+              |   plus long que le
+              |   maxi
+EDIT.CFG      | par fichier : nom
+              |   maxi [MOTS|CAR]
+              |   [largeur impr.],
+              |   ex. *.LOG 126 CAR
+              |   80
 FUNCT         | menus Fichier (dont
               |   Inserer, Imprimer),
               |   Edition, Chercher,

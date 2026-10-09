@@ -554,9 +554,33 @@ Un programme peut installer sa propre barre par `JSR $C02D` avec A/Y = adresse d
     A>EDIT LETTRE.TXT
 
 C'est un éditeur plein écran : 26 lignes de 38 colonnes, avec une barre de menus et une ligne
-d'état (nom du fichier, `*` si le texte est modifié, paragraphe `L`, colonne `C`, `INS`/`RFP`,
-`M` si une marque est posée). Par défaut, les lignes sont coupées entre les mots.
-Le texte peut atteindre environ 34 Ko.
+d'état (nom du fichier, `*` si le texte est modifié, paragraphe `L`, position `C` du curseur
+dans le paragraphe, `INS`/`RFP`, `M` si une marque est posée). Par défaut, les lignes sont
+coupées entre les mots. Le texte peut atteindre environ 32 Ko.
+
+Un paragraphe d'EDIT n'a pas de limite de longueur, mais les programmes qui lisent le fichier
+en ont une : LOGO lit 126 caractères par ligne, un script `.BAT` 78. Le fichier **`EDIT.CFG`**
+donne, pour chaque fichier, la longueur maxi d'un paragraphe, la coupure à l'écran et la
+largeur de l'imprimante :
+
+    ; nom    maxi coupure imprimante
+    LETTRE.TXT 0   MOTS  96
+    *.LOG    126  CAR   80
+    *.BAT    78   CAR   80
+    *.*      0    MOTS  80
+
+La première ligne dont le nom correspond s'applique (jokers `*` et `?`, lecteur facultatif :
+`B:*.TXT`) ; on met donc les fichiers particuliers en tête. Les colonnes absentes gardent leur
+valeur par défaut (sans limite, `MOTS`, 80) ; `;` commence un commentaire. EDIT cherche
+`EDIT.CFG` sur le lecteur du document, puis sur `A:`, à chaque ouverture et à chaque
+« Enreg. sous... ». Sans `EDIT.CFG`, il garde 126 pour `*.LOG` et 78 pour `*.BAT`. Les
+disquettes livrées l'ont, modifiable (`EDIT EDIT.CFG`) ; il est caché (SYS) sur les disquettes
+par usage.
+
+Quand le paragraphe du curseur dépasse la longueur maxi, la ligne d'état montre `C 127!` en
+vidéo inverse. **CTRL-N** (menu Chercher, Trop long) va au premier caractère en trop du
+paragraphe trop long suivant ; les Statistiques donnent la longueur du plus long paragraphe
+et son numéro (`max 177 (L4)`).
 
 | Touche | Action |
 |---|---|
@@ -572,27 +596,30 @@ Le texte peut atteindre environ 34 Ko.
 | CTRL-S | enregistrer |
 | CTRL-L | insérer un fichier au curseur (Fichier, Insérer...) |
 | CTRL-P | imprimer le texte (Fichier, Imprimer) |
+| CTRL-N | paragraphe trop long suivant (Chercher, Trop long) |
 | FUNCT | menus |
 
 Menus :
 - **Fichier** : Nouveau, Ouvrir..., Insérer..., Enregistrer, Enreg. sous..., Imprimer, Quitter. Le
   système demande confirmation avant de perdre des modifications. Insérer... ajoute le contenu
   d'un autre fichier texte à l'endroit du curseur (le curseur se retrouve après le texte inséré).
-  Imprimer envoie tout le texte sur l'imprimante (port Centronics, fonction 5 du BDOS), un
-  paragraphe par ligne (CR LF à la fin de chacun) : l'imprimante coupe elle-même les lignes trop
-  longues. ESC arrête entre deux paragraphes. Sans imprimante rien ne bloque, mais chaque
+  Imprimer envoie tout le texte sur l'imprimante (port Centronics, fonction 5 du BDOS), mis en
+  page : chaque paragraphe est coupé entre les mots en lignes d'au plus la largeur de
+  l'imprimante moins un caractère (79 pour 80, réglable dans `EDIT.CFG`), pour qu'une
+  imprimante qui passe d'elle-même à la ligne ne fasse pas de ligne blanche ; un mot plus long
+  qu'une ligne est coupé. ESC arrête entre deux lignes. Sans imprimante rien ne bloque, mais chaque
   caractère attend 2 ms l'accusé de réception (une vingtaine de secondes pour 10 Ko) : ESC.
   Lancé depuis LOGO par `EDITE`, EDIT montre Retour au lieu de Quitter : il enregistre le texte
   s'il a changé et revient dans LOGO (voir LOGO).
 - **Edition** : Marquer, Copier, Couper, Coller, Eff. paragr. Le presse-papiers fait 4 Ko au plus.
   On marque un bout du bloc, on déplace le curseur à l'autre bout, puis on copie ou on coupe.
-- **Chercher** : Chercher..., Suivant, Remplacer.... Pour chaque occurrence, on répond
+- **Chercher** : Chercher..., Suivant, Remplacer..., Trop long. Pour chaque occurrence, on répond
   O (oui), N (non), T (tous) ou Esc. La recherche ignore la différence majuscules/minuscules.
-- **Options** : Coupure mots (entre les mots, ou à 38 caractères), Ins/Rempl., Statistiques
-  (caractères et mots).
+- **Options** : Coupure mots (entre les mots, ou à 38 caractères ; le réglage de départ vient
+  d'`EDIT.CFG`), Ins/Rempl., Statistiques (caractères, mots, plus long paragraphe).
 
 Lancé depuis le mode SPLIT, l'éditeur passe en plein écran texte et garde son texte sous
-`$A000` (environ 29 Ko). En sortant, il réaffiche l'image intacte.
+`$A000` (environ 27 Ko). En sortant, il réaffiche l'image intacte.
 
 Les fichiers sont du texte CP/M : CR LF entre les paragraphes, `^Z` à la fin. Pour ne rien perdre
 si le disque est plein, l'enregistrement écrit d'abord `NOM.$$$`, puis remplace l'ancien fichier.
@@ -779,7 +806,11 @@ une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortu
 les commandes à la place de l'utilisateur.
 
 Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut modifier avec
-`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier. La disquette contient
+`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier. Une ligne de fichier a
+126 caractères au plus, comme au clavier : au-delà, `CHARGE` s'arrête sur
+`Ligne de plus de 126 car. : L 12` (le numéro est celui de la ligne d'état d'EDIT, qui signale
+ces lignes : voir `EDIT.CFG`) ; une longue liste se construit en plusieurs lignes (`DONNE "L
+PH :L [...]`). La disquette contient
 `DEMO.LOG`, avec CARRE, POLY, ETOILE, FLEUR, SPIRALE, ARBRE (récursif) et DEMO :
 
     ? CHARGE "DEMO

@@ -57,7 +57,7 @@ cp progs/cpa.inc build/src/CPA.INC
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
-EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.bat"
+EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.bat files/edit.cfg"
 PROTEGES=""
 for f in build/progs/*.COM build/src/CPA.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
@@ -66,15 +66,15 @@ python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/c
   --ro $PROTEGES --rw $EXEMPLES
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et
-# cachées de DIR (SYS), EDIT et l'outil de la disquette protégés et visibles,
-# les exemples modifiables.
+# cachées de DIR (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la
+# disquette protégés et visibles, les exemples modifiables.
 P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM"
 theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
   echo "== $1"
   python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \
-    --ro --sys $BASE $3 --dir $P/EDIT.COM $2 --rw $4 | tail -1
+    --ro --sys $BASE $3 --rw files/edit.cfg --ro --dir $P/EDIT.COM $2 --rw $4 | tail -1
 }
 theme build/cpa-logo.dsk "$P/LOGO.COM" "" "files/demo.log files/dessin.bat"
 theme build/cpa-notes.dsk "" "" ""

@@ -8,6 +8,8 @@
 ;  libre entre les deux. Les paragraphes se terminent par CR ($0D) ;
 ;  sur disque, CR LF et ^Z en fin de fichier (format CP/M).
 ;  Affichage : 26 lignes de 38 colonnes, coupure entre les mots.
+;  Réglages par fichier dans EDIT.CFG (longueur maxi d'un paragraphe,
+;  coupure à l'écran, largeur de l'imprimante) : voir apply_cfg.
 ;
 ;  Les articles de menu « tapent » un code $81-$90 que l'éditeur
 ;  traite comme une touche : menus et raccourcis passent par le même
@@ -27,6 +29,7 @@ EOFC    = $1A
 ; (l'image en $A000-$B3FF est alors préservée et réaffichée en sortant).
 CLIPMAX = $1000         ; presse-papiers de 4 Ko ($A400-$B3FF)
 MAXIN   = 30            ; longueur maximale d'une saisie
+CLMAX   = 40            ; EDIT.CFG : longueur d'une ligne lue
 
 ; --- page zéro ---
 gs      = $10           ; début du trou
@@ -79,6 +82,7 @@ bend    = $56           ; fin de la zone de texte (2 octets)
 clipa   = $58           ; presse-papiers (2 octets)
 blim    = $5A           ; bend - 128 (2 octets)
 wassplit = $5C          ; 1 = lancé depuis le mode SPLIT
+cptr    = $5D           ; EDIT.CFG : lecture des réglages intégrés (2 octets)
 
         *= $0500
 
@@ -157,8 +161,11 @@ cpn     lda FCB1,x
         bpl cpn
         lda #1
         sta hasname
+        jsr apply_cfg
         jsr load_file
-noarg   lda #1
+        jmp arg
+noarg   jsr apply_cfg           ; sans nom : réglages par défaut
+arg   lda #1
         sta dirty
         sta setgoal
 
@@ -191,7 +198,7 @@ dispatch
         beq del
         cmp #$81
         bcc none
-        cmp #$93
+        cmp #$94
         bcs none
         sec
         sbc #$81
@@ -212,21 +219,21 @@ del     jmp k_del
 none    rts
 .)
 
-; tables de saut : codes de contrôle $00-$1F, puis codes de menu $81-$92
+; tables de saut : codes de contrôle $00-$1F, puis codes de menu $81-$93
 cvec_lo .byt <(k_none-1),<(k_home-1),<(k_none-1),<(k_pgdn-1),<(k_delr-1),<(k_end-1),<(k_find-1),<(k_next-1)
-        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_insert-1),<(k_cr-1),<(k_none-1),<(k_ins-1)
+        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_insert-1),<(k_cr-1),<(k_long-1),<(k_ins-1)
         .byt <(k_print-1),<(k_top-1),<(k_pgup-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
         .byt <(k_none-1),<(k_delpara-1),<(k_bot-1),<(k_esc-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
 cvec_hi .byt >(k_none-1),>(k_home-1),>(k_none-1),>(k_pgdn-1),>(k_delr-1),>(k_end-1),>(k_find-1),>(k_next-1)
-        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_insert-1),>(k_cr-1),>(k_none-1),>(k_ins-1)
+        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_insert-1),>(k_cr-1),>(k_long-1),>(k_ins-1)
         .byt >(k_print-1),>(k_top-1),>(k_pgup-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
         .byt >(k_none-1),>(k_delpara-1),>(k_bot-1),>(k_esc-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
 mvec_lo .byt <(k_new-1),<(k_open-1),<(k_save-1),<(k_saveas-1),<(k_quit-1),<(k_mark-1),<(k_copy-1),<(k_cut-1)
         .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wrap-1),<(k_ins-1),<(k_stats-1)
-        .byt <(k_insert-1),<(k_print-1)
+        .byt <(k_insert-1),<(k_print-1),<(k_long-1)
 mvec_hi .byt >(k_new-1),>(k_open-1),>(k_save-1),>(k_saveas-1),>(k_quit-1),>(k_mark-1),>(k_copy-1),>(k_cut-1)
         .byt >(k_paste-1),>(k_delpara-1),>(k_find-1),>(k_next-1),>(k_repl-1),>(k_wrap-1),>(k_ins-1),>(k_stats-1)
-        .byt >(k_insert-1),>(k_print-1)
+        .byt >(k_insert-1),>(k_print-1),>(k_long-1)
 
 k_none
 k_esc
@@ -1225,15 +1232,40 @@ pos     lda #"L"                ; paragraphe
         sta t1+1
         ldy #16
         jsr st_num
-        lda #"C"                ; colonne
+        lda #"C"                ; position dans le paragraphe
         sta stline+23
-        ldx ccol
-        inx
-        stx t1
-        lda #0
+        jsr para_info
+        clc
+        lda pcol
+        adc #1
+        sta t1
+        lda pcol+1
+        adc #0
         sta t1+1
         ldy #24
         jsr st_num
+        lda maxi                ; paragraphe plus long que maxi :
+        ora maxi+1              ; « C nnn! » en vidéo inverse
+        beq lim_ok
+        lda maxi+1
+        cmp plen+1
+        bcc over
+        bne lim_ok
+        lda maxi
+        cmp plen
+        bcs lim_ok
+over    lda #"!"
+        sta stline,y
+        iny
+        sty tmpb
+        ldy #23
+inv     lda stline,y
+        ora #$80
+        sta stline,y
+        iny
+        cpy tmpb
+        bne inv
+lim_ok
         ldy #3
         lda insm
         bne ins
@@ -1441,16 +1473,7 @@ k_wrap
         lda wrap
         eor #1
         sta wrap
-        jsr calc_curl_len
-        lda top                 ; la mise en page change : on recale le haut
-        sta t0
-        lda top+1
-        sta t0+1
-        jsr rowstart_of
-        lda t0
-        sta top
-        lda t0+1
-        sta top+1
+        jsr relayout
         lda wrap
         beq off
         lda #<m_wron
@@ -1518,7 +1541,47 @@ c2      lda m_mots,y
         inx
         iny
         bne c2
-c2e     lda #<msgbuf
+c2e     stx spos                ; ", max nnn (Lnn)" : plus long paragraphe
+        jsr para_scan
+        ldx spos
+        ldy #0
+c3      lda m_max,y
+        beq c3e
+        sta msgbuf,x
+        inx
+        iny
+        bne c3
+c3e     lda pmax
+        sta t1
+        lda pmax+1
+        sta t1+1
+        stx spos
+        jsr utoa
+        ldx spos
+        jsr cat_num
+        lda #" "
+        sta msgbuf,x
+        inx
+        lda #"("
+        sta msgbuf,x
+        inx
+        lda #"L"
+        sta msgbuf,x
+        inx
+        lda pmaxl
+        sta t1
+        lda pmaxl+1
+        sta t1+1
+        stx spos
+        jsr utoa
+        ldx spos
+        jsr cat_num
+        lda #")"
+        sta msgbuf,x
+        inx
+        lda #0
+        sta msgbuf,x
+        lda #<msgbuf
         ldy #>msgbuf
         jmp set_msg
 .)
@@ -2046,6 +2109,22 @@ c1e     lda #1
 r       rts
 .)
 
+; relayout : la mise en page change (coupure) : on recale le haut
+relayout
+        jsr calc_curl_len
+        lda top
+        sta t0
+        lda top+1
+        sta t0+1
+        jsr rowstart_of
+        lda t0
+        sta top
+        lda t0+1
+        sta top+1
+        lda #1
+        sta dirty
+        rts
+
 ; ---------------------------------------------------------------------
 ; Fichiers
 ; ---------------------------------------------------------------------
@@ -2055,6 +2134,7 @@ k_new
         jsr text_clear
         lda #0
         sta hasname
+        jmp apply_cfg
 kn_r    rts
 
 k_open
@@ -2075,51 +2155,631 @@ bad     lda #<m_badname
 r       rts
 .)
 
-; k_print : imprime tout le texte (fonction 5 du BDOS, port Centronics),
-;   CR LF à la fin de chaque paragraphe ; ESC arrête (entre deux
-;   paragraphes). Sans imprimante rien ne bloque, mais chaque caractère
-;   attend son accusé 2 ms au plus (BIOS LIST)
+; k_print : imprime tout le texte (fonction 5 du BDOS, port Centronics).
+;   Chaque paragraphe est coupé entre les mots en lignes de prw-1
+;   caractères au plus (prw : largeur de l'imprimante, EDIT.CFG) : une
+;   imprimante qui passe d'elle-même à la ligne à la dernière colonne ne
+;   fait pas de ligne blanche. Un mot plus long qu'une ligne est coupé.
+;   ESC arrête (entre deux lignes). Sans imprimante rien ne bloque, mais
+;   chaque caractère attend son accusé 2 ms au plus (BIOS LIST)
 k_print
 .(
         lda #0
         sta t0
         sta t0+1
-        sta tmpb                ; dernier caractère envoyé
         jsr addr_of             ; ip : début du texte
-loop    jsr ip_end
-        beq done
+        ldx prw
+        dex
+        stx pmaxc               ; caractères par ligne
+line    jsr ip_end
+        bne l0
+        jmp done
+l0      lda ip
+        sta ipsv
+        lda ip+1
+        sta ipsv+1
+        lda #0
+        sta pn
+        lda #$FF
+        sta psp
+scan    jsr ip_end
+        beq last
         ldy #0
         lda (ip),y
         cmp #CR
-        bne ch
+        beq para
+        ldx pn
+        cpx pmaxc
+        beq full
+        cmp #" "
+        bne sc1
+        stx psp                 ; dernier espace de la ligne
+sc1     inc pn
+        jsr it_next
+        jmp scan
+last    lda pn                  ; fin du texte sans CR : fin de ligne
+        beq done
+        jsr out_n
         jsr crlf_p
+        jmp done
+para    jsr out_n               ; fin du paragraphe
+        jsr it_next             ; (CR)
+        jmp eol
+full    ldx psp                 ; ligne pleine : coupée au dernier espace,
+        cpx #$FF                ; qui n'est pas imprimé
+        beq hard
+        cpx #0
+        beq hard
+        stx pn
+        jsr out_n
+        jsr it_next
+        jmp eol
+hard    jsr out_n               ; pas d'espace : coupée au caractère
+eol     jsr crlf_p
         jsr B_CONST             ; ESC : arrêt
         cmp #0
-        beq nx
+        beq jline
         jsr B_CONIN
         cmp #27
-        bne nx
-        lda #<m_pstop
+        beq stop
+jline   jmp line
+stop    lda #<m_pstop
         ldy #>m_pstop
         jmp set_msg
-ch      jsr lst
-nx      jsr it_next
-        jmp loop
-done    lda tmpb                ; dernier paragraphe sans CR : fin de ligne
-        beq e
-        cmp #LF
-        beq e
-        jsr crlf_p
-e       lda #<m_pdone
+done    lda #<m_pdone
         ldy #>m_pdone
         jmp set_msg
+; out_n : imprime pn caractères depuis ipsv (ip se retrouve après eux)
+out_n   lda ipsv
+        sta ip
+        lda ipsv+1
+        sta ip+1
+on1     lda pn
+        beq on2
+        ldy #0
+        lda (ip),y
+        jsr lst
+        jsr it_next
+        dec pn
+        jmp on1
+on2     rts
 crlf_p  lda #CR
         jsr lst
         lda #LF
-lst     sta tmpb
-        ldx #F_LIST
+lst     ldx #F_LIST
         jmp BDOS
 .)
+
+; ---------------------------------------------------------------------
+; Paragraphes : position, longueur, plus long, trop longs
+; ---------------------------------------------------------------------
+; para_info : pcol = position du curseur dans son paragraphe (0 = début),
+;   plen = longueur de ce paragraphe (sans le CR)
+para_info
+.(
+        lda gs                  ; avant le curseur : [BUF, gs), d'un bloc
+        sta src
+        lda gs+1
+        sta src+1
+        lda #0
+        sta pcol
+        sta pcol+1
+        ldy #0
+back    lda src
+        cmp #<BUF
+        bne b1
+        lda src+1
+        cmp #>BUF
+        beq fwd
+b1      lda src
+        bne b2
+        dec src+1
+b2      dec src
+        lda (src),y
+        cmp #CR
+        beq fwd
+        inc pcol
+        bne back
+        inc pcol+1
+        jmp back
+fwd     lda pcol                ; après le curseur : [ge, bend)
+        sta plen
+        lda pcol+1
+        sta plen+1
+        lda ge
+        sta src
+        lda ge+1
+        sta src+1
+f1      lda src
+        cmp bend
+        bne f2
+        lda src+1
+        cmp bend+1
+        beq done
+f2      lda (src),y
+        cmp #CR
+        beq done
+        inc plen
+        bne f3
+        inc plen+1
+f3      inc src
+        bne f1
+        inc src+1
+        jmp f1
+done    rts
+.)
+
+; para_scan : parcourt tout le texte
+;   -> pmax, pmaxl : longueur et numéro (1 = premier) du plus long
+;      paragraphe ; lfirst, lnext : position du premier caractère au-delà
+;      de maxi dans le premier paragraphe trop long du texte, et dans le
+;      premier qui le soit après le curseur ($FFFF : aucun)
+para_scan
+.(
+        jsr calc_curl_len
+        lda #0
+        sta t0                  ; t0 : position courante
+        sta t0+1
+        sta pst
+        sta pst+1
+        sta plen
+        sta plen+1
+        sta pmax
+        sta pmax+1
+        sta pmaxl+1
+        sta pno+1
+        lda #1
+        sta pmaxl
+        sta pno
+        lda #$FF
+        sta lfirst
+        sta lfirst+1
+        sta lnext
+        sta lnext+1
+        jsr addr_of
+loop    jsr ip_end
+        beq endp
+        ldy #0
+        lda (ip),y
+        cmp #CR
+        beq endp
+        inc plen
+        bne nx
+        inc plen+1
+nx      jsr it_next
+        inc t0
+        bne loop
+        inc t0+1
+        jmp loop
+endp    lda pmax+1              ; plus long ?
+        cmp plen+1
+        bcc newmax
+        bne chk
+        lda pmax
+        cmp plen
+        bcs chk
+newmax  lda plen
+        sta pmax
+        lda plen+1
+        sta pmax+1
+        lda pno
+        sta pmaxl
+        lda pno+1
+        sta pmaxl+1
+chk     lda maxi                ; trop long ?
+        ora maxi+1
+        beq next
+        lda maxi+1
+        cmp plen+1
+        bcc over
+        bne next
+        lda maxi
+        cmp plen
+        bcs next
+over    clc                     ; tmpw : premier caractère en trop
+        lda pst
+        adc maxi
+        sta tmpw
+        lda pst+1
+        adc maxi+1
+        sta tmpw+1
+        lda lfirst+1
+        cmp #$FF
+        bne af
+        lda tmpw
+        sta lfirst
+        lda tmpw+1
+        sta lfirst+1
+af      lda lnext+1             ; après le curseur (strictement) ?
+        cmp #$FF
+        bne next
+        lda curl+1
+        cmp tmpw+1
+        bcc set
+        bne next
+        lda curl
+        cmp tmpw
+        bcs next
+set     lda tmpw
+        sta lnext
+        lda tmpw+1
+        sta lnext+1
+next    jsr ip_end              ; paragraphe suivant
+        beq done
+        jsr it_next
+        inc t0
+        bne n1
+        inc t0+1
+n1      lda t0
+        sta pst
+        lda t0+1
+        sta pst+1
+        lda #0
+        sta plen
+        sta plen+1
+        inc pno
+        bne jl
+        inc pno+1
+jl      jmp loop
+done    rts
+.)
+
+; k_long : va au premier caractère en trop du paragraphe trop long suivant
+;   (au-delà de la longueur maxi du fichier, EDIT.CFG)
+k_long
+.(
+        lda maxi
+        ora maxi+1
+        bne go
+        lda #<m_nolim
+        ldy #>m_nolim
+        jmp set_msg
+go      jsr para_scan
+        lda lnext
+        sta t0
+        lda lnext+1
+        sta t0+1
+        cmp #$FF
+        bne found
+        lda lfirst              ; aucun après le curseur : on repart du début
+        sta t0
+        lda lfirst+1
+        sta t0+1
+        cmp #$FF
+        bne found
+        lda #<m_nolong
+        ldy #>m_nolong
+        jmp set_msg
+found   jsr gap_to
+        jsr moved
+        lda #<m_long
+        ldy #>m_long
+        jmp set_msg
+.)
+
+; ---------------------------------------------------------------------
+; Réglages par fichier : EDIT.CFG
+; ---------------------------------------------------------------------
+; apply_cfg : réglages du document (fcb_main) : maxi (longueur maxi d'un
+;   paragraphe, 0 = sans limite), wrap (coupure à l'écran), prw (largeur
+;   de l'imprimante). EDIT.CFG est cherché sur le lecteur du document,
+;   puis sur A: ; sans lui, réglages intégrés (cfg_def). Une ligne :
+;     [d:]nom.ext  maxi  [MOTS|CAR]  [largeur]
+;   jokers * et ? ; « ; » : commentaire. La première ligne dont le nom
+;   correspond s'applique ; les colonnes absentes gardent leur défaut.
+apply_cfg
+.(
+        lda #0
+        sta maxi
+        sta maxi+1
+        lda #1
+        sta wrap
+        lda #80
+        sta prw
+        lda hasname
+        beq end
+        ldx #F_CURDSK           ; lecteur du document (1 = A:)
+        jsr BDOS
+        clc
+        adc #1
+        ldx fcb_main
+        beq cur
+        txa
+cur     sta cdrv
+        jsr try_open
+        bcc file
+        lda cdrv
+        cmp #1
+        beq def
+        lda #1
+        jsr try_open
+        bcc file
+def     lda #<cfg_def
+        sta cptr
+        lda #>cfg_def
+        sta cptr+1
+        lda #0
+        beq csrc
+file    lda #128
+        sta cidx
+        lda #1
+csrc    sta cfile
+scan    jsr cfg_line
+        bcs dma
+        jsr cfg_match
+        bcs scan
+dma     ldx #F_SETDMA
+        lda #<DEF_DMA
+        ldy #>DEF_DMA
+        jsr BDOS
+end     jmp relayout
+
+; try_open : ouvre EDIT.CFG sur le lecteur A (1 = A:). C=1 si absent
+try_open
+        sta fcb_cfg
+        ldx #35
+        lda #0
+to0     sta fcb_cfg,x
+        dex
+        cpx #11
+        bne to0
+to1     lda cfg_name-1,x
+        sta fcb_cfg,x
+        dex
+        bne to1
+        ldx #F_OPEN
+        lda #<fcb_cfg
+        ldy #>fcb_cfg
+        jsr BDOS
+        cmp #$FF
+        beq no
+        clc
+        rts
+no      sec
+        rts
+.)
+
+; cfg_getc : caractère suivant des réglages (C=1 à la fin)
+cfg_getc
+.(
+        lda cfile
+        beq mem
+        ldy cidx
+        cpy #128
+        bcc have
+        ldx #F_SETDMA
+        lda #<recbuf
+        ldy #>recbuf
+        jsr BDOS
+        ldx #F_READ
+        lda #<fcb_cfg
+        ldy #>fcb_cfg
+        jsr BDOS
+        cmp #0
+        bne eof
+        ldy #0
+        sty cidx
+have    inc cidx
+        lda recbuf,y
+        cmp #EOFC
+        beq eof
+        clc
+        rts
+mem     ldy #0
+        lda (cptr),y
+        beq eof
+        inc cptr
+        bne m1
+        inc cptr+1
+m1      clc
+        rts
+eof     lda #0                  ; la suite renvoie aussi « fin »
+        sta cfile
+        lda #<cfg_end
+        sta cptr
+        lda #>cfg_end
+        sta cptr+1
+        sec
+        rts
+.)
+
+; cfg_line : ligne suivante (non vide) dans cline, terminée par 0. C=1 à la fin
+cfg_line
+.(
+        lda #0
+        sta clen
+loop    jsr cfg_getc
+        bcs eof
+        cmp #CR
+        beq eol
+        cmp #LF
+        beq eol
+        ldx clen
+        cpx #CLMAX
+        bcs loop
+        sta cline,x
+        inc clen
+        bne loop
+eol     lda clen
+        beq loop
+done    ldx clen
+        lda #0
+        sta cline,x
+        clc
+        rts
+eof     lda clen
+        bne done
+        sec
+        rts
+.)
+
+; cfg_match : la ligne cline s'applique-t-elle à fcb_main ? Si oui, ses
+;   réglages sont pris et C=0 ; sinon C=1
+cfg_match
+.(
+        ldy #0
+        jsr skipsp
+        beq jno
+        cmp #";"
+        bne pat0
+jno     jmp no
+pat0    ldx #11                 ; motif : lecteur (0 : tous) et nom
+        lda #" "
+cl      sta cpat,x
+        dex
+        bne cl
+        stx cpat
+        lda cline+1,y
+        cmp #":"
+        bne nm
+        lda cline,y
+        jsr upc
+        sec
+        sbc #"@"
+        sta cpat
+        iny
+        iny
+nm      ldx #1
+        lda #9
+        sta clim
+pc      lda cline,y
+        cmp #" "+1
+        bcc pend
+        iny
+        cmp #"."
+        bne nd
+        ldx #9
+        lda #12
+        sta clim
+        bne pc
+nd      cmp #"*"
+        bne nst
+        lda #"?"
+st      cpx clim
+        bcs pc
+        sta cpat,x
+        inx
+        bne st
+nst     cpx clim
+        bcs pc
+        jsr upc
+        sta cpat,x
+        inx
+        bne pc
+pend    lda cpat
+        beq names
+        cmp cdrv
+        bne no
+names   ldx #11
+cmpl    lda cpat,x
+        cmp #"?"
+        beq nx
+        lda fcb_main,x
+        and #$7F
+        cmp cpat,x
+        bne no
+nx      dex
+        bne cmpl
+        jsr getnum              ; longueur maxi
+        lda t1
+        sta maxi
+        lda t1+1
+        sta maxi+1
+        jsr skipsp              ; coupure : MOTS ou CAR
+        jsr upc
+        cmp #"C"
+        bne m
+        lda #0
+        beq setw
+m       cmp #"M"
+        bne nn
+        lda #1
+setw    sta wrap
+sk      iny
+        lda cline,y
+        cmp #" "+1
+        bcs sk
+nn      jsr getnum              ; largeur de l'imprimante (20 à 255)
+        bcs ok
+        lda t1+1
+        bne ok
+        lda t1
+        cmp #20
+        bcc ok
+        sta prw
+ok      clc
+        rts
+no      sec
+        rts
+.)
+
+; skipsp : saute les espaces de cline à partir de Y ; A = caractère (Z si fin)
+skipsp
+.(
+loop    lda cline,y
+        beq r
+        cmp #" "+1
+        bcs r2
+        iny
+        bne loop
+r2      lda cline,y
+r       rts
+.)
+
+; getnum : nombre décimal de cline (Y) -> t1. C=1 s'il n'y a pas de chiffre
+getnum
+.(
+        jsr skipsp
+        lda #0
+        sta t1
+        sta t1+1
+        sta gnd
+loop    lda cline,y
+        sec
+        sbc #"0"
+        cmp #10
+        bcs end
+        pha
+        lda t1                  ; t1 = t1 * 10 + chiffre
+        asl
+        sta tmpw
+        lda t1+1
+        rol
+        sta tmpw+1
+        asl t1
+        rol t1+1
+        asl t1
+        rol t1+1
+        asl t1
+        rol t1+1
+        clc
+        lda t1
+        adc tmpw
+        sta t1
+        lda t1+1
+        adc tmpw+1
+        sta t1+1
+        pla
+        clc
+        adc t1
+        sta t1
+        bcc g1
+        inc t1+1
+g1      iny
+        inc gnd
+        bne loop
+end     lda gnd
+        beq none
+        clc
+        rts
+none    sec
+        rts
+.)
+
+cfg_name .asc "EDIT    CFG"
+; réglages intégrés, sans EDIT.CFG
+cfg_def  .asc "*.LOG 126",CR,"*.BAT 78",CR
+cfg_end  .byt 0
 
 ; k_insert : insère un fichier texte au curseur (CR LF -> CR, arrêt
 ; sur ^Z), le curseur se retrouve après le texte inséré
@@ -2322,7 +2982,7 @@ tn1     lda fcb_new,x
         lda #1
         sta hasname
         sta dirty
-        rts
+        jmp apply_cfg           ; réglages du nouveau nom
 
 ; parse_name : inbuf -> fcb_new ([D:]NOM.EXT en majuscules). C=1 si invalide
 parse_name
@@ -2732,7 +3392,7 @@ mn_edi  .byt 5,15
         .byt MA_TYPE
         .word c_delp
 
-mn_chr  .byt 3,14
+mn_chr  .byt 4,14
         .asc "Chercher",0
         .asc "Chercher... ^F",0
         .byt MA_TYPE
@@ -2743,6 +3403,9 @@ mn_chr  .byt 3,14
         .asc "Remplacer...",0
         .byt MA_TYPE
         .word c_repl
+        .asc "Trop long   ^N",0
+        .byt MA_TYPE
+        .word c_long
 
 mn_opt  .byt 3,14
         .asc "Options",0
@@ -2781,6 +3444,7 @@ c_ins    .byt $8F,0
 c_stats  .byt $90,0
 c_insert .byt $91,0
 c_print  .byt $92,0
+c_long   .byt $93,0
 
 ; ---------------------------------------------------------------------
 ; Messages
@@ -2801,6 +3465,10 @@ m_nrep    .asc " remplacement(s)",0
 m_car     .asc " car., ",0
 m_mots    .asc " mots",0
 m_wron    .asc "Coupure entre les mots",0
+m_max     .asc ", max ",0
+m_nolim   .asc "Pas de longueur maxi (EDIT.CFG)",0
+m_nolong  .asc "Aucun paragraphe trop long",0
+m_long    .asc "Paragraphe trop long : la suite",0
 m_wroff   .asc "Coupure a 38 caracteres",0
 m_newf    .asc "Nouveau fichier",0
 m_toobig  .asc "Fichier tronque : trop gros",0
@@ -2843,13 +3511,38 @@ inbuf   .dsb MAXIN+2,0
 pat     .dsb MAXIN+2,0
 repl    .dsb MAXIN+2,0
 numbuf  .dsb 8,0
-msgbuf  .dsb 40,0
+msgbuf  .dsb 48,0
 stline  .dsb WIDTH,0
 fcb_main .dsb 36,0
 fcb_new .dsb 36,0
 fcb_tmp .dsb 36,0
 fcb_ren .dsb 36,0
 recbuf  .dsb 128,0
+; réglages du document (EDIT.CFG)
+maxi    .word 0         ; longueur maxi d'un paragraphe (0 : sans limite)
+prw     .byt 80         ; largeur de l'imprimante
+cdrv    .byt 0          ; lecteur du document (1 = A:)
+cfile   .byt 0          ; 1 : réglages lus dans EDIT.CFG
+cidx    .byt 0
+clen    .byt 0
+clim    .byt 0
+gnd     .byt 0
+cpat    .dsb 12,0
+cline   .dsb CLMAX+1,0
+fcb_cfg .dsb 36,0
+; paragraphes
+pcol    .word 0
+plen    .word 0
+pst     .word 0
+pno     .word 0
+pmax    .word 0
+pmaxl   .word 0
+lfirst  .word 0
+lnext   .word 0
+; impression
+pmaxc   .byt 0
+pn      .byt 0
+psp     .byt 0
 
         .dsb (*+255)/256*256-*,0
 BUF                             ; zone de texte : BUF à BEND
