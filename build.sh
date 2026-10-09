@@ -53,13 +53,14 @@ mkdir -p build/src
 cp progs/hello.s build/src/HELLO.ASM
 cp progs/gtest.s build/src/GTEST.ASM
 cp progs/cpa.inc build/src/CPA.INC
+cp progs/hires.inc build/src/HIRES.INC
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
-EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.bat files/edit.cfg"
+EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/edit.cfg"
 PROTEGES=""
-for f in build/progs/*.COM build/src/CPA.INC files/readme.txt; do
+for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
@@ -70,15 +71,16 @@ python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/c
 # disquette protégés et visibles, les exemples modifiables.
 P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
-  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM"
+  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM
+  $P/VOIR.COM"
 theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
   echo "== $1"
   python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \
     --ro --sys $BASE $3 --rw files/edit.cfg --ro --dir $P/EDIT.COM $2 --rw $4 | tail -1
 }
-theme build/cpa-logo.dsk "$P/LOGO.COM" "" "files/demo.log files/dessin.bat"
+theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/dessin.grx files/ecran.grx"
 theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM build/src/CPA.INC" \
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM build/src/CPA.INC build/src/HIRES.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm}.dsk"

@@ -272,6 +272,7 @@ cmd_table
         .asc "GCL"
         .byt "S"|$80
         .word cmd_gcls
+#ifndef DISK                    ; version disque : GRAPHER.COM
         .asc "PE"
         .byt "N"|$80
         .word cmd_pen
@@ -299,6 +300,7 @@ cmd_table
         .asc "POIN"
         .byt "T"|$80
         .word cmd_point
+#endif
         .asc "ECH"
         .byt "O"|$80
         .word cmd_echo

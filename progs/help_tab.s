@@ -9,9 +9,10 @@ help_keys
         .asc "DEBU",0
         .asc "MEMO",0
         .asc "USB",0
+        .asc "GRAP",0
         .byt 0
 help_ptrs
-        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8
+        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8,h_9
 h_default
         .asc "COMMANDES",13,10
         .asc "---------",13,10
@@ -45,32 +46,18 @@ h_default
         .asc "SPLIT         | image + 10 lignes",13,10
         .asc "TEXT          | texte seul",13,10
         .asc "GCLS          | efface l'image",13,10
-        .asc "PEN m         | 0 efface 1 trace 2",13,10
-        .asc "              |   inv.",13,10
-        .asc "PLOT x y      | point (x 0-239, y",13,10
-        .asc "              |   0-127)",13,10
-        .asc "LINE x1 y1 x2 y2",13,10
-        .asc "              | ligne",13,10
-        .asc "BOX x1 y1 x2 y2",13,10
-        .asc "              | rectangle",13,10
-        .asc "FBOX x1 y1 x2 y2",13,10
-        .asc "              | rectangle plein",13,10
-        .asc "CIRCLE x y r  | cercle",13,10
-        .asc "GTEXT col y texte",13,10
-        .asc "              | texte dans l'image",13,10
-        .asc "              |   (col 0-39)",13,10
-        .asc "ATTR col y1 y2 v",13,10
-        .asc "              | attribut : encre 0-7,",13,10
-        .asc "              |   papier 16-23",13,10
-        .asc "POINT x y     | affiche 1 si allume",13,10
         .asc "GSAVE fic     | sauve l'image (.IMG)",13,10
         .asc "GLOAD fic     | charge l'image",13,10
         .asc "NOM [param]   | lance NOM.COM, sinon",13,10
         .asc "              |   NOM.BAT",13,10
+        .asc "(dessin)      | PLOT, LINE... : dans",13,10
+        .asc "              |   GRAPHER (HELP",13,10
+        .asc "              |   GRAPHER)",13,10
         .asc "",13,10
         .asc "Autres sujets : HELP suivi de",13,10
         .asc "  TOUCHES PROGRAMMES EDIT HEX",13,10
-        .asc "  LOGO ASM DEBUG MEMOIRE USB",13,10
+        .asc "  LOGO ASM DEBUG MEMOIRE",13,10
+        .asc "  USB GRAPHER",13,10
         .asc "  (4 lettres suffisent)",13,10
         .byt 0
 h_0
@@ -110,6 +97,14 @@ h_1
         .asc "              |   compris",13,10
         .asc "EDIT [fic]    | editeur de texte",13,10
         .asc "HEX fic       | editeur hexadecimal",13,10
+        .asc "GRAPHER nom [p]",13,10
+        .asc "              | execute NOM.GRX :",13,10
+        .asc "              |   dessin, HIRES",13,10
+        .asc "              |   240x200 (HELP",13,10
+        .asc "              |   GRAPHER)",13,10
+        .asc "VOIR nom      | affiche NOM.HIR",13,10
+        .asc "              |   (plein ecran) ou",13,10
+        .asc "              |   NOM.IMG, une touche",13,10
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10
         .asc "              |   DIR (sans opt : les",13,10
         .asc "              |   affiche)",13,10
@@ -406,4 +401,44 @@ h_8
         .asc "              |   ajoutes a l'IMPORT",13,10
         .asc "X.DSK         | EXPORT refuse (image",13,10
         .asc "              |   disque)",13,10
+        .byt 0
+h_9
+        .asc "GRAPHER : FICHIERS .GRX",13,10
+        .asc "-----------------------",13,10
+        .asc "GRAPHER nom [p]",13,10
+        .asc "              | execute NOM.GRX",13,10
+        .asc "              |   ($1..$9 = p, ESC",13,10
+        .asc "              |   arrete)",13,10
+        .asc "HIRES         | plein ecran 240 x",13,10
+        .asc "              |   200, efface",13,10
+        .asc "SPLIT         | 240 x 128, console",13,10
+        .asc "              |   dessous",13,10
+        .asc "TEXT          | retour au texte",13,10
+        .asc "GCLS          | efface l'image",13,10
+        .asc "PEN m         | 0 efface 1 trace 2",13,10
+        .asc "              |   inv.",13,10
+        .asc "PLOT x y      | point (x 0-239, y",13,10
+        .asc "              |   0-199)",13,10
+        .asc "LINE x1 y1 x2 y2",13,10
+        .asc "              | ligne",13,10
+        .asc "BOX x1 y1 x2 y2",13,10
+        .asc "              | rectangle (FBOX :",13,10
+        .asc "              |   plein)",13,10
+        .asc "CIRCLE x y r  | cercle",13,10
+        .asc "GTEXT col y texte",13,10
+        .asc "              | texte dans l'image",13,10
+        .asc "              |   (col 0-39)",13,10
+        .asc "ATTR col y1 y2 v",13,10
+        .asc "              | attribut : encre 0-7,",13,10
+        .asc "              |   papier 16-23",13,10
+        .asc "GLOAD fic     | .HIR (HIRES) ou .IMG",13,10
+        .asc "              |   (SPLIT)",13,10
+        .asc "GSAVE fic     | idem, selon le mode",13,10
+        .asc "WAIT          | attend une touche",13,10
+        .asc "DELAY n       | attend n/50 s",13,10
+        .asc "ECHO texte    | affiche (pas en",13,10
+        .asc "              |   HIRES)",13,10
+        .asc "END           | fin ; HIRES : une",13,10
+        .asc "              |   touche",13,10
+        .asc "; texte       | commentaire",13,10
         .byt 0

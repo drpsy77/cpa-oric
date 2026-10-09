@@ -1,11 +1,13 @@
 ; =====================================================================
 
-;  ccp_gfx.s — primitives graphiques au prompt, ECHO et PAUSE
+;  ccp_gfx.s — primitives graphiques au prompt (version ROM), ECHO, PAUSE
 ;
 ;  PEN m, PLOT x y, LINE x1 y1 x2 y2, BOX ..., FBOX ..., CIRCLE x y r,
 ;  GTEXT col y texte, ATTR col y1 y2 v, POINT x y : mêmes paramètres que
 ;  la fonction 115 du BDOS, en décimal (0 à 255). Il faut être en mode
 ;  SPLIT, et donner exactement le bon nombre de paramètres.
+;  Version disque : ces commandes sont dans GRAPHER.COM (fichiers .GRX),
+;  qui dessine aussi en HIRES plein écran ; get_byte reste (SAVE).
 ; =====================================================================
 
 #ifndef DISK
@@ -21,6 +23,7 @@ G_TEXT   = 7
 G_ATTR   = 8
 G_POINT  = 9
 
+#ifndef DISK
 cmd_pen    lda #G_PEN
            ldx #1
            bne gfx_cmd
@@ -98,6 +101,7 @@ call    ldx #GFX_FUNC
 r       rts
 syn     jmp syntax_err
 .)
+#endif
 
 ; get_byte : nombre décimal 0-255 en CMDBUF+2+X -> A. C=1 si absent ou trop grand
 get_byte

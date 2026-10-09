@@ -72,7 +72,12 @@ wboot
         cld
         jsr hw_init
         jsr font_init
-        lda lst_echo            ; édition de ligne interrompue
+        jsr hires_on            ; un programme a laissé le HIRES plein
+        bne wb_h                ; écran : retour au texte ; l'image a
+        lda #0                  ; recouvert l'historique des lignes
+        sta HIST
+        jsr video_text
+wb_h    lda lst_echo            ; édition de ligne interrompue
         and #1
         sta lst_echo
         lda #0
@@ -256,7 +261,11 @@ rr_bad  lda #<msg_rambad
 ; ---------------------------------------------------------------------
 crash_screen
 .(
-        lda #ATTR_TEXT50
+        jsr hires_on            ; HIRES plein : historique recouvert
+        bne cs1
+        lda #0
+        sta HIST
+cs1     lda #ATTR_TEXT50
         sta $BFDF               ; dernier octet lu par le circuit vidéo en HIRES
         sta SCREEN              ; (et annule la bascule du mode SPLIT)
         jsr video_vars_text
@@ -574,6 +583,8 @@ conin_raw
         jsr conin_key
         cmp #MENU_KEY
         bne cr_r
+        jsr hires_on            ; HIRES plein écran : pas de menus
+        beq conin_raw
         jsr menu_run
         jmp conin_raw
 cr_r    rts
@@ -903,6 +914,8 @@ draw_status
 ; colonne 38 : P = copie de la console à l'imprimante (CTRL-P), sinon espace
 draw_flags                      ; (appelée aussi depuis l'IRQ : CTRL-T)
 .(
+        jsr hires_on            ; HIRES plein écran : rien à dessiner
+        beq r
         lda #"a"
         ldy caps
         beq lc
@@ -916,8 +929,18 @@ lc      ldy #37
         lda #"P"
 np      iny
         sta (ZP_BAR),y
-        rts
+r       rts
 .)
+
+; hires_on : Z=1 si un programme a mis l'écran en HIRES plein (240 x 200,
+;   progs/hires.inc) : mode texte pour le système, mais attribut de haute
+;   résolution dans la dernière case de l'écran
+hires_on
+        lda vmode
+        bne ho_r
+        lda SCREEN+LAST_ROW*40+COLS-1
+        cmp #ATTR_HIRES
+ho_r    rts
 
 ; ---------------------------------------------------------------------
 ; Utilitaires d'affichage (A/Y = adresse d'une chaîne terminée par 0)

@@ -69,13 +69,16 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 | `PUT fichier commande [paramètres]` | exécute la commande en copiant tout ce qu'elle affiche dans le fichier |
 | `DO fichier [p1 ... p9]` | exécute les commandes de `FICHIER.BAT`, une par ligne |
 | `ECHO texte`, `PAUSE [texte]` | affiche un texte ; attend une touche (pour les scripts) |
-| `PEN`, `PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `POINT` | primitives graphiques (voir le mode SPLIT) |
+| `SPLIT`, `TEXT`, `GCLS` | mode SPLIT (image et texte), mode texte, effacement de l'image |
 | `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute ; à défaut, exécute le script `NOM.BAT` (comme `DO NOM [args]`) |
 | `VER`, `CLS` | version, effacement de l'écran |
 | `B:` (`A:` à `D:`) | change de lecteur courant (version disquette) ; l'invite devient `B>` |
 
 TYPE, ERA et REN sont des programmes (`.COM`, sur la disquette système) et non des commandes
-internes : cela libère près de 300 octets dans le système. On les tape de la même façon, y
+internes : cela libère près de 300 octets dans le système. De même, les commandes de dessin
+(`PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `PEN`) ne sont plus au prompt de
+la version disquette : elles sont dans `GRAPHER.COM`, qui exécute un fichier de commandes
+graphiques et dessine aussi en HIRES plein écran (voir « GRAPHER »). La version ROM les garde. On les tape de la même façon, y
 compris dans les scripts et après PUT ; depuis un autre lecteur, ils sont cherchés sur A:.
 
 Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP :
@@ -192,10 +195,10 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 tous les fichiers.
 
 Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT et CPA.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+ASM...), README.TXT, CPA.INC et HIRES.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
-copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, DESSIN.BAT) restent
+copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, DESSIN.GRX, ECRAN.GRX) restent
 modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
 reste à la disposition de l'utilisateur.
 
@@ -204,15 +207,15 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 
 **Disquettes par usage.** `build.sh` fabrique aussi trois disquettes amorçables, plus légères
 à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
-FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR) sont protégées et **cachées** (SYS) : `DIR`
+FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR) sont protégées et **cachées** (SYS) : `DIR`
 ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
 y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO | | DEMO.LOG, DESSIN.BAT |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, CPA.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, CPA.INC, HIRES.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 
 Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
 `B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont cherchés sur `A:`, et `DIR` ne montre que
@@ -246,8 +249,8 @@ affiche les noms possibles et réécrit la ligne en dessous. Sans majuscules (CT
 est complété en minuscules. Un mot vide + ESC montre tout le disque.
 
 **Premier mot : les commandes.** En début de ligne, ESC complète une commande : les
-commandes internes (`FB` → `FBOX `) et les programmes `.COM` et `.BAT` du lecteur courant,
-sans leur type (`ED` → `EDIT `, `DES` → `DESSIN `). `D` + ESC montre `DEBUG DISKCOPY DESSIN
+commandes internes (`DIRS` après `DIR` + ESC) et les programmes `.COM` et `.BAT` du lecteur
+courant, sans leur type (`ED` → `EDIT `, `GR` → `GRAPHER `). `D` + ESC montre `DEBUG DISKCOPY
 DIR DIRS DO`. Les autres fichiers ne sont pas proposés en début de ligne. Cette complétion
 coûte environ 120 octets dans le système ; elle est assemblée avec l'option `CPLCMD`, et
 `DISK_OPTS="" ./build.sh` construit un système sans elle (la complétion des noms de fichiers
@@ -290,18 +293,17 @@ Un script qui n'en appelle pas d'autre ne passe pas par XDO. Il faut une disquet
 écrire ; sans `XDO.COM`, la ligne d'appel est sautée (`XDO?`). Un script qui modifie un script
 déjà en cours d'exécution (l'appelant) n'est pas sûr. ESC tapé entre deux lignes, ou pendant un `PAUSE`,
 arrête le script. `ECHO texte` affiche un texte et `PAUSE [texte]` attend une touche. La pause
-en fin d'écran repart à zéro à chaque ligne du script. Exemple sur la disquette : `DESSIN.BAT`.
+en fin d'écran repart à zéro à chaque ligne du script. Exemple :
 
-    ; DESSIN.BAT : demo des commandes graphiques
-    SPLIT
-    BOX 0 0 239 126
-    CIRCLE 60 64 40
-    GTEXT 2 114 $1
+    ; IMAGES.BAT : montre deux images, puis dessine
+    VOIR TITRE
+    VOIR CARTE
+    GRAPHER DESSIN $1
     ECHO Fini.
 
-    A>DO DESSIN Bonjour
+    A>DO IMAGES Bonjour
 
-`ECHO`, `GTEXT` et les paramètres de DO gardent les minuscules telles qu'elles sont tapées
+`ECHO` et les paramètres de DO gardent les minuscules telles qu'elles sont tapées
 (le reste de la ligne de commande passe en majuscules).
 
 **Limites des scripts.** Un script n'est qu'une suite de commandes, comme tapées au clavier :
@@ -311,12 +313,13 @@ comprennent pas. Un script qui s'appelle lui-même ne s'arrête jamais de lui-m�
 de condition pour sortir) : seul ESC l'arrête. Exemple qui ne marche pas :
 
     ; SCRIPT.BAT : trait en $1, puis le suivant 4 points plus loin ?
-    LINE $1 100 $1 110
+    GRAPHER TRAIT $1
     SCRIPT ($1+4)
 
-La première ligne trace bien le trait en 10, mais la deuxième passe `(10+4)` tel quel. Au
-niveau suivant, `LINE (10+4) 100 (10+4) 110` n'est pas compris ; le script se rappelle ensuite
-sans fin avec un paramètre de plus en plus long, jusqu'à ESC. Pour calculer, répéter ou décider,
+(`TRAIT.GRX` contient `SPLIT` puis `LINE $1 100 $1 110`.) La première ligne trace bien le
+trait en 10, mais la deuxième passe `(10+4)` tel quel. Au niveau suivant, GRAPHER refuse
+`LINE (10+4) 100 (10+4) 110` (`parametres ?`) ; le script se rappelle ensuite sans fin avec un
+paramètre de plus en plus long, jusqu'à ESC. Pour calculer, répéter ou décider,
 il faut un programme : LOGO (`REPETE`, variables, `SI`) ou un `.COM`.
 
 **L'alternative : confier le calcul à LOGO, depuis le script.** Le script garde ce qu'il fait
@@ -324,13 +327,13 @@ bien (enchaîner des commandes et des programmes) et LOGO fait le reste. Deux pr
 permettent : `LOGO NOM` charge `NOM.LOG` au démarrage et `CHARGE` exécute les lignes du fichier
 qui ne sont pas des procédures, donc un programme peut se lancer seul et finir par `QUITTE` ;
 et en sortant de LOGO, l'image reste intacte, en mode SPLIT : le script continue sur le même
-dessin, et les commandes graphiques du CCP peuvent le compléter. Exemple :
+dessin, et GRAPHER, lancé en mode SPLIT, dessine par-dessus sans l'effacer. Exemple :
 
-    ; PELOUSE.BAT
-    SPLIT
-    CIRCLE 120 30 20
+    ; PELOUSE.BAT (CERCLE.GRX : SPLIT puis CIRCLE 120 30 20 ;
+    ; MOT.GRX : GTEXT 2 114 $1 $2)
+    GRAPHER CERCLE
     LOGO HERBE
-    GTEXT 2 114 Pelouse finie
+    GRAPHER MOT Pelouse finie
 
     POUR HERBE :N
     REPETE :N [AV 10 RE 10 LC DR 90 AV 4 GA 90 BC]
@@ -339,7 +342,7 @@ dessin, et les commandes graphiques du CCP peuvent le compléter. Exemple :
     HERBE 50
     QUITTE
 
-(la seconde partie est `HERBE.LOG`). Le cercle tracé par le CCP, les 50 brins tracés par LOGO
+(la seconde partie est `HERBE.LOG`). Le cercle tracé par GRAPHER, les 50 brins tracés par LOGO
 et le texte ajouté ensuite par le script restent ensemble à l'écran. Le script ne peut pas
 passer de paramètre à LOGO (`LOGO NOM` ne prend que le nom du fichier) : les valeurs sont dans
 `NOM.LOG`, qu'on peut avoir écrit avec EDIT.
@@ -435,8 +438,8 @@ ligne serait dessinée avec la police du mode HIRES, qui n'existe pas ici. L'ima
 s'arrête juste avant la police du mode texte (`$B400`), si bien qu'aucune zone ne se
 chevauche. Pendant le mode SPLIT, la TPA s'arrête en `$9FFF` (variable publique `$020C`).
 
-Le HIRES complet (200 lignes) n'est pas géré par le système : les programmes qui en ont
-besoin le pilotent entièrement eux-mêmes.
+Le HIRES plein écran (240 × 200) n'est pas un mode du système : les programmes le prennent
+en main avec la bibliothèque `hires.inc` (voir « HIRES plein écran »), comme `GRAPHER` et `VOIR`.
 
 **Primitives graphiques** (fonction 115 du BDOS, A/Y = adresse d'un bloc de 6 octets
 `[op, p1..p5]`, comme pour l'extension GSX de CP/M) :
@@ -462,16 +465,87 @@ GSAVE et GLOAD (version disque) prennent le type `.IMG` si le nom n'en a pas, et
 `$FF` pour GSAVE hors du mode SPLIT. Un programme qui appelle GLOAD depuis le mode texte doit
 rester sous `$A000`.
 
-**Au prompt**, chaque primitive a sa commande, avec ses paramètres en décimal (0 à 255) :
-`PEN m`, `PLOT x y`, `LINE x1 y1 x2 y2`, `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2`, `CIRCLE x y r`,
-`GTEXT col y texte`, `ATTR col y1 y2 v`, `POINT x y` (affiche 0 ou 1). Il faut être en mode
-SPLIT (pas de bascule automatique : `Not in SPLIT mode.`) et donner exactement le bon nombre de
-paramètres (sinon `Syntax?`). Avec `DO`, on dessine ainsi sans programme, et `GSAVE` garde le
-résultat. Le crayon est en mode « trace » au démarrage.
+**Sans programme**, on dessine avec `GRAPHER` et un fichier `.GRX` (voir ci-dessous), et
+`GSAVE` garde le résultat. La version ROM garde au prompt une commande par primitive (`PEN m`,
+`PLOT x y`, `LINE x1 y1 x2 y2`, `BOX`, `FBOX`, `CIRCLE x y r`, `GTEXT col y texte`,
+`ATTR col y1 y2 v`, `POINT x y`), en mode SPLIT seulement. Le crayon est en mode « trace » au
+démarrage.
 
 Hors du mode SPLIT, les primitives 0 à 9 renvoient `$FF`. `GTEST.COM` est un exemple
 complet : il passe en SPLIT et dessine un cadre, des diagonales, des cercles, des
 rectangles et du texte.
+
+## GRAPHER : dessiner avec un fichier de commandes (.GRX)
+
+    A>GRAPHER ECRAN
+    A>GRAPHER DESSIN Bonjour
+
+`GRAPHER NOM [p1 ... p9]` exécute `NOM.GRX`, un fichier texte (écrit avec EDIT) qui contient
+une commande par ligne. C'est un outil de traitement par lots, plus près du système que LOGO :
+coordonnées entières, attributs de couleur, HIRES plein écran ou SPLIT, images. Il sert à
+fabriquer des écrans (écran titre d'un jeu, décor) et à les enregistrer. Le dessin passe par
+la bibliothèque `hires.inc`, pas par la fonction 115 du BDOS.
+
+| Commande | Effet |
+|---|---|
+| `HIRES` | HIRES plein écran : 240 × 200 points, image effacée, pas de console |
+| `SPLIT` | mode SPLIT : 240 × 128 points, console dessous, image effacée |
+| `TEXT` | retour au mode texte |
+| `GCLS` | efface l'image |
+| `PEN m` | crayon : 0 efface, 1 trace, 2 inverse |
+| `PLOT x y` | point (x de 0 à 239, y de 0 à 199, ou 127 en SPLIT) |
+| `LINE x1 y1 x2 y2` | ligne |
+| `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, rectangle plein |
+| `CIRCLE x y r` | cercle (r ≤ 127) |
+| `GTEXT col y texte` | texte dans l'image, à la case `col` (0 à 39, 6 points), à la ligne de points `y` |
+| `ATTR col y1 y2 v` | attribut dans la case `col`, lignes `y1` à `y2` : encre 0-7, papier 16-23 |
+| `GLOAD nom` | charge une image : `.HIR` en HIRES, `.IMG` en SPLIT ; depuis le mode texte, le type choisit le mode (`.HIR` par défaut) |
+| `GSAVE nom` | enregistre l'image, au format du mode |
+| `WAIT` | attend une touche (ESC arrête) |
+| `DELAY n` | attend n cinquantièmes de seconde (0 à 65535) |
+| `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran) |
+| `END` | fin du fichier |
+| `; texte` | commentaire (aussi en fin de ligne) |
+
+Les nombres sont en décimal, de 0 à 255. `$1` à `$9` sont remplacés par les paramètres donnés
+après le nom du fichier (en gardant leur casse) ; une ligne fait 126 caractères au plus. ESC
+entre deux lignes arrête. Une erreur arrête aussi, avec la ligne et la commande en cause :
+`L 3 LINE : parametres ?`. En fin de fichier, une image HIRES reste affichée jusqu'à une
+touche, puis le mode texte revient ; une image SPLIT reste au-dessus du prompt. Lancé en mode
+SPLIT, GRAPHER dessine sur l'image en place (après un programme LOGO, par exemple).
+
+La disquette contient `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`) et `ECRAN.GRX` (un
+écran titre en HIRES plein écran, en couleurs par attributs). GRAPHER n'a pas encore de
+variables ni de boucles : elles viendront (puis la traduction d'un `.GRX` en assembleur), si
+l'usage le demande.
+
+## HIRES plein écran : VOIR, hires.inc, png2hir.py
+
+Le HIRES plein écran (240 × 200 points, `$A000-$BF3F`) recouvre la police (`$B400`) et l'écran
+texte (`$BB80`) : le système ne peut plus rien y afficher. Ce n'est donc pas un mode du système
+mais une règle : **le programme prend l'écran pour lui**, et rend la main proprement.
+
+- `VOIR NOM` affiche `NOM.HIR` en plein écran, ou `VOIR NOM.IMG` une image du mode SPLIT, et
+  revient au texte à la première touche.
+- Une image `.HIR` est la copie brute de l'écran : 8 000 octets, le format usuel sur Oric.
+  `GSAVE` dans GRAPHER en écrit ; `tools/png2hir.py image.png NOM.HIR` en fabrique une sur le
+  Mac à partir d'une image quelconque (mise à l'échelle, noir et blanc tramé ; `--split` pour
+  une image `.IMG` de 240 × 128 ; module Pillow), qu'on copie ensuite avec `IMPORT` ou
+  `tools/mkdisk.py put`.
+- `progs/hires.inc` (`HIRES.INC` sur les disquettes) est la bibliothèque qu'un programme inclut
+  (`#include "HIRES.INC"`, avec xa sur le Mac ou ASM sur l'Oric) : `h_full` (plein écran),
+  `h_split`, `h_text`, `h_cls`, `h_pen`, `h_plot`, `h_line`, `h_box`, `h_fbox`, `h_circle`,
+  `h_print` (texte), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key`. Les paramètres sont dans
+  `h_x1`, `h_y1`, `h_x2`, `h_y2`, `h_r` ; elle utilise `$C0-$C7` en page zéro et place ses
+  tables (2 Ko) après la fin du programme (`h_free` : première adresse libre). Les mêmes
+  routines marchent en SPLIT (128 lignes). Voir `progs/voir.s` pour un exemple court.
+
+Pendant le HIRES plein écran, le programme n'écrit pas sur la console (fonctions 2, 9... du
+BDOS) avant `h_text`. Le système, lui, n'y dessine plus rien de lui-même : la touche FUNCT est
+ignorée (pas de menus), les voyants ne sont pas redessinés et le curseur est éteint. Il le
+reconnaît à l'attribut `$1E` dans la dernière case de l'écran (`$BFDF`) hors du mode SPLIT. Et
+si le programme se termine sans `h_text` (CTRL-C, plantage, oubli), le démarrage à chaud remet
+le mode texte, la police et un écran propre.
 
 ## Le son (fonction 116 du BDOS)
 
@@ -631,8 +705,10 @@ Programmes fournis sur la disquette :
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG`.
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
-- `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM` et
-  `CPA.INC`.
+- `GRAPHER.COM NOM`, le dessin par fichiers `.GRX`, avec `DESSIN.GRX` et `ECRAN.GRX`, et
+  `VOIR.COM NOM`, qui affiche une image (voir « GRAPHER » et « HIRES plein écran »).
+- `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
+  `CPA.INC` et `HIRES.INC`.
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits plus haut.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
@@ -1143,6 +1219,8 @@ Autres fichiers dans `tools/` :
 - `gen_readme_txt.py` : textes d'aide, à partir d'une seule liste : `files/readme.txt` (`README.TXT`
   sur la disquette) et `progs/help_tab.s` (les rubriques de `HELP.COM`), 37 colonnes au plus ;
 - `gen_asm_tab.py` : table des mnémoniques et des opcodes de l'assembleur (`progs/asm_tab.s`) ;
+- `png2hir.py` : image PNG ou JPEG -> `.HIR` (plein écran) ou `.IMG` (`--split`), noir et blanc
+  tramé (`--seuil N` sans trame, `--invert`, `--apercu F.png` ; module Pillow) ;
 - `oricutron-testhook.patch` : frappe simulée et dump mémoire pour ces tests ; avec la
   variable `ORIC_LOCI=dossier`, l'interface du LOCI simulée sur ce dossier, qui tient lieu de
   clé USB (`0:` est son sous-dossier `int`) : EXPORT, IMPORT et USBDIR marchent dans

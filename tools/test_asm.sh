@@ -8,10 +8,10 @@ cd "$(dirname "$0")/.."
 XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 T=$(mktemp -d)
-cp progs/cpa.inc progs/*_tab.s progs/*_inc.s "$T/"
+cp progs/cpa.inc progs/hires.inc progs/*_tab.s progs/*_inc.s "$T/"
 (cd progs && $XA -o "$T/ASM.COM" asm.s)
 ok=0; ko=0
-for p in hello copy gtest hex edit logo debug help set poke go mem stat xdo export import usbdir format diskcopy type era ren asm; do
+for p in hello copy gtest hex edit logo debug help set poke go mem stat xdo export import usbdir format diskcopy type era ren voir grapher asm; do
   P=$(echo $p | tr a-z A-Z)
   cp progs/$p.s "$T/$P.ASM"
   (cd progs && $XA -o "$T/ref.bin" $p.s)
