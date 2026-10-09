@@ -735,9 +735,23 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
      `LINE` (estimation à prendre large) ; zones à zéro de `GRX.INC` (~150 octets) après la fin du
      programme ; police copiée seulement si le programme écrit du texte (768 octets de mémoire).
      Pas maintenant (Pierre).
-   - **Reprendre le compresseur d'images** fait avec Claude auparavant (à retrouver : il n'est ni
-     dans ce dépôt ni dans les conversations consultées) : images `.HIR`/`.IMG` compressées sur
-     la disquette, décompressées au chargement (`hires.inc`, VOIR, GRAPHER).
+   - **Reprendre le compresseur d'images** fait avec Claude dans un projet OSDK : images
+     `.HIR`/`.IMG` compressées sur la disquette, décompressées au chargement (`hires.inc`, VOIR,
+     GRAPHER). Pierre a fourni le décodeur `decode_screen_hires.s` (xa) ; l'encodeur reste à
+     retrouver ou à réécrire.
+     - Format LZSS « maison » : groupes de 8 jetons précédés d'un octet de drapeaux lu du bit 0
+       au bit 7. Bit à 1 : littéral, 1 octet brut. Bit à 0 : copie, 3 octets (distance 16 bits
+       little-endian, 1 = l'octet précédent ; longueur 4..255). Copie octet par octet, donc les
+       recouvrements marchent (aplats). Pas de marqueur de fin : arrêt après 8 000 octets écrits
+       à partir de $A000.
+     - Décodeur : ~120 octets, pointeurs source/destination/copie en page zéro (`tmp0`-`tmp2`
+       d'OSDK, $50+) et 3 octets de travail en `.bss`.
+     - Pour CP/A : passer en page zéro de `hires.inc` ($C0-$C7 ou à côté), remplacer `.bss` et
+       les labels `+` par la syntaxe acceptée par ASM.COM, paramétrer la taille (5 120 octets
+       pour le mode SPLIT) ; lire le flux fichier par enregistrements de 128 octets (ou le
+       charger d'abord en mémoire libre) ; encodeur en Python à côté de `tools/png2hir.py`
+       (option de sortie compressée). Type de fichier à choisir (`.HIZ` ?).
+     - Pas avant que Pierre ait testé l'existant.
 
 ## Contraintes à garder en tête
 
