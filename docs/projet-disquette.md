@@ -723,6 +723,22 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    Jokers dans EXPORT : faits (octobre 2026, voir « Choix déjà faits »). Suites possibles : conversion CR LF -> LF à l'EXPORT si le Mac
    la demande, liste des appareils du LOCI (`opendir("")`).
 
+7. **Images : dessin GRAPHER ou copie d'écran ?** (backlog, octobre 2026 ; rien à coder avant
+   les essais de Pierre sur le vrai Oric). Pierre compare deux façons de garder un écran : un
+   dessin décrit par un `.GRX` (exécuté ou traduit en `.COM`) et une copie d'écran (`.HIR`,
+   8 000 octets ; `.IMG`, 5 120). Repères mesurés : un `.COM` traduit pèse au moins 3 114 octets
+   (bibliothèques entières : `GRX.INC` 1 620, `HIRES.INC` 1 488), puis quelques dizaines
+   d'octets par commande (`LINE` : 26) ; à l'exécution, +1,6 Ko de tables après le programme.
+   Pistes notées :
+   - **Découper `GRX.INC` et `HIRES.INC` en modules** (noyau, cercle, texte, images, division,
+     RND...) et n'écrire que les `#include` utiles : 700 à 900 octets estimés pour `HIRES` +
+     `LINE` (estimation à prendre large) ; zones à zéro de `GRX.INC` (~150 octets) après la fin du
+     programme ; police copiée seulement si le programme écrit du texte (768 octets de mémoire).
+     Pas maintenant (Pierre).
+   - **Reprendre le compresseur d'images** fait avec Claude auparavant (à retrouver : il n'est ni
+     dans ce dépôt ni dans les conversations consultées) : images `.HIR`/`.IMG` compressées sur
+     la disquette, décompressées au chargement (`hires.inc`, VOIR, GRAPHER).
+
 ## Contraintes à garder en tête
 
 - 544 octets libres dans la zone du code (667 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
