@@ -1,0 +1,18 @@
+; ANIMS.GRX : les animations dans GRAPHER
+; ANIM nom [n] joue nom.ANI n fois (0 ou
+; rien : jusqu'a une touche ; ESC arrete)
+; pendant une animation, fleches gauche
+; et droite : deplacer la ligne de
+; dechirure (calage sur l'ecran)
+; usage : GRAPHER ANIMS (ou /A puis ASM)
+HIRES
+ANIM CUBE 3
+GTEXT 2 188 12 images, un quart de tour
+DELAY 100
+ANIM BALLE 2
+GTEXT 2 188 Seule la balle change
+DELAY 100
+FOR I 1 3
+ANIM VAISSEAU 1
+NEXT
+GTEXT 2 188 Fin : une touche

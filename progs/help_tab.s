@@ -103,8 +103,15 @@ h_1
         .asc "              |   240x200 (HELP",13,10
         .asc "              |   GRAPHER)",13,10
         .asc "VOIR nom      | affiche NOM.HIR",13,10
-        .asc "              |   (plein ecran) ou",13,10
-        .asc "              |   NOM.IMG, une touche",13,10
+        .asc "              |   (plein ecran), .HIZ",13,10
+        .asc "              |   (compressee) ou",13,10
+        .asc "              |   .IMG, une touche",13,10
+        .asc "VOIR nom.ANI [n]",13,10
+        .asc "              | animation jouee n",13,10
+        .asc "              |   fois (0 : jusqu'a",13,10
+        .asc "              |   une touche) ;",13,10
+        .asc "              |   fleches G D : ligne",13,10
+        .asc "              |   de dechirure",13,10
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10
         .asc "              |   DIR (sans opt : les",13,10
         .asc "              |   affiche)",13,10
@@ -435,7 +442,8 @@ h_9
         .asc "              |   NOM.ASM ; puis ASM",13,10
         .asc "              |   NOM -> NOM.COM",13,10
         .asc "              |   (avec CPA.INC",13,10
-        .asc "              |   GRX.INC HIRES.INC)",13,10
+        .asc "              |   GRX.INC HIRES.INC,",13,10
+        .asc "              |   ANIM.INC si ANIM)",13,10
         .asc "HIRES         | plein ecran 240 x",13,10
         .asc "              |   200, efface",13,10
         .asc "SPLIT         | 240 x 128, console",13,10
@@ -458,8 +466,11 @@ h_9
         .asc "ATTR col y1 y2 v",13,10
         .asc "              | attribut : encre 0-7,",13,10
         .asc "              |   papier 16-23",13,10
-        .asc "GLOAD fic     | .HIR (HIRES) ou .IMG",13,10
-        .asc "              |   (SPLIT)",13,10
+        .asc "GLOAD fic     | .HIR ou .HIZ (HIRES),",13,10
+        .asc "              |   .IMG (SPLIT)",13,10
+        .asc "ANIM fic [n]  | animation .ANI en",13,10
+        .asc "              |   HIRES, n fois (0 :",13,10
+        .asc "              |   jusqu'a une touche)",13,10
         .asc "GSAVE fic     | idem, selon le mode",13,10
         .asc "WAIT          | attend une touche",13,10
         .asc "DELAY n       | attend n/50 s",13,10

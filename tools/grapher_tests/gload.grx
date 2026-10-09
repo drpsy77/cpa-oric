@@ -1,0 +1,12 @@
+; GSAVE puis GLOAD (lecteur courant : octet 0 avant le nom traduit)
+HIRES
+PLOT 10 10
+GSAVE TEST
+GCLS
+GLOAD TEST
+A = POINT(10,10)
+TEXT
+PRINT A
+GLOAD TEST.HIR
+TEXT
+PRINT 2

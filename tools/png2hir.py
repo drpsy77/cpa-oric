@@ -9,6 +9,8 @@ Options :
   --seuil N     pas de tramage : seuil 0-255 (sinon Floyd-Steinberg)
   --cadre       garde toute l'image (bandes noires) au lieu de la recadrer
   --apercu F    écrit aussi l'aperçu de ce que verra l'Oric (PNG)
+  --hiz         image compressée (SORTIE.HIZ, lue par VOIR et GLOAD ;
+                avec --split, 5 120 octets décompressés)
 
 L'image est mise à l'échelle et recadrée au centre, passée en niveaux de
 gris puis en noir et blanc (encre blanche sur papier noir, les couleurs
@@ -31,7 +33,12 @@ W = 240
 
 
 def convert(src, lines, invert=False, seuil=None, cadre=False):
-    im = Image.open(src).convert("L")
+    return convert_image(Image.open(src), lines, invert, seuil, cadre)
+
+
+def convert_image(im, lines, invert=False, seuil=None, cadre=False):
+    """Image Pillow -> (octets de l'Oric, image noir et blanc)"""
+    im = im.convert("L")
     if cadre:
         im = ImageOps.pad(im, (W, lines), color=0)
     else:
@@ -70,15 +77,23 @@ def main(argv):
         apercu = opts[opts.index("--apercu") + 1]
         args = [a for a in args if a != apercu]
     lines = 128 if split else 200
+    sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
     data, bw = convert(args[0], lines, "--invert" in opts, seuil, "--cadre" in opts)
     if split:
         # GSAVE garde $A000-$B3FF : la 1re case de la ligne 127 porte le
         # retour au texte ($1A), remis par GLOAD de toute façon
         data[127 * 40] = 0x1A
-    open(args[1], "wb").write(bytes(data))
+    if "--hiz" in opts:                          # image compressée (lzhir.py)
+        import lzhir
+        comp = lzhir.compress(bytes(data))
+        open(args[1], "wb").write(comp)
+        print("%s : %d octets compresses (%d sans compression)" % (args[1], len(comp), len(data)))
+    else:
+        open(args[1], "wb").write(bytes(data))
     if apercu:
         bw.convert("RGB").resize((W * 2, lines * 2), Image.NEAREST).save(apercu)
-    print("%s : %d octets (%s)" % (args[1], len(data), "SPLIT 240 x 128" if split else "plein écran 240 x 200"))
+    if "--hiz" not in opts:
+        print("%s : %d octets (%s)" % (args[1], len(data), "SPLIT 240 x 128" if split else "plein écran 240 x 200"))
     return 0
 
 

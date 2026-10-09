@@ -4,6 +4,11 @@ Fichiers écrits avec Claude dans un projet OSDK antérieur, gardés ici
 **tels quels** en vue d'une reprise dans CP/A (backlog, point 7 de
 `docs/projet-disquette.md`). Ils ne sont pas utilisés par la construction.
 
+**Repris dans CP/A** (lot LH) : le format est gardé tel quel ; le décodeur
+est réécrit dans `progs/hires.inc` (`h_unz` : page zéro `$C0-$C7`, saut
+sans copie pour la distance 0, copie bornée à la fin de l'image) et le
+compresseur dans `tools/lzhir.py` (images `.HIZ`, animations `.ANI`).
+
 - `decode_screen_hires.s` : décodeur 6502 (xa, conventions OSDK :
   `tmp0`-`tmp2` en page zéro, `.bss`, labels `+` dans un bloc `.( .)`).
 - `compress_hires.py` : compresseur et décompresseur de contrôle (Python 3,
