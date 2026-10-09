@@ -27,6 +27,9 @@ def main():
     words = args.split()
     setfcb(0x45C, words[0] if words else '')
     mem[0x480] = len(args); mem[0x481:0x481+len(args)] = args.encode()
+    # ligne de commande d'origine ($F670, ORIG_LINE) : programme et paramètres
+    orig = (os.path.splitext(os.path.basename(prog))[0] + ' ' + ' '.join(sys.argv[3:])).encode()
+    mem[0xF670:0xF670+len(orig)+1] = orig + b'\0'
     m = MPU(memory=mem)
     m.pc = 0x500; m.sp = 0xFD
     mem[0x1FE] = 0xFF; mem[0x1FF] = 0x01  # rts -> $0200

@@ -195,7 +195,7 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 tous les fichiers.
 
 Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT, CPA.INC et HIRES.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+ASM...), README.TXT, CPA.INC, HIRES.INC et GRX.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
 copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`) restent
@@ -215,7 +215,7 @@ y est partout, protégé et visible.
 |---|---|---|---|
 | `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, CPA.INC, HIRES.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 
 Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
 `B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont cherchés sur `A:`, et `DIR` ne montre que
@@ -572,8 +572,33 @@ signalé (le reste s'exécute normalement).
 La disquette contient quatre exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
 `ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
 ciel étoilé : boucles, hasard, sous-programme) et `ARDOISE.GRX` (un télécran : les flèches
-dessinent, ESPACE efface, ESC finit). La traduction d'un `.GRX` en assembleur viendra peut-être
-(palier 4).
+dessinent, ESPACE efface, ESC finit).
+
+**Traduction en assembleur.** `GRAPHER NOM /A` n'exécute pas le fichier : il écrit `NOM.ASM`,
+qu'ASM assemble en un programme autonome `NOM.COM`, beaucoup plus rapide :
+
+    A>GRAPHER MOTIFS /A
+    MOTIFS.ASM ecrit : ASM MOTIFS
+    A>ASM MOTIFS
+    A>MOTIFS
+
+Le `.ASM` produit est lisible : chaque ligne du `.GRX` y figure en commentaire, suivie de son
+code. Le dessin appelle `HIRES.INC` (`lda #$78`, `sta h_x1`... `jsr h_line`), les variables sont
+des mots en mémoire (`V_A` à `V_Z`), les boucles et les `IF` des étiquettes et des sauts
+(`L3T`, `L3E`), `CALL` un `jsr` vers `P_NOM`, et ce qui est plus long (multiplication,
+division, `RND`, `PRINT`, images) est dans la bibliothèque `GRX.INC`. Les parties constantes
+des expressions sont calculées pendant la traduction (`120+8` devient `128`), et une valeur
+constante hors de 0-255 est signalée tout de suite. ASM a besoin de `CPA.INC`, `GRX.INC` et
+`HIRES.INC` sur le lecteur de la source (ils sont sur la disquette complète et sur la disquette
+Assembleur, avec GRAPHER) ; il met moins d'une minute pour un programme comme `MOTIFS`.
+
+Gain mesuré : 5 à 20 fois plus rapide selon les calculs (le ciel de 400 étoiles de `MOTIFS` :
+0,6 seconde au lieu de 5). Le programme produit se comporte comme le `.GRX` interprété (ESC
+dans une boucle, attente de fin en HIRES), avec deux différences : `$1` à `$9` sont remplacés
+par les paramètres donnés à `GRAPHER NOM /A`, au moment de la traduction ; et une erreur qui
+ne peut se voir qu'à l'exécution (division par zéro, valeur hors de 0-255 calculée) s'affiche
+sans numéro de ligne (`Erreur : division par zero`). Les erreurs de syntaxe et de blocs sont
+signalées par la traduction, avec la ligne, et `NOM.ASM` n'est alors pas écrit.
 
 ## HIRES plein écran : VOIR, hires.inc, png2hir.py
 
@@ -761,7 +786,8 @@ Programmes fournis sur la disquette :
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG`.
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
-- `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX`, avec `DESSIN.GRX`,
+- `GRAPHER.COM NOM [/A]`, le petit langage de dessin des fichiers `.GRX` (exécuté, ou traduit en
+  assembleur avec `GRX.INC`), avec `DESSIN.GRX`,
   `ECRAN.GRX`, `MOTIFS.GRX` et `ARDOISE.GRX`, et
   `VOIR.COM NOM`, qui affiche une image (voir « GRAPHER » et « HIRES plein écran »).
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
@@ -1268,8 +1294,9 @@ Autres fichiers dans `tools/` :
 - `gen_tables.py` : tables écran et clavier ;
 - `run_test.sh` et `screen.py` : tests automatiques dans Oricutron (`DSKB=`... pour monter les
   lecteurs B: à D:) ;
-- `test_grapher.sh` : non-régression de GRAPHER (calculs, boucles, messages d'erreur), dans le
-  6502 simulé, sans émulateur ;
+- `test_grapher.sh` : non-régression de GRAPHER dans le 6502 simulé, sans émulateur : chaque
+  test est interprété, puis traduit (`/A`), assemblé avec xa et exécuté ; les deux sorties sont
+  comparées à leurs références ;
 - `test_asm.sh` : non-régression d'ASM (chaque programme assemblé par ASM.COM doit être
   identique à sa version `xa`) ;
 - `run_com.py` : exécute un `.COM` dans un 6502 simulé (module Python `py65`), avec un BDOS

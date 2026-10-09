@@ -104,6 +104,7 @@ SECTIONS = [
   ("SUB NOM", "... ENDSUB ; CALL NOM ; RETURN"),
   ("PRINT expr", "affiche un nombre (pas en HIRES)"),
   ("GNUM col y n", "nombre dans l'image"),
+  ("GRAPHER nom /A", "traduit NOM.GRX en NOM.ASM ; puis ASM NOM -> NOM.COM (avec CPA.INC GRX.INC HIRES.INC)"),
   ("HIRES", "plein ecran 240 x 200, efface"),
   ("SPLIT", "240 x 128, console dessous"),
   ("TEXT", "retour au texte"),

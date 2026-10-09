@@ -129,7 +129,8 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - Fichiers `progs/*_tab.s` (tables) et `progs/*_inc.s` (bibliothèques) : inclus par un
   programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
   disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
-  pour ne gêner aucun programme.
+  pour ne gêner aucun programme. `progs/grx.inc` (`GRX.INC`) est la bibliothèque d'exécution
+  des programmes traduits par `GRAPHER NOM /A`.
 - HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
   en `$BFDF` hors du mode SPLIT a l'écran pour lui ; le système le reconnaît (`hires_on`) et
   n'y dessine rien (FUNCT ignoré, voyants, curseur éteint par le programme) ; le démarrage à

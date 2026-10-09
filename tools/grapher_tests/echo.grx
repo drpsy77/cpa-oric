@@ -1,0 +1,19 @@
+ECHO Il dit "oui" !
+ECHO "
+ECHO
+X = 7
+IF X > 5
+  ECHO grand
+ELSE
+  ECHO petit
+ENDIF
+CALL S
+PRINT X
+SUB S
+  REPEAT 3
+    X = X + 1
+    IF X = 9
+      RETURN
+    ENDIF
+  NEXT
+ENDSUB
