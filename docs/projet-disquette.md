@@ -737,8 +737,10 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
      Pas maintenant (Pierre).
    - **Reprendre le compresseur d'images** fait avec Claude dans un projet OSDK : images
      `.HIR`/`.IMG` compressées sur la disquette, décompressées au chargement (`hires.inc`, VOIR,
-     GRAPHER). Pierre a fourni le décodeur `decode_screen_hires.s` (xa) ; l'encodeur reste à
-     retrouver ou à réécrire.
+     GRAPHER). Pierre a fourni le décodeur `decode_screen_hires.s` (xa) et le compresseur
+     `compress_hires.py`, archivés tels quels dans `archives/lzss-osdk/` (avec mesures :
+     ~1,1 Ko pour un dessin au trait ou une image sans tramage, ~4,3 Ko pour une image tramée,
+     au lieu de 8 000 octets).
      - Format LZSS « maison » : groupes de 8 jetons précédés d'un octet de drapeaux lu du bit 0
        au bit 7. Bit à 1 : littéral, 1 octet brut. Bit à 0 : copie, 3 octets (distance 16 bits
        little-endian, 1 = l'octet précédent ; longueur 4..255). Copie octet par octet, donc les
@@ -749,7 +751,7 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
      - Pour CP/A : passer en page zéro de `hires.inc` ($C0-$C7 ou à côté), remplacer `.bss` et
        les labels `+` par la syntaxe acceptée par ASM.COM, paramétrer la taille (5 120 octets
        pour le mode SPLIT) ; lire le flux fichier par enregistrements de 128 octets (ou le
-       charger d'abord en mémoire libre) ; encodeur en Python à côté de `tools/png2hir.py`
+       charger d'abord en mémoire libre) ; brancher `compress_hires.py` sur `tools/png2hir.py`
        (option de sortie compressée). Type de fichier à choisir (`.HIZ` ?).
      - Pas avant que Pierre ait testé l'existant.
 
