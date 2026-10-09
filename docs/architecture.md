@@ -101,6 +101,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/smoke_test.sh              # construction + démarrage disquette et ROM dans l'émulateur
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
+    tools/test_grapher.sh            # GRAPHER.COM : calculs, boucles, erreurs (sans émulateur)
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
@@ -120,6 +121,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | Système (BIOS, BDOS, CCP, menus) | en plus : essai Oricutron ciblé sur ce qui change, `tools/smoke_test.sh` |
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
+| GRAPHER.COM, `hires.inc` | en plus : `tools/test_grapher.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | Avant un commit de version, ou sur demande | tout |
 
 ## 5. Conventions

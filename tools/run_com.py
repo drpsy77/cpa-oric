@@ -81,6 +81,8 @@ def main():
                 elif x == 16:
                     f = files.get(adr)
                     if f and f[3] is not None: open(f[0], 'wb').write(f[3])
+                elif x == 115:
+                    pass        # graphisme : mode texte (GETMODE -> 0)
                 else:
                     print('BDOS ?', x); break
             # rts

@@ -409,6 +409,27 @@ h_9
         .asc "              | execute NOM.GRX",13,10
         .asc "              |   ($1..$9 = p, ESC",13,10
         .asc "              |   arrete)",13,10
+        .asc "nombres       | entiers",13,10
+        .asc "              |   -32768..32767,",13,10
+        .asc "              |   variables A a Z",13,10
+        .asc "parametre     | expression sans",13,10
+        .asc "              |   espace : X+8",13,10
+        .asc "              |   RND(240) (X * 2)",13,10
+        .asc "operateurs    | - ; * / % ; + - ; =",13,10
+        .asc "              |   <> < <= > >= ; & |",13,10
+        .asc "fonctions     | RND(n) ABS(n)",13,10
+        .asc "              |   POINT(x,y) INKEY",13,10
+        .asc "V = expr      | affectation (LET V =",13,10
+        .asc "              |   expr)",13,10
+        .asc "REPEAT n      | ... NEXT",13,10
+        .asc "FOR V a b [p] | ... NEXT",13,10
+        .asc "WHILE expr    | ... NEXT",13,10
+        .asc "IF expr       | ... [ELSE ...] ENDIF",13,10
+        .asc "SUB NOM       | ... ENDSUB ; CALL NOM",13,10
+        .asc "              |   ; RETURN",13,10
+        .asc "PRINT expr    | affiche un nombre",13,10
+        .asc "              |   (pas en HIRES)",13,10
+        .asc "GNUM col y n  | nombre dans l'image",13,10
         .asc "HIRES         | plein ecran 240 x",13,10
         .asc "              |   200, efface",13,10
         .asc "SPLIT         | 240 x 128, console",13,10

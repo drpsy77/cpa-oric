@@ -1,0 +1,25 @@
+; ARDOISE.GRX : un telecran
+; fleches : dessiner ; ESPACE :
+; effacer ; ESC : finir
+HIRES
+X = 120
+Y = 100
+WHILE 1
+  PLOT X Y
+  K = INKEY
+  IF K = 8
+    X = X - (X > 0)
+  ENDIF
+  IF K = 9
+    X = X + (X < 239)
+  ENDIF
+  IF K = 11
+    Y = Y - (Y > 0)
+  ENDIF
+  IF K = 10
+    Y = Y + (Y < 199)
+  ENDIF
+  IF K = 32
+    GCLS
+  ENDIF
+NEXT

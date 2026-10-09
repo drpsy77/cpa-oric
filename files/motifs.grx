@@ -1,0 +1,28 @@
+; MOTIFS.GRX : boucles et variables
+; usage : GRAPHER MOTIFS
+HIRES
+; un eventail
+FOR X 0 239 6
+  LINE X 0 239-X 199
+NEXT
+DELAY 50
+; des cercles
+GCLS
+FOR R 4 96 4
+  CIRCLE 120 100 R
+NEXT
+DELAY 50
+; un ciel etoile, dans un cadre
+GCLS
+CALL CADRE
+REPEAT 400
+  PLOT 1+RND(238) 1+RND(198)
+NEXT
+GTEXT 16 96 ETOILES
+; fin : une touche ramene au texte
+END
+
+SUB CADRE
+  BOX 0 0 239 199
+  BOX 3 3 236 196
+ENDSUB

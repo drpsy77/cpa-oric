@@ -198,7 +198,7 @@ Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, E
 ASM...), README.TXT, CPA.INC et HIRES.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
-copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, DESSIN.GRX, ECRAN.GRX) restent
+copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`) restent
 modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
 reste à la disposition de l'utilisateur.
 
@@ -213,7 +213,7 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, CPA.INC, HIRES.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 
@@ -477,14 +477,23 @@ rectangles et du texte.
 
 ## GRAPHER : dessiner avec un fichier de commandes (.GRX)
 
-    A>GRAPHER ECRAN
+    A>GRAPHER MOTIFS
     A>GRAPHER DESSIN Bonjour
 
 `GRAPHER NOM [p1 ... p9]` exécute `NOM.GRX`, un fichier texte (écrit avec EDIT) qui contient
-une commande par ligne. C'est un outil de traitement par lots, plus près du système que LOGO :
-coordonnées entières, attributs de couleur, HIRES plein écran ou SPLIT, images. Il sert à
-fabriquer des écrans (écran titre d'un jeu, décor) et à les enregistrer. Le dessin passe par
-la bibliothèque `hires.inc`, pas par la fonction 115 du BDOS.
+une commande par ligne. C'est un petit langage, plus près du système que LOGO : coordonnées
+entières, attributs de couleur, HIRES plein écran ou SPLIT, images, variables, boucles et
+sous-programmes. Il sert à fabriquer des écrans (écran titre d'un jeu, décor, motifs) et à les
+enregistrer, et même à de petits programmes interactifs (`ARDOISE.GRX`). Le fichier est chargé
+en mémoire puis exécuté ; le dessin passe par la bibliothèque `hires.inc`.
+
+    ; un eventail en plein ecran
+    HIRES
+    FOR X 0 239 6
+      LINE X 0 239-X 199
+    NEXT
+
+**Dessin et modes**
 
 | Commande | Effet |
 |---|---|
@@ -498,26 +507,73 @@ la bibliothèque `hires.inc`, pas par la fonction 115 du BDOS.
 | `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, rectangle plein |
 | `CIRCLE x y r` | cercle (r ≤ 127) |
 | `GTEXT col y texte` | texte dans l'image, à la case `col` (0 à 39, 6 points), à la ligne de points `y` |
+| `GNUM col y n` | nombre dans l'image (un score, par exemple) |
 | `ATTR col y1 y2 v` | attribut dans la case `col`, lignes `y1` à `y2` : encre 0-7, papier 16-23 |
 | `GLOAD nom` | charge une image : `.HIR` en HIRES, `.IMG` en SPLIT ; depuis le mode texte, le type choisit le mode (`.HIR` par défaut) |
 | `GSAVE nom` | enregistre l'image, au format du mode |
+
+Les valeurs du dessin vont de 0 à 255 (au-delà : `valeur hors de 0-255`).
+
+**Calcul.** Les nombres sont des entiers de -32768 à 32767. Il y a 26 variables, `A` à `Z`
+(à 0 au départ). `X = expr` (ou `LET X = expr`) donne une valeur à une variable. Partout où
+une commande attend un nombre, on peut écrire une expression : `12`, `X`, `X+8`,
+`239-X`, `RND(240)`, `(X * 2)`. Entre plusieurs paramètres, l'espace sépare : **une
+expression ne contient pas d'espace, sauf entre parenthèses** (`LINE X 0 (239 - X) 199`).
+Une expression seule en fin de ligne (`X = ...`, `IF`, `WHILE`, `PRINT`) peut en contenir.
+
+| Élément | Sens |
+|---|---|
+| `-` (signe) ; `*` `/` `%` ; `+` `-` | du plus fort au plus faible ; `/` tronque vers 0, `%` est le reste |
+| `=` `<>` `<` `<=` `>` `>=` | comparaisons : 1 si vrai, 0 sinon (`X = X + (X < 239)`) |
+| `&` `\|` | et, ou (bit à bit : `(X > 0) & (Y > 0)`) |
+| `RND(n)` | nombre au hasard de 0 à n-1 |
+| `ABS(n)` | valeur absolue |
+| `POINT(x,y)` | 1 si le point est allumé |
+| `INKEY` | touche tapée (code), 0 si aucune ; n'attend pas |
+
+**Contrôle**
+
+| Bloc | Effet |
+|---|---|
+| `REPEAT n` ... `NEXT` | n fois (rien si n ≤ 0) |
+| `FOR V a b [pas]` ... `NEXT` | V de a à b, pas de 1 par défaut (négatif : en descendant) ; rien si a est déjà au-delà de b |
+| `WHILE expr` ... `NEXT` | tant que l'expression n'est pas nulle (`WHILE 1` : sans fin, ESC arrête) |
+| `IF expr` ... [`ELSE` ...] `ENDIF` | si l'expression n'est pas nulle |
+| `SUB NOM` ... `ENDSUB` | sous-programme, appelé par `CALL NOM` ; `RETURN` en sort avant la fin. Rencontré en chemin, il est sauté : on peut le placer n'importe où. |
+
+Les blocs s'imbriquent (16 niveaux de boucles et d'appels) ; le retrait est libre.
+
+**Divers**
+
+| Commande | Effet |
+|---|---|
 | `WAIT` | attend une touche (ESC arrête) |
-| `DELAY n` | attend n cinquantièmes de seconde (0 à 65535) |
+| `DELAY n` | attend n cinquantièmes de seconde |
 | `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran) |
-| `END` | fin du fichier |
+| `PRINT expr` | affiche un nombre (sauf en HIRES) |
+| `END` | fin du programme |
 | `; texte` | commentaire (aussi en fin de ligne) |
 
-Les nombres sont en décimal, de 0 à 255. `$1` à `$9` sont remplacés par les paramètres donnés
-après le nom du fichier (en gardant leur casse) ; une ligne fait 126 caractères au plus. ESC
-entre deux lignes arrête. Une erreur arrête aussi, avec la ligne et la commande en cause :
-`L 3 LINE : parametres ?`. En fin de fichier, une image HIRES reste affichée jusqu'à une
-touche, puis le mode texte revient ; une image SPLIT reste au-dessus du prompt. Lancé en mode
-SPLIT, GRAPHER dessine sur l'image en place (après un programme LOGO, par exemple).
+`$1` à `$9` sont remplacés par les paramètres donnés après le nom du fichier (en gardant leur
+casse) : `X = $1`. Une ligne fait 126 caractères au plus. ESC entre deux lignes arrête ; une
+autre touche tapée pendant le dessin est gardée pour `WAIT`, `INKEY` ou l'attente de fin. Une
+erreur arrête aussi, avec la ligne et la commande en cause : `L 3 LINE : valeur hors de
+0-255`, `L 12 NEXT : NEXT sans boucle`, `L 7 IF : bloc non ferme`. En fin de fichier, une
+image HIRES reste affichée jusqu'à une touche, puis le mode texte revient ; une image SPLIT
+reste au-dessus du prompt. Lancé en mode SPLIT, GRAPHER dessine sur l'image en place (après un
+programme LOGO, par exemple).
 
-La disquette contient `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`) et `ECRAN.GRX` (un
-écran titre en HIRES plein écran, en couleurs par attributs). GRAPHER n'a pas encore de
-variables ni de boucles : elles viendront (puis la traduction d'un `.GRX` en assembleur), si
-l'usage le demande.
+Vitesse : GRAPHER interprète de 150 à quelques centaines de lignes par seconde selon les
+calculs : un ciel de 400 étoiles tirées au hasard (`PLOT 1+RND(238) 1+RND(198)` dans un
+`REPEAT`) prend environ 5 secondes. Limites : des entiers
+seulement, des variables d'une lettre, et un `ENDIF` oublié après un `IF` vrai n'est pas
+signalé (le reste s'exécute normalement).
+
+La disquette contient quatre exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
+`ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
+ciel étoilé : boucles, hasard, sous-programme) et `ARDOISE.GRX` (un télécran : les flèches
+dessinent, ESPACE efface, ESC finit). La traduction d'un `.GRX` en assembleur viendra peut-être
+(palier 4).
 
 ## HIRES plein écran : VOIR, hires.inc, png2hir.py
 
@@ -705,7 +761,8 @@ Programmes fournis sur la disquette :
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG`.
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
-- `GRAPHER.COM NOM`, le dessin par fichiers `.GRX`, avec `DESSIN.GRX` et `ECRAN.GRX`, et
+- `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX`, avec `DESSIN.GRX`,
+  `ECRAN.GRX`, `MOTIFS.GRX` et `ARDOISE.GRX`, et
   `VOIR.COM NOM`, qui affiche une image (voir « GRAPHER » et « HIRES plein écran »).
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
   `CPA.INC` et `HIRES.INC`.
@@ -1211,6 +1268,8 @@ Autres fichiers dans `tools/` :
 - `gen_tables.py` : tables écran et clavier ;
 - `run_test.sh` et `screen.py` : tests automatiques dans Oricutron (`DSKB=`... pour monter les
   lecteurs B: à D:) ;
+- `test_grapher.sh` : non-régression de GRAPHER (calculs, boucles, messages d'erreur), dans le
+  6502 simulé, sans émulateur ;
 - `test_asm.sh` : non-régression d'ASM (chaque programme assemblé par ASM.COM doit être
   identique à sa version `xa`) ;
 - `run_com.py` : exécute un `.COM` dans un 6502 simulé (module Python `py65`), avec un BDOS
