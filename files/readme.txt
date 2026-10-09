@@ -68,28 +68,13 @@ PAUSE [texte] | attend une touche
 SPLIT         | image + 10 lignes
 TEXT          | texte seul
 GCLS          | efface l'image
-PEN m         | 0 efface 1 trace 2
-              |   inv.
-PLOT x y      | point (x 0-239, y
-              |   0-127)
-LINE x1 y1 x2 y2
-              | ligne
-BOX x1 y1 x2 y2
-              | rectangle
-FBOX x1 y1 x2 y2
-              | rectangle plein
-CIRCLE x y r  | cercle
-GTEXT col y texte
-              | texte dans l'image
-              |   (col 0-39)
-ATTR col y1 y2 v
-              | attribut : encre 0-7,
-              |   papier 16-23
-POINT x y     | affiche 1 si allume
 GSAVE fic     | sauve l'image (.IMG)
 GLOAD fic     | charge l'image
 NOM [param]   | lance NOM.COM, sinon
               |   NOM.BAT
+(dessin)      | PLOT, LINE... : dans
+              |   GRAPHER (HELP
+              |   GRAPHER)
 
 PROGRAMMES
 ----------
@@ -97,6 +82,14 @@ DIRS *.COM    | tous, caches (SYS)
               |   compris
 EDIT [fic]    | editeur de texte
 HEX fic       | editeur hexadecimal
+GRAPHER nom [p]
+              | execute NOM.GRX :
+              |   dessin, HIRES
+              |   240x200 (HELP
+              |   GRAPHER)
+VOIR nom      | affiche NOM.HIR
+              |   (plein ecran) ou
+              |   NOM.IMG, une touche
 SET afn [opt] | attributs : RO RW SYS
               |   DIR (sans opt : les
               |   affiche)
@@ -183,6 +176,45 @@ USBDIR [chemin]
               |   ajoutes a l'IMPORT
 X.DSK         | EXPORT refuse (image
               |   disque)
+
+GRAPHER : FICHIERS .GRX
+-----------------------
+GRAPHER nom [p]
+              | execute NOM.GRX
+              |   ($1..$9 = p, ESC
+              |   arrete)
+HIRES         | plein ecran 240 x
+              |   200, efface
+SPLIT         | 240 x 128, console
+              |   dessous
+TEXT          | retour au texte
+GCLS          | efface l'image
+PEN m         | 0 efface 1 trace 2
+              |   inv.
+PLOT x y      | point (x 0-239, y
+              |   0-199)
+LINE x1 y1 x2 y2
+              | ligne
+BOX x1 y1 x2 y2
+              | rectangle (FBOX :
+              |   plein)
+CIRCLE x y r  | cercle
+GTEXT col y texte
+              | texte dans l'image
+              |   (col 0-39)
+ATTR col y1 y2 v
+              | attribut : encre 0-7,
+              |   papier 16-23
+GLOAD fic     | .HIR (HIRES) ou .IMG
+              |   (SPLIT)
+GSAVE fic     | idem, selon le mode
+WAIT          | attend une touche
+DELAY n       | attend n/50 s
+ECHO texte    | affiche (pas en
+              |   HIRES)
+END           | fin ; HIRES : une
+              |   touche
+; texte       | commentaire
 
 EDIT
 ----

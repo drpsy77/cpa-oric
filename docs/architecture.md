@@ -16,7 +16,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 |---|---|---|---|
 | BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque | `src/bios.s`, `src/disk.s` | commun (disque : `-DDISK`) |
 | BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
-| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/PUT/DO… : disque (TYPE, ERA, REN : `.COM`) |
+| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/PUT/DO… : disque (TYPE, ERA, REN : `.COM` ; commandes de dessin : GRAPHER.COM, ROM seulement au prompt) |
 | Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
 | Programmes | fichiers `.COM` chargés en `$0500` (un nom sans `.COM` se rabat sur le script `.BAT`) | `progs/*.s` | disque (la ROM pourra en intégrer un) |
 
@@ -88,7 +88,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | Zone | Version disquette | Version ROM |
 |---|---|---|
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
-| `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT | idem |
+| `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
 | `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F5B0`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDA8-$FDAF`, `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, tables en `$FF00` (comme la disquette), reste libre |
 
@@ -125,7 +125,13 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 ## 5. Conventions
 
 - Fichiers `progs/*_tab.s` (tables) et `progs/*_inc.s` (bibliothèques) : inclus par un
-  programme, jamais assemblés seuls.
+  programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
+  disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
+  pour ne gêner aucun programme.
+- HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
+  en `$BFDF` hors du mode SPLIT a l'écran pour lui ; le système le reconnaît (`hires_on`) et
+  n'y dessine rien (FUNCT ignoré, voyants, curseur éteint par le programme) ; le démarrage à
+  chaud remet le texte, la police et un historique vide.
 - Assembleur : syntaxe `xa` de l'OSDK. Les programmes de `progs/` restent dans le sous-ensemble
   compris par ASM.COM (pas de `&étiquette`, pas de `#define`) : `tools/test_asm.sh` le vérifie.
   Le système (`src/`) peut utiliser tout `xa`.

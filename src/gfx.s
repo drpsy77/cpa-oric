@@ -275,6 +275,7 @@ ct_r    rts
 
 video_text
         jsr cur_off_sys
+        jsr font_init           ; écrasée si l'on revient du HIRES plein
         jsr video_vars_text
         lda #ATTR_TEXT50
         sta SCREEN+LAST_ROW*40+COLS-1 ; plus de bascule en fin d'écran

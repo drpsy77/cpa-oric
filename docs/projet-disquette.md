@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F501`, marge 367 octets jusqu'à `$F670`, 490 sans l'option `CPLCMD` ; page `$FF00-$FFB7`, marge 66
+**Système** (`$C000-$F450`, marge 544 octets jusqu'à `$F670`, 667 sans l'option `CPLCMD` ; page `$FF00-$FFB7`, marge 66
 octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
@@ -30,8 +30,10 @@ octets jusqu'aux vecteurs) :
   utilisable), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ, départ simultané des voix,
   mélangeur son et bruit par voix) ;
-- CCP : DIR, DIRS, SAVE, VER, CLS, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX,
-  FBOX, CIRCLE, GTEXT, ATTR, POINT, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
+- HIRES plein écran (240 × 200) laissé aux programmes (`progs/hires.inc`) : le système le
+  reconnaît (`$1E` en `$BFDF` hors SPLIT) et n'y dessine rien ; retour au texte assuré par le
+  démarrage à chaud ;
+- CCP : DIR, DIRS, SAVE, VER, CLS, SPLIT, TEXT, GCLS, GSAVE, GLOAD, PUT (sortie vers un fichier), DO (scripts
   `.BAT` avec `$1`-`$9`, lancés aussi par leur nom, appel de script à script par XDO.COM),
   ECHO, PAUSE.
 
@@ -45,7 +47,9 @@ avec RENDS, écran texte, aller-retour avec EDIT par EDITE), ASM
 désassembleur symbolique, pas à pas), STAT (taille des fichiers en enregistrements, blocs et
 octets ; place libre), MEM (carte mémoire), POKE et GO (écrire et lancer du code), XDO (appel
 de script à script), COPY (jokers admis, comme PIP), TYPE, ERA (avec confirmation), REN,
-GTEST, HELLO ; EXPORT, IMPORT et USBDIR (échange de fichiers avec
+GTEST, HELLO ; GRAPHER (dessin par fichiers `.GRX`, HIRES plein écran ou SPLIT ; les
+commandes de dessin du prompt y sont passées) et VOIR (affiche une image `.HIR` ou `.IMG`) ;
+EXPORT, IMPORT et USBDIR (échange de fichiers avec
 la clé USB du LOCI) ; FORMAT (formatage, un seul lecteur possible, `/Q` rapide) ; DISKCOPY
 (copie de disquette, un seul lecteur possible ; `/S` : système seul, comme SYSGEN).
 Disquette livrée : commandes et applications protégées (R/O) et visibles, exemples modifiables ;
@@ -616,6 +620,8 @@ lecteur dès que c'est possible.
 | L5 | **EDIT** : raccourci clavier pour « Insérer » (proposé : `^K`, libre ; à confirmer) et impression du texte (article « Imprimer » du menu Fichier et raccourci, par la fonction 5 du BDOS, CR LF à chaque ligne ; sans imprimante, rien ne bloque) | ~150-300 o dans EDIT.COM | **fait** (raccourci `^L`, pas `^K` qui est la flèche haut ; essayé dans Oricutron) |
 | LB | **Disquettes par usage** (décidé avec Pierre, octobre 2026) : `build.sh` fabrique `cpa-logo.dsk` (EDIT, LOGO, DEMO.LOG, DESSIN.BAT), `cpa-notes.dsk` (EDIT) et `cpa-asm.dsk` (EDIT, ASM, DEBUG, HEX, CPA.INC, HELLO et GTEST ; MEM, POKE, GO cachés). Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR) sont **R/O et SYS** : DIR ne montre que l'outil et le travail. EDIT reste visible partout (« presque » système, mais une commande doit se voir). `mkdisk.py new` reçoit `--sys` / `--dir`. Usage conseillé : disquette d'usage en A:, données en B:. `cpa.dsk` inchangée (tout visible). HELP PROGRAMMES rappelle `DIRS *.COM` | rien dans le système ; HELP.COM +1 ligne | **fait** (essayé dans Oricutron : DIR, DIRS, STAT, ASM HELLO sur `cpa-asm.dsk` ; reste le LOCI) |
 | LC | **Paragraphes et limites** (décidé avec Pierre, octobre 2026) : un paragraphe d'EDIT n'a pas de limite, mais ses lecteurs en ont (LOGO 126 par ligne, DO 78, l'imprimante sa largeur) et elles étaient invisibles. (1) **LOGO** : `CHARGE` refusait en silence la fin d'une ligne de plus de 126 caractères ; il s'arrête maintenant sur `Ligne de plus de 126 car. : L n` (n = numéro de ligne, comme `L` dans EDIT). Pas de listes sur plusieurs lignes (choix de Pierre : on concatène avec PH) ; (2) **EDIT** : `C` = position dans le paragraphe (et non plus colonne à l'écran) ; **`EDIT.CFG`** (texte, une règle par ligne : `[d:]afn maxi [MOTS\|CAR] [largeur]`, la première qui correspond s'applique, cherché sur le lecteur du document puis A:, lu à l'ouverture et à « Enreg. sous », réglages intégrés `*.LOG 126` et `*.BAT 78` sans lui) ; au-delà de maxi, `C nnn!` en inverse ; **^N** / Chercher, Trop long : premier caractère en trop du paragraphe trop long suivant ; Statistiques : plus long paragraphe et son numéro ; (3) **impression** coupée entre les mots à largeur-1 (pas de ligne blanche sur une imprimante qui passe d'elle-même à la ligne), mot trop long coupé au caractère. `EDIT.CFG` livré (R/W ; SYS sur les disquettes par usage) | rien dans le système ; EDIT.COM 6 656 -> 8 192 octets (texte : ~32 Ko au lieu de ~34) ; LOGO.COM +~40 o | **fait** (essayé dans Oricutron : `C127!`, ^N, Statistiques, règle par fichier, EDIT.CFG trouvé sur A: pour un document sur B:, impression à 30 et 40 colonnes ; reste le vrai Oric et une vraie imprimante) |
+| LD | **HIRES plein écran par une bibliothèque** (décidé avec Pierre, octobre 2026 ; plutôt qu'un mode 3 résident de la fonction 115) : `progs/hires.inc` (`HIRES.INC` sur les disquettes), incluse par un programme : plein écran 240 × 200 et SPLIT avec les mêmes routines (`h_full`, `h_split`, `h_text`, `h_cls`, `h_pen`, `h_plot`, `h_line`, `h_box`, `h_fbox`, `h_circle`, `h_print`, `h_attr`, `h_point`, `h_load`/`h_save` .HIR ou .IMG, `h_key`), tables propres (200 lignes, x / 6, masques, copie de la police : 1,6 Ko après la fin du programme), page zéro `$C0-$C7`, étiquettes internes `hz_`. Règle : le programme prend l'écran et n'écrit pas sur la console avant `h_text`. **Filet résident** (~46 o) : `hires_on` (vmode = 0 et `$1E` en `$BFDF`) ; FUNCT ignoré, voyants non redessinés ; démarrage à chaud et reprise après plantage : retour au texte, police, écran, et historique des lignes vidé (`$BA80-$BB7F` recouvert par l'image) ; `video_text` recopie la police. **VOIR.COM** (`.HIR` plein écran, `.IMG` SPLIT, une touche) ; **`tools/png2hir.py`** (Pillow : mise à l'échelle, trame Floyd-Steinberg ou seuil, `--split`, `--apercu`). Aucun changement du contrat d'interface. La piste H (masque calculé) devient inutile pour ce besoin et reste en réserve | VOIR 1,7 Ko ; résident +46 o | **fait** (Oricutron : VOIR plein écran et SPLIT, FUNCT ignoré, programme qui sort sans `h_text`, flèche haut après le HIRES ; reste le vrai Oric : bascule du circuit vidéo, 3 lignes du bas noires) |
+| LE | **GRAPHER.COM, palier 2** (décidé avec Pierre : commandes en anglais, fichiers `.GRX`, nom GRAPHER) : exécute un fichier de commandes graphiques, une par ligne : HIRES, SPLIT, TEXT, GCLS, PEN, PLOT, LINE, BOX, FBOX, CIRCLE, GTEXT, ATTR, GLOAD/GSAVE (.HIR en HIRES, .IMG en SPLIT ; depuis le texte, le type choisit le mode), WAIT, DELAY (1/50 s), ECHO (pas en HIRES), END, `;` ; `$1`-`$9` (casse d'origine, `ORIG_LINE`) ; erreurs `L n COMMANDE : message` ; ESC entre deux lignes (une autre touche est gardée pour WAIT) ; en fin de fichier, HIRES attend une touche, SPLIT reste au-dessus du prompt ; lancé en SPLIT, dessine sur l'image en place. Dessin par `hires.inc`, pas par la fonction 115. **Les commandes PEN, PLOT, LINE, BOX, FBOX, CIRCLE, GTEXT, ATTR, POINT quittent le CCP de la version disque** (la ROM les garde) ; SPLIT, TEXT, GCLS, GSAVE, GLOAD restent. `DESSIN.BAT` devient `DESSIN.GRX` ; `ECRAN.GRX` (plein écran, couleurs par attributs). Paliers suivants, à décider à l'usage : (3) variables entières, expressions, boucles, SI ; (4) traduction d'un `.GRX` en `.ASM` (appels de `hires.inc`, assemblé par ASM) | GRAPHER 3,4 Ko ; résident −224 o | **fait** (Oricutron : ECRAN, DESSIN avec paramètre, erreurs, ESC, GSAVE puis GLOAD .HIR depuis le texte ; ASM identique à xa pour VOIR et GRAPHER) |
 
 La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,
 voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par ESC des commandes
@@ -717,7 +723,7 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
 
 ## Contraintes à garder en tête
 
-- 367 octets libres dans la zone du code (490 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
+- 544 octets libres dans la zone du code (667 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
   justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
   plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H et
   I de la revue de place (~325 octets) ; J (TYPE, ERA et REN en `.COM`) est faite.
