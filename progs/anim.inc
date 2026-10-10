@@ -16,22 +16,26 @@
 ;               animation ; C=0 : A = 0 (passages finis, la dernière image
 ;               reste à l'écran) ou la touche qui a arrêté.
 ;            Flèches gauche / droite : la phase du timer recule ou avance
-;            de 8 lignes (calage de la ligne de déchirure, à la main).
+;            de 8 lignes (calage de la ligne de déchirure, à la main,
+;            gardé jusqu'au prochain démarrage, comme celui de VSYNC).
 ;  a_msg     A = code d'erreur -> A/Y = message (terminé par 0)
 ;  a_grx     pour GRAPHER /A : A = passages, nom après l'appel (lecteur,
 ;            puis 11 caractères) ; une erreur ou ESC appelle a_fail (A/Y =
 ;            message), que le programme définit.
 ;
 ;  Cadence : chaque image s'affiche au top 50 Hz qui suit son délai (pas
-;  de dérive si le décodage déborde). Pendant l'animation, T1 tourne à
-;  19 968 cycles, la durée d'une trame vidéo (312 lignes x 64) : la
-;  ligne de déchirure ne bouge plus. Il est remis à 20 000 à la fin
-;  (le démarrage à chaud le remet aussi).
+;  de dérive si le décodage déborde). Le timer du système tourne à
+;  19 968 cycles, la durée d'une trame vidéo (312 lignes x 64) : le top
+;  tombe toujours à la même ligne du balayage, et la ligne de déchirure
+;  ne bouge pas. VSYNC.COM cale le top sur la fin de l'image (ligne
+;  200) : le décodage commence quand le faisceau a quitté l'image, et
+;  rien ne se déchire tant qu'il reste devant lui. Les flèches décalent
+;  ce top : le réglage vaut jusqu'au prochain démarrage à froid.
 ; =====================================================================
 
 A_T1LL  = $0306         ; latch du timer 1 du 6522
-A_LOCK  = 19966         ; période 19 968 cycles = une trame vidéo
-A_SYS   = 19998         ; réglage du système (src/hw.inc, T1_PERIOD)
+A_LOCK  = 19966         ; période du système (src/hw.inc, T1_PERIOD) :
+                        ; 19 968 cycles = une trame vidéo
 A_STEP  = 512           ; 8 lignes de 64 cycles
 
 a_play
@@ -95,11 +99,7 @@ hz_sg   lda (hs),y
 hz_bad  lda #4
         sec
         rts
-hz_go   lda #<A_LOCK            ; timer calé sur la trame vidéo
-        sta A_T1LL
-        lda #>A_LOCK
-        sta A_T1LL+1
-        lda SYS_TICKS           ; première image : au prochain top
+hz_go   lda SYS_TICKS           ; première image : au prochain top
         sta a_tg
         lda SYS_TICKS+1
         sta a_tg+1
@@ -193,13 +193,7 @@ hz_rf   lda #1                  ; a_p = image de retour
         sta a_rt
         jmp hz_pl
 hz_end  lda #0
-hz_key  pha
-        lda #<A_SYS             ; timer du système
-        sta A_T1LL
-        lda #>A_SYS
-        sta A_T1LL+1
-        pla
-        clc
+hz_key  clc
         rts
 .)
 

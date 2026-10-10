@@ -91,7 +91,7 @@ theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM build
 BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
 BASE_TOUT=$BASE
 BASE=$BASE_SANS_VOIR
-theme build/cpa-anim.dsk "$P/VOIR.COM $P/GRAPHER.COM $P/ASM.COM" \
+theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/ASM.COM" \
   "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT

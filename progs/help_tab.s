@@ -112,6 +112,10 @@ h_1
         .asc "              |   une touche) ;",13,10
         .asc "              |   fleches G D : ligne",13,10
         .asc "              |   de dechirure",13,10
+        .asc "VSYNC         | cale le top 50 Hz sur",13,10
+        .asc "              |   l'ecran (texte du",13,10
+        .asc "              |   milieu en entier),",13,10
+        .asc "              |   jusqu'a l'arret",13,10
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10
         .asc "              |   DIR (sans opt : les",13,10
         .asc "              |   affiche)",13,10

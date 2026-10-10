@@ -62,6 +62,7 @@ SECTIONS = [
   ("GRAPHER nom [p]", "execute NOM.GRX : dessin, HIRES 240x200 (HELP GRAPHER)"),
   ("VOIR nom", "affiche NOM.HIR (plein ecran), .HIZ (compressee) ou .IMG, une touche"),
   ("VOIR nom.ANI [n]", "animation jouee n fois (0 : jusqu'a une touche) ; fleches G D : ligne de dechirure"),
+  ("VSYNC", "cale le top 50 Hz sur l'ecran (texte du milieu en entier), jusqu'a l'arret"),
   ("SET afn [opt]", "attributs : RO RW SYS DIR (sans opt : les affiche)"),
   ("LOGO [fic]", "Logo et sa tortue (charge fic.LOG)"),
   ("ASM nom", "NOM.ASM -> NOM.COM et NOM.SYM"),

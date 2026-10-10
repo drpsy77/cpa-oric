@@ -21,7 +21,8 @@ PCR_IDLE    = $DD       ; AY inactif
 PCR_LATCH   = $FF       ; AY : sélection de registre
 PCR_WRITE   = $FD       ; AY : écriture de donnée
 
-T1_PERIOD   = 19998     ; 20 ms à 1 MHz -> interruption à 50 Hz
+T1_PERIOD   = 19966     ; période 19 968 cycles (N+2) = une trame vidéo (312 x 64) :
+                        ; top à 50,08 Hz, toujours à la même ligne du balayage
 
 ; --- Écran ---
 SCREEN      = $BB80

@@ -97,6 +97,10 @@ VOIR nom.ANI [n]
               |   une touche) ;
               |   fleches G D : ligne
               |   de dechirure
+VSYNC         | cale le top 50 Hz sur
+              |   l'ecran (texte du
+              |   milieu en entier),
+              |   jusqu'a l'arret
 SET afn [opt] | attributs : RO RW SYS
               |   DIR (sans opt : les
               |   affiche)
