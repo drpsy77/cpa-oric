@@ -36,7 +36,7 @@ SECTIONS = [
   ("HELP [sujet]", "aide (HELP.COM)"),
   ("VER", "version"),
   ("CLS", "efface l'ecran"),
-  ("B:", "lecteur courant (A: a D:) ; aussi menu Systeme, Lecteur suivant ; un .COM absent est cherche sur A:"),
+  ("B:", "lecteur courant (A: a D:) ; aussi menu Systeme, Lecteur suivant ; un .COM ou .BAT tape sans lecteur est cherche sur le lecteur courant (dans un script : celui du script), puis A:, B:, C:, D: (un lecteur vide est saute ensuite)"),
   ("DIR [afn]", "liste des fichiers"),
   ("DIRS [afn]", "idem, fichiers SYS compris"),
   ("TYPE fic", "affiche un texte"),

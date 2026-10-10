@@ -446,7 +446,7 @@ hasext  ldx #0
         ldx #3
         jsr cmp_type
         bne notcom
-try_bat jsr open_ccp            ; script : comme DO NOM [p1..p9]
+try_bat jsr open_com            ; script : comme DO NOM [p1..p9]
         beq notcom
         jsr cmd_do              ; reprend le nom à ccp_pos (type BAT)
         pla                     ; retour direct au prompt
@@ -536,33 +536,61 @@ r       rts
 .)
 type_tab .asc "COMBAT"
 
-; open_com : comme open_ccp ; un programme sans lecteur donné qui n'est
-;   pas sur le lecteur courant est cherché sur A: (disquette système)
+;  open_com : ouvre le FCB (ZP_CFCB) d'un programme ou d'un script ;
+;   Z=1 si introuvable. Un nom avec lecteur n'est cherché que là. Sans
+;   lecteur : d'abord le lecteur du script en cours (au prompt : le
+;   lecteur courant), puis A:, B:, C:, D:, sauf ceux qui n'ont pas répondu
+;   depuis le démarrage (bad_vec : un lecteur vide coûte ~3 s, payées
+;   une fois). Trouvé : le lecteur reste dans l'octet 0 du FCB.
 open_com
 .(
-        jsr open_ccp
+        ldy #0
+        lda (ZP_CFCB),y
+        bne open_cf             ; lecteur donné : là seulement
+        ldx cur_drv
+        lda scr_on
+        beq f
+        ldx scr_fcb             ; lecteur du script (1-4)
+        dex
+f       stx oc_first
+        inx
+        jsr try
         bne r
-        lda cur_drv
-        beq r                   ; (Z=1 : introuvable)
-        lda CCP_FCB
-        bne nf
-        inc CCP_FCB             ; A:
-        jsr open_ccp
+        inc io_quiet            ; lecteurs suivants : sans message
+        ldx #0
+l       cpx oc_first
+        beq nx
+        lda bitmask,x
+        and bad_vec
+        bne nx
+        inx
+        jsr try
         bne r
-        dec CCP_FCB             ; (Z=1)
-r       rts
-nf      lda #0
+        ldy #0
+        lda (ZP_CFCB),y
+        tax
+        dex
+nx      inx
+        cpx #NDRV
+        bcc l
+        lda #0                  ; introuvable : lecteur remis à 0 (Z=1)
+        tay
+        sta (ZP_CFCB),y
+r       php
+        lda #0
+        sta io_quiet
+        plp
         rts
-.)
-
-; open_ccp : ouvre CCP_FCB, Z=1 si introuvable
-open_ccp
-        ldx #15
-        lda #<CCP_FCB
-        ldy #>CCP_FCB
+try     txa                     ; lecteur X (1-4) dans le FCB, puis ouvre
+        ldy #0
+        sta (ZP_CFCB),y
+open_cf ldx #15
+        lda ZP_CFCB
+        ldy ZP_CFCB+1
         jsr bdos
         cmp #$FF
         rts
+.)
 
 no_file
         lda #<msg_nofile

@@ -23,8 +23,15 @@ h_default
         .asc "              |   D:) ; aussi menu",13,10
         .asc "              |   Systeme, Lecteur",13,10
         .asc "              |   suivant ; un .COM",13,10
-        .asc "              |   absent est cherche",13,10
-        .asc "              |   sur A:",13,10
+        .asc "              |   ou .BAT tape sans",13,10
+        .asc "              |   lecteur est cherche",13,10
+        .asc "              |   sur le lecteur",13,10
+        .asc "              |   courant (dans un",13,10
+        .asc "              |   script : celui du",13,10
+        .asc "              |   script), puis A:,",13,10
+        .asc "              |   B:, C:, D: (un",13,10
+        .asc "              |   lecteur vide est",13,10
+        .asc "              |   saute ensuite)",13,10
         .asc "DIR [afn]     | liste des fichiers",13,10
         .asc "DIRS [afn]    | idem, fichiers SYS",13,10
         .asc "              |   compris",13,10

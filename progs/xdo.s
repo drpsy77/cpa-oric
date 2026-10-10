@@ -80,11 +80,7 @@ typed   jsr get_par             ; ses paramètres, casse d'origine
         lda #0
         sta pend
 
-        ldx #F_OPEN             ; 1. le script appelé
-        lda #<bfcb
-        ldy #>bfcb
-        jsr BDOS
-        cmp #$FF
+        jsr open_b              ; 1. le script appelé
         bne opened
         lda #<msg_nofile
         ldy #>msg_nofile
@@ -356,6 +352,53 @@ r       rts
 cmd_do  .asc "DO $$$",0
 msg_use .asc "XDO NOM [p1..p9] : appel d'un script",13,10
         .asc "par un script (lance par le CCP)",13,10,"$"
+; open_b : ouvre bfcb, Z=1 si introuvable. Sans lecteur donné, même
+;   recherche que le CCP : lecteur du script appelant (sans script : le
+;   lecteur courant), puis A: à D:, sauf ceux qui n'ont pas répondu.
+open_b
+.(
+        lda bfcb
+        bne one                 ; lecteur donné : là seulement
+        ldx afcb                ; lecteur de l'appelant (1-4)
+        lda was_on
+        bne f
+        ldx #F_CURDSK
+        jsr BDOS
+        tax
+        inx
+f       stx t2
+        jsr try
+        bne r
+        inc IO_QUIET            ; lecteurs suivants : sans message
+        ldx #1
+l       cpx t2
+        beq nx
+        lda bits-1,x
+        and BAD_VEC
+        bne nx
+        jsr try
+        bne r
+        ldx bfcb
+nx      inx
+        cpx #5
+        bcc l
+        lda #0                  ; introuvable (Z=1)
+        sta bfcb
+r       php
+        lda #0
+        sta IO_QUIET
+        plp
+        rts
+try     stx bfcb
+one     ldx #F_OPEN
+        lda #<bfcb
+        ldy #>bfcb
+        jsr BDOS
+        cmp #$FF
+        rts
+bits    .byt 1,2,4,8
+.)
+
 msg_nofile .asc "Script introuvable",13,10,"$"
 msg_disk .asc "Erreur disque (XDO)",13,10,"$"
 msg_big .asc "Scripts trop longs (XDO)",13,10,"$"

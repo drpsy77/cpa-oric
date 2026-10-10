@@ -106,6 +106,8 @@ S_MIXER     = 8         ; voix, son (0/1), bruit (0/1)
 SCR_ON      = $02AF     ; 1 = script en cours
 SCR_IDX     = $02B0     ; position dans SCR_BUF (128 : enregistrement à lire)
 SCR_FCB     = $F6C0     ; FCB du script, ouvert (36 octets)
+BAD_VEC     = $FDAA     ; bit n : lecteur n sans réponse (interne, recherche des scripts)
+IO_QUIET    = $FDAC     ; <> 0 : erreur disque sans message (interne)
 SCR_BUF     = $F6E4     ; enregistrement en cours (128 octets)
 SCR_PAR     = $F764     ; paramètres $1-$9, séparés par des espaces (80 octets)
 ORIG_LINE   = $F670     ; ligne de commande en cours, casse d'origine, 0 à la fin

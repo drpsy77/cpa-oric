@@ -79,7 +79,7 @@ internes : cela libère près de 300 octets dans le système. De même, les comm
 (`PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `PEN`) ne sont plus au prompt de
 la version disquette : elles sont dans `GRAPHER.COM`, qui exécute un fichier de commandes
 graphiques et dessine aussi en HIRES plein écran (voir « GRAPHER »). La version ROM les garde. On les tape de la même façon, y
-compris dans les scripts et après PUT ; depuis un autre lecteur, ils sont cherchés sur A:.
+compris dans les scripts et après PUT ; depuis un autre lecteur, ils sont cherchés sur A: (voir « Lecteurs »).
 
 Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP :
 
@@ -131,9 +131,16 @@ Tout nom de fichier peut commencer par un lecteur : `DIR B:`, `TYPE B:LETTRE.TXT
 `COPY LETTRE.TXT B:`, `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (le `.COM`,
 le `.SYM` et les `#include` sont sur le lecteur de la source), et dans LOGO `CHARGE "B:JEU`.
 Sans lecteur, c'est le lecteur courant, choisi par `B:` au prompt ou par l'article **Lecteur
-suivant** du menu Systeme (A, B, C, D, puis A). Un programme tapé sans lecteur
-qui n'est pas sur le lecteur courant est cherché sur `A:` : depuis `B>`, `EDIT`, `LOGO` ou
-`STAT` se lancent depuis la disquette système.
+suivant** du menu Systeme (A, B, C, D, puis A). Un programme (`.COM`) ou un script
+(`.BAT`, aussi par `DO`) tapé sans lecteur est cherché sur le lecteur courant, puis sur `A:`,
+`B:`, `C:` et `D:` : depuis `B>`, `EDIT`, `LOGO` ou `STAT` se lancent depuis la disquette
+système. Dans un script, la recherche commence par le lecteur du script : un script et ses
+programmes rangés sur une même disquette se trouvent, quel que soit le lecteur où elle est
+(ensuite `A:`, puis les autres). Un lecteur vide ou absent coûte environ 3 s la première
+fois ; il est ensuite sauté par cette recherche, jusqu'à ce qu'on le lise de nouveau (`C:`,
+`DIR C:`...). Un nom tapé avec son lecteur (`C:PROG`) n'est cherché que là. Limite : la
+fin d'un script qui en a appelé un autre est lue depuis `$$$.BAT`, écrit sur le lecteur
+courant ; c'est alors ce lecteur qui passe en premier.
 
 Chaque lecteur a la même organisation de disquette. Une disquette de données (sans système)
 se prépare sur l'Oric avec `FORMAT B:`, ou sur le PC : `python3 tools/mkdisk.py new
@@ -222,7 +229,7 @@ Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée,
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
-`B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont cherchés sur `A:`, et `DIR` ne montre que
+`B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont trouvés sur `A:`, et `DIR` ne montre que
 le travail en cours. `build/cpa.dsk` reste la disquette complète, tout visible.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
