@@ -34,6 +34,10 @@ cb_clr  sta $00,x
         jsr ram_test            ; teste la TPA et la remplit de $00 (BRK)
         jsr video_vars_text
         jsr hw_init
+        lda #<T1_PERIOD
+        sta VIA_T1CL
+        lda #>T1_PERIOD
+        sta VIA_T1CH            ; démarre le timer (seulement ici)
         jsr font_init
 
         ; --- État initial ---
@@ -134,12 +138,10 @@ hw_init
         sta VIA_PCR
         lda #$40
         sta VIA_ACR             ; T1 en mode continu, sans sortie PB7
-        lda #<T1_PERIOD
-        sta VIA_T1LL
-        sta VIA_T1CL
-        lda #>T1_PERIOD
-        sta VIA_T1LH
-        sta VIA_T1CH            ; démarre le timer
+        lda #<T1_PERIOD         ; la période seulement : le compteur n'est
+        sta VIA_T1LL            ; lancé qu'au démarrage à froid, la phase
+        lda #>T1_PERIOD         ; du top (calée par VSYNC) tient donc
+        sta VIA_T1LH            ; jusqu'au prochain démarrage
         ldx #13                 ; AY : tout silencieux, port A en sortie
 hw_ay   lda #0
         cpx #7

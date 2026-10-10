@@ -216,7 +216,7 @@ y est partout, protégé et visible.
 | `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
@@ -669,10 +669,20 @@ longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
 - Cadence : chaque image a son délai (1/50 s) et part au top 50 Hz qui suit ; si le décodage
   déborde, l'image attend le top suivant, sans dérive.
 - **Déchirure.** L'Oric n'a qu'un écran : une image se dessine pendant que le faisceau balaie.
-  Pendant l'animation, le timer de l'IRQ passe à 19 968 cycles (une trame vidéo) au lieu de
-  20 000 : la ligne de déchirure ne bouge plus. Les **flèches gauche et droite** la déplacent
-  de 8 lignes ; on la met là où rien ne change. Le timer est remis à la fin (et par le
-  démarrage à chaud).
+  Le timer de l'IRQ du système tourne à 19 968 cycles, une trame vidéo exacte (top à 50,08 Hz),
+  et n'est relancé qu'au démarrage à froid : le top tombe toujours à la même ligne du balayage,
+  et la ligne de déchirure ne bouge pas. Les **flèches gauche et droite** la déplacent de
+  8 lignes ; on la met là où rien ne change. Ce réglage tient jusqu'au prochain démarrage.
+- **VSYNC** cale le top sur la fin de l'image, comme le réglage du début d'Oricium (l'Oric n'a
+  pas de signal de synchronisation que le programme puisse lire). Un texte caché au milieu de
+  l'écran n'est rendu visible que pendant 8 lignes de balayage, à un instant fixe après le
+  top ; les flèches décalent le top (gauche / droite : 1 ligne, haut / bas : 8 lignes) jusqu'à
+  voir le texte en entier et immobile, RETURN garde le réglage (ESC l'annule). Une image se
+  décode alors juste après que le faisceau a quitté l'image, et ne se déchire pas si elle tient
+  dans le temps où il revient : environ 7 000 cycles, plus 64 par ligne en descendant (une
+  petite figure qui bouge). Les démos changent trop de points par image (10 000 à 75 000
+  cycles) : la déchirure y reste, à un endroit fixe. À faire une fois après l'allumage ; à
+  essayer sur un vrai Oric.
 - Dans un programme : `#include "ANIM.INC"` **avant** `HIRES.INC` (qui reste à la fin), puis
   `a_play` (A/Y = FCB, X = passages ; C=1 si erreur, `a_msg` donne le message). `GRAPHER /A`
   n'inclut `ANIM.INC` que si le programme se sert d'ANIM.
