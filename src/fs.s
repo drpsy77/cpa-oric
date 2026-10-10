@@ -112,10 +112,12 @@ io_err
         lda #0
         sta buf_ok
         sta buf_dirty
+        lda io_quiet            ; recherche d'un programme : lecteur vide
+        bne ie_q                ; essayé sans message
         lda #<msg_ioerr
         ldy #>msg_ioerr
         jsr print_z
-        sec
+ie_q    sec
         rts
 
 set_secbuf
@@ -339,8 +341,10 @@ r       rts
 drv_select
 .(
         cmp #NDRV
-        bcs bad
-        cmp act_drv
+        bcc in
+        lda #$FF                ; lecteur inconnu (C=1)
+        rts
+in      cmp act_drv
         beq same
         sta act_drv
         tax
@@ -387,6 +391,10 @@ next    inc dir_i
         pla
         sta dir_i
         ldx act_drv
+        lda bitmask,x           ; lu : il répond de nouveau
+        eor #$FF
+        and bad_vec
+        sta bad_vec
         lda bitmask,x
         ora log_vec
         sta log_vec
@@ -395,7 +403,11 @@ ok      lda #0
         rts
 err     pla
         sta dir_i
-bad     lda #$FF
+        ldx act_drv             ; sans réponse : la recherche des
+        lda bitmask,x           ; programmes le sautera
+        ora bad_vec
+        sta bad_vec
+        lda #$FF
         sec
         rts
 alv_ofs .byt 0,ALV_LEN,2*ALV_LEN,3*ALV_LEN

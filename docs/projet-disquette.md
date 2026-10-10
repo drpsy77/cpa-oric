@@ -11,7 +11,7 @@ données, communiquer (réseau par le LOCI).
 
 ## État (version 0.9)
 
-**Système** (`$C000-$F450`, marge 544 octets jusqu'à `$F670`, 667 sans l'option `CPLCMD` ; page `$FF00-$FFB7`, marge 66
+**Système** (`$C000-$F491`, marge 479 octets jusqu'à `$F670`, 602 sans l'option `CPLCMD` ; page `$FF00-$FFB7`, marge 66
 octets jusqu'aux vecteurs) :
 
 - console avec pause en fin d'écran, menus déroulants, reprise après plantage (BRK, RESET) ;
@@ -24,8 +24,9 @@ octets jusqu'aux vecteurs) :
   commandes internes et des `.COM` / `.BAT` sans leur type (option `CPLCMD`) ;
 - fichiers CP/M 2.2 : séquentiel, accès direct (33-36), attributs R/O et SYS (30) ;
 - quatre lecteurs A: à D: (Microdisc, LOCI, Oricutron) : `B:` au prompt, article « Lecteur
-  suivant » du menu Systeme, lecteur dans tout nom de fichier, programme cherché sur A: s'il
-  n'est pas sur le lecteur courant, lecteur vide ou absent sans blocage ;
+  suivant » du menu Systeme, lecteur dans tout nom de fichier, programme ou script tapé sans
+  lecteur cherché sur le lecteur courant (dans un script : celui du script), puis A: à D:,
+  lecteur vide ou absent sans blocage (sauté par cette recherche une fois constaté) ;
 - mode SPLIT (240 × 128 + barre + 10 lignes de texte ; bascule en `$BFDF` comme le BASIC, `$A000`
   utilisable), graphisme BDOS 115, images `.IMG` ;
 - son BDOS 116 (notes, bruit, enveloppe, durées gérées par l'IRQ, départ simultané des voix,
@@ -279,7 +280,8 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     `dsk_trk` en `$FDA4`. Démarrage à chaud : le lecteur courant est gardé et relu, retour en
     A: s'il ne répond plus. Changer de disquette demande un CTRL-C, comme sous CP/M.
   - CCP : `X:` seul change de lecteur (`X:?` si absent) ; invite `B>` ; un `.COM` sans lecteur
-    absent du lecteur courant est cherché sur A: (`open_com`, comme la recherche de CP/M 3) ;
+    absent du lecteur courant est cherché sur A: (`open_com`, comme la recherche de CP/M 3 ;
+    élargie en octobre 2026, voir « Recherche des programmes et des scripts ») ;
     DO fixe le lecteur de son script à l'ouverture (un `A:` dans un script de B: ne change pas
     sa lecture) ; DIR d'un lecteur illisible ne donne pas de place libre. Complétion par ESC
     sur le lecteur tapé (`B:NO` + ESC). Menu : « Lecteur suivant » tape `X:` (comme les autres
@@ -418,6 +420,29 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     `0:`, `B:` seul, erreurs (fichier absent, nom invalide, disque plein, `.DSK`), et
     `LOCI absent` sans la simulation. La simulation suit les sources du firmware
     (loci-firmware, `src/mia/api/std.c` et `dir.c`), pas le vrai LOCI.
+- Recherche des programmes et des scripts (Pierre, octobre 2026, après un essai sur le vrai
+  Oric : un `.BAT` de B: ne trouvait pas les `.COM` de sa disquette en C:, et une disquette
+  n'a pas de lettre fixe) : un `.COM` ou un `.BAT` tapé sans lecteur (aussi par `DO` et par
+  XDO.COM) est cherché sur le lecteur du script en cours (au prompt : le lecteur courant),
+  puis A:, B:, C:, D: dans l'ordre, sans essayer deux fois le même. Écartés par Pierre : un
+  chemin de recherche à la `PATH` (variable de plus dans le contrat) et un `$D` (lecteur du
+  script) à écrire dans les scripts. Choix :
+  - Un lecteur vide ou absent coûte ~3 s : `drv_select` (BDOS) note dans `bad_vec` (`$FDAA`,
+    remis à 0 au démarrage à froid seulement, contrairement à `log_vec`) chaque lecteur qui
+    n'a pas répondu, et l'efface dès qu'il est lu. La recherche saute ces lecteurs (sauf le
+    premier essayé) : on ne paie l'attente qu'une fois. Taper `C:` ou lire C: le réhabilite.
+  - Pendant la recherche, les lecteurs essayés après le premier ne donnent pas « BDOS: disk
+    I/O error » (`io_quiet`, `$FDAC`) ; un lecteur tapé explicitement garde le message.
+  - Un nom avec lecteur (`C:PROG`) n'est cherché que là. Trouvé, le lecteur reste dans le
+    FCB : le script garde son lecteur (comme avant).
+  - XDO.COM refait la même recherche (il connaît le lecteur de l'appelant, `afcb`) ; `BAD_VEC`
+    et `IO_QUIET` sont dans `cpa.inc` comme variables internes (comme `SCR_FCB`).
+  - Limite : la fin d'un script qui en a appelé un autre est lue dans `$$$.BAT`, écrit sur le
+    lecteur courant ; le « lecteur du script » est alors celui-là (puis A: à D:).
+  - Coût : 65 octets résidents (marge 544 -> 479 ; 602 sans `CPLCMD`), XDO.COM un enregistrement de plus ;
+    rien dans le contrat. Essayé dans Oricutron : script sur B: qui lance un `.COM` et un
+    `.BAT` de C:, `SUITE` et `DO SUITE` depuis A:, `B:ZZZ` refusé, `C:ZZZ`, D: absent
+    constaté puis sauté sans message ni attente, `D:` tapé (message, `D:?`).
 - FORMAT.COM (lot L2, octobre 2026) : 1 573 octets, rien de résident ; noms des entrées
   disque du BIOS (`B_SELDSK`... `B_WRITE`) et de la fonction 13 (`F_RESET`) ajoutés à
   `cpa.inc` (ce sont les entrées du contrat, simplement nommées). Choix :
@@ -766,7 +791,7 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
 
 ## Contraintes à garder en tête
 
-- 544 octets libres dans la zone du code (667 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
+- 479 octets libres dans la zone du code (602 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
   justifie, le reste va en `.COM` (le pilote série prévu en demande ~150 estimés, donc
   plutôt 300 : les estimations ont été dépassées du simple au double). Réserve : pistes H et
   I de la revue de place (~325 octets) ; J (TYPE, ERA et REN en `.COM`) est faite.

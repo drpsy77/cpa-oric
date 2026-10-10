@@ -56,18 +56,9 @@ alone   lda #<scr_fcb
         sta scr_fcb+10
         lda #"T"
         sta scr_fcb+11
-ext     ldx #15
-        lda #<scr_fcb
-        ldy #>scr_fcb
-        jsr bdos
-        cmp #$FF
-        bne found
-        jmp no_file
-found   lda scr_fcb             ; lecteur du script fixé : une ligne
-        bne fd                  ; « B: » du script ne change pas sa lecture
-        ldx cur_drv
-        inx
-        stx scr_fcb
+ext     jsr open_com            ; même recherche que les programmes ; le
+        bne fd                  ; lecteur trouvé reste dans scr_fcb : une
+        jmp no_file             ; ligne « B: » du script ne change pas sa lecture
 fd      ldx ccp_cnt             ; paramètres : la suite de la ligne
         jsr skip_spaces
         ldy #0
