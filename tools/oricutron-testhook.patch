@@ -308,7 +308,7 @@ index 00b7b0e..734c680 100644
 +static int mia_active(unsigned short addr)
 +{
 +  if (addr < 0x3A0 || addr > 0x3BF || !getenv("ORIC_LOCI")) return 0;
-+  if (!mia_init) { mia_init = 1; mia_xs[512] = 0; mia_ret(0xffff); }
++  if (!mia_init) { mia_init = 1; mia_xs[512] = 0; mia_ret(0xffff); mia_r[0x13] = 0x6C; mia_r[0x14] = 0xFC; mia_r[0x15] = 0xFF; mia_r[0x16] = 0x00; } /* comme le LOCI après le démarrage : JMP ($FFFC) en $03B3 */
 +  return 1;
 +}
 +static void mia_write(unsigned short addr, unsigned char data)

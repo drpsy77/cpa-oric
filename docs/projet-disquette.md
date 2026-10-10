@@ -386,6 +386,13 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
   - Le LOCI est reconnu au code que sa MIA place en `$03B0-$03B7` (CLV, BVC, LDA #, LDX #,
     RTS) avant tout `JSR $03B0` : sans LOCI, ces adresses sont celles du VIA, et l'appel
     planterait. Message `LOCI absent : cle USB inaccessible`.
+  - Corrigé après l'essai de Pierre sur le vrai LOCI (octobre 2026 : `LOCI absent` partout) :
+    après le démarrage d'une disquette, le firmware laisse en `$03B3` le code de démarrage
+    (`JMP ($FFFC)`, `api_return_boot` de loci-firmware), pas `LDA #` ; le code attendu n'y
+    revient qu'après une opération. `mia_chk` lance donc l'opération 0 (pile d'échange
+    vidée, réponse immédiate du LOCI) avant de lire `$03B0-$03B7`. Sans LOCI, cette écriture
+    en `$03AF` tombe sur le port A du VIA, sans effet. La simulation d'Oricutron démarre
+    maintenant dans le même état que le vrai LOCI (elle aurait montré l'erreur).
   - Chemins sans lecteur par défaut : FatFs du LOCI prend alors la première clé montée (son
     lecteur courant), quel que soit son numéro (`1:`, ou `2:` derrière un hub, le LOCI
     numérotant les appareils USB). `0:` (mémoire interne) et les chemins restent possibles.

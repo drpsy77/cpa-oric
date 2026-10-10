@@ -53,8 +53,16 @@ num     = $38           ; 4 octets : nombre affiché par pnum
 ; mia_chk : C=0 si le LOCI répond (pile d'échange vidée), sinon message
 ;   et C=1. On lit d'abord le code de $03B0 : sans LOCI, ces adresses
 ;   sont celles du VIA, et un JSR $03B0 planterait.
+;   L'opération 0 (vider la pile d'échange) est lancée AVANT la lecture :
+;   après le démarrage d'une disquette, le LOCI laisse en $03B3 le code
+;   de démarrage (JMP ($FFFC), loci-firmware api_return_boot) et non
+;   LDA # ; l'opération 0 y remet aussitôt CLV/BVC/LDA/LDX/RTS. Sans LOCI,
+;   l'écriture tombe sur un registre du VIA (port A sans poignée de main),
+;   sans effet : le son et le clavier réécrivent le port à chaque usage.
 mia_chk
 .(
+        lda #0                  ; opération 0 : vide la pile d'échange
+        sta MIA_OP
         lda $03B0
         cmp #$B8                ; CLV
         bne no
@@ -70,8 +78,6 @@ mia_chk
         lda $03B7
         cmp #$60                ; RTS
         bne no
-        lda #0                  ; opération 0 : vide la pile d'échange
-        sta MIA_OP
         clc
         rts
 no      lda #<m_noloci
