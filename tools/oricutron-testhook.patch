@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..d3353d7 100644
+index 00b7b0e..8cb8314 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,172 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,201 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -168,7 +168,10 @@ index 00b7b0e..d3353d7 100644
 +   Opérations faites d'un coup (pas d'attente) : 00 vide la pile, 14 open,
 +   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire.
 +   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
++static int loci_wedged = 0;                    /* voir mia_write */
++static struct machine *mia_oric = NULL;
 +#ifdef _WIN32
++#define mia_root() NULL
 +#define mia_active(addr) 0
 +#define mia_read(addr) 0
 +#define mia_write(addr, data)
@@ -311,9 +314,34 @@ index 00b7b0e..d3353d7 100644
 +  if (!mia_init) { mia_init = 1; mia_xs[512] = 0; mia_ret(0xffff); mia_r[0x13] = 0x6C; mia_r[0x14] = 0xFC; mia_r[0x15] = 0xFF; mia_r[0x16] = 0x00; } /* comme le LOCI après le démarrage : JMP ($FFFC) en $03B3 */
 +  return 1;
 +}
++/* XRAM du LOCI, fenêtre 1 ($03A8 données, $03A9 pas, $03AA-$03AB adresse) :
++   seule la zone gardée par le menu du LOCI (loci-rom, persist.c) est
++   simulée : "LOCI" en $8000, puis la configuration ; en $800B l'octet
++   mounts (bit n : lecteur n monté) d'après les disquettes insérées. */
++static unsigned short mia_xa1 = 0;
++static unsigned char mia_xram(unsigned short a)
++{
++  static const unsigned char magic[] = "LOCI";
++  int n, m = 0;
++  if (a >= 0x8000 && a < 0x8004) return magic[a - 0x8000];
++  if (a == 0x8004) return 1;                    /* fdc_on */
++  if (a == 0x800B && mia_oric) {                /* mounts */
++    for (n = 0; n < 4; n++) if (mia_oric->wddisk.disk[n]) m |= 1 << n;
++    return m;
++  }
++  return 0;
++}
++/* Contrôleur de disquettes du LOCI (loci-firmware, src/mia/oric/dsk.c) :
++   une commande pour un lecteur sans image n'est jamais terminée (état
++   occupé), et la tâche disque ne lit plus aucune commande, Force Interrupt
++   compris, jusqu'au redémarrage du LOCI. Simulé ici avec le LOCI. */
 +static void mia_write(unsigned short addr, unsigned char data)
 +{
 +  int i = addr - 0x3A0;
++  if (i == 0x0A || i == 0x0B) {
++    if (i == 0x0A) mia_xa1 = (mia_xa1 & 0xff00) | data; else mia_xa1 = (mia_xa1 & 0xff) | (data << 8);
++    mia_r[0x08] = mia_xram(mia_xa1);
++  }
 +  if (i == 0x0C) { if (mia_xp) mia_xs[--mia_xp] = data; mia_r[0x0C] = mia_xs[mia_xp]; }
 +  else if (i == 0x0F) { mia_r[0x0F] = data; mia_op(data); }
 +  else mia_r[i] = data;
@@ -322,6 +350,7 @@ index 00b7b0e..d3353d7 100644
 +{
 +  int i = addr - 0x3A0;
 +  unsigned char v = mia_r[i];
++  if (i == 0x08) { mia_xa1 += (signed char)mia_r[0x09]; mia_r[0x08] = mia_xram(mia_xa1); }
 +  if (i == 0x0C) { if (mia_xp < 512) mia_xp++; mia_r[0x0C] = mia_xs[mia_xp]; }
 +  return v;
 +}
@@ -330,23 +359,39 @@ index 00b7b0e..d3353d7 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,7 +683,9 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,8 +712,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
 -    if((addr >= 0x310) && (addr < 0x31c))
+-      microdisc_write(&oric->md, addr, data);
++    mia_oric = oric;
 +    if(mia_active(addr))
 +      mia_write(addr, data);
 +    else if((addr >= 0x310) && (addr < 0x31c))
-       microdisc_write(&oric->md, addr, data);
++    {
++      if(addr == 0x310 && mia_root() && !oric->wddisk.disk[oric->wddisk.c_drive])
++        loci_wedged = 1;                        /* LOCI : commande sans image */
++      if(!(loci_wedged && addr >= 0x310 && addr < 0x314))
++        microdisc_write(&oric->md, addr, data);
++    }
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
-@@ -918,6 +1086,8 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+       acia_write(&oric->tele_acia, addr, data);
+@@ -918,6 +1121,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {
++    mia_oric = oric;
 +    if(mia_active(addr))
 +      return mia_read(addr);
++    if(addr == 0x319 && mia_root())
++      return 'L';                               /* marque d'identité du LOCI */
++    if(loci_wedged && mia_root())
++    {
++      if(addr == 0x310) return 0x01;            /* occupé, pour toujours */
++      if(addr == 0x314 || addr == 0x318) return 0xff;
++    }
      if((addr >= 0x310) && (addr < 0x31c))
        return microdisc_read(&oric->md, addr);
  

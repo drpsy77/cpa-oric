@@ -103,6 +103,16 @@ usage   lda #<m_use
         jmp puts
 parsed  lda drv
         bmi usage
+        jsr loci_abs            ; LOCI sans image dans ce lecteur : on
+        bcc present             ; ne lui envoie aucune commande (elle
+        lda #<m_abs             ; bloquerait son contrôleur)
+        ldy #>m_abs
+        jsr puts
+        jsr pdrv
+        lda #<m_abs2
+        ldy #>m_abs2
+        jmp puts
+present
 
         ldx #F_RESET            ; tampon écrit, lecteurs oubliés
         jsr BDOS
@@ -146,6 +156,51 @@ back    lda drv                 ; A: : la disquette système, avant le
         jsr crlf
 wb      jmp WBOOT
 .)
+
+; ---------------------------------------------------------------------
+; loci_abs : C=1 si le lecteur drv n'a pas d'image sur le LOCI. Une
+;   commande pour un lecteur vide n'y est jamais terminée et fige son
+;   contrôleur jusqu'au redémarrage du LOCI. Même test que le pilote du
+;   système (src/disk.s) : "L" en $0319, puis dans la XRAM du LOCI
+;   "LOCI" en $8000 et l'octet des lecteurs montés en $800B (menu du
+;   LOCI). Sans LOCI, ou signature absente : C=0.
+; ---------------------------------------------------------------------
+loci_abs
+.(
+        lda $0319
+        cmp #"L"
+        bne ok
+        lda #1
+        sta $03A9               ; pas de la fenêtre 1
+        lda #$80
+        sta $03AB
+        ldx #0
+        stx $03AA               ; adresse $8000
+sig     lda $03A8
+        cmp lsig,x
+        bne ok
+        inx
+        cpx #4
+        bne sig
+        lda #$0B
+        sta $03AA
+        lda $03A8               ; octet mounts ($800B)
+        tay
+        and #$C1
+        cmp #1
+        bne ok
+        tya
+        ldx drv
+m       lsr
+        dex
+        bpl m
+        bcs ok                  ; bit du lecteur à 1 : monté
+        sec
+        rts
+ok      clc
+        rts
+.)
+lsig    .asc "LOCI"
 
 ; ---------------------------------------------------------------------
 ; qformat : /Q, répertoire vide (16 secteurs de $E5) par le BIOS

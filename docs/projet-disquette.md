@@ -662,6 +662,39 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
   Écarté : chercher aussi sur A: depuis un autre lecteur (plus coûteux, peu utile).
   Essayé dans Oricutron : `FB` -> `FBOX `, `ED` -> `EDIT `, `DES` -> `DESSIN `, `D` et `L`
   (listes), `HEL` (HELLO et HELP), `TYPE REA` -> `TYPE README.TXT ` (inchangé).
+- Lecteur sans image sur le LOCI (Pierre, octobre 2026 : « BDOS: disk I/O error » après
+  une commande inconnue ou ESC, sur le vrai LOCI ; disquette d'essai avec DSKTEST.COM). Un
+  premier correctif fait sur le Pi (bit 7 « pas prêt » de l'état testé en fin de lecture,
+  resté hors de GitHub) ne pouvait rien : le LOCI simule un Microdisc dont la ligne READY est
+  toujours active, ce bit y vaut toujours 0. Cause trouvée dans loci-firmware
+  (`src/mia/oric/dsk.c`, `dsk_task`) : une commande (Seek, Restore, lecture, écriture) pour
+  un lecteur sans image fait passer la tâche disque dans un état qu'elle ne quitte jamais
+  (rien n'est fait si le lecteur est `EMPTY`) ; elle ne lit plus la file des commandes,
+  Force Interrupt compris, et l'état reste « occupé » jusqu'au redémarrage du LOCI depuis
+  son menu. La recherche des programmes (A: à D:) déclenchait cela au premier lecteur vide ;
+  ensuite tout accès échouait. Choix :
+  - Aucune commande pour un lecteur que le LOCI n'a pas monté. Le BIOS (`loci_abs`,
+    `src/disk.s`) le vérifie avant de changer de lecteur (`buf_drv` <> `phy_drv`), au début
+    de `disk_read`, `disk_write` et `disk_home` : refusé, l'accès échoue tout de suite (pas
+    d'attente de 3 s), avec les messages et `bad_vec` habituels.
+  - Source de la liste : la configuration que le menu du LOCI (loci-rom, `persist.c`) garde
+    dans la XRAM, `"LOCI"` en `$8000` puis `mounts` en `$800B` (bit n = lecteur n monté),
+    lue par la fenêtre 1 (`$03A8` données, `$03A9` pas, `$03AA-$03AB` adresse), sans appel à
+    l'API. Mise à jour à chaque éjection, contrairement à l'opération `getcwd` (`$88`) de
+    l'API, qui garde le chemin d'une image éjectée. Le LOCI est reconnu à la marque `L` qu'il
+    place en `$0319` (sans LOCI, `$03A8-$03AB` sont des registres du VIA : on n'y écrit
+    rien). Signature absente, ou octet invraisemblable (A: non monté, bits 6-7 à 1 : autre
+    disposition du menu, celle-ci date de décembre 2024) : on laisse passer, comme avant.
+  - FORMAT.COM pilote le contrôleur lui-même : même test (copie de 40 octets), « Lecteur B:
+    absent ou vide » avant la confirmation. DISKCOPY passe par le BIOS.
+  - Coût : 88 octets résidents (marge 479 -> 391). Rien dans le contrat.
+  - Oricutron de test : avec `ORIC_LOCI`, le contrôleur imite celui du LOCI (marque en
+    `$0319`, XRAM du menu d'après les disquettes insérées, blocage sur un lecteur vide).
+    Le défaut y est reproduit avec l'ancien système (`ZZZ` -> `BDOS: disk I/O error`), et
+    corrigé : `ZZZ`, ESC, `B:` vide (message immédiat), `DIR` ensuite, COPY de B: monté vers
+    A:, `FORMAT B:` et `FORMAT C: /Q` vides refusés, `FORMAT B:` complet et `/Q` sur un B:
+    monté ; sans LOCI, recherche et lecteurs absents inchangés.
+  - À vérifier sur le vrai LOCI : version du menu (signature et octet `mounts` en XRAM).
 
 ## Suite prévue (par priorité)
 

@@ -128,6 +128,12 @@ FDC_DATA    = $0313
 MD_CTRL     = $0314     ; écriture : contrôle ; lecture : bit 7 = /INTRQ
 MD_DRQ      = $0318     ; lecture : bit 7 = /DRQ
 MD_BASE     = $84       ; EPROM coupée, ROM coupée (RAM overlay), lecteur A, face 0
+LOCI_ID     = $0319     ; lecture : "L" si un LOCI est là (loci-firmware, mia.c)
+MIA_RW1     = $03A8     ; LOCI : XRAM, fenêtre 1 (lecture : octet, puis adresse + pas)
+MIA_STEP1   = $03A9
+MIA_ADDR1   = $03AA     ; 2 octets ; les écrire charge MIA_RW1
+LOCI_CFG    = $8000     ; XRAM : "LOCI" puis la configuration du menu (loci-rom, persist.c)
+LOCI_MNT    = $800B     ;   octet mounts : bit n = lecteur n monté
 
 ; --- Géométrie de la disquette CP/A ---
 SPT         = 17        ; secteurs de 256 octets par piste
