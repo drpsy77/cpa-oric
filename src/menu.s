@@ -595,6 +595,13 @@ loop    lda line_lo,x
         rts
 .)
 
+; Pagination : pause quand l'écran est plein, oui / non (comme PAGE)
+m_page
+        lda page_on
+        eor #1
+        sta page_on
+        rts
+
 m_caps
         lda caps
         eor #1
@@ -697,7 +704,7 @@ mn_fic  .byt 5,11
         .word ty_era
 #endif
 
-mn_ecr  .byt 6,10
+mn_ecr  .byt 7,10
         .asc "Ecran",0
         .asc "Mode SPLIT",0
         .byt MA_TYPE
@@ -717,6 +724,9 @@ mn_ecr  .byt 6,10
         .asc "Majuscules",0
         .byt MA_CALL
         .word m_caps
+        .asc "Pagination",0
+        .byt MA_CALL
+        .word m_page
 
 mn_clv  .byt 3,6
         .asc "Clavier",0

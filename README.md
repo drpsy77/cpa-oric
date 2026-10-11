@@ -72,6 +72,8 @@ paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 | `SPLIT`, `TEXT`, `GCLS` | mode SPLIT (image et texte), mode texte, effacement de l'image |
 | `NOM [args]` | charge `NOM.COM` en `$0500` et l'exécute ; à défaut, exécute le script `NOM.BAT` (comme `DO NOM [args]`) |
 | `VER`, `CLS` | version, effacement de l'écran |
+| `PAPER n`, `INK n` | couleur du fond, de l'encre (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc) de toute la console ; la même couleur pour les deux est permise (texte caché) |
+| `PAGE ON`, `PAGE OFF` | pause en fin d'écran, ou non (voir plus bas) |
 | `B:` (`A:` à `D:`) | change de lecteur courant (version disquette) ; l'invite devient `B>` |
 
 TYPE, ERA et REN sont des programmes (`.COM`, sur la disquette système) et non des commandes
@@ -278,8 +280,9 @@ reste).
 10 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
 ` -- Suite (^C stop) -- `. Une touche continue, CTRL-C abandonne et revient au
 prompt. Cela vaut pour `HELP`, `TYPE`, `DIR`, `DUMP`… et pour les programmes qui affichent par
-le BDOS ou le BIOS. Un programme qui ne veut pas de pause met `$02A3` à 0 (variable publique,
-remise à 1 au démarrage à froid).
+le BDOS ou le BIOS. `PAGE OFF` (ou l'article Pagination du menu Ecran, qui bascule) supprime
+la pause, `PAGE ON` la remet ; le réglage reste jusqu'au démarrage à froid. Un programme qui ne
+veut pas de pause met `$02A3` à 0 (variable publique, remise à 1 au démarrage à froid).
 
 **Rediriger la sortie : PUT.** `PUT LISTE.TXT DIR`, `PUT AIDE.TXT HELP` ou
 `PUT RAPPORT.TXT ASM PROG` exécutent la commande (interne ou programme `.COM`) normalement, et
@@ -744,7 +747,9 @@ leur période est commune aux trois voix.
 
 La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante,
 Lecteur suivant, Redemarrer), **Fichiers** (version disque seulement),
-**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules) et **Clavier**. Au bout
+**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules, Pagination) et
+**Clavier**. Encre et Papier passent à la couleur suivante (jamais la même pour les deux) ;
+dans les scripts, `INK n` et `PAPER n` font de même avec une couleur choisie. Au bout
 de la barre, deux voyants : `A` (majuscules verrouillées) ou `a` (minuscules), puis `P` quand
 la copie à l'imprimante est active. Le moteur est réécrit d'après le projet
 [Menus](https://github.com/drpsy77/Menus) de Pierre Garnier, dont il reprend l'ergonomie,

@@ -698,7 +698,18 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
 - Scripts `PAPER.BAT` et `INK.BAT` (couleurs du fond et de l'encre par `POKE`, une ligne
   par ligne d'écran) : essayés par Pierre, puis retirés des disquettes à sa demande (le menu
   Ecran fait déjà Encre et Papier). POKE.COM retourne sur la seule disquette Assembleur.
-  À la place : des commandes PAPER et INK, à étudier (scriptables, contrairement au menu).
+- Commandes internes `PAPER n`, `INK n` et `PAGE ON` / `PAGE OFF`, et article Pagination du
+  menu Ecran (Pierre, octobre 2026 : le menu ne se scripte pas). Dans le CCP, donc aussi dans
+  la version ROM (règle de placement : instantanées, utiles dans les scripts). Choix :
+  - PAPER et INK réécrivent les deux attributs de tête de chaque ligne de la console
+    (`apply_colors` du menu) ; la même couleur pour les deux est permise (Pierre), alors que
+    le menu l'évite. Valeur 0-7, sinon `Syntax?`.
+  - PAGE ON / OFF met `page_on` (`$02A3`, déjà public) ; seuls `O` puis `N` ou `F` sont
+    vérifiés (`PAGE OFFX` passe). PAGE seul : `Syntax?` (pas d'affichage de l'état, pour
+    la place). Pagination bascule. Réglage gardé jusqu'au démarrage à froid.
+  - Coût : 104 octets résidents (marge 391 -> 287) : 81 pour les commandes, 23 pour le menu.
+  - Essayé dans Oricutron (disquette et ROM) : couleurs des lignes 1 à 27, PAPER 4 + INK 4,
+    `PAPER 8`, `INK`, `PAGE X` refusés, TYPE README.TXT avec et sans pause, Pagination.
 
 ## Suite prévue (par priorité)
 
