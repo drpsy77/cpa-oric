@@ -452,6 +452,27 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
   pour un nom de procédure) 45 % ; découpage du texte (`scan_word`, `is_op`, `advance`,
   `at_end`) ~13 % ; copies de listes (`cpy_out`, `emit`) ~11 %. Le programme lui-même
   appelle beaucoup (REPETE 80 [ETAPEM] avec STOP, SP SP sur une table de 74 mots).
+- LOGO plus rapide sans tokenisation (Pierre, octobre 2026, étapes 1 et 3 de la mesure
+  d'ELIZA ; la tokenisation reste en réserve, à décider sur nouvelle mesure) :
+  - **Index des primitives** : les tables `prims` (66 commandes) et `funcs` (43 fonctions)
+    sont rangées par première lettre ; `ix_build` (au démarrage) en tire `pix` (2 x 26
+    adresses, après `spill_end`, 0 = aucune entrée), et `lookup` ne compare que les noms du
+    groupe de la lettre du mot (un nom qui ne commence pas par une lettre est écarté tout de
+    suite). Index construit en RAM plutôt qu'écrit en étiquettes : 40 étiquettes de plus
+    faisaient déborder la table des symboles d'ASM.COM sur `LOGO.ASM` (« Programme trop
+    gros »). Une primitive ajoutée va dans le groupe de sa lettre.
+  - **Découpage** : `scan_word` passe une lettre sans autre test, `is_op` écarte d'emblée
+    tout caractère au-delà de `>`.
+  - Mesure (6502 simulé, « MON CHAT EST MALADE ») : 32,4 -> 19,1 millions de cycles avec
+    l'index, 15,2 avec le découpage (x 2,1). Restent en tête : copies de listes (`cpy_out`,
+    `emit` ~18 %), découpage (`scan_word`, `advance`, `at_end`) ~20 %, `is_op` (opérateurs
+    entre les mots).
+  - Coût : LOGO.COM 18 306 -> 18 425 octets ; `procbase` passe de `$6300` à `$6400`
+    (256 octets de moins pour les procédures et le tas).
+  - **`ELIZA2.LOG`** (disquette LOGO) : mêmes réponses qu'ELIZA (vérifié sur 7 phrases, sauf
+    la réponse au hasard), APRES, REMPL (MEMBRE? d'abord, puis CHERCHE par paires) et REFLETE
+    récursifs avec RENDS. Réponses : 0,8 / 2,1 / 1,2 s contre 15,2 / 17,1 / 29,7 s pour
+    ELIZA avec le même LOGO.
 - FORMAT.COM (lot L2, octobre 2026) : 1 573 octets, rien de résident ; noms des entrées
   disque du BIOS (`B_SELDSK`... `B_WRITE`) et de la fonction 13 (`F_RESET`) ajoutés à
   `cpa.inc` (ce sont les entrées du contrat, simplement nommées). Choix :

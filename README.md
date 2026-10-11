@@ -220,7 +220,7 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
@@ -1044,10 +1044,16 @@ PH :L [...]`). La disquette contient
 
 La disquette LOGO (`cpa-logo.dsk`) ajoute des exemples de Pierre, qui se lancent d'eux-mêmes
 par `LOGO NOM` : `ELIZA` (le « docteur », conversation en français ; `AUREVOIR` pour
-sortir ; une réponse demande de quelques secondes à une trentaine), et trois traceurs de
-courbes dans un repère : `TRACARRE` (x²), `TRASINUS` (sinus), `TRASINXX` (x sin x).
+sortir), et trois traceurs de courbes dans un repère : `TRACARRE` (x²), `TRASINUS`
+(sinus), `TRASINXX` (x sin x). `ELIZA2` donne les mêmes réponses, mais ses recherches sont
+des fonctions récursives (`RENDS`) qui s'arrêtent dès qu'elles trouvent, et un mot absent de
+la table est écarté d'un seul `MEMBRE?` au lieu d'une boucle de 80 tours qui recopie la
+table : une réponse prend 1 à 2 s au lieu de 15 à 30. Comparer les deux est une bonne leçon
+de Logo sur l'Oric : un `REPETE` qui continue après avoir trouvé, et `SP` sur une longue
+liste (une copie à chaque pas), coûtent cher.
 
-Le Logo lit directement le texte des procédures. Les listes et les appels passent par une pile
+Le Logo lit directement le texte des procédures ; les noms des primitives sont retrouvés par
+un index par première lettre, construit au démarrage. Les listes et les appels passent par une pile
 de contextes en mémoire, pas par la pile du 6502. La récursion peut donc aller jusqu'à
 120 niveaux, avec 100 paramètres actifs et 32 variables globales.
 
