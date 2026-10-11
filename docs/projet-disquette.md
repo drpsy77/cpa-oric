@@ -756,9 +756,22 @@ codé). Décidé :
   est le code d'une case, `M$(l)` la ligne l comme chaîne (tableau de chaînes = tableau
   d'octets à deux dimensions) ; fichiers texte lus et écrits ligne par ligne (`LOAD`/`SAVE`
   d'un tableau, modifiables avec EDIT). Les tables à la Lua (hachage, mémoire dynamique)
-  iraient plutôt dans LOGO, qui a déjà un tas et son compactage. Questions ouvertes :
-  indices à partir de 0 ou de 1, débordement d'une chaîne (erreur ou coupure), fichiers
-  texte ou binaires, concaténation et conversions nombre/chaîne.
+  iraient plutôt dans LOGO, qui a déjà un tas et son compactage. Réponses de Pierre :
+  indices à partir de 0 comme en C (`DIM A(10)` : 0 à 9 ; le BASIC de l'Oric en réserve 11) ;
+  chaîne trop longue : erreur qui arrête le programme (sauf INPUT, coupé à la capacité) ;
+  chaînes seulement affectées, lues et comparées (ni concaténation ni conversion : on
+  enchaîne ECHO et PRINT) ; fichiers texte **et** binaires (les codes 0-31, attributs, ne
+  se tapent pas dans EDIT ; un binaire se modifie avec HEX).
+- **Affichage sur l'écran texte du programme** (proposé par Pierre) : ECHO et PRINT écrivent
+  au curseur, qui avance sur la même ligne ; une sortie qui dépasse la colonne 39 est coupée
+  (on ne déborde pas sur la ligne suivante, dont les colonnes 0-1 portent les attributs) ;
+  `ECHO` seul passe en colonne 0 de la ligne suivante ; `SPC n` écrit n espaces, `TAB n`
+  avance le curseur de n colonnes sans rien écrire ; les espaces voulus d'ECHO doivent
+  s'écrire (aujourd'hui ceux du début sont sautés). À préciser : nom de la commande qui
+  donne l'écran texte au programme, dernière ligne (pas de défilement), guillemets.
+- **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
+  seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
+  (colonnes 0-1 comprises) pour dessiner un écran texte.
 
   - Essayé dans Oricutron (disquette et ROM) : couleurs des lignes 1 à 27, PAPER 4 + INK 4,
     `PAPER 8`, `INK`, `PAGE X` refusés, TYPE README.TXT avec et sans pause, Pagination.
