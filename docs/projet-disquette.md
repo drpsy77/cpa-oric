@@ -694,7 +694,10 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     corrigé : `ZZZ`, ESC, `B:` vide (message immédiat), `DIR` ensuite, COPY de B: monté vers
     A:, `FORMAT B:` et `FORMAT C: /Q` vides refusés, `FORMAT B:` complet et `/Q` sur un B:
     monté ; sans LOCI, recherche et lecteurs absents inchangés.
-  - À vérifier sur le vrai LOCI : version du menu (signature et octet `mounts` en XRAM).
+  - Vérifié par Pierre sur le vrai LOCI (octobre 2026) : le défaut a disparu.
+- Scripts `PAPER.BAT` et `INK.BAT` (couleurs du fond et de l'encre par `POKE`, une ligne
+  par ligne d'écran) sur toutes les disquettes : essayés par Pierre, sans remarque. Ils font
+  ce que le menu fait déjà ; ils servent surtout d'exemples de scripts.
 
 ## Suite prévue (par priorité)
 
