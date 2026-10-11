@@ -710,6 +710,7 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
   - Coût : 104 octets résidents (marge 391 -> 287) : 81 pour les commandes, 23 pour le menu.
   - Essayé dans Oricutron (disquette et ROM) : couleurs des lignes 1 à 27, PAPER 4 + INK 4,
     `PAPER 8`, `INK`, `PAGE X` refusés, TYPE README.TXT avec et sans pause, Pagination.
+  - Vérifié par Pierre sur le vrai Oric (octobre 2026).
 
 ## Suite prévue (par priorité)
 
@@ -737,7 +738,32 @@ lecteur dès que c'est possible.
 | LH | **Images compressées et animations HIRES plein écran** (étude chiffrée puis choix de Pierre, octobre 2026 : format compatible, copies coupées, déchirure calée à la touche faute de VSYNC matériel, animation en RAM seulement, lecteur dans un `ANIM.INC` séparé, nouvelle disquette) : (1) **format** : celui du compresseur OSDK (`archives/lzss-osdk/`), inchangé ; une copie de distance 0 garde l'octet (saut), une distance « négative » (65 536 − k) le prend k octets plus loin dans l'image précédente ; le décodeur d'origine lit donc les animations (lentement : 43,6 cycles par octet gardé). (2) **`hires.inc`** : `h_unz` (décodeur rapide, saut sans copie, copie bornée à la fin de l'image contre un fichier abîmé, plein écran ou SPLIT), `h_zread` (fichier entier en `h_zbuf`, jusqu'à `$A000`), `.HIZ` dans `h_load` (image autonome, sans saut ni image précédente). (3) **`ANIM.INC`** (`progs/anim.inc`, à inclure avant `HIRES.INC`) : `a_play` (en-tête `.ANI`, 1re image sur écran effacé, image de retour pour boucler, délai par image calé sur les tops 50 Hz sans dérive, T1 à 19 966 pendant l'animation pour fixer la déchirure, flèches gauche / droite : ±8 lignes), `a_msg`, `a_grx` (programmes traduits). (4) **VOIR** `.HIZ` et `NOM.ANI [n]` ; **GRAPHER** `ANIM nom [n]` (refusé en SPLIT, ESC arrête le programme), `GLOAD nom.HIZ`, animation chargée après le texte ; `/A` n'inclut `ANIM.INC` que si ANIM sert. (5) **Outils** : `tools/lzhir.py` (compression, contrôle, modèle de coût), `tools/mkanim.py` (GIF ou PNG -> `.ANI`, bilan, aperçu GIF), `png2hir.py --hiz`, `tools/anim_demos.py`, `tools/test_anim.py` ; `run_com.py` : compteur 50 Hz, `DUMP`, `PROF`, FCB2. (6) **`cpa-anim.dsk`** : VOIR, GRAPHER, ASM, `CUBE.ANI`, `BALLE.ANI`, `VAISSEAU.ANI` (GIF original contrasté), `LOGO.HIZ`, `ANIMS.GRX`, `DEMO.BAT`. Mesures (py65, cycle près) : littéral 52 cycles, copie 127 + 18,2 par octet, saut 105, d'où ~200 octets changés par 1/50 s ; IRQ du système 850 cycles par top. Place : ~34 Ko dans VOIR, ~22 Ko dans GRAPHER. (7) **Corrigé au passage** : dans un programme traduit, `GLOAD` et `GSAVE` sautaient le nom qui suit l'appel en cherchant un 0 final (`g_str`) ; l'octet du lecteur courant vaut 0, le programme repartait donc au milieu du nom (BRK) : `g_nm` saute 12 octets fixes ; test `gload.grx` | VOIR 1,7 -> 3,1 Ko ; GRAPHER 10 -> 11,4 Ko ; HIRES.INC 1 488 -> 1 855 o ; ANIM.INC 774 o ; rien de résident | **fait** (6502 simulé : chaque image des trois démos décodée par `h_unz` = Python, VOIR deux passages, cadence au top près, fichiers abîmés refusés ; GRAPHER interprété = traduit, ASM = xa pour VOIR, GRAPHER et un programme traduit avec ANIM ; restent Oricutron et le vrai Oric : déchirure, flèches, débit) |
 | LI | **Calage du top sur le balayage (VSYNC)** (Pierre, octobre 2026, sur le modèle d'Oricium ; constat sur Oricutron : la déchirure se voit) : (1) **système** : T1 à 19 966 (période 19 968 cycles = 312 lignes × 64, une trame), compteur lancé au démarrage à froid seulement (`hw_init` ne réécrit que la période) : la phase du top par rapport au balayage tient jusqu'à l'arrêt ; top à 50,08 Hz (délais 0,16 % plus courts). (2) **`VSYNC.COM`** (744 octets) : texte caché en ligne 14 (encre = papier), encre rendue visible de l'instant où l'octet haut du compteur passe à `$15` à celui où il passe à `$13` (8 lignes) ; calé, le top tombe à la ligne 200 (fin de l'image HIRES) ; flèches : une période allongée ou raccourcie de 1 ou 8 lignes ; ESC rend le décalage total (modulo 312). (3) **`ANIM.INC`** ne touche plus au timer (les flèches décalent le top du système, réglage gardé). (4) Mesure (modèle de coût de `lzhir.py`) : une image ne se déchire pas si son décodage reste devant le faisceau, ~7 000 cycles après le top plus 64 par ligne ; les démos demandent 10 500 à 425 000 cycles par image : déchirure toujours là (à un endroit fixe) | VSYNC 744 o ; rien de résident (quelques octets déplacés) | **fait** (Oricutron : sur 39 pas de 8 lignes, le texte n'apparaît qu'à un seul, en entier à la ligne près, coupé d'une ligne par pas d'écart ; le réglage tient après d'autres commandes ; reste le vrai Oric) |
 
-La piste J de la revue de place (TYPE, ERA et REN en `.COM`) est **faite** (octobre 2026,
+**Jeux en écran texte : GRAPHER et LOGO** (réflexion avec Pierre, octobre 2026 ; rien de
+codé). Décidé :
+- **GRAPHER** reste un langage de bas niveau : commandes texte `LOCATE col lig` (puis `ECHO`
+  et `PRINT` à cet endroit), `CHAR col lig code`, `SCRN(col,lig)`, `CLS` ; coordonnées de
+  l'écran entier (colonnes 0-39, lignes 0-27, attributs des colonnes 0-1 compris) ; le
+  programme a l'écran pour lui : ni console, ni menus (comme en HIRES).
+- **LOGO** : `FIXECURSEUR col lig`, `CURSEUR` (rend `[col lig]`), `VIDETEXTE` / `VT`,
+  `CARECRAN col lig`. La tokenisation viendra dans un lot à part, mesurée avant et après.
+- **Avant tout code : les structures de données de GRAPHER** (Pierre : « la base d'un
+  langage »), chaînes et tableaux à deux dimensions, pour un nom de joueur, un tableau des
+  meilleurs scores, un niveau lu dans un fichier. Proposition en discussion :
+  allocation statique par `DIM` (une seule fois, jamais libérée : ni ramasse-miettes ni
+  fragmentation ; « memoire pleine » dès le `DIM`), indices contrôlés à chaque accès ; noms à
+  la BASIC (`A` entier, `A(i[,j])` tableau d'entiers, `A$` / `A$(i[,j])` tableau d'octets) ;
+  une chaîne est un tableau d'octets terminé par 0 dans sa capacité (comme en C) ; `M$(l,c)`
+  est le code d'une case, `M$(l)` la ligne l comme chaîne (tableau de chaînes = tableau
+  d'octets à deux dimensions) ; fichiers texte lus et écrits ligne par ligne (`LOAD`/`SAVE`
+  d'un tableau, modifiables avec EDIT). Les tables à la Lua (hachage, mémoire dynamique)
+  iraient plutôt dans LOGO, qui a déjà un tas et son compactage. Questions ouvertes :
+  indices à partir de 0 ou de 1, débordement d'une chaîne (erreur ou coupure), fichiers
+  texte ou binaires, concaténation et conversions nombre/chaîne.
+
+  - Essayé dans Oricutron (disquette et ROM) : couleurs des lignes 1 à 27, PAPER 4 + INK 4,
+    `PAPER 8`, `INK`, `PAGE X` refusés, TYPE README.TXT avec et sans pause, Pagination.
+  - Vérifié par Pierre sur le vrai Oric (octobre 2026).
+ (octobre 2026,
 voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par ESC des commandes
 (premier mot) est faite aussi, dans un commit à part et derrière une option d'assemblage.
 
