@@ -443,6 +443,15 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     rien dans le contrat. Essayé dans Oricutron : script sur B: qui lance un `.COM` et un
     `.BAT` de C:, `SUITE` et `DO SUITE` depuis A:, `B:ZZZ` refusé, `C:ZZZ`, D: absent
     constaté puis sauté sans message ni attente, `D:` tapé (message, `D:?`).
+- Exemples de Pierre sur la disquette LOGO seulement (octobre 2026) : `ELIZA.LOG`,
+  `TRACARRE.LOG`, `TRASINUS.LOG`, `TRASINXX.LOG` (`files/`). Sa disquette avait aussi
+  `TRAREPER.LOG`, identique à `TRASINUS.LOG` à une ligne vide près : non repris. Mesure
+  d'ELIZA (6502 simulé, profil par routine) : « MON CHAT EST MALADE » demande 32,4 millions
+  de cycles (32 s ; Oricutron ~30 s). Répartition : `lookup` + `word_is` (recherche d'un
+  nom dans les tables de primitives, 66 commandes puis 43 fonctions, parcourues en entier
+  pour un nom de procédure) 45 % ; découpage du texte (`scan_word`, `is_op`, `advance`,
+  `at_end`) ~13 % ; copies de listes (`cpy_out`, `emit`) ~11 %. Le programme lui-même
+  appelle beaucoup (REPETE 80 [ETAPEM] avec STOP, SP SP sur une table de 74 mots).
 - FORMAT.COM (lot L2, octobre 2026) : 1 573 octets, rien de résident ; noms des entrées
   disque du BIOS (`B_SELDSK`... `B_WRITE`) et de la fonction 13 (`F_RESET`) ajoutés à
   `cpa.inc` (ce sont les entrées du contrat, simplement nommées). Choix :
