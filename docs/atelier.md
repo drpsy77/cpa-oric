@@ -40,7 +40,9 @@ outils, et suit toujours la même boucle.
      dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
      opérations de fichiers et de répertoires sont simulées, et d'un coup (le vrai LOCI fait
      attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT.
-     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel.
+     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel. Pour un usage à la main, le
+     même dossier se donne dans `oricutron.cfg` : `loci = '~/Oric/loci'` (`~/` = dossier
+     personnel, chemin relatif = à côté d'Oricutron) ; la variable, si elle existe, l'emporte.
 
    Il change aussi le collage du presse-papiers (F12) : d'origine, Oricutron ne livre le texte
    qu'à la routine clavier de la ROM BASIC (adresse `$EB78`), que CP/A n'utilise pas. Le texte

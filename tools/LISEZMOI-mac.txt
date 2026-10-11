@@ -39,14 +39,15 @@ Pour un fichier entier (MATH.LOG...), mieux vaut le mettre sur la disquette :
 Clé USB du LOCI simulée
 -----------------------
 Les commandes EXPORT, IMPORT et USBDIR de CP/A parlent au LOCI. Oricutron
-peut simuler le LOCI avec un dossier du Mac pour clé USB : lancer
-l'application depuis le Terminal, dans le dossier Oricutron-CPA, avec la
-variable ORIC_LOCI :
-    cd ~/chemin/Oricutron-CPA
-    ORIC_LOCI=~/Oric/cle Oricutron.app/Contents/MacOS/Oricutron
-(le dossier ~/Oric/cle doit exister ; son sous-dossier int tient lieu de
-mémoire interne du LOCI, 0:). Lancée autrement, l'application ne simule
-pas le LOCI, et ces commandes répondent « LOCI absent ».
+peut simuler le LOCI avec un dossier du Mac pour clé USB. Dans
+oricutron.cfg (à côté de l'application), enlever le ; de la ligne loci en
+fin de fichier et donner le dossier :
+    loci = '~/Oric/loci'
+(~/ = dossier personnel ; le dossier doit exister, et son sous-dossier int
+tient lieu de mémoire interne du LOCI, 0:). L'application, lancée par un
+double-clic, simule alors le LOCI. Sans cette ligne, EXPORT, IMPORT et
+USBDIR répondent « LOCI absent ». Depuis le Terminal, la variable
+ORIC_LOCI=dossier fait de même et l'emporte sur la ligne.
 
 Couleurs
 --------

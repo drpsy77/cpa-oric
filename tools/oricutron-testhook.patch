@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..08b9e2b 100644
+index 00b7b0e..d3353d7 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,163 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,172 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -193,10 +193,19 @@ index 00b7b0e..08b9e2b 100644
 +{
 +  mia_xp = 512; mia_r[0x0D] = e; mia_r[0x0E] = 0; mia_ret(0xffff);
 +}
++/* dossier tenant lieu de clé USB : variable ORIC_LOCI, sinon option
++   loci de oricutron.cfg ; NULL : pas de LOCI */
++char loci_dir[1024] = "";
++static const char *mia_root(void)
++{
++  const char *e = getenv("ORIC_LOCI");
++  if (e && *e) return e;
++  return loci_dir[0] ? loci_dir : NULL;
++}
 +/* chemin de l'Oric -> chemin du PC (casse ignorée, comme FAT) ; 0 si refusé */
 +static int mia_path(const char *p, char *out, int create)
 +{
-+  const char *root = getenv("ORIC_LOCI");
++  const char *root = mia_root();
 +  char comp[256];
 +  int internal = 0;
 +  if (p[0] >= '0' && p[0] <= '9' && p[1] == ':') { internal = (p[0] == '0'); p += 2; }
@@ -298,7 +307,7 @@ index 00b7b0e..08b9e2b 100644
 +}
 +static int mia_active(unsigned short addr)
 +{
-+  if (addr < 0x3A0 || addr > 0x3BF || !getenv("ORIC_LOCI")) return 0;
++  if (addr < 0x3A0 || addr > 0x3BF || !mia_root()) return 0;
 +  if (!mia_init) { mia_init = 1; mia_xs[512] = 0; mia_ret(0xffff); mia_r[0x13] = 0x6C; mia_r[0x14] = 0xFC; mia_r[0x15] = 0xFF; mia_r[0x16] = 0x00; } /* comme le LOCI après le démarrage : JMP ($FFFC) en $03B3 */
 +  return 1;
 +}
@@ -321,7 +330,7 @@ index 00b7b0e..08b9e2b 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,7 +674,9 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,7 +683,9 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -332,7 +341,7 @@ index 00b7b0e..08b9e2b 100644
        microdisc_write(&oric->md, addr, data);
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
-@@ -918,6 +1077,8 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+@@ -918,6 +1086,8 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -342,10 +351,10 @@ index 00b7b0e..08b9e2b 100644
        return microdisc_read(&oric->md, addr);
  
 diff --git a/main.c b/main.c
-index a47cd0c..da22bb0 100644
+index a47cd0c..a99e213 100644
 --- a/main.c
 +++ b/main.c
-@@ -513,6 +513,32 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
+@@ -513,6 +513,51 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
    return SDL_FALSE;
  }
  
@@ -375,18 +384,38 @@ index a47cd0c..da22bb0 100644
 +  return SDL_FALSE;
 +}
 +
++/* CP/A : loci = 'dossier' simule le LOCI avec ce dossier pour clé USB
++   (~/ = dossier personnel ; chemin relatif : à côté d'Oricutron) */
++static SDL_bool read_config_loci(char *buf)
++{
++  extern char loci_dir[1024];
++  char tmp[1024];
++  const char *home = getenv("HOME");
++
++  if(!read_config_string(buf, "loci", tmp, sizeof(tmp))) return SDL_FALSE;
++  if((tmp[0] == '~') && (tmp[1] == '/') && home)
++    snprintf(loci_dir, sizeof(loci_dir), "%s%s", home, tmp+1);
++  else
++  {
++    snprintf(loci_dir, sizeof(loci_dir), "%s", tmp);
++    if(loci_dir[0]) add_fileprefix(loci_dir, sizeof(loci_dir));
++  }
++  return SDL_TRUE;
++}
++
  static void load_config(struct start_opts *sto, struct machine *oric)
  {
    FILE *f;
-@@ -531,6 +557,7 @@ static void load_config(struct start_opts *sto, struct machine *oric)
+@@ -531,6 +576,8 @@ static void load_config(struct start_opts *sto, struct machine *oric)
  
      for(i=0; isws(sto->lctmp[i]); i++) ;
  
 +    if(read_config_colour(&sto->lctmp[i])) continue;
++    if(read_config_loci(&sto->lctmp[i])) continue;
      if(read_config_option(&sto->lctmp[i], "machine", &sto->start_machine, machtypes)) continue;
      if(read_config_option(&sto->lctmp[i], "disktype", &sto->start_disktype, disktypes)) continue;
      if(read_config_bool(&sto->lctmp[i], "debug", &sto->start_debug)) continue;
-@@ -1759,9 +1786,154 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1806,154 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -541,7 +570,7 @@ index a47cd0c..da22bb0 100644
  
    if(oric->diskautosave)
    {
-@@ -2102,6 +2274,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+@@ -2102,6 +2294,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
    emscripten_fetch_close(fetch); // Also free data on failure.
  }
  
@@ -568,7 +597,7 @@ index a47cd0c..da22bb0 100644
  void EMSCRIPTEN_KEEPALIVE www_async_dload()
  {
  
-@@ -2192,6 +2384,10 @@ int main(int argc, char* argv[])
+@@ -2192,6 +2404,10 @@ int main(int argc, char* argv[])
  #ifdef WWW
    // save the context to a global
    gCtx = &ctx;
@@ -579,7 +608,7 @@ index a47cd0c..da22bb0 100644
    // create read-write fs
    EM_ASM(
      FS.mkdir('/readwritefs');
-@@ -2207,6 +2403,7 @@ int main(int argc, char* argv[])
+@@ -2207,6 +2423,7 @@ int main(int argc, char* argv[])
    });
    );
  
@@ -588,10 +617,10 @@ index a47cd0c..da22bb0 100644
  #else
    loop_handler(&ctx);
 diff --git a/oricutron.cfg b/oricutron.cfg
-index 8b977e2..acbe655 100644
+index 8b977e2..755c123 100644
 --- a/oricutron.cfg
 +++ b/oricutron.cfg
-@@ -226,3 +226,14 @@ sticky_mod_keys = yes
+@@ -226,3 +226,19 @@ sticky_mod_keys = yes
  ; only available in telestrat mode
  ch376 = no
  twilighte_board = no
@@ -606,6 +635,11 @@ index 8b977e2..acbe655 100644
 +;colour5 = '#FF00FF'
 +;colour6 = '#00FFFF'
 +;colour7 = '#FFFFFF'
++
++; CP/A : simulate the LOCI (EXPORT, IMPORT, USBDIR) with this folder as
++; its USB key; its sub-folder int is the internal memory (0:). ~/ is the
++; home folder. The ORIC_LOCI environment variable takes precedence.
++;loci = '~/Oric/loci'
 diff --git a/system_sdl.c b/system_sdl.c
 index a6dc439..8eeacae 100644
 --- a/system_sdl.c
