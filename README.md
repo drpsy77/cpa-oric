@@ -220,7 +220,7 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
@@ -1040,6 +1040,11 @@ PH :L [...]`). La disquette contient
 
     ? CHARGE "DEMO
     ? DEMO
+
+La disquette LOGO (`cpa-logo.dsk`) ajoute des exemples de Pierre, qui se lancent d'eux-mêmes
+par `LOGO NOM` : `ELIZA` (le « docteur », conversation en français ; `AUREVOIR` pour
+sortir ; une réponse demande de quelques secondes à une trentaine), et trois traceurs de
+courbes dans un repère : `TRACARRE` (x²), `TRASINUS` (sinus), `TRASINXX` (x sin x).
 
 Le Logo lit directement le texte des procédures. Les listes et les appels passent par une pile
 de contextes en mémoire, pas par la pile du 6502. La récursion peut donc aller jusqu'à
