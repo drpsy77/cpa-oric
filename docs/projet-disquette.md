@@ -767,8 +767,20 @@ codé). Décidé :
   (on ne déborde pas sur la ligne suivante, dont les colonnes 0-1 portent les attributs) ;
   `ECHO` seul passe en colonne 0 de la ligne suivante ; `SPC n` écrit n espaces, `TAB n`
   avance le curseur de n colonnes sans rien écrire ; les espaces voulus d'ECHO doivent
-  s'écrire (aujourd'hui ceux du début sont sautés). À préciser : nom de la commande qui
-  donne l'écran texte au programme, dernière ligne (pas de défilement), guillemets.
+  s'écrire (aujourd'hui ceux du début sont sautés). Décidé ensuite avec Pierre :
+  - **`LORES`** donne l'écran texte au programme (comme HIRES : effacé, colonnes 0-1
+    comprises, curseur éteint, ni console ni menus) ; **`TEXT`** rend la console (comme en
+    BASIC de l'Oric). Les `.GRX` existants ne changent pas : ces règles ne valent qu'en LORES.
+  - Espaces voulus entre guillemets (`ECHO "  Score : "`) ; ECHO reste réservé aux textes
+    du programme et à `$1`-`$9` ; **PRINT** affiche nombres et chaînes (`PRINT S`,
+    `PRINT A$`, `PRINT M$(L)`).
+  - `TAB n` relatif (n colonnes plus loin), à bien signaler dans l'aide (en BASIC, `TAB(n)`
+    va à la colonne n) ; `LOCATE` donne la colonne absolue.
+  - `ECHO` seul en ligne 27 : retour en ligne 0, colonne 0 (pas de défilement).
+  - INPUT en LORES : saisie simple au curseur (visible pendant la saisie, DEL, RETURN),
+    bornée à la capacité de la chaîne et à la fin de la ligne.
+  - Fichiers : `LOAD`/`SAVE` en texte, `BLOAD`/`BSAVE` en binaire (proposé) ; idée : les
+    mêmes sur l'écran texte entier (écran titre).
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.
