@@ -696,8 +696,9 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     monté ; sans LOCI, recherche et lecteurs absents inchangés.
   - Vérifié par Pierre sur le vrai LOCI (octobre 2026) : le défaut a disparu.
 - Scripts `PAPER.BAT` et `INK.BAT` (couleurs du fond et de l'encre par `POKE`, une ligne
-  par ligne d'écran) sur toutes les disquettes : essayés par Pierre, sans remarque. Ils font
-  ce que le menu fait déjà ; ils servent surtout d'exemples de scripts.
+  par ligne d'écran) : essayés par Pierre, puis retirés des disquettes à sa demande (le menu
+  Ecran fait déjà Encre et Papier). POKE.COM retourne sur la seule disquette Assembleur.
+  À la place : des commandes PAPER et INK, à étudier (scriptables, contrairement au menu).
 
 ## Suite prévue (par priorité)
 
