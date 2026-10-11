@@ -20,6 +20,7 @@
 #                     USB (EXPORT, IMPORT, USBDIR)
 #   SHOW=1            montre la fenêtre (sinon écran virtuel Xvfb)
 #   ORICUTRON=dossier Oricutron avec le crochet de test (défaut tools/oricutron)
+#   ORIC_CFG=lignes    ajoutées à oricutron.cfg (ex. "colour3 = '#FFF426'")
 #
 # Exemples :
 #   DSK=build/cpa.dsk tools/run_test.sh $'DIR\n' 600 /tmp/t && python3 tools/screen.py /tmp/t.mem
@@ -47,6 +48,7 @@ fi
 
 cd "$ORIC"
 printf "machine = atmos\natmosrom = 'roms/%s'\nrendermode = soft\ndiskautosave = yes\n" "$ROM" > oricutron.cfg
+[ -z "$ORIC_CFG" ] || printf "%s\n" "$ORIC_CFG" >> oricutron.cfg
 
 XPID=""
 if [ -z "$SHOW" ]; then

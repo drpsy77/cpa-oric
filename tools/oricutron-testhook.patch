@@ -154,18 +154,9 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..734c680 100644
+index 00b7b0e..08b9e2b 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -86,7 +86,7 @@ extern struct osdmenuitem mainitems[];
- Uint8 oricpalette[] = { 0x00, 0x00, 0x00,
-                         0xff, 0x00, 0x00,
-                         0x00, 0xff, 0x00,
--                        0xff, 0xff, 0x00,
-+                        0xff, 0xf4, 0x26,   /* jaune adouci (CP/A) : plus lisible sur blanc */
-                         0x00, 0x00, 0xff,
-                         0xff, 0x00, 0xff,
-                         0x00, 0xff, 0xff,
 @@ -502,6 +502,163 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
@@ -351,10 +342,51 @@ index 00b7b0e..734c680 100644
        return microdisc_read(&oric->md, addr);
  
 diff --git a/main.c b/main.c
-index a47cd0c..c049951 100644
+index a47cd0c..da22bb0 100644
 --- a/main.c
 +++ b/main.c
-@@ -1759,9 +1759,154 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -513,6 +513,32 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
+   return SDL_FALSE;
+ }
+ 
++/* CP/A : couleurs de l'Oric dans oricutron.cfg, colour0 = '#000000' ...
++   colour7 = '#FFFFFF' (RRGGBB en hexadecimal, # facultatif) */
++static SDL_bool read_config_colour(char *buf)
++{
++  extern Uint8 oricpalette[];
++  char tok[8], val[16], *p;
++  unsigned int rgb;
++  int c;
++
++  for(c=0; c<8; c++)
++  {
++    sprintf(tok, "colour%d", c);
++    if(!read_config_string(buf, tok, val, sizeof(val))) continue;
++    p = (val[0] == '#') ? val+1 : val;
++    if((strlen(p) == 6) && (strspn(p, "0123456789abcdefABCDEF") == 6) &&
++       (sscanf(p, "%x", &rgb) == 1))
++    {
++      oricpalette[c*3  ] = (rgb>>16)&0xff;
++      oricpalette[c*3+1] = (rgb>>8)&0xff;
++      oricpalette[c*3+2] = rgb&0xff;
++    }
++    return SDL_TRUE;
++  }
++  return SDL_FALSE;
++}
++
+ static void load_config(struct start_opts *sto, struct machine *oric)
+ {
+   FILE *f;
+@@ -531,6 +557,7 @@ static void load_config(struct start_opts *sto, struct machine *oric)
+ 
+     for(i=0; isws(sto->lctmp[i]); i++) ;
+ 
++    if(read_config_colour(&sto->lctmp[i])) continue;
+     if(read_config_option(&sto->lctmp[i], "machine", &sto->start_machine, machtypes)) continue;
+     if(read_config_option(&sto->lctmp[i], "disktype", &sto->start_disktype, disktypes)) continue;
+     if(read_config_bool(&sto->lctmp[i], "debug", &sto->start_debug)) continue;
+@@ -1759,9 +1786,154 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -509,7 +541,7 @@ index a47cd0c..c049951 100644
  
    if(oric->diskautosave)
    {
-@@ -2102,6 +2247,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+@@ -2102,6 +2274,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
    emscripten_fetch_close(fetch); // Also free data on failure.
  }
  
@@ -536,7 +568,7 @@ index a47cd0c..c049951 100644
  void EMSCRIPTEN_KEEPALIVE www_async_dload()
  {
  
-@@ -2192,6 +2357,10 @@ int main(int argc, char* argv[])
+@@ -2192,6 +2384,10 @@ int main(int argc, char* argv[])
  #ifdef WWW
    // save the context to a global
    gCtx = &ctx;
@@ -547,7 +579,7 @@ index a47cd0c..c049951 100644
    // create read-write fs
    EM_ASM(
      FS.mkdir('/readwritefs');
-@@ -2207,6 +2376,7 @@ int main(int argc, char* argv[])
+@@ -2207,6 +2403,7 @@ int main(int argc, char* argv[])
    });
    );
  
@@ -555,6 +587,25 @@ index a47cd0c..c049951 100644
    emscripten_set_main_loop_arg(loop_handler, &ctx, -1, 0);
  #else
    loop_handler(&ctx);
+diff --git a/oricutron.cfg b/oricutron.cfg
+index 8b977e2..acbe655 100644
+--- a/oricutron.cfg
++++ b/oricutron.cfg
+@@ -226,3 +226,14 @@ sticky_mod_keys = yes
+ ; only available in telestrat mode
+ ch376 = no
+ twilighte_board = no
++
++; Colours of the Oric (RRGGBB in hexadecimal). A missing line keeps
++; the default value shown here.
++;colour0 = '#000000'
++;colour1 = '#FF0000'
++;colour2 = '#00FF00'
++;colour3 = '#FFFF00'
++;colour4 = '#0000FF'
++;colour5 = '#FF00FF'
++;colour6 = '#00FFFF'
++;colour7 = '#FFFFFF'
 diff --git a/system_sdl.c b/system_sdl.c
 index a6dc439..8eeacae 100644
 --- a/system_sdl.c

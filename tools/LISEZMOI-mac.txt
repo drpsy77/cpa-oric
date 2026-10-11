@@ -50,5 +50,7 @@ pas le LOCI, et ces commandes répondent « LOCI absent ».
 
 Couleurs
 --------
-Le jaune est adouci (#FFF426 au lieu de #FFFF00) : plus lisible sur fond
-blanc que le jaune vif d'origine.
+Les 8 couleurs de l'Oric se règlent dans oricutron.cfg (lignes colour0 à
+colour7, en fin de fichier) : enlever le ; et donner la couleur en RRGGBB
+hexadécimal. Par exemple, un jaune adouci, plus lisible sur fond blanc :
+colour3 = '#FFF426'
