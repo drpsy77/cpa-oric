@@ -301,6 +301,15 @@ cmd_table
         .byt "T"|$80
         .word cmd_point
 #endif
+        .asc "PAPE"
+        .byt "R"|$80
+        .word cmd_paper
+        .asc "IN"
+        .byt "K"|$80
+        .word cmd_ink
+        .asc "PAG"
+        .byt "E"|$80
+        .word cmd_page
         .asc "ECH"
         .byt "O"|$80
         .word cmd_echo
@@ -362,6 +371,43 @@ cmd_ver
 cmd_cls
         lda #$0C
         jmp conout
+
+; PAPER n / INK n : couleur du fond / de l'encre (0-7) de toutes les lignes
+;   de la console, comme les articles Papier et Encre du menu Ecran (la
+;   même couleur pour les deux est permise ici)
+cmd_paper
+        ldy #cur_paper-cur_ink
+        .byt $2C                ; BIT abs : saute l'instruction suivante
+cmd_ink
+        ldy #0
+        sty ccp_cnt
+        ldx ccp_pos
+        jsr get_byte
+        bcs cpi_syn
+        cmp #8
+        bcs cpi_syn
+        ldy ccp_cnt
+        sta cur_ink,y
+        jmp apply_colors
+
+; PAGE ON / PAGE OFF : pause quand l'écran est plein, ou non (comme
+;   l'article Pagination du menu Ecran)
+cmd_page
+        ldx ccp_pos
+        jsr skip_spaces
+        lda CMDBUF+2,x
+        cmp #"O"
+        bne cpi_syn
+        lda CMDBUF+3,x
+        ldy #1
+        cmp #"N"
+        beq cpg_set
+        dey
+        cmp #"F"
+        bne cpi_syn
+cpg_set sty page_on
+        rts
+cpi_syn jmp syntax_err
 
 #ifndef DISK
 cmd_mem
@@ -498,6 +544,7 @@ msg_help
         .asc "BOX/FBOX x1 y1 x2 y2  CIRCLE x y r",13,10
         .asc "GTEXT col y text  POINT x y",13,10
         .asc "ATTR col y1 y2 v  ECHO text  PAUSE",13,10
+        .asc "PAPER n  INK n  PAGE ON/OFF",13,10
 #ifdef DISK
         .asc "GSAVE/GLOAD file  save/load image",13,10
         .asc "PUT file cmd  output of cmd to file",13,10

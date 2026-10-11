@@ -36,6 +36,8 @@ SECTIONS = [
   ("HELP [sujet]", "aide (HELP.COM)"),
   ("VER", "version"),
   ("CLS", "efface l'ecran"),
+  ("PAPER n / INK n", "couleur du fond / de l'encre, 0-7 (0 noir 1 rouge 2 vert 3 jaune 4 bleu 5 magenta 6 cyan 7 blanc)"),
+  ("PAGE ON/OFF", "pause en fin d'ecran, ou non (aussi menu Ecran, Pagination)"),
   ("B:", "lecteur courant (A: a D:) ; aussi menu Systeme, Lecteur suivant ; un .COM ou .BAT tape sans lecteur est cherche sur le lecteur courant (dans un script : celui du script), puis A:, B:, C:, D: (un lecteur vide est saute ensuite)"),
   ("DIR [afn]", "liste des fichiers"),
   ("DIRS [afn]", "idem, fichiers SYS compris"),

@@ -19,6 +19,16 @@ h_default
         .asc "HELP [sujet]  | aide (HELP.COM)",13,10
         .asc "VER           | version",13,10
         .asc "CLS           | efface l'ecran",13,10
+        .asc "PAPER n / INK n",13,10
+        .asc "              | couleur du fond / de",13,10
+        .asc "              |   l'encre, 0-7 (0",13,10
+        .asc "              |   noir 1 rouge 2 vert",13,10
+        .asc "              |   3 jaune 4 bleu 5",13,10
+        .asc "              |   magenta 6 cyan 7",13,10
+        .asc "              |   blanc)",13,10
+        .asc "PAGE ON/OFF   | pause en fin d'ecran,",13,10
+        .asc "              |   ou non (aussi menu",13,10
+        .asc "              |   Ecran, Pagination)",13,10
         .asc "B:            | lecteur courant (A: a",13,10
         .asc "              |   D:) ; aussi menu",13,10
         .asc "              |   Systeme, Lecteur",13,10
