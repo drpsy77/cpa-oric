@@ -781,6 +781,8 @@ codé). Décidé :
     bornée à la capacité de la chaîne et à la fin de la ligne.
   - Fichiers : `LOAD`/`SAVE` en texte, `BLOAD`/`BSAVE` en binaire (proposé) ; idée : les
     mêmes sur l'écran texte entier (écran titre).
+- **Spécification** à relire par Pierre : `docs/spec-grapher-lores.md` (paliers A LORES, B
+  tableaux et chaînes, C fichiers ; questions Q1-Q4).
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.
