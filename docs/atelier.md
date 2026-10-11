@@ -40,7 +40,12 @@ outils, et suit toujours la même boucle.
      dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
      opérations de fichiers et de répertoires sont simulées, et d'un coup (le vrai LOCI fait
      attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT.
-     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel. Pour un usage à la main, le
+     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel. Le contrôleur de
+     disquettes imite aussi celui du LOCI (loci-firmware, `src/mia/oric/dsk.c`) : `$0319`
+     se lit `L`, la fenêtre 1 de la XRAM (`$03A8-$03AB`) montre la configuration gardée par
+     le menu du LOCI (`LOCI` en `$8000`, lecteurs montés en `$800B`, d'après les disquettes
+     insérées), et une commande pour un lecteur sans disquette le bloque pour de bon (état
+     occupé, plus aucune commande prise) jusqu'à la fin d'Oricutron, comme le vrai LOCI. Pour un usage à la main, le
      même dossier se donne dans `oricutron.cfg` : `loci = '~/Oric/loci'` (`~/` = dossier
      personnel, chemin relatif = à côté d'Oricutron) ; la variable, si elle existe, l'emporte.
 

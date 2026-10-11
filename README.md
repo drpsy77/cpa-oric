@@ -147,6 +147,13 @@ se prépare sur l'Oric avec `FORMAT B:`, ou sur le PC : `python3 tools/mkdisk.py
 donnees.dsk [fichiers...]` ; les pistes du système y restent inutilisées (336 Ko pour les
 fichiers). Sur le LOCI, monter l'image sur le lecteur B, C ou D.
 
+Sur le LOCI, un lecteur sans image est refusé d'emblée (`BDOS: disk I/O error` s'il est tapé,
+rien pendant la recherche des programmes) : le contrôleur du LOCI ne termine jamais une
+commande envoyée à un tel lecteur, et ne répond plus ensuite jusqu'à son redémarrage. CP/A
+lit donc, avant de passer sur un autre lecteur, la liste des lecteurs montés que garde le
+menu du LOCI. Une image montée ou éjectée se prend en compte au démarrage suivant depuis le
+menu du LOCI.
+
 **FORMAT.** `FORMAT B:` formate la disquette du lecteur B: au format de CP/A (2 faces,
 42 pistes, 17 secteurs de 256 octets) : chaque piste est écrite d'un coup (commande Write
 Track du contrôleur), puis relue ; la progression s'affiche (`Piste 12 face 1`), ESC
@@ -1395,7 +1402,9 @@ Autres fichiers dans `tools/` :
 - `oricutron-testhook.patch` : frappe simulée et dump mémoire pour ces tests ; avec la
   variable `ORIC_LOCI=dossier`, l'interface du LOCI simulée sur ce dossier, qui tient lieu de
   clé USB (`0:` est son sous-dossier `int`) : EXPORT, IMPORT et USBDIR marchent dans
-  l'émulateur (`ORIC_LOCI=/tmp/cle DSK=build/cpa.dsk tools/run_test.sh ...`).
+  l'émulateur (`ORIC_LOCI=/tmp/cle DSK=build/cpa.dsk tools/run_test.sh ...`). Le contrôleur
+  de disquettes s'y comporte alors comme celui du LOCI : marque `L` en `$0319`, lecteurs
+  montés dans la XRAM, et blocage définitif sur une commande pour un lecteur sans image.
 
 ## Limites connues
 
