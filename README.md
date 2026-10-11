@@ -400,7 +400,8 @@ le renommer sur le Mac.
 Ces commandes passent par l'interface que le LOCI offre au 6502, celle du Picocomputer 6502
 (registres en `$03A0-$03BF`, détail dans `progs/loci_inc.s`). Pour les essayer sans le
 matériel, l'Oricutron de l'atelier simule cette interface sur un dossier du PC :
-`ORIC_LOCI=dossier` (voir « Outils »).
+`ORIC_LOCI=dossier` (voir « Outils »), ou la ligne `loci = '~/Oric/loci'` dans `oricutron.cfg`
+(le dossier doit exister, avec son sous-dossier `int` pour `0:`).
 
 ## Démarrage et reprise après plantage
 
