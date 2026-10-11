@@ -187,7 +187,8 @@ start
         lda #<gq_split
         ldy #>gq_split
         jsr BDOS
-ok      lda #<procbase
+ok      jsr ix_build
+        lda #<procbase
         sta pend
         lda #>procbase
         sta pend+1
@@ -681,7 +682,11 @@ loop    jsr at_end
         bcs done
         ldy #0
         lda (tp),y
-        cmp #" "+1
+        cmp #"A"                ; lettre : suite du mot sans autre test
+        bcc oth
+        cmp #"["
+        bcc more
+oth     cmp #" "+1
         bcc done
         cmp #"["
         beq done
@@ -693,7 +698,7 @@ loop    jsr at_end
         beq done
         jsr is_op
         beq done
-        inc tlen
+more    inc tlen
         jsr inc_tp
         jmp loop
 done    rts
@@ -728,12 +733,14 @@ done    rts
 ; is_op : Z=1 si A est un opérateur (A préservé)
 is_op
 .(
+        cmp #">"+1              ; au-delà de ">" (lettres...) : jamais
+        bcs no                  ; un opérateur
         ldx #8
 loop    cmp ops,x
         beq r
         dex
         bpl loop
-        ldx #1                  ; Z=0
+no      ldx #1                  ; Z=0
 r       rts
 ops     .asc "+-*/=<>()"
 .)
@@ -1010,8 +1017,7 @@ word    lda tnam                ; mémorise le nom de la commande
         sta cname+1
         lda tlen
         sta clen
-        lda #<prims             ; primitive ?
-        ldy #>prims
+        ldx #0                  ; primitive ?
         jsr lookup
         bcs user
         jsr advance             ; consomme le nom ; le jeton suivant est le 1er argument
@@ -1019,15 +1025,78 @@ word    lda tnam                ; mémorise le nom de la commande
 user    jmp call_proc
 .)
 
-; lookup : cherche le mot tnam/tlen dans la table A/Y (nom, 0, adresse ;
-;   0 à la fin). C=0 trouvé, p3 = adresse ; C=1 sinon
+; ix_build : index pix des tables prims (pix) et funcs (pix+52) : pour
+;   chaque lettre, l'adresse de la première entrée (0 : aucune)
+ix_build
+.(
+        ldx #103
+        lda #0
+clr     sta pix,x
+        dex
+        bpl clr
+        lda #<prims
+        ldy #>prims
+        ldx #0
+        jsr one
+        lda #<funcs
+        ldy #>funcs
+        ldx #52
+one     sta p2
+        sty p2+1
+        stx p3
+ent     ldy #0
+        lda (p2),y
+        beq r                   ; fin de la table
+        sec
+        sbc #"A"
+        asl
+        adc p3                  ; (C=0)
+        tax
+        lda pix+1,x
+        bne skip                ; lettre déjà vue
+        lda p2
+        sta pix,x
+        lda p2+1
+        sta pix+1,x
+skip    lda (p2),y              ; entrée suivante : nom, 0, adresse
+        beq nx
+        iny
+        bne skip
+nx      tya
+        sec                     ; + 3
+        adc #2
+        adc p2
+        sta p2
+        bcc ent
+        inc p2+1
+        bne ent
+r       rts
+.)
+
+; lookup : cherche le mot tnam/tlen dans les primitives (X = 0) ou les
+;   fonctions (X = 52) : seul le groupe de la première lettre du mot est
+;   parcouru (index pix). C=0 trouvé, p3 = adresse ; C=1 sinon
 lookup
 .(
+        stx p2
+        ldy #0
+        lda (tnam),y
+        sec
+        sbc #"A"
+        cmp #26
+        bcs no                  ; pas une lettre : aucune primitive
+        asl
+        adc p2                  ; (C=0)
+        tax
+        lda pix+1,x             ; début du groupe de cette lettre
+        beq no                  ; (aucune entrée)
+        sta p2+1
+        lda pix,x
         sta p2
-        sty p2+1
 find    ldy #0
         lda (p2),y
-        beq no
+        cmp (tnam),y            ; autre lettre, ou 0 de fin : absent
+        bne no
         lda p2
         ldy p2+1
         jsr word_is
@@ -1435,8 +1504,7 @@ n2      cmp #TK_OP
         jmp advance
 n3      cmp #TK_WORD
         bne pbad
-        lda #<funcs             ; fonction ?
-        ldy #>funcs
+        ldx #52                 ; fonction ?
         jsr lookup
         bcs unk
         jmp (p3)
@@ -5709,203 +5777,214 @@ dec_hi  .byt >10000,>1000,>100,>10
 ; mots et listes
 #include "ltxt_inc.s"
 
+; Tables des primitives (nom, 0, adresse ; 0 à la fin), rangées par
+;   première lettre : ix_build en tire au démarrage l'index pix (début du
+;   groupe de chaque lettre), et lookup ne compare que les noms de la
+;   lettre du mot. Une primitive ajoutée va dans le groupe de sa lettre.
 prims
-        .asc "RENDS",0
-        .word p_rends
-        .asc "EXECUTE",0
-        .word p_exec
-        .asc "EXEC",0
-        .word p_exec
         .asc "AVANCE",0
         .word p_av
         .asc "AV",0
         .word p_av
-        .asc "RECULE",0
-        .word p_re
-        .asc "RE",0
-        .word p_re
-        .asc "DROITE",0
-        .word p_dr
-        .asc "DR",0
-        .word p_dr
-        .asc "GAUCHE",0
-        .word p_ga
-        .asc "GA",0
-        .word p_ga
-        .asc "LEVECRAYON",0
-        .word p_lc
-        .asc "LC",0
-        .word p_lc
+        .asc "ATTENDS",0
+        .word p_attends
+        .asc "ATTENDSSON",0
+        .word p_attson
+        .asc "AIDE",0
+        .word p_aide
+        .asc "AUREVOIR",0
+        .word p_quitte
         .asc "BAISSECRAYON",0
         .word p_bc
         .asc "BC",0
         .word p_bc
-        .asc "GOMME",0
-        .word p_gomme
-        .asc "INVERSE",0
-        .word p_inv
+        .asc "BRUITV",0
+        .word p_bruitv
         .asc "CACHETORTUE",0
         .word p_ct
         .asc "CT",0
         .word p_ct
-        .asc "MONTRETORTUE",0
-        .word p_mt
-        .asc "MT",0
-        .word p_mt
+        .asc "CERCLE",0
+        .word p_cercle
+        .asc "CHARGE",0
+        .word p_charge
+        .asc "CHARGEIMAGE",0
+        .word p_cimage
+        .asc "DROITE",0
+        .word p_dr
+        .asc "DR",0
+        .word p_dr
+        .asc "DONNE",0
+        .word p_donne
+        .asc "EXECUTE",0
+        .word p_exec
+        .asc "EXEC",0
+        .word p_exec
         .asc "ECRANTEXTE",0
         .word p_etexte
         .asc "EDITE",0
         .word p_edite
         .asc "ECRANMIXTE",0
         .word p_emixte
-        .asc "VIDEECRAN",0
-        .word p_ve
-        .asc "VE",0
-        .word p_ve
-        .asc "NETTOIE",0
-        .word p_net
-        .asc "ORIGINE",0
-        .word p_orig
+        .asc "ETIQUETTE",0
+        .word p_etiq
+        .asc "ECRIS",0
+        .word p_ecris
+        .asc "EC",0
+        .word p_ecris
+        .asc "ENVELOPPE",0
+        .word p_env
+        .asc "ENSEMBLE",0
+        .word p_ensemble
         .asc "FIXECAP",0
         .word p_fcap
         .asc "FIXEXY",0
         .word p_fxy
-        .asc "POINT",0
-        .word p_point
-        .asc "TRAIT",0
-        .word p_trait
-        .asc "RECTANGLE",0
-        .word p_rect
-        .asc "PAVE",0
-        .word p_pave
-        .asc "CERCLE",0
-        .word p_cercle
-        .asc "ETIQUETTE",0
-        .word p_etiq
         .asc "FIXECOULEUR",0
         .word p_fcoul
+        .asc "GAUCHE",0
+        .word p_ga
+        .asc "GA",0
+        .word p_ga
+        .asc "GOMME",0
+        .word p_gomme
+        .asc "INVERSE",0
+        .word p_inv
+        .asc "LEVECRAYON",0
+        .word p_lc
+        .asc "LC",0
+        .word p_lc
+        .asc "LISTE",0
+        .word p_liste
+        .asc "MONTRETORTUE",0
+        .word p_mt
+        .asc "MT",0
+        .word p_mt
+        .asc "MELANGE",0
+        .word p_melange
+        .asc "NETTOIE",0
+        .word p_net
+        .asc "ORIGINE",0
+        .word p_orig
+        .asc "OUBLIE",0
+        .word p_oublie
+        .asc "OUBLIETOUT",0
+        .word p_oubtout
+        .asc "POINT",0
+        .word p_point
+        .asc "PAVE",0
+        .word p_pave
+        .asc "POUR",0
+        .word p_pour
+        .asc "QUITTE",0
+        .word p_quitte
+        .asc "RENDS",0
+        .word p_rends
+        .asc "RECULE",0
+        .word p_re
+        .asc "RE",0
+        .word p_re
+        .asc "RECTANGLE",0
+        .word p_rect
         .asc "REPETE",0
         .word p_repete
         .asc "SI",0
         .word p_si
         .asc "STOP",0
         .word p_stop
-        .asc "ECRIS",0
-        .word p_ecris
-        .asc "EC",0
-        .word p_ecris
-        .asc "DONNE",0
-        .word p_donne
-        .asc "ATTENDS",0
-        .word p_attends
         .asc "SONF",0
         .word p_sonf
         .asc "SON",0
         .word p_son
-        .asc "BRUITV",0
-        .word p_bruitv
-        .asc "ENVELOPPE",0
-        .word p_env
-        .asc "MELANGE",0
-        .word p_melange
-        .asc "ATTENDSSON",0
-        .word p_attson
-        .asc "ENSEMBLE",0
-        .word p_ensemble
         .asc "SILENCE",0
         .word p_silence
-        .asc "POUR",0
-        .word p_pour
         .asc "SAUVE",0
         .word p_sauve
-        .asc "CHARGE",0
-        .word p_charge
         .asc "SAUVEIMAGE",0
         .word p_simage
-        .asc "CHARGEIMAGE",0
-        .word p_cimage
+        .asc "TRAIT",0
+        .word p_trait
         .asc "TITRES",0
         .word p_titres
-        .asc "LISTE",0
-        .word p_liste
-        .asc "OUBLIE",0
-        .word p_oublie
-        .asc "OUBLIETOUT",0
-        .word p_oubtout
-        .asc "AIDE",0
-        .word p_aide
-        .asc "QUITTE",0
-        .word p_quitte
-        .asc "AUREVOIR",0
-        .word p_quitte
+        .asc "VIDEECRAN",0
+        .word p_ve
+        .asc "VE",0
+        .word p_ve
         .byt 0
 
 w_pour   .asc "POUR",0
 w_fin    .asc "FIN",0
-funcs   .asc "HASARD",0
-        .word f_hasard
-        .asc "CAP",0
-        .word f_cap
-        .asc "XCOR",0
-        .word f_xcor
+funcs
         .asc "ALLUME?",0
         .word f_allume
-        .asc "YCOR",0
-        .word f_ycor
-        .asc "RACINE",0
-        .word f_racine
-        .asc "EXP",0
-        .word f_exp
-        .asc "LN",0
-        .word f_ln
-        .asc "SIN",0
-        .word f_sin
-        .asc "COS",0
-        .word f_cos
         .asc "ARCTAN",0
         .word f_atn
+        .asc "ASCII",0
+        .word f_ascii
+        .asc "ARRONDI",0
+        .word f_arrondi
+        .asc "ABS",0
+        .word f_abs
+        .asc "CAP",0
+        .word f_cap
+        .asc "COS",0
+        .word f_cos
+        .asc "CAR",0
+        .word f_car
+        .asc "COMPTE",0
+        .word f_compte
+        .asc "DERNIER",0
+        .word f_dernier
+        .asc "DER",0
+        .word f_dernier
+        .asc "EXP",0
+        .word f_exp
+        .asc "ENT",0
+        .word f_ent
+        .asc "HASARD",0
+        .word f_hasard
+        .asc "ITEM",0
+        .word f_item
+        .asc "JOUE?",0
+        .word f_joue
+        .asc "LN",0
+        .word f_ln
         .asc "LISLISTE",0
         .word f_lisliste
         .asc "LL",0
         .word f_lisliste
         .asc "LISMOT",0
         .word f_lismot
-        .asc "ASCII",0
-        .word f_ascii
-        .asc "CAR",0
-        .word f_car
         .asc "LISCAR",0
         .word f_liscar
-        .asc "TOUCHE?",0
-        .word f_touche
-        .asc "JOUE?",0
-        .word f_joue
-        .asc "ENT",0
-        .word f_ent
-        .asc "ARRONDI",0
-        .word f_arrondi
-        .asc "ABS",0
-        .word f_abs
-        .asc "QUOTIENT",0
-        .word f_quotient
-        .asc "RESTE",0
-        .word f_reste
+        .asc "LISTE",0
+        .word f_liste
+        .asc "LISTE?",0
+        .word f_listep
         .asc "MOT",0
         .word f_mot
+        .asc "MOT?",0
+        .word f_motp
+        .asc "MEMBRE?",0
+        .word f_membrep
+        .asc "NOMBRE?",0
+        .word f_nombrep
         .asc "PHRASE",0
         .word f_phrase
         .asc "PH",0
         .word f_phrase
-        .asc "LISTE",0
-        .word f_liste
         .asc "PREMIER",0
         .word f_premier
         .asc "PR",0
         .word f_premier
-        .asc "DERNIER",0
-        .word f_dernier
-        .asc "DER",0
-        .word f_dernier
+        .asc "QUOTIENT",0
+        .word f_quotient
+        .asc "RACINE",0
+        .word f_racine
+        .asc "RESTE",0
+        .word f_reste
+        .asc "SIN",0
+        .word f_sin
         .asc "SAUFPREMIER",0
         .word f_sp
         .asc "SP",0
@@ -5914,20 +5993,14 @@ funcs   .asc "HASARD",0
         .word f_sd
         .asc "SD",0
         .word f_sd
-        .asc "ITEM",0
-        .word f_item
-        .asc "COMPTE",0
-        .word f_compte
+        .asc "TOUCHE?",0
+        .word f_touche
         .asc "VIDE?",0
         .word f_videp
-        .asc "MOT?",0
-        .word f_motp
-        .asc "LISTE?",0
-        .word f_listep
-        .asc "NOMBRE?",0
-        .word f_nombrep
-        .asc "MEMBRE?",0
-        .word f_membrep
+        .asc "XCOR",0
+        .word f_xcor
+        .asc "YCOR",0
+        .word f_ycor
         .byt 0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
@@ -6155,5 +6228,6 @@ xstack_end= xstack+512
 llbuf   = xstack_end    ; ligne lue par LISLISTE, LISMOT (128)
 spill   = llbuf+128     ; pile du 6502 des expressions en attente d'une
 spill_end = spill+640   ;   fonction (RENDS)
-procbase = (spill_end+255)/256*256   ; procédures, puis le tas des textes
+pix     = spill_end     ; index des primitives par lettre (2 x 26 mots)
+procbase = (pix+104+255)/256*256   ; procédures, puis le tas des textes
 
