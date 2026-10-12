@@ -171,7 +171,9 @@ formater, puis de remettre la disquette système (le système reste en mémoire)
 vide seulement le répertoire d'une disquette déjà formatée : c'est instantané, et cela suffit
 pour une image du LOCI ou d'Oricutron. Les secteurs sont entrelacés (1, 10, 2, 11...) pour
 qu'un vrai lecteur Microdisc lise une piste en deux tours au lieu de dix-sept ; les images
-faites par `mkdisk.py` ne le sont pas, ce qui ne change rien sur le LOCI ni dans Oricutron.
+faites par `mkdisk.py` (`build/*.dsk`) le sont de même. Mesuré dans Clock Signal, qui simule
+la rotation : copier LOGO.COM prend ~12 s au lieu de ~50 s, et le démarrage ~7 s au lieu
+de ~9 s. Cela ne change rien sur le LOCI ni dans Oricutron.
 
 **DISKCOPY.** `DISKCOPY A: B:` copie la disquette de A: sur celle de B: (déjà formatée) :
 amorçage et système, répertoire, puis seulement les blocs occupés par des fichiers ; `/T`

@@ -95,7 +95,8 @@ Dans cet exemple, `|` attend 3 s (le temps que la pause s'affiche) et `\x1cC` ta
 
 - **Le son** : l'émulateur tourne sans audio. Claude vérifie seulement la logique (registres,
   durées) ; l'oreille, c'est toi sur le vrai Oric.
-- **Le timing réel** du lecteur de disquettes et du LOCI.
+- **Le timing réel** du LOCI. Celui d'un vrai lecteur Microdisc (rotation, chargement de la
+  tête) se mesure avec le banc Clock Signal (`tools/setup_clk.sh`), pas avec Oricutron.
 - **Le rendu des couleurs** sur un vrai écran : les captures donnent une idée, sans plus.
 
 D'où les essais sur matériel notés dans `docs/projet-disquette.md`.
@@ -151,6 +152,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py put IMAGE local [NOM.EXT]` | ajouter un fichier |
 | `python3 tools/mkdisk.py era IMAGE NOM.EXT` | effacer un fichier |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT et la table de HELP.COM |
+| `tools/setup_clk.sh` | installe le banc Clock Signal dans `tools/clk/` (une fois, long) |
+| `tools/clk/clkheadless IMAGE tools/clk/roms SCRIPT` | Clock Signal sans écran : frappe, durées en temps émulé d'un vrai Microdisc (`cmd`), écran texte (`screen`) ; syntaxe en tête de `tools/clk-banc.patch` |
 
 ### `run_test.sh` en détail
 

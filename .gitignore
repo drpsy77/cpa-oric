@@ -13,3 +13,4 @@ tools/oricutron/
 _to_delete/
 __pycache__/
 .DS_Store
+tools/clk/

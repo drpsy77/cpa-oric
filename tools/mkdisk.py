@@ -17,6 +17,12 @@ Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
 Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
 face = piste % 2, secteur = LSN % 17 + 1.
 LSN 0-2 : amorçage, 3-66 : système, 68+ : blocs de 2 Ko (bloc 0-1 = répertoire).
+
+Entrelacement : sur chaque piste, les secteurs sont rangés un sur ENTREL
+(variable d'environnement CPA_ENTREL pour essayer une autre valeur ; 1 = dans
+l'ordre). Un vrai lecteur tourne pendant que le BDOS traite un secteur : dans
+l'ordre, le suivant est déjà passé et il faut attendre un tour. La lecture
+des images ne dépend pas de l'ordre (secteurs retrouvés par leur en-tête).
 """
 import os
 import struct
@@ -30,6 +36,20 @@ NBLK = (NSECT - DIR_LSN) // BLK_SECT
 DIR_ENT = 128
 TRACK_LEN = 6400
 GAP1, GAP2, GAP3 = 72, 34, 50
+ENTREL = int(os.environ.get("CPA_ENTREL", "2"))
+
+
+def slot_order(k):
+    """Numéros de secteur dans l'ordre de passage sous la tête, un sur k
+    (k = 2 : 1, 10, 2, 11... 9, comme FORMAT.COM)."""
+    order = [0] * SPT
+    pos = 0
+    for s in range(1, SPT + 1):
+        while order[pos]:
+            pos = (pos + 1) % SPT
+        order[pos] = s
+        pos = (pos + k) % SPT
+    return order
 
 CRCTAB = []
 for i in range(256):
@@ -92,7 +112,7 @@ class Disk:
             for cyl in range(NCYL):
                 t = bytearray()
                 t += b"\x4e" * (GAP1 - 12)
-                for s in range(1, SPT + 1):
+                for s in slot_order(ENTREL):
                     lt = cyl * 2 + side
                     data = self.sec[lt * SPT + s - 1]
                     idf = b"\xa1\xa1\xa1\xfe" + bytes([cyl, side, s, 1])
