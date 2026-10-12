@@ -1,0 +1,207 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e709556..16d6f2b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -85,3 +85,9 @@ endif()
+ install(TARGETS clksignal RUNTIME DESTINATION bin)
+ 
+ # TODO: Investigate building on Windows.
++
++# Banc d'essai CP/A (local, hors dépôt CLK)
++set(CLK_HEADLESS_SOURCES ${CLK_SOURCES})
++list(FILTER CLK_HEADLESS_SOURCES EXCLUDE REGEX "OSBindings/")
++add_executable(clkheadless ${CLK_HEADLESS_SOURCES} harness/headless.cpp)
++target_link_libraries(clkheadless PRIVATE ZLIB::ZLIB OpenGL::GL)
+diff --git a/Machines/Oric/Microdisc.cpp b/Machines/Oric/Microdisc.cpp
+index 8863588..199f681 100644
+--- a/Machines/Oric/Microdisc.cpp
++++ b/Machines/Oric/Microdisc.cpp
+@@ -34,7 +34,7 @@ void Microdisc::set_control_register(uint8_t control, uint8_t changes) {
+ 
+ 	// b65: drive select
+ 	if((changes >> 5)&3) {
+-		set_drive(1 << (control >> 5)&3);
++		set_drive(1 << ((control >> 5)&3));
+ 	}
+ 
+ 	// b4: side select
+diff --git a/Machines/Oric/Oric.cpp b/Machines/Oric/Oric.cpp
+index 806be3e..88f5792 100644
+--- a/Machines/Oric/Oric.cpp
++++ b/Machines/Oric/Oric.cpp
+@@ -83,6 +83,8 @@ private:
+ 
+ }
+ 
++uint8_t *clk_harness_ram = nullptr;
++
+ namespace Oric {
+ 
+ using DiskInterface = Analyser::Static::Oric::Target::DiskInterface;
+@@ -305,6 +307,7 @@ public:
+ 		// so I can't have any switch-to-NTSC bytes in the display area. Hence:
+ 		// disallow all atributes.
+ 		Memory::Fuzz(ram_);
++		clk_harness_ram = ram_.data();
+ 		for(auto &c: ram_) {
+ 			c |= 0x40;
+ 		}
+diff --git a/harness/headless.cpp b/harness/headless.cpp
+new file mode 100644
+index 0000000..87f166d
+--- /dev/null
++++ b/harness/headless.cpp
+@@ -0,0 +1,153 @@
++// Banc d'essai sans écran pour Clock Signal (Oric + Microdisc), pour CP/A
++// (tools/clk-banc.patch, installé par tools/setup_clk.sh). L'émulation va
++// aussi vite que possible ; les durées affichées sont en temps émulé.
++// Usage : clkheadless image.dsk dossier_roms script
++// Script, une commande par ligne (# : commentaire) :
++//   waitprompt       attend un prompt A> à D> (démarrage), affiche l'heure
++//   run S            fait tourner S secondes
++//   type TEXTE       tape TEXTE sur la matrice du clavier (\n = Entrée)
++//   cmd TEXTE        tape TEXTE puis Entrée, et mesure le temps entre
++//                    Entrée et le retour du prompt
++//   screen           affiche l'écran texte
++//   verbose 1        trace les voyants (tête du Microdisc, moteurs)
++#include "Analyser/Static/StaticAnalyser.hpp"
++#include "Machines/Utility/MachineForTarget.hpp"
++#include "Machines/DynamicMachine.hpp"
++#include "Activity/Observer.hpp"
++#include "Inputs/Keyboard.hpp"
++#include <cstdio>
++#include <fstream>
++#include <iostream>
++#include <string>
++#include <vector>
++
++extern uint8_t *clk_harness_ram;
++static double now_s = 0.0;
++
++struct Obs: public Activity::Observer {
++	bool verbose = false;
++	void set_led_status(std::string_view name, bool lit) override {
++		if(verbose) printf("  [%8.3f] LED %.*s %s\n", now_s, int(name.size()), name.data(), lit ? "on" : "off");
++	}
++	void announce_drive_event(std::string_view, DriveEvent) override { ++steps; }
++	int steps = 0;
++};
++
++static std::vector<std::string> screen_lines() {
++	std::vector<std::string> out;
++	for(int r = 0; r < 28; r++) {
++		std::string l;
++		for(int c = 0; c < 40; c++) {
++			uint8_t b = clk_harness_ram[0xbb80 + r*40 + c] & 0x7f;
++			l += (b >= 32 && b < 127) ? char(b) : ' ';
++		}
++		while(!l.empty() && l.back() == ' ') l.pop_back();
++		out.push_back(l);
++	}
++	return out;
++}
++static std::string last_line() {
++	auto s = screen_lines();
++	for(int i = 27; i >= 0; i--) {
++		std::string l = s[i];
++		size_t p = l.find_first_not_of(' ');
++		if(p != std::string::npos) return l.substr(p);
++	}
++	return "";
++}
++
++using K = Inputs::Keyboard::Key;
++static bool key_for(char c, K &k, bool &shift) {
++	shift = false;
++	if(c >= 'a' && c <= 'z') c -= 32;
++	if(c >= 'A' && c <= 'Z') { static const K L[] = {K::A,K::B,K::C,K::D,K::E,K::F,K::G,K::H,K::I,K::J,K::K,K::L,K::M,K::N,K::O,K::P,K::Q,K::R,K::S,K::T,K::U,K::V,K::W,K::X,K::Y,K::Z}; k = L[c-'A']; return true; }
++	if(c >= '1' && c <= '9') { static const K D[] = {K::k1,K::k2,K::k3,K::k4,K::k5,K::k6,K::k7,K::k8,K::k9}; k = D[c-'1']; return true; }
++	switch(c) {
++		case '0': k = K::k0; return true;
++		case ' ': k = K::Space; return true;
++		case '\n': k = K::Enter; return true;
++		case '.': k = K::FullStop; return true;
++		case ',': k = K::Comma; return true;
++		case ';': k = K::Semicolon; return true;
++		case ':': k = K::Semicolon; shift = true; return true;
++		case '*': k = K::k8; shift = true; return true;
++		case '=': k = K::Equals; return true;
++		case '/': k = K::ForwardSlash; return true;
++		case 27: k = K::Escape; return true;
++	}
++	return false;
++}
++static bool is_prompt(const std::string &l) {
++	return l.size() == 2 && l[0] >= 'A' && l[0] <= 'D' && l[1] == '>';
++}
++
++int main(int argc, char **argv) {
++	if(argc < 4) { fprintf(stderr, "usage\n"); return 1; }
++	std::string rompath = argv[2]; if(rompath.back() != '/') rompath += '/';
++	auto targets = Analyser::Static::GetTargets(argv[1]);
++	if(targets.empty()) { fprintf(stderr, "no target\n"); return 1; }
++	ROMMachine::ROMFetcher fetch = [&](const ROM::Request &roms) -> ROM::Map {
++		ROM::Map results;
++		for(const auto &d: roms.all_descriptions()) for(const auto &f: d.file_names) {
++			std::ifstream in(rompath + d.machine_name + "/" + f, std::ios::binary);
++			if(!in) continue;
++			results[d.name] = std::vector<uint8_t>((std::istreambuf_iterator<char>(in)), {});
++			break;
++		}
++		return results;
++	};
++	::Machine::Error error;
++	std::unique_ptr<::Machine::DynamicMachine> m(::Machine::MachineForTargets(targets, fetch, error));
++	if(!m) { fprintf(stderr, "machine error %d\n", int(error)); return 1; }
++	Obs obs;
++	if(m->activity_source()) m->activity_source()->set_activity_observer(&obs);
++	auto tm = m->timed_machine();
++	auto kb = m->keyboard_machine();
++	const double step = 0.01;
++	auto run = [&](double s) { for(double t = 0; t < s; t += step) { tm->run_for(step); now_s += step; } };
++	auto press = [&](const std::string &t) {
++		auto &k = kb->keyboard();
++		for(char c: t) {
++			K key; bool shift;
++			if(!key_for(c, key, shift)) { fprintf(stderr, "touche ? %c\n", c); continue; }
++			if(shift) { k.set_key_pressed(K::LeftShift, 0, true, false); run(0.05); }
++			k.set_key_pressed(key, 0, true, false); run(0.12);
++			k.set_key_pressed(key, 0, false, false);
++			if(shift) k.set_key_pressed(K::LeftShift, 0, false, false);
++			run(0.12);
++		}
++	};
++	auto unescape = [](std::string t) { std::string o; for(size_t i=0;i<t.size();i++){ if(t[i]=='\\'&&i+1<t.size()&&t[i+1]=='n'){o+='\n';i++;} else o+=t[i];} return o; };
++
++	std::ifstream sc(argv[3]);
++	std::string line;
++	while(std::getline(sc, line)) {
++		if(line.empty() || line[0] == '#') continue;
++		std::string op = line.substr(0, line.find(' '));
++		std::string arg = line.size() > op.size() ? line.substr(op.size() + 1) : "";
++		if(op == "run") run(std::stod(arg));
++		else if(op == "verbose") obs.verbose = arg == "1";
++		else if(op == "type") press(unescape(arg));
++		else if(op == "waitprompt") {
++			const double limit = now_s + 120;
++			while(now_s < limit && !is_prompt(last_line())) run(step);
++			printf("PROMPT %8.2f s\n", now_s);
++		}
++		else if(op == "screen") { for(auto &l: screen_lines()) printf("|%s\n", l.c_str()); }
++		else if(op == "cmd") {
++			double t_start = now_s, t0 = -1;
++			press(arg);
++			t0 = now_s;
++			press("\n");
++			const double limit = now_s + 600;
++			while(now_s < limit) {
++				run(step);
++				std::string l = last_line();
++				if(t0 >= 0 && is_prompt(l)) break;
++			}
++			printf("CMD %-28s %7.2f s (frappe %.2f s)\n", arg.c_str(), now_s - t0, t0 - t_start);
++		}
++	}
++	m.reset();
++	return 0;
++}

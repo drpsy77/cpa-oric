@@ -492,7 +492,8 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
   - Entrelacement 2:1 (1, 10, 2, 11... 9) : sans lui, un vrai Microdisc ne lit qu'un
     secteur par tour (le BDOS traite le secteur pendant que le suivant passe) ; avec, une
     piste se lit en deux tours environ. Sans effet sur le LOCI et Oricutron (la recherche
-    d'un secteur n'y dépend pas de la rotation), et `mkdisk.py` reste en ordre 1:1.
+    d'un secteur n'y dépend pas de la rotation), et `mkdisk.py` reste en ordre 1:1
+    (passé lui aussi en 2:1 en octobre 2026, voir plus bas).
   - Relecture de chaque piste aussitôt écrite (17 secteurs, tous à `$E5`, deux essais) :
     c'est la vérification, et sur le LOCI elle remet aussi à neuf le compteur d'attente
     du firmware (`dsk_rw_countdown`, fixé par une lecture mais pas par Write Track) avant la
@@ -738,6 +739,38 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     `FORMAT B:` d'une image vierge, `COPY` et `HELLO` depuis B: ; `tools/test_asm.sh` à 0
     différence. Restent Clock Signal (premier accès après plus de 3 s : TYPE, PUT, FORMAT)
     et un vrai Microdisc.
+
+- Entrelacement 2:1 des images faites par `mkdisk.py` (Pierre, octobre 2026 : dans Clock
+  Signal, `COPY LOGO.COM LOG2.COM` prend ~45 s, bien plus que sur le LOCI ou Oricutron).
+  Cause : `mkdisk.py` rangeait les secteurs dans l'ordre (1:1) ; pendant que le BDOS traite
+  un secteur, le suivant passe, et chaque secteur coûte un tour (0,2 s). Choix :
+  - Même rangement que FORMAT.COM (1, 10, 2, 11... 9), constante `ENTREL` de `mkdisk.py`
+    (variable d'environnement `CPA_ENTREL` pour en essayer un autre). Rien dans le système,
+    ni dans le contrat ; l'amorçage demande ses secteurs par numéro et en profite aussi.
+  - Mesuré dans Clock Signal (banc `tools/clk/clkheadless`, temps émulé) :
+
+    | Rangement | Démarrage | `COPY LOGO.COM LOG2.COM` | `DIR LOG*.*` |
+    |---|---|---|---|
+    | 1:1 (avant) | 9,0 s | 50,2 s | 4,2 s |
+    | **2:1** | **6,8 s** | **12,4 s** | **1,6 s** |
+    | 3:1 | 7,6 s | 13,8 s | 1,6 s |
+    | 4:1 | 8,6 s | 16,1 s | 1,8 s |
+
+    Écarté : un décalage du secteur 1 d'une piste à l'autre (essayé de 1 à 12 secteurs en
+    plus du 2:1) : au mieux 3 % sur COPY, dans le bruit des mesures.
+  - Banc d'essai Clock Signal (`tools/setup_clk.sh`, `tools/clk-banc.patch`) : Clock Signal
+    compilé sans écran, piloté par un script (frappe sur la matrice du clavier, temps émulé
+    entre Entrée et le retour du prompt, écran texte lu en mémoire). Il simule la rotation
+    et le chargement de tête, ce que ne font ni Oricutron ni le LOCI. Le correctif y règle
+    aussi la sélection des lecteurs du Microdisc (défaut signalé à l'auteur).
+  - Mesuré au passage : la première commande inconnue d'une session prend ~16 s sur un
+    Microdisc dont B:, C: et D: sont vides (~5 s par lecteur : déplacement de tête jamais
+    terminé, délai de ~3,4 s, deux fois), puis ~1,8 s grâce à `bad_vec`. À reprendre si
+    Pierre le juge utile (délai du déplacement, ou un seul essai par lecteur).
+  - Essayé : Oricutron (test complet de l'atelier, COPY), `tools/test_asm.sh` à 0
+    différence, relecture des images par `mkdisk.py`. Reste le LOCI (démarrer la nouvelle
+    image, un COPY) : il retrouve les secteurs par leur en-tête, mais un rangement autre que
+    1:1 n'y a jamais été essayé (FORMAT n'y a pas encore été essayé non plus).
 
 ## Suite prévue (par priorité)
 
