@@ -1050,6 +1050,25 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
        (option de sortie compressée). Type de fichier à choisir (`.HIZ` ?).
      - Pas avant que Pierre ait testé l'existant. **Fait** (lot LH, avec les animations).
 
+8. **Éditeur de caractères et de sprites, avec masque, et bibliothèque d'affichage**
+   (backlog, Pierre, octobre 2026 ; **à réfléchir encore**, rien à coder ni à décider avant
+   d'en reparler). Cible d'abord GRAPHER, mais pourquoi pas LOGO ou d'autres programmes.
+   Idée de Pierre : un fichier de sprites est un ensemble de bits rangés par paquets de 6
+   (un octet de l'Oric : 6 points utiles), qu'on met ensuite soit dans l'écran HIRES, soit
+   dans un caractère pour le redéfinir (jeux en écran texte).
+   Points à examiner le moment venu (notés, non tranchés) :
+   - l'éditeur : un `.COM` plein écran (grille agrandie, aperçu en taille réelle), édition
+     du dessin et de son masque ; tailles de sprite (multiples de 6 points en largeur ?) ;
+   - le format du fichier : en-tête (nombre, largeur en octets, hauteur), puis données et
+     masques ; les bits 6 et 7 de chaque octet (attribut / vidéo inverse en HIRES) ;
+   - l'affichage HIRES avec masque (`ET` masque puis `OU` dessin, fond sauvé pour
+     l'effacer) : position au point près ou par colonne de 6 points (copies décalées
+     d'avance, ou décalage à l'affichage : place contre vitesse) ;
+   - les caractères redéfinis : un sprite découpé en caractères de 6 × 8 (police en
+     `$B400`), animation par changement de la définition ;
+   - la bibliothèque : un `.INC` pour les programmes en assembleur et la traduction GRAPHER
+     (comme `HIRES.INC`, prévoir large), puis des primitives LOGO éventuelles.
+
 ## Contraintes à garder en tête
 
 - 479 octets libres dans la zone du code (602 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
