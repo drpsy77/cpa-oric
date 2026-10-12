@@ -59,7 +59,7 @@ plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservée
 | `$0244` | 1 = une ligne laissée par CHAIN attend dans `$0400` (interne au système) |
 | `$0245` | imprimante : bit 0 = CTRL-P actif, bit 7 = suspendu pendant l'édition d'une ligne (interne) |
 
-Les autres variables de la page 2 sont internes (liste complète : `src/hw.inc`). La partie
+Les autres variables de la page 2 sont internes (liste complète, page 3 comprise : `docs/memoire-pages-2-3.md`). La partie
 publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 ### Fonctions du BDOS

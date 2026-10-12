@@ -1,6 +1,7 @@
 # GRAPHER : écran texte (LORES), tableaux et chaînes — spécification
 
-État : **proposition à relire par Pierre** (octobre 2026). Rien n'est codé.
+État : **palier A relu par Pierre** (12 octobre 2026, réponses intégrées ; une question
+reste, A1) ; paliers B et C à relire. Rien n'est codé.
 Décisions déjà prises : `docs/projet-disquette.md`, « Jeux en écran texte : GRAPHER et LOGO ».
 Ce document ne concerne que GRAPHER ; les ajouts à LOGO (FIXECURSEUR, CURSEUR, VIDETEXTE,
 CARECRAN) et sa tokenisation feront l'objet de lots séparés.
@@ -25,19 +26,29 @@ CARECRAN) et sa tokenisation feront l'objet de lots séparés.
 
 | Commande | Effet |
 |---|---|
-| `LORES` | le programme prend l'écran texte entier : 40 colonnes (0-39) × 28 lignes (0-27), ligne 0 et colonnes 0-1 comprises. L'écran est effacé (voir `CLS`), le curseur de la console est éteint, la barre de menus disparaît, FUNCT est ignoré. Curseur d'écriture en colonne 2, ligne 0 (voir question Q1). |
-| `TEXT` | retour à la console (comme aujourd'hui) : écran effacé, couleurs de PAPER et INK, barre de menus, curseur. |
-| `CLS` | en LORES : efface l'écran (espaces), remet en colonnes 0 et 1 de chaque ligne le papier et l'encre courants de la console (PAPER, INK), curseur en colonne 2, ligne 0. Hors LORES : efface la console (comme la commande CLS du CCP). |
+| `LORES` | le programme prend l'écran texte entier : 40 colonnes (0-39) × 28 lignes (0-27), ligne 0 et colonnes 0-1 comprises. L'écran est effacé (voir `CLS`), le curseur de la console est éteint, la barre de menus disparaît, les touches de la console sont sans effet (1.3). Curseur d'écriture en colonne 0, ligne 0. |
+| `TEXT` | retour à la console (comme aujourd'hui) : écran rempli d'espaces (32), couleurs de PAPER et INK en colonnes 0-1, barre de menus, curseur. |
+| `CLS` | en LORES : remplit les 1 120 cases, colonnes 0 à 39, de l'attribut 16 (papier noir ; l'Oric en BASIC met 16 partout sauf 8 en colonne 0, Pierre préfère 16 partout) ; curseur en colonne 0, ligne 0. Hors LORES : efface la console (comme la commande CLS du CCP). |
 
 - `HIRES` et `SPLIT` depuis LORES : comme depuis le texte (l'écran texte est perdu).
 - Les commandes de dessin (`PLOT`, `LINE`... `GTEXT`, `GNUM`, `ATTR`) restent réservées à
   HIRES et SPLIT : en LORES, l'erreur actuelle (`HIRES ou SPLIT d'abord`).
-- **Fin du programme en LORES** (fin du fichier ou `END`) : comme en HIRES, l'écran reste
-  affiché jusqu'à une touche, puis retour à la console. **ESC** entre deux lignes arrête,
-  comme aujourd'hui. **Erreur** : retour à la console, puis le message habituel
+- **Fin du programme en LORES** (fin du fichier ou `END`) : retour immédiat à la console,
+  **sans attente imposée par GRAPHER** (Pierre : attendre est le rôle d'une instruction du
+  programme, `WAIT` ou `GET`). Pour HIRES, voir la question A1. **ESC** entre deux lignes
+  arrête, comme aujourd'hui. **Erreur** : retour à la console, puis le message habituel
   `L n COMMANDE : message`.
-- `WAIT`, `DELAY`, `INKEY` inchangés (INKEY lit sans attendre, la répétition des touches
-  est celle du menu Clavier).
+- Touches :
+
+  | Élément | Effet |
+  |---|---|
+  | `INKEY` | fonction : code de la touche tapée, 0 si aucune ; n'attend pas (inchangé) |
+  | `GET V` | **nouveau** : attend une touche et range son code dans la variable V |
+  | `WAIT` | attend une touche, sans la garder (inchangé) : `GET` sans variable |
+  | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier (inchangé) : cadence d'une animation ou d'un jeu |
+
+  ESC arrête le programme, y compris pendant `GET` et `WAIT` (comme aujourd'hui pour WAIT).
+  La répétition des touches est celle du menu Clavier.
 
 ### 1.2 Écrire et lire des cases
 
@@ -47,10 +58,10 @@ CARECRAN) et sa tokenisation feront l'objet de lots séparés.
 | `CHAR col lig code` | écrit l'octet `code` (0-255) dans la case : un caractère (32-127), un attribut (0-31 : encre 0-7, papier 16-23, et les autres attributs de l'Oric), ou un caractère en vidéo inverse (+128). Le curseur ne bouge pas. |
 | `SCRN(col,lig)` | fonction : l'octet de la case (0-255). |
 | `ECHO texte` | écrit le texte au curseur, qui avance sur la ligne. Sans guillemets : comme aujourd'hui (espaces du début sautés). Entre guillemets : `ECHO "  Score : "` écrit exactement ce qui est entre les guillemets, espaces compris. `$1`-`$9` sont remplacés dans les deux cas. |
-| `ECHO` (seul) | passe à la ligne suivante, en colonne 0 (voir Q1) ; après la ligne 27 : ligne 0. Rien n'est effacé. |
+| `ECHO` (seul) | passe à la ligne suivante, en colonne 0 ; après la ligne 27 : ligne 0. Rien n'est effacé. Pour commencer plus loin : `TAB 2`. |
 | `PRINT expr` | écrit le nombre au curseur (sans passage à la ligne), qui avance. |
-| `SPC n` | écrit n espaces au curseur (efface), le curseur avance. |
-| `TAB n` | avance le curseur de n colonnes **sans rien écrire** (relatif : en BASIC de l'Oric, `TAB(n)` va à la colonne n ; ici, `LOCATE` donne la colonne absolue). |
+| `SPC n [x]` | écrit n fois l'octet x au curseur (x : 0-255, 32 = espace par défaut), le curseur avance : des espaces, l'attribut 16 de LORES, un trait de `-`... (Pierre a écrit `SPC(N,X)` ; en GRAPHER, les paramètres d'une commande sont séparés par des espaces, les parenthèses étant pour les fonctions.) |
+| `TAB n` | avance le curseur de n colonnes **sans rien écrire** (n ≥ 0, sinon `valeur hors limites` : pas de TAB négatif ; relatif : en BASIC de l'Oric, `TAB(n)` va à la colonne n ; ici, `LOCATE` donne la colonne absolue). |
 
 **Règle du bord droit** (ECHO, PRINT, SPC, TAB) : on n'écrit jamais au-delà de la colonne 39.
 Ce qui dépasse est perdu, sans erreur ; le curseur reste « au bout » (colonne 40) et tout ce
@@ -59,17 +70,23 @@ sur la ligne suivante (dont les colonnes 0-1 portent les attributs), rien ne fai
 
 Hors LORES, `LOCATE`, `CHAR`, `SCRN`, `SPC` et `TAB` donnent l'erreur `LORES d'abord`.
 
-### 1.3 Ce qu'il faut au système (touche au contrat : accord demandé)
+### 1.3 Ce qu'il faut au système (ajout au contrat : accordé par Pierre)
 
 En HIRES, le système sait qu'un programme a l'écran (`hires_on`, octet `$1E` en `$BFDF`) :
 FUNCT est ignoré, les voyants de la barre (`A`/`a` par CTRL-T, `P` par CTRL-P) ne sont pas
 redessinés, et le démarrage à chaud remet la console. En LORES, aucune case de l'écran ne
 peut servir de marque (le programme les utilise toutes). Proposition :
 
-- une **variable publique de la page 2**, `SCR_PROG` (adresse libre à choisir), mise à 1 par
+- une **variable publique de la page 2**, `SCR_PROG` (une des adresses libres de
+  `docs/memoire-pages-2-3.md`, par exemple `$020E`, à côté du haut de la TPA), mise à 1 par
   un programme qui prend l'écran texte ; `hires_on` devient « écran au programme » (HIRES
   ou `SCR_PROG`) ; le démarrage à chaud la remet à 0 et réaffiche la console (effacement,
-  attributs, barre). Sans cela, CTRL-T écrirait `A` en ligne 0, colonne 37 d'un jeu.
+  attributs, barre). Pierre : toutes les interactions de la console sont alors
+  désactivées. Concrètement : FUNCT ne fait rien (pas de menus) ; CTRL-T et CTRL-P n'agissent
+  plus et ne dessinent plus de voyant (sans cela, CTRL-T écrirait `A` en ligne 0, colonne
+  37 d'un jeu) : leur code arrive au programme comme une touche ordinaire ; pas de
+  clignotement du curseur ni de pause en fin d'écran (le programme n'écrit pas sur la
+  console). Reste RESET (bouton) : retour au prompt, console remise.
 - C'est un **ajout au contrat** (une variable publique de plus, dans `progs/cpa.inc` et
   `docs/architecture.md`), donc aussi dans la version ROM ; rien ne change pour l'existant.
 - Coût estimé : 20 octets résidents (prévoir 40), sur 287 libres.
@@ -151,7 +168,9 @@ plus tard si un jeu HIRES en a besoin.
   chaîne ou au bord droit (on ne peut plus taper, sans erreur) ; ESC arrête le programme
   (comme partout). Après RETURN, le curseur reste après le texte saisi.
 - **Hors LORES** : la saisie de ligne de la console (BDOS 10), coupée à la capacité.
-- Question Q3 : faut-il aussi `INPUT V` pour un nombre ?
+- **`INPUT V`** (accordé par Pierre) : même saisie, chiffres et signe `-` seulement, au plus
+  6 caractères ; RETURN valide un entier de -32768 à 32767 ; vide ou hors limites : la
+  saisie est refusée (son bref, on recommence), pas d'erreur qui arrête le programme.
 
 ## 3. Palier C : fichiers
 
@@ -193,13 +212,13 @@ palier C, le même tableau enregistré, un niveau dessiné dans EDIT, un écran 
 
 ## 5. Questions
 
-- **Q1. Colonnes 0 et 1.** `LORES` et `CLS` y mettent les couleurs de PAPER et INK, et le
-  curseur part en colonne 2 : un texte écrit sans LOCATE a les couleurs de la console. Mais
-  un `ECHO` seul ramène en colonne 0 (comme tu l'as demandé) : le texte suivant écrase alors
-  les deux attributs de la ligne (la ligne repasse en noir et blanc, défaut de l'Oric).
-  Propositions : (a) `ECHO` seul ramène en colonne 2, la colonne 0 restant accessible par
-  LOCATE et CHAR ; ou (b) colonne 0, et LORES efface sans attributs (tout en espaces, noir et
-  blanc, couleurs posées par le programme avec CHAR). Je penche pour (a).
-- **Q2. `SCR_PROG`** : d'accord pour cet ajout au contrat (variable publique de la page 2) ?
-- **Q3. `INPUT V`** (nombre) : utile ou non ?
-- **Q4. Types par défaut** des fichiers : `.TXT` (texte), `.DAT` (binaire), `.SCR` (écran) ?
+Réponses de Pierre (12 octobre 2026) : **Q1** colonne 0 (les attributs se posent partout
+dans un jeu ; pour se décaler, `TAB`) ; **Q2** oui, toutes les interactions de la console
+désactivées ; **Q3** oui, `INPUT V` pour un entier de 16 bits (voir 2.5) ; **Q4** oui.
+
+- **A1. Fin d'un programme HIRES.** Aujourd'hui, GRAPHER attend une touche à la fin d'un
+  programme HIRES. Faut-il, comme en LORES, ne plus attendre (cohérent : l'attente devient
+  toujours un `WAIT` ou un `GET` écrit dans le programme) ? Il faudrait alors ajouter `WAIT`
+  à la fin des exemples livrés qui en dépendent (`ECRAN.GRX`, `MOTIFS.GRX`, `ANIMS.GRX`...),
+  et les programmes de Pierre écrits avant changeraient de comportement. Je penche pour
+  oui, pour n'avoir qu'une règle.

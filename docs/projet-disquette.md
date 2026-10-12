@@ -781,8 +781,10 @@ codé). Décidé :
     bornée à la capacité de la chaîne et à la fin de la ligne.
   - Fichiers : `LOAD`/`SAVE` en texte, `BLOAD`/`BSAVE` en binaire (proposé) ; idée : les
     mêmes sur l'écran texte entier (écran titre).
-- **Spécification** à relire par Pierre : `docs/spec-grapher-lores.md` (paliers A LORES, B
-  tableaux et chaînes, C fichiers ; questions Q1-Q4).
+- **Spécification** : `docs/spec-grapher-lores.md` (paliers A LORES, B tableaux et chaînes,
+  C fichiers). Palier A relu par Pierre le 12 octobre (CLS en attribut 16, pas d'attente
+  imposée en fin de programme, GET, `SPC n [x]`, `INPUT V`, `SCR_PROG` accordé) ; B et C à
+  relire. Pages 2 et 3 documentées : `docs/memoire-pages-2-3.md`.
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.
