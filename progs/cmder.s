@@ -167,6 +167,7 @@ ub      = $A2           ; vers la clé : second enregistrement (2)
 ucnt    = $A4
 ulen    = $A5           ; u_hdr : longueur maximale du nom
 vprev   = $A6           ; Voir : caractère précédent (CR LF)
+curk    = $A7           ; copie : rang du fichier en cours (0 = premier)
 ; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
 ; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
 PZ0     = $25
@@ -4667,6 +4668,7 @@ lp      lda ci
         jmp end
 go      tax
         lda ch_k,x
+        sta curk
         tax
         lda tg,x
         jsr ent_ptr
@@ -4749,6 +4751,7 @@ nn      sta dfcb+1,y
         ldy #>m_cpy
         jsr lb_str
         jsr dname
+        jsr lb_pn
         jsr lb_to_msg
         jsr draw_msg
         jsr set_dma0            ; le nom existe-t-il ?
@@ -4812,6 +4815,33 @@ ok      lda #0
 dname   lda #<dfcb+1
         ldy #>dfcb+1
         jmp lb_pat
+.)
+
+; lb_pn : « (p/n) » après le nom : fichier p sur n (plusieurs seulement)
+lb_pn
+.(
+        lda ntg
+        cmp #2
+        bcc rt
+        lda #0
+        sta sepf
+        lda #" "
+        jsr lb_chr
+        lda #"("
+        jsr lb_chr
+        ldx curk
+        inx
+        txa
+        jsr num8
+        jsr lb_numl
+        lda #"/"
+        jsr lb_chr
+        lda ntg
+        jsr num8
+        jsr lb_numl
+        lda #")"
+        jmp lb_chr
+rt      rts
 .)
 
 ; wr_chunk : écrit la tranche ci (bp avance) ; C=1 si disque plein
@@ -5891,7 +5921,9 @@ f0      jsr esc_chk
         lda #>m_esc
         sta errm+1
         jmp u_end
-ne      jsr open_dst            ; copie créée sur la disquette
+ne      lda vi
+        sta curk
+        jsr open_dst            ; copie créée sur la disquette
         lda stopf
         beq ok1
         jmp u_end
@@ -6101,6 +6133,9 @@ pgo     jsr lb_clear            ; progression
         lda ep
         ldy ep+1
         jsr lb_pat
+        lda vi
+        sta curk
+        jsr lb_pn
         jsr lb_to_msg
         jsr draw_msg
         jsr ent_fcb             ; ouverture de l'original
