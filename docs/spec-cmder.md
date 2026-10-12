@@ -1,7 +1,8 @@
-# CMDER : gestionnaire de fichiers en plein écran — maquette
+# CMDER : gestionnaire de fichiers en plein écran — spécification
 
-État : **maquette validée** par Pierre (12 octobre 2026), rien de codé ; le code attend la fin du sujet en cours. Nom choisi par Pierre (écho à
-GRAPHER). Un `.COM`, **rien de résident**, contrat d'interface inchangé.
+État : maquette validée par Pierre (12 octobre 2026), **version 1 faite** le même jour
+(`progs/cmder.s`, CMDER.COM 7 628 octets, lot LJ) ; écarts de la réalisation au § 11. Nom
+choisi par Pierre (écho à GRAPHER). Un `.COM`, **rien de résident**, contrat d'interface inchangé.
 
 ## 0. Périmètre
 
@@ -30,7 +31,7 @@ Maquette sur les 37 colonnes utiles (le curseur est une ligne en vidéo inverse,
 
 ```
  0 |Fichier Marque Trier Vue          a  |
- 1 |A: *.*     40 fichiers  126 Ko libres|
+ 1 |A: *.*              40 fic 126K libre|
  2 |  NOM+     TYP  TAILLE RS   N GENRE  |
  3 |  ANIM     INC   8 832 R    1 Source |
  4 |  ARDOISE  GRX     384      2 Grapher|
@@ -182,7 +183,7 @@ les noms et la liste des noms ferait défiler l'écran.
 - **Déplacer** (`^D`) : même lecteur et autre nom = renommer ; autre lecteur = copier puis
   effacer l'original, seulement si la copie a réussi ; original R/O : refusé.
 - **Un seul lecteur** : le fichier est lu dans un tampon (le reste de la TPA, ~28 Ko), puis :
-  `Disquette DESTINATION en A:, une touche`, écriture, `Disquette SOURCE en A:, une touche`,
+  `DESTINATION en A:, une touche`, écriture, `SOURCE en A:, une touche`,
   et ainsi de suite ; un fichier plus grand que le tampon demande plusieurs échanges (il est
   fermé puis repris à son enregistrement suivant). Le BDOS est prévenu à chaque échange
   (fonction 13, comme DISKCOPY). **Protection contre une erreur d'échange** : CMDER note une
@@ -263,11 +264,51 @@ Pour que ce soit simple à ajouter, la version 1 range déjà ce qui dépend de 
 (lire la liste, lire et écrire un fichier, effacer, renommer) derrière quelques routines : une
 colonne USB n'aura qu'à fournir les siennes.
 
-## 10. À trancher en codant (sans changer ce que voit l'utilisateur)
+## 10. Tranché en codant
 
-- Fonctions 17/18 avec `?` dans l'octet d'extent : rendent-elles toutes les entrées dans
-  l'ordre du répertoire ? Sinon, lecture directe (BIOS) comme DISKCOPY.
-- Reprise d'un fichier en cours de copie après un échange : réouverture puis position par
-  l'accès direct (fonctions 33-36).
-- Affichage direct dans `$BB80` (comme EDIT) et touches par la fonction 6 : vérifier que
-  FUNCT ouvre bien la barre de CMDER pendant l'attente d'une touche.
+- Les fonctions 17/18 avec `?` partout (extent compris) rendent toutes les entrées, dans
+  l'ordre du répertoire : la table se remplit par elles, sans lecture directe. Les entrées
+  d'un même fichier sont regroupées par le nom ; enregistrements = le plus grand `EX x 128 +
+  RC` (comme la fonction 35), blocs = somme des blocs des entrées.
+- Reprise d'un fichier après un échange : inutile de le rouvrir. Le FCB de la destination
+  est fermé (fonction 16, point d'étape : l'entrée du répertoire reçoit les blocs déjà
+  écrits) avant chaque échange, puis on continue d'écrire avec le même FCB ; la carte
+  d'allocation refaite par la fonction 13 contient donc ces blocs. Le FCB de la source sert
+  tel quel (rien n'est écrit sur la source).
+- Affichage direct dans `$BB80` et touches par l'entrée CONIN du BIOS (comme EDIT) : FUNCT
+  ouvre la barre de CMDER.
+
+## 11. Réalisation (version 1) : écarts et précisions
+
+- **En-tête** : `A: *.*     22/40 fic 126K libre` (place comptée en Ko, comme STAT).
+- **Tri par défaut** : par nom. L'ordre inverse ne vaut que pour la clé principale : à égalité
+  (même taille, même type), les noms restent de A à Z.
+- **Ligne 25** : `NOM.EXT : 69 enr., 5 bloc(s)` ; `?` (Infos) donne en message la taille
+  exacte et les blocs.
+- **Menus** : Marque : `Marquer ESP`, `Marquer... +`, `Oter... -`, `Inverser *`, `Tout`,
+  `Rien` ; Vue : `Filtrer... /`, `Sans filtre`, `Cacher SYS` (devient `Montrer SYS`),
+  `Taille exacte ^E`. Les articles tapent les codes `$81-$98`.
+- **Saisies** : texte proposé (`*.*` pour `+` et `-`, le nom actuel pour Renommer, le filtre
+  actuel pour `/`) ; un modèle sans point vaut pour tous les types (`LO*` = `LO*.*`).
+- **Voir** : 26 lignes par page, `-- ESP : suite, ESC : retour --`, puis `-- Fin du
+  fichier : une touche --`.
+- **Copie** : progression `Copie : NOM.EXT` ; `Remplacer NOM.EXT (O/N/T) ?` ; bilan
+  `3 copie(s), 1 protege(s)` (ou `deplace(s)`) ; un fichier sauté ou non copié garde sa
+  marque. Un seul lecteur : `DESTINATION en A:, une touche` (`Non ! ...` si c'est la source
+  ou une autre disquette), `Lecture du repertoire...` après chaque touche. ESC à une demande :
+  `Interrompu` (`NOM.EXT incomplet` si un gros fichier était commencé). Le tampon (~33 Ko en
+  mode texte) reçoit jusqu'à 32 tranches (fichiers ou morceaux) par échange.
+- **Déplacer** : refusé d'emblée si un original est protégé (`Original protege (R/O)`).
+- **Lancé en mode SPLIT** : CMDER repasse en texte (l'image est perdue) ; ESC rend le prompt
+  en texte.
+- **Taille** : CMDER.COM 7 628 octets (estimé ~5,9 Ko, prévu ~8,8 Ko), table 3,1 Ko.
+- **Essais** (Oricutron, `tools/run_test.sh`) : liste, tris et ordre inverse, filtre (avec
+  changement de lecteur), SYS cachés, marquage, Voir, Infos, tailles exactes, menus,
+  Renommer, Attributs, Effacer (fichier protégé épargné), Copier et Déplacer vers B: (4
+  fichiers, 60 Ko, plus que le tampon : contenus identiques, attributs gardés), remplacement
+  O/N/T, destination protégée, disque plein (copie effacée), un seul lecteur avec de vrais
+  échanges (`DSKSWAP` et `\x07`, ajoutés à l'Oricutron de test pour cela) : 4 fichiers
+  dont un coupé en deux, mauvaise disquette refusée, ESC, Déplacer.
+- **Reste à vérifier sur le vrai Oric + LOCI** : rapidité de l'affichage, échanges de
+  disquettes par le menu du LOCI (attention : une touche tapée lecteur vide bloque le LOCI,
+  comme pour DISKCOPY A: A:), copie vers un second lecteur du LOCI.

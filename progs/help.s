@@ -3,6 +3,7 @@
 ;
 ;  HELP          commandes internes et liste des sujets
 ;  HELP sujet    TOUCHES PROGRAMMES EDIT HEX LOGO ASM DEBUG MEMOIRE
+;                USB GRAPHER CMDER
 ;                (les premières lettres suffisent)
 ;  Les textes viennent de tools/gen_readme_txt.py (help_tab.s), comme
 ;  README.TXT.

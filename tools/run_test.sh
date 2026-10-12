@@ -8,6 +8,7 @@
 #            codes spéciaux (écrire la chaîne avec $'...' en bash) :
 #            \n Entrée  ~ DEL  | pause 3 s  \x1b ESC  \x01-\x04 flèches G D H B
 #            \x05 FUNCT  \x1c préfixe CTRL (\x1cC = ^C)  \x06 bouton RESET (NMI)
+#            \x07 échange la disquette du lecteur A: (voir DSKSWAP)
 #   TRAME    trame (1/50 s) du vidage mémoire ; l'émulateur s'arrête juste après
 #   SORTIE   préfixe des résultats : SORTIE.mem (64 Ko, $0300-$03FF à zéro),
 #            SORTIE.png (capture), SORTIE.log
@@ -15,6 +16,9 @@
 # Variables :
 #   DSK=fichier.dsk   démarre sur cette disquette (copiée : l'original ne change pas)
 #   DSKB, DSKC, DSKD  disquettes des lecteurs B: à D: (copiées en SORTIE.b.dsk...)
+#   DSKSWAP=f.dsk     seconde disquette du lecteur A: (copiée en SORTIE.swap.dsk) :
+#                     chaque \x07 de TOUCHES met l'autre (swap, puis DSK...),
+#                     après avoir enregistré celle qui sort (un seul lecteur)
 #   ORIC_ROM=cpa      démarre sur build/cpa.rom au lieu de la ROM BASIC 1.1
 #   ORIC_LOCI=dossier interface du LOCI simulée, ce dossier tenant lieu de clé
 #                     USB (EXPORT, IMPORT, USBDIR)
@@ -44,6 +48,10 @@ if [ -n "$DSK" ]; then
     set -- -d "$OUT.$l.dsk" "$@"
   done
   set -- -k microdisc -d "$OUT.dsk" "$@"
+  if [ -n "$DSKSWAP" ]; then
+    cp "$DSKSWAP" "$OUT.swap.dsk"
+    export ORIC_SWAP="$OUT.swap.dsk:$OUT.dsk"
+  fi
 fi
 
 cd "$ORIC"

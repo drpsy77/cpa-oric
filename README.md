@@ -92,7 +92,8 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 
 | Commande | Effet |
 |---|---|
-| `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG` |
+| `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER` |
+| `CMDER [d:][afn]` | gestionnaire de fichiers plein écran : liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs ; copie avec un seul lecteur (voir « CMDER ») |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
 | `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets, attributs (`R` protégé, `S` système) ; sans paramètre : place libre sur le disque |
 | `MEM` | carte de la mémoire (taille de la TPA selon le mode texte ou SPLIT) |
@@ -203,8 +204,33 @@ courant). Chaque fichier copié est nommé, puis le nombre de copies. Les attrib
 pas recopiés (comme PIP) : la copie d'une commande protégée est modifiable. Un fichier de
 destination protégé est laissé (`fichier protege`), un fichier sur lui-même refusé (`meme
 fichier`) ; les autres fichiers du même nom sont remplacés. ESC arrête entre deux fichiers.
-COPY respecte le haut de la TPA (il marche aussi en mode SPLIT). Avec un seul lecteur, copier
-d'une disquette à l'autre n'est pas encore possible.
+COPY respecte le haut de la TPA (il marche aussi en mode SPLIT). Avec un seul lecteur, pour
+copier d'une disquette à l'autre : CMDER.
+
+**CMDER** (comme « commander ») montre les fichiers d'une disquette en plein écran et agit
+dessus : `CMDER`, `CMDER B:`, `CMDER B:*.COM` (lecteur et filtre). Chaque ligne donne le nom,
+le type, la taille en octets, `R` (protégé) et `S` (système), le rang dans le répertoire (`N`,
+l'ordre de DIR) et un genre (Prog, Source, Texte, Image...) ; en bas, le fichier sous le
+curseur ou le total des fichiers marqués. Flèches haut et bas : fichier ; gauche et droite :
+page ; `<` `>` : premier, dernier ; une lettre : fichier suivant qui commence par elle.
+`ESPACE` marque, `+` / `-` marquent ou démarquent selon un modèle, `*` inverse ; `1` à `4`
+trient par ordre disque, nom, type, taille (la même touche inverse l'ordre) ; `/` filtre
+(`B:*.TXT` change aussi de lecteur). Les opérations portent sur les fichiers marqués, ou sur
+celui du curseur : RETURN les montre (texte, par pages), `^C` copie, `^D` déplace, `^N`
+renomme, DEL efface (après confirmation), `^A` change les attributs, `?` donne la taille
+exacte du fichier et `^E` celle de tous (règle de STAT), `^L` change de lecteur, `^R` relit
+(disquette changée), ESC quitte. Les mêmes actions sont dans les menus (FUNCT) Fichier,
+Marque, Trier et Vue. Une copie garde les attributs de l'original ; un fichier déjà présent
+est remplacé après accord (`O/N/T`, T pour tous), un fichier protégé de la destination est
+laissé ; disque plein : la copie commencée est effacée.
+
+Copier vers le lecteur de la liste sans changer de nom (`A:` quand la liste est celle de A:)
+veut dire **un seul lecteur** : CMDER lit autant de fichiers que la mémoire en tient (~33 Ko),
+demande `DESTINATION en A:, une touche`, écrit, puis `SOURCE en A:` pour la suite, et ainsi de
+suite. Avant d'écrire, il vérifie une empreinte du répertoire de chaque disquette et refuse la
+mauvaise (`Non ! DESTINATION en A:...`) ; un gros fichier est fermé avant chaque échange, puis
+repris. ESC à une demande arrête tout. Déplacer avec un seul lecteur efface les originaux
+quand la source revient.
 
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
 un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
@@ -235,7 +261,7 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 
 **Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables, plus légères
 à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
-FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR) sont protégées et **cachées** (SYS) : `DIR`
+FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR, CMDER) sont protégées et **cachées** (SYS) : `DIR`
 ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
 y est partout, protégé et visible.
 

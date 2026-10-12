@@ -74,7 +74,7 @@ python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/c
 P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM
-  $P/VOIR.COM"
+  $P/VOIR.COM $P/CMDER.COM"
 theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
   echo "== $1"
   python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \

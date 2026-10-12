@@ -170,6 +170,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   | `\x05` | FUNCT (ouvre la barre de menus) |
   | `\x1c` puis une lettre | CTRL + lettre (`\x1cC` = ^C) |
   | `\x06` | bouton RESET (NMI) |
+  | `\x07` | change la disquette du lecteur A: (voir `DSKSWAP`) |
   | `\|` | pause de 3 s dans la frappe |
 
   Majuscules et `$ : * # " > < ( )` sont tapés avec SHIFT automatiquement. L'Oric démarre en
@@ -184,6 +185,7 @@ Variables utiles :
 |---|---|
 | `DSK=build/cpa.dsk` | démarre sur la disquette. Elle est copiée, car Oricutron réécrit l'image : l'original ne change pas |
 | `DSKB=b.dsk` (`DSKC`, `DSKD`) | disquettes des lecteurs B: à D:, copiées en `SORTIE.b.dsk`... (on y relit ce qui a été écrit). Les lecteurs sont remplis dans l'ordre : avec `DSKB` seul, C: et D: sont vides (essai d'un lecteur absent) |
+| `DSKSWAP=b.dsk` | seconde disquette du lecteur A:, copiée en `SORTIE.swap.dsk` : chaque `\x07` de TOUCHES met l'autre (d'abord celle-ci, puis `DSK`, et ainsi de suite), après avoir enregistré celle qui sort. Pour essayer les copies à un seul lecteur (CMDER) ; laisser au programme le temps d'afficher sa demande avant `\x07` (pauses `\|`), car une touche tapée pendant une copie est prise pour un essai d'ESC |
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
 | `DISK_OPTS=""` (pour `build.sh`) | système sans la complétion des commandes par ESC (option `CPLCMD`, ~120 octets résidents) ; par défaut `-DCPLCMD` |
