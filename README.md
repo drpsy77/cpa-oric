@@ -238,6 +238,15 @@ colonne ne montre que les fichiers absents de l'autre, ou présents avec une aut
 d'autres attributs (`#` dans l'en-tête) ; avec « Tout » puis `^C`, on recopie ce qui manque.
 Menu Fichier, « Imprimer liste » : la liste de la colonne active sur l'imprimante.
 
+**Clé USB du LOCI** : `CMDER USB:` (ou `CMDER USB:/JEUX`, `CMDER A: USB:`) montre le
+répertoire courant de la clé (`USB:JEUX/`) : dossiers d'abord (`<REP>`), noms longs (en entier
+jusqu'à 26 caractères en plein écran). RETURN entre dans un dossier, ou remonte sur `..` ; sur
+un fichier, il le montre. La clé est une passerelle : on y copie (Copier vers `USB:`, ou vers
+la colonne de la clé) et on en copie, mais on n'y efface ni ne renomme rien. Depuis la clé, un
+nom long est ramené en 8 + 3 (comme IMPORT) ; `/T` à la fin de la réponse (ou menu « Copier
+texte... ») change un LF seul en CR LF. Vers la clé, les `^Z` de fin sont retirés (comme
+EXPORT) et un `.DSK` est refusé.
+
 Copier vers le lecteur de la liste sans changer de nom (`A:` quand la liste est celle de A:)
 veut dire **un seul lecteur** : CMDER lit autant de fichiers que la mémoire en tient (~33 Ko),
 demande `DESTINATION en A:, une touche`, écrit, puis `SOURCE en A:` pour la suite, et ainsi de
