@@ -10,8 +10,14 @@
 ;  Le WD1793 n'a qu'un registre de piste pour les 4 lecteurs : il est
 ;  rangé dans dsk_trk au changement de lecteur (drv_sel). Un lecteur
 ;  vide ou absent ne répond jamais : les attentes ont un délai maximal
-;  (~0,7 s pour le premier octet d'un secteur, ~3 s pour un déplacement),
+;  (~2,9 s pour le premier octet d'un secteur, ~3 s pour un déplacement),
 ;  puis la commande est interrompue (Force Interrupt) et l'accès échoue.
+;  Le premier octet d'un vrai Microdisc peut tarder ~1 s : après ~3 s
+;  sans commande, le WD1793 lève la tête, qui commande aussi le moteur ;
+;  le recharger et relancer le moteur prend ce temps (0,7 s ne suffisait
+;  pas : « BDOS: disk I/O error » au premier accès après une pause, vu
+;  dans Clock Signal). Sans effet sur le LOCI et Oricutron, qui répondent
+;  aussitôt ; un lecteur absent échoue avant, au déplacement de tête.
 ;  LOCI : une commande pour un lecteur sans image n'y est jamais terminée,
 ;  et son contrôleur ne répond plus à rien (Force Interrupt compris)
 ;  jusqu'au redémarrage du LOCI (loci-firmware, src/mia/oric/dsk.c).
@@ -238,11 +244,13 @@ trk_ok
         ldy #0
         ldx #0
         stx dsk_to
+        lda #4                  ; 4 x 256 x ~2,8 ms : ~2,9 s
+        sta dsk_to2
         lda dsk_op
         sta FDC_CMD
         cmp #CMD_WRITE
         beq ww
-        ; premier octet : attente limitée (~0,7 s), fin anticipée (INTRQ)
+        ; premier octet : attente limitée (~2,9 s), fin anticipée (INTRQ)
         ; vue toutes les 256 boucles ; ~18 cycles entre DRQ et la lecture
 rw      lda MD_DRQ
         bpl rd1
@@ -251,6 +259,8 @@ rw      lda MD_DRQ
         lda MD_CTRL
         bpl fin
         dec dsk_to
+        bne rw
+        dec dsk_to2
         bne rw
         beq tmo
 
@@ -274,6 +284,8 @@ ww      lda MD_DRQ
         lda MD_CTRL
         bpl fin
         dec dsk_to
+        bne ww
+        dec dsk_to2
         bne ww
 tmo     jsr fdc_abort
         jmp error
