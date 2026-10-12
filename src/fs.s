@@ -398,6 +398,9 @@ next    inc dir_i
         lda bitmask,x
         ora log_vec
         sta log_vec
+        lda bitmask,x           ; et connu jusqu'à l'arrêt (recherche des
+        ora seen_vec            ; programmes, open_com)
+        sta seen_vec
 ok      lda #0
         clc
         rts
