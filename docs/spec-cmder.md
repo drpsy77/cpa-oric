@@ -386,35 +386,43 @@ opérations partent de la colonne active.
 | `^X` | passe à l'autre colonne (l'Oric n'a pas de TAB : CTRL-I est la flèche droite) |
 | `^Z` | zoom : la colonne active en plein écran (affichage de la v1), et retour |
 | `^W` | échange les deux colonnes de place |
-| `=` | compare deux fichiers (voir plus bas) |
 
 En zoom, `^X` montre l'autre colonne en plein écran. Les flèches gauche et droite restent
 les pages. Menu Vue : `Deux colonnes / Plein ecran ^Z`, `Echanger ^W`, `Autre colonne ^X`,
-`Absents de l'autre`.
+`Absents de l'autre`. Menu Fichier : `Imprimer la liste`.
 
 **Copier / Déplacer** : la question propose le lecteur de l'autre colonne (`Copier 3
 fichiers vers : B:`, RETURN suffit) ; tout autre lecteur ou nom reste possible. Après
 l'opération, les deux colonnes sont relues.
 
-**Comparer** (`=`, menu Fichier) : deux fichiers exactement, marqués dans la même colonne ou
-un dans chaque colonne ; sans aucune marque, le fichier sous le curseur de chaque colonne.
-Comparaison octet par octet (après la règle de STAT sur les `^Z` de fin) : `Identiques`, ou
-`Differents a l'octet 1 234`, ou `Tailles differentes (447 / 512 o)` puis le premier écart.
-Lecture par moitiés du tampon (~14 Ko de chaque fichier par passe). Même disquette ou deux
-lecteurs ; pas avec un seul lecteur et deux disquettes.
+**Comparer** deux fichiers : **reporté** (Pierre : un programme de comparaison dédié).
 
 **Absents de l'autre** (menu Vue, bascule par colonne) : la colonne ne montre que les
-fichiers dont le nom n'existe pas dans l'autre colonne (avant filtre de l'autre). Avec
-`Tout` puis `^C`, on recopie ce qui manque : une synchronisation sans code de plus.
-L'en-tête le signale (`A:*.* -B` par exemple, à trancher en codant).
+fichiers dont le nom n'existe pas dans l'autre colonne, **ou** qui existent sous le même nom
+avec une autre taille (enregistrements) ou d'autres attributs (R, S) ; la comparaison se fait
+sur les tables, sans lecture du contenu. Avec `Tout` puis `^C`, on recopie ce qui manque ou
+diffère : une synchronisation sans code de plus. L'en-tête le signale (`A:*.*` suivi de `#`).
+
+**Place avant une copie** : vers une disquette, CMDER compte les blocs de 2 Ko nécessaires
+(par fichier, enregistrements arrondis au bloc), retire ceux des fichiers du même nom qui
+seront remplacés, et compare à la place libre de la destination. Si elle manque :
+`Place : 26K libres, 31K a copier (O/N)` (O : essayer quand même). Pas de vérification avec
+un seul lecteur (la destination n'est pas encore lue) ni vers la clé USB.
+
+**Imprimer la liste** (menu Fichier) : en-tête et lignes de la colonne active, au format du
+plein écran, sur l'imprimante (fonction 5, CR LF) ; sans imprimante, rien ne bloque.
 
 **Mémoire** : deux tables (2 x 3 Ko) ; tampon de copie ~30 Ko au lieu de ~33. L'état d'une
 colonne (lecteur, filtre, tri, compteurs, curseur, table) tient dans un bloc ; changer de
 colonne échange les blocs.
 
+`CMDER A: A:` (le même lecteur deux fois) est refusé : `Deux lecteurs differents` ; la copie
+à un seul lecteur reste celle du plein écran.
+
 Coût prévu (doublé) : affichage en deux colonnes et deux ascenseurs ~700 ; état par
 colonne, `^X ^Z ^W` ~400 ; destination proposée et relecture des deux colonnes ~150 ;
-Comparer ~600 ; Absents de l'autre ~250 ; menus et messages ~300. **~2,4 Ko**.
+Absents de l'autre ~300 ; place avant copie ~200 ; impression ~200 ; menus et messages
+~300. **~2,3 Ko**.
 
 ### 12.3 Partie 2c : clé USB du LOCI
 
@@ -430,15 +438,23 @@ puis les fichiers. Noms longs : coupés avec `~` en deux colonnes (12 caractère
 jusqu'à 26 caractères en plein écran (`^Z`), plus la taille. RETURN sur `<REP>` y entre,
 sur `..` remonte ; RETURN sur un fichier : Voir.
 
-**Opérations** : Copier, Déplacer entre la clé et une disquette dans les deux sens (logique
-d'EXPORT et d'IMPORT : `^Z` retirés à l'envoi, ajoutés à l'arrivée ; noms coupés à 8 + 3
-à l'arrivée sur disquette, avec le nom obtenu en message ; `.DSK` refusé à l'envoi). Voir sur
-la clé. Tri par nom, type, taille et ordre de la clé ; filtre et marquage comme ailleurs.
-Bibliothèque commune : `progs/loci_inc.s`.
+**Opérations** : la clé est une **passerelle** (Pierre) : le vrai support reste la
+disquette. Copier dans les deux sens (logique d'EXPORT et d'IMPORT : `^Z` retirés à l'envoi,
+ajoutés à l'arrivée ; noms coupés à 8 + 3 à l'arrivée sur disquette ; `.DSK` refusé à
+l'envoi). Déplacer d'une disquette vers la clé (l'original sur disquette est effacé) ; pas
+de Déplacer depuis la clé. **Rien n'est effacé ni renommé sur la clé** (Effacer, Renommer,
+Attributs refusés dans une colonne USB : `Cle USB : lecture et copie seulement`). Pas de
+copie de répertoire entier. Voir sur la clé. Tri par nom, type, taille et ordre de la clé ;
+filtre et marquage comme ailleurs. Bibliothèque commune : `progs/loci_inc.s`.
+
+**Textes** (de la clé vers une disquette) : comme `IMPORT /T`, l'option `/T` à la fin de la
+réponse de Copier change un LF seul en CR LF (`Copier 2 fichiers vers : A: /T`) ; sans elle,
+copie binaire. Le menu Fichier a aussi `Copier texte...`, qui pose la même question avec
+` /T` déjà écrit.
 
 Coût prévu (doublé) : liste et navigation ~900 ; noms longs, plein écran ~300 ; copies
-dans les deux sens ~900 ; Voir ~150 ; messages ~300 ; plus `loci_inc.s` (~700 déjà écrits).
-**~3,3 Ko**. CMDER.COM finirait vers **14 Ko**, toujours sans rien de résident (tampon ~25 Ko).
+dans les deux sens et `/T` ~900 ; Voir ~150 ; messages ~300 ; plus `loci_inc.s` (~700 déjà
+écrits). **~3,3 Ko**. CMDER.COM finirait vers **14 Ko**, toujours sans rien de résident (tampon ~25 Ko).
 
 ### 12.4 Remarques
 
@@ -446,31 +462,23 @@ dans les deux sens ~900 ; Voir ~150 ; messages ~300 ; plus `loci_inc.s` (~700 d�
   qui dépend de la source (liste, lecture, écriture, effacement, renommage) derrière des
   routines par colonne : la v1 appelle le BDOS directement. Ce rangement fait partie de 2b.
 - **Idées en plus** (à accepter ou non, chacune ~100-200 octets) :
-  - avant une copie, comparer le total des fichiers à la place libre de la destination
-    (`Place insuffisante : 26K libres, 31K a copier`) au lieu de s'arrêter en cours de route ;
-  - `Absents ou differents` : variante du filtre qui montre aussi les fichiers du même nom
-    mais de taille différente (une « vraie » synchronisation) ;
-  - imprimer la liste de la colonne active (fonction 5, comme EDIT) ;
+  - retenues par Pierre : place avant une copie, impression de la liste (§ 12.2) ;
   - plus tard : ouvrir un fichier dans EDIT ou HEX puis revenir à CMDER (enchaînement par
-    CHAIN et un script, comme `EDITE` de LOGO).
-- **Firmware du LOCI** : la simulation d'Oricutron fait `unlink` (`$1B`) mais pas `rename` ;
-  l'effacement et le renommage sur la clé dépendent de ce que l'API de la MIA offre
-  (à vérifier dans loci-firmware avant de les promettre, § 12.5 question 7).
+    CHAIN et un script, comme `EDITE` de LOGO) ; programme de comparaison dédié.
+- **Firmware du LOCI** : sans objet (ni effacement ni renommage sur la clé).
 - **Grand répertoire de clé** : plus de 128 entrées : CMDER montre les 128 premières et le
   signale (`liste coupee`).
 
-### 12.5 Questions pour Pierre
+### 12.5 Réponses de Pierre (12 octobre 2026)
 
-1. Touches de 2b : `^X` autre colonne, `^Z` zoom, `^W` échanger, `=` comparer : d'accord ?
-2. `CMDER A: A:` (le même lecteur dans les deux colonnes) : refusé (`deux lecteurs
-   differents`) ? La copie à un seul lecteur resterait celle du plein écran.
-3. Absents de l'autre : par le nom seulement, ou aussi la variante « absents ou différents
-   (taille) » ?
-4. Comparer : le premier écart suffit-il, ou faut-il compter tous les octets différents ?
-5. Clé USB, textes : conversion automatique selon le type (`.TXT .LOG .ASM .BAT .GRX .CFG` :
-   LF seul -> CR LF à l'arrivée, comme `IMPORT /T`) ou jamais (copie binaire, comme IMPORT
-   sans `/T`) ?
-6. Clé USB : copier un répertoire entier (avec ses sous-répertoires) : utile ou non ?
-7. Clé USB : effacer et renommer sur la clé : voulus (si le firmware le permet) ?
-8. Vérification de la place avant une copie, `Absents ou differents`, impression de la
-   liste : lesquelles retiens-tu ?
+1. Touches `^X` autre colonne, `^Z` zoom, `^W` échanger : oui (`=` comparer : sans objet).
+2. `CMDER A: A:` : refusé.
+3. Absents de l'autre : nom absent, ou même nom avec une taille ou des attributs différents.
+   (À sa réponse 8, Pierre écarte « différent » comme trop compliqué : compris comme la
+   comparaison du contenu ; la taille et les attributs, déjà dans les tables, sont gardés.)
+4. Comparer : reporté, un programme dédié.
+5. Textes de la clé : option `/T` dans la réponse de Copier, et article `Copier texte...` ;
+   revue des fonctions et des menus par Pierre après l'implémentation.
+6. Pas de copie de répertoire entier (IMPORT * n'existe pas non plus).
+7. Pas d'effacement (ni de renommage) sur la clé : c'est une passerelle.
+8. Place avant une copie : oui. Imprimer la liste : oui.
