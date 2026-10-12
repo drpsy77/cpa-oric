@@ -231,7 +231,7 @@ Rien de résident. À côté : une rubrique CMDER dans HELP (~0,6 Ko dans HELP.C
 README.TXT. Sur les disquettes : `cpa.dsk` visible ; sur les disquettes d'usage, R/O et SYS
 comme les autres commandes de base (~9 Ko, 5 blocs).
 
-## 9. Plus tard : deux colonnes et clé USB (maquettes, rien de décidé)
+## 9. Plus tard : deux colonnes et clé USB (premières maquettes ; décisions au § 12)
 
 Deux colonnes de 18 caractères séparées par `|` ; la taille passe en Ko ; `^X` passe d'une
 colonne à l'autre (l'Oric n'a pas de TAB : CTRL-I est la flèche droite) ; les flèches gauche et
@@ -260,9 +260,8 @@ USBDIR), noms ramenés en 8.3 à l'arrivée comme IMPORT.
  5 | SUPERCO~ DSK 330K| SCORES   DAT   1K|
 ```
 
-Pour que ce soit simple à ajouter, la version 1 range déjà ce qui dépend de la source
-(lire la liste, lire et écrire un fichier, effacer, renommer) derrière quelques routines : une
-colonne USB n'aura qu'à fournir les siennes.
+(Prévu à l'origine : que la version 1 range ce qui dépend de la source derrière quelques
+routines. Ce n'est pas fait : la v1 appelle le BDOS directement ; voir § 12.4.)
 
 ## 10. Tranché en codant
 
@@ -312,3 +311,166 @@ colonne USB n'aura qu'à fournir les siennes.
 - **Reste à vérifier sur le vrai Oric + LOCI** : rapidité de l'affichage, échanges de
   disquettes par le menu du LOCI (attention : une touche tapée lecteur vide bloque le LOCI,
   comme pour DISKCOPY A: A:), copie vers un second lecteur du LOCI.
+
+## 12. Lot 2 (spécification, octobre 2026 ; rien de codé)
+
+Décidé avec Pierre après les essais de la v1 sur le vrai Oric + LOCI (« l'affichage est très
+rapide » ; copie de CMDER sur une ancienne version réussie avec une disquette bien
+différente). Trois parties, chacune livrée, essayée et commitée à part : **2a**
+améliorations, **2b** deux colonnes, **2c** clé USB.
+
+### 12.1 Partie 2a : améliorations de la v1
+
+1. **Disquette identique à la source** (un seul lecteur). L'empreinte ne voit que le
+   répertoire : deux disquettes aux mêmes fichiers (mêmes tailles, mêmes blocs) se
+   confondent. Au lieu de refuser, CMDER demande `Identique a la source : continuer (O/N) ?`
+   (O : c'est bien la destination ; N : nouvelle demande de la destination). Le numéro de
+   disquette écrit par FORMAT (option B) est écarté pour l'instant.
+2. **Erreurs disque sans message du BDOS** : pendant ses accès, CMDER pose `IO_QUIET`
+   (`$FDAC`, `cpa.inc`) ; le BDOS n'écrit plus `BDOS: disk I/O error` à la position du curseur
+   de la console (au milieu de l'écran, constaté par Pierre). CMDER affiche en ligne 26
+   `Erreur disque : verifiez la disquette` et, pendant une copie à un seul lecteur, redemande
+   la même disquette ; ailleurs, l'opération s'arrête sur ce message. `IO_QUIET` est remis à
+   0 avant chaque sortie (ESC, et avant tout retour au prompt).
+3. **Fin d'une copie à un seul lecteur** : `SOURCE en A:, une touche (ESC : rester)`. ESC
+   garde la destination dans le lecteur et la liste la montre (un échange de moins). Pour
+   Déplacer, la source reste exigée (les originaux y sont effacés). Le tampon n'est pas
+   agrandi (Pierre : en usage réel, il exploite les 4 lecteurs).
+4. **Couleurs** (attributs en colonnes 0 et 1) : titres des colonnes (ligne 2) papier cyan,
+   encre noire ; lignes d'état 25 et 26 papier bleu, encre blanche (comme EDIT) ; la ligne
+   d'aide 27 et la liste gardent les couleurs de l'utilisateur (PAPER / INK restent valables
+   dans toutes les applications). Si l'utilisateur a choisi les mêmes couleurs, tant pis
+   (Pierre). Voir remet les couleurs de l'utilisateur sur ses lignes pendant l'affichage du
+   texte, puis repose celles de CMDER. Couleurs en constantes au début de la source.
+5. **Ascenseur en colonne 39** (lignes 3 à 24) : rail `:` et curseur en vidéo inverse, de
+   hauteur `22 x 22 / nvis` (1 au moins) et placé à `top x 22 / nvis` ; rien quand tout tient
+   dans l'écran (22 fichiers au plus).
+
+Coût prévu (doublé par prudence) : ~100 + 80 + 80 + 100 + 150 = **~510 octets**.
+
+### 12.2 Partie 2b : deux colonnes
+
+**Appel** : `CMDER A: B:` démarre en deux colonnes (un modèle par lecteur :
+`CMDER A:*.COM B:`, lus par FCB1 et FCB2). Pas d'article pour charger un autre lecteur dans
+une colonne : on quitte et on relance (historique des lignes, Pierre). `^L` (Lecteur...)
+change le lecteur de la colonne active. Pas de notion de source et de cible : les
+opérations partent de la colonne active.
+
+**Écran** (38 colonnes 2 à 39 ; `#` = curseur de l'ascenseur, en vidéo inverse) :
+
+```
+ 0 |Fichier Marque Trier Vue           a  |
+ 1 |A:*.*  118K libre |B:*.*  280K libre  |
+ 2 | NOM+     TYP   Ko| NOM+     TYP   Ko |
+ 3 | ANIM     INC   9K# DEMO     LOG   1K |
+ 4 | ARDOISE  GRX   1K#*NOTES    TXT   4K |
+ 5 |*ASM      COM   6K# LETTRE   TXT   2K |
+ 6 | CMDER    COM   8K: SCORES   DAT   1K |
+ 7 | COPY     COM   2K:                   |
+   ...
+25 |ASM.COM : 48 enr., 3 bloc(s)          |
+26 |                                      |
+27 |FUNCT menus  ESP marque  ESC fin      |
+```
+
+- Colonne de 18 caractères : marque, nom, type, taille en Ko. La séparation (colonne 20)
+  sert d'ascenseur à la colonne de gauche ; la colonne 39, à celle de droite.
+- Colonne active : son en-tête (ligne 1) en vidéo inverse, et elle seule montre son curseur.
+  Lignes 25 et 26 : fichier ou marques de la colonne active.
+- Chaque colonne garde son lecteur, son filtre, son tri, ses marques, son curseur.
+
+**Touches nouvelles** (toutes les autres comme en v1, pour la colonne active) :
+
+| Touche | Effet |
+|---|---|
+| `^X` | passe à l'autre colonne (l'Oric n'a pas de TAB : CTRL-I est la flèche droite) |
+| `^Z` | zoom : la colonne active en plein écran (affichage de la v1), et retour |
+| `^W` | échange les deux colonnes de place |
+| `=` | compare deux fichiers (voir plus bas) |
+
+En zoom, `^X` montre l'autre colonne en plein écran. Les flèches gauche et droite restent
+les pages. Menu Vue : `Deux colonnes / Plein ecran ^Z`, `Echanger ^W`, `Autre colonne ^X`,
+`Absents de l'autre`.
+
+**Copier / Déplacer** : la question propose le lecteur de l'autre colonne (`Copier 3
+fichiers vers : B:`, RETURN suffit) ; tout autre lecteur ou nom reste possible. Après
+l'opération, les deux colonnes sont relues.
+
+**Comparer** (`=`, menu Fichier) : deux fichiers exactement, marqués dans la même colonne ou
+un dans chaque colonne ; sans aucune marque, le fichier sous le curseur de chaque colonne.
+Comparaison octet par octet (après la règle de STAT sur les `^Z` de fin) : `Identiques`, ou
+`Differents a l'octet 1 234`, ou `Tailles differentes (447 / 512 o)` puis le premier écart.
+Lecture par moitiés du tampon (~14 Ko de chaque fichier par passe). Même disquette ou deux
+lecteurs ; pas avec un seul lecteur et deux disquettes.
+
+**Absents de l'autre** (menu Vue, bascule par colonne) : la colonne ne montre que les
+fichiers dont le nom n'existe pas dans l'autre colonne (avant filtre de l'autre). Avec
+`Tout` puis `^C`, on recopie ce qui manque : une synchronisation sans code de plus.
+L'en-tête le signale (`A:*.* -B` par exemple, à trancher en codant).
+
+**Mémoire** : deux tables (2 x 3 Ko) ; tampon de copie ~30 Ko au lieu de ~33. L'état d'une
+colonne (lecteur, filtre, tri, compteurs, curseur, table) tient dans un bloc ; changer de
+colonne échange les blocs.
+
+Coût prévu (doublé) : affichage en deux colonnes et deux ascenseurs ~700 ; état par
+colonne, `^X ^Z ^W` ~400 ; destination proposée et relecture des deux colonnes ~150 ;
+Comparer ~600 ; Absents de l'autre ~250 ; menus et messages ~300. **~2,4 Ko**.
+
+### 12.3 Partie 2c : clé USB du LOCI
+
+**Appel** : `CMDER USB:[chemin]` (plein écran) ou `CMDER A: USB:[chemin]` (deux colonnes ;
+la colonne USB peut être à gauche ou à droite). `USB:` est lu par CMDER dans la ligne de
+commande (le CCP ne le comprend pas comme un lecteur). Sans chemin : la racine de la
+première clé (comme USBDIR). LOCI absent : `LOCI absent : cle USB inaccessible`, colonne
+vide.
+
+**Affichage** : l'en-tête montre le répertoire courant seulement (`USB:JEUX/`), pas le
+chemin complet. En tête de liste `..` (sauf à la racine) et les sous-répertoires (`<REP>`),
+puis les fichiers. Noms longs : coupés avec `~` en deux colonnes (12 caractères), en entier
+jusqu'à 26 caractères en plein écran (`^Z`), plus la taille. RETURN sur `<REP>` y entre,
+sur `..` remonte ; RETURN sur un fichier : Voir.
+
+**Opérations** : Copier, Déplacer entre la clé et une disquette dans les deux sens (logique
+d'EXPORT et d'IMPORT : `^Z` retirés à l'envoi, ajoutés à l'arrivée ; noms coupés à 8 + 3
+à l'arrivée sur disquette, avec le nom obtenu en message ; `.DSK` refusé à l'envoi). Voir sur
+la clé. Tri par nom, type, taille et ordre de la clé ; filtre et marquage comme ailleurs.
+Bibliothèque commune : `progs/loci_inc.s`.
+
+Coût prévu (doublé) : liste et navigation ~900 ; noms longs, plein écran ~300 ; copies
+dans les deux sens ~900 ; Voir ~150 ; messages ~300 ; plus `loci_inc.s` (~700 déjà écrits).
+**~3,3 Ko**. CMDER.COM finirait vers **14 Ko**, toujours sans rien de résident (tampon ~25 Ko).
+
+### 12.4 Remarques
+
+- **Ordre de livraison** : 2a, puis 2b, puis 2c. 2b et 2c demandent d'abord de ranger ce
+  qui dépend de la source (liste, lecture, écriture, effacement, renommage) derrière des
+  routines par colonne : la v1 appelle le BDOS directement. Ce rangement fait partie de 2b.
+- **Idées en plus** (à accepter ou non, chacune ~100-200 octets) :
+  - avant une copie, comparer le total des fichiers à la place libre de la destination
+    (`Place insuffisante : 26K libres, 31K a copier`) au lieu de s'arrêter en cours de route ;
+  - `Absents ou differents` : variante du filtre qui montre aussi les fichiers du même nom
+    mais de taille différente (une « vraie » synchronisation) ;
+  - imprimer la liste de la colonne active (fonction 5, comme EDIT) ;
+  - plus tard : ouvrir un fichier dans EDIT ou HEX puis revenir à CMDER (enchaînement par
+    CHAIN et un script, comme `EDITE` de LOGO).
+- **Firmware du LOCI** : la simulation d'Oricutron fait `unlink` (`$1B`) mais pas `rename` ;
+  l'effacement et le renommage sur la clé dépendent de ce que l'API de la MIA offre
+  (à vérifier dans loci-firmware avant de les promettre, § 12.5 question 7).
+- **Grand répertoire de clé** : plus de 128 entrées : CMDER montre les 128 premières et le
+  signale (`liste coupee`).
+
+### 12.5 Questions pour Pierre
+
+1. Touches de 2b : `^X` autre colonne, `^Z` zoom, `^W` échanger, `=` comparer : d'accord ?
+2. `CMDER A: A:` (le même lecteur dans les deux colonnes) : refusé (`deux lecteurs
+   differents`) ? La copie à un seul lecteur resterait celle du plein écran.
+3. Absents de l'autre : par le nom seulement, ou aussi la variante « absents ou différents
+   (taille) » ?
+4. Comparer : le premier écart suffit-il, ou faut-il compter tous les octets différents ?
+5. Clé USB, textes : conversion automatique selon le type (`.TXT .LOG .ASM .BAT .GRX .CFG` :
+   LF seul -> CR LF à l'arrivée, comme `IMPORT /T`) ou jamais (copie binaire, comme IMPORT
+   sans `/T`) ?
+6. Clé USB : copier un répertoire entier (avec ses sous-répertoires) : utile ou non ?
+7. Clé USB : effacer et renommer sur la clé : voulus (si le firmware le permet) ?
+8. Vérification de la place avant une copie, `Absents ou differents`, impression de la
+   liste : lesquelles retiens-tu ?
