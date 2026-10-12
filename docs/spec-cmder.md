@@ -439,6 +439,21 @@ colonne, `^X ^Z ^W` ~400 ; destination proposée et relecture des deux colonnes 
 Absents de l'autre ~300 ; place avant copie ~200 ; impression ~200 ; menus et messages
 ~300. **~2,3 Ko**.
 
+**Fait (2b)** : CMDER.COM 8 197 -> 9 818 octets (+1 621). Réalisation : l'état de la colonne
+active (octets `$25-$2F` de la page zéro, filtre, liste visible, table) est à sa place
+habituelle ; celui de l'autre colonne dans une seconde zone de même forme (`pswap` échange
+les deux : `^X`, et les relectures de l'autre colonne). L'autre colonne n'est redessinée
+qu'après `^X ^W ^Z`, Voir et les relectures : déplacer le curseur ne redessine que la colonne
+active (affichage aussi rapide qu'en v1). `ent_ptr` et `vis_ptr` lisent la table par un
+pointeur, pour dessiner l'autre colonne et pour Absents de l'autre. En-tête d'une colonne :
+`A:*.*#        112K` (`#` : absents de l'autre seulement ; la colonne active en vidéo
+inverse) ; titres `NOM+  TYP  Ko` (`+NOM` pour l'ordre du disque). Après une copie, les deux
+colonnes sont relues. Place avant copie : `Libre 14K, requis 18K : O/N ?`. Essayé dans
+Oricutron : affichage et ascenseurs, `^X`, `^W`, `^Z`, Voir puis retour, Absents de l'autre
+(nom, taille, attributs), copie avec le lecteur de l'autre colonne proposé, place
+insuffisante, `A: A:` et `^L` vers le lecteur de l'autre colonne refusés, impression
+(`printer_out.txt`), copie à un seul lecteur inchangée.
+
 ### 12.3 Partie 2c : clé USB du LOCI
 
 **Appel** : `CMDER USB:[chemin]` (plein écran) ou `CMDER A: USB:[chemin]` (deux colonnes ;

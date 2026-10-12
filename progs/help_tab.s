@@ -548,6 +548,11 @@ h_10
         .asc "              | fichiers de d:,",13,10
         .asc "              |   filtre afn (CMDER",13,10
         .asc "              |   B:*.COM)",13,10
+        .asc "CMDER A: B:   | deux colonnes (A: A:",13,10
+        .asc "              |   refuse)",13,10
+        .asc "^X ^W ^Z      | autre colonne /",13,10
+        .asc "              |   echanger / plein",13,10
+        .asc "              |   ecran",13,10
         .asc "haut bas      | fichier precedent /",13,10
         .asc "              |   suivant",13,10
         .asc "<- ->         | page precedente /",13,10
@@ -585,8 +590,13 @@ h_10
         .asc "^L ^R         | autre lecteur /",13,10
         .asc "              |   relire (disquette",13,10
         .asc "              |   changee)",13,10
-        .asc "FUNCT         | menus Fichier,",13,10
+        .asc "FUNCT         | menus Fichier",13,10
+        .asc "              |   (Imprimer liste),",13,10
         .asc "              |   Marque, Trier, Vue",13,10
+        .asc "              |   (Absents autre :",13,10
+        .asc "              |   fichiers absents de",13,10
+        .asc "              |   l'autre colonne ou",13,10
+        .asc "              |   differents)",13,10
         .asc "ESC           | quitter",13,10
         .asc "cibles        | les fichiers marques,",13,10
         .asc "              |   sinon celui du",13,10
