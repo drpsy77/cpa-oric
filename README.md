@@ -55,8 +55,7 @@ contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
 **Clock Signal** (macOS, Linux) démarre aussi `cpa.dsk`, et son minutage du lecteur est plus
 proche du matériel qu'Oricutron. Mais son Microdisc perd tous les lecteurs, `A:` compris, dès
 que CP/A choisit `B:`, `C:` ou `D:` (défaut de l'émulateur, signalé à son auteur) : y rester sur
-`A:` et n'y taper que des commandes qui existent (une commande inconnue est cherchée sur les
-autres lecteurs).
+`A:` (sans `DIR B:` ni `B:`, une commande inconnue n'est pas cherchée sur les autres lecteurs).
 
 La disquette contient `README.TXT`, un aide-mémoire de toutes les commandes et de leurs
 paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
@@ -141,13 +140,18 @@ le `.SYM` et les `#include` sont sur le lecteur de la source), et dans LOGO `CHA
 Sans lecteur, c'est le lecteur courant, choisi par `B:` au prompt ou par l'article **Lecteur
 suivant** du menu Systeme (A, B, C, D, puis A). Un programme (`.COM`) ou un script
 (`.BAT`, aussi par `DO`) tapé sans lecteur est cherché sur le lecteur courant, puis sur `A:`,
-`B:`, `C:` et `D:` : depuis `B>`, `EDIT`, `LOGO` ou `STAT` se lancent depuis la disquette
-système. Dans un script, la recherche commence par le lecteur du script : un script et ses
-programmes rangés sur une même disquette se trouvent, quel que soit le lecteur où elle est
-(ensuite `A:`, puis les autres). Un lecteur vide ou absent coûte environ 3 s la première
-fois ; il est ensuite sauté par cette recherche, jusqu'à ce qu'on le lise de nouveau (`C:`,
-`DIR C:`...). Un nom tapé avec son lecteur (`C:PROG`) n'est cherché que là. Limite : la
-fin d'un script qui en a appelé un autre est lue depuis `$$$.BAT`, écrit sur le lecteur
+puis sur ceux des lecteurs `B:`, `C:` et `D:` déjà lus depuis la mise sous tension (`DIR B:`,
+`B:`, une copie...) : depuis `B>`, `EDIT`, `LOGO` ou `STAT` se lancent depuis la disquette
+système. Avec un vrai Microdisc, un lecteur vide ou absent coûte plusieurs secondes : une
+commande inconnue (une faute de frappe) prendrait ~16 s si la recherche essayait les lecteurs
+jamais lus ; elle répond donc en ~2 s. Une disquette qu'on vient d'insérer en `B:` se lit
+d'abord (`DIR B:`), et ses programmes se trouvent ensuite. Avec le LOCI, qui dit quels
+lecteurs ont une image, tous ceux-là sont cherchés, lus ou non. Dans un script, la recherche
+commence par le lecteur du script : un script et ses programmes rangés sur une même
+disquette se trouvent, quel que soit le lecteur où elle est (ensuite `A:`, puis les autres).
+Un lecteur qui ne répond pas est ensuite sauté par cette recherche, jusqu'à ce qu'on le lise
+de nouveau (`C:`, `DIR C:`...). Un nom tapé avec son lecteur (`C:PROG`) n'est cherché que là.
+Limite : la fin d'un script qui en a appelé un autre est lue depuis `$$$.BAT`, écrit sur le lecteur
 courant ; c'est alors ce lecteur qui passe en premier.
 
 Chaque lecteur a la même organisation de disquette. Une disquette de données (sans système)

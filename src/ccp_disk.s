@@ -540,8 +540,12 @@ type_tab .asc "COMBAT"
 ;   Z=1 si introuvable. Un nom avec lecteur n'est cherché que là. Sans
 ;   lecteur : d'abord le lecteur du script en cours (au prompt : le
 ;   lecteur courant), puis A:, B:, C:, D:, sauf ceux qui n'ont pas répondu
-;   depuis le démarrage (bad_vec : un lecteur vide coûte ~3 s, payées
-;   une fois). Trouvé : le lecteur reste dans l'octet 0 du FCB.
+;   depuis le démarrage (bad_vec) et, sans LOCI, ceux qui n'ont jamais été
+;   lus depuis le démarrage à froid (seen_vec : DIR B:, B:... ; un lecteur
+;   vide d'un vrai Microdisc coûte plusieurs secondes, et la plupart des
+;   possesseurs n'en ont qu'un). Le LOCI refuse d'emblée ses lecteurs sans
+;   image (loci_abs) : on y cherche partout. Trouvé : le lecteur reste dans
+;   l'octet 0 du FCB.
 open_com
 .(
         ldy #0
@@ -563,7 +567,13 @@ l       cpx oc_first
         lda bitmask,x
         and bad_vec
         bne nx
-        inx
+        ldy LOCI_ID
+        cpy #"L"
+        beq t                   ; LOCI : tous les lecteurs montés
+        lda bitmask,x
+        and seen_vec
+        beq nx                  ; jamais lu depuis le démarrage : sauté
+t       inx
         jsr try
         bne r
         ldy #0

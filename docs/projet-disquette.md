@@ -764,13 +764,33 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     et le chargement de tête, ce que ne font ni Oricutron ni le LOCI. Le correctif y règle
     aussi la sélection des lecteurs du Microdisc (défaut signalé à l'auteur).
   - Mesuré au passage : la première commande inconnue d'une session prend ~16 s sur un
-    Microdisc dont B:, C: et D: sont vides (~5 s par lecteur : déplacement de tête jamais
-    terminé, délai de ~3,4 s, deux fois), puis ~1,8 s grâce à `bad_vec`. À reprendre si
-    Pierre le juge utile (délai du déplacement, ou un seul essai par lecteur).
+    Microdisc dont B:, C: et D: sont vides (~5 s par lecteur, cause détaillée plus bas),
+    puis ~1,8 s grâce à `bad_vec`. Repris juste
+    après (recherche limitée aux lecteurs déjà lus).
   - Essayé : Oricutron (test complet de l'atelier, COPY), `tools/test_asm.sh` à 0
     différence, relecture des images par `mkdisk.py`. Reste le LOCI (démarrer la nouvelle
     image, un COPY) : il retrouve les secteurs par leur en-tête, mais un rangement autre que
     1:1 n'y a jamais été essayé (FORMAT n'y a pas encore été essayé non plus).
+
+- Recherche des programmes limitée aux lecteurs déjà lus (choix de Pierre, octobre 2026 : « quand
+  je mets une disquette, mon réflexe, c'est d'abord un DIR »). Constat dans Clock Signal : la
+  première commande inconnue d'une session prenait 16,4 s avec B:, C: et D: vides (un lecteur
+  vide y tourne : la vérification du déplacement échoue après 6 tours, ~1,2 s, et CP/A
+  recommençait 4 fois avec retour en piste 0). Sur un vrai lecteur sans index, ce serait le
+  délai de ~3,4 s par lecteur. Choix :
+  - Sans LOCI, `open_com` ne cherche plus sur B:, C:, D: que s'ils ont été lus depuis le
+    démarrage à froid : nouvel octet `seen_vec` (`$FDAE`), bit posé à chaque lecture réussie
+    du répertoire (comme `log_vec`, mais remis à zéro seulement au démarrage à froid). A:,
+    lecteur de démarrage, est toujours lu. Avec le LOCI (`L` en `$0319`), recherche
+    inchangée : `loci_abs` refuse d'emblée un lecteur sans image.
+  - Écartés (proposés à Pierre) : deux essais au plus sur une erreur de déplacement (9,2 s
+    mesuré, prototype), et abandon sans impulsion d'index (~6 s estimé, invérifiable dans
+    Clock Signal). `bad_vec` reste (lecteur lu puis vidé).
+  - Coût : 24 octets résidents (marge 246 -> 222). Rien dans le contrat.
+  - Mesuré dans Clock Signal : commande inconnue 16,4 s -> 1,8 s. Essayé dans Oricutron :
+    `H2` (programme seulement sur B:) introuvable, puis trouvé après `DIR B:` ; avec le LOCI
+    simulé, trouvé d'emblée ; test complet de l'atelier ; `tools/test_asm.sh` à 0 différence.
+    Reste le vrai matériel (LOCI : rien ne doit changer).
 
 ## Suite prévue (par priorité)
 

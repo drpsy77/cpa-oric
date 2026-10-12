@@ -39,9 +39,12 @@ h_default
         .asc "              |   courant (dans un",13,10
         .asc "              |   script : celui du",13,10
         .asc "              |   script), puis A:,",13,10
-        .asc "              |   B:, C:, D: (un",13,10
-        .asc "              |   lecteur vide est",13,10
-        .asc "              |   saute ensuite)",13,10
+        .asc "              |   puis B:, C:, D:",13,10
+        .asc "              |   deja lus depuis",13,10
+        .asc "              |   l'allumage (DIR",13,10
+        .asc "              |   B:...) ; LOCI :",13,10
+        .asc "              |   tous ceux qui ont",13,10
+        .asc "              |   une image",13,10
         .asc "DIR [afn]     | liste des fichiers",13,10
         .asc "DIRS [afn]    | idem, fichiers SYS",13,10
         .asc "              |   compris",13,10

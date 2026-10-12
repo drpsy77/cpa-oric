@@ -61,9 +61,12 @@ B:            | lecteur courant (A: a
               |   courant (dans un
               |   script : celui du
               |   script), puis A:,
-              |   B:, C:, D: (un
-              |   lecteur vide est
-              |   saute ensuite)
+              |   puis B:, C:, D:
+              |   deja lus depuis
+              |   l'allumage (DIR
+              |   B:...) ; LOCI :
+              |   tous ceux qui ont
+              |   une image
 DIR [afn]     | liste des fichiers
 DIRS [afn]    | idem, fichiers SYS
               |   compris
