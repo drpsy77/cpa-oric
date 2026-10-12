@@ -538,3 +538,13 @@ clé, LOCI absent. Reste le vrai LOCI. CMDER.COM finirait vers **14 Ko**, toujou
 6. Pas de copie de répertoire entier (IMPORT * n'existe pas non plus).
 7. Pas d'effacement (ni de renommage) sur la clé : c'est une passerelle.
 8. Place avant une copie : oui. Imprimer la liste : oui.
+
+### 12.6 Après l'essai du lot 2 sur le vrai Oric (Pierre)
+
+Couleurs et deux colonnes validées (la barre de menus en vidéo inverse coupe le menu
+déroulant sur la ligne des titres colorés : accepté). Ajouté : la progression d'une copie
+de plusieurs fichiers donne le rang, `Copie : NOM.EXT (3/12)` (disquettes, un seul lecteur,
+clé USB). Constat de Pierre : copier beaucoup de fichiers vers une disquette vierge reste plus
+lent que DISKCOPY (chaque fichier coûte recherche, effacement, création, fermeture et
+attributs) ; CMDER est d'abord un outil de liste et de tri, tous les indicateurs en vue.
+
