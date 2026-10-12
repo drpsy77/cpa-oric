@@ -229,6 +229,15 @@ et la ligne d'aide gardent les couleurs choisies par PAPER et INK. En colonne 39
 ascenseur montre la partie visible de la liste. Une erreur disque s'affiche en ligne 26
 (`Erreur disque : verifiez la disquette`) au lieu du message du BDOS au milieu de l'écran.
 
+**Deux colonnes** : `CMDER A: B:` (un filtre par lecteur : `CMDER A:*.COM B:`) montre deux
+disquettes côte à côte (nom, type, taille en Ko) ; l'en-tête de la colonne active est en vidéo
+inverse. `^X` passe à l'autre colonne, `^W` échange leurs places, `^Z` met la colonne active
+en plein écran (et revient). Copier propose le lecteur de l'autre colonne (RETURN suffit) et
+vérifie d'abord la place (`Libre 14K, requis 18K : O/N ?`). Menu Vue, « Absents autre » : la
+colonne ne montre que les fichiers absents de l'autre, ou présents avec une autre taille ou
+d'autres attributs (`#` dans l'en-tête) ; avec « Tout » puis `^C`, on recopie ce qui manque.
+Menu Fichier, « Imprimer liste » : la liste de la colonne active sur l'imprimante.
+
 Copier vers le lecteur de la liste sans changer de nom (`A:` quand la liste est celle de A:)
 veut dire **un seul lecteur** : CMDER lit autant de fichiers que la mémoire en tient (~33 Ko),
 demande `DESTINATION en A:, une touche`, écrit, puis `SOURCE en A:` pour la suite, et ainsi de

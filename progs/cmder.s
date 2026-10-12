@@ -130,6 +130,27 @@ usrp    = $6D           ; couleurs de l'utilisateur (attributs papier, encre)
 usri    = $6E
 sbh     = $6F           ; ascenseur : hauteur, position
 sbp     = $70
+absf    = $71           ; 1 = absents de l'autre colonne seulement
+tbase   = $72           ; table des fichiers lue par ent_ptr (2)
+vbase   = $74           ; liste visible lue par vis_ptr (2)
+mode2   = $76           ; 1 = deux colonnes
+zoom    = $77           ; 1 = colonne active en plein écran
+actl    = $78           ; 1 = la colonne active est à gauche
+redrw   = $79           ; 1 = redessiner aussi l'autre colonne
+ps      = $7A           ; put_part : de lbuf[ps] à lbuf[pe] exclu
+pe      = $7B
+po      = $7C           ; début de la colonne dans lbuf (0 ou 19)
+dused   = $7D           ; dir_fp : blocs occupés
+sbcol   = $7E           ; ascenseur : colonne de l'écran (39 ou 20)
+sbnc    = $7F           ;   et son caractère sans défilement
+needb   = $80           ; place avant copie : blocs (2)
+fpb     = $82           ; filtre de la colonne dessinée (2)
+curon   = $84           ; 1 = montrer le curseur (colonne active)
+rlen    = $85
+; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
+; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
+PZ0     = $25
+PZN     = 11
 
 ; Couleurs des lignes remarquables (attributs série de l'Oric : papier
 ; 16-23, encre 0-7 ; 0 noir 1 rouge 2 vert 3 jaune 4 bleu 5 magenta
@@ -158,36 +179,18 @@ start
         lda #<gq_text
         ldy #>gq_text
         jsr BDOS
-txt     lda FCB1                ; lecteur donné, sinon le courant
-        bne hasd
-        ldx #F_CURDSK
-        jsr BDOS
-        clc
-        adc #1
-hasd    sta drv
-        ldx #10                 ; filtre donné (CMDER B:*.COM), sinon tout
-        lda FCB1+1
-        cmp #" "
-        bne pf
-        lda #"?"
-fa      sta fpat,x
-        dex
-        bpl fa
-        bmi fdone
-pf      lda FCB1+1,x
-        sta fpat,x
-        dex
-        bpl pf
-fdone   lda #>bufs              ; tampon de copie : page suivant la table
+txt     lda #>bufs              ; tampon de copie : page suivant les tables
         clc
         adc #1
         sta bufpg
-        lda #2                  ; tri par nom
-        sta skey
         lda #0
-        sta srev
-        sta hides
         sta msgp+1
+        sta mode2
+        sta zoom
+        lda #1
+        sta actl
+        sta redrw
+        jsr bases
         lda #<bar
         ldy #>bar
         jsr B_MENUBAR
@@ -201,8 +204,137 @@ fdone   lda #>bufs              ; tampon de copie : page suivant la table
         lda #1                  ; erreurs disque sans message du BDOS :
         sta IO_QUIET            ; CMDER les signale lui-même (bit 7)
         jsr cur_off
+        lda FCB1                ; lecteur donné, sinon le courant
+        bne hasd
+        ldx #F_CURDSK
+        jsr BDOS
+        clc
+        adc #1
+hasd    pha
+        lda FCB2                ; second lecteur : deux colonnes
+        beq one
+        sta drv
+        pla
+        pha
+        cmp drv
+        bne two
+        lda #<m_twod            ; CMDER A: A: refusé
+        ldy #>m_twod
+        jsr set_msg
+        jmp one
+two     lda #<FCB2              ; l'autre colonne d'abord, puis échange
+        ldy #>FCB2
+        jsr init_pan
+        jsr load_dir
+        jsr rebuild
+        jsr pswap
+        inc mode2
+one     pla
+        sta drv
+        lda #<FCB1
+        ldy #>FCB1
+        jsr init_pan
         jsr reload
         jmp mchk
+
+; init_pan : état d'une colonne neuve, filtre d'après le FCB A/Y
+; (CMDER B:*.COM), sinon tout
+init_pan
+        sta sp
+        sty sp+1
+        lda #2                  ; tri par nom
+        sta skey
+        lda #0
+        sta srev
+        sta hides
+        sta absf
+        sta cur
+        sta top
+        ldy #1
+        lda (sp),y
+        cmp #" "
+        bne pf
+        ldx #10
+        lda #"?"
+fa      sta fpat,x
+        dex
+        bpl fa
+        rts
+pf      ldy #11
+        ldx #10
+fc      lda (sp),y
+        sta fpat,x
+        dey
+        dex
+        bpl fc
+        rts
+.)
+
+; bases : ent_ptr et vis_ptr lisent la colonne active
+bases
+        lda #<ftab
+        sta tbase
+        lda #>ftab
+        sta tbase+1
+        lda #<vis
+        sta vbase
+        lda #>vis
+        sta vbase+1
+        lda #<fpat
+        sta fpb
+        lda #>fpat
+        sta fpb+1
+        rts
+
+; pswap : échange la colonne active et l'autre (tables et page zéro)
+pswap
+.(
+        lda #<fpat
+        sta sp
+        lda #>fpat
+        sta sp+1
+        lda #<fpat2
+        sta bp
+        lda #>fpat2
+        sta bp+1
+        lda #<RSZ
+        sta nrec
+        lda #>RSZ
+        sta nrec+1
+        ldy #0
+lp      lda (sp),y
+        tax
+        lda (bp),y
+        sta (sp),y
+        txa
+        sta (bp),y
+        iny
+        bne nx
+        inc sp+1
+        inc bp+1
+nx      lda nrec
+        bne d
+        dec nrec+1
+d       dec nrec
+        lda nrec
+        ora nrec+1
+        bne lp
+.)
+; zswap : échange seulement la page zéro des deux colonnes
+zswap
+.(
+        ldx #PZN-1
+lp      lda PZ0,x
+        ldy pz2,x
+        sta pz2,x
+        sty PZ0,x
+        dex
+        bpl lp
+        lda absf
+        ldy pz2+PZN
+        sta pz2+PZN
+        sty absf
+        rts
 .)
 main
         jsr B_CONST             ; d'autres touches attendent : on
@@ -365,6 +497,22 @@ ktab    .byt 11
         .word k_sys-1
         .byt $98
         .word k_exact-1
+        .byt 24
+        .word k_x-1
+        .byt 26
+        .word k_z-1
+        .byt 23
+        .word k_w-1
+        .byt $99
+        .word k_print-1
+        .byt $9A
+        .word k_abs-1
+        .byt $9B
+        .word k_z-1
+        .byt $9C
+        .word k_w-1
+        .byt $9D
+        .word k_x-1
         .byt 0
 
 ; ---------------------------------------------------------------------
@@ -691,7 +839,14 @@ cp      lda pfcb+1,x
         and #1
         beq kp
         lda pfcb
-        sta drv
+        ldx mode2               ; deux colonnes : pas le lecteur de l'autre
+        beq fd
+        cmp pz2+4
+        bne fd
+        lda #<m_twod
+        ldy #>m_twod
+        jmp set_msg
+fd      sta drv
         jmp reload
 kp      jmp rebuild_keep
 rt      rts
@@ -777,11 +932,15 @@ lp      lda vi
         jsr match
         bne hide
         lda hides
-        beq show
+        beq ab
         ldy #E_ATTR
         lda (ep),y
         and #$40
         bne hide
+ab      lda absf                ; absents de l'autre colonne seulement
+        beq show
+        jsr in_other
+        bcs hide
 show    ldx nvis
         lda vi
         sta vis,x
@@ -795,6 +954,59 @@ nx      inc vi
         bne lp
 srt     jsr sort
         jmp clamp
+.)
+
+; in_other : C=1 si l'autre colonne a un fichier du même nom, de même
+; taille (enregistrements) et de mêmes attributs que l'entrée ep
+in_other
+.(
+        lda mode2
+        beq no
+        lda ep
+        sta ep2
+        lda ep+1
+        sta ep2+1
+        lda #<ftab2
+        sta tbase
+        lda #>ftab2
+        sta tbase+1
+        lda #0
+        sta vk
+lp      lda vk
+        cmp pz2                 ; cnt de l'autre colonne
+        beq nf
+        jsr ent_ptr
+        ldy #10
+c       lda (ep),y
+        cmp (ep2),y
+        bne nx
+        dey
+        bpl c
+        ldy #E_ATTR             ; même nom : même taille, mêmes attributs ?
+        lda (ep),y
+        cmp (ep2),y
+        bne nf
+        iny
+        lda (ep),y
+        cmp (ep2),y
+        bne nf
+        iny
+        lda (ep),y
+        cmp (ep2),y
+        bne nf
+        jsr back
+        sec
+        rts
+nx      inc vk
+        bne lp
+nf      jsr back
+no      clc
+        rts
+back    lda ep2
+        sta ep
+        lda ep2+1
+        sta ep+1
+        jmp bases
 .)
 
 ; match : Z=1 si le nom de l'entrée ep correspond au modèle (pp, 11 o.)
@@ -914,17 +1126,17 @@ ent_ptr
         sta ep+1                ; x 24
         lda ep
         clc
-        adc #<ftab
+        adc tbase
         sta ep
         lda ep+1
-        adc #>ftab
+        adc tbase+1
         sta ep+1
         rts
 
 ; vis_ptr : A = index visible -> ep
 vis_ptr
-        tax
-        lda vis,x
+        tay
+        lda (vbase),y
         jmp ent_ptr
 
 ; reload : lit le répertoire, curseur en haut
@@ -933,11 +1145,34 @@ reload
         sta cur
         sta top
         jsr load_dir
-        jmp rebuild
+        jsr rebuild
+; others : deux colonnes : l'autre colonne refait sa liste (ses absents
+; dépendent de la table de la colonne active) et sera redessinée
+others
+        lda mode2
+        beq ot_r
+        jsr pswap
+        jsr rebuild_keep
+        jsr pswap
+        lda #1
+        sta redrw
+ot_r    rts
+
+; reload_both : relit les deux colonnes (après une copie)
+reload_both
+        lda mode2
+        beq rb_1
+        jsr pswap
+        jsr reload_keep0
+        jsr pswap
+rb_1    jmp reload_keep
 
 ; reload_keep : relit le répertoire en gardant les marques et le
 ; curseur (par les noms)
 reload_keep
+        jsr reload_keep0
+        jmp others
+reload_keep0
 .(
         lda #$FF
         sta keepc
@@ -1117,11 +1352,19 @@ q       sta tfcb,x
         sta fp0
         sta fp0+1
         sta fp0+2
+        sta dused
         ldx #F_SFIRST
         jsr bdos_t
 lp      cmp #$FF
         beq d
         inc fp0+2
+        ldy #16                 ; blocs de l'entrée
+bk      lda DEF_DMA,y
+        beq bn
+        inc dused
+bn      iny
+        cpy #32
+        bne bk
         ldy #31
 s       lda DEF_DMA,y
         clc
@@ -1421,11 +1664,21 @@ es      sec
 ; Affichage
 ; ---------------------------------------------------------------------
 draw
-        jsr draw_hdr
+        lda #39                 ; ascenseur : colonne 39
+        sta sbcol
+        lda #" "
+        sta sbnc
+        lda mode2
+        beq dw1
+        lda zoom
+        bne dw1
+        jsr draw2
+        jmp dw3
+dw1     jsr draw_hdr
         jsr draw_col
         jsr draw_list
         jsr draw_sb
-        jsr draw_info
+dw3     jsr draw_info
         jsr draw_msg
         jsr draw_help
 ; couleurs : titres des colonnes, lignes d'état
@@ -1469,7 +1722,7 @@ ua1     lda usrp
 ; curseur en vidéo inverse, proportionnels à la partie visible
 draw_sb
 .(
-        lda #" "
+        lda sbnc
         sta t2
         lda #0
         sta sbh
@@ -1527,7 +1780,7 @@ lp      lda vk
         lda #$A0                ; curseur de l'ascenseur
         .byt $2C
 rl      lda t2
-put     ldy #39
+put     ldy sbcol
         sta (scr),y
         inc vk
         lda vk
@@ -1589,6 +1842,255 @@ mul22
         sta num+1
         rts
 
+; absmark : « # » après le filtre si la colonne ne montre que les
+; absents de l'autre
+absmark
+        lda absf
+        beq am_r
+        lda #"#"
+        jmp lb_chr
+am_r    rts
+
+; ---------------------------------------------------------------------
+; Deux colonnes : 18 caractères chacune (lbuf 0-17 et 19-36) ; la
+; colonne 20 de l'écran est l'ascenseur de gauche, la 39 celui de droite
+; ---------------------------------------------------------------------
+draw2
+.(
+        lda redrw
+        beq act
+        lda #0
+        sta redrw
+        jsr lb_clear            ; l'autre colonne : état et tables échangés
+        jsr zswap
+        lda #<ftab2
+        sta tbase
+        lda #>ftab2
+        sta tbase+1
+        lda #<vis2
+        sta vbase
+        lda #>vis2
+        sta vbase+1
+        lda #<fpat2
+        sta fpb
+        lda #>fpat2
+        sta fpb+1
+        lda #0
+        sta curon
+        lda actl                ; à droite si l'active est à gauche
+        jsr side
+        jsr pane
+        jsr zswap
+        jsr bases
+act     jsr lb_clear            ; la colonne active
+        lda #1
+        sta curon
+        lda actl
+        eor #1
+        jsr side
+.)
+; pane : en-tête, titres, liste et ascenseur de la colonne (po, sbcol)
+pane
+.(
+        jsr lb_clear
+        lda po                  ; ligne 1 : en-tête (inverse si active)
+        sta ps
+        clc
+        adc #18
+        sta pe
+        ldx po
+        lda drv
+        clc
+        adc #"A"-1
+        sta lbuf,x
+        lda #":"
+        sta lbuf+1,x
+        inx
+        inx
+        stx lx
+        lda dok
+        bne ok
+        lda #"?"
+        jsr lb_chr
+        jmp hd
+ok      lda fpb
+        ldy fpb+1
+        jsr lb_pat
+        jsr absmark
+        lda #NBLK               ; place libre en Ko, cadrée à droite
+        sec
+        sbc used
+        bcs fr
+        lda #0
+fr      asl
+        sta num
+        lda #0
+        rol
+        sta num+1
+        lda #0
+        sta num+2
+        sta sepf
+        lda po
+        clc
+        adc #16
+        tay
+        lda #" "                ; un espace avant le nombre
+        sta lbuf-4,y
+        jsr lb_numr
+        ldx po
+        lda #"K"
+        sta lbuf+17,x
+hd      lda curon
+        beq h1
+        lda #$80
+h1      sta inv
+        ldx #R_HDR
+        jsr put_part
+        ldx po                  ; ligne 2 : titres et sens du tri
+        ldy #0
+tl      lda m_t2,y
+        sta lbuf,x
+        inx
+        iny
+        cpy #18
+        bne tl
+        lda po
+        ldx skey
+        clc
+        adc spos2-1,x
+        tay
+        lda #"+"
+        ldx srev
+        beq up
+        lda #"-"
+up      sta lbuf,y
+        ldx #R_COL
+        jsr put_part0
+        lda #0                  ; lignes 3 à 24
+        sta vk
+lp      jsr pclear
+        lda #0
+        sta inv
+        lda top
+        clc
+        adc vk
+        cmp nvis
+        bcs emp
+        ldx curon
+        beq nc
+        cmp cur
+        bne nc
+        ldx #$80
+        stx inv
+nc      jsr vis_ptr
+        jsr fmt_ent2
+emp     lda vk
+        clc
+        adc #R_LIST
+        tax
+        jsr put_part
+        inc vk
+        lda vk
+        cmp #NROWS
+        bne lp
+        jmp draw_sb
+.)
+spos2   .byt 0,4,13,15
+
+; side : A = 0 colonne à gauche (po 0, ascenseur en colonne 20 de
+; l'écran, « | » sans défilement), 1 à droite (po 19, colonne 39)
+side
+.(
+        cmp #0
+        bne rt
+        lda #0
+        sta po
+        lda #20
+        sta sbcol
+        lda #"|"
+        sta sbnc
+        rts
+rt      lda #19
+        sta po
+        lda #39
+        sta sbcol
+        lda #" "
+        sta sbnc
+        rts
+.)
+
+; pclear : la colonne (po..po+17) remplie d'espaces
+pclear
+.(
+        ldx po
+        ldy #18
+        lda #" "
+lp      sta lbuf,x
+        inx
+        dey
+        bne lp
+        rts
+.)
+
+put_part0
+        lda #0
+        sta inv
+        jmp put_part
+
+; fmt_ent2 : ligne courte de l'entrée ep à lbuf+po
+; « *NOM      TYP  12K »
+fmt_ent2
+.(
+        ldx po
+        ldy #E_FLAG
+        lda (ep),y
+        and #FL_MARK
+        beq nm
+        lda #"*"
+        sta lbuf,x
+nm      ldy #0
+c1      lda (ep),y
+        sta lbuf+1,x
+        inx
+        iny
+        cpy #8
+        bne c1
+c2      lda (ep),y
+        sta lbuf+2,x
+        inx
+        iny
+        cpy #11
+        bne c2
+        ldy #E_SIZE             ; Ko = (taille + 1023) / 1024
+        lda (ep),y
+        clc
+        adc #$FF
+        iny
+        lda (ep),y
+        adc #$03
+        sta num
+        iny
+        lda (ep),y
+        adc #0
+        lsr
+        ror num
+        lsr
+        ror num
+        sta num+1
+        lda #0
+        sta num+2
+        sta sepf
+        lda po
+        clc
+        adc #16
+        tay
+        jsr lb_numr
+        ldx po
+        lda #"K"
+        sta lbuf+17,x
+        rts
+.)
+
 ; ligne 1 : « A: *.*         22/40 fic 126K libre »
 draw_hdr
 .(
@@ -1610,6 +2112,7 @@ draw_hdr
 ok      lda #<fpat
         ldy #>fpat
         jsr lb_pat
+        jsr absmark
         lda #0
         sta sepf
         jsr num_cnt
@@ -1918,16 +2421,22 @@ put_line0
         lda #0
         sta inv
 put_line
+        lda #0
+        sta ps
+        lda #W
+        sta pe
+; put_part : lbuf[ps..pe) -> ligne X, à partir de la colonne 2 + ps
+put_part
 .(
         jsr row_addr
-        ldy #0
+        ldy ps
 lp      lda lbuf,y
         ora inv
         iny
         iny
         sta (scr),y
         dey
-        cpy #W
+        cpy pe
         bne lp
         rts
 .)
@@ -2456,7 +2965,9 @@ nl      jsr vnl
 eof     lda #<m_vend
         ldy #>m_vend
         jsr vprompt
-quit    jmp clr_area
+quit    lda #1                  ; deux colonnes : tout est à redessiner
+        sta redrw
+        jmp clr_area
 .)
 
 ; vput : A écrit en (vx, vy) ; passe à la ligne après 37 colonnes
@@ -2741,6 +3252,7 @@ c3      lda cname,x
         lda #0
         sta keepc
         jsr reload_marks
+        jsr others
         lda #<m_renok
         ldy #>m_renok
         jmp set_msg
@@ -3004,7 +3516,14 @@ sk      cpx inlen
         beq bad
         cmp #5
         bcs bad
-        sta drv
+        ldx mode2               ; deux colonnes : pas le lecteur de l'autre
+        beq dk
+        cmp pz2+4
+        bne dk
+        lda #<m_twod
+        ldy #>m_twod
+        jmp set_msg
+dk      sta drv
         jmp reload
 bad     lda #<m_drvbad
         ldy #>m_drvbad
@@ -3044,6 +3563,279 @@ cur_off
         sta CON_CURVIS
 rt      plp
         rts
+.)
+
+; ---------------------------------------------------------------------
+; Deux colonnes : autre colonne, zoom, échange, absents de l'autre
+; ---------------------------------------------------------------------
+k_x
+        jsr two_chk
+        bcs kx_r
+        jsr pswap               ; l'autre colonne devient l'active
+        lda actl
+        eor #1
+        sta actl
+        lda #1
+        sta redrw
+kx_r    rts
+
+k_w
+        jsr two_chk
+        bcs kw_r
+        lda actl                ; les colonnes changent de place
+        eor #1
+        sta actl
+        lda #1
+        sta redrw
+kw_r    rts
+
+k_z
+        jsr two_chk
+        bcs kz_r
+        lda zoom                ; plein écran, ou deux colonnes
+        eor #1
+        sta zoom
+        lda #1
+        sta redrw
+kz_r    rts
+
+k_abs
+        jsr two_chk
+        bcs ka_r
+        lda absf
+        eor #1
+        sta absf
+        jmp rebuild_keep
+ka_r    rts
+
+; two_chk : C=1 (et message) s'il n'y a qu'une colonne
+two_chk
+        lda mode2
+        bne tc_ok
+        lda #<m_one2
+        ldy #>m_one2
+        jsr set_msg
+        sec
+        rts
+tc_ok   clc
+        rts
+
+; ---------------------------------------------------------------------
+; Imprimer la liste (colonne active, format du plein écran)
+; ---------------------------------------------------------------------
+k_print
+.(
+        lda #<m_prt
+        ldy #>m_prt
+        jsr show_now
+        jsr draw_hdr            ; en-tête dans lbuf (et en ligne 1)
+        jsr prline
+        lda #0
+        sta vi
+lp      lda vi
+        cmp nvis
+        beq done
+        jsr esc_chk
+        bcs done
+        jsr lb_clear
+        lda vi
+        jsr vis_ptr
+        jsr fmt_ent
+        jsr prline
+        inc vi
+        bne lp
+done    lda #1
+        sta redrw
+        lda #<m_prtok
+        ldy #>m_prtok
+        jmp set_msg
+.)
+
+; prline : lbuf sans les espaces de fin, puis CR LF, sur l'imprimante
+prline
+.(
+        ldx #W
+l1      dex
+        bmi e
+        lda lbuf,x
+        cmp #" "
+        beq l1
+e       inx
+        stx rlen
+        ldx #0
+l2      cpx rlen
+        beq cr
+        lda lbuf,x
+        jsr lst
+        inx
+        bne l2
+cr      lda #13
+        jsr lst
+        lda #10
+lst     stx t1
+        ldx #F_LIST
+        jsr BDOS
+        ldx t1
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; place : A = blocs libres de la destination. Compte les blocs des
+; fichiers visés, moins ceux des fichiers du même nom qui seront
+; remplacés (destination affichée) ; s'il en manque : question.
+; C=1 si l'utilisateur renonce
+; ---------------------------------------------------------------------
+place
+.(
+        sta rlen
+        lda #0
+        sta needb
+        sta needb+1
+        sta vi
+lp      lda vi
+        cmp ntg
+        beq ck
+        tax
+        lda tg,x
+        jsr ent_ptr
+        ldy #E_RECS             ; blocs = (enreg. + 15) / 16
+        lda (ep),y
+        clc
+        adc #15
+        sta t0
+        iny
+        lda (ep),y
+        adc #0
+        lsr
+        ror t0
+        lsr
+        ror t0
+        lsr
+        ror t0
+        lsr
+        ror t0
+        lda t0
+        clc
+        adc needb
+        sta needb
+        bcc n1
+        inc needb+1
+n1      jsr repl_blk
+        sta t0
+        lda needb
+        sec
+        sbc t0
+        sta needb
+        bcs n2
+        dec needb+1
+n2      inc vi
+        bne lp
+ck      lda needb+1
+        bmi ok
+        bne short
+        lda rlen
+        cmp needb
+        bcs ok
+short   jsr lb_clear            ; « Libre 26K, requis 31K : O/N ? »
+        lda #<m_libre
+        ldy #>m_libre
+        jsr lb_str
+        lda rlen
+        asl
+        sta num
+        lda #0
+        rol
+        sta num+1
+        lda #0
+        sta num+2
+        sta sepf
+        jsr lb_numl
+        lda #<m_req
+        ldy #>m_req
+        jsr lb_str
+        lda needb
+        asl
+        sta num
+        lda needb+1
+        rol
+        sta num+1
+        lda #0
+        sta num+2
+        jsr lb_numl
+        lda #<m_ynk
+        ldy #>m_ynk
+        jsr lb_str
+        jsr lb_to_msg
+        lda #<mbuf
+        ldy #>mbuf
+        jsr ask_yn
+        bcc no
+ok      clc
+        rts
+no      lda #0
+        sta msgp+1
+        sec
+        rts
+.)
+
+; repl_blk : A = blocs du fichier qui portera le nom de la copie de ep
+; sur la destination (0 s'il n'existe pas ou si la destination n'est
+; pas affichée) ; ep conservé
+repl_blk
+.(
+        lda ep
+        sta ep2
+        lda ep+1
+        sta ep2+1
+        lda cdst
+        cmp drv
+        bne o
+        lda cnt                 ; la colonne active
+        sta t1
+        jmp go
+o       lda mode2               ; l'autre colonne
+        beq zero
+        lda cdst
+        cmp pz2+4
+        bne zero
+        lda pz2
+        sta t1
+        lda #<ftab2
+        sta tbase
+        lda #>ftab2
+        sta tbase+1
+go      lda #0
+        sta vk
+lp      lda vk
+        cmp t1
+        beq nf
+        jsr ent_ptr
+        ldy #10
+c       lda named
+        beq e2
+        lda cname,y
+        jmp cm
+e2      lda (ep2),y
+cm      cmp (ep),y
+        bne nx
+        dey
+        bpl c
+        ldy #E_BLKS
+        lda (ep),y
+        pha
+        jsr back
+        pla
+        rts
+nx      inc vk
+        bne lp
+nf      jsr back
+zero    lda #0
+        rts
+back    lda ep2
+        sta ep
+        lda ep2+1
+        sta ep+1
+        jmp bases
 .)
 
 ; ---------------------------------------------------------------------
@@ -3089,7 +3881,17 @@ c1      jsr lb_what
         jsr lb_to_msg
         lda #0
         sta inlen
-        lda #<mbuf
+        lda mode2               ; deux colonnes : l'autre lecteur proposé
+        beq ap
+        lda pz2+4
+        clc
+        adc #"A"-1
+        sta inbuf
+        lda #":"
+        sta inbuf+1
+        lda #2
+        sta inlen
+ap      lda #<mbuf
         ldy #>mbuf
         jsr ask
         bcc jf3
@@ -3144,18 +3946,30 @@ nn      lda cdst
         sta single              ; lecteur, avec échanges
         jmp run
 dup     lda mvf                 ; même lecteur, autre nom
-        beq two0
+        beq dp
         jmp do_rename           ; Déplacer = renommer
+dp      lda #NBLK               ; place libre : celle de la liste
+        sec
+        sbc used
+        jmp pl
 two     lda cdst                ; autre lecteur : lisible ?
         jsr dir_fp
-        bcc two0
+        bcc t2ok
         lda #<m_nodst
         ldy #>m_nodst
         jmp set_msg
+t2ok    lda #NBLK
+        sec
+        sbc dused
+pl      bcs pl2
+        lda #0
+pl2     jsr place               ; assez de place ?
+        bcc two0
+        rts
 two0    lda #0
         sta single
 run     jsr copy_run
-        jsr reload_keep
+        jsr reload_both
         lda errm+1
         beq rpt
         lda errm
@@ -3846,7 +4660,7 @@ gq_text .byt G_MODE,0,0,0,0,0
 bar     .byt 4
         .word mn_f, mn_m, mn_t, mn_v
 
-mn_f    .byt 10,16
+mn_f    .byt 11,16
         .asc "Fichier",0
         .asc "Voir         RET",0
         .byt MA_TYPE
@@ -3869,6 +4683,9 @@ mn_f    .byt 10,16
         .asc "Infos          ?",0
         .byt MA_TYPE
         .word c87
+        .asc "Imprimer liste",0
+        .byt MA_TYPE
+        .word c99
         .asc "Lecteur...    ^L",0
         .byt MA_TYPE
         .word c88
@@ -3915,7 +4732,7 @@ mn_t    .byt 4,14
         .byt MA_TYPE
         .word c94
 
-mn_v    .byt 4,16
+mn_v    .byt 8,16
         .asc "Vue",0
         .asc "Filtrer...     /",0
         .byt MA_TYPE
@@ -3929,6 +4746,18 @@ it_sys  .asc "Cacher SYS ",0
         .asc "Taille exacte ^E",0
         .byt MA_TYPE
         .word c98
+        .asc "Absents autre",0
+        .byt MA_TYPE
+        .word c9a
+        .asc "Zoom          ^Z",0
+        .byt MA_TYPE
+        .word c9b
+        .asc "Echanger      ^W",0
+        .byt MA_TYPE
+        .word c9c
+        .asc "Autre colonne ^X",0
+        .byt MA_TYPE
+        .word c9d
 
 s_hide  .asc "Cacher SYS "
 s_show  .asc "Montrer SYS"
@@ -3957,6 +4786,11 @@ c95     .byt $95,0
 c96     .byt $96,0
 c97     .byt $97,0
 c98     .byt $98,0
+c99     .byt $99,0
+c9a     .byt $9A,0
+c9b     .byt $9B,0
+c9c     .byt $9C,0
+c9d     .byt $9D,0
 
 ; ---------------------------------------------------------------------
 ; Messages (37 colonnes au plus, sans accents)
@@ -4001,6 +4835,14 @@ m_keyst .asc " (ESC : rester)",0
 m_err   .asc "Erreur, ",0
 m_same  .asc "Comme la source : continuer (O/N) ?",0
 m_ioerr .asc "Erreur disque : verifiez la disquette",0
+m_t2    .asc " NOM      TYP   Ko"
+m_twod  .asc "Deux lecteurs differents",0
+m_one2  .asc "Une seule colonne",0
+m_prt   .asc "Impression... (ESC arrete)",0
+m_prtok .asc "Liste imprimee",0
+m_libre .asc "Libre ",0
+m_req   .asc "K, requis ",0
+m_ynk   .asc "K : O/N ?",0
 m_non   .asc "Non ! ",0
 m_rdir  .asc "Lecture du repertoire...",0
 m_cpy   .asc "Copie : ",0
@@ -4034,15 +4876,20 @@ dbuf    = mbuf+40               ; chiffres (8)
 tfcb    = dbuf+8                ; FCB de travail (36)
 sfcb    = tfcb+36               ; FCB source (36)
 dfcb    = sfcb+36               ; FCB destination (36)
-fpat    = dfcb+36               ; filtre (11)
-pfcb    = fpat+11               ; nom analysé (12)
+fpat    = dfcb+36               ; colonne active : filtre (11),
+vis     = fpat+11               ;   liste visible (128),
+ftab    = vis+128               ;   table des fichiers (128 x 24)
+RSZ     = 11+128+NMAX*ESZ
+fpat2   = fpat+RSZ              ; l'autre colonne : mêmes zones
+vis2    = fpat2+11
+ftab2   = vis2+128
+pz2     = fpat2+RSZ             ;   et sa page zéro (PZN + 1)
+pfcb    = pz2+PZN+1             ; nom analysé (12)
 cname   = pfcb+12               ; autre nom de la copie (11)
 curname = cname+11              ; fichier du curseur (11)
-vis     = curname+11            ; liste visible (128)
-tg      = vis+128               ; fichiers visés (128)
+tg      = curname+11            ; fichiers visés (128)
 ch_k    = tg+128                ; tranches : fichier, enreg., drapeaux
 ch_nl   = ch_k+NCH
 ch_nh   = ch_nl+NCH
 ch_f    = ch_nh+NCH
-ftab    = ch_f+NCH              ; table des fichiers (128 x 24)
-bufs    = ftab+NMAX*ESZ         ; noms marqués (relecture), tampon de copie
+bufs    = ch_f+NCH              ; noms marqués (relecture), tampon de copie

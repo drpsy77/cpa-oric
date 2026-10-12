@@ -158,6 +158,8 @@ SECTIONS = [
  ]),
  ("CMDER : FICHIERS PLEIN ECRAN", [
   ("CMDER [d:][afn]", "fichiers de d:, filtre afn (CMDER B:*.COM)"),
+  ("CMDER A: B:", "deux colonnes (A: A: refuse)"),
+  ("^X ^W ^Z", "autre colonne / echanger / plein ecran"),
   ("haut bas", "fichier precedent / suivant"),
   ("<- ->", "page precedente / suivante"),
   ("< >", "premier / dernier fichier"),
@@ -174,7 +176,7 @@ SECTIONS = [
   ("^A", "attributs R (protege) S (systeme)"),
   ("? ^E", "taille exacte : du fichier / de tous"),
   ("^L ^R", "autre lecteur / relire (disquette changee)"),
-  ("FUNCT", "menus Fichier, Marque, Trier, Vue"),
+  ("FUNCT", "menus Fichier (Imprimer liste), Marque, Trier, Vue (Absents autre : fichiers absents de l'autre colonne ou differents)"),
   ("ESC", "quitter"),
   ("cibles", "les fichiers marques, sinon celui du curseur"),
  ]),
