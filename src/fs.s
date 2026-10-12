@@ -112,8 +112,13 @@ io_err
         lda #0
         sta buf_ok
         sta buf_dirty
-        lda io_quiet            ; recherche d'un programme : lecteur vide
-        bne ie_q                ; essayé sans message
+        lda io_quiet            ; recherche d'un programme, CMDER : sans
+        beq ie_p                ; message, erreur notée (bit 7) pour
+        ora #$80                ; l'appelant
+        sta io_quiet
+        sec
+        rts
+ie_p
         lda #<msg_ioerr
         ldy #>msg_ioerr
         jsr print_z
