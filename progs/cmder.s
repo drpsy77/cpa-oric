@@ -36,6 +36,8 @@ E_RANK  = 15            ; rang dans le répertoire (ordre sur le disque)
 E_SIZE  = 16            ; taille affichée (3 octets)
 E_FLAG  = 19
 E_GEN   = 20            ; genre (index dans gname)
+E_KIND  = 21            ; 0 répertoire (clé USB) ou fichier de disquette,
+                        ; 1 fichier de la clé : les répertoires d'abord
 FL_MARK = 1
 FL_EXACT = 2            ; taille exacte (^Z retirés) connue
 FL_DEL  = 4             ; original à effacer (Déplacer)
@@ -59,7 +61,7 @@ scr     = $14           ; écran (2)
 sp      = $16           ; chaîne (2)
 bp      = $18           ; tampon de copie (2)
 pp      = $1A           ; modèle de nom (2)
-num     = $1C           ; nombre (3)
+cnum    = $1C           ; nombre (3)
 t0      = $1F
 t1      = $20
 t2      = $21
@@ -77,16 +79,16 @@ hides   = $2C           ; 1 = fichiers SYS cachés
 nmark   = $2D
 used    = $2E           ; blocs occupés
 dok     = $2F           ; 1 = lecteur lisible
-msgp    = $30           ; message de la ligne 26 (2 ; poids fort 0 = aucun)
-inlen   = $32
-lx      = $33           ; position dans lbuf
-ly      = $34
-dlen    = $35
-nz      = $36
-inv     = $37           ; $80 = ligne du curseur
-sepf    = $38           ; 1 = espace des milliers
-nrec    = $39           ; (2)
-ci      = $3B           ; tranche en cours
+msgp    = $88           ; message de la ligne 26 (2 ; poids fort 0 = aucun)
+inlen   = $8A
+lx      = $8B           ; position dans lbuf
+ly      = $8C
+dlen    = $8D
+nzf      = $8E
+inv     = $8F           ; $80 = ligne du curseur
+sepf    = $90           ; 1 = espace des milliers
+nrec    = $91           ; (2)
+ci      = $93           ; tranche en cours
 vx      = $3C           ; Voir : colonne, ligne
 vy      = $3D
 vrec    = $3E           ; Voir : index dans l'enregistrement
@@ -147,6 +149,24 @@ needb   = $80           ; place avant copie : blocs (2)
 fpb     = $82           ; filtre de la colonne dessinée (2)
 curon   = $84           ; 1 = montrer le curseur (colonne active)
 rlen    = $85
+ptype   = $94           ; 1 = la colonne montre la clé USB du LOCI
+ufd     = $95           ; descripteur d'un fichier ou répertoire de la clé
+urp     = $96           ; copie depuis la clé : position dans l'enregistrement
+ulast   = $97           ;   dernier octet (/T)
+textf   = $98           ; 1 = /T : LF seul -> CR LF
+dd      = $99           ; 1 = la liste de la clé commence par « .. »
+ucut    = $9A           ; 1 = plus de 128 entrées (liste coupée)
+ctext   = $9B           ; 1 = « Copier texte... » (/T proposé)
+tk1     = $9C           ; paramètres de CMDER : début des mots dans args
+tk2     = $9D
+u1      = $9E           ; 1 = le mot est « USB:... »
+u2      = $9F
+vlen    = $A0           ; Voir : octets dans l'enregistrement
+nrf     = $A1           ; copie : fichiers refusés (.DSK vers la clé)
+ub      = $A2           ; vers la clé : second enregistrement (2)
+ucnt    = $A4
+ulen    = $A5           ; u_hdr : longueur maximale du nom
+vprev   = $A6           ; Voir : caractère précédent (CR LF)
 ; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
 ; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
 PZ0     = $25
@@ -204,6 +224,17 @@ txt     lda #>bufs              ; tampon de copie : page suivant les tables
         lda #1                  ; erreurs disque sans message du BDOS :
         sta IO_QUIET            ; CMDER les signale lui-même (bit 7)
         jsr cur_off
+        jsr get_args            ; les mots tels que tapés (USB:chemin)
+        ldx #0
+        jsr skipsp
+        stx tk1
+        jsr is_usb
+        sta u1
+        jsr skipw
+        jsr skipsp
+        stx tk2
+        jsr is_usb
+        sta u2
         lda FCB1                ; lecteur donné, sinon le courant
         bne hasd
         ldx #F_CURDSK
@@ -211,35 +242,62 @@ txt     lda #>bufs              ; tampon de copie : page suivant les tables
         clc
         adc #1
 hasd    pha
-        lda FCB2                ; second lecteur : deux colonnes
+        ldx tk2                 ; second mot : deux colonnes
+        lda args,x
+        beq one
+        lda u2
+        beq d2
+        lda u1                  ; une seule colonne USB
+        beq u2ok
+        lda #<m_twou
+        ldy #>m_twou
+        jsr set_msg
+        jmp one
+u2ok    ldx tk2
+        jsr usb_pan
+        jmp two
+d2      lda FCB2
         beq one
         sta drv
+        lda u1
+        bne d2ok
         pla
         pha
         cmp drv
-        bne two
+        bne d2ok
         lda #<m_twod            ; CMDER A: A: refusé
         ldy #>m_twod
         jsr set_msg
         jmp one
-two     lda #<FCB2              ; l'autre colonne d'abord, puis échange
+d2ok    lda #0
+        sta ptype
+        lda #<FCB2
         ldy #>FCB2
         jsr init_pan
-        jsr load_dir
+two     jsr load_dir            ; l'autre colonne d'abord, puis échange
         jsr rebuild
         jsr pswap
         inc mode2
 one     pla
         sta drv
+        lda u1
+        beq d1
+        ldx tk1
+        jsr usb_pan
+        jmp r1
+d1      lda #0
+        sta ptype
         lda #<FCB1
         ldy #>FCB1
         jsr init_pan
-        jsr reload
+r1      jsr reload
         jmp mchk
+.)
 
 ; init_pan : état d'une colonne neuve, filtre d'après le FCB A/Y
 ; (CMDER B:*.COM), sinon tout
 init_pan
+.(
         sta sp
         sty sp+1
         lda #2                  ; tri par nom
@@ -334,6 +392,10 @@ lp      lda PZ0,x
         ldy pz2+PZN
         sta pz2+PZN
         sty absf
+        lda ptype
+        ldy pz2+PZN+1
+        sta pz2+PZN+1
+        sty ptype
         rts
 .)
 main
@@ -513,6 +575,8 @@ ktab    .byt 11
         .word k_w-1
         .byt $9D
         .word k_x-1
+        .byt $9E
+        .word k_copyt-1
         .byt 0
 
 ; ---------------------------------------------------------------------
@@ -838,9 +902,13 @@ cp      lda pfcb+1,x
         lda pfl                 ; B:*.COM : change aussi de lecteur
         and #1
         beq kp
+        lda ptype               ; (pas de lecteur dans la colonne de la clé)
+        bne kp
         lda pfcb
         ldx mode2               ; deux colonnes : pas le lecteur de l'autre
         beq fd
+        ldx pz2+PZN+1
+        bne fd
         cmp pz2+4
         bne fd
         lda #<m_twod
@@ -962,6 +1030,10 @@ in_other
 .(
         lda mode2
         beq no
+        ldy #E_ATTR             ; un répertoire de la clé reste montré
+        lda (ep),y
+        and #$20
+        bne no
         lda ep
         sta ep2
         lda ep+1
@@ -983,10 +1055,13 @@ c       lda (ep),y
         dey
         bpl c
         ldy #E_ATTR             ; même nom : même taille, mêmes attributs ?
+        lda ptype               ; (avec la clé : la taille seulement)
+        ora pz2+PZN+1
+        bne sz
         lda (ep),y
         cmp (ep2),y
         bne nf
-        iny
+sz      ldy #E_RECS
         lda (ep),y
         cmp (ep2),y
         bne nf
@@ -1064,7 +1139,12 @@ rt      rts
 ; cmp_ent : C=1 si l'entrée ep2 doit venir après l'entrée ep
 cmp_ent
 .(
-        ldx skey
+        ldy #E_KIND             ; clé USB : répertoires d'abord
+        lda (ep2),y
+        cmp (ep),y
+        beq k0
+        rts
+k0      ldx skey
         lda okey-1,x
         sta t0                  ; début des octets de la clé
         lda nprim-1,x
@@ -1297,7 +1377,10 @@ nf      sec
 ; load_dir : table des fichiers du lecteur drv
 load_dir
 .(
-        lda #0
+        lda ptype               ; clé USB
+        beq dk
+        jmp u_load
+dk      lda #0
         sta cnt
         sta used
         lda #1
@@ -1733,9 +1816,9 @@ draw_sb
         lda #":"
         pha
         lda #<NROWS*NROWS       ; hauteur = 22 x 22 / nvis (1 au moins)
-        sta num
+        sta cnum
         lda #>NROWS*NROWS
-        sta num+1
+        sta cnum+1
         lda nvis
         jsr div16
         bne h1
@@ -1789,57 +1872,57 @@ put     ldy sbcol
         rts
 .)
 
-; div16 : num (16 bits) / A -> A = quotient (inférieur à 256)
+; div16 : cnum (16 bits) / A -> A = quotient (inférieur à 256)
 div16
 .(
         sta t2
         lda #0
         ldx #16
-lp      asl num
-        rol num+1
+lp      asl cnum
+        rol cnum+1
         rol
         bcs sb
         cmp t2
         bcc nx
 sb      sbc t2
-        inc num
+        inc cnum
 nx      dex
         bne lp
-        lda num
+        lda cnum
         rts
 .)
 
-; mul22 : num = A x 22
+; mul22 : cnum = A x 22
 mul22
-        sta num
+        sta cnum
         lda #0
-        sta num+1
-        asl num                 ; x 2
-        rol num+1
-        lda num
+        sta cnum+1
+        asl cnum                 ; x 2
+        rol cnum+1
+        lda cnum
         sta t0
-        lda num+1
+        lda cnum+1
         sta t1
-        asl num                 ; x 4
-        rol num+1
-        lda num
+        asl cnum                 ; x 4
+        rol cnum+1
+        lda cnum
         clc
         adc t0
         sta t0
-        lda num+1
+        lda cnum+1
         adc t1
         sta t1                  ; x 6
-        asl num                 ; x 8
-        rol num+1
-        asl num                 ; x 16
-        rol num+1
-        lda num
+        asl cnum                 ; x 8
+        rol cnum+1
+        asl cnum                 ; x 16
+        rol cnum+1
+        lda cnum
         clc
         adc t0
-        sta num
-        lda num+1
+        sta cnum
+        lda cnum+1
         adc t1
-        sta num+1
+        sta cnum+1
         rts
 
 ; absmark : « # » après le filtre si la colonne ne montre que les
@@ -1898,7 +1981,15 @@ pane
         clc
         adc #18
         sta pe
-        ldx po
+        lda ptype               ; clé USB
+        beq pd
+        lda po
+        sta lx
+        lda #12
+        sta ulen
+        jsr u_hdr
+        jmp hd
+pd      ldx po
         lda drv
         clc
         adc #"A"-1
@@ -1923,12 +2014,12 @@ ok      lda fpb
         bcs fr
         lda #0
 fr      asl
-        sta num
+        sta cnum
         lda #0
         rol
-        sta num+1
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         sta sepf
         lda po
         clc
@@ -1946,16 +2037,31 @@ hd      lda curon
 h1      sta inv
         ldx #R_HDR
         jsr put_part
-        ldx po                  ; ligne 2 : titres et sens du tri
+        lda #<m_t2              ; ligne 2 : titres et sens du tri
+        sta sp
+        lda #>m_t2
+        sta sp+1
+        lda ptype
+        beq t0k
+        lda #<m_t2u
+        sta sp
+        lda #>m_t2u
+        sta sp+1
+t0k     ldx po
         ldy #0
-tl      lda m_t2,y
+tl      lda (sp),y
         sta lbuf,x
         inx
         iny
         cpy #18
         bne tl
+        lda skey
+        ldx ptype
+        beq t1k
+        clc
+        adc #4
+t1k     tax
         lda po
-        ldx skey
         clc
         adc spos2-1,x
         tay
@@ -1996,6 +2102,7 @@ emp     lda vk
         jmp draw_sb
 .)
 spos2   .byt 0,4,13,15
+        .byt 0,4,4,15           ; (clé USB)
 
 ; side : A = 0 colonne à gauche (po 0, ascenseur en colonne 20 de
 ; l'écran, « | » sans défilement), 1 à droite (po 19, colonne 39)
@@ -2041,7 +2148,10 @@ put_part0
 ; « *NOM      TYP  12K »
 fmt_ent2
 .(
-        ldx po
+        lda ptype
+        beq dk
+        jmp fmt_usb2
+dk      ldx po
         ldy #E_FLAG
         lda (ep),y
         and #FL_MARK
@@ -2061,6 +2171,11 @@ c2      lda (ep),y
         iny
         cpy #11
         bne c2
+        jmp ko2
+.)
+
+; ko2 : taille de ep en Ko (arrondie au-dessus) à lbuf+po+14..17
+ko2
         ldy #E_SIZE             ; Ko = (taille + 1023) / 1024
         lda (ep),y
         clc
@@ -2068,17 +2183,17 @@ c2      lda (ep),y
         iny
         lda (ep),y
         adc #$03
-        sta num
+        sta cnum
         iny
         lda (ep),y
         adc #0
         lsr
-        ror num
+        ror cnum
         lsr
-        ror num
-        sta num+1
+        ror cnum
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         sta sepf
         lda po
         clc
@@ -2089,13 +2204,22 @@ c2      lda (ep),y
         lda #"K"
         sta lbuf+17,x
         rts
-.)
+
 
 ; ligne 1 : « A: *.*         22/40 fic 126K libre »
 draw_hdr
 .(
         jsr lb_clear
-        lda drv
+        lda ptype               ; clé USB : « USB:JEUX/ »
+        beq dsk
+        lda #16
+        sta ulen
+        jsr u_hdr
+        lda dok
+        bne u1k
+        jmp out
+u1k     jmp cnt1
+dsk     lda drv
         clc
         adc #"A"-1
         sta lbuf
@@ -2113,7 +2237,7 @@ ok      lda #<fpat
         ldy #>fpat
         jsr lb_pat
         jsr absmark
-        lda #0
+cnt1    lda #0
         sta sepf
         jsr num_cnt
         ldy #21
@@ -2126,25 +2250,32 @@ ok      lda #<fpat
         sta lbuf,y
         dey
         lda nvis
-        sta num
+        sta cnum
         jsr lb_numr
 nf      lda #22
         sta lx
         lda #<m_fic
         ldy #>m_fic
         jsr lb_str
-        lda #NBLK               ; place libre, en Ko
+        lda ptype
+        beq fr0
+        lda ucut                ; clé : « + » si la liste est coupée
+        beq out
+        lda #"+"
+        jsr lb_chr
+        jmp out
+fr0     lda #NBLK               ; place libre, en Ko
         sec
         sbc used
         bcs fr
         lda #0
 fr      asl
-        sta num
+        sta cnum
         lda #0
         rol
-        sta num+1
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         ldy #29
         jsr lb_numr
         lda #30
@@ -2157,10 +2288,10 @@ out     ldx #R_HDR
 .)
 
 num_cnt lda cnt
-num8    sta num
+num8    sta cnum
         lda #0
-        sta num+1
-        sta num+2
+        sta cnum+1
+        sta cnum+2
         rts
 
 ; ligne 2 : titres des colonnes, sens du tri
@@ -2169,8 +2300,17 @@ draw_col
         jsr lb_clear
         lda #<m_cols
         ldy #>m_cols
-        jsr lb_str
-        ldx skey
+        ldx ptype
+        beq c0
+        lda #<m_colsu
+        ldy #>m_colsu
+c0      jsr lb_str
+        lda skey
+        ldx ptype
+        beq c1
+        clc
+        adc #4
+c1      tax
         ldy spos-1,x
         lda #"+"
         ldx srev
@@ -2181,6 +2321,7 @@ up      sta lbuf,y
         jmp put_line0
 .)
 spos    .byt 29,5,14,22
+        .byt 0,5,5,30           ; (clé USB)
 
 ; lignes 3 à 24 : la liste
 draw_list
@@ -2218,7 +2359,10 @@ rt      rts
 ; « * NOM      TYP  TAILLE RS   N GENRE  »
 fmt_ent
 .(
-        ldy #E_FLAG
+        lda ptype
+        beq dk
+        jmp fmt_usb
+dk      ldy #E_FLAG
         lda (ep),y
         and #FL_MARK
         beq nm
@@ -2237,13 +2381,13 @@ c2      lda (ep),y
         bne c2
         ldy #E_SIZE
         lda (ep),y
-        sta num
+        sta cnum
         iny
         lda (ep),y
-        sta num+1
+        sta cnum+1
         iny
         lda (ep),y
-        sta num+2
+        sta cnum+2
         lda #1
         sta sepf
         ldy #21
@@ -2300,11 +2444,11 @@ draw_info
         ldy #>m_marks
         jsr lb_str
         lda tot
-        sta num
+        sta cnum
         lda tot+1
-        sta num+1
+        sta cnum+1
         lda tot+2
-        sta num+2
+        sta cnum+2
         lda #1
         sta sepf
         jsr lb_numl
@@ -2316,7 +2460,11 @@ one     lda nvis
         beq none
         lda cur
         jsr vis_ptr
-        lda ep
+        lda ptype               ; clé : nom long et taille
+        beq od
+        jsr u_info
+        jmp out
+od      lda ep
         ldy ep+1
         jsr lb_pat
         lda #<m_sep
@@ -2324,12 +2472,12 @@ one     lda nvis
         jsr lb_str
         ldy #E_RECS
         lda (ep),y
-        sta num
+        sta cnum
         iny
         lda (ep),y
-        sta num+1
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         sta sepf
         jsr lb_numl
         lda #<m_enr
@@ -2571,33 +2719,33 @@ z       stx inlen
 ; ---------------------------------------------------------------------
 ; Nombres
 ; ---------------------------------------------------------------------
-; utoa : num (24 bits, < 1 000 000) -> chiffres dans dbuf, dlen
+; utoa : cnum (24 bits, < 1 000 000) -> chiffres dans dbuf, dlen
 utoa
 .(
         ldx #0
         stx dlen
-        stx nz
+        stx nzf
 pw      lda #0
         sta t0
-sub     lda num
+sub     lda cnum
         sec
         sbc p0,x
         sta t1
-        lda num+1
+        lda cnum+1
         sbc p1,x
         sta t2
-        lda num+2
+        lda cnum+2
         sbc p2,x
         bcc out
-        sta num+2
+        sta cnum+2
         lda t2
-        sta num+1
+        sta cnum+1
         lda t1
-        sta num
+        sta cnum
         inc t0
         bne sub
 out     lda t0
-        ora nz
+        ora nzf
         bne dig
         cpx #5
         bne skip
@@ -2606,7 +2754,7 @@ dig     lda t0
         ldy dlen
         sta dbuf,y
         inc dlen
-        sta nz
+        sta nzf
 skip    inx
         cpx #6
         bne pw
@@ -2616,7 +2764,7 @@ p0      .byt $A0,$10,$E8,$64,$0A,$01
 p1      .byt $86,$27,$03,$00,$00,$00
 p2      .byt $01,$00,$00,$00,$00,$00
 
-; lb_numr : num cadré à droite, dernier chiffre en colonne Y ; lx =
+; lb_numr : cnum cadré à droite, dernier chiffre en colonne Y ; lx =
 ; colonne à gauche du nombre ; sepf : espace entre les milliers
 lb_numr
 .(
@@ -2647,7 +2795,7 @@ nd      lda dbuf,x
 rt      rts
 .)
 
-; lb_numl : num à partir de lx ; sepf : espace entre les milliers
+; lb_numl : cnum à partir de lx ; sepf : espace entre les milliers
 lb_numl
 .(
         jsr utoa
@@ -2914,13 +3062,18 @@ k_view
         rts
 go      lda cur
         jsr vis_ptr
-        jsr ent_fcb
+        lda ptype
+        beq dsk
+        jsr u_open_ep           ; clé : répertoire (on y entre) ou fichier
+        bcc op
+        rts
+dsk     jsr ent_fcb
         jsr set_dma0
         ldx #F_OPEN
         jsr bdos_t
         cmp #$FF
         bne op
-        lda #<m_rerr
+rerr    lda #<m_rerr
         ldy #>m_rerr
         jmp set_msg
 op      jsr usr_attr          ; le texte garde les couleurs de l'utilisateur
@@ -2929,17 +3082,36 @@ op      jsr usr_attr          ; le texte garde les couleurs de l'utilisateur
         sta vx
         sta vy
         sta vquit
-        lda #128
         sta vrec
+        sta vlen
 nx      lda vquit
         bne quit
         lda vrec
-        bpl have
+        cmp vlen
+        bcc have
+        lda ptype
+        bne uf
         jsr set_dma0
         ldx #F_READ
         jsr bdos_t
         cmp #0
         bne eof
+        sta vrec
+        lda #128
+        sta vlen
+        bne have
+uf      lda ufd                 ; clé : 128 octets au plus
+        jsr usb_read
+        bcs eof
+        cmp #0
+        beq eof
+        sta vlen
+        tay
+cp      dey
+        lda iobuf,y
+        sta DEF_DMA,y
+        tya
+        bne cp
         sta vrec
 have    ldx vrec
         inc vrec
@@ -2948,8 +3120,14 @@ have    ldx vrec
         beq eof
         cmp #13
         beq nl
-        cmp #10
+        cmp #10                 ; LF : fin de ligne, sauf après CR
+        bne nlf
+        ldx vprev
+        sta vprev
+        cpx #13
         beq nx
+        jmp nl2
+nlf     sta vprev
         cmp #9
         bne nt
         lda #" "
@@ -2960,14 +3138,19 @@ nt      cmp #" "
 dot     lda #"."
 ok      jsr vput
         jmp nx
-nl      jsr vnl
+nl      sta vprev
+nl2     jsr vnl
         jmp nx
 eof     lda #<m_vend
         ldy #>m_vend
         jsr vprompt
 quit    lda #1                  ; deux colonnes : tout est à redessiner
         sta redrw
-        jmp clr_area
+        lda ptype
+        beq q2
+        lda ufd
+        jsr usb_close
+q2      jmp clr_area
 .)
 
 ; vput : A écrit en (vx, vy) ; passe à la ligne après 37 colonnes
@@ -3036,6 +3219,8 @@ vprompt
 ; ---------------------------------------------------------------------
 k_del
 .(
+        jsr usb_ro
+        bcs rt
         jsr targets
         bcs rt
         lda #<m_era
@@ -3141,7 +3326,15 @@ n1      lda nerr
         lda #<m_illis
         ldy #>m_illis
         jsr lb_str
-n2      jmp lb_to_msg
+n2      lda nrf
+        beq n3
+        jsr num8
+        jsr comma
+        jsr lb_numl
+        lda #<m_refus
+        ldy #>m_refus
+        jsr lb_str
+n3      jmp lb_to_msg
 comma   lda #","
         jsr lb_chr
         lda #" "
@@ -3153,6 +3346,8 @@ comma   lda #","
 ; ---------------------------------------------------------------------
 k_ren
 .(
+        jsr usb_ro
+        bcs rt
         jsr targets
         bcs rt
         lda ntg
@@ -3263,7 +3458,10 @@ c3      lda cname,x
 ; ---------------------------------------------------------------------
 k_attr
 .(
-        jsr targets
+        jsr usb_ro
+        bcc a0
+        rts
+a0      jsr targets
         bcc jf1
         jmp rt
 jf1
@@ -3348,6 +3546,8 @@ addin   ldx inlen
 ; k_info : taille exacte, enregistrements et blocs du fichier courant
 k_info
 .(
+        lda ptype               ; clé : tout est déjà en ligne 25
+        bne rt
         lda nvis
         beq rt
         lda cur
@@ -3362,13 +3562,13 @@ k_info
         jsr lb_str
         ldy #E_SIZE
         lda (ep),y
-        sta num
+        sta cnum
         iny
         lda (ep),y
-        sta num+1
+        sta cnum+1
         iny
         lda (ep),y
-        sta num+2
+        sta cnum+2
         lda #1
         sta sepf
         jsr lb_numl
@@ -3440,16 +3640,16 @@ exact
         sec
         sbc #1
         sta tfcb+FCB_R0
-        sta num+1
+        sta cnum+1
         lda nrec+1
         sbc #0
         sta tfcb+FCB_R0+1
-        sta num+2
+        sta cnum+2
         lda #0
-        sta num
-        lsr num+2               ; (recs - 1) x 128
-        ror num+1
-        ror num
+        sta cnum
+        lsr cnum+2               ; (recs - 1) x 128
+        ror cnum+1
+        ror cnum
         ldx #F_RREAD
         jsr bdos_t
         ldy #128                ; illisible : enregistrement entier
@@ -3464,20 +3664,20 @@ tz      lda DEF_DMA,y
 last    iny
 add     tya
         clc
-        adc num
-        sta num
+        adc cnum
+        sta cnum
         bcc st
-        inc num+1
+        inc cnum+1
         bne st
-        inc num+2
+        inc cnum+2
 st      ldy #E_SIZE
-        lda num
+        lda cnum
         sta (ep),y
         iny
-        lda num+1
+        lda cnum+1
         sta (ep),y
         iny
-        lda num+2
+        lda cnum+2
         sta (ep),y
 zero    ldy #E_FLAG
         lda (ep),y
@@ -3518,13 +3718,24 @@ sk      cpx inlen
         bcs bad
         ldx mode2               ; deux colonnes : pas le lecteur de l'autre
         beq dk
+        ldx pz2+PZN+1
+        bne dk
         cmp pz2+4
         bne dk
         lda #<m_twod
         ldy #>m_twod
         jmp set_msg
 dk      sta drv
-        jmp reload
+        lda ptype               ; la colonne de la clé devient une disquette
+        beq dk2
+        lda #0
+        sta ptype
+        ldx #10
+        lda #"?"
+fq      sta fpat,x
+        dex
+        bpl fq
+dk2     jmp reload
 bad     lda #<m_drvbad
         ldy #>m_drvbad
         jmp set_msg
@@ -3742,12 +3953,12 @@ short   jsr lb_clear            ; « Libre 26K, requis 31K : O/N ? »
         jsr lb_str
         lda rlen
         asl
-        sta num
+        sta cnum
         lda #0
         rol
-        sta num+1
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         sta sepf
         jsr lb_numl
         lda #<m_req
@@ -3755,12 +3966,12 @@ short   jsr lb_clear            ; « Libre 26K, requis 31K : O/N ? »
         jsr lb_str
         lda needb
         asl
-        sta num
+        sta cnum
         lda needb+1
         rol
-        sta num+1
+        sta cnum+1
         lda #0
-        sta num+2
+        sta cnum+2
         jsr lb_numl
         lda #<m_ynk
         ldy #>m_ynk
@@ -3795,6 +4006,8 @@ repl_blk
         jmp go
 o       lda mode2               ; l'autre colonne
         beq zero
+        lda pz2+PZN+1
+        bne zero
         lda cdst
         cmp pz2+4
         bne zero
@@ -3841,10 +4054,21 @@ back    lda ep2
 ; ---------------------------------------------------------------------
 ; Copier, Déplacer
 ; ---------------------------------------------------------------------
-k_copy  lda #0
+k_copyt lda #1                  ; Copier texte : /T proposé
         .byt $2C
-k_move  lda #1
-        sta mvf
+k_copy  lda #0
+        sta ctext
+        lda #0
+        beq kcm
+k_move  lda #0
+        sta ctext
+        lda ptype               ; pas de Déplacer depuis la clé
+        beq km1
+        lda #<m_usbro
+        ldy #>m_usbro
+        jmp set_msg
+km1     lda #1
+kcm     sta mvf
 .(
         jsr targets
         bcc jf2
@@ -3883,7 +4107,17 @@ c1      jsr lb_what
         sta inlen
         lda mode2               ; deux colonnes : l'autre lecteur proposé
         beq ap
-        lda pz2+4
+        lda pz2+PZN+1
+        beq ad
+        ldx #3                  ; (ou USB:)
+pu      lda m_usb,x
+        sta inbuf,x
+        dex
+        bpl pu
+        lda #4
+        sta inlen
+        bne ap
+ad      lda pz2+4
         clc
         adc #"A"-1
         sta inbuf
@@ -3891,17 +4125,37 @@ c1      jsr lb_what
         sta inbuf+1
         lda #2
         sta inlen
-ap      lda #<mbuf
+ap      lda ctext               ; Copier texte : « /T »
+        beq ap2
+        ldx inlen
+        lda #" "
+        sta inbuf,x
+        lda #"/"
+        sta inbuf+1,x
+        lda #"T"
+        sta inbuf+2,x
+        txa
+        clc
+        adc #3
+        sta inlen
+ap2     lda #<mbuf
         ldy #>mbuf
         jsr ask
         bcc jf3
         jmp rt
 jf3
+        jsr strip_t             ; « /T » final : texte
         lda inlen
         bne jf4
         jmp rt
 jf4
-        jsr parse
+        jsr is_usbin            ; vers la clé ?
+        bcc nu
+        jmp ucopy_out
+nu      lda ptype               ; depuis la clé ?
+        beq nu2
+        jmp ucopy_in
+nu2     jsr parse
         bcc jf5
         jmp bad
 jf5
@@ -4660,7 +4914,7 @@ gq_text .byt G_MODE,0,0,0,0,0
 bar     .byt 4
         .word mn_f, mn_m, mn_t, mn_v
 
-mn_f    .byt 11,16
+mn_f    .byt 12,16
         .asc "Fichier",0
         .asc "Voir         RET",0
         .byt MA_TYPE
@@ -4668,6 +4922,9 @@ mn_f    .byt 11,16
         .asc "Copier...     ^C",0
         .byt MA_TYPE
         .word c82
+        .asc "Copier texte...",0
+        .byt MA_TYPE
+        .word c9e
         .asc "Deplacer...   ^D",0
         .byt MA_TYPE
         .word c83
@@ -4791,6 +5048,7 @@ c9a     .byt $9A,0
 c9b     .byt $9B,0
 c9c     .byt $9C,0
 c9d     .byt $9D,0
+c9e     .byt $9E,0
 
 ; ---------------------------------------------------------------------
 ; Messages (37 colonnes au plus, sans accents)
@@ -4837,6 +5095,17 @@ m_same  .asc "Comme la source : continuer (O/N) ?",0
 m_ioerr .asc "Erreur disque : verifiez la disquette",0
 m_t2    .asc " NOM      TYP   Ko"
 m_twod  .asc "Deux lecteurs differents",0
+m_twou  .asc "Une seule colonne USB",0
+m_usb   .asc "USB:",0
+m_blnk  .byt 0," "
+m_usbro .asc "Cle USB : lecture et copie seulement",0
+m_usberr .asc "Erreur USB (cle absente ou pleine ?)",0
+m_noloci2 .asc "LOCI absent : cle USB inaccessible",0
+m_refus .asc " refuse(s)",0
+m_colsu .asc "  NOM                         TAILLE",0
+m_t2u   .asc " NOM            Ko"
+m_rep   .asc "<REP>",0
+m_ucut  .asc " +",0
 m_one2  .asc "Une seule colonne",0
 m_prt   .asc "Impression... (ESC arrete)",0
 m_prtok .asc "Liste imprimee",0
@@ -4866,10 +5135,1238 @@ m_wait  .asc "Tailles exactes... (ESC arrete)",0
 m_exok  .asc "Tailles exactes",0
 
 ; ---------------------------------------------------------------------
+; Clé USB du LOCI (lot 2c) : une passerelle. Liste du répertoire
+; courant (upath), Voir, Copier dans les deux sens ; rien n'est effacé
+; ni renommé sur la clé. Une seule colonne USB (upath, lnames).
+; ---------------------------------------------------------------------
+; is_usb : X = début d'un mot de args -> A = 1 s'il commence par USB:
+is_usb
+.(
+        ldy #0
+lp      lda args,x
+        jsr upc
+        cmp m_usb,y
+        bne no
+        inx
+        iny
+        cpy #4
+        bne lp
+        txa                     ; X revient au début du mot
+        sec
+        sbc #4
+        tax
+        lda #1
+        rts
+no      stx t0                  ; X revient au début du mot
+        tya
+        eor #$FF
+        sec
+        adc t0
+        tax
+        lda #0
+        rts
+.)
+
+; usb_pan : colonne de la clé, chemin d'après le mot args,X (après USB:)
+usb_pan
+.(
+        lda #1
+        sta ptype
+        inx
+        inx
+        inx
+        inx
+        ldy #0
+lp      lda args,x
+        beq e
+        cmp #" "
+        beq e
+        sta upath,y
+        inx
+        iny
+        cpy #99
+        bne lp
+e       lda #0
+        sta upath,y
+        cpy #0
+        bne hp
+        lda #"/"                ; sans chemin : la racine de la clé
+        sta upath
+        lda #0
+        sta upath+1
+hp      lda #<m_blnk            ; filtre : tout (FCB sans nom)
+        ldy #>m_blnk
+        jmp init_pan
+.)
+
+; is_usbin : C=1 si la réponse (inbuf) commence par USB:
+is_usbin
+.(
+        lda inlen
+        cmp #4
+        bcc no
+        ldx #3
+lp      lda inbuf,x
+        jsr upc
+        cmp m_usb,x
+        bne no
+        dex
+        bpl lp
+        sec
+        rts
+no      clc
+        rts
+.)
+
+; strip_t : « /T » à la fin de la réponse : textf = 1, et retiré
+strip_t
+.(
+        lda #0
+        sta textf
+lp      ldx inlen               ; espaces de fin
+        beq rt
+        lda inbuf-1,x
+        cmp #" "
+        bne nsp
+        dec inlen
+        jmp lp
+nsp     cpx #2
+        bcc rt
+        jsr upc
+        cmp #"T"
+        bne rt
+        lda inbuf-2,x
+        cmp #"/"
+        bne rt
+        dec inlen
+        dec inlen
+        inc textf
+rt      rts
+.)
+
+; usb_ro : C=1 (et message) dans une colonne de la clé
+usb_ro
+        lda ptype
+        beq ur_n
+        lda #<m_usbro
+        ldy #>m_usbro
+        jsr set_msg
+        sec
+        rts
+ur_n    clc
+        rts
+
+; u_chk : C=0 si le LOCI répond (comme mia_chk, sans message)
+u_chk
+.(
+        lda #0
+        sta MIA_OP
+        lda $03B0
+        cmp #$B8
+        bne no
+        lda $03B1
+        cmp #$50
+        bne no
+        lda $03B3
+        cmp #$A9
+        bne no
+        lda $03B5
+        cmp #$A2
+        bne no
+        lda $03B7
+        cmp #$60
+        bne no
+        clc
+        rts
+no      sec
+        rts
+.)
+
+; u_load : table de la colonne d'après le répertoire upath de la clé ;
+; « .. » en tête hors de la racine ; ni fichiers cachés ou système, ni
+; noms commençant par un point (comme USBDIR)
+u_load
+.(
+        lda #0
+        sta cnt
+        sta used
+        sta ucut
+        sta dok
+        sta dd
+        jsr u_chk
+        bcc lc
+        lda #<m_noloci2         ; LOCI absent : message
+        ldy #>m_noloci2
+        jmp set_msg
+lc      jsr is_root
+        bcs op
+        lda #0                  ; « .. »
+        jsr ent_ptr
+        jsr ent_zero
+        lda #"."
+        ldy #0
+        sta (ep),y
+        iny
+        sta (ep),y
+        ldy #E_ATTR
+        lda #$20
+        sta (ep),y
+        lda #0
+        jsr lname_ptr
+        ldy #0
+        lda #"."
+        sta (sp),y
+        iny
+        sta (sp),y
+        iny
+        lda #0
+        sta (sp),y
+        inc cnt
+        inc dd
+op      lda #<upath
+        ldy #>upath
+        jsr usb_opendir
+        bcs rt
+        sta ufd
+lp      lda ufd
+        jsr usb_readdir
+        bcs cl
+        lda dirent+2
+        beq cl
+        jsr u_skip
+        beq lp
+        lda cnt
+        cmp #NMAX
+        bcc ad
+        inc ucut
+        bne cl
+ad      jsr u_add
+        jmp lp
+cl      lda ufd
+        jsr usb_closedir
+        lda #1
+        sta dok
+rt      rts
+.)
+
+; u_skip : Z=1 si l'entrée dirent n'est pas montrée
+u_skip
+        lda dirent+2
+        cmp #"."
+        beq us_r
+        lda dirent+66
+        and #$06
+        beq us_s
+        lda #0
+        rts
+us_s    lda #1
+us_r    rts
+
+; ent_zero : entrée ep remise à zéro, nom en espaces
+ent_zero
+.(
+        ldy #ESZ-1
+        lda #0
+z       sta (ep),y
+        dey
+        bpl z
+        ldy #10
+        lda #" "
+s       sta (ep),y
+        dey
+        bpl s
+        rts
+.)
+
+; u_add : entrée de la clé (dirent) ajoutée à la table : nom ramené en
+; 8 + 3 (comme IMPORT ; caractère interdit -> _), taille exacte,
+; enregistrements et blocs de 2 Ko qu'il occupera sur une disquette
+u_add
+.(
+        lda cnt
+        jsr ent_ptr
+        jsr ent_zero
+        ldx #0
+        ldy #0
+nm      lda dirent+2,x
+        beq dn
+        cmp #"."
+        beq dot
+        cpy #8
+        bcs sk
+        jsr fixc
+        sta (ep),y
+        iny
+sk      inx
+        cpx #63
+        bne nm
+        beq dn
+dot     inx
+        ldy #8
+ex      lda dirent+2,x
+        beq dn
+        cmp #"."
+        beq dn
+        cpy #11
+        bcs dn
+        jsr fixc
+        sta (ep),y
+        iny
+        inx
+        bne ex
+dn      lda dirent+66
+        and #$10
+        beq file
+        ldy #E_ATTR             ; répertoire
+        lda #$20
+        sta (ep),y
+        jmp nmx
+file    ldy #E_KIND
+        lda #1
+        sta (ep),y
+        ldy #E_FLAG
+        lda #FL_EXACT
+        sta (ep),y
+        lda dirent+68           ; taille (plafonnée à 24 bits)
+        sta t0
+        lda dirent+69
+        sta t1
+        lda dirent+70
+        sta t2
+        lda dirent+71
+        beq s24
+        lda #$FF
+        sta t0
+        sta t1
+        sta t2
+s24     ldy #E_SIZE
+        lda t0
+        sta (ep),y
+        iny
+        lda t1
+        sta (ep),y
+        iny
+        lda t2
+        sta (ep),y
+        lda t0                  ; enregistrements = (taille + 127) / 128
+        clc
+        adc #127
+        php
+        asl
+        plp
+        lda t1
+        adc #0
+        sta cnum+1
+        lda t2
+        adc #0
+        sta cnum+2
+        lda t0
+        clc
+        adc #127
+        asl                     ; bit 7 -> C
+        lda cnum+1
+        rol
+        sta cnum
+        lda cnum+2
+        rol
+        bcc r16
+        lda #$FF
+        sta cnum
+r16     ldy #E_RECS+1
+        sta (ep),y
+        dey
+        lda cnum
+        sta (ep),y
+        lda t0                  ; blocs = (taille + 2047) / 2048
+        clc
+        adc #$FF
+        lda t1
+        adc #$07
+        sta cnum
+        lda t2
+        adc #0
+        cmp #8
+        bcc b8
+        lda #$FF
+        bne bs
+b8      ldx #3
+sh      lsr
+        ror cnum
+        dex
+        bne sh
+        lda cnum
+bs      ldy #E_BLKS
+        sta (ep),y
+nmx     lda cnt                 ; rang = ordre de la clé = n° du nom long
+        ldy #E_RANK
+        sta (ep),y
+        jsr lname_ptr
+        ldy #0
+cl      lda dirent+2,y
+        sta (sp),y
+        beq ce
+        iny
+        cpy #26
+        bne cl
+        lda dirent+2,y          ; plus long : « ~ » à la fin
+        beq ce0
+        lda #"~"
+        dey
+        sta (sp),y
+        iny
+ce0     lda #0
+        sta (sp),y
+ce      jsr genre
+        inc cnt
+        rts
+.)
+
+; fixc : caractère d'un nom de la clé -> majuscule, ou _ s'il est interdit
+fixc
+.(
+        jsr upc
+        cmp #" "+1
+        bcc bad
+        cmp #$7F
+        bcs bad
+        stx t1
+        ldx #8
+lp      cmp badc,x
+        beq bd2
+        dex
+        bpl lp
+        ldx t1
+        rts
+bd2     ldx t1
+bad     lda #"_"
+        rts
+.)
+
+; lname_ptr : A = rang -> sp = lnames + 27 x A (X, Y conservés)
+lname_ptr
+.(
+        sta sp
+        lda #0
+        sta sp+1
+        lda sp                  ; x 27 = x 16 + x 8 + x 2 + x 1
+        sta cnum
+        lda #0
+        sta cnum+1
+        asl sp
+        rol sp+1                ; x 2
+        lda sp
+        clc
+        adc cnum
+        sta cnum
+        lda sp+1
+        adc cnum+1
+        sta cnum+1              ; x 3
+        asl sp
+        rol sp+1
+        asl sp
+        rol sp+1                ; x 8
+        lda sp
+        clc
+        adc cnum
+        sta cnum
+        lda sp+1
+        adc cnum+1
+        sta cnum+1              ; x 11
+        asl sp
+        rol sp+1                ; x 16
+        lda sp
+        clc
+        adc cnum
+        sta sp
+        lda sp+1
+        adc cnum+1
+        sta sp+1                ; x 27
+        lda sp
+        clc
+        adc #<lnames
+        sta sp
+        lda sp+1
+        adc #>lnames
+        sta sp+1
+        rts
+.)
+
+; slashes : t0 = position du premier « / » d'upath, t1 = celle du dernier
+; ($FF : aucun), t2 = longueur
+slashes
+.(
+        lda #$FF
+        sta t0
+        sta t1
+        ldy #0
+lp      lda upath,y
+        beq e
+        cmp #"/"
+        bne n
+        sty t1
+        lda t0
+        bpl n
+        sty t0
+n       iny
+        bne lp
+e       sty t2
+        rts
+.)
+
+; is_root : C=1 si upath est la racine (« / », « 1:/ », « 0: »)
+is_root
+.(
+        jsr slashes
+        lda t1
+        bmi nos
+        cmp t0                  ; un seul « / », en dernier
+        bne no
+        clc
+        adc #1
+        cmp t2
+        bne no
+        sec
+        rts
+nos     ldy t2                  ; « 0: »
+        beq y
+        lda upath-1,y
+        cmp #":"
+        bne no
+y       sec
+        rts
+no      clc
+        rts
+.)
+
+; path_up : upath remonte d'un répertoire
+path_up
+.(
+        jsr is_root
+        bcs rt
+        lda t1
+        bmi nos
+        cmp t0
+        bne cut
+        tay                     ; le premier « / » : on le garde
+        iny
+        bne z
+cut     tay
+z       lda #0
+        sta upath,y
+rt      rts
+nos     ldy #0                  ; « 0:REP » -> « 0: »
+f       lda upath,y
+        iny
+        cmp #":"
+        bne f
+        lda #0
+        sta upath,y
+        rts
+.)
+
+; u_full : ufull = upath + « / » + nom (A/Y, 0 à la fin) ; C=1 si trop long
+u_full
+.(
+        sta pp
+        sty pp+1
+        ldx #0
+c1      lda upath,x
+        beq e1
+        sta ufull,x
+        inx
+        bne c1
+e1      txa
+        beq sl
+        lda upath-1,x
+        cmp #"/"
+        beq nm
+        cmp #":"
+        beq nm
+sl      lda #"/"
+        sta ufull,x
+        inx
+nm      ldy #0
+c2      lda (pp),y
+        sta ufull,x
+        beq ok
+        inx
+        iny
+        cpx #127
+        bne c2
+        sec
+        rts
+ok      clc
+        rts
+.)
+
+; u_name : nom complet de l'entrée de rang A (relu sur la clé, dans
+; dirent+2) puis ufull = son chemin ; C=1 si introuvable
+u_name
+.(
+        sec
+        sbc dd
+        sta ucnt
+        lda #<upath
+        ldy #>upath
+        jsr usb_opendir
+        bcs rt
+        sta ufd
+lp      lda ufd
+        jsr usb_readdir
+        bcs no
+        lda dirent+2
+        beq no
+        jsr u_skip
+        beq lp
+        lda ucnt
+        beq got
+        dec ucnt
+        jmp lp
+got     lda ufd
+        jsr usb_closedir
+        lda #<dirent+2
+        ldy #>dirent+2
+        jmp u_full
+no      lda ufd
+        jsr usb_closedir
+        sec
+rt      rts
+.)
+
+; u_open_ep : RETURN sur une entrée de la clé : « .. » remonte, un
+; répertoire y entre (C=1 : rien à voir) ; un fichier est ouvert pour
+; Voir (ufd, C=0)
+u_open_ep
+.(
+        ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        beq fil
+        ldy #0
+        lda (ep),y
+        cmp #"."
+        bne ent
+        jsr path_up
+        jmp rl
+ent     ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcs er
+        ldx #0                  ; upath = ufull (99 caractères au plus)
+c       lda ufull,x
+        sta upath,x
+        beq rl
+        inx
+        cpx #99
+        bne c
+        lda #0
+        sta upath,x
+rl      jsr reload
+        sec
+        rts
+fil     ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcs er
+        lda #<ufull
+        ldy #>ufull
+        ldx #O_RDONLY
+        jsr usb_open
+        bcs er
+        sta ufd
+        clc
+        rts
+er      lda #<m_usberr
+        ldy #>m_usberr
+        jsr set_msg
+        sec
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; Copies avec la clé (fichier par fichier, sans le grand tampon)
+; ---------------------------------------------------------------------
+u_init
+        lda #0
+        sta ncp
+        sta nro
+        sta nerr
+        sta nrf
+        sta stopf
+        sta rall
+        sta errm+1
+        sta wr_open
+        sta vi
+        lda #0
+        sta bp
+        sta ub
+        lda bufpg
+        sta bp+1
+        sta ub+1
+        lda #$80
+        sta ub
+        rts
+
+; u_end : relecture des deux colonnes, puis message (arrêt ou bilan)
+u_end
+.(
+        jsr reload_both
+        lda errm+1
+        beq rp
+        lda errm
+        ldy errm+1
+        jmp set_msg
+rp      lda #<m_copied
+        ldy #>m_copied
+        ldx mvf
+        beq r2
+        lda #<m_moved
+        ldy #>m_moved
+r2      jmp report
+.)
+
+; ucopy_in : clé (colonne active) -> disquette ; /T : LF seul -> CR LF ;
+; dernier enregistrement complété par des ^Z (comme IMPORT)
+ucopy_in
+.(
+        jsr parse
+        bcs bad
+        lda pfl
+        and #4
+        bne bad
+        lda pfl                 ; un lecteur est nécessaire
+        and #1
+        beq bad
+        lda pfcb
+        sta cdst
+        lda #0
+        sta named
+        lda pfl
+        and #2
+        beq nn
+        lda ntg
+        cmp #1
+        beq one
+        lda #<m_one
+        ldy #>m_one
+        jmp set_msg
+one     inc named
+        ldx #10
+cn      lda pfcb+1,x
+        sta cname,x
+        dex
+        bpl cn
+nn      lda cdst                ; lisible, assez de place ?
+        jsr dir_fp
+        bcc rd
+        lda #<m_nodst
+        ldy #>m_nodst
+        jmp set_msg
+rd      lda #NBLK
+        sec
+        sbc dused
+        bcs pl
+        lda #0
+pl      jsr place
+        bcc go
+        rts
+bad     jmp bad_name
+go      jsr u_init
+lp      lda vi
+        cmp ntg
+        bne nx
+        jmp u_end
+nx      tax
+        lda tg,x
+        jsr ent_ptr
+        ldy #E_ATTR             ; répertoire : laissé
+        lda (ep),y
+        and #$20
+        beq f0
+        jmp nf
+f0      jsr esc_chk
+        bcc ne
+        lda #<m_esc
+        sta errm
+        lda #>m_esc
+        sta errm+1
+        jmp u_end
+ne      jsr open_dst            ; copie créée sur la disquette
+        lda stopf
+        beq ok1
+        jmp u_end
+ok1     bcs nf
+        ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcs ue
+        lda #<ufull
+        ldy #>ufull
+        ldx #O_RDONLY
+        jsr usb_open
+        bcs ue
+        sta ufd
+        lda #0
+        sta urp
+        sta ulast
+rl      lda ufd
+        jsr usb_read
+        bcs ue2
+        cmp #0
+        beq eof
+        sta ucnt
+        ldx #0
+by      lda iobuf,x
+        cmp #10                 ; /T : LF seul -> CR LF
+        bne em
+        ldy textf
+        beq em
+        ldy ulast
+        cpy #13
+        beq em
+        lda #13
+        jsr emit
+        bcs full
+        lda #10
+em      sta ulast
+        jsr emit
+        bcs full
+        inx
+        cpx ucnt
+        bne by
+        jmp rl
+eof     lda urp                 ; dernier enregistrement : ^Z
+        beq cls
+z       lda #$1A
+        jsr emit
+        bcs full
+        lda urp
+        bne z
+cls     lda ufd
+        jsr usb_close
+        jsr end_dst
+nf      inc vi
+        jmp lp
+full    lda ufd                 ; disque plein
+        jsr usb_close
+        jsr kill_dst
+        lda #<m_full
+        sta errm
+        lda #>m_full
+        sta errm+1
+        jmp u_end
+ue2     lda ufd
+        jsr usb_close
+ue      jsr kill_dst
+        lda #<m_usberr
+        sta errm
+        lda #>m_usberr
+        sta errm+1
+        jmp u_end
+.)
+
+; emit : A dans l'enregistrement (bp) ; plein : écrit sur dfcb. C=1 si
+; disque plein (X conservé)
+emit
+.(
+        ldy urp
+        sta (bp),y
+        iny
+        sty urp
+        bpl ok
+        txa
+        pha
+        lda bp
+        ldy bp+1
+        ldx #F_SETDMA
+        jsr BDOS
+        ldx #F_WRITE
+        jsr bdos_d
+        tay
+        pla
+        tax
+        lda #0
+        sta urp
+        cpy #0
+        bne no
+ok      clc
+        rts
+no      sec
+        rts
+.)
+
+; ucopy_out : disquette (colonne active) -> clé ; dernier enregistrement
+; sans ses ^Z (comme EXPORT) ; .DSK refusé ; Déplacer efface l'original
+ucopy_out
+.(
+        ldx #4                  ; répertoire : après USB:, sinon celui de
+        ldy #0                  ; la colonne de la clé, sinon la racine
+        cpx inlen
+        beq dflt
+cp      lda inbuf,x
+        sta udest,y
+        inx
+        iny
+        cpx inlen
+        bne cp
+        lda #0
+        sta udest,y
+        beq go0
+dflt    lda mode2
+        beq root
+        lda pz2+PZN+1
+        beq root
+        ldx #0
+c2      lda upath,x
+        sta udest,x
+        beq go0
+        inx
+        bne c2
+root    lda #"/"
+        sta udest
+        lda #0
+        sta udest+1
+go0     jsr u_chk
+        bcc go
+        lda #<m_noloci2
+        ldy #>m_noloci2
+        jmp set_msg
+go      jsr u_init
+lp      lda vi
+        cmp ntg
+        bne nx
+        jmp u_end
+nx      tax
+        lda tg,x
+        jsr ent_ptr
+        jsr esc_chk
+        bcc ne
+        lda #<m_esc
+        sta errm
+        lda #>m_esc
+        sta errm+1
+        jmp u_end
+ne      ldy #8                  ; .DSK : refusé (image en service ?)
+        lda (ep),y
+        cmp #"D"
+        bne nd
+        iny
+        lda (ep),y
+        cmp #"S"
+        bne nd
+        iny
+        lda (ep),y
+        cmp #"K"
+        bne nd
+        inc nrf
+        jmp nf
+nd      jsr lb_clear            ; « NOM.EXT » -> chemin sur la clé
+        lda ep
+        ldy ep+1
+        jsr lb_pat
+        lda #0
+        ldx lx
+        sta lbuf,x
+        ldx #0                  ; (u_full part de upath : échange)
+c3      lda upath,x
+        pha
+        lda udest,x
+        sta upath,x
+        pla
+        sta udest,x
+        inx
+        cpx #100
+        bne c3
+        lda #<lbuf
+        ldy #>lbuf
+        jsr u_full
+        php
+        ldx #0
+c4      lda upath,x
+        pha
+        lda udest,x
+        sta upath,x
+        pla
+        sta udest,x
+        inx
+        cpx #100
+        bne c4
+        plp
+        bcc pgo
+        jmp ue
+pgo     jsr lb_clear            ; progression
+        lda #<m_cpy
+        ldy #>m_cpy
+        jsr lb_str
+        lda ep
+        ldy ep+1
+        jsr lb_pat
+        jsr lb_to_msg
+        jsr draw_msg
+        jsr ent_fcb             ; ouverture de l'original
+        ldx #35
+cf      lda tfcb,x
+        sta sfcb,x
+        dex
+        bpl cf
+        jsr set_dma0
+        ldx #F_OPEN
+        jsr bdos_s
+        cmp #$FF
+        bne op
+        inc nerr
+        jmp nf
+op      lda #0
+        sta sfcb+32
+        lda #<ufull
+        ldy #>ufull
+        ldx #O_WRONLY+O_CREAT+O_TRUNC
+        jsr usb_open
+        bcs ue
+        sta ufd
+        jsr rdb                 ; premier enregistrement
+        bcs dn
+mv      ldy #127                ; B -> A
+m1      lda (ub),y
+        sta (bp),y
+        dey
+        bpl m1
+        jsr rdb
+        bcs last
+        ldx #128
+        jsr wra
+        bcs ue2
+        jmp mv
+last    ldy #127                ; sans les ^Z de la fin
+tz      lda (bp),y
+        cmp #$1A
+        bne lz
+        dey
+        bpl tz
+lz      iny
+        tya
+        tax
+        beq dn
+        jsr wra
+        bcs ue2
+dn      lda ufd
+        jsr usb_close
+        inc ncp
+        ldy #E_FLAG
+        lda (ep),y
+        and #$FF-FL_MARK
+        sta (ep),y
+        lda mvf                 ; Déplacer : original effacé
+        beq nf
+        jsr ent_fcb
+        ldx #F_DELETE
+        jsr bdos_t
+nf      inc vi
+        jmp lp
+ue2     lda ufd
+        jsr usb_close
+ue      lda #<m_usberr
+        sta errm
+        lda #>m_usberr
+        sta errm+1
+        jmp u_end
+.)
+
+; rdb : enregistrement suivant de sfcb dans B (ub) ; C=1 en fin de fichier
+rdb
+        lda ub
+        ldy ub+1
+        ldx #F_SETDMA
+        jsr BDOS
+        ldx #F_READ
+        jsr bdos_s
+        cmp #1
+        rts
+
+; wra : X octets de A (bp) -> clé (ufd) ; C=1 si erreur
+wra
+.(
+        stx ucnt
+        ldy #0
+c       lda (bp),y
+        sta iobuf,y
+        iny
+        cpy ucnt
+        bne c
+        lda ufd
+        ldx ucnt
+        jsr usb_write
+        rts
+.)
+
+; u_hdr : « USB:JEUX/ » à partir de lx (ulen caractères au plus pour le
+; nom du répertoire) ; « USB:? » si la clé ou le LOCI ne répond pas
+u_hdr
+.(
+        lda #<m_usb
+        ldy #>m_usb
+        jsr lb_str
+        lda dok
+        bne ok
+        lda #"?"
+        jmp lb_chr
+ok      jsr slashes
+        ldy t1                  ; après le dernier « / »
+        iny
+        lda upath,y
+        bne cp
+        ldy #0                  ; racine : le chemin entier
+cp      ldx #0
+lp      lda upath,y
+        beq e
+        jsr lb_chr
+        iny
+        inx
+        cpx ulen
+        bne lp
+e       dey
+        lda upath,y
+        cmp #"/"
+        beq am
+        lda #"/"
+        jsr lb_chr
+am      jmp absmark
+.)
+
+; fmt_usb : ligne d'une entrée de la clé (plein écran)
+; « * nom long (26)                 12 345 »
+fmt_usb
+.(
+        ldy #E_FLAG
+        lda (ep),y
+        and #FL_MARK
+        beq nm
+        lda #"*"
+        sta lbuf
+nm      ldy #E_RANK
+        lda (ep),y
+        jsr lname_ptr
+        ldy #0
+c       lda (sp),y
+        beq e
+        sta lbuf+2,y
+        iny
+        cpy #26
+        bne c
+e       ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        beq sz
+        ldx #4                  ; répertoire
+r       lda m_rep,x
+        sta lbuf+32,x
+        dex
+        bpl r
+        rts
+sz      ldy #E_SIZE
+        lda (ep),y
+        sta cnum
+        iny
+        lda (ep),y
+        sta cnum+1
+        iny
+        lda (ep),y
+        sta cnum+2
+        lda #1
+        sta sepf
+        ldy #36
+        jmp lb_numr
+.)
+
+; fmt_usb2 : ligne courte d'une entrée de la clé à lbuf+po
+; « *nom-de-12-ca~ 12K »
+fmt_usb2
+.(
+        ldx po
+        ldy #E_FLAG
+        lda (ep),y
+        and #FL_MARK
+        beq nm
+        lda #"*"
+        sta lbuf,x
+nm      ldy #E_RANK
+        lda (ep),y
+        jsr lname_ptr
+        ldx po
+        ldy #0
+c       lda (sp),y
+        beq e
+        sta lbuf+1,x
+        inx
+        iny
+        cpy #12
+        bne c
+        lda (sp),y              ; plus long : « ~ »
+        beq e
+        lda #"~"
+        sta lbuf,x
+e       ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        beq sz
+        lda po                  ; répertoire
+        clc
+        adc #13
+        tax
+        ldy #0
+r       lda m_rep,y
+        sta lbuf,x
+        inx
+        iny
+        cpy #5
+        bne r
+        rts
+sz      jmp ko2
+.)
+
+; u_info : ligne 25 pour une entrée de la clé : nom long, taille
+u_info
+.(
+        ldy #E_RANK
+        lda (ep),y
+        jsr lname_ptr
+        lda sp
+        ldy sp+1
+        jsr lb_str
+        lda #" "
+        jsr lb_chr
+        ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        beq sz
+        lda #<m_rep
+        ldy #>m_rep
+        jmp lb_str
+sz      ldy #E_SIZE
+        lda (ep),y
+        sta cnum
+        iny
+        lda (ep),y
+        sta cnum+1
+        iny
+        lda (ep),y
+        sta cnum+2
+        lda #1
+        sta sepf
+        jsr lb_numl
+        lda #<m_oct
+        ldy #>m_oct
+        jmp lb_str
+.)
+
+; Clé USB du LOCI : bibliothèque commune (page zéro $30-$3B, tampons
+; args, iobuf, dirent après elle)
+#include "loci_inc.s"
+
+; ---------------------------------------------------------------------
 ; Zones de travail (après le programme, non chargées)
 ; ---------------------------------------------------------------------
-endp
-lbuf    = endp                  ; ligne de travail (40)
+lbuf    = lib_free              ; ligne de travail (40)
 inbuf   = lbuf+40               ; saisie (24)
 mbuf    = inbuf+24              ; message construit (40)
 dbuf    = mbuf+40               ; chiffres (8)
@@ -4883,8 +6380,8 @@ RSZ     = 11+128+NMAX*ESZ
 fpat2   = fpat+RSZ              ; l'autre colonne : mêmes zones
 vis2    = fpat2+11
 ftab2   = vis2+128
-pz2     = fpat2+RSZ             ;   et sa page zéro (PZN + 1)
-pfcb    = pz2+PZN+1             ; nom analysé (12)
+pz2     = fpat2+RSZ             ;   et sa page zéro (PZN + 2 : absf, ptype)
+pfcb    = pz2+PZN+2             ; nom analysé (12)
 cname   = pfcb+12               ; autre nom de la copie (11)
 curname = cname+11              ; fichier du curseur (11)
 tg      = curname+11            ; fichiers visés (128)
@@ -4892,4 +6389,8 @@ ch_k    = tg+128                ; tranches : fichier, enreg., drapeaux
 ch_nl   = ch_k+NCH
 ch_nh   = ch_nl+NCH
 ch_f    = ch_nh+NCH
-bufs    = ch_f+NCH              ; noms marqués (relecture), tampon de copie
+upath   = ch_f+NCH              ; clé USB : répertoire de la colonne (100)
+ufull   = upath+100             ;   chemin complet d'un fichier (128)
+udest   = ufull+128             ;   répertoire de destination (100)
+lnames  = udest+100             ;   noms longs affichés (128 x 27)
+bufs    = lnames+NMAX*27        ; noms marqués (relecture), tampon de copie

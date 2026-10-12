@@ -160,6 +160,8 @@ SECTIONS = [
   ("CMDER [d:][afn]", "fichiers de d:, filtre afn (CMDER B:*.COM)"),
   ("CMDER A: B:", "deux colonnes (A: A: refuse)"),
   ("^X ^W ^Z", "autre colonne / echanger / plein ecran"),
+  ("CMDER USB:[ch]", "cle USB du LOCI (A: USB: : deux colonnes) ; RETURN : entre dans un dossier, .. remonte ; copie seulement"),
+  ("/T", "(copie depuis la cle) LF seul -> CR LF ; menu Copier texte"),
   ("haut bas", "fichier precedent / suivant"),
   ("<- ->", "page precedente / suivante"),
   ("< >", "premier / dernier fichier"),

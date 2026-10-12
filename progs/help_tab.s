@@ -553,6 +553,16 @@ h_10
         .asc "^X ^W ^Z      | autre colonne /",13,10
         .asc "              |   echanger / plein",13,10
         .asc "              |   ecran",13,10
+        .asc "CMDER USB:[ch]",13,10
+        .asc "              | cle USB du LOCI (A:",13,10
+        .asc "              |   USB: : deux",13,10
+        .asc "              |   colonnes) ; RETURN",13,10
+        .asc "              |   : entre dans un",13,10
+        .asc "              |   dossier, .. remonte",13,10
+        .asc "              |   ; copie seulement",13,10
+        .asc "/T            | (copie depuis la cle)",13,10
+        .asc "              |   LF seul -> CR LF ;",13,10
+        .asc "              |   menu Copier texte",13,10
         .asc "haut bas      | fichier precedent /",13,10
         .asc "              |   suivant",13,10
         .asc "<- ->         | page precedente /",13,10

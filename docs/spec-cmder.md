@@ -484,7 +484,33 @@ copie binaire. Le menu Fichier a aussi `Copier texte...`, qui pose la même ques
 
 Coût prévu (doublé) : liste et navigation ~900 ; noms longs, plein écran ~300 ; copies
 dans les deux sens et `/T` ~900 ; Voir ~150 ; messages ~300 ; plus `loci_inc.s` (~700 déjà
-écrits). **~3,3 Ko**. CMDER.COM finirait vers **14 Ko**, toujours sans rien de résident (tampon ~25 Ko).
+écrits). **~3,3 Ko**.
+
+**Fait (2c)** : CMDER.COM 9 818 -> 13 463 octets (+3 645, dont ~720 pour `loci_inc.s`, incluse
+telle quelle : la page zéro de CMDER a été déplacée hors de `$30-$3B`). Réalisation :
+- une seule colonne USB à la fois (`CMDER USB: USB:` refusé : `Une seule colonne USB`) ;
+  `CMDER USB:`, `CMDER USB:/JEUX`, `CMDER A: USB:` ou `CMDER USB: A:` ; le chemin est lu dans
+  la ligne d'origine (`get_args`) ;
+- table : nom ramené en 8 + 3 (comme IMPORT, un caractère interdit devient `_`), taille
+  exacte, enregistrements et blocs qu'il occuperait sur une disquette ; nom long (26
+  caractères affichés, `~` au-delà) dans une zone à part ; le nom complet est relu sur la clé
+  quand il faut ouvrir le fichier. Répertoires d'abord, quel que soit le tri ;
+- en-tête `USB:JEUX/` (`USB:?` : LOCI absent ou clé illisible, avec le message
+  `LOCI absent : cle USB inaccessible`) ; `+` après le nombre de fichiers si la liste est
+  coupée à 128 ;
+- copie fichier par fichier (pas de grand tampon) : depuis la clé, `^Z` ajoutés, `/T`
+  (`Copier texte...` le propose) ; vers la clé, `^Z` de fin retirés, fichier remplacé sans
+  question (comme EXPORT), `.DSK` refusé (`refuse(s)`) ; place vérifiée vers la disquette ;
+- Absents de l'autre entre la clé et une disquette : nom 8 + 3 et taille, sans les attributs ;
+  les répertoires restent montrés ;
+- Voir : une fin de ligne LF seule est comprise (fichiers du Mac, de Linux) ;
+- Effacer, Renommer, Attributs et Déplacer depuis la clé : `Cle USB : lecture et copie
+  seulement`.
+Essayé dans Oricutron avec la clé simulée (`ORIC_LOCI`) : liste, répertoires (entrer,
+remonter), nom long, fichier caché et `._` absents, Voir (LF seul), copie vers B: avec `/T`
+(CR LF et `^Z` vérifiés), copie d'un fichier de 70 000 octets (contenu identique), copie et
+Déplacer vers la clé (EDIT.COM identique), Absents de l'autre, refus dans la colonne de la
+clé, LOCI absent. Reste le vrai LOCI. CMDER.COM finirait vers **14 Ko**, toujours sans rien de résident (tampon ~25 Ko).
 
 ### 12.4 Remarques
 
