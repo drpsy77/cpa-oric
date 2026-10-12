@@ -17,4 +17,5 @@ GTEXT 13 102 GRAPHER
 ATTR 0 0 199 3
 ATTR 1 0 199 20
 ; GSAVE ECRAN garderait ECRAN.HIR
-; fin : une touche ramene au texte
+WAIT
+; une touche : fin, retour au texte

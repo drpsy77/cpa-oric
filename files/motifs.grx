@@ -19,7 +19,8 @@ REPEAT 400
   PLOT 1+RND(238) 1+RND(198)
 NEXT
 GTEXT 16 96 ETOILES
-; fin : une touche ramene au texte
+WAIT
+; une touche : fin, retour au texte
 END
 
 SUB CADRE

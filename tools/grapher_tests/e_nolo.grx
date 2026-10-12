@@ -1,0 +1,3 @@
+; LOCATE hors du LORES
+PRINT 1
+LOCATE 1 1

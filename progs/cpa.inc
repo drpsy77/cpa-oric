@@ -30,6 +30,9 @@ CON_CUREN   = $0213     ; 1 = curseur clignotant actif
 CON_BLINK   = $0214     ; compteur de clignotement
 
 SCREEN      = $BB80
+SCR_PROG    = $020E     ; 1 = le programme a l'écran texte entier (LORES) : la
+                        ;   console est muette (ni menus, ni voyants, FUNCT et
+                        ;   CTRL-T sans effet) ; remis à 0 au démarrage à chaud
 
 ; Fonctions du BDOS
 F_CONOUT    = 2

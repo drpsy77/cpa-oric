@@ -76,10 +76,13 @@ wboot
         cld
         jsr hw_init
         jsr font_init
-        jsr hires_on            ; un programme a laissé le HIRES plein
-        bne wb_h                ; écran : retour au texte ; l'image a
-        lda #0                  ; recouvert l'historique des lignes
+        jsr hires_on            ; un programme a laissé l'écran à lui :
+        bne wb_h                ; retour à la console ; en HIRES, l'image
+        lda scr_prog            ; a recouvert l'historique des lignes
+        bne wb_l
         sta HIST
+wb_l    lda #0
+        sta scr_prog
         jsr video_text
 wb_h    lda lst_echo            ; édition de ligne interrompue
         and #1
@@ -470,7 +473,10 @@ m4      lda kb_newmods      ; FUNCT vient d'être enfoncée -> code MENU_KEY
         bne nofn
         lda kb_newmods
         sta kb_mods
-        lda #MENU_KEY
+        jsr hires_on            ; écran au programme : pas de menus
+        bne fn_m
+        rts
+fn_m    lda #MENU_KEY
         sta ZP_IRQ
         jmp push
 nofn    lda kb_newmods
@@ -551,6 +557,8 @@ nocaps
         sta ZP_IRQ
         cmp #$14                ; CTRL-T : bascule majuscules (comme l'Atmos)
         bne push
+        jsr hires_on            ; écran au programme : code ordinaire
+        beq push
         lda caps
         eor #1
         sta caps
@@ -934,10 +942,15 @@ np      iny
 r       rts
 .)
 
-; hires_on : Z=1 si un programme a mis l'écran en HIRES plein (240 x 200,
-;   progs/hires.inc) : mode texte pour le système, mais attribut de haute
-;   résolution dans la dernière case de l'écran
+; hires_on : Z=1 si un programme a l'écran pour lui : écran texte (LORES,
+;   scr_prog = 1), ou HIRES plein (240 x 200, progs/hires.inc : mode texte
+;   pour le système, mais attribut de haute résolution dans la dernière
+;   case de l'écran). La console est alors muette : ni menus, ni voyants,
+;   CTRL-T et FUNCT sans effet
 hires_on
+        lda scr_prog
+        cmp #1
+        beq ho_r
         lda vmode
         bne ho_r
         lda SCREEN+LAST_ROW*40+COLS-1

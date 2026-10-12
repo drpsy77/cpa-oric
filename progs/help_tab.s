@@ -447,6 +447,7 @@ h_9
         .asc "              |   <> < <= > >= ; & |",13,10
         .asc "fonctions     | RND(n) ABS(n)",13,10
         .asc "              |   POINT(x,y) INKEY",13,10
+        .asc "              |   SCRN(col,lig)",13,10
         .asc "V = expr      | affectation (LET V =",13,10
         .asc "              |   expr)",13,10
         .asc "REPEAT n      | ... NEXT",13,10
@@ -456,7 +457,8 @@ h_9
         .asc "SUB NOM       | ... ENDSUB ; CALL NOM",13,10
         .asc "              |   ; RETURN",13,10
         .asc "PRINT expr    | affiche un nombre",13,10
-        .asc "              |   (pas en HIRES)",13,10
+        .asc "              |   (pas en HIRES ;",13,10
+        .asc "              |   LORES : au curseur)",13,10
         .asc "GNUM col y n  | nombre dans l'image",13,10
         .asc "GRAPHER nom /A",13,10
         .asc "              | traduit NOM.GRX en",13,10
@@ -470,6 +472,29 @@ h_9
         .asc "SPLIT         | 240 x 128, console",13,10
         .asc "              |   dessous",13,10
         .asc "TEXT          | retour au texte",13,10
+        .asc "              |   (console)",13,10
+        .asc "LORES         | ecran texte 40 x 28",13,10
+        .asc "              |   au programme, sans",13,10
+        .asc "              |   console ni menus",13,10
+        .asc "CLS           | LORES : attribut 16",13,10
+        .asc "              |   partout ; sinon la",13,10
+        .asc "              |   console",13,10
+        .asc "LOCATE col lig",13,10
+        .asc "              | curseur (col 0-39,",13,10
+        .asc "              |   lig 0-27)",13,10
+        .asc "CHAR col lig c",13,10
+        .asc "              | octet c dans la case",13,10
+        .asc "              |   (caractere ou",13,10
+        .asc "              |   attribut)",13,10
+        .asc "SPC n [x]     | n fois l'octet x",13,10
+        .asc "              |   (espace par defaut)",13,10
+        .asc "TAB n         | avance de n colonnes",13,10
+        .asc "              |   sans ecrire",13,10
+        .asc "ECHO ",34,"texte",34,"  | LORES : au curseur,",13,10
+        .asc "              |   tel quel ; ECHO",13,10
+        .asc "              |   seul : ligne",13,10
+        .asc "              |   suivante ; rien",13,10
+        .asc "              |   apres la colonne 39",13,10
         .asc "GCLS          | efface l'image",13,10
         .asc "PEN m         | 0 efface 1 trace 2",13,10
         .asc "              |   inv.",13,10
@@ -494,10 +519,14 @@ h_9
         .asc "              |   jusqu'a une touche)",13,10
         .asc "GSAVE fic     | idem, selon le mode",13,10
         .asc "WAIT          | attend une touche",13,10
+        .asc "GET V         | attend une touche,",13,10
+        .asc "              |   son code dans V",13,10
         .asc "DELAY n       | attend n/50 s",13,10
         .asc "ECHO texte    | affiche (pas en",13,10
         .asc "              |   HIRES)",13,10
-        .asc "END           | fin ; HIRES : une",13,10
-        .asc "              |   touche",13,10
+        .asc "END           | fin ; HIRES et LORES",13,10
+        .asc "              |   : retour a la",13,10
+        .asc "              |   console (WAIT avant",13,10
+        .asc "              |   pour attendre)",13,10
         .asc "; texte       | commentaire",13,10
         .byt 0

@@ -1,0 +1,35 @@
+; LORES : écrire, lire, bord droit, ECHO seul, guillemets
+LORES
+LOCATE 2 1
+ECHO Bonjour
+ECHO
+ECHO "  deux espaces"
+PRINT 123
+PRINT -5
+LOCATE 30 3
+ECHO tres long texte qui deborde
+PRINT 77
+CHAR 0 5 1
+CHAR 1 5 65
+LOCATE 2 5
+SPC 3 45
+TAB 2
+SPC 2
+ECHO x
+X = SCRN(1,5)
+Y = SCRN(0,5)
+LOCATE 0 7
+PRINT X
+TAB 1
+PRINT Y
+GET K
+LOCATE 0 8
+PRINT K
+LOCATE 5 27
+ECHO
+ECHO "haut"
+CHAR 39 27 42
+LOCATE 0 9
+FOR I 0 4
+  SPC 1 48+I
+NEXT

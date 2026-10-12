@@ -23,7 +23,8 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$0206` | `V_IRQ` | 3 | `JMP` IRQ, détournable (DEBUG) | public |
 | `$0209` | `V_NMI` | 3 | `JMP` NMI (bouton RESET), détournable (DEBUG) | public |
 | `$020C` | `tpa_top` / `TPA_TOP` | 2 | premier octet après la TPA : `$B400` en texte, `$A000` en SPLIT, moins si un plafond est posé (`$02A9`) | public |
-| `$020E-$020F` | — | 2 | **libres** (`$020E` proposé pour `SCR_PROG`, voir `docs/spec-grapher-lores.md`) | |
+| `$020E` | `scr_prog` / `SCR_PROG` | 1 | 1 = un programme a l'écran texte entier (LORES, `h_lores`) : console muette (ni menus, ni voyants ; FUNCT et CTRL-T arrivent au programme comme des touches) ; remis à 0 par `h_text` et le démarrage à chaud | public |
+| `$020F` | — | 1 | **libre** | |
 
 ### Console et clavier (`$0210-$023F`)
 
@@ -177,7 +178,7 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$02E4` | `cp_com` | 13 | préfixe commun | interne |
 | `$02F1-$02FF` | `rl_pr` | 15 | prompt recopié de l'écran | interne |
 
-**Octets libres de la page 2** : `$020E-$020F`, `$022F`, `$024E-$024F`, `$027F` (6 octets).
+**Octets libres de la page 2** : `$020F`, `$022F`, `$024E-$024F`, `$027F` (5 octets).
 
 ## Page 3 (`$0300-$03FF`) : entrées et sorties
 

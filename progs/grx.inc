@@ -56,17 +56,22 @@ z       sta g_vars,x
 r       rts
 .)
 
-; g_end : fin normale (une image plein écran attend une touche)
-g_end
+; g_end : fin normale : HIRES et LORES rendent la console, sans attendre
+g_end   jsr g_totext
+        ldx g_sp
+        txs
+        rts
+
+; g_totext : quitte le HIRES plein écran ou le LORES (console rendue)
+g_totext
 .(
+        lda h_lo
+        bne t
         lda h_lines
         cmp #200
         bne r
-        jsr g_getkey
-        jsr h_text
-r       ldx g_sp
-        txs
-        rts
+t       jmp h_text
+r       rts
 .)
 
 ; a_fail : erreur ou ESC dans ANIM (anim.inc, inclus seulement si le
@@ -78,11 +83,8 @@ g_stop
         pha
         tya
         pha
-        lda h_lines             ; pas de console en HIRES plein écran
-        cmp #200
-        bne gs1
-        jsr h_text
-gs1     pla
+        jsr g_totext            ; pas de console en HIRES ni en LORES
+        pla
         tay
         pla
         jsr g_puts
@@ -469,7 +471,13 @@ g_cls   lda h_lines             ; rien hors du mode HIRES ou SPLIT
 gc_r    rts
 
 g_print
-        lda h_lines
+        lda h_lo
+        beq gp_c
+        jsr g_fmt               ; LORES : au curseur, sans passer à la ligne
+        lda #<g_num
+        ldy #>g_num
+        jmp h_lstr
+gp_c    lda h_lines
         cmp #200
         beq gp_r
         jsr g_fmt
@@ -533,6 +541,8 @@ g_gtext jsr g_str
         jmp h_print
 
 g_echo  jsr g_str
+        lda h_lo
+        bne g_eclo
         lda h_lines
         cmp #200
         beq ge_r
@@ -541,6 +551,113 @@ g_echo  jsr g_str
         jsr g_puts
         jmp g_crlf
 ge_r    rts
+
+; g_eclo : ECHO en LORES : au curseur, sans déborder ; vide : ligne
+;   suivante ; entre guillemets : tel quel
+g_eclo
+.(
+        ldy #0
+        lda (g_t),y
+        bne t
+        jmp h_lnl
+t       cmp #34
+        bne l2
+        iny
+l1      lda (g_t),y
+        beq r
+        cmp #34
+        beq r
+        jsr h_lput
+        iny
+        bne l1
+l2      lda (g_t),y
+        beq r
+        jsr h_lput
+        iny
+        bne l2
+r       rts
+.)
+
+; ---------------------------------------------------------------------
+; LORES (h_x1 = colonne, h_y1 = ligne)
+; ---------------------------------------------------------------------
+g_needlo
+        lda h_lo
+        bne gnl_r
+        lda #<g_m_nolo
+        ldy #>g_m_nolo
+        jmp g_stop
+gnl_r   rts
+g_chk   lda h_x1
+        cmp #40
+        bcs g_lim
+        lda h_y1
+        cmp #28
+        bcs g_lim
+        rts
+g_lim   lda #<g_m_lim
+        ldy #>g_m_lim
+        jmp g_stop
+g_lcls
+.(
+        lda h_lo
+        beq c
+        jmp h_lcls
+c       lda h_lines             ; hors du LORES : la console (pas en HIRES)
+        cmp #200
+        beq r
+        lda #12
+        jmp g_putc
+r       rts
+.)
+g_loc   jsr g_needlo
+        jsr g_chk
+        jmp h_loc
+g_chr   pha
+        jsr g_needlo
+        jsr g_chk
+        pla
+        jmp h_chr
+g_spc   jsr g_needlo
+        lda h_x1
+        ldx h_y1
+        jmp h_lspc
+g_tab   pha
+        jsr g_needlo
+        pla
+        jmp h_ltab
+; g_get : attend une touche -> g_ev (ESC arrête)
+g_get   jsr g_wait
+        sta g_ev
+        lda #0
+        sta g_ev+1
+        rts
+; g_scrn : g_et = colonne, g_ev = ligne -> octet de la case
+g_scrn
+.(
+        jsr g_needlo
+        lda g_et+1
+        ora g_ev+1
+        bne g_lim
+        lda h_x1                ; les paramètres en cours sont gardés
+        pha
+        lda h_y1
+        pha
+        lda g_et
+        sta h_x1
+        lda g_ev
+        sta h_y1
+        jsr g_chk
+        jsr h_scrn
+        sta g_ev
+        pla
+        sta h_y1
+        pla
+        sta h_x1
+        lda #0
+        sta g_ev+1
+        rts
+.)
 
 g_wait
 .(
@@ -585,7 +702,10 @@ g_gload
         beq spl
         jsr h_full
         jmp ld
-spl     lda #128
+spl     lda h_lo                ; depuis le LORES : la console d'abord
+        beq spl1
+        jsr h_text
+spl1    lda #128
         sta h_lines
         jmp ld
 mode    jsr g_deftype
@@ -856,6 +976,8 @@ g_dhi   .byt >10000,>1000,>100,>10
 g_timg  .asc "IMG"
 g_thir  .asc "HIR"
 g_m_esc   .asc "Interrompu",0
+g_m_nolo  .asc "Erreur : LORES d'abord",0
+g_m_lim   .asc "Erreur : valeur hors limites",0
 g_m_div   .asc "Erreur : division par zero",0
 g_m_range .asc "Erreur : valeur hors de 0-255",0
 g_m_step  .asc "Erreur : pas nul",0

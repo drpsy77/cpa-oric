@@ -45,6 +45,22 @@
 ;              (hs = fin des données), 1 absent, 3 trop grand
 ;    h_save    A/Y = FCB : même format selon le mode. -> A = 0, 2 plein
 ;    h_key     attend une touche -> A
+;  Écran texte LORES (le programme a les 40 x 28 cases, ligne 0 et
+;  colonnes 0-1 comprises ; console muette : SCR_PROG) :
+;    h_lores   prend l'écran texte (depuis le texte, SPLIT ou HIRES) et
+;              l'efface ; h_text rend la console
+;    h_lcls    remplit les 1 120 cases de l'attribut 16 (papier noir),
+;              curseur d'écriture en (0, 0)
+;    h_loc     curseur d'écriture en colonne h_x1 (0-39), ligne h_y1 (0-27)
+;    h_chr     octet A dans la case (h_x1, h_y1) ; h_scrn : l'octet -> A
+;    h_lput    octet A au curseur, qui avance ; au-delà de la colonne 39,
+;              rien n'est écrit (pas de passage à la ligne suivante)
+;    h_lstr    chaîne A/Y (terminée par 0) au curseur, même règle
+;    h_lspc    A fois l'octet X au curseur, même règle
+;    h_ltab    avance le curseur de A colonnes sans rien écrire
+;    h_lnl     colonne 0 de la ligne suivante (après la 27 : ligne 0)
+;    h_lo = 1 en LORES ; h_lx, h_ly : curseur d'écriture (h_lx = 40 :
+;    bout de la ligne atteint)
 ;  x 0-239, y 0-199 (0-127 en SPLIT) ; hors de l'image, rien n'est
 ;  dessiné. Les cases d'attribut sont épargnées par les tracés.
 ;  h_lines : 200 en plein écran, 128 en SPLIT, 0 en mode texte.
@@ -136,6 +152,7 @@ h_gfx
 
 h_full
 .(
+        jsr h_lend
         jsr h_init
         lda #G_GETMODE          ; depuis le SPLIT : d'abord le texte
         jsr h_gfx
@@ -171,6 +188,7 @@ hz_l       sta H_BOT,x
 .)
 
 h_split
+        jsr h_lend
         jsr h_init
         lda #128
         sta h_lines
@@ -179,6 +197,7 @@ h_split
         jmp h_gfx
 
 h_text
+        jsr h_lend
         lda #0
         sta h_lines
         lda #G_MODE
@@ -186,6 +205,166 @@ h_text
         jmp h_gfx
 
 h_key   jmp B_CONIN
+
+; h_lend : fin du LORES (la console reprend la parole)
+h_lend  lda #0
+        sta h_lo
+        sta SCR_PROG
+        rts
+
+; ---------------------------------------------------------------------
+; LORES : l'écran texte au programme
+; ---------------------------------------------------------------------
+h_lores
+        lda h_lines             ; depuis le SPLIT ou le HIRES : d'abord
+        beq hz_lr1              ; le texte
+        jsr h_text
+hz_lr1  lda #0                  ; plus de curseur de la console
+        sta CON_CUREN
+        sta CON_CURVIS
+        lda #1
+        sta SCR_PROG            ; console muette (menus, voyants, CTRL-T)
+        sta h_lo
+h_lcls
+.(
+        lda #<SCREEN
+        sta hq
+        lda #>SCREEN
+        sta hq+1
+        lda #16                 ; papier noir partout, colonne 0 comprise
+        ldx #4
+        ldy #0
+hz_lc1  sta (hq),y              ; 4 pages : $BB80-$BF7F
+        iny
+        bne hz_lc1
+        inc hq+1
+        dex
+        bne hz_lc1
+        ldy #95                 ; puis $BF80-$BFDF
+hz_lc2  sta (hq),y
+        dey
+        bpl hz_lc2
+        lda #0
+        sta h_lx
+        sta h_ly
+        rts
+.)
+
+; hz_tad : hq = adresse de la case (colonne X, ligne Y)
+hz_tad  tya
+        asl
+        tay
+        txa
+        clc
+        adc hz_rows,y
+        sta hq
+        lda hz_rows+1,y
+        adc #0
+        sta hq+1
+        rts
+
+h_loc   lda h_x1
+        sta h_lx
+        lda h_y1
+        sta h_ly
+        rts
+
+h_chr   pha
+        ldx h_x1
+        ldy h_y1
+        jsr hz_tad
+        pla
+        ldy #0
+        sta (hq),y
+        rts
+
+h_scrn  ldx h_x1
+        ldy h_y1
+        jsr hz_tad
+        ldy #0
+        lda (hq),y
+        rts
+
+; h_lput : octet A au curseur (X et Y gardés)
+h_lput
+.(
+        sta h_lc
+        lda h_lx
+        cmp #40
+        bcs hz_lp9              ; bout de la ligne : rien
+        txa
+        pha
+        tya
+        pha
+        ldx h_lx
+        ldy h_ly
+        jsr hz_tad
+        lda h_lc
+        ldy #0
+        sta (hq),y
+        inc h_lx
+        pla
+        tay
+        pla
+        tax
+hz_lp9  rts
+.)
+
+h_lstr
+.(
+        sta hs
+        sty hs+1
+        ldy #0
+hz_ls1  lda (hs),y
+        beq hz_ls9
+        jsr h_lput
+        iny
+        bne hz_ls1
+hz_ls9  rts
+.)
+
+h_lspc
+.(
+        tay
+        beq hz_lq9
+hz_lq1  txa
+        jsr h_lput
+        dey
+        bne hz_lq1
+hz_lq9  rts
+.)
+
+h_ltab
+.(
+        clc
+        adc h_lx
+        bcs hz_lt1
+        cmp #41
+        bcc hz_lt2
+hz_lt1  lda #40
+hz_lt2  sta h_lx
+        rts
+.)
+
+h_lnl
+.(
+        lda #0
+        sta h_lx
+        inc h_ly
+        lda h_ly
+        cmp #28
+        bcc hz_ln9
+        lda #0
+        sta h_ly
+hz_ln9  rts
+.)
+
+hz_rows .word SCREEN,SCREEN+40,SCREEN+80,SCREEN+120,SCREEN+160
+        .word SCREEN+200,SCREEN+240,SCREEN+280,SCREEN+320,SCREEN+360
+        .word SCREEN+400,SCREEN+440,SCREEN+480,SCREEN+520,SCREEN+560
+        .word SCREEN+600,SCREEN+640,SCREEN+680,SCREEN+720,SCREEN+760
+        .word SCREEN+800,SCREEN+840,SCREEN+880,SCREEN+920,SCREEN+960
+        .word SCREEN+1000,SCREEN+1040,SCREEN+1080
 
 h_pen   sta h_pm
         rts
@@ -1024,6 +1203,10 @@ h_zel   .byt 0
 h_zeh   .byt 0
 h_zt    .byt 0
 h_zlh   .byt 0
+h_lo    .byt 0
+h_lx    .byt 0
+h_ly    .byt 0
+h_lc    .byt 0
 h_end
 
 h_ylo   = h_end

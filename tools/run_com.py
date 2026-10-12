@@ -5,6 +5,9 @@ minimal sur un dossier du PC. Pour tester ASM.COM hors de l'émulateur.
 Variables :
   INPUT=l1|l2   lignes lues par la fonction 10
   DUMP=fichier  mémoire (64 Ko) écrite à la fin
+  SCREEN=1      écran texte ($BB80, 40 x 28) affiché à la fin, lignes non
+                vides seulement : attribut 16 « . », autre code 0-31 « ^ »,
+                caractère inversé (128 et plus) « * »
   PROF=adr      chronomètre la routine à cette adresse (hexa) : cycle de
                 départ et durée de chaque appel, écrits dans PROF_OUT
                 (défaut : prof.txt)
@@ -120,6 +123,12 @@ def main():
         lastpc = m.pc
         m.step(); steps += 1
         if steps > int(os.environ.get("MAXSTEPS", "400000000")): print("trop long PC=%04X" % m.pc); break
+    if os.environ.get('SCREEN'):
+        out.append('\n[ecran]\n')
+        for r in range(28):
+            row = mem[0xBB80 + 40 * r:0xBB80 + 40 * r + 40]
+            t = ''.join('.' if c == 16 else '^' if c < 32 else '*' if c >= 128 else chr(c) for c in row)
+            if t.strip('.') != '': out.append('%2d|%s|\n' % (r, t))
     if os.environ.get('DUMP'):
         open(os.environ['DUMP'], 'wb').write(bytes(mem))
     if prof is not None:

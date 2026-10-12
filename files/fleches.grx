@@ -1,0 +1,44 @@
+; FLECHES.GRX : l'ecran texte (LORES)
+; fleches : bouger le @ ; ESC : finir
+LORES
+; fond bleu (papier 20), encre jaune (3)
+FOR L 0 27
+  CHAR 0 L 20
+  CHAR 1 L 3
+  LOCATE 2 L
+  SPC 38
+NEXT
+; un cadre de # (lignes 1 a 25)
+LOCATE 2 1
+SPC 38 35
+LOCATE 2 25
+SPC 38 35
+FOR L 2 24
+  CHAR 2 L 35
+  CHAR 39 L 35
+NEXT
+; un mur au milieu
+FOR L 6 20
+  CHAR 20 L 35
+NEXT
+LOCATE 2 0
+ECHO "      LORES : l'ecran texte"
+LOCATE 2 27
+ECHO "Fleches, ESC : fin    Pas :"
+X = 10
+Y = 13
+N = 0
+WHILE 1
+  CHAR X Y 64
+  LOCATE 30 27
+  PRINT N
+  GET K
+  A = X - (K = 8) + (K = 9)
+  B = Y - (K = 11) + (K = 10)
+  IF SCRN(A,B) = 32
+    CHAR X Y 32
+    X = A
+    Y = B
+    N = N + 1
+  ENDIF
+NEXT

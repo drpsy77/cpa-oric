@@ -221,6 +221,7 @@ operateurs    | - ; * / % ; + - ; =
               |   <> < <= > >= ; & |
 fonctions     | RND(n) ABS(n)
               |   POINT(x,y) INKEY
+              |   SCRN(col,lig)
 V = expr      | affectation (LET V =
               |   expr)
 REPEAT n      | ... NEXT
@@ -230,7 +231,8 @@ IF expr       | ... [ELSE ...] ENDIF
 SUB NOM       | ... ENDSUB ; CALL NOM
               |   ; RETURN
 PRINT expr    | affiche un nombre
-              |   (pas en HIRES)
+              |   (pas en HIRES ;
+              |   LORES : au curseur)
 GNUM col y n  | nombre dans l'image
 GRAPHER nom /A
               | traduit NOM.GRX en
@@ -244,6 +246,29 @@ HIRES         | plein ecran 240 x
 SPLIT         | 240 x 128, console
               |   dessous
 TEXT          | retour au texte
+              |   (console)
+LORES         | ecran texte 40 x 28
+              |   au programme, sans
+              |   console ni menus
+CLS           | LORES : attribut 16
+              |   partout ; sinon la
+              |   console
+LOCATE col lig
+              | curseur (col 0-39,
+              |   lig 0-27)
+CHAR col lig c
+              | octet c dans la case
+              |   (caractere ou
+              |   attribut)
+SPC n [x]     | n fois l'octet x
+              |   (espace par defaut)
+TAB n         | avance de n colonnes
+              |   sans ecrire
+ECHO "texte"  | LORES : au curseur,
+              |   tel quel ; ECHO
+              |   seul : ligne
+              |   suivante ; rien
+              |   apres la colonne 39
 GCLS          | efface l'image
 PEN m         | 0 efface 1 trace 2
               |   inv.
@@ -268,11 +293,15 @@ ANIM fic [n]  | animation .ANI en
               |   jusqu'a une touche)
 GSAVE fic     | idem, selon le mode
 WAIT          | attend une touche
+GET V         | attend une touche,
+              |   son code dans V
 DELAY n       | attend n/50 s
 ECHO texte    | affiche (pas en
               |   HIRES)
-END           | fin ; HIRES : une
-              |   touche
+END           | fin ; HIRES et LORES
+              |   : retour a la
+              |   console (WAIT avant
+              |   pour attendre)
 ; texte       | commentaire
 
 EDIT
