@@ -72,6 +72,7 @@ V_BDOS      = $0203
 V_IRQ       = $0206
 V_NMI       = $0209
 tpa_top     = $020C     ; 2 octets : premier octet après la TPA (public)
+scr_prog    = $020E     ; 1 = un programme a l'écran texte (LORES) : console muette (public)
 
 ; --- Variables système (page 2) ---
 cur_x       = $0210

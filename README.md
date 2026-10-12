@@ -536,6 +536,31 @@ en mémoire puis exécuté ; le dessin passe par la bibliothèque `hires.inc`.
 
 Les valeurs du dessin vont de 0 à 255 (au-delà : `valeur hors de 0-255`).
 
+**L'écran texte (LORES).** `LORES` donne au programme tout l'écran texte, comme `LORES 0` en
+BASIC : 40 colonnes (0-39) × 28 lignes (0-27), ligne 0 et colonnes 0-1 comprises, sans console
+ni menus (FUNCT et CTRL-T n'y font rien ; leurs codes arrivent au programme comme des touches).
+On y écrit et on y lit des cases, et l'on pose soi-même les attributs de couleur où l'on veut.
+`TEXT` rend la console.
+
+| Commande | Effet |
+|---|---|
+| `LORES` | prend l'écran texte et l'efface (`CLS`) |
+| `CLS` | en LORES : attribut 16 (papier noir) dans les 1 120 cases, curseur en (0, 0) ; ailleurs : efface la console |
+| `LOCATE col lig` | place le curseur d'écriture |
+| `CHAR col lig code` | écrit l'octet `code` dans la case : caractère (32-127, +128 en inverse) ou attribut (encre 0-7, papier 16-23...) ; le curseur ne bouge pas |
+| `ECHO texte` | écrit au curseur, qui avance ; entre guillemets, le texte est pris tel quel, espaces compris (`ECHO "  Score : "`) |
+| `ECHO` (seul) | colonne 0 de la ligne suivante (après la ligne 27 : ligne 0) |
+| `PRINT expr` | écrit le nombre au curseur, sans passer à la ligne |
+| `SPC n [x]` | écrit n fois l'octet x (espace par défaut) : effacer, remettre l'attribut 16, tracer un trait |
+| `TAB n` | avance le curseur de n colonnes sans rien écrire (relatif ; `LOCATE` donne la colonne absolue) |
+| `SCRN(col,lig)` | fonction : l'octet de la case |
+
+Rien ne s'écrit au-delà de la colonne 39 : ce qui dépasse est perdu, sans erreur et sans
+passer sur la ligne suivante (dont les colonnes 0-1 portent souvent des attributs) ; rien ne
+fait défiler l'écran. Hors du LORES, `LOCATE`, `CHAR`, `SPC`, `TAB` et `SCRN` donnent
+`LORES d'abord` ; une colonne ou une ligne hors de l'écran, `valeur hors limites`. Les
+commandes de dessin restent réservées à HIRES et SPLIT.
+
 **Calcul.** Les nombres sont des entiers de -32768 à 32767. Il y a 26 variables, `A` à `Z`
 (à 0 au départ). `X = expr` (ou `LET X = expr`) donne une valeur à une variable. Partout où
 une commande attend un nombre, on peut écrire une expression : `12`, `X`, `X+8`,
@@ -552,6 +577,7 @@ Une expression seule en fin de ligne (`X = ...`, `IF`, `WHILE`, `PRINT`) peut en
 | `ABS(n)` | valeur absolue |
 | `POINT(x,y)` | 1 si le point est allumé |
 | `INKEY` | touche tapée (code), 0 si aucune ; n'attend pas |
+| `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
 
 **Contrôle**
 
@@ -570,19 +596,21 @@ Les blocs s'imbriquent (16 niveaux de boucles et d'appels) ; le retrait est libr
 | Commande | Effet |
 |---|---|
 | `WAIT` | attend une touche (ESC arrête) |
-| `DELAY n` | attend n cinquantièmes de seconde |
-| `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran) |
-| `PRINT expr` | affiche un nombre (sauf en HIRES) |
+| `GET V` | attend une touche et range son code dans la variable V (ESC arrête) ; flèches : 8 gauche, 9 droite, 10 bas, 11 haut |
+| `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier (cadence d'une animation, d'un jeu) |
+| `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran ; en LORES : voir plus haut) |
+| `PRINT expr` | affiche un nombre (sauf en HIRES ; en LORES : au curseur) |
 | `END` | fin du programme |
 | `; texte` | commentaire (aussi en fin de ligne) |
 
 `$1` à `$9` sont remplacés par les paramètres donnés après le nom du fichier (en gardant leur
 casse) : `X = $1`. Une ligne fait 126 caractères au plus. ESC entre deux lignes arrête ; une
-autre touche tapée pendant le dessin est gardée pour `WAIT`, `INKEY` ou l'attente de fin. Une
+autre touche tapée pendant le dessin est gardée pour `WAIT`, `GET` ou `INKEY`. Une
 erreur arrête aussi, avec la ligne et la commande en cause : `L 3 LINE : valeur hors de
-0-255`, `L 12 NEXT : NEXT sans boucle`, `L 7 IF : bloc non ferme`. En fin de fichier, une
-image HIRES reste affichée jusqu'à une touche, puis le mode texte revient ; une image SPLIT
-reste au-dessus du prompt. Lancé en mode SPLIT, GRAPHER dessine sur l'image en place (après un
+0-255`, `L 12 NEXT : NEXT sans boucle`, `L 7 IF : bloc non ferme`. En fin de fichier (ou à
+`END`), HIRES et LORES rendent aussitôt la console : pour laisser l'image ou l'écran affiché,
+le programme finit par `WAIT` ou `GET` (les exemples le font). Une image SPLIT reste au-dessus
+du prompt. Lancé en mode SPLIT, GRAPHER dessine sur l'image en place (après un
 programme LOGO, par exemple).
 
 Vitesse : GRAPHER interprète de 150 à quelques centaines de lignes par seconde selon les
@@ -591,10 +619,11 @@ calculs : un ciel de 400 étoiles tirées au hasard (`PLOT 1+RND(238) 1+RND(198)
 seulement, des variables d'une lettre, et un `ENDIF` oublié après un `IF` vrai n'est pas
 signalé (le reste s'exécute normalement).
 
-La disquette contient quatre exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
+La disquette contient cinq exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
 `ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
-ciel étoilé : boucles, hasard, sous-programme) et `ARDOISE.GRX` (un télécran : les flèches
-dessinent, ESPACE efface, ESC finit).
+ciel étoilé : boucles, hasard, sous-programme), `ARDOISE.GRX` (un télécran : les flèches
+dessinent, ESPACE efface, ESC finit) et `FLECHES.GRX` (LORES : un `@` qu'on déplace aux
+flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `GET` pour les touches).
 
 **Traduction en assembleur.** `GRAPHER NOM /A` n'exécute pas le fichier : il écrit `NOM.ASM`,
 qu'ASM assemble en un programme autonome `NOM.COM`, beaucoup plus rapide :
@@ -641,7 +670,9 @@ mais une règle : **le programme prend l'écran pour lui**, et rend la main prop
 - `progs/hires.inc` (`HIRES.INC` sur les disquettes) est la bibliothèque qu'un programme inclut
   (`#include "HIRES.INC"`, avec xa sur le Mac ou ASM sur l'Oric) : `h_full` (plein écran),
   `h_split`, `h_text`, `h_cls`, `h_pen`, `h_plot`, `h_line`, `h_box`, `h_fbox`, `h_circle`,
-  `h_print` (texte), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key`. Les paramètres sont dans
+  `h_print` (texte), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key` ; pour l'écran texte
+  (LORES) : `h_lores`, `h_lcls`, `h_loc`, `h_chr`, `h_scrn`, `h_lput`, `h_lstr`, `h_lspc`,
+  `h_ltab`, `h_lnl` (curseur d'écriture `h_lx`, `h_ly`). Les paramètres sont dans
   `h_x1`, `h_y1`, `h_x2`, `h_y2`, `h_r` ; elle utilise `$C0-$C7` en page zéro et place ses
   tables (2 Ko) après la fin du programme (`h_free` : première adresse libre). Les mêmes
   routines marchent en SPLIT (128 lignes). Voir `progs/voir.s` pour un exemple court.
@@ -651,7 +682,9 @@ BDOS) avant `h_text`. Le système, lui, n'y dessine plus rien de lui-même : la 
 ignorée (pas de menus), les voyants ne sont pas redessinés et le curseur est éteint. Il le
 reconnaît à l'attribut `$1E` dans la dernière case de l'écran (`$BFDF`) hors du mode SPLIT. Et
 si le programme se termine sans `h_text` (CTRL-C, plantage, oubli), le démarrage à chaud remet
-le mode texte, la police et un écran propre.
+le mode texte, la police et un écran propre. L'écran texte au programme (LORES, `h_lores`)
+suit la même règle ; le système le reconnaît à la variable publique `SCR_PROG` (`$020E`) à 1,
+que `h_lores` pose et que `h_text` et le démarrage à chaud remettent à 0.
 
 ### Images compressées et animations
 

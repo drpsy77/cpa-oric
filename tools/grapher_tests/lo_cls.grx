@@ -1,0 +1,7 @@
+; CLS en LORES, SCRN hors limites
+LORES
+ECHO efface
+CLS
+ECHO "ici"
+CHAR 3 0 SCRN(0,0)+1
+X = SCRN(0,28)

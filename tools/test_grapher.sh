@@ -1,7 +1,8 @@
 #!/bin/sh
 # Non-régression de GRAPHER.COM sans émulateur : chaque fichier de
 # tools/grapher_tests/*.grx est exécuté dans le 6502 simulé de
-# tools/run_com.py (mode texte : PRINT et messages d'erreur seulement),
+# tools/run_com.py (mode texte : PRINT et messages d'erreur seulement ;
+# pour les fichiers lo*.grx, l'écran texte du LORES en plus),
 # et la sortie est comparée au fichier .ref ; puis il est traduit
 # (GRAPHER NOM /A), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
 # ANIM.INC ; CUBE.ANI pour ANIM) et
@@ -27,8 +28,9 @@ check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
 for f in $D/*.grx; do
   n=$(basename "$f" .grx)
   N=$(echo "$n" | tr a-z A-Z)
+  S=""; case "$n" in lo*) S=1;; esac   # LORES : l'écran texte à la fin
   tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/$N.GRX"
-  (cd "$T" && python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
+  (cd "$T" && SCREEN=$S python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
     | grep -v '^\[[0-9]* instructions\]' > "$T/$n.out" || true
   check "$n" ref
   rm -f "$T/$N.ASM" "$T/$N.COM"
@@ -37,7 +39,7 @@ for f in $D/*.grx; do
   if [ -f "$T/$N.ASM" ]; then
     tr -d '\032' < "$T/$N.ASM" > "$T/$n.s"
     (cd "$T" && "$XA" -o "$N.COM" "$n.s" > "$n.xa" 2>&1) || { echo "xa : $n"; cat "$T/$n.xa"; ko=$((ko+1)); }
-    (cd "$T" && python3 "$RUN" "$T" "$N.COM" 2>&1) \
+    (cd "$T" && SCREEN=$S python3 "$RUN" "$T" "$N.COM" 2>&1) \
       | grep -v '^\[[0-9]* instructions\]' >> "$T/$n.out" || true
   fi
   check "$n" kref

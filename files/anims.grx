@@ -16,3 +16,4 @@ FOR I 1 3
 ANIM VAISSEAU 1
 NEXT
 GTEXT 2 188 Fin : une touche
+WAIT

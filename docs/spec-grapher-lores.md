@@ -1,7 +1,10 @@
 # GRAPHER : écran texte (LORES), tableaux et chaînes — spécification
 
-État : **palier A relu par Pierre** (12 octobre 2026, réponses intégrées ; une question
-reste, A1) ; paliers B et C à relire. Rien n'est codé.
+État : **palier A fait** (12 octobre 2026 ; A1 : oui, plus d'attente imposée en fin de
+programme HIRES non plus) ; paliers B et C à relire. Écarts à la réalisation : un `TAB`
+négatif donne `valeur hors de 0-255` (comme tout paramètre d'octet) ; `INPUT V` viendra avec
+`INPUT A$` au palier B ; CTRL-P n'agit que dans la saisie d'une ligne de la console, qu'un
+programme en LORES n'utilise pas.
 Décisions déjà prises : `docs/projet-disquette.md`, « Jeux en écran texte : GRAPHER et LOGO ».
 Ce document ne concerne que GRAPHER ; les ajouts à LOGO (FIXECURSEUR, CURSEUR, VIDETEXTE,
 CARECRAN) et sa tokenisation feront l'objet de lots séparés.

@@ -1,0 +1,5 @@
+; erreurs du LORES
+LORES
+ECHO avant
+LOCATE 40 0
+ECHO jamais

@@ -52,6 +52,7 @@ plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservée
 | `$0200` / `$0203` | `JMP WBOOT` / `JMP BDOS` |
 | `$0206` / `$0209` | `JMP` IRQ / NMI, détournables (DEBUG s'en sert) |
 | `$020C` | haut de la TPA (mot) : `$B400` en texte, `$A000` en SPLIT, moins si un plafond est posé |
+| `$020E` | `SCR_PROG` : 1 = un programme a l'écran texte entier (LORES) ; la console est muette (ni menus, ni voyants, FUNCT et CTRL-T sans effet) ; remis à 0 au démarrage à chaud (octobre 2026) |
 | `$0210-$0214` | console : curseur X, Y, visible, actif, clignotement |
 | `$021B` | compteur 50 Hz (mot) |
 | `$02A3` | 1 = pause en fin d'écran |
@@ -135,10 +136,13 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   des programmes traduits par `GRAPHER NOM /A`. `progs/anim.inc` (`ANIM.INC`) joue les
   animations `.ANI` ; il s'inclut avant `HIRES.INC`, qui reste à la fin du programme (ses
   tables suivent `h_end`), et utilise aussi les étiquettes internes `hz_`.
-- HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
+- Écran au programme. HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
   en `$BFDF` hors du mode SPLIT a l'écran pour lui ; le système le reconnaît (`hires_on`) et
   n'y dessine rien (FUNCT ignoré, voyants, curseur éteint par le programme) ; le démarrage à
   chaud remet le texte, la police et un historique vide.
+  Écran texte (LORES, `h_lores` de `hires.inc`) : `SCR_PROG` (`$020E`) à 1, mêmes effets
+  (FUNCT et CTRL-T arrivent au programme comme des touches) ; `h_text` et le démarrage à chaud
+  rendent la console.
 - Assembleur : syntaxe `xa` de l'OSDK. Les programmes de `progs/` restent dans le sous-ensemble
   compris par ASM.COM (pas de `&étiquette`, pas de `#define`) : `tools/test_asm.sh` le vérifie.
   Le système (`src/`) peut utiliser tout `xa`.

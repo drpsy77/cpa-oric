@@ -785,6 +785,28 @@ codé). Décidé :
   C fichiers). Palier A relu par Pierre le 12 octobre (CLS en attribut 16, pas d'attente
   imposée en fin de programme, GET, `SPC n [x]`, `INPUT V`, `SCR_PROG` accordé) ; B et C à
   relire. Pages 2 et 3 documentées : `docs/memoire-pages-2-3.md`.
+- **Palier A fait** (12 octobre 2026) : `LORES`, `CLS`, `LOCATE`, `CHAR`, `SCRN()`, `SPC n
+  [x]`, `TAB n`, `GET V`, ECHO et PRINT au curseur en LORES (bord droit, guillemets, ECHO seul),
+  interprétés et traduits (`/A`). Fin de programme : HIRES et LORES rendent la console sans
+  attendre (A1) ; `WAIT` ajouté à la fin d'`ECRAN.GRX`, `MOTIFS.GRX`, `ANIMS.GRX`. Choix :
+  - système : `SCR_PROG` (`$020E`, public) ; `hires_on` devient « écran au programme »
+    (LORES ou HIRES) : FUNCT ne pousse plus le code des menus (corrige aussi un blocage en
+    HIRES : GRAPHER attendait une autre touche après FUNCT), CTRL-T devient un code
+    ordinaire, voyants non dessinés ; démarrage à chaud : console rendue (historique gardé en
+    LORES). 26 octets résidents (marge 287 -> 261).
+  - `hires.inc` : `h_lores`, `h_lcls`, `h_loc`, `h_chr`, `h_scrn`, `h_lput`, `h_lstr`,
+    `h_lspc`, `h_ltab`, `h_lnl`, `h_lend` ; table des 28 adresses de lignes (56 octets) ;
+    `h_full`, `h_split`, `h_text` quittent le LORES. +306 octets (VOIR 3 404 octets).
+  - GRAPHER 11 368 -> 12 391 octets ; LOCATE et CHAR en tête de la table des commandes
+    (recherche séquentielle). GLOAD d'un `.IMG` depuis le LORES : console d'abord.
+  - Tests : `tools/run_com.py` gagne `SCREEN=1` (écran texte en fin d'exécution) ;
+    `test_grapher.sh` : `lores`, `lo_err`, `lo_cls`, `e_nolo` (interprété = traduit).
+    Oricutron : `FLECHES.GRX` (nouvel exemple : `@` aux flèches dans un cadre, fond bleu)
+    interprété, puis traduit et assemblé sur l'Oric émulé (`FLECHES.COM`, 5 134 octets) ;
+    FUNCT et CTRL-T sans effet en LORES ; ESC, fin normale et RESET rendent la console ;
+    menus de retour ensuite.
+  - À vérifier sur le vrai Oric : FLECHES (couleurs, flèches), FUNCT et CTRL-T pendant le
+    jeu, retour à la console (ESC, fin, RESET), MOTIFS et ECRAN qui attendent une touche.
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.

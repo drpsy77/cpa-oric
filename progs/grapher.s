@@ -16,7 +16,11 @@
 ;  Fonctions : RND(n) (0 à n-1), ABS(n), POINT(x,y) (1 si allumé),
 ;  INKEY (touche tapée, 0 si aucune ; n'attend pas).
 ;
-;  Modes      HIRES, SPLIT, TEXT
+;  Modes      HIRES, SPLIT, TEXT, LORES (écran texte 40 x 28 au programme)
+;  LORES      CLS, LOCATE col lig, CHAR col lig code, SPC n [x], TAB n,
+;             SCRN(col,lig) ; ECHO et PRINT au curseur, sans déborder de
+;             la ligne ; ECHO seul : colonne 0 de la ligne suivante
+;  Touches    GET V (attend une touche), WAIT, INKEY
 ;  Image      GCLS, PEN m, PLOT x y, LINE x1 y1 x2 y2, BOX / FBOX x1 y1
 ;             x2 y2, CIRCLE x y r, GTEXT col y texte, GNUM col y n,
 ;             ATTR col y1 y2 v, GLOAD nom, GSAVE nom   (valeurs 0-255)
@@ -27,9 +31,9 @@
 ;             IF expr ... [ELSE ...] ENDIF
 ;             SUB NOM ... ENDSUB (RETURN : sortie avant la fin), CALL NOM
 ;  Divers     WAIT, DELAY n (1/50 s), ECHO texte, PRINT expr, END
-;  ESC entre deux lignes arrête. En fin de fichier, une image HIRES reste
-;  affichée jusqu'à une touche, puis retour au texte ; une image SPLIT
-;  reste au-dessus du prompt.
+;  ESC entre deux lignes arrête. En fin de fichier, HIRES et LORES rendent
+;  aussitôt la console (attendre : WAIT ou GET dans le programme) ; une
+;  image SPLIT reste au-dessus du prompt.
 ;  Le dessin passe par hires.inc (pas par la fonction 115 du BDOS).
 ; =====================================================================
 
@@ -215,13 +219,9 @@ eot     lda csp                 ; fin du texte dans une boucle
         ldy #>m_nonext
         jmp error
 
-; fin normale : une image plein écran attend une touche
-finish  lda h_lines
-        cmp #200
-        bne bye
-        jsr getkey
-        jsr h_text
-bye     ldx sav_sp
+; fin normale : HIRES et LORES rendent la console (sans attendre)
+finish  jsr to_text
+        ldx sav_sp
         txs
         rts
 
@@ -699,6 +699,7 @@ needgfx
         jmp error
 ng_ok   rts
 
+
 ; getvar : lettre de variable (lbuf, X) -> vix
 getvar
 .(
@@ -1089,7 +1090,10 @@ func    jsr find_fn
         beq f_abs
         cmp #2
         beq f_point
-        jmp f_inkey
+        cmp #4
+        bne fik
+        jmp f_scrn
+fik     jmp f_inkey
 f_rnd   jsr arg1
         lda ev+1
         bmi zero
@@ -1140,6 +1144,41 @@ f_point jsr x_open
         lda #0
         sta ev+1
         rts
+f_scrn  jsr x_open              ; SCRN(col,lig) : octet de la case
+        jsr e_or
+        jsr pushv
+        jsr x_comma
+        jsr e_or
+        jsr x_close
+        jsr popt
+        jsr needlo
+        lda et+1
+        ora ev+1
+        bne fs_lim
+        lda et
+        cmp #40
+        bcs fs_lim
+        lda ev
+        cmp #28
+        bcs fs_lim
+        lda h_x1                ; paramètres de la commande gardés
+        pha
+        lda h_y1
+        pha
+        lda et
+        sta h_x1
+        lda ev
+        sta h_y1
+        jsr h_scrn
+        sta ev
+        pla
+        sta h_y1
+        pla
+        sta h_x1
+        lda #0
+        sta ev+1
+        rts
+fs_lim  jmp e_lim
 f_inkey lda pkey                ; touche gardée par le test d'ESC
         ldx #0
         stx pkey
@@ -1288,7 +1327,7 @@ x_comma jsr ws
         rts
 x_bad   jmp e_expr
 
-fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,0
+fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,0
 
 ; rand : et <- nombre pseudo-aléatoire de 0 à 32767
 ;   (rnd = rnd * 5 + 13849 sur 16 bits, puis échange des octets)
@@ -1547,6 +1586,8 @@ w       sec                     ; jusqu'à ce que ticks - fin >= 0
 .)
 c_echo
 .(
+        lda h_lo
+        bne lo
         lda h_lines             ; pas de console en HIRES plein écran
         cmp #200
         beq r
@@ -1561,9 +1602,34 @@ loop    lda lbuf,x
         bne loop
 end     jsr crlf
 r       rts
+lo      jsr skipsp              ; LORES : au curseur, sans déborder
+        bne lo1
+        jmp h_lnl               ; ECHO seul : ligne suivante, colonne 0
+lo1     cmp #34
+        bne lo3
+        inx                     ; entre guillemets : tel quel, espaces
+lo2     lda lbuf,x              ; compris
+        beq r
+        cmp #34
+        beq r
+        jsr h_lput
+        inx
+        bne lo2
+lo3     lda lbuf,x
+        beq r
+        jsr h_lput
+        inx
+        bne lo3
+        rts
 .)
 c_print jsr lexpr
-        lda h_lines
+        lda h_lo
+        beq cp_c
+        jsr fmtnum              ; LORES : au curseur, sans passer à la ligne
+        lda #<numbuf
+        ldy #>numbuf
+        jmp h_lstr
+cp_c    lda h_lines
         cmp #200
         beq cp_r
         jsr fmtnum
@@ -1577,6 +1643,97 @@ c_end   jsr endline
         txs
         jmp finish
 
+; ---------------------------------------------------------------------
+; LORES : l'écran texte au programme
+; ---------------------------------------------------------------------
+; needlo : erreur hors du LORES
+needlo  lda h_lo
+        bne nl_ok
+        lda #<m_nolo
+        ldy #>m_nolo
+        jmp error
+nl_ok   rts
+
+; colrow : deux valeurs -> h_x1 (colonne 0-39) h_y1 (ligne 0-27)
+colrow  jsr getbyte
+        sta h_x1
+        jsr getbyte
+        sta h_y1
+        lda h_x1
+        cmp #40
+        bcs e_lim
+        lda h_y1
+        cmp #28
+        bcs e_lim
+        rts
+e_lim   lda #<m_lim
+        ldy #>m_lim
+        jmp error
+
+c_lores jsr endline
+        jmp h_lores
+c_cls   jsr endline
+        lda h_lo
+        beq cls_c
+        jmp h_lcls              ; LORES : attribut 16 partout
+cls_c   lda h_lines             ; sinon : la console (pas en HIRES)
+        cmp #200
+        beq cls_r
+        lda #12
+        jmp putc
+cls_r   rts
+c_locate
+        jsr needlo
+        jsr colrow
+        jsr endline
+        jmp h_loc
+c_char  jsr needlo
+        jsr colrow
+        jsr getbyte
+        pha
+        jsr endline
+        pla
+        jmp h_chr
+c_spc
+.(
+        jsr needlo
+        jsr getbyte             ; nombre
+        pha
+        jsr skipsp
+        beq dflt
+        cmp #";"
+        beq dflt
+        jsr getbyte             ; octet écrit
+        .byt $2C                ; (BIT abs : saute lda #32)
+dflt    lda #32
+        sta gd
+        jsr endline
+        pla
+        ldx gd
+        jmp h_lspc
+.)
+c_tab   jsr needlo
+        jsr getbyte
+        pha
+        jsr endline
+        pla
+        jmp h_ltab
+c_get
+.(
+        jsr getvar              ; GET V : attend une touche, code dans V
+        jsr endline
+        jsr getkey
+        cmp #27
+        bne k
+        lda #<m_esc
+        ldy #>m_esc
+        jmp stop_msg
+k       sta ev
+        lda #0
+        sta ev+1
+        jmp setvar
+.)
+
 ; GLOAD / GSAVE nom
 c_gload
 .(
@@ -1587,7 +1744,10 @@ c_gload
         beq spl
         jsr h_full
         jmp ld
-spl     lda #128                ; GLOAD du système : il passe en SPLIT
+spl     lda h_lo                ; depuis le LORES : la console d'abord
+        beq spl1
+        jsr h_text
+spl1    lda #128                ; GLOAD du système : il passe en SPLIT
         sta h_lines
         jmp ld
 mode    jsr deftype
@@ -2851,6 +3011,8 @@ func    jsr find_fn
         beq f_abs
         cmp #2
         beq f_point
+        cmp #4
+        beq f_scrn
         lda #<s_inkey
         ldy #>s_inkey
         jmp dyn
@@ -2896,6 +3058,22 @@ f_point jsr x_open
         jsr oi
         lda #<s_point
         ldy #>s_point
+        jmp dyn
+f_scrn  jsr x_open              ; comme POINT : g_et = col, g_ev = lig
+        jsr k_or
+        jsr k_mat
+        lda #<s_push
+        ldy #>s_push
+        jsr oi
+        jsr x_comma
+        jsr k_or
+        jsr x_close
+        jsr k_mat
+        lda #<s_pop
+        ldy #>s_pop
+        jsr oi
+        lda #<s_scrn
+        ldy #>s_scrn
 dyn     jsr oi
         lda #0
         sta kc
@@ -3186,6 +3364,76 @@ k_end   lda #<s_jend
         lda #>s_jend
         pha
         jmp k_call0
+k_lores lda #<s_lores
+        pha
+        lda #>s_lores
+        pha
+        jmp k_call0
+k_cls   lda #<s_lcls
+        pha
+        lda #>s_lcls
+        pha
+        jmp k_call0
+k_locate
+        jsr k_p2
+        jsr endline
+        lda #<s_loc
+        ldy #>s_loc
+        jmp oi
+k_char  jsr k_p2
+        jsr k_byte
+        jsr endline
+        lda #<s_chr
+        ldy #>s_chr
+        jmp oi
+k_spc
+.(
+        lda #<s_hx1             ; nombre -> h_x1, octet -> h_y1
+        ldy #>s_hx1
+        jsr k_p
+        jsr skipsp
+        beq dflt
+        cmp #";"
+        beq dflt
+        lda #<s_hy1
+        ldy #>s_hy1
+        jsr k_p
+        jmp e
+dflt    stx lx
+        lda #<s_ldai            ; espace par défaut
+        ldy #>s_ldai
+        pha
+        lda #32
+        sta osv
+        pla
+        jsr oimm
+        lda #<s_hy1
+        ldy #>s_hy1
+        jsr dest_fix
+        lda #<s_sta
+        ldy #>s_sta
+        jsr o_ins_sym
+        ldx lx
+e       jsr endline
+        lda #<s_spc
+        ldy #>s_spc
+        jmp oi
+.)
+k_tab   jsr k_byte
+        jsr endline
+        lda #<s_ltab
+        ldy #>s_ltab
+        jmp oi
+k_get   jsr getvar              ; GET V : g_get -> g_ev -> V
+        jsr endline
+        lda #<s_get
+        ldy #>s_get
+        jsr oi
+        lda #0
+        sta kc
+        lda vix
+        jsr dest_var
+        jmp o_st16
 k_pen   jsr k_pexpr
         lda kc                  ; constante : 0 à 2
         beq kpen1
@@ -3703,6 +3951,14 @@ s_rnd   .asc "jsr g_rnd",0
 s_abs   .asc "jsr g_abs",0
 s_point .asc "jsr g_point",0
 s_inkey .asc "jsr g_inkey",0
+s_scrn  .asc "jsr g_scrn",0
+s_lores .asc "jsr h_lores",0
+s_lcls  .asc "jsr g_lcls",0
+s_loc   .asc "jsr g_loc",0
+s_chr   .asc "jsr g_chr",0
+s_spc   .asc "jsr g_spc",0
+s_ltab  .asc "jsr g_tab",0
+s_get   .asc "jsr g_get",0
 s_cmp   .asc "jsr g_cmp",0
 s_add   .asc "jsr g_add",0
 s_sub   .asc "jsr g_sub",0
@@ -3834,11 +4090,13 @@ quit    jsr o_drop
         txs
         rts
 
-; to_text : quitte le HIRES plein écran avant d'écrire sur la console
-to_text lda h_lines
+; to_text : quitte le HIRES plein écran ou le LORES (console rendue)
+to_text lda h_lo
+        bne tt_t
+        lda h_lines
         cmp #200
         bne tt_r
-        jmp h_text
+tt_t    jmp h_text
 tt_r    rts
 
 ; getkey : touche gardée par le test d'ESC, sinon attend une touche
@@ -3925,6 +4183,14 @@ cmds
         .byt "E"|$80,K_ELSE
         .word c_else
         .word k_else
+        .asc "LOCAT"
+        .byt "E"|$80,0
+        .word c_locate
+        .word k_locate
+        .asc "CHA"
+        .byt "R"|$80,0
+        .word c_char
+        .word k_char
         .asc "PLO"
         .byt "T"|$80,0
         .word c_plot
@@ -4041,6 +4307,26 @@ cmds
         .byt "D"|$80,0
         .word c_end
         .word k_end
+        .asc "SP"
+        .byt "C"|$80,0
+        .word c_spc
+        .word k_spc
+        .asc "TA"
+        .byt "B"|$80,0
+        .word c_tab
+        .word k_tab
+        .asc "GE"
+        .byt "T"|$80,0
+        .word c_get
+        .word k_get
+        .asc "CL"
+        .byt "S"|$80,0
+        .word c_cls
+        .word k_cls
+        .asc "LORE"
+        .byt "S"|$80,0
+        .word c_lores
+        .word k_lores
         .byt 0
 
 t_grx   .asc "GRX"
@@ -4059,6 +4345,8 @@ m_esc   .asc "Interrompu",0
 m_big   .asc "Fichier trop gros",0
 m_expr  .asc "expression ?",0
 m_range .asc "valeur hors de 0-255",0
+m_lim   .asc "valeur hors limites",0
+m_nolo  .asc "LORES d'abord",0
 m_var   .asc "variable ? (A a Z)",0
 m_div   .asc "division par zero",0
 m_deep  .asc "trop de blocs imbriques",0
