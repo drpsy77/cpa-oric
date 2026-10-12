@@ -121,6 +121,13 @@ VSYNC         | cale le top 50 Hz sur
               |   l'ecran (texte du
               |   milieu en entier),
               |   jusqu'a l'arret
+CMDER [d:][afn]
+              | gestionnaire de
+              |   fichiers plein
+              |   ecran : trier,
+              |   filtrer, marquer,
+              |   voir, copier...
+              |   (HELP CMDER)
 SET afn [opt] | attributs : RO RW SYS
               |   DIR (sans opt : les
               |   affiche)
@@ -342,6 +349,56 @@ FUNCT         | menus Fichier (dont
 Retour        | (lance par EDITE de
               |   LOGO) enregistre et
               |   revient
+
+CMDER : FICHIERS PLEIN ECRAN
+----------------------------
+CMDER [d:][afn]
+              | fichiers de d:,
+              |   filtre afn (CMDER
+              |   B:*.COM)
+haut bas      | fichier precedent /
+              |   suivant
+<- ->         | page precedente /
+              |   suivante
+< >           | premier / dernier
+              |   fichier
+A a Z         | fichier suivant qui
+              |   commence par la
+              |   lettre
+ESP           | marque / ote la
+              |   marque
++ -           | marque / ote selon un
+              |   modele (*.COM)
+*             | inverse les marques
+1 2 3 4       | tri : disque, nom,
+              |   type, taille ; 2
+              |   fois : ordre
+              |   inverse
+/             | filtre (B:*.TXT :
+              |   autre lecteur)
+RETURN        | voir le texte
+^C ^D         | copier / deplacer
+              |   vers B: ou NOM.EXT
+              |   ; A: (lecteur de la
+              |   liste) : un seul
+              |   lecteur, disquettes
+              |   echangees
+^N            | renommer
+DEL           | effacer
+              |   (confirmation)
+^A            | attributs R (protege)
+              |   S (systeme)
+? ^E          | taille exacte : du
+              |   fichier / de tous
+^L ^R         | autre lecteur /
+              |   relire (disquette
+              |   changee)
+FUNCT         | menus Fichier,
+              |   Marque, Trier, Vue
+ESC           | quitter
+cibles        | les fichiers marques,
+              |   sinon celui du
+              |   curseur
 
 HEX
 ---

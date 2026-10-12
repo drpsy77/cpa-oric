@@ -65,6 +65,7 @@ SECTIONS = [
   ("VOIR nom", "affiche NOM.HIR (plein ecran), .HIZ (compressee) ou .IMG, une touche"),
   ("VOIR nom.ANI [n]", "animation jouee n fois (0 : jusqu'a une touche) ; fleches G D : ligne de dechirure"),
   ("VSYNC", "cale le top 50 Hz sur l'ecran (texte du milieu en entier), jusqu'a l'arret"),
+  ("CMDER [d:][afn]", "gestionnaire de fichiers plein ecran : trier, filtrer, marquer, voir, copier... (HELP CMDER)"),
   ("SET afn [opt]", "attributs : RO RW SYS DIR (sans opt : les affiche)"),
   ("LOGO [fic]", "Logo et sa tortue (charge fic.LOG)"),
   ("ASM nom", "NOM.ASM -> NOM.COM et NOM.SYM"),
@@ -154,6 +155,28 @@ SECTIONS = [
   ("EDIT.CFG", "par fichier : nom maxi [MOTS|CAR] [largeur impr.], ex. *.LOG 126 CAR 80"),
   ("FUNCT", "menus Fichier (dont Inserer, Imprimer), Edition, Chercher, Options"),
   ("Retour", "(lance par EDITE de LOGO) enregistre et revient"),
+ ]),
+ ("CMDER : FICHIERS PLEIN ECRAN", [
+  ("CMDER [d:][afn]", "fichiers de d:, filtre afn (CMDER B:*.COM)"),
+  ("haut bas", "fichier precedent / suivant"),
+  ("<- ->", "page precedente / suivante"),
+  ("< >", "premier / dernier fichier"),
+  ("A a Z", "fichier suivant qui commence par la lettre"),
+  ("ESP", "marque / ote la marque"),
+  ("+ -", "marque / ote selon un modele (*.COM)"),
+  ("*", "inverse les marques"),
+  ("1 2 3 4", "tri : disque, nom, type, taille ; 2 fois : ordre inverse"),
+  ("/", "filtre (B:*.TXT : autre lecteur)"),
+  ("RETURN", "voir le texte"),
+  ("^C ^D", "copier / deplacer vers B: ou NOM.EXT ; A: (lecteur de la liste) : un seul lecteur, disquettes echangees"),
+  ("^N", "renommer"),
+  ("DEL", "effacer (confirmation)"),
+  ("^A", "attributs R (protege) S (systeme)"),
+  ("? ^E", "taille exacte : du fichier / de tous"),
+  ("^L ^R", "autre lecteur / relire (disquette changee)"),
+  ("FUNCT", "menus Fichier, Marque, Trier, Vue"),
+  ("ESC", "quitter"),
+  ("cibles", "les fichiers marques, sinon celui du curseur"),
  ]),
  ("HEX", [
   ("fleches RET", "deplacement"),
@@ -321,7 +344,7 @@ def asm_str(lines):
     return "\n".join(res).replace('.asc "",34,"', '.asc 34,"').replace(',""', '')
 
 byname = {t.split()[0].replace(":", ""): (t, r) for t, r in SECTIONS}
-topics = ["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG", "MEMOIRE", "USB", "GRAPHER"]
+topics = ["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG", "MEMOIRE", "USB", "GRAPHER", "CMDER"]
 default = render(*byname["COMMANDES"]) + ["", "Autres sujets : HELP suivi de",
           "  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]), "  " + " ".join(topics[8:]),
           "  (4 lettres suffisent)"]

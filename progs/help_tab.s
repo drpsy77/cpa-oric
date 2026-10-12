@@ -10,9 +10,10 @@ help_keys
         .asc "MEMO",0
         .asc "USB",0
         .asc "GRAP",0
+        .asc "CMDE",0
         .byt 0
 help_ptrs
-        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8,h_9
+        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8,h_9,h_10
 h_default
         .asc "COMMANDES",13,10
         .asc "---------",13,10
@@ -77,7 +78,7 @@ h_default
         .asc "Autres sujets : HELP suivi de",13,10
         .asc "  TOUCHES PROGRAMMES EDIT HEX",13,10
         .asc "  LOGO ASM DEBUG MEMOIRE",13,10
-        .asc "  USB GRAPHER",13,10
+        .asc "  USB GRAPHER CMDER",13,10
         .asc "  (4 lettres suffisent)",13,10
         .byt 0
 h_0
@@ -136,6 +137,13 @@ h_1
         .asc "              |   l'ecran (texte du",13,10
         .asc "              |   milieu en entier),",13,10
         .asc "              |   jusqu'a l'arret",13,10
+        .asc "CMDER [d:][afn]",13,10
+        .asc "              | gestionnaire de",13,10
+        .asc "              |   fichiers plein",13,10
+        .asc "              |   ecran : trier,",13,10
+        .asc "              |   filtrer, marquer,",13,10
+        .asc "              |   voir, copier...",13,10
+        .asc "              |   (HELP CMDER)",13,10
         .asc "SET afn [opt] | attributs : RO RW SYS",13,10
         .asc "              |   DIR (sans opt : les",13,10
         .asc "              |   affiche)",13,10
@@ -532,4 +540,55 @@ h_9
         .asc "              |   console (WAIT avant",13,10
         .asc "              |   pour attendre)",13,10
         .asc "; texte       | commentaire",13,10
+        .byt 0
+h_10
+        .asc "CMDER : FICHIERS PLEIN ECRAN",13,10
+        .asc "----------------------------",13,10
+        .asc "CMDER [d:][afn]",13,10
+        .asc "              | fichiers de d:,",13,10
+        .asc "              |   filtre afn (CMDER",13,10
+        .asc "              |   B:*.COM)",13,10
+        .asc "haut bas      | fichier precedent /",13,10
+        .asc "              |   suivant",13,10
+        .asc "<- ->         | page precedente /",13,10
+        .asc "              |   suivante",13,10
+        .asc "< >           | premier / dernier",13,10
+        .asc "              |   fichier",13,10
+        .asc "A a Z         | fichier suivant qui",13,10
+        .asc "              |   commence par la",13,10
+        .asc "              |   lettre",13,10
+        .asc "ESP           | marque / ote la",13,10
+        .asc "              |   marque",13,10
+        .asc "+ -           | marque / ote selon un",13,10
+        .asc "              |   modele (*.COM)",13,10
+        .asc "*             | inverse les marques",13,10
+        .asc "1 2 3 4       | tri : disque, nom,",13,10
+        .asc "              |   type, taille ; 2",13,10
+        .asc "              |   fois : ordre",13,10
+        .asc "              |   inverse",13,10
+        .asc "/             | filtre (B:*.TXT :",13,10
+        .asc "              |   autre lecteur)",13,10
+        .asc "RETURN        | voir le texte",13,10
+        .asc "^C ^D         | copier / deplacer",13,10
+        .asc "              |   vers B: ou NOM.EXT",13,10
+        .asc "              |   ; A: (lecteur de la",13,10
+        .asc "              |   liste) : un seul",13,10
+        .asc "              |   lecteur, disquettes",13,10
+        .asc "              |   echangees",13,10
+        .asc "^N            | renommer",13,10
+        .asc "DEL           | effacer",13,10
+        .asc "              |   (confirmation)",13,10
+        .asc "^A            | attributs R (protege)",13,10
+        .asc "              |   S (systeme)",13,10
+        .asc "? ^E          | taille exacte : du",13,10
+        .asc "              |   fichier / de tous",13,10
+        .asc "^L ^R         | autre lecteur /",13,10
+        .asc "              |   relire (disquette",13,10
+        .asc "              |   changee)",13,10
+        .asc "FUNCT         | menus Fichier,",13,10
+        .asc "              |   Marque, Trier, Vue",13,10
+        .asc "ESC           | quitter",13,10
+        .asc "cibles        | les fichiers marques,",13,10
+        .asc "              |   sinon celui du",13,10
+        .asc "              |   curseur",13,10
         .byt 0

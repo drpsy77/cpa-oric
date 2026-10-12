@@ -52,7 +52,9 @@ GTEST, HELLO ; GRAPHER (petit langage de dessin, fichiers `.GRX` : variables, ex
 commandes de dessin du prompt y sont passées) et VOIR (affiche une image `.HIR` ou `.IMG`) ;
 EXPORT, IMPORT et USBDIR (échange de fichiers avec
 la clé USB du LOCI) ; FORMAT (formatage, un seul lecteur possible, `/Q` rapide) ; DISKCOPY
-(copie de disquette, un seul lecteur possible ; `/S` : système seul, comme SYSGEN).
+(copie de disquette, un seul lecteur possible ; `/S` : système seul, comme SYSGEN) ; CMDER
+(gestionnaire de fichiers plein écran : tri, filtre, marquage, Voir, Copier, Déplacer,
+Renommer, Effacer, Attributs ; copie avec un seul lecteur).
 Disquette livrée : commandes et applications protégées (R/O) et visibles, exemples modifiables ;
 trois disquettes par usage (LOGO, notes, assembleur), commandes de base cachées (SYS).
 
@@ -69,7 +71,8 @@ ECRANTEXTE et ECRANMIXTE (avec le menu Tortue), le dessin du lot L4 (POINT, TRAI
 RECTANGLE, PAVE, CERCLE, ETIQUETTE, FIXECOULEUR, ALLUME?), EDITE et le Retour d'EDIT (temps d'écriture
 et de lecture de LOGO.$$$, image gardée), `LOGO NOM` ; EXPORT, IMPORT et USBDIR (jamais
 lancés sur le vrai LOCI : voir le lot L1 plus bas) ; FORMAT (lot L2 : sur le LOCI et sur un
-vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (lot LA).
+vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (lot LA) ;
+CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
 
 ## Choix déjà faits (et pourquoi)
 
@@ -519,6 +522,26 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     y compris avec l'Oricutron de l'OSDK, non corrigé) ; et le correctif d'Oricutron vide ce
     cache à la fin de Write Track (`disk.c`). Essayé : la disquette SEDORIC de Pierre et sa
     copie à moitié formatée, 84 pistes contrôlées.
+- CMDER.COM (lot LJ, octobre 2026) : 7 628 octets, rien de résident ; spécification,
+  maquettes et écarts de la réalisation : `docs/spec-cmder.md` (§ 10 et 11). Choix :
+  - Table des fichiers (128 x 24 octets) remplie par les fonctions 17/18 avec des `?` partout
+    (tous les extents, ordre du répertoire), entrées d'un même fichier regroupées par le nom ;
+    taille affichée = enregistrements x 128 tout de suite, exacte (règle de STAT) sur demande
+    (`?`, `^E`) : une lecture par fichier, lente sur un vrai Microdisc.
+  - Une seule mécanique de copie, en tranches : lecture de la suite des fichiers dans le
+    tampon (le reste de la TPA, ~33 Ko en texte, 32 tranches au plus), puis écriture. Avec
+    deux lecteurs, rien de plus ; avec un seul (destination = lecteur de la liste, même nom),
+    les disquettes sont demandées entre lecture et écriture. Avant chaque échange : fonction
+    13 (tampon écrit) ; un fichier commencé est fermé (point d'étape) puis repris avec le même
+    FCB. Empreinte du répertoire (sommes de contrôle et nombre d'entrées, par les fonctions
+    17/18) de chaque disquette, refaite après chaque écriture : la mauvaise disquette est
+    refusée (`Non ! ...`), la source n'est jamais prise pour la destination.
+  - Contrairement à COPY (comme PIP), la copie garde les attributs R/O et SYS (préparer une
+    disquette d'usage) et demande avant de remplacer (O/N/T).
+  - Oricutron de test : `\x07` dans `ORIC_KEYS` change la disquette du lecteur A: (variable
+    `ORIC_SWAP`, posée par `DSKSWAP=` de `run_test.sh`) ; celle qui sort est enregistrée.
+  - Deux erreurs trouvées aux essais : `cmp` de l'empreinte qui finissait avec Z=0 (DEX) même
+    à égalité, et `STA` suivi de `BNE` (STA ne touche pas aux indicateurs) dans la réponse T.
 - DISKCOPY.COM (lot L3, octobre 2026) : 2 216 octets (deux blocs), rien de résident.
   Choix :
   - Les secteurs passent par SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première
@@ -817,7 +840,7 @@ lecteur dès que c'est possible.
 | LG | **GRAPHER, palier 4 : traduction en assembleur** (Pierre : « oui ») : `GRAPHER NOM /A` écrit `NOM.ASM` (supprimé en cas d'erreur), qu'ASM assemble en `NOM.COM`. Même analyse que l'interpréteur (table des commandes à deux adresses : exécution, traduction ; `binop`, `parse_num`, `parse_id`, `find_fn`, `relop`, `x_open`/`x_close` partagés). Expressions compilées avec un état « constante en attente » : calcul des parties constantes à la traduction (par `binop`), sinon `g_ev`/`g_et` et la pile des valeurs de la bibliothèque. Bibliothèque d'exécution **`progs/grx.inc`** (`GRX.INC`) : opérations, comparaisons, `RND`, `POINT` (garde `h_x1`/`h_y1`, corrigé aussi dans l'interpréteur), `INKEY`, `PRINT`/`GNUM`, textes et noms d'images placés après l'appel (`g_str`), boucles (`g_rept`, `g_forok`, `g_forstep`, 4 octets `Bn` par bloc), ESC à chaque `NEXT`, erreurs d'exécution sans numéro de ligne. Code lisible : ligne source en commentaire, `V_A`-`V_Z`, `L3T`/`L3E`/`L3X`, `P_NOM`. `run_com.py` remplit `ORIG_LINE`. `test_grapher.sh` : chaque test interprété puis traduit, assemblé (xa) et exécuté (`.ref`, `.kref`) | GRAPHER 6 -> 10 Ko ; GRX.INC (source) ; rien de résident | **fait** (Oricutron : ECRAN compilé = interprété (image identique), MOTIFS 8 fois plus rapide, ARDOISE ; chaîne complète sur l'Oric émulé : `GRAPHER MOTIFS /A`, `ASM MOTIFS` (< 1 min), `MOTIFS` ; ASM = xa sur les 5 programmes produits) |
 | LH | **Images compressées et animations HIRES plein écran** (étude chiffrée puis choix de Pierre, octobre 2026 : format compatible, copies coupées, déchirure calée à la touche faute de VSYNC matériel, animation en RAM seulement, lecteur dans un `ANIM.INC` séparé, nouvelle disquette) : (1) **format** : celui du compresseur OSDK (`archives/lzss-osdk/`), inchangé ; une copie de distance 0 garde l'octet (saut), une distance « négative » (65 536 − k) le prend k octets plus loin dans l'image précédente ; le décodeur d'origine lit donc les animations (lentement : 43,6 cycles par octet gardé). (2) **`hires.inc`** : `h_unz` (décodeur rapide, saut sans copie, copie bornée à la fin de l'image contre un fichier abîmé, plein écran ou SPLIT), `h_zread` (fichier entier en `h_zbuf`, jusqu'à `$A000`), `.HIZ` dans `h_load` (image autonome, sans saut ni image précédente). (3) **`ANIM.INC`** (`progs/anim.inc`, à inclure avant `HIRES.INC`) : `a_play` (en-tête `.ANI`, 1re image sur écran effacé, image de retour pour boucler, délai par image calé sur les tops 50 Hz sans dérive, T1 à 19 966 pendant l'animation pour fixer la déchirure, flèches gauche / droite : ±8 lignes), `a_msg`, `a_grx` (programmes traduits). (4) **VOIR** `.HIZ` et `NOM.ANI [n]` ; **GRAPHER** `ANIM nom [n]` (refusé en SPLIT, ESC arrête le programme), `GLOAD nom.HIZ`, animation chargée après le texte ; `/A` n'inclut `ANIM.INC` que si ANIM sert. (5) **Outils** : `tools/lzhir.py` (compression, contrôle, modèle de coût), `tools/mkanim.py` (GIF ou PNG -> `.ANI`, bilan, aperçu GIF), `png2hir.py --hiz`, `tools/anim_demos.py`, `tools/test_anim.py` ; `run_com.py` : compteur 50 Hz, `DUMP`, `PROF`, FCB2. (6) **`cpa-anim.dsk`** : VOIR, GRAPHER, ASM, `CUBE.ANI`, `BALLE.ANI`, `VAISSEAU.ANI` (GIF original contrasté), `LOGO.HIZ`, `ANIMS.GRX`, `DEMO.BAT`. Mesures (py65, cycle près) : littéral 52 cycles, copie 127 + 18,2 par octet, saut 105, d'où ~200 octets changés par 1/50 s ; IRQ du système 850 cycles par top. Place : ~34 Ko dans VOIR, ~22 Ko dans GRAPHER. (7) **Corrigé au passage** : dans un programme traduit, `GLOAD` et `GSAVE` sautaient le nom qui suit l'appel en cherchant un 0 final (`g_str`) ; l'octet du lecteur courant vaut 0, le programme repartait donc au milieu du nom (BRK) : `g_nm` saute 12 octets fixes ; test `gload.grx` | VOIR 1,7 -> 3,1 Ko ; GRAPHER 10 -> 11,4 Ko ; HIRES.INC 1 488 -> 1 855 o ; ANIM.INC 774 o ; rien de résident | **fait** (6502 simulé : chaque image des trois démos décodée par `h_unz` = Python, VOIR deux passages, cadence au top près, fichiers abîmés refusés ; GRAPHER interprété = traduit, ASM = xa pour VOIR, GRAPHER et un programme traduit avec ANIM ; restent Oricutron et le vrai Oric : déchirure, flèches, débit) |
 | LI | **Calage du top sur le balayage (VSYNC)** (Pierre, octobre 2026, sur le modèle d'Oricium ; constat sur Oricutron : la déchirure se voit) : (1) **système** : T1 à 19 966 (période 19 968 cycles = 312 lignes × 64, une trame), compteur lancé au démarrage à froid seulement (`hw_init` ne réécrit que la période) : la phase du top par rapport au balayage tient jusqu'à l'arrêt ; top à 50,08 Hz (délais 0,16 % plus courts). (2) **`VSYNC.COM`** (744 octets) : texte caché en ligne 14 (encre = papier), encre rendue visible de l'instant où l'octet haut du compteur passe à `$15` à celui où il passe à `$13` (8 lignes) ; calé, le top tombe à la ligne 200 (fin de l'image HIRES) ; flèches : une période allongée ou raccourcie de 1 ou 8 lignes ; ESC rend le décalage total (modulo 312). (3) **`ANIM.INC`** ne touche plus au timer (les flèches décalent le top du système, réglage gardé). (4) Mesure (modèle de coût de `lzhir.py`) : une image ne se déchire pas si son décodage reste devant le faisceau, ~7 000 cycles après le top plus 64 par ligne ; les démos demandent 10 500 à 425 000 cycles par image : déchirure toujours là (à un endroit fixe) | VSYNC 744 o ; rien de résident (quelques octets déplacés) | **fait** (Oricutron : sur 39 pas de 8 lignes, le texte n'apparaît qu'à un seul, en entier à la ligne près, coupé d'une ligne par pas d'écart ; le réglage tient après d'autres commandes ; reste le vrai Oric) |
-| LJ | **CMDER, version 1** (Pierre, octobre 2026 ; nom en écho à GRAPHER) : gestionnaire de fichiers en plein écran sur une disquette, `CMDER [d:][afn]` ; liste triable (ordre disque, nom, type, taille), filtre, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs, tailles exactes ; copie avec un seul lecteur (échanges, empreinte du répertoire). Plus tard : deux colonnes (`CMDER A: B:`, Comparer) puis la clé USB du LOCI (répertoire courant, plein écran possible). Maquette, menus, raccourcis, marquage et coût : `docs/spec-cmder.md` | ~6 Ko estimés, **~9 Ko à prévoir** ; rien de résident | **maquette validée** par Pierre (12 octobre 2026) ; code après le sujet en cours |
+| LJ | **CMDER, version 1** (Pierre, octobre 2026 ; nom en écho à GRAPHER) : gestionnaire de fichiers en plein écran sur une disquette, `CMDER [d:][afn]` ; liste triable (ordre disque, nom, type, taille), filtre, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs, tailles exactes ; copie avec un seul lecteur (échanges, empreinte du répertoire). Plus tard : deux colonnes (`CMDER A: B:`, Comparer) puis la clé USB du LOCI (répertoire courant, plein écran possible). Maquette, menus, raccourcis, marquage et coût : `docs/spec-cmder.md` | ~6 Ko estimés, ~9 Ko à prévoir ; **7 628 octets** ; rien de résident | **fait** (Oricutron : toutes les opérations, deux lecteurs et un seul avec de vrais échanges ; reste le vrai Oric + LOCI) |
 
 **Jeux en écran texte : GRAPHER et LOGO** (réflexion avec Pierre, octobre 2026 ; rien de
 codé). Décidé :
@@ -968,8 +991,9 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    hors de la disquette construite pour l'instant.
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
-4. Lecteurs : FORMAT, DISKCOPY et COPY avec jokers faits (lots L2, L3, LA) ; reste COPY
-   d'une disquette à l'autre avec un seul lecteur (échanges, comme DISKCOPY A: A:).
+4. Lecteurs : FORMAT, DISKCOPY et COPY avec jokers faits (lots L2, L3, LA) ; la copie d'une
+   disquette à l'autre avec un seul lecteur est dans CMDER (lot LJ). CMDER, suite : deux
+   colonnes (`CMDER A: B:`, Comparer), puis la clé USB du LOCI (`docs/spec-cmder.md` § 9).
 5. Pistes : base de données simple sur l'accès direct.
 6. **Échange de fichiers avec la clé USB du LOCI** (étude, octobre 2026). Le LOCI dérive du
    Picocomputer 6502 (RP6502) : son « MIA » expose à l'Oric l'API du RIA, en `$03A0-$03B9`
