@@ -52,6 +52,12 @@ couleurs des menus, peu lisibles dans certains émulateurs, sont nettes sur un v
 contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
 `oricutron -m atmos -k microdisc -d build/cpa.dsk -d donnees.dsk`). Voir « Lecteurs A: à D: ».
 
+**Clock Signal** (macOS, Linux) démarre aussi `cpa.dsk`, et son minutage du lecteur est plus
+proche du matériel qu'Oricutron. Mais son Microdisc perd tous les lecteurs, `A:` compris, dès
+que CP/A choisit `B:`, `C:` ou `D:` (défaut de l'émulateur, signalé à son auteur) : y rester sur
+`A:` et n'y taper que des commandes qui existent (une commande inconnue est cherchée sur les
+autres lecteurs).
+
 La disquette contient `README.TXT`, un aide-mémoire de toutes les commandes et de leurs
 paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
 

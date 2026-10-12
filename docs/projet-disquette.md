@@ -712,6 +712,33 @@ vrai Microdisc) ; DISKCOPY (lot L3) ; COPY avec jokers et STAT avec attributs (l
     `PAPER 8`, `INK`, `PAGE X` refusés, TYPE README.TXT avec et sans pause, Pagination.
   - Vérifié par Pierre sur le vrai Oric (octobre 2026).
 
+- Premier accès après une pause sur un vrai Microdisc (Pierre, octobre 2026 : dans Clock
+  Signal, DIR passe, puis TYPE et PUT donnent aussitôt « BDOS: disk I/O error »). Cause : le
+  WD1793 lève la tête après 15 tours sans commande (~3 s), et sur le Microdisc la levée de
+  tête commande aussi le moteur ; le premier octet d'un secteur arrive alors ~1 s après la
+  commande (Clock Signal : 0,96 s de chargement, plus jusqu'à un tour), et le pilote
+  n'attendait que ~0,7 s, sans nouvel essai. Le LOCI et Oricutron répondent aussitôt, d'où
+  un défaut jamais vu. Choix :
+  - Une seule attente du premier octet, portée à ~2,9 s (4 x 256 x ~2,8 ms) : `dsk_to2`
+    (`$FDAD`, poids fort du compteur) dans `disk_read` / `disk_write`, et de même dans
+    FORMAT.COM (Write Track et relecture). Écarté : 0,7 s puis des essais de plus en plus
+    longs (idée de Pierre, pour ne rien perdre sur le LOCI) : l'attente ne coûte rien quand
+    le contrôleur répond, donc ni sur le LOCI ni sur un lecteur présent ; un lecteur absent
+    échoue avant, au déplacement de tête (~3 s, une fois par session grâce à `bad_vec`).
+    Dans Clock Signal, une commande relancée avant la fin du chargement de tête le
+    recommence : seule une attente unique assez longue y passe à coup sûr.
+  - Coût : 15 octets résidents (marge 261 -> 246). Rien dans le contrat.
+  - Clock Signal a aussi un défaut à lui (signalé par Pierre à son auteur, octobre 2026) :
+    la sélection du lecteur du Microdisc (`Machines/Oric/Microdisc.cpp`, depuis février
+    2020) donne toujours « aucun lecteur » quand le bit 7 du registre de contrôle est à 1,
+    ce qui est le cas de CP/A ; dès que B:, C: ou D: est choisi (recherche d'un programme
+    absent de A:, commande inconnue), plus aucun lecteur ne répond, A: compris, jusqu'au
+    redémarrage. N'y essayer que A: et des commandes qui existent.
+  - Essayé dans Oricutron : test complet de l'atelier, `TYPE`, `PUT` puis `TYPE` du fichier,
+    `FORMAT B:` d'une image vierge, `COPY` et `HELLO` depuis B: ; `tools/test_asm.sh` à 0
+    différence. Restent Clock Signal (premier accès après plus de 3 s : TYPE, PUT, FORMAT)
+    et un vrai Microdisc.
+
 ## Suite prévue (par priorité)
 
 **Prochains lots, dans l'ordre voulu par Pierre** (une livraison testée et un commit par lot ;

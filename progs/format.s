@@ -63,6 +63,7 @@ i       = $19
 tries   = $1A
 sptr    = $1B           ; 2 octets
 pch     = $1D
+to2     = $1E           ; poids fort du délai du premier octet
 
         *= $0500
 start
@@ -409,11 +410,14 @@ wtrack
         ldy #0
         ldx #0
         stx to
+        lda #4                  ; ~2,9 s, comme src/disk.s
+        sta to2
         lda #CMD_WTRK
         sta FDC_CMD
         ; premier octet : le contrôleur le demande tout de suite (attente
-        ; limitée, ~0,7 s) ; ensuite ~14 cycles par attente, comme
-        ; l'écriture d'un secteur (src/disk.s)
+        ; limitée, ~2,9 s : tête et moteur d'un vrai lecteur à relancer) ;
+        ; ensuite ~14 cycles par attente, comme l'écriture d'un secteur
+        ; (src/disk.s)
 w0      lda MD_DRQ
         bpl wgo
         dex
@@ -421,6 +425,8 @@ w0      lda MD_DRQ
         lda MD_CTRL
         bpl early
         dec to
+        bne w0
+        dec to2
         bne w0
         lda #CMD_FINT
         sta FDC_CMD
@@ -511,6 +517,8 @@ rsec
         ldy #0
         ldx #0
         stx to
+        lda #4                  ; ~2,9 s, comme src/disk.s
+        sta to2
         lda #CMD_READ
         sta FDC_CMD
 r0      lda MD_DRQ
@@ -520,6 +528,8 @@ r0      lda MD_DRQ
         lda MD_CTRL
         bpl fin
         dec to
+        bne r0
+        dec to2
         bne r0
         lda #CMD_FINT
         sta FDC_CMD
