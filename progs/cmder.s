@@ -125,6 +125,20 @@ kk      = $68
 rel     = $69
 bufpg   = $6A           ; première page du tampon de copie
 wasx    = $6B
+stay    = $6C           ; 1 = fin de copie : ESC garde la destination
+usrp    = $6D           ; couleurs de l'utilisateur (attributs papier, encre)
+usri    = $6E
+sbh     = $6F           ; ascenseur : hauteur, position
+sbp     = $70
+
+; Couleurs des lignes remarquables (attributs série de l'Oric : papier
+; 16-23, encre 0-7 ; 0 noir 1 rouge 2 vert 3 jaune 4 bleu 5 magenta
+; 6 cyan 7 blanc). La liste et la ligne d'aide gardent celles de
+; l'utilisateur (PAPER, INK).
+C_TPAP  = 16+6          ; titres des colonnes : papier cyan,
+C_TINK  = 0             ;   encre noire
+C_SPAP  = 16+4          ; lignes d'état 25 et 26 : papier bleu,
+C_SINK  = 7             ;   encre blanche
 
         *= $0500
 
@@ -180,8 +194,15 @@ fdone   lda #>bufs              ; tampon de copie : page suivant la table
         ldx #F_CONOUT           ; efface l'écran
         lda #$0C
         jsr BDOS
+        lda SCREEN+3*40         ; couleurs de l'utilisateur (ligne effacée)
+        sta usrp
+        lda SCREEN+3*40+1
+        sta usri
+        lda #1                  ; erreurs disque sans message du BDOS :
+        sta IO_QUIET            ; CMDER les signale lui-même (bit 7)
         jsr cur_off
         jsr reload
+        jmp mchk
 .)
 main
         jsr B_CONST             ; d'autres touches attendent : on
@@ -193,7 +214,25 @@ getk    jsr B_CONIN
         sta msgp+1
         lda kk
         jsr dispatch
+mchk    jsr io_chk              ; erreur disque pendant l'opération ?
+        bcc main
+        lda #<m_ioerr
+        ldy #>m_ioerr
+        jsr set_msg
         jmp main
+
+; io_chk : C=1 si une erreur disque a eu lieu depuis le dernier appel
+io_chk
+.(
+        lda IO_QUIET
+        bpl no
+        lda #1
+        sta IO_QUIET
+        sec
+        rts
+no      clc
+        rts
+.)
 
 ; dispatch : A = touche ou code de menu
 dispatch
@@ -1385,9 +1424,170 @@ draw
         jsr draw_hdr
         jsr draw_col
         jsr draw_list
+        jsr draw_sb
         jsr draw_info
         jsr draw_msg
-        jmp draw_help
+        jsr draw_help
+; couleurs : titres des colonnes, lignes d'état
+        ldx #R_COL
+        lda #C_TPAP
+        ldy #C_TINK
+        jsr set_attr
+        lda #C_SPAP
+        ldy #C_SINK
+        ldx #R_INFO
+        jsr set_attr
+        lda #C_SPAP
+        ldy #C_SINK
+        ldx #R_MSG
+; set_attr : ligne X, papier A, encre Y (colonnes 0 et 1)
+set_attr
+        pha
+        tya
+        pha
+        jsr row_addr
+        ldy #1
+        pla
+        sta (scr),y
+        dey
+        pla
+        sta (scr),y
+        rts
+
+; usr_attr : couleurs de l'utilisateur sur les lignes 2, 25, 26 (Voir)
+usr_attr
+        ldx #R_COL
+        jsr ua1
+        ldx #R_INFO
+        jsr ua1
+        ldx #R_MSG
+ua1     lda usrp
+        ldy usri
+        jmp set_attr
+
+; draw_sb : ascenseur en colonne 39 (lignes 3 à 24) : rail « : » et
+; curseur en vidéo inverse, proportionnels à la partie visible
+draw_sb
+.(
+        lda #" "
+        sta t2
+        lda #0
+        sta sbh
+        sta sbp
+        lda nvis
+        cmp #NROWS+1
+        bcc show                ; tout tient : colonne vide
+        lda #":"
+        pha
+        lda #<NROWS*NROWS       ; hauteur = 22 x 22 / nvis (1 au moins)
+        sta num
+        lda #>NROWS*NROWS
+        sta num+1
+        lda nvis
+        jsr div16
+        bne h1
+        lda #1
+h1      sta sbh
+        lda top                 ; dernière page : en bas
+        clc
+        adc #NROWS
+        cmp nvis
+        bcs last
+        lda top                 ; place = top x 22 / nvis
+        jsr mul22
+        lda nvis
+        jsr div16
+        sta sbp
+        clc
+        adc sbh
+        cmp #NROWS+1
+        bcc ok
+last    lda #NROWS
+        sec
+        sbc sbh
+        sta sbp
+ok      pla
+        sta t2
+show    lda #0
+        sta vk
+lp      lda vk
+        clc
+        adc #R_LIST
+        tax
+        jsr row_addr
+        lda t2                  ; rail
+        ldx vk
+        cpx sbp
+        bcc put
+        txa
+        sec
+        sbc sbp
+        cmp sbh
+        bcs rl
+        lda #$A0                ; curseur de l'ascenseur
+        .byt $2C
+rl      lda t2
+put     ldy #39
+        sta (scr),y
+        inc vk
+        lda vk
+        cmp #NROWS
+        bne lp
+        rts
+.)
+
+; div16 : num (16 bits) / A -> A = quotient (inférieur à 256)
+div16
+.(
+        sta t2
+        lda #0
+        ldx #16
+lp      asl num
+        rol num+1
+        rol
+        bcs sb
+        cmp t2
+        bcc nx
+sb      sbc t2
+        inc num
+nx      dex
+        bne lp
+        lda num
+        rts
+.)
+
+; mul22 : num = A x 22
+mul22
+        sta num
+        lda #0
+        sta num+1
+        asl num                 ; x 2
+        rol num+1
+        lda num
+        sta t0
+        lda num+1
+        sta t1
+        asl num                 ; x 4
+        rol num+1
+        lda num
+        clc
+        adc t0
+        sta t0
+        lda num+1
+        adc t1
+        sta t1                  ; x 6
+        asl num                 ; x 8
+        rol num+1
+        asl num                 ; x 16
+        rol num+1
+        lda num
+        clc
+        adc t0
+        sta num
+        lda num+1
+        adc t1
+        sta num+1
+        rts
 
 ; ligne 1 : « A: *.*         22/40 fic 126K libre »
 draw_hdr
@@ -1687,6 +1887,9 @@ clr_area
         ldx #1
 lp      stx vk
         jsr put_line0
+        ldy #39                 ; ascenseur
+        lda #" "
+        sta (scr),y
         ldx vk
         inx
         cpx #28
@@ -2211,7 +2414,8 @@ go      lda cur
         lda #<m_rerr
         ldy #>m_rerr
         jmp set_msg
-op      jsr clr_area
+op      jsr usr_attr          ; le texte garde les couleurs de l'utilisateur
+        jsr clr_area
         lda #0
         sta vx
         sta vy
@@ -2814,6 +3018,8 @@ k_reload
         jmp reload_keep
 
 k_quit
+        lda #0                  ; messages d'erreur du BDOS rendus
+        sta IO_QUIET
         ldx #F_CONOUT
         lda #$0C
         jsr BDOS
@@ -3002,7 +3208,17 @@ c2      lda single
         lda drv
         jsr dir_fp              ; empreinte de la source, en place
         jsr fp_to_s
-lp      jsr need_src
+lp      lda #0                  ; fin de copie (sauf Déplacer) : ESC
+        sta stay                ; à la demande de la source garde la
+        lda mvf                 ; destination dans le lecteur
+        bne ns
+        lda stopf
+        bne st1
+        lda rd_k
+        cmp ntg
+        bcc ns
+st1     inc stay
+ns      jsr need_src
         bcs abort
         jsr do_pending
         lda stopf
@@ -3011,7 +3227,15 @@ lp      jsr need_src
         cmp ntg
         bcs fin
         jsr fill
-        lda nch
+        lda stopf               ; erreur de lecture : rien n'est écrit
+        beq rdok
+        lda single
+        bne fin
+        lda wr_open
+        beq fin
+        jsr kill_dst
+        jmp fin
+rdok    lda nch
         beq lp
         jsr need_dst
         bcs abort
@@ -3055,7 +3279,7 @@ need_src
 again   lda #<m_isrc
         ldy #>m_isrc
         jsr ask_swap
-        bcs rt
+        bcs esc
         lda fpok
         beq bad
         jsr cmp_s
@@ -3064,8 +3288,19 @@ again   lda #<m_isrc
         sta cur_in
 ok      clc
 rt      rts
-bad     inc retry
+bad     lda fpok                ; illisible : « Erreur ! », sinon « Non ! »
+        beq ioe
+        lda #1
+        .byt $2C
+ioe     lda #$80
+        sta retry
         jmp again
+esc     lda stay                ; fin de copie : on reste sur la destination
+        beq rt
+        lda #0
+        sta errm+1
+        clc
+        rts
 .)
 
 need_dst
@@ -3076,26 +3311,40 @@ need_dst
         bne ok
         lda #0
         sta retry
-again   lda #<m_idst
+again   lda #0
+        sta stay
+        lda #<m_idst
         ldy #>m_idst
         jsr ask_swap
         bcs rt
         lda fpok
         beq bad
-        jsr cmp_s               ; la source n'est pas une destination
-        beq bad
         lda havd
         beq new
-        jsr cmp_d
+        jsr cmp_d               ; déjà vue : la même ?
         bne bad
         beq got
-new     jsr fp_to_d
+new     jsr cmp_s               ; même répertoire que la source : on
+        bne nw                  ; demande (deux disquettes trop proches)
+        lda #<m_same
+        ldy #>m_same
+        jsr ask_yn
+        bcs nw
+        lda #0
+        sta retry
+        jmp again
+nw      jsr fp_to_d
         inc havd
 got     lda #1
         sta cur_in
 ok      clc
 rt      rts
-bad     inc retry
+bad     lda fpok                ; illisible : « Erreur ! », sinon « Non ! »
+        beq ioe
+        lda #1
+        .byt $2C
+ioe     lda #$80
+        sta retry
         jmp again
 .)
 
@@ -3109,9 +3358,13 @@ ask_swap
         jsr lb_clear
         lda retry
         beq n
-        lda #<m_non
+        bpl nn
+        lda #<m_err
+        ldy #>m_err
+        bne pr
+nn      lda #<m_non
         ldy #>m_non
-        jsr lb_str
+pr      jsr lb_str
 n       pla
         tay
         pla
@@ -3124,7 +3377,11 @@ n       pla
         jsr lb_chr
         lda #<m_key
         ldy #>m_key
-        jsr lb_str
+        ldx stay
+        beq k1
+        lda #<m_keyst
+        ldy #>m_keyst
+k1      jsr lb_str
         jsr lb_to_msg
         lda #<mbuf
         ldy #>mbuf
@@ -3142,7 +3399,11 @@ n       pla
         rol
         eor #1
         sta fpok
-        clc
+        jsr io_chk              ; erreur de lecture : illisible
+        bcc ok
+        lda #0
+        sta fpok
+ok      clc
         rts
 esc     lda #<m_esc
         sta errm
@@ -3301,7 +3562,17 @@ rl      lda bp+1
         bne rl
         inc ch_nh,x
         jmp rl
-eof     ldx nch                 ; fin du fichier
+eof     jsr io_chk              ; erreur de lecture : arrêt
+        bcc eof2
+        lda #<m_ioerr
+        sta errm
+        lda #>m_ioerr
+        sta errm+1
+        inc stopf
+        lda #0
+        sta rd_open
+        rts
+eof2    ldx nch                 ; fin du fichier
         lda ch_f,x
         ora #2
         sta ch_f,x
@@ -3355,7 +3626,12 @@ cont    ldy #E_FLAG
         jsr wr_chunk
         bcc wok
         jsr kill_dst            ; disque plein : copie partielle effacée
-        lda #<m_full
+        jsr io_chk
+        bcc dfl
+        lda #<m_ioerr
+        ldy #>m_ioerr
+        jmp stop
+dfl     lda #<m_full
         ldy #>m_full
         jmp stop
 wok     ldx ci
@@ -3721,6 +3997,10 @@ m_repl  .asc "Remplacer ",0
 m_isrc  .asc "SOURCE en ",0
 m_idst  .asc "DESTINATION en ",0
 m_key   .asc ", une touche",0
+m_keyst .asc " (ESC : rester)",0
+m_err   .asc "Erreur, ",0
+m_same  .asc "Comme la source : continuer (O/N) ?",0
+m_ioerr .asc "Erreur disque : verifiez la disquette",0
 m_non   .asc "Non ! ",0
 m_rdir  .asc "Lecture du repertoire...",0
 m_cpy   .asc "Copie : ",0

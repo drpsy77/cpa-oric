@@ -348,6 +348,21 @@ améliorations, **2b** deux colonnes, **2c** clé USB.
 
 Coût prévu (doublé par prudence) : ~100 + 80 + 80 + 100 + 150 = **~510 octets**.
 
+**Fait (2a)** : CMDER.COM 7 628 -> 8 197 octets (+569). Écarts : message
+`Comme la source : continuer (O/N) ?` (37 colonnes) ; préfixe `Erreur, ` (au lieu de
+`Non ! `) quand la disquette demandée est illisible. **Le BDOS change de 5 octets** (marge
+du système 222 -> 215) : avec `IO_QUIET` non nul, une erreur disque n'affiche rien mais pose
+le bit 7 de `IO_QUIET` ; CMDER le lit après chaque opération, chaque lecture de la copie et
+chaque échange (`Erreur disque : verifiez la disquette`). Sans ce bit, une erreur de lecture
+pendant une copie passait pour une fin de fichier (copie tronquée sans message) : elle arrête
+maintenant la copie (avec deux lecteurs, la copie commencée est effacée). Une disquette
+acceptée comme « identique à la source » ne peut plus être distinguée de la source aux
+échanges suivants : c'est à l'utilisateur de mettre la bonne. Essayé dans Oricutron :
+couleurs et ascenseur (capture), lecteur B: illisible (secteur du répertoire abîmé : message
+en ligne 26, plus de `BDOS: disk I/O error`), destination illisible pendant un échange
+(`Erreur, DESTINATION en A:...`), disquette identique (O, puis remplacement), ESC à la fin
+(la liste montre la destination).
+
 ### 12.2 Partie 2b : deux colonnes
 
 **Appel** : `CMDER A: B:` démarre en deux colonnes (un modèle par lecteur :

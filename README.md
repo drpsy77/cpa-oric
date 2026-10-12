@@ -224,12 +224,21 @@ Marque, Trier et Vue. Une copie garde les attributs de l'original ; un fichier d
 est remplacé après accord (`O/N/T`, T pour tous), un fichier protégé de la destination est
 laissé ; disque plein : la copie commencée est effacée.
 
+Les titres des colonnes et les deux lignes d'état sont en couleur (cyan, bleu) ; la liste
+et la ligne d'aide gardent les couleurs choisies par PAPER et INK. En colonne 39, un
+ascenseur montre la partie visible de la liste. Une erreur disque s'affiche en ligne 26
+(`Erreur disque : verifiez la disquette`) au lieu du message du BDOS au milieu de l'écran.
+
 Copier vers le lecteur de la liste sans changer de nom (`A:` quand la liste est celle de A:)
 veut dire **un seul lecteur** : CMDER lit autant de fichiers que la mémoire en tient (~33 Ko),
 demande `DESTINATION en A:, une touche`, écrit, puis `SOURCE en A:` pour la suite, et ainsi de
 suite. Avant d'écrire, il vérifie une empreinte du répertoire de chaque disquette et refuse la
 mauvaise (`Non ! DESTINATION en A:...`) ; un gros fichier est fermé avant chaque échange, puis
-repris. ESC à une demande arrête tout. Déplacer avec un seul lecteur efface les originaux
+repris. Une disquette au même répertoire que la source (copie de la source,
+ancienne version) est acceptée après `Comme la source : continuer (O/N) ?` ; il faut alors
+veiller soi-même à remettre la bonne. À la fin d'une copie, `SOURCE en A: (ESC : rester)` :
+ESC laisse la destination dans le lecteur et la liste la montre. ESC à une autre demande
+arrête tout. Déplacer avec un seul lecteur efface les originaux
 quand la source revient.
 
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
