@@ -16,6 +16,12 @@ suivent, --dir les laisse visibles. « ls » montre R/O et SYS.
 Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
 Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
 face = piste % 2, secteur = LSN % 17 + 1.
+
+Fichiers texte (types TEXTE plus bas : .ASM, .INC, .LOG, .GRX, .TXT, .BAT,
+.CFG...) : « new » et « put » mettent des fins de ligne CR LF, celles de
+CP/M qu'attendent EDIT, TYPE, LOGO et ASM (un fichier venu du Mac, en LF
+seul, s'afficherait en escalier). Les CR LF déjà là ne changent pas ; les
+autres types (.COM, .HIZ, .ANI...) sont copiés tels quels.
 LSN 0-2 : amorçage, 3-66 : système, 68+ : blocs de 2 Ko (bloc 0-1 = répertoire).
 
 Entrelacement : sur chaque piste, les secteurs sont rangés un sur ENTREL
@@ -27,6 +33,17 @@ des images ne dépend pas de l'ordre (secteurs retrouvés par leur en-tête).
 import os
 import struct
 import sys
+
+# types de fichiers texte : fins de ligne CR LF sur la disquette
+TEXTE = {"ASM", "INC", "LOG", "GRX", "TXT", "BAT", "CFG", "DOC", "SUB", "PRN", "LST"}
+
+
+def crlf_texte(name, data):
+    """LF seul (Mac, Linux) -> CR LF pour un fichier texte ; CR LF gardé."""
+    ext = os.path.basename(name).rpartition(".")[2].upper()
+    if ext not in TEXTE:
+        return data
+    return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
 SPT, NSIDES, NCYL = 17, 2, 42
 NSECT = SPT * NSIDES * NCYL
@@ -193,6 +210,7 @@ class Disk:
             self.put_entry(i, e)
 
     def write_file(self, name, data):
+        data = crlf_texte(name, data)
         self.erase(name)
         n = self.name83(name)
         if len(data) % 128:

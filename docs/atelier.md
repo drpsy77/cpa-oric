@@ -149,7 +149,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/run_com.py DOSSIER PROG.COM args` | `.COM` dans un 6502 simulé (BDOS minimal) |
 | `python3 tools/mkdisk.py ls IMAGE` | contenu d'une disquette |
 | `python3 tools/mkdisk.py get IMAGE NOM.EXT [local]` | extraire un fichier (ex. un `.ASM` écrit sur l'Oric) |
-| `python3 tools/mkdisk.py put IMAGE local [NOM.EXT]` | ajouter un fichier |
+| `python3 tools/mkdisk.py put IMAGE local [NOM.EXT]` | ajouter un fichier (texte : fins de ligne mises en CR LF, comme par `new`) |
 | `python3 tools/mkdisk.py era IMAGE NOM.EXT` | effacer un fichier |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
 | `tools/test_inc.sh` | les bibliothèques allégées de la disquette s'assemblent comme les originaux (xa et ASM.COM) |

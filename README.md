@@ -1509,6 +1509,11 @@ pour que ses données et son entrée de répertoire soient à jour sur la disque
     python3 tools/mkdisk.py attr build/cpa.dsk NOTES.TXT RO      # RO RW SYS DIR
     python3 tools/mkdisk.py new donnees.dsk [fichiers...]    # disquette de données (B: à D:)
 
+Les fichiers texte (`.ASM`, `.INC`, `.LOG`, `.GRX`, `.TXT`, `.BAT`, `.CFG`, `.DOC`, `.SUB`,
+`.PRN`, `.LST`) sont mis en fins de ligne CR LF, celles de CP/M, par `put` et `new` (donc aussi
+par `build.sh`) : un fichier écrit sur le Mac, en LF seul, s'afficherait sinon en escalier
+dans EDIT et TYPE. Les autres types sont copiés tels quels.
+
 Autres fichiers dans `tools/` :
 - `gen_font.py` : police 6×8 originale ;
 - `gen_tables.py` : tables écran et clavier ;
