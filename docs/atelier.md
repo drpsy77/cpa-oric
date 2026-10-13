@@ -172,6 +172,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   | `\x1c` puis une lettre | CTRL + lettre (`\x1cC` = ^C) |
   | `\x06` | bouton RESET (NMI) |
   | `\x07` | change la disquette du lecteur A: (voir `DSKSWAP`) |
+  | `\x0e` | la touche suivante reste enfoncée 1 s (50 trames) au lieu de 4 : répétition, `INKEY` des jeux |
   | `\|` | pause de 3 s dans la frappe |
 
   Majuscules et `$ : * # " > < ( )` sont tapés avec SHIFT automatiquement. L'Oric démarre en

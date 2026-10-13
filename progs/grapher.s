@@ -111,11 +111,15 @@ kin     = $4E
 kst     = $4F
 osa     = $50           ; instruction à écrire (2 octets)
 kanim   = $52           ; 1 : ANIM traduit (NOM.ASM inclut ANIM.INC)
+ihk     = $53           ; INKEY : code de la dernière touche lue
+ihi     = $54           ;   et sa place dans la matrice (KB_HELD)
 
         *= $0500
 
         tsx
         stx sav_sp
+        lda #0
+        sta ihk
         lda SYS_TICKS           ; graine du hasard
         sta rnd
         lda SYS_TICKS+1
@@ -1182,13 +1186,28 @@ fs_lim  jmp e_lim
 f_inkey lda pkey                ; touche gardée par le test d'ESC
         ldx #0
         stx pkey
-        cmp #0
-        bne ik
-        jsr B_CONST
-        beq ik
+ikv     sta ev                  ; puis le tampon, vidé (pas de retard
+        jsr B_CONST             ; dû à la répétition) ; ESC arrête
+        beq ike
         jsr h_key
-ik      sta ev
-        lda #0
+        cmp #27
+        bne ikv
+        lda #<m_esc
+        ldy #>m_esc
+        jmp stop_msg
+ike     lda KB_HELD
+        ldx ev
+        beq ikh
+        sta ihi                 ; touche neuve : on retient sa place
+        stx ihk
+        bne ik
+ikh     cmp #$FF                ; rien de neuf : la même touche encore
+        beq ik                  ; enfoncée ? (sans délai de répétition)
+        cmp ihi
+        bne ik
+        ldx ihk
+        stx ev
+ik      lda #0
         sta ev+1
         rts
 arg1    jsr x_open

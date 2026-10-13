@@ -29,6 +29,11 @@ CON_CURVIS  = $0212     ; 1 = curseur inversé à l'écran en ce moment
 CON_CUREN   = $0213     ; 1 = curseur clignotant actif
 CON_BLINK   = $0214     ; compteur de clignotement
 
+KB_HELD     = $0217     ; touche enfoncée en ce moment, lue à 50 Hz par l'IRQ :
+                        ;   index dans la matrice (ligne * 8 + colonne) ou $FF ;
+                        ;   une seule touche à la fois, sans SHIFT/CTRL/FUNCT
+                        ;   (jeux : pas de délai de répétition)
+
 SCREEN      = $BB80
 SCR_PROG    = $020E     ; 1 = le programme a l'écran texte entier (LORES) : la
                         ;   console est muette (ni menus, ni voyants, FUNCT et

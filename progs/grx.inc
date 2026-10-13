@@ -9,7 +9,7 @@
 ;  Une boucle a 4 octets Bn : compte (REPEAT), ou arrivée et pas (FOR).
 ;  Les textes (GTEXT, ECHO) et les noms d'images (GLOAD, GSAVE) suivent
 ;  l'appel dans le code (g_str les y prend).
-;  Page zéro : $10-$25. ESC est testé à chaque tour de boucle (NEXT) et
+;  Page zéro : $10-$27. ESC est testé à chaque tour de boucle (NEXT) et
 ;  par WAIT.
 ; =====================================================================
 
@@ -27,6 +27,8 @@ g_t     = $20           ; adresse du texte suivant l'appel (2 octets)
 g_ip    = $22           ; (2 octets)
 g_lx    = $24
 g_fl    = $25
+g_hk    = $26           ; INKEY : code de la dernière touche lue
+g_hi    = $27           ;   et sa place dans la matrice (KB_HELD)
 
 g_init
 .(
@@ -42,6 +44,7 @@ g_init
         lda #0
         sta g_vsp
         sta g_pk
+        sta g_hk
         ldx #51
 z       sta g_vars,x
         dex
@@ -435,19 +438,36 @@ zero    lda #0
         rts
 .)
 
-; g_inkey : touche tapée (0 si aucune), sans attendre
+; g_inkey : touche (0 si aucune), sans attendre et sans délai de
+;   répétition : une touche tapée depuis le dernier INKEY (le tampon est
+;   vidé, ESC arrête), sinon celle qui est encore enfoncée (KB_HELD)
 g_inkey
 .(
         lda g_pk
         ldx #0
         stx g_pk
-        cmp #0
-        bne r
+v       sta g_ev
         jsr B_CONST
-        beq r
+        beq e
         jsr h_key
-r       sta g_ev
-        lda #0
+        cmp #27
+        bne v
+        lda #<g_m_esc
+        ldy #>g_m_esc
+        jmp g_stop
+e       lda KB_HELD
+        ldx g_ev
+        beq h
+        sta g_hi                ; touche neuve : on retient sa place
+        stx g_hk
+        bne r
+h       cmp #$FF                ; rien de neuf : la même touche
+        beq r                   ; encore enfoncée ?
+        cmp g_hi
+        bne r
+        ldx g_hk
+        stx g_ev
+r       lda #0
         sta g_ev+1
         rts
 .)

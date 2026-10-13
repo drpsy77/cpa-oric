@@ -45,7 +45,7 @@ CARECRAN) et sa tokenisation feront l'objet de lots séparés.
 
   | Élément | Effet |
   |---|---|
-  | `INKEY` | fonction : code de la touche tapée, 0 si aucune ; n'attend pas (inchangé) |
+  | `INKEY` | fonction : code de la touche, 0 si aucune ; n'attend pas ; sans délai de répétition (octobre 2026) : touche tapée depuis le dernier `INKEY` (tampon vidé), sinon celle qui est encore enfoncée (`KB_HELD`, `$0217`, lu à 50 Hz par l'IRQ) |
   | `GET V` | **nouveau** : attend une touche et range son code dans la variable V |
   | `WAIT` | attend une touche, sans la garder (inchangé) : `GET` sans variable |
   | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier (inchangé) : cadence d'une animation ou d'un jeu |
