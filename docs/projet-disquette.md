@@ -1092,8 +1092,14 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    (signature en `$03B0`) ; écriture sur la clé pendant que `cpa.dsk`, sur la même clé, est
    monté comme lecteur Microdisc ; interruptions de CP/A pendant `MIA_SPIN` ; les drapeaux
    d'ouverture ; le lecteur par défaut (sans `1:`) avec et sans hub ; la vitesse.
-   Jokers dans EXPORT : faits (octobre 2026, voir « Choix déjà faits »). Suites possibles : conversion CR LF -> LF à l'EXPORT si le Mac
-   la demande, liste des appareils du LOCI (`opendir("")`).
+   Jokers dans EXPORT : faits (octobre 2026, voir « Choix déjà faits »). Suite possible : liste des appareils du LOCI (`opendir("")`). EXPORT
+   ne changera pas (Pierre, 13 octobre 2026 : pas de conversion CR LF -> LF).
+   **Fins de ligne des fichiers du Mac** (Pierre, même jour : ils s'affichaient en escalier dans
+   EDIT et TYPE) : `tools/mkdisk.py` met les fichiers texte en CR LF à l'écriture (`new`, `put`,
+   donc `build.sh`) ; types `ASM INC LOG GRX TXT BAT CFG DOC SUB PRN LST`, CR LF déjà là gardés,
+   binaires inchangés. Corrigés ainsi sur les disquettes : `ANIMS.GRX`, `DEMO.BAT`,
+   `ECRAN.GRX`, `FLECHES.GRX`, `MOTIFS.GRX`, les `.INC` et les `.ASM` d'exemple. Essayé dans
+   Oricutron : TYPE FLECHES.GRX, ASM HELLO, GRAPHER FLECHES /A puis ASM (identique à xa).
 
 7. **Images : dessin GRAPHER ou copie d'écran ?** (backlog, octobre 2026 ; rien à coder avant
    les essais de Pierre sur le vrai Oric). Pierre compare deux façons de garder un écran : un
