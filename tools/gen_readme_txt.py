@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """Génère l'aide de CP/A à partir d'une seule liste :
-  files/readme.txt   aide-mémoire complet (README.TXT sur la disquette)
-  progs/help_tab.s   textes de HELP.COM, par rubrique (HELP, HELP EDIT...)
+  files/readme.txt   README.TXT de la disquette : notation et renvoi à HELP
+                     (l'aide-mémoire complet est dans HELP.COM, pour ne pas
+                     occuper 10 blocs de 2 Ko une seconde fois)
+  progs/help_tab.s   textes de HELP.COM, par rubrique (HELP, HELP EDIT...),
+                     compressés en LZSS (tools/lzhir.py, format de
+                     archives/lzss-osdk) ; décodés par help.s
 Lisible sur l'écran de l'Oric (37 colonnes au plus, sans accents).
 Deux colonnes : commande et paramètres | libellé court. Ce qui dépasse
 passe à la ligne suivante, décalé."""
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lzhir
 
 W = 37          # largeur maximale (38 colonnes utiles, la 38e ferait sauter une ligne)
 LW = 14         # largeur de la colonne de gauche
@@ -341,35 +348,52 @@ def render(title, rows):
 
 for l in lines:
     assert len(l) <= W, l
-dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "files", "readme.txt")
-open(dest, "wb").write(("\r\n".join(lines) + "\r\n").encode("ascii"))
-print(len(lines), "lignes")
-
-# --- HELP.COM : une chaîne par rubrique -------------------------------
-def asm_str(lines):
-    res = []
-    for l in lines:
-        esc = l.replace('"', '",34,"')
-        res.append('        .asc "%s",13,10' % esc)
-    res.append('        .byt 0')
-    return "\n".join(res).replace('.asc "",34,"', '.asc 34,"').replace(',""', '')
 
 byname = {t.split()[0].replace(":", ""): (t, r) for t, r in SECTIONS}
 topics = ["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG", "MEMOIRE", "USB", "GRAPHER", "CMDER"]
-default = render(*byname["COMMANDES"]) + ["", "Autres sujets : HELP suivi de",
-          "  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]), "  " + " ".join(topics[8:]),
+sujets = ["  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]), "  " + " ".join(topics[8:]),
           "  (4 lettres suffisent)"]
+
+# --- README.TXT : notation et renvoi à HELP ---------------------------
+readme = render(*SECTIONS[0]) + ["", "Aide : HELP (commandes internes)", "et HELP suivi d'un sujet :"] + sujets
+for l in readme:
+    assert len(l) <= W, l
+dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "files", "readme.txt")
+open(dest, "wb").write(("\r\n".join(readme) + "\r\n").encode("ascii"))
+print(len(readme), "lignes dans README.TXT")
+
+# --- HELP.COM : une chaîne par rubrique, le tout compressé -------------
+# Les rubriques sont mises bout à bout (chacune : lignes + CR LF, puis 0)
+# et compressées d'un seul tenant : une rubrique profite des mots des
+# précédentes. help.s décode depuis le début jusqu'à la fin de la rubrique
+# demandée (help_ends) dans le tampon qui suit le programme.
+def text(lines):
+    return "".join(l + "\r\n" for l in lines).encode("ascii") + b"\0"
+
+default = render(*byname["COMMANDES"]) + ["", "Autres sujets : HELP suivi de"] + sujets
+parts = [text(default)] + [text(render(*byname[t])) for t in topics]
+data = b"".join(parts)
+comp = lzhir.compress(data)
+ends, pos = [], 0
+for p in parts:
+    pos += len(p)
+    ends.append(pos)
+
 out = ["; Généré par tools/gen_readme_txt.py — ne pas éditer à la main",
+       "; %d octets de texte, %d compressés" % (len(data), len(comp)),
        "help_keys"]
 for t in topics:
     out.append('        .asc "%s",0' % t[:4])     # 4 premières lettres suffisent
 out.append("        .byt 0")
-out.append("help_ptrs")
-out.append("        .word h_default," + ",".join("h_%d" % i for i in range(len(topics))))
-out.append("h_default")
-out.append(asm_str(default))
-for i, t in enumerate(topics):
-    out.append("h_%d" % i)
-    out.append(asm_str(render(*byname[t])))
+out.append("; début de chaque rubrique dans le texte décodé (h_default, puis les sujets)")
+out.append("help_offs")
+out.append("        .word " + ",".join(str(e) for e in [0] + ends[:-1]))
+out.append("; fin de chaque rubrique (0 final compris) : où le décodage peut s'arrêter")
+out.append("help_ends")
+out.append("        .word " + ",".join(str(e) for e in ends))
+out.append("hz_data")
+for i in range(0, len(comp), 16):
+    out.append("        .byt " + ",".join("$%02X" % b for b in comp[i:i + 16]))
 dest2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "progs", "help_tab.s")
 open(dest2, "w").write("\n".join(out) + "\n")
+print("HELP : %d octets de texte -> %d compressés" % (len(data), len(comp)))

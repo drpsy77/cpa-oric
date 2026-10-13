@@ -31,6 +31,7 @@ montre si elles ont changé.
 
     tools/smoke_test.sh                                  # chaîne complète (avec Oricutron)
     tools/test_asm.sh                                    # ASM.COM == xa, octet par octet
+    tools/test_inc.sh                                    # .INC allégés == originaux
     python3 tools/test_fp.py                             # décimaux de LOGO
     tools/test_logo.sh                                   # LOGO (long : ~20 min sur le Pi)
     DSK=build/cpa.dsk ORIC_KEYS_AT=400 tools/run_test.sh $'DIR\n' 900 /tmp/t

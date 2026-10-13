@@ -153,8 +153,11 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   provoque un retour à la ligne automatique en plus). Messages du CCP en anglais court, aide et
   programmes en français.
 - Commentaires et documentation en français.
-- Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT) et
-  `progs/help_tab.s` (HELP.COM) à partir d'une seule liste.
+- Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT : notation et
+  renvoi à HELP) et `progs/help_tab.s` (HELP.COM, textes compressés en LZSS, décodés par
+  `help.s`) à partir d'une seule liste.
+- Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC) : copies sans
+  commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
 - Git : un commit par livraison, message en français, testé avant. Le dépôt est publié sur
   GitHub (https://github.com/drpsy77/cpa-oric).
 

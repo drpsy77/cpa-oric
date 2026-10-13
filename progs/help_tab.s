@@ -1,4 +1,5 @@
 ; Généré par tools/gen_readme_txt.py — ne pas éditer à la main
+; 18675 octets de texte, 8763 compressés
 help_keys
         .asc "TOUC",0
         .asc "PROG",0
@@ -12,620 +13,558 @@ help_keys
         .asc "GRAP",0
         .asc "CMDE",0
         .byt 0
-help_ptrs
-        .word h_default,h_0,h_1,h_2,h_3,h_4,h_5,h_6,h_7,h_8,h_9,h_10
-h_default
-        .asc "COMMANDES",13,10
-        .asc "---------",13,10
-        .asc "HELP [sujet]  | aide (HELP.COM)",13,10
-        .asc "VER           | version",13,10
-        .asc "CLS           | efface l'ecran",13,10
-        .asc "PAPER n / INK n",13,10
-        .asc "              | couleur du fond / de",13,10
-        .asc "              |   l'encre, 0-7 (0",13,10
-        .asc "              |   noir 1 rouge 2 vert",13,10
-        .asc "              |   3 jaune 4 bleu 5",13,10
-        .asc "              |   magenta 6 cyan 7",13,10
-        .asc "              |   blanc)",13,10
-        .asc "PAGE ON/OFF   | pause en fin d'ecran,",13,10
-        .asc "              |   ou non (aussi menu",13,10
-        .asc "              |   Ecran, Pagination)",13,10
-        .asc "B:            | lecteur courant (A: a",13,10
-        .asc "              |   D:) ; aussi menu",13,10
-        .asc "              |   Systeme, Lecteur",13,10
-        .asc "              |   suivant ; un .COM",13,10
-        .asc "              |   ou .BAT tape sans",13,10
-        .asc "              |   lecteur est cherche",13,10
-        .asc "              |   sur le lecteur",13,10
-        .asc "              |   courant (dans un",13,10
-        .asc "              |   script : celui du",13,10
-        .asc "              |   script), puis A:,",13,10
-        .asc "              |   puis B:, C:, D:",13,10
-        .asc "              |   deja lus depuis",13,10
-        .asc "              |   l'allumage (DIR",13,10
-        .asc "              |   B:...) ; LOCI :",13,10
-        .asc "              |   tous ceux qui ont",13,10
-        .asc "              |   une image",13,10
-        .asc "DIR [afn]     | liste des fichiers",13,10
-        .asc "DIRS [afn]    | idem, fichiers SYS",13,10
-        .asc "              |   compris",13,10
-        .asc "TYPE fic      | affiche un texte",13,10
-        .asc "ERA afn [/Q]  | efface, apres",13,10
-        .asc "              |   confirmation (/Q :",13,10
-        .asc "              |   sans question)",13,10
-        .asc "REN nouv=anc  | renomme",13,10
-        .asc "SAVE n fic    | sauve n pages de 0500",13,10
-        .asc "PUT fic cmd [param]",13,10
-        .asc "              | lance cmd, copie sa",13,10
-        .asc "              |   sortie dans fic",13,10
-        .asc "DO fic [p1..p9]",13,10
-        .asc "              | lance FIC.BAT ($1..$9",13,10
-        .asc "              |   = parametres, ESC",13,10
-        .asc "              |   arrete)",13,10
-        .asc "ECHO texte    | affiche le texte",13,10
-        .asc "PAUSE [texte] | attend une touche",13,10
-        .asc "SPLIT         | image + 10 lignes",13,10
-        .asc "TEXT          | texte seul",13,10
-        .asc "GCLS          | efface l'image",13,10
-        .asc "GSAVE fic     | sauve l'image (.IMG)",13,10
-        .asc "GLOAD fic     | charge l'image",13,10
-        .asc "NOM [param]   | lance NOM.COM, sinon",13,10
-        .asc "              |   NOM.BAT",13,10
-        .asc "(dessin)      | PLOT, LINE... : dans",13,10
-        .asc "              |   GRAPHER (HELP",13,10
-        .asc "              |   GRAPHER)",13,10
-        .asc "",13,10
-        .asc "Autres sujets : HELP suivi de",13,10
-        .asc "  TOUCHES PROGRAMMES EDIT HEX",13,10
-        .asc "  LOGO ASM DEBUG MEMOIRE",13,10
-        .asc "  USB GRAPHER CMDER",13,10
-        .asc "  (4 lettres suffisent)",13,10
-        .byt 0
-h_0
-        .asc "TOUCHES",13,10
-        .asc "-------",13,10
-        .asc "FUNCT         | menus deroulants",13,10
-        .asc "CTRL-T        | majuscules oui/non",13,10
-        .asc "              |   (voyant A ou a au",13,10
-        .asc "              |   bout de la barre)",13,10
-        .asc "<- ->         | deplace dans la ligne",13,10
-        .asc "              |   (on tape en",13,10
-        .asc "              |   insertion)",13,10
-        .asc "haut bas      | lignes deja tapees",13,10
-        .asc "              |   (historique)",13,10
-        .asc "ESC           | complete un nom de",13,10
-        .asc "              |   fichier (en debut",13,10
-        .asc "              |   de ligne : une",13,10
-        .asc "              |   commande) ; 2 fois",13,10
-        .asc "              |   : les noms",13,10
-        .asc "              |   possibles",13,10
-        .asc "DEL ^D        | efface a gauche /",13,10
-        .asc "              |   sous",13,10
-        .asc "^A ^E         | debut / fin de ligne",13,10
-        .asc "CTRL-X        | efface la ligne",13,10
-        .asc "CTRL-P        | imprimante oui/non",13,10
-        .asc "              |   (tout ce qui",13,10
-        .asc "              |   s'affiche ; voyant",13,10
-        .asc "              |   P ; aussi menu",13,10
-        .asc "              |   Systeme)",13,10
-        .asc "CTRL-C        | redemarrage a chaud",13,10
-        .asc "RESET         | retour au prompt",13,10
-        .byt 0
-h_1
-        .asc "PROGRAMMES",13,10
-        .asc "----------",13,10
-        .asc "DIRS *.COM    | tous, caches (SYS)",13,10
-        .asc "              |   compris",13,10
-        .asc "EDIT [fic]    | editeur de texte",13,10
-        .asc "HEX fic       | editeur hexadecimal",13,10
-        .asc "GRAPHER nom [p]",13,10
-        .asc "              | execute NOM.GRX :",13,10
-        .asc "              |   dessin, HIRES",13,10
-        .asc "              |   240x200 (HELP",13,10
-        .asc "              |   GRAPHER)",13,10
-        .asc "VOIR nom      | affiche NOM.HIR",13,10
-        .asc "              |   (plein ecran), .HIZ",13,10
-        .asc "              |   (compressee) ou",13,10
-        .asc "              |   .IMG, une touche",13,10
-        .asc "VOIR nom.ANI [n]",13,10
-        .asc "              | animation jouee n",13,10
-        .asc "              |   fois (0 : jusqu'a",13,10
-        .asc "              |   une touche) ;",13,10
-        .asc "              |   fleches G D : ligne",13,10
-        .asc "              |   de dechirure",13,10
-        .asc "VSYNC         | cale le top 50 Hz sur",13,10
-        .asc "              |   l'ecran (texte du",13,10
-        .asc "              |   milieu en entier),",13,10
-        .asc "              |   jusqu'a l'arret",13,10
-        .asc "CMDER [d:][afn]",13,10
-        .asc "              | gestionnaire de",13,10
-        .asc "              |   fichiers plein",13,10
-        .asc "              |   ecran : trier,",13,10
-        .asc "              |   filtrer, marquer,",13,10
-        .asc "              |   voir, copier...",13,10
-        .asc "              |   (HELP CMDER)",13,10
-        .asc "SET afn [opt] | attributs : RO RW SYS",13,10
-        .asc "              |   DIR (sans opt : les",13,10
-        .asc "              |   affiche)",13,10
-        .asc "LOGO [fic]    | Logo et sa tortue",13,10
-        .asc "              |   (charge fic.LOG)",13,10
-        .asc "ASM nom       | NOM.ASM -> NOM.COM et",13,10
-        .asc "              |   NOM.SYM",13,10
-        .asc "DEBUG nom [param]",13,10
-        .asc "              | debogueur",13,10
-        .asc "COPY src [dst]",13,10
-        .asc "              | copie, jokers admis :",13,10
-        .asc "              |   COPY *.COM B:, COPY",13,10
-        .asc "              |   *.TXT *.BAK, COPY",13,10
-        .asc "              |   B:*.LOG",13,10
-        .asc "FORMAT X: [/Q]",13,10
-        .asc "              | formate X: (A: : un",13,10
-        .asc "              |   seul lecteur) ; /Q",13,10
-        .asc "              |   : vide le",13,10
-        .asc "              |   repertoire",13,10
-        .asc "DISKCOPY s: d: [opt]",13,10
-        .asc "              | copie la disquette s:",13,10
-        .asc "              |   sur d: (A: A: : un",13,10
-        .asc "              |   seul lecteur) ; /T",13,10
-        .asc "              |   tout, /V relecture,",13,10
-        .asc "              |   /S systeme",13,10
-        .asc "              |   seulement (SYSGEN)",13,10
-        .asc "STAT [d:][afn]",13,10
-        .asc "              | taille : enreg.,",13,10
-        .asc "              |   blocs de 2 Ko,",13,10
-        .asc "              |   octets ; At : R",13,10
-        .asc "              |   protege, S systeme",13,10
-        .asc "              |   ; seul : place",13,10
-        .asc "              |   libre",13,10
-        .asc "XDO nom [param]",13,10
-        .asc "              | script appele par un",13,10
-        .asc "              |   script (lance par",13,10
-        .asc "              |   le CCP)",13,10
-        .asc "EXPORT fic [nom]",13,10
-        .asc "              | copie sur la cle USB",13,10
-        .asc "              |   du LOCI (HELP USB)",13,10
-        .asc "IMPORT nom [fic]",13,10
-        .asc "              | copie depuis la cle",13,10
-        .asc "              |   USB du LOCI",13,10
-        .asc "USBDIR [chemin]",13,10
-        .asc "              | fichiers de la cle",13,10
-        .asc "              |   USB du LOCI",13,10
-        .asc "MEM           | carte de la memoire",13,10
-        .asc "POKE adr bb.. | ecrit en memoire",13,10
-        .asc "              |   (code a lancer :",13,10
-        .asc "              |   0600 et +)",13,10
-        .asc "GO adr [param]",13,10
-        .asc "              | lance le code (RTS =",13,10
-        .asc "              |   retour)",13,10
-        .asc "GTEST         | demo graphique",13,10
-        .asc "HELLO [param] | exemple de .COM",13,10
-        .byt 0
-h_2
-        .asc "EDIT",13,10
-        .asc "----",13,10
-        .asc "fleches       | deplacement",13,10
-        .asc "^A ^E         | debut / fin de ligne",13,10
-        .asc "^R ^C         | page prec. / suiv.",13,10
-        .asc "^Q ^Z         | debut / fin du texte",13,10
-        .asc "DEL ^D        | efface avant / sous",13,10
-        .asc "^Y            | efface le paragraphe",13,10
-        .asc "^O            | insere / remplace",13,10
-        .asc "^F ^G         | cherche / suivant",13,10
-        .asc "^S            | enregistre",13,10
-        .asc "^L            | insere un fichier au",13,10
-        .asc "              |   curseur",13,10
-        .asc "^P            | imprime le texte, mis",13,10
-        .asc "              |   en page (ESC",13,10
-        .asc "              |   arrete)",13,10
-        .asc "^N            | paragraphe trop long",13,10
-        .asc "              |   suivant",13,10
-        .asc "C 127!        | (ligne d'etat)",13,10
-        .asc "              |   position dans le",13,10
-        .asc "              |   paragraphe ; ! :",13,10
-        .asc "              |   plus long que le",13,10
-        .asc "              |   maxi",13,10
-        .asc "EDIT.CFG      | par fichier : nom",13,10
-        .asc "              |   maxi [MOTS|CAR]",13,10
-        .asc "              |   [largeur impr.],",13,10
-        .asc "              |   ex. *.LOG 126 CAR",13,10
-        .asc "              |   80",13,10
-        .asc "FUNCT         | menus Fichier (dont",13,10
-        .asc "              |   Inserer, Imprimer),",13,10
-        .asc "              |   Edition, Chercher,",13,10
-        .asc "              |   Options",13,10
-        .asc "Retour        | (lance par EDITE de",13,10
-        .asc "              |   LOGO) enregistre et",13,10
-        .asc "              |   revient",13,10
-        .byt 0
-h_3
-        .asc "HEX",13,10
-        .asc "---",13,10
-        .asc "fleches RET   | deplacement",13,10
-        .asc "^R ^C         | page prec. / suiv.",13,10
-        .asc "^Q ^Z         | debut / fin",13,10
-        .asc "^A            | aller a l'adresse",13,10
-        .asc "^F ^G         | cherche texte ou",13,10
-        .asc "              |   #hexa / suivant",13,10
-        .asc "^O            | mode HEX / ASCII",13,10
-        .asc "^S            | enregistre",13,10
-        .asc "ESC           | quitte",13,10
-        .byt 0
-h_4
-        .asc "LOGO",13,10
-        .asc "----",13,10
-        .asc "AV n  RE n    | avance / recule (n",13,10
-        .asc "              |   decimal admis)",13,10
-        .asc "DR n  GA n    | droite / gauche",13,10
-        .asc "              |   (degres, 0.5 admis)",13,10
-        .asc "LC  BC        | leve / baisse stylo",13,10
-        .asc "CT  MT        | cache / montre",13,10
-        .asc "VE  ORIGINE   | vide ecran / centre",13,10
-        .asc "POINT x y     | un point (coordonnees",13,10
-        .asc "              |   de la tortue, qui",13,10
-        .asc "              |   ne bouge pas)",13,10
-        .asc "TRAIT x y x y | un trait ; RECTANGLE,",13,10
-        .asc "              |   PAVE (plein) :",13,10
-        .asc "              |   coins opposes",13,10
-        .asc "CERCLE r      | autour de la tortue",13,10
-        .asc "              |   (r 0-127)",13,10
-        .asc "ETIQUETTE x   | ecrit x dans l'image",13,10
-        .asc "              |   a la tortue",13,10
-        .asc "FIXECOULEUR v | encre 0-7 ou papier",13,10
-        .asc "              |   16-23 de l'image",13,10
-        .asc "ALLUME? x y   | 1 si le point est",13,10
-        .asc "              |   allume",13,10
-        .asc "ECRANTEXTE    | tout en texte",13,10
-        .asc "ECRANMIXTE    | retour a l'image",13,10
-        .asc "VT            | efface le texte",13,10
-        .asc "              |   (VIDETEXTE)",13,10
-        .asc "TAPE x        | ecrit, sans aller a",13,10
-        .asc "              |   la ligne",13,10
-        .asc "FIXECURSEUR c l",13,10
-        .asc "              | curseur colonne 0-39,",13,10
-        .asc "              |   ligne 0-27 (ecran",13,10
-        .asc "              |   entier)",13,10
-        .asc "FIXECARECRAN c l n",13,10
-        .asc "              | code n dans la case",13,10
-        .asc "              |   (attributs 0-31)",13,10
-        .asc "REPETE n [..] | repete la liste",13,10
-        .asc "SI c [..] [..]",13,10
-        .asc "              | condition",13,10
-        .asc "POUR NOM :A ... FIN",13,10
-        .asc "              | definit une procedure",13,10
-        .asc "RENDS x       | la procedure rend x",13,10
-        .asc "EC x          | ecrit",13,10
-        .asc "SAUVE ",34,"N      | procedures -> N.LOG",13,10
-        .asc "CHARGE ",34,"N     | charge N.LOG",13,10
-        .asc "EDITE ",34,"N      | N.LOG dans EDIT, puis",13,10
-        .asc "              |   Retour",13,10
-        .asc "SAUVEIMAGE ",34,"N | dessin -> N.IMG",13,10
-        .asc "CHARGEIMAGE ",34,"N",13,10
-        .asc "              | charge N.IMG",13,10
-        .asc "3.14  2E-7    | decimaux (9 chiffres)",13,10
-        .asc "              |   ; 7 / 2 = 3.5",13,10
-        .asc "ENT x  ARRONDI x",13,10
-        .asc "              | partie entiere /",13,10
-        .asc "              |   entier proche",13,10
-        .asc "RACINE x      | racine carree",13,10
-        .asc "SIN COS ARCTAN",13,10
-        .asc "              | en degres (SIN 30 =",13,10
-        .asc "              |   0.5)",13,10
-        .asc "LN x  EXP x   | logarithme /",13,10
-        .asc "              |   exponentielle",13,10
-        .asc "ABS x         | valeur absolue",13,10
-        .asc "QUOTIENT a b  | division entiere ;",13,10
-        .asc "              |   RESTE a b : reste",13,10
-        .asc 34,"MOT  [A B]   | mot, liste (DONNE ",34,"L",13,10
-        .asc "              |   [A B])",13,10
-        .asc "PR SP x       | premier / sauf le",13,10
-        .asc "              |   premier",13,10
-        .asc "DER SD x      | dernier / sauf le",13,10
-        .asc "              |   dernier",13,10
-        .asc "ITEM n x      | n-ieme element",13,10
-        .asc "COMPTE x      | nombre d'elements",13,10
-        .asc "MOT a b       | colle deux mots",13,10
-        .asc "PH a b  LISTE a b",13,10
-        .asc "              | phrase / liste de",13,10
-        .asc "              |   deux",13,10
-        .asc "VIDE? MOT? LISTE?",13,10
-        .asc "              | 1 ou 0 ; aussi",13,10
-        .asc "              |   NOMBRE? MEMBRE? a b",13,10
-        .asc "EXEC [..]     | execute une liste",13,10
-        .asc "LISLISTE      | lit une ligne ->",13,10
-        .asc "              |   liste (LL)",13,10
-        .asc "LISMOT        | lit une ligne -> mot",13,10
-        .asc "LISCAR        | attend une touche ->",13,10
-        .asc "              |   caractere",13,10
-        .asc "ASCII x  CAR n",13,10
-        .asc "              | code d'un caractere /",13,10
-        .asc "              |   caractere",13,10
-        .asc "TOUCHE?       | 1 si une touche",13,10
-        .asc "              |   attend, 0 sinon",13,10
-        .asc "TOUCHE        | touche enfoncee, sans",13,10
-        .asc "              |   delai (jeux) ; mot",13,10
-        .asc "              |   vide si aucune",13,10
-        .asc "CURSEUR       | [colonne ligne] du",13,10
-        .asc "              |   curseur",13,10
-        .asc "CARECRAN c l  | code de la case",13,10
-        .asc "SON v n vol d | note n (37 = do, 0 =",13,10
-        .asc "              |   rien) sur la voix v",13,10
-        .asc "              |   (0-2), volume 0-15",13,10
-        .asc "              |   (16 = enveloppe),",13,10
-        .asc "              |   d/50 s (0 : sans",13,10
-        .asc "              |   fin)",13,10
-        .asc "SONF v p vol d",13,10
-        .asc "              | son de periode p",13,10
-        .asc "              |   (0-4095)",13,10
-        .asc "BRUITV v p vol d",13,10
-        .asc "              | bruit de periode p",13,10
-        .asc "              |   (0-31)",13,10
-        .asc "ENVELOPPE f p | forme 0-15, periode",13,10
-        .asc "              |   0-65535",13,10
-        .asc "MELANGE v s b | son et bruit de la",13,10
-        .asc "              |   voix (1 / 0)",13,10
-        .asc "ENSEMBLE [..] | les voix de la liste",13,10
-        .asc "              |   partent ensemble",13,10
-        .asc "ATTENDSSON v  | attend la fin (255 :",13,10
-        .asc "              |   toutes)",13,10
-        .asc "JOUE? v       | 1 si la voix joue",13,10
-        .asc "              |   encore",13,10
-        .asc "SILENCE       | coupe le son",13,10
-        .asc "AIDE          | liste complete",13,10
-        .asc "QUITTE        | retour a CP/A",13,10
-        .byt 0
-h_5
-        .asc "ASM : SYNTAXE",13,10
-        .asc "-------------",13,10
-        .asc "etiq          | en colonne 1",13,10
-        .asc "NOM = expr    | constante",13,10
-        .asc "*= adr        | adresse (0500)",13,10
-        .asc ".byt .asc     | octets, ",34,"chaines",34,13,10
-        .asc ".word         | mots 16 bits",13,10
-        .asc ".dsb n[,v]    | n octets",13,10
-        .asc ".(  .)        | bloc, etiquettes",13,10
-        .asc "              |   locales",13,10
-        .asc "#include ",34,"f",34,"  | inclusion",13,10
-        .asc "$ % ",34,"c",34," *     | hexa, binaire, car.,",13,10
-        .asc "              |   ici",13,10
-        .asc "< >           | octet bas / haut",13,10
-        .byt 0
-h_6
-        .asc "DEBUG",13,10
-        .asc "-----",13,10
-        .asc "R [reg=v]     | registres (A X Y S PC",13,10
-        .asc "              |   P, N V D I Z C)",13,10
-        .asc "L [adr]       | desassemble",13,10
-        .asc "D [adr]       | memoire",13,10
-        .asc "M adr bb..    | modifie la memoire",13,10
-        .asc "G [adr]       | execute",13,10
-        .asc "T [n]         | pas a pas",13,10
-        .asc "P [n]         | pas a pas, JSR d'un",13,10
-        .asc "              |   coup",13,10
-        .asc "B [adr]       | pose / liste les",13,10
-        .asc "              |   points d'arret",13,10
-        .asc "B- [adr]      | enleve (tous)",13,10
-        .asc "? expr        | valeur et symbole",13,10
-        .asc "H  Q          | aide / quitte",13,10
-        .asc "adr           | hexa, #decimal, nom+n",13,10
-        .byt 0
-h_7
-        .asc "MEMOIRE",13,10
-        .asc "-------",13,10
-        .asc "0000-00DF     | page zero libre",13,10
-        .asc "0200 / 0203   | WBOOT / BDOS",13,10
-        .asc "020C          | haut de la TPA (mot)",13,10
-        .asc "0400-04FF     | page de base, DMA",13,10
-        .asc "              |   0480",13,10
-        .asc "0500-B3FF     | programmes (TPA)",13,10
-        .asc "A000-B3FF     | image en mode SPLIT",13,10
-        .asc "              |   (TPA jusqu'a 9FFF)",13,10
-        .asc "B400-BB7F     | jeux de caracteres",13,10
-        .asc "BB80-BFDF     | ecran texte",13,10
-        .asc "C000-FFFF     | CP/A (RAM overlay)",13,10
-        .asc "DEBUG         | se place en 8400-9FFF",13,10
-        .asc "MEM           | cette carte, selon le",13,10
-        .asc "              |   mode",13,10
-        .byt 0
-h_8
-        .asc "USB : CLE DU LOCI",13,10
-        .asc "-----------------",13,10
-        .asc "EXPORT fic [nom]",13,10
-        .asc "              | fic -> cle (nom : par",13,10
-        .asc "              |   defaut fic,",13,10
-        .asc "              |   minuscules gardees)",13,10
-        .asc "EXPORT afn [dos]",13,10
-        .asc "              | jokers : chaque",13,10
-        .asc "              |   fichier sous son",13,10
-        .asc "              |   nom, dans le",13,10
-        .asc "              |   dossier dos",13,10
-        .asc "IMPORT nom [fic]",13,10
-        .asc "              | cle -> fic (par",13,10
-        .asc "              |   defaut : nom coupe",13,10
-        .asc "              |   a 8.3 ; B: seul :",13,10
-        .asc "              |   sur B:)",13,10
-        .asc "/T            | (IMPORT) texte : LF",13,10
-        .asc "              |   seul -> CR LF",13,10
-        .asc "USBDIR [chemin]",13,10
-        .asc "              | liste (taille, <REP>",13,10
-        .asc "              |   : dossier)",13,10
-        .asc "1:/DOCS/X.TXT | chemin sur la cle ;",13,10
-        .asc "              |   sans 1: : la",13,10
-        .asc "              |   premiere cle",13,10
-        .asc "0:X.TXT       | memoire interne du",13,10
-        .asc "              |   LOCI",13,10
-        .asc "^Z            | retires a l'EXPORT,",13,10
-        .asc "              |   ajoutes a l'IMPORT",13,10
-        .asc "X.DSK         | EXPORT refuse (image",13,10
-        .asc "              |   disque)",13,10
-        .byt 0
-h_9
-        .asc "GRAPHER : FICHIERS .GRX",13,10
-        .asc "-----------------------",13,10
-        .asc "GRAPHER nom [p]",13,10
-        .asc "              | execute NOM.GRX",13,10
-        .asc "              |   ($1..$9 = p, ESC",13,10
-        .asc "              |   arrete)",13,10
-        .asc "nombres       | entiers",13,10
-        .asc "              |   -32768..32767,",13,10
-        .asc "              |   variables A a Z",13,10
-        .asc "parametre     | expression sans",13,10
-        .asc "              |   espace : X+8",13,10
-        .asc "              |   RND(240) (X * 2)",13,10
-        .asc "operateurs    | - ; * / % ; + - ; =",13,10
-        .asc "              |   <> < <= > >= ; & |",13,10
-        .asc "fonctions     | RND(n) ABS(n)",13,10
-        .asc "              |   POINT(x,y) INKEY",13,10
-        .asc "              |   SCRN(col,lig)",13,10
-        .asc "V = expr      | affectation (LET V =",13,10
-        .asc "              |   expr)",13,10
-        .asc "REPEAT n      | ... NEXT",13,10
-        .asc "FOR V a b [p] | ... NEXT",13,10
-        .asc "WHILE expr    | ... NEXT",13,10
-        .asc "IF expr       | ... [ELSE ...] ENDIF",13,10
-        .asc "SUB NOM       | ... ENDSUB ; CALL NOM",13,10
-        .asc "              |   ; RETURN",13,10
-        .asc "PRINT expr    | affiche un nombre",13,10
-        .asc "              |   (pas en HIRES ;",13,10
-        .asc "              |   LORES : au curseur)",13,10
-        .asc "GNUM col y n  | nombre dans l'image",13,10
-        .asc "GRAPHER nom /A",13,10
-        .asc "              | traduit NOM.GRX en",13,10
-        .asc "              |   NOM.ASM ; puis ASM",13,10
-        .asc "              |   NOM -> NOM.COM",13,10
-        .asc "              |   (avec CPA.INC",13,10
-        .asc "              |   GRX.INC HIRES.INC,",13,10
-        .asc "              |   ANIM.INC si ANIM)",13,10
-        .asc "HIRES         | plein ecran 240 x",13,10
-        .asc "              |   200, efface",13,10
-        .asc "SPLIT         | 240 x 128, console",13,10
-        .asc "              |   dessous",13,10
-        .asc "TEXT          | retour au texte",13,10
-        .asc "              |   (console)",13,10
-        .asc "LORES         | ecran texte 40 x 28",13,10
-        .asc "              |   au programme, sans",13,10
-        .asc "              |   console ni menus",13,10
-        .asc "CLS           | LORES : attribut 16",13,10
-        .asc "              |   partout ; sinon la",13,10
-        .asc "              |   console",13,10
-        .asc "LOCATE col lig",13,10
-        .asc "              | curseur (col 0-39,",13,10
-        .asc "              |   lig 0-27)",13,10
-        .asc "CHAR col lig c",13,10
-        .asc "              | octet c dans la case",13,10
-        .asc "              |   (caractere ou",13,10
-        .asc "              |   attribut)",13,10
-        .asc "SPC n [x]     | n fois l'octet x",13,10
-        .asc "              |   (espace par defaut)",13,10
-        .asc "TAB n         | avance de n colonnes",13,10
-        .asc "              |   sans ecrire",13,10
-        .asc "ECHO ",34,"texte",34,"  | LORES : au curseur,",13,10
-        .asc "              |   tel quel ; ECHO",13,10
-        .asc "              |   seul : ligne",13,10
-        .asc "              |   suivante ; rien",13,10
-        .asc "              |   apres la colonne 39",13,10
-        .asc "GCLS          | efface l'image",13,10
-        .asc "PEN m         | 0 efface 1 trace 2",13,10
-        .asc "              |   inv.",13,10
-        .asc "PLOT x y      | point (x 0-239, y",13,10
-        .asc "              |   0-199)",13,10
-        .asc "LINE x1 y1 x2 y2",13,10
-        .asc "              | ligne",13,10
-        .asc "BOX x1 y1 x2 y2",13,10
-        .asc "              | rectangle (FBOX :",13,10
-        .asc "              |   plein)",13,10
-        .asc "CIRCLE x y r  | cercle",13,10
-        .asc "GTEXT col y texte",13,10
-        .asc "              | texte dans l'image",13,10
-        .asc "              |   (col 0-39)",13,10
-        .asc "ATTR col y1 y2 v",13,10
-        .asc "              | attribut : encre 0-7,",13,10
-        .asc "              |   papier 16-23",13,10
-        .asc "GLOAD fic     | .HIR ou .HIZ (HIRES),",13,10
-        .asc "              |   .IMG (SPLIT)",13,10
-        .asc "ANIM fic [n]  | animation .ANI en",13,10
-        .asc "              |   HIRES, n fois (0 :",13,10
-        .asc "              |   jusqu'a une touche)",13,10
-        .asc "GSAVE fic     | idem, selon le mode",13,10
-        .asc "WAIT          | attend une touche",13,10
-        .asc "GET V         | attend une touche,",13,10
-        .asc "              |   son code dans V",13,10
-        .asc "DELAY n       | attend n/50 s",13,10
-        .asc "ECHO texte    | affiche (pas en",13,10
-        .asc "              |   HIRES)",13,10
-        .asc "END           | fin ; HIRES et LORES",13,10
-        .asc "              |   : retour a la",13,10
-        .asc "              |   console (WAIT avant",13,10
-        .asc "              |   pour attendre)",13,10
-        .asc "; texte       | commentaire",13,10
-        .byt 0
-h_10
-        .asc "CMDER : FICHIERS PLEIN ECRAN",13,10
-        .asc "----------------------------",13,10
-        .asc "CMDER [d:][afn]",13,10
-        .asc "              | fichiers de d:,",13,10
-        .asc "              |   filtre afn (CMDER",13,10
-        .asc "              |   B:*.COM)",13,10
-        .asc "CMDER A: B:   | deux colonnes (A: A:",13,10
-        .asc "              |   refuse)",13,10
-        .asc "^X ^W ^Z      | autre colonne /",13,10
-        .asc "              |   echanger / plein",13,10
-        .asc "              |   ecran",13,10
-        .asc "CMDER USB:[ch]",13,10
-        .asc "              | cle USB du LOCI (A:",13,10
-        .asc "              |   USB: : deux",13,10
-        .asc "              |   colonnes) ; RETURN",13,10
-        .asc "              |   : entre dans un",13,10
-        .asc "              |   dossier, .. remonte",13,10
-        .asc "              |   ; copie seulement",13,10
-        .asc "/T            | (copie depuis la cle)",13,10
-        .asc "              |   LF seul -> CR LF ;",13,10
-        .asc "              |   menu Copier texte",13,10
-        .asc "haut bas      | fichier precedent /",13,10
-        .asc "              |   suivant",13,10
-        .asc "<- ->         | page precedente /",13,10
-        .asc "              |   suivante",13,10
-        .asc "< >           | premier / dernier",13,10
-        .asc "              |   fichier",13,10
-        .asc "A a Z         | fichier suivant qui",13,10
-        .asc "              |   commence par la",13,10
-        .asc "              |   lettre",13,10
-        .asc "ESP           | marque / ote la",13,10
-        .asc "              |   marque",13,10
-        .asc "+ -           | marque / ote selon un",13,10
-        .asc "              |   modele (*.COM)",13,10
-        .asc "*             | inverse les marques",13,10
-        .asc "1 2 3 4       | tri : disque, nom,",13,10
-        .asc "              |   type, taille ; 2",13,10
-        .asc "              |   fois : ordre",13,10
-        .asc "              |   inverse",13,10
-        .asc "/             | filtre (B:*.TXT :",13,10
-        .asc "              |   autre lecteur)",13,10
-        .asc "RETURN        | voir le texte",13,10
-        .asc "^C ^D         | copier / deplacer",13,10
-        .asc "              |   vers B: ou NOM.EXT",13,10
-        .asc "              |   ; A: (lecteur de la",13,10
-        .asc "              |   liste) : un seul",13,10
-        .asc "              |   lecteur, disquettes",13,10
-        .asc "              |   echangees",13,10
-        .asc "^N            | renommer",13,10
-        .asc "DEL           | effacer",13,10
-        .asc "              |   (confirmation)",13,10
-        .asc "^A            | attributs R (protege)",13,10
-        .asc "              |   S (systeme)",13,10
-        .asc "? ^E          | taille exacte : du",13,10
-        .asc "              |   fichier / de tous",13,10
-        .asc "^L ^R         | autre lecteur /",13,10
-        .asc "              |   relire (disquette",13,10
-        .asc "              |   changee)",13,10
-        .asc "FUNCT         | menus Fichier",13,10
-        .asc "              |   (Imprimer liste),",13,10
-        .asc "              |   Marque, Trier, Vue",13,10
-        .asc "              |   (Absents autre :",13,10
-        .asc "              |   fichiers absents de",13,10
-        .asc "              |   l'autre colonne ou",13,10
-        .asc "              |   differents)",13,10
-        .asc "ESC           | quitter",13,10
-        .asc "cibles        | les fichiers marques,",13,10
-        .asc "              |   sinon celui du",13,10
-        .asc "              |   curseur",13,10
-        .byt 0
+; début de chaque rubrique dans le texte décodé (h_default, puis les sujets)
+help_offs
+        .word 0,2076,2980,5716,6844,7139,10945,11339,11835,12326,13251,16389
+; fin de chaque rubrique (0 final compris) : où le décodage peut s'arrêter
+help_ends
+        .word 2076,2980,5716,6844,7139,10945,11339,11835,12326,13251,16389,18675
+hz_data
+        .byt $FF,$43,$4F,$4D,$4D,$41,$4E,$44,$45,$EF,$53,$0D,$0A,$2D,$01,$00
+        .byt $08,$0D,$0A,$48,$FF,$45,$4C,$50,$20,$5B,$73,$75,$6A,$FF,$65,$74
+        .byt $5D,$20,$20,$7C,$20,$61,$DF,$69,$64,$65,$20,$28,$16,$00,$04,$2E
+        .byt $43,$FF,$4F,$4D,$29,$0D,$0A,$56,$45,$52,$FD,$20,$01,$00,$0A,$7C
+        .byt $20,$76,$65,$72,$73,$FF,$69,$6F,$6E,$0D,$0A,$43,$4C,$53,$FE,$19
+        .byt $00,$0D,$65,$66,$66,$61,$63,$65,$20,$FF,$6C,$27,$65,$63,$72,$61
+        .byt $6E,$0D,$FF,$0A,$50,$41,$50,$45,$52,$20,$6E,$FF,$20,$2F,$20,$49
+        .byt $4E,$4B,$20,$6E,$F3,$0D,$0A,$2E,$00,$0B,$31,$00,$05,$63,$6F,$75
+        .byt $6C,$FF,$65,$75,$72,$20,$64,$75,$20,$66,$FF,$6F,$6E,$64,$20,$2F
+        .byt $20,$64,$65,$FA,$26,$00,$12,$20,$52,$00,$04,$6E,$63,$72,$65,$2C
+        .byt $7F,$20,$30,$2D,$37,$20,$28,$30,$23,$00,$14,$FF,$6E,$6F,$69,$72
+        .byt $20,$31,$20,$72,$BF,$6F,$75,$67,$65,$20,$32,$A4,$00,$04,$74,$FE
+        .byt $27,$00,$14,$33,$20,$6A,$61,$75,$6E,$65,$FF,$20,$34,$20,$62,$6C
+        .byt $65,$75,$20,$FD,$35,$24,$00,$14,$6D,$61,$67,$65,$6E,$74,$FF,$61
+        .byt $20,$36,$20,$63,$79,$61,$6E,$FB,$20,$37,$24,$00,$14,$62,$6C,$61
+        .byt $6E,$63,$FD,$29,$E3,$00,$04,$47,$45,$20,$4F,$4E,$2F,$F7,$4F,$46
+        .byt $46,$1A,$00,$05,$70,$61,$75,$73,$FF,$65,$20,$65,$6E,$20,$66,$69
+        .byt $6E,$EB,$20,$64,$09,$01,$06,$2C,$41,$00,$14,$6F,$75,$20,$FF,$6E
+        .byt $6F,$6E,$20,$28,$61,$75,$73,$7F,$73,$69,$20,$6D,$65,$6E,$75,$26
+        .byt $00,$14,$FD,$45,$40,$00,$05,$20,$50,$61,$67,$69,$6E,$FF,$61,$74
+        .byt $69,$6F,$6E,$29,$0D,$0A,$7B,$42,$3A,$26,$00,$0E,$6C,$65,$63,$74
+        .byt $45,$01,$04,$FF,$63,$6F,$75,$72,$61,$6E,$74,$20,$DF,$28,$41,$3A
+        .byt $20,$61,$4D,$00,$14,$44,$3A,$EF,$29,$20,$3B,$20,$71,$00,$1E,$53
+        .byt $79,$73,$7F,$74,$65,$6D,$65,$2C,$20,$4C,$56,$00,$06,$DE,$24,$00
+        .byt $14,$73,$75,$69,$76,$69,$00,$04,$3B,$20,$E7,$75,$6E,$20,$24,$02
+        .byt $04,$E0,$00,$17,$2E,$42,$41,$FF,$54,$20,$74,$61,$70,$65,$20,$73
+        .byt $E7,$61,$6E,$73,$D8,$01,$15,$BB,$00,$07,$65,$73,$74,$7F,$20,$63
+        .byt $68,$65,$72,$63,$68,$FF,$01,$15,$3F,$73,$75,$72,$20,$6C,$65,$2E
+        .byt $00,$08,$22,$00,$14,$7E,$FC,$00,$09,$64,$61,$6E,$73,$20,$75,$6B
+        .byt $02,$13,$FF,$20,$20,$73,$63,$72,$69,$70,$74,$FF,$20,$3A,$20,$63
+        .byt $65,$6C,$75,$69,$F3,$20,$64,$00,$01,$15,$25,$00,$06,$29,$2C,$20
+        .byt $70,$3F,$75,$69,$73,$20,$41,$3A,$BC,$01,$15,$1C,$00,$05,$FF,$42
+        .byt $3A,$2C,$20,$43,$3A,$2C,$20,$FB,$44,$3A,$23,$00,$14,$64,$65,$6A
+        .byt $61,$20,$3F,$6C,$75,$73,$20,$64,$65,$2E,$00,$04,$D5,$02,$16,$EF
+        .byt $61,$6C,$6C,$75,$6D,$02,$04,$20,$28,$44,$FB,$49,$52,$23,$00,$14
+        .byt $42,$3A,$2E,$2E,$2E,$BE,$B5,$01,$04,$4C,$4F,$43,$49,$20,$69,$00
+        .byt $15,$74,$FF,$6F,$75,$73,$20,$63,$65,$75,$78,$7F,$20,$71,$75,$69
+        .byt $20,$6F,$6E,$F6,$02,$15,$FA,$F2,$02,$04,$69,$6A,$00,$04,$0D,$0A
+        .byt $44,$49,$52,$BF,$20,$5B,$61,$66,$6E,$5D,$1D,$00,$07,$6C,$FF,$69
+        .byt $73,$74,$65,$20,$64,$65,$73,$FF,$20,$66,$69,$63,$68,$69,$65,$72
+        .byt $F5,$73,$24,$00,$05,$53,$25,$00,$0A,$7C,$20,$69,$64,$F7,$65,$6D
+        .byt $2C,$20,$00,$09,$20,$53,$59,$53,$EE,$84,$01,$16,$6D,$70,$72,$EB
+        .byt $00,$04,$54,$59,$50,$59,$45,$2E,$00,$04,$1B,$00,$08,$61,$66,$3B
+        .byt $00,$04,$65,$2E,$02,$04,$FF,$74,$65,$78,$74,$65,$0D,$0A,$45,$FF
+        .byt $52,$41,$20,$61,$66,$6E,$20,$5B,$F3,$2F,$51,$73,$04,$05,$39,$04
+        .byt $06,$2C,$20,$61,$70,$FB,$72,$65,$2C,$01,$15,$63,$6F,$6E,$66,$69
+        .byt $7B,$72,$6D,$03,$03,$05,$20,$28,$2F,$51,$0C,$01,$16,$BE,$67,$02
+        .byt $04,$20,$71,$75,$65,$73,$2A,$03,$07,$52,$FF,$45,$4E,$20,$6E,$6F
+        .byt $75,$76,$3D,$F7,$61,$6E,$63,$22,$00,$04,$72,$65,$6E,$6F,$FF,$6D
+        .byt $6D,$65,$0D,$0A,$53,$41,$56,$F3,$45,$20,$A4,$03,$04,$A4,$00,$05
+        .byt $7C,$20,$73,$61,$FF,$75,$76,$65,$20,$6E,$20,$70,$61,$FB,$67,$65
+        .byt $B3,$01,$04,$20,$30,$35,$30,$30,$DF,$0D,$0A,$50,$55,$54,$24,$00
+        .byt $05,$63,$6D,$FF,$64,$20,$5B,$70,$61,$72,$61,$6D,$E9,$5D,$77,$00
+        .byt $12,$09,$04,$04,$65,$23,$00,$04,$2C,$20,$63,$E7,$6F,$70,$69,$ED
+        .byt $02,$04,$9C,$00,$15,$6F,$72,$74,$F7,$69,$65,$20,$A0,$02,$05,$66
+        .byt $69,$63,$0D,$F7,$0A,$44,$4F,$5C,$00,$05,$5B,$70,$31,$2E,$77,$2E
+        .byt $70,$39,$59,$00,$19,$46,$49,$43,$48,$03,$05,$7F,$28,$24,$31,$2E
+        .byt $2E,$24,$39,$5B,$00,$14,$FB,$3D,$20,$9C,$00,$05,$65,$74,$72,$65
+        .byt $73,$DF,$2C,$20,$45,$53,$43,$25,$00,$14,$61,$72,$FF,$72,$65,$74
+        .byt $65,$29,$0D,$0A,$45,$C7,$43,$48,$4F,$88,$01,$06,$1B,$00,$06,$9E
+        .byt $01,$08,$6C,$65,$FE,$9E,$01,$08,$50,$41,$55,$53,$45,$20,$5B,$FA
+        .byt $0E,$00,$05,$5D,$22,$00,$04,$74,$74,$65,$6E,$64,$EE,$45,$02,$05
+        .byt $74,$6F,$75,$A4,$03,$05,$53,$50,$4C,$F3,$49,$54,$60,$00,$0B,$5D
+        .byt $02,$05,$20,$2B,$20,$31,$BF,$30,$20,$6C,$69,$67,$6E,$C5,$01,$04
+        .byt $54,$DB,$45,$58,$22,$00,$0A,$20,$7C,$73,$00,$07,$73,$65,$1F,$75
+        .byt $6C,$0D,$0A,$47,$3A,$06,$0D,$39,$06,$0B,$A5,$02,$07,$E1,$47,$A1
+        .byt $01,$05,$43,$02,$08,$A0,$01,$08,$1F,$00,$07,$20,$28,$2E,$FF,$49
+        .byt $4D,$47,$29,$0D,$0A,$47,$4C,$F7,$4F,$41,$44,$26,$00,$0B,$63,$68
+        .byt $61,$72,$9D,$67,$46,$00,$0B,$4E,$4F,$4D,$B7,$01,$08,$51,$01,$0B
+        .byt $4E,$FB,$4F,$4D,$B4,$04,$04,$2C,$20,$73,$69,$6E,$F8,$C5,$06,$04
+        .byt $2B,$01,$12,$22,$00,$04,$42,$41,$54,$0D,$0A,$FF,$28,$64,$65,$73
+        .byt $73,$69,$6E,$29,$FE,$1B,$00,$08,$50,$4C,$4F,$54,$2C,$20,$4C,$FF
+        .byt $49,$4E,$45,$2E,$2E,$2E,$20,$3A,$FC,$CD,$01,$05,$41,$00,$14,$47
+        .byt $52,$41,$50,$48,$45,$F9,$52,$45,$07,$06,$21,$00,$1B,$29,$0D,$0A
+        .byt $0D,$0A,$EB,$41,$75,$B8,$01,$04,$20,$80,$07,$05,$73,$20,$3A,$E9
+        .byt $20,$8F,$07,$05,$63,$05,$04,$69,$0D,$07,$07,$54,$4F,$55,$FF,$43
+        .byt $48,$45,$53,$20,$50,$52,$4F,$FF,$47,$52,$41,$4D,$4D,$45,$53,$20
+        .byt $FF,$45,$44,$49,$54,$20,$48,$45,$58,$FE,$1F,$00,$04,$4C,$4F,$47
+        .byt $4F,$20,$41,$53,$FF,$4D,$20,$44,$45,$42,$55,$47,$20,$7F,$4D,$45
+        .byt $4D,$4F,$49,$52,$45,$1A,$00,$04,$F7,$55,$53,$42,$8B,$00,$09,$43
+        .byt $4D,$44,$45,$7E,$63,$04,$05,$28,$34,$20,$6C,$65,$74,$73,$00,$07
+        .byt $FF,$66,$66,$69,$73,$65,$6E,$74,$29,$E7,$0D,$0A,$00,$66,$00,$07
+        .byt $1A,$08,$09,$0D,$0A,$46,$C7,$55,$4E,$43,$E4,$01,$0C,$33,$06,$04
+        .byt $1D,$03,$04,$72,$6F,$FF,$75,$6C,$61,$6E,$74,$73,$0D,$0A,$DF,$43
+        .byt $54,$52,$4C,$2D,$23,$00,$09,$7C,$20,$FF,$6D,$61,$6A,$75,$73,$63
+        .byt $75,$6C,$7F,$65,$73,$20,$6F,$75,$69,$2F,$5F,$01,$17,$AF,$28,$76
+        .byt $6F,$79,$AC,$05,$04,$41,$24,$06,$04,$61,$7B,$20,$61,$88,$05,$15
+        .byt $62,$6F,$75,$74,$89,$03,$04,$EF,$6C,$61,$20,$62,$BB,$02,$04,$29
+        .byt $0D,$0A,$DF,$3C,$2D,$20,$2D,$3E,$25,$00,$0B,$64,$65,$33,$70,$6C
+        .byt $36,$02,$04,$53,$03,$05,$6C,$61,$79,$02,$06,$71,$00,$15,$EB,$6F
+        .byt $6E,$87,$06,$06,$65,$90,$00,$15,$69,$6E,$73,$FB,$65,$72,$32,$04
+        .byt $07,$68,$61,$75,$74,$20,$07,$62,$61,$73,$1E,$00,$08,$CD,$02,$06
+        .byt $CE,$05,$06,$43,$00,$04,$9E,$04,$16,$FF,$28,$68,$69,$73,$74,$6F
+        .byt $72,$69,$9B,$71,$75,$61,$03,$05,$53,$43,$20,$00,$0D,$18,$05,$04
+        .byt $6C,$3B,$65,$74,$00,$05,$05,$6E,$6F,$6D,$E3,$08,$17,$5E,$05,$07
+        .byt $FF,$20,$28,$65,$6E,$20,$64,$65,$62,$31,$75,$C8,$05,$15,$11,$01
+        .byt $04,$92,$00,$04,$20,$3A,$8E,$03,$04,$85,$05,$17,$DF,$6D,$61,$6E
+        .byt $64,$65,$35,$06,$04,$32,$20,$DB,$66,$6F,$7B,$06,$16,$3A,$20,$A4
+        .byt $01,$04,$6E,$6F,$FD,$6D,$1E,$00,$15,$70,$6F,$73,$73,$69,$62,$FD
+        .byt $6C,$EC,$00,$04,$44,$45,$4C,$20,$5E,$44,$BC,$1D,$00,$0A,$A9,$03
+        .byt $07,$61,$20,$67,$61,$09,$04,$04,$20,$FD,$2F,$EB,$04,$16,$75,$73
+        .byt $0D,$0A,$5E,$41,$67,$20,$5E,$45,$18,$00,$0B,$D5,$00,$05,$20,$2F
+        .byt $19,$09,$06,$44,$C8,$00,$07,$43,$02,$07,$58,$61,$00,$11,$CF,$01
+        .byt $0A,$21,$00,$05,$50,$21,$00,$0A,$7D,$69,$65,$06,$04,$6D,$61,$6E
+        .byt $74,$65,$64,$02,$1D,$4D,$74,$40,$02,$04,$63,$65,$15,$07,$04,$A3
+        .byt $00,$15,$27,$F7,$04,$08,$53,$3B,$20,$8F,$02,$06,$26,$00,$14,$50
+        .byt $2F,$09,$28,$29,$A8,$00,$07,$FC,$F9,$01,$09,$6C,$06,$04,$64,$65
+        .byt $6D,$61,$72,$72,$DA,$B1,$04,$04,$61,$9B,$04,$04,$75,$64,$91,$06
+        .byt $04,$53,$45,$FE,$53,$03,$0C,$72,$65,$74,$6F,$75,$72,$20,$FF,$61
+        .byt $75,$20,$70,$72,$6F,$6D,$70,$4F,$74,$0D,$0A,$00,$E6,$03,$0A,$A5
+        .byt $0B,$0B,$2D,$94,$07,$07,$F1,$2A,$BA,$04,$04,$3B,$00,$06,$F8,$07
+        .byt $04,$2C,$20,$63,$61,$FF,$63,$68,$65,$73,$20,$28,$53,$59,$F3,$53
+        .byt $29,$94,$07,$1D,$32,$04,$05,$5B,$66,$69,$63,$AE,$D3,$07,$07,$65
+        .byt $64,$69,$7A,$09,$05,$64,$F6,$05,$09,$48,$F3,$45,$58,$B5,$07,$0A
+        .byt $22,$00,$0B,$68,$65,$78,$61,$3F,$64,$65,$63,$69,$6D,$61,$B9,$05
+        .byt $04,$4F,$04,$07,$F6,$C8,$02,$04,$5B,$70,$B5,$06,$13,$65,$78,$65
+        .byt $63,$3B,$75,$74,$66,$05,$06,$47,$52,$58,$A8,$07,$16,$57,$05,$06
+        .byt $9F,$2C,$20,$48,$49,$52,$E7,$00,$04,$21,$00,$12,$32,$BF,$34,$30
+        .byt $78,$32,$30,$30,$41,$05,$24,$56,$43,$4F,$49,$8F,$00,$06,$1C,$00
+        .byt $07,$D8,$01,$08,$81,$00,$04,$48,$56,$09,$16,$7F,$28,$70,$6C,$65
+        .byt $69,$6E,$20,$9C,$0B,$05,$7F,$29,$2C,$20,$2E,$48,$49,$5A,$27,$00
+        .byt $15,$FE,$3D,$01,$05,$65,$73,$73,$65,$65,$29,$20,$C9,$6F,$FF,$01
+        .byt $15,$89,$06,$04,$2C,$19,$07,$0D,$8F,$00,$08,$2E,$41,$DF,$4E,$49
+        .byt $20,$5B,$6E,$22,$01,$13,$61,$6E,$7D,$69,$C8,$08,$07,$6A,$6F,$75
+        .byt $65,$65,$17,$0D,$14,$FD,$20,$B9,$03,$05,$20,$28,$30,$20,$3A,$20
+        .byt $3F,$6A,$75,$73,$71,$75,$27,$53,$08,$15,$78,$00,$0A,$B7,$29,$20
+        .byt $3B,$46,$00,$15,$6C,$65,$1F,$02,$05,$47,$D3,$20,$44,$F3,$03,$04
+        .byt $20,$05,$18,$64,$00,$0A,$04,$63,$68,$EF,$69,$72,$75,$72,$C2,$00
+        .byt $04,$53,$59,$4E,$DE,$C1,$04,$0A,$7C,$20,$63,$61,$7B,$0B,$05,$20
+        .byt $74,$FF,$6F,$70,$20,$35,$30,$20,$48,$7A,$98,$8F,$0B,$04,$D0,$0A
+        .byt $16,$52,$01,$05,$20,$28,$EA,$07,$06,$60,$0B,$16,$6D,$DF,$69,$6C
+        .byt $69,$65,$75,$21,$0D,$04,$65,$6E,$1F,$74,$69,$65,$72,$29,$61,$0B
+        .byt $15,$F5,$00,$07,$23,$0B,$04,$F6,$B7,$08,$04,$0D,$0A,$BF,$06,$05
+        .byt $20,$5B,$64,$3A,$E9,$5D,$97,$0A,$05,$34,$00,$12,$67,$F5,$09,$06
+        .byt $6E,$61,$69,$19,$72,$CE,$00,$04,$62,$05,$1B,$73,$20,$FF,$01,$05
+        .byt $22,$00,$14,$C0,$00,$06,$7F,$3A,$20,$74,$72,$69,$65,$72,$99,$00
+        .byt $15,$FF,$66,$69,$6C,$74,$72,$65,$72,$2C,$BF,$20,$6D,$61,$72,$71
+        .byt $75,$25,$00,$17,$76,$F7,$6F,$69,$72,$0D,$0A,$07,$72,$2E,$2E,$2E
+        .byt $38,$5C,$02,$15,$E6,$07,$05,$D6,$00,$05,$29,$0D,$0A,$15,$04,$04
+        .byt $0F,$0B,$05,$F7,$6F,$70,$74,$71,$09,$07,$72,$69,$62,$75,$3E,$0F
+        .byt $08,$05,$52,$4F,$20,$52,$57,$73,$0B,$18,$CD,$0B,$04,$85,$28,$F6
+        .byt $0A,$05,$6F,$DA,$0C,$05,$B4,$05,$05,$27,$00,$12,$14,$03,$07,$29
+        .byt $F3,$0D,$0A,$2D,$08,$05,$07,$04,$0B,$4C,$6F,$67,$6F,$FF,$20,$65
+        .byt $74,$20,$73,$61,$20,$74,$CF,$6F,$72,$74,$75,$40,$07,$16,$59,$09
+        .byt $07,$66,$69,$8F,$63,$2E,$4C,$4F,$7A,$09,$04,$6F,$08,$04,$74,$03
+        .byt $09,$20,$59,$7C,$6D,$03,$05,$14,$00,$04,$2D,$3E,$5F,$09,$08,$20
+        .byt $B6,$01,$04,$1C,$4B,$00,$12,$1E,$00,$04,$53,$59,$4D,$59,$06,$04
+        .byt $AD,$08,$04,$47,$04,$06,$7E,$59,$0B,$17,$64,$65,$62,$6F,$67,$75
+        .byt $F1,$0D,$05,$FF,$43,$4F,$50,$59,$20,$73,$72,$63,$9F,$20,$5B,$64
+        .byt $73,$74,$2B,$00,$13,$6C,$01,$05,$2C,$EF,$20,$6A,$6F,$6B,$E0,$01
+        .byt $04,$61,$64,$6D,$C3,$69,$73,$7A,$04,$16,$49,$00,$05,$46,$05,$06
+        .byt $C0,$0D,$05,$4F,$50,$FD,$59,$27,$00,$14,$2A,$2E,$54,$58,$54,$20
+        .byt $DF,$2A,$2E,$42,$41,$4B,$25,$00,$1A,$42,$3A,$FD,$2A,$0F,$01,$04
+        .byt $0D,$0A,$46,$4F,$52,$4D,$9F,$41,$54,$20,$58,$3A,$D0,$0C,$05,$2B
+        .byt $00,$12,$66,$85,$6F,$BA,$0C,$04,$65,$21,$00,$04,$9C,$0F,$04,$BC
+        .byt $07,$04,$94,$06,$15,$65,$B3,$75,$6C,$E4,$0E,$08,$BF,$07,$04,$2F
+        .byt $51,$BB,$07,$16,$76,$FA,$A0,$11,$04,$6C,$AA,$01,$15,$72,$65,$70
+        .byt $65,$72,$F7,$74,$6F,$69,$C8,$03,$04,$44,$49,$53,$4B,$1E,$38,$01
+        .byt $06,$3A,$20,$64,$3A,$5C,$02,$06,$3A,$01,$17,$6F,$07,$04,$7F,$64
+        .byt $69,$73,$71,$75,$65,$74,$A3,$0B,$04,$90,$5C,$0D,$16,$2D,$06,$04
+        .byt $C1,$00,$06,$C4,$00,$2C,$54,$26,$00,$14,$9D,$07,$04,$2C,$BF,$20
+        .byt $2F,$56,$20,$72,$65,$2C,$00,$04,$75,$7B,$72,$65,$48,$03,$15,$2F
+        .byt $53,$20,$73,$60,$07,$06,$EE,$6B,$00,$18,$65,$6D,$65,$F5,$0F,$04
+        .byt $53,$59,$53,$77,$47,$45,$4E,$49,$03,$04,$54,$41,$54,$26,$04,$1C
+        .byt $DF,$74,$61,$69,$6C,$6C,$3E,$09,$04,$65,$6E,$EF,$72,$65,$67,$2E
+        .byt $76,$00,$15,$62,$6C,$6F,$BD,$63,$04,$0E,$05,$32,$20,$4B,$6F,$BB
+        .byt $11,$16,$63,$9D,$74,$AB,$0B,$04,$3B,$20,$41,$74,$03,$04,$63,$06
+        .byt $15,$70,$FF,$72,$6F,$74,$65,$67,$65,$2C,$20,$9A,$C3,$00,$1D,$3B
+        .byt $30,$01,$06,$3A,$20,$C9,$0A,$05,$54,$05,$15,$69,$9D,$62,$CC,$01
+        .byt $04,$58,$44,$4F,$2C,$03,$1E,$DC,$10,$07,$61,$9F,$70,$70,$65,$6C
+        .byt $65,$0F,$0E,$04,$04,$11,$1E,$28,$F6,$0B,$0D,$06,$70,$61,$C9,$05
+        .byt $16,$65,$20,$43,$43,$BD,$50,$CA,$0A,$04,$58,$50,$4F,$52,$03,$0F
+        .byt $06,$5B,$E3,$6E,$6F,$78,$00,$14,$F2,$0E,$07,$A0,$11,$04,$61,$20
+        .byt $63,$93,$6C,$65,$74,$0C,$04,$63,$06,$15,$75,$C3,$10,$06,$F8,$04
+        .byt $06,$55,$7F,$53,$42,$29,$0D,$0A,$49,$4D,$5E,$00,$05,$00,$D8,$00
+        .byt $05,$92,$04,$04,$5E,$00,$18,$42,$11,$06,$61,$00,$07,$5D,$00,$14
+        .byt $E8,$0C,$04,$61,$00,$07,$DF,$0D,$0A,$55,$53,$42,$E3,$10,$05,$63
+        .byt $68,$87,$65,$6D,$69,$04,$02,$14,$07,$06,$09,$5E,$0C,$06,$54,$00
+        .byt $24,$4D,$99,$45,$75,$09,$05,$98,$00,$0A,$61,$72,$34,$11,$05,$40
+        .byt $00,$04,$6D,$FB,$65,$6D,$70,$03,$06,$50,$4F,$4B,$45,$20,$FF,$61
+        .byt $64,$72,$20,$62,$62,$2E,$2E,$1E,$0A,$09,$04,$63,$72,$69,$74,$E9
+        .byt $06,$04,$22,$00,$09,$66,$00,$12,$4F,$28,$63,$6F,$64,$1F,$0A,$04
+        .byt $8F,$01,$05,$72,$B3,$04,$16,$AF,$30,$36,$30,$30,$A3,$05,$04,$2B
+        .byt $F2,$0E,$04,$4F,$DC,$62,$00,$05,$8C,$10,$1F,$6C,$65,$20,$58,$00
+        .byt $05,$28,$52,$8F,$54,$53,$20,$3D,$28,$04,$16,$78,$0A,$04,$51,$00
+        .byt $04,$54,$FB,$45,$53,$91,$0A,$0C,$64,$65,$6D,$6F,$20,$9F,$67,$72
+        .byt $61,$70,$68,$CD,$0C,$04,$1C,$16,$05,$4C,$41,$4F,$45,$0F,$09,$DF
+        .byt $09,$05,$CD,$0C,$04,$FC,$00,$04,$F9,$13,$06,$00,$59,$0A,$04,$06
+        .byt $AA,$0A,$06,$0D,$0A,$70,$08,$08,$4E,$00,$0A,$D9,$02,$05,$A5,$03
+        .byt $04,$10,$0C,$28,$CF,$5E,$52,$20,$5E,$7E,$08,$0C,$92,$11,$04,$20
+        .byt $70,$BF,$72,$65,$63,$2E,$20,$2F,$16,$0F,$05,$2E,$7F,$0D,$0A,$5E
+        .byt $51,$20,$5E,$5A,$4A,$00,$18,$51,$75,$D0,$0A,$08,$BB,$0C,$18,$BB
+        .byt $14,$05,$2F,$A5,$0C,$08,$59,$1B,$01,$0E,$24,$7F,$0C,$08,$1C,$03
+        .byt $05,$61,$09,$01,$05,$95,$00,$04,$4F,$26,$00,$0E,$32,$0E,$05,$9F
+        .byt $65,$20,$2F,$20,$72,$0E,$01,$04,$BB,$03,$05,$5E,$0F,$46,$20,$5E
+        .byt $47,$23,$00,$0B,$CE,$14,$07,$B5,$00,$07,$60,$0C,$05,$71,$5E,$2D
+        .byt $17,$0C,$6C,$00,$04,$84,$04,$04,$69,$73,$74,$1B,$02,$04,$8B,$5E
+        .byt $4C,$62,$00,$15,$75,$A4,$12,$05,$18,$0E,$05,$27,$0F,$16,$63,$17
+        .byt $75,$72,$73,$22,$07,$05,$5E,$23,$0D,$09,$41,$00,$07,$27,$0D,$05
+        .byt $AE,$D6,$11,$0A,$2C,$20,$6D,$0B,$0E,$16,$65,$F6,$12,$06,$20,$CD
+        .byt $28,$38,$12,$20,$5E,$4E,$1B,$00,$0E,$21,$01,$0A,$20,$74,$FF,$72
+        .byt $6F,$70,$20,$6C,$6F,$6E,$67,$FC,$39,$06,$16,$00,$01,$07,$43,$20
+        .byt $31,$32,$37,$21,$FA,$1B,$00,$0A,$28,$CB,$0E,$06,$64,$27,$65,$74
+        .byt $61,$3C,$83,$10,$04,$3B,$00,$12,$70,$6F,$73,$69,$2A,$0B,$05,$E3
+        .byt $0F,$06,$5C,$43,$03,$15,$87,$00,$0B,$3B,$20,$21,$43,$03,$16,$70
+        .byt $89,$15,$04,$78,$A0,$00,$04,$1D,$14,$04,$48,$00,$17,$6D,$61,$78
+        .byt $69,$27,$0D,$06,$47,$2E,$43,$46,$CA,$01,$07,$E5,$00,$05,$82,$01
+        .byt $09,$3A,$AB,$04,$04,$FE,$3B,$00,$18,$20,$5B,$4D,$4F,$54,$53,$7C
+        .byt $F7,$43,$41,$52,$97,$03,$13,$20,$20,$5B,$6C,$B6,$42,$09,$04,$75
+        .byt $72,$98,$01,$05,$2E,$5D,$57,$06,$15,$65,$F7,$78,$2E,$20,$52,$08
+        .byt $05,$20,$31,$32,$36,$B7,$20,$43,$41,$59,$06,$15,$38,$30,$99,$11
+        .byt $18,$46,$EA,$41,$10,$08,$64,$05,$16,$17,$49,$54,$02,$05,$72,$2C
+        .byt $20,$D9,$49,$1C,$02,$06,$7C,$0B,$17,$45,$64,$74,$01,$05,$2C,$20
+        .byt $D9,$43,$C3,$02,$06,$E4,$0A,$16,$4F,$70,$25,$00,$04,$73,$0D,$43
+        .byt $0A,$52,$C3,$0E,$06,$1B,$00,$09,$5B,$06,$0A,$A6,$12,$05,$45,$8D
+        .byt $0B,$17,$F2,$89,$0A,$04,$29,$03,$03,$0B,$30,$0A,$17,$72,$65,$76
+        .byt $69,$12,$3E,$04,$05,$00,$EE,$12,$05,$66,$04,$0D,$52,$4B,$0F,$05
+        .byt $66,$04,$10,$40,$04,$3E,$9C,$A7,$04,$05,$84,$00,$0D,$61,$6C,$6C
+        .byt $7E,$03,$04,$8B,$0C,$04,$64,$10,$0D,$0E,$05,$EC,$03,$1A,$F8,$0C
+        .byt $06,$2A,$0E,$16,$23,$47,$0F,$04,$0E,$04,$0D,$54,$04,$0F,$F9,$6D
+        .byt $B2,$05,$04,$84,$0F,$04,$2F,$20,$41,$53,$43,$F3,$49,$49,$30,$04
+        .byt $1E,$64,$12,$10,$71,$75,$69,$74,$F2,$F5,$04,$04,$00,$58,$01,$04
+        .byt $8F,$05,$08,$41,$56,$20,$6E,$27,$20,$20,$52,$EA,$16,$04,$CB,$00
+        .byt $06,$76,$9B,$01,$05,$B7,$04,$04,$C6,$A5,$13,$04,$20,$28,$23,$08
+        .byt $15,$EC,$0F,$07,$46,$0B,$06,$29,$0D,$BB,$0A,$44,$C2,$1B,$04,$20
+        .byt $47,$41,$46,$00,$08,$64,$8F,$72,$6F,$69,$74,$46,$00,$04,$03,$12
+        .byt $06,$D7,$06,$15,$64,$BB,$65,$67,$8C,$16,$05,$30,$2E,$35,$48,$00
+        .byt $09,$4C,$EF,$43,$20,$20,$42,$21,$11,$0B,$6C,$65,$76,$FE,$46,$00
+        .byt $04,$62,$61,$69,$73,$73,$65,$20,$DF,$73,$74,$79,$6C,$6F,$46,$11
+        .byt $04,$20,$20,$F9,$4D,$52,$14,$0B,$E0,$10,$05,$20,$2F,$20,$6D,$6F
+        .byt $FD,$6E,$F8,$00,$05,$56,$45,$20,$20,$4F,$52,$2F,$49,$47,$49,$4E
+        .byt $4B,$06,$04,$7C,$0C,$0B,$06,$B7,$0D,$06,$EF,$2F,$20,$63,$65,$25
+        .byt $00,$06,$50,$4F,$49,$BF,$4E,$54,$20,$78,$20,$79,$45,$00,$07,$75
+        .byt $DF,$6E,$20,$70,$6F,$69,$29,$0A,$04,$63,$6F,$3F,$6F,$72,$64,$6F
+        .byt $6E,$6E,$C8,$13,$17,$D2,$07,$06,$9A,$09,$0D,$06,$2C,$3B,$12,$18
+        .byt $6E,$65,$9D,$14,$04,$56,$02,$04,$61,$1E,$D7,$00,$04,$54,$52,$41
+        .byt $49,$6D,$00,$06,$04,$00,$04,$6D,$00,$05,$EF,$74,$72,$61,$69,$1E
+        .byt $1B,$04,$52,$45,$43,$BF,$54,$41,$4E,$47,$4C,$45,$42,$03,$15,$50
+        .byt $74,$E3,$16,$04,$8B,$10,$06,$29,$B7,$04,$16,$63,$6F,$69,$DA,$0D
+        .byt $05,$F7,$70,$6F,$73,$B0,$00,$04,$43,$45,$52,$43,$F7,$4C,$45,$20
+        .byt $6C,$03,$07,$7C,$20,$61,$75,$F8,$7A,$03,$05,$B5,$00,$0C,$8D,$01
+        .byt $15,$72,$20,$30,$2D,$31,$FB,$32,$37,$D0,$09,$04,$54,$49,$51,$55
+        .byt $45,$9F,$54,$54,$45,$20,$78,$52,$02,$06,$A3,$08,$05,$78,$E0,$5F
+        .byt $05,$07,$37,$17,$08,$43,$00,$12,$A1,$08,$04,$62,$00,$09,$46,$49
+        .byt $58,$FF,$45,$43,$4F,$55,$4C,$45,$55,$52,$BB,$20,$76,$97,$02,$05
+        .byt $63,$72,$65,$99,$1D,$05,$6F,$CF,$75,$20,$70,$61,$F5,$0E,$04,$44
+        .byt $00,$14,$31,$36,$E7,$2D,$32,$33,$AD,$00,$05,$68,$00,$08,$41,$4C
+        .byt $4C,$EF,$55,$4D,$45,$3F,$A9,$01,$07,$7C,$20,$31,$67,$20,$73,$69
+        .byt $7A,$07,$05,$AC,$01,$05,$65,$73,$11,$04,$15,$3C,$33,$1B,$05,$01
+        .byt $03,$04,$43,$52,$41,$4E,$63,$18,$04,$53,$08,$05,$30,$0F,$13,$05
+        .byt $6D,$09,$05,$61,$1A,$08,$1F,$00,$04,$4D,$49,$1F,$00,$09,$69,$13
+        .byt $08,$C2,$7E,$00,$0A,$56,$9D,$18,$0B,$FA,$07,$0E,$43,$00,$07,$4A
+        .byt $01,$13,$56,$49,$33,$44,$45,$74,$00,$05,$F8,$01,$04,$41,$50,$47
+        .byt $01,$06,$40,$00,$08,$82,$4C,$01,$04,$2C,$83,$1A,$06,$34,$04,$07
+        .byt $5C,$0B,$15,$D9,$14,$09,$48,$01,$05,$55,$3B,$52,$53,$48,$01,$04
+        .byt $63,$20,$6C,$FE,$0A,$13,$DC,$07,$06,$EF,$20,$63,$6F,$6C,$B3,$02
+        .byt $04,$20,$30,$2D,$F3,$33,$39,$4A,$02,$15,$48,$07,$06,$30,$2D,$32
+        .byt $37,$C3,$20,$28,$7A,$1F,$07,$25,$00,$12,$6F,$11,$07,$78,$00,$07
+        .byt $41,$52,$C8,$22,$01,$05,$79,$00,$04,$98,$1F,$16,$64,$0F,$1B,$04
+        .byt $5A,$17,$08,$63,$61,$F4,$F7,$04,$04,$54,$00,$12,$28,$A9,$10,$0A
+        .byt $30,$2D,$33,$31,$EE,$72,$1B,$05,$50,$45,$54,$71,$04,$04,$5B,$2E
+        .byt $2E,$D4,$30,$0A,$04,$91,$0E,$04,$74,$CF,$15,$07,$73,$56,$01,$04
+        .byt $53,$49,$23,$20,$63,$1D,$00,$06,$05,$00,$04,$7A,$00,$14,$6E,$80
+        .byt $06,$06,$C7,$03,$04,$7B,$55,$52,$31,$10,$04,$20,$3A,$41,$20,$70
+        .byt $19,$04,$F7,$46,$49,$4E,$30,$00,$12,$64,$65,$66,$69,$F7,$6E,$69
+        .byt $74,$0C,$13,$05,$70,$72,$6F,$63,$FB,$65,$64,$C5,$12,$05,$52,$45
+        .byt $4E,$44,$53,$70,$9F,$01,$09,$19,$0B,$04,$1E,$00,$0A,$07,$1C,$04
+        .byt $64,$20,$78,$25,$02,$04,$F8,$C1,$01,$0A,$C3,$01,$09,$1D,$1C,$04
+        .byt $55,$56,$45,$20,$22,$CA,$EF,$08,$07,$7C,$39,$00,$0A,$73,$E0,$10
+        .byt $05,$F4,$0F,$06,$43,$48,$07,$41,$52,$47,$26,$00,$09,$7C,$1A,$09
+        .byt $1E,$00,$07,$FA,$06,$06,$43,$00,$0A,$80,$17,$00,$05,$4F,$01,$06
+        .byt $1B,$00,$04,$5E,$1E,$06,$52,$01,$14,$4E,$07,$06,$84,$00,$07,$49
+        .byt $8D,$4D,$5D,$20,$04,$22,$4E,$E7,$00,$05,$32,$15,$04,$80,$00,$06
+        .byt $49,$C1,$4D,$80,$00,$09,$22,$00,$08,$48,$01,$13,$90,$00,$08,$2E
+        .byt $00,$05,$33,$2E,$FF,$31,$34,$20,$20,$32,$45,$2D,$37,$FC,$36,$01
+        .byt $08,$E4,$05,$04,$75,$78,$20,$28,$39,$20,$7F,$63,$68,$69,$66,$66
+        .byt $72,$65,$CC,$04,$04,$FE,$90,$00,$12,$3B,$20,$37,$20,$2F,$20,$32
+        .byt $FF,$20,$3D,$20,$33,$2E,$35,$0D,$0A,$FD,$45,$58,$05,$05,$20,$41
+        .byt $52,$52,$4F,$4E,$33,$44,$49,$44,$01,$04,$33,$00,$10,$70,$61,$E7
+        .byt $1C,$05,$6E,$02,$06,$70,$20,$18,$17,$1D,$00,$06,$58,$01,$05,$40
+        .byt $06,$04,$52,$41,$43,$CF,$05,$04,$FE,$8B,$01,$07,$7C,$20,$72,$61
+        .byt $63,$69,$6E,$ED,$65,$65,$0D,$04,$72,$65,$32,$02,$05,$4E,$20,$43
+        .byt $1F,$4F,$53,$20,$41,$52,$4E,$05,$04,$50,$00,$12,$30,$19,$05,$B6
+        .byt $6F,$06,$04,$20,$28,$2B,$00,$04,$33,$30,$F3,$0C,$16,$30,$EB,$2E
+        .byt $35,$85,$06,$04,$4E,$68,$00,$04,$45,$58,$50,$FE,$02,$05,$07,$6C
+        .byt $6F,$67,$61,$72,$69,$74,$7B,$68,$6D,$AB,$00,$18,$78,$70,$6F,$6E
+        .byt $B0,$00,$05,$4D,$6C,$37,$0A,$04,$41,$42,$55,$02,$0A,$7F,$06,$05
+        .byt $61,$BF,$22,$05,$DF,$61,$62,$73,$6F,$6C,$1C,$05,$04,$51,$55,$77
+        .byt $4F,$54,$49,$25,$01,$04,$61,$20,$62,$68,$01,$05,$C7,$69,$76,$69
+        .byt $2B,$23,$04,$10,$01,$09,$A7,$15,$15,$52,$45,$F7,$53,$54,$45,$33
+        .byt $00,$05,$3A,$20,$72,$65,$FE,$27,$03,$05,$22,$4D,$4F,$54,$20,$20
+        .byt $5B,$F7,$41,$20,$42,$BB,$1C,$06,$6D,$6F,$74,$2C,$FE,$AB,$1F,$07
+        .byt $28,$44,$4F,$4E,$4E,$45,$20,$E3,$22,$4C,$68,$0A,$15,$32,$00,$04
+        .byt $97,$22,$04,$52,$20,$53,$BC,$E4,$00,$06,$1A,$00,$06,$70,$72,$65
+        .byt $6D,$74,$01,$04,$2F,$E2,$4B,$1D,$04,$66,$4B,$0B,$18,$25,$00,$06
+        .byt $3B,$0D,$04,$52,$20,$53,$3D,$44,$92,$01,$0A,$64,$65,$72,$6E,$3E
+        .byt $00,$21,$25,$00,$07,$FF,$0D,$0A,$49,$54,$45,$4D,$20,$6E,$FE,$3E
+        .byt $00,$0A,$6E,$2D,$69,$65,$6D,$65,$20,$99,$65,$AE,$11,$06,$CD,$13
+        .byt $04,$4D,$50,$83,$06,$07,$20,$00,$06,$6F,$EB,$6D,$62,$B5,$15,$04
+        .byt $27,$22,$00,$07,$73,$0D,$0A,$58,$FE,$00,$04,$43,$01,$05,$23,$00
+        .byt $07,$63,$6F,$B7,$11,$04,$64,$E6,$20,$04,$DB,$6D,$6F,$21,$00,$04
+        .byt $50,$48,$20,$00,$06,$4C,$49,$3C,$3B,$01,$07,$8A,$02,$13,$68,$72
+        .byt $61,$73,$3C,$08,$04,$E2,$20,$08,$DE,$B5,$00,$16,$75,$78,$0D,$0A
+        .byt $D8,$05,$04,$3F,$20,$AF,$4D,$4F,$54,$3F,$51,$00,$06,$3F,$2B,$00
+        .byt $12,$31,$F2,$DE,$06,$04,$30,$10,$1A,$08,$4B,$00,$14,$4E,$4F,$4D
+        .byt $42,$E5,$52,$47,$00,$04,$45,$08,$00,$06,$95,$00,$05,$45,$58,$45
+        .byt $C1,$43,$EF,$04,$06,$27,$00,$06,$1F,$19,$08,$AF,$04,$04,$12,$05
+        .byt $07,$4C,$49,$C9,$53,$C6,$00,$06,$23,$00,$07,$6C,$CE,$04,$07,$D6
+        .byt $05,$06,$2D,$3E,$6C,$F2,$05,$16,$0A,$02,$05,$4C,$4C,$D3,$02,$04
+        .byt $49,$53,$2D,$02,$05,$18,$40,$00,$18,$32,$01,$04,$26,$00,$05,$43
+        .byt $41,$C7,$25,$09,$D4,$1F,$13,$6A,$00,$17,$7F,$63,$61,$72,$61,$63
+        .byt $74,$65,$54,$05,$04,$F0,$97,$0A,$05,$B7,$01,$04,$49,$00,$04,$35
+        .byt $06,$18,$64,$27,$75,$6E,$10,$35,$00,$0A,$55,$03,$16,$54,$00,$0B
+        .byt $76,$1E,$06,$3F,$1D,$00,$09,$04,$08,$05,$50,$19,$0C,$1C,$3E,$00
+        .byt $12,$BA,$00,$06,$2C,$20,$30,$C1,$1F,$08,$44,$00,$06,$23,$00,$0A
+        .byt $FE,$D0,$00,$07,$65,$6E,$66,$6F,$6E,$63,$65,$F9,$65,$94,$07,$06
+        .byt $FD,$01,$16,$6C,$61,$69,$20,$28,$0F,$6A,$65,$75,$78,$AC,$14,$04
+        .byt $28,$01,$05,$26,$00,$12,$63,$0A,$05,$3F,$73,$69,$20,$61,$75,$63
+        .byt $74,$1D,$05,$B4,$07,$08,$12,$22,$00,$08,$5B,$A0,$07,$08,$71,$01
+        .byt $05,$5D,$F8,$18,$17,$A9,$0F,$09,$7B,$07,$0D,$F8,$36,$01,$09,$8B
+        .byt $12,$06,$67,$07,$05,$53,$4F,$4E,$20,$76,$FF,$20,$6E,$20,$76,$6F
+        .byt $6C,$20,$64,$FA,$1F,$03,$05,$74,$8C,$07,$04,$28,$33,$37,$20,$3D
+        .byt $E7,$20,$64,$6F,$F9,$00,$04,$D4,$11,$16,$69,$65,$6E,$FD,$29,$8B
+        .byt $13,$08,$76,$6F,$69,$78,$20,$76,$BE,$B4,$07,$15,$30,$2D,$32,$29
+        .byt $2C,$5E,$00,$04,$75,$F5,$6D,$35,$08,$04,$31,$03,$27,$15,$28,$31
+        .byt $36,$20,$FF,$3D,$20,$65,$6E,$76,$65,$6C,$6F,$F7,$70,$70,$65,$2A
+        .byt $0E,$16,$64,$2F,$35,$30,$D9,$20,$A7,$1A,$07,$64,$01,$18,$66,$69
+        .byt $57,$1F,$04,$53,$4F,$3F,$4E,$46,$20,$76,$20,$70,$D5,$00,$06,$28
+        .byt $00,$12,$FD,$73,$E4,$0F,$04,$65,$20,$70,$65,$72,$69,$BA,$0F,$01
+        .byt $04,$70,$B9,$00,$17,$34,$30,$39,$C5,$05,$04,$42,$DF,$52,$55,$49
+        .byt $54,$56,$50,$00,$1C,$62,$72,$E3,$75,$69,$3F,$20,$05,$52,$00,$20
+        .byt $B5,$08,$05,$45,$4E,$56,$6F,$45,$4C,$4F,$50,$B5,$24,$04,$20,$70
+        .byt $B0,$17,$07,$F2,$1B,$01,$06,$2C,$41,$00,$08,$52,$06,$15,$2D,$36
+        .byt $35,$35,$FB,$33,$35,$1F,$14,$04,$4C,$41,$4E,$47,$45,$BF,$20,$76
+        .byt $20,$73,$20,$62,$CE,$00,$07,$65,$E5,$74,$85,$00,$0A,$6C,$0A,$0A
+        .byt $15,$A3,$01,$05,$28,$31,$20,$F7,$2F,$20,$30,$84,$00,$05,$53,$45
+        .byt $4D,$42,$03,$4C,$45,$39,$09,$08,$A0,$1F,$04,$22,$00,$05,$1B,$02
+        .byt $06,$2C,$04,$07,$46,$00,$12,$FC,$70,$07,$04,$04,$17,$04,$65,$6E
+        .byt $73,$65,$6D,$62,$C6,$A4,$06,$05,$54,$54,$FD,$08,$04,$47,$02,$06
+        .byt $EA,$03,$0A,$6C,$61,$5E,$20,$13,$05,$28,$32,$35,$35,$49,$26,$19
+        .byt $74,$06,$08,$05,$1F,$4A,$4F,$55,$45,$3F,$3C,$00,$04,$1B,$00,$07
+        .byt $98,$0B,$06,$D8,$54,$02,$07,$B4,$1C,$04,$D4,$07,$16,$63,$6F,$D1
+        .byt $03,$04,$53,$49,$4F,$4C,$45,$4E,$43,$8E,$03,$08,$E2,$29,$05,$70
+        .byt $56,$0B,$05,$1D,$73,$AB,$03,$04,$41,$49,$44,$03,$14,$0A,$7D,$26
+        .byt $09,$21,$21,$08,$E2,$40,$07,$04,$49,$9E,$0C,$04,$20,$00,$09,$B7
+        .byt $0B,$09,$43,$50,$2F,$EF,$41,$0D,$0A,$00,$64,$1A,$04,$3A,$20,$53
+        .byt $3F,$59,$4E,$54,$41,$58,$45,$20,$1F,$0C,$F0,$0E,$05,$6F,$65,$74
+        .byt $69,$71,$5E,$00,$0C,$65,$6E,$3C,$0B,$09,$C5,$31,$0E,$24,$06,$3D
+        .byt $D1,$07,$04,$41,$0D,$05,$6A,$0A,$05,$73,$74,$1E,$48,$20,$04,$0D
+        .byt $0A,$2A,$3D,$57,$15,$05,$39,$00,$09,$EA,$0F,$07,$FB,$20,$28,$07
+        .byt $26,$04,$29,$0D,$0A,$2E,$62,$3F,$79,$74,$20,$2E,$61,$73,$69,$24
+        .byt $08,$01,$18,$06,$FF,$2C,$20,$22,$63,$68,$61,$69,$6E,$FF,$65,$73
+        .byt $22,$0D,$0A,$2E,$77,$6F,$F3,$72,$64,$7C,$00,$0B,$A7,$06,$04,$20
+        .byt $31,$36,$20,$FB,$62,$69,$AF,$06,$04,$2E,$64,$73,$62,$20,$AF,$6E
+        .byt $5B,$2C,$76,$77,$1B,$07,$6E,$43,$00,$07,$0D,$3F,$0A,$2E,$28,$20
+        .byt $20,$2E,$61,$24,$07,$BA,$02,$05,$1F,$6C,$6F,$63,$2C,$20,$CA,$00
+        .byt $04,$8D,$19,$05,$39,$28,$16,$FD,$6F,$94,$1D,$04,$73,$0D,$0A,$23
+        .byt $69,$6E,$FF,$63,$6C,$75,$64,$65,$20,$22,$66,$F1,$22,$1B,$00,$04
+        .byt $0F,$00,$05,$9B,$2B,$06,$24,$20,$25,$20,$9F,$22,$63,$22,$20,$2A
+        .byt $36,$00,$07,$7F,$10,$04,$2C,$A7,$20,$62,$69,$21,$1D,$05,$38,$20
+        .byt $04,$72,$FE,$18,$16,$69,$3F,$63,$69,$0D,$0A,$3C,$20,$68,$23,$0A
+        .byt $F0,$00,$09,$76,$17,$23,$05,$2F,$20,$22,$23,$04,$0D,$0A,$00,$C0
+        .byt $1B,$05,$FE,$82,$01,$07,$0D,$0A,$52,$20,$5B,$72,$65,$E3,$67,$3D
+        .byt $DF,$00,$06,$B8,$01,$05,$A9,$10,$06,$73,$20,$28,$FF,$41,$20,$58
+        .byt $20,$59,$20,$53,$20,$FD,$50,$5E,$14,$15,$50,$2C,$20,$4E,$20,$56
+        .byt $FF,$20,$44,$20,$49,$20,$5A,$20,$43,$3E,$CE,$06,$04,$20,$5B,$61
+        .byt $64,$72,$48,$00,$06,$7B,$08,$06,$97,$73,$61,$73,$DB,$02,$08,$44
+        .byt $1D,$00,$0F,$5A,$17,$09,$4D,$9C,$79,$17,$0A,$7E,$01,$07,$64,$69
+        .byt $66,$D8,$1A,$06,$24,$00,$09,$47,$9C,$3D,$00,$0F,$8B,$07,$07,$0D
+        .byt $0A,$54,$A8,$1F,$04,$96,$00,$0B,$70,$EF,$61,$73,$20,$61,$06,$00
+        .byt $04,$0D,$0A,$50,$3E,$1B,$00,$18,$2C,$20,$4A,$53,$52,$ED,$06,$05
+        .byt $B9,$0F,$16,$1F,$75,$70,$0D,$0A,$42,$71,$00,$0F,$C7,$0F,$04,$8F
+        .byt $08,$09,$DC,$AA,$1D,$17,$FC,$0E,$05,$73,$20,$64,$F8,$1E,$08,$42
+        .byt $2D,$20,$45,$00,$0C,$D3,$02,$04,$37,$11,$05,$DF,$22,$04,$AB,$03
+        .byt $04,$3F,$D0,$02,$09,$1F,$00,$06,$BC,$90,$0A,$07,$D1,$1D,$04,$79
+        .byt $6D,$62,$6F,$34,$01,$04,$48,$27,$20,$20,$51,$64,$00,$0C,$DE,$2D
+        .byt $05,$2F,$31,$12,$09,$F8,$02,$0B,$EA,$28,$02,$0B,$23,$05,$12,$07
+        .byt $2C,$9D,$09,$04,$2B,$6E,$0D,$F3,$0A,$00,$57,$26,$09,$6E,$03,$09
+        .byt $30,$30,$30,$30,$CF,$2D,$30,$30,$44,$F8,$2C,$04,$1C,$01,$06,$67
+        .byt $65,$5F,$20,$7A,$65,$72,$6F,$B5,$1A,$08,$30,$C2,$21,$04,$BF,$2F
+        .byt $20,$30,$32,$30,$33,$21,$00,$05,$57,$FF,$42,$4F,$4F,$54,$20,$2F
+        .byt $20,$42,$27,$44,$4F,$53,$1E,$00,$05,$C3,$12,$0B,$7C,$58,$02,$05
+        .byt $ED,$04,$07,$7F,$54,$50,$41,$20,$28,$6D,$6F,$14,$16,$04,$CB,$30
+        .byt $34,$65,$00,$04,$34,$5D,$2D,$05,$65,$00,$09,$64,$65,$7E,$8C,$02
+        .byt $04,$65,$2C,$20,$44,$4D,$41,$99,$05,$15,$B9,$34,$26,$15,$04,$BC
+        .byt $03,$04,$2D,$42,$33,$3B,$00,$0A,$72,$BF,$6F,$67,$72,$61,$6D,$6D
+        .byt $95,$02,$04,$54,$03,$50,$41,$C6,$1E,$04,$C2,$00,$04,$22,$00,$0B
+        .byt $5E,$28,$06,$B2,$19,$04,$33,$06,$04,$F0,$E3,$28,$05,$37,$06,$15
+        .byt $A0,$00,$04,$A2,$20,$08,$39,$46,$46,$46,$1C,$93,$06,$04,$A8,$00
+        .byt $04,$42,$42,$37,$4B,$00,$08,$54,$08,$04,$A8,$00,$04,$FE,$EB,$08
+        .byt $09,$73,$0D,$0A,$42,$42,$38,$30,$47,$2D,$42,$46,$31,$01,$09,$B7
+        .byt $12,$06,$6E,$10,$07,$43,$8C,$00,$04,$F3,$46,$46,$8C,$00,$09,$F1
+        .byt $04,$04,$20,$28,$52,$41,$FF,$4D,$20,$6F,$76,$65,$72,$6C,$61,$31
+        .byt $79,$8A,$13,$04,$34,$1F,$05,$8B,$00,$0A,$73,$65,$39,$1C,$06,$B3
+        .byt $00,$04,$C1,$38,$81,$00,$04,$8D,$00,$04,$AE,$1A,$13,$D6,$1D,$05
+        .byt $B4,$1A,$05,$2C,$20,$9F,$73,$65,$6C,$6F,$6E,$03,$17,$18,$E9,$06
+        .byt $05,$00,$36,$FB,$1A,$04,$3A,$20,$6B,$12,$04,$44,$55,$01,$1B,$07
+        .byt $69,$05,$0D,$58,$FF,$01,$06,$1C,$1C,$22,$1B,$00,$04,$2D,$3E,$16
+        .byt $1C,$05,$28,$E5,$1B,$04,$DD,$3A,$70,$1C,$18,$64,$65,$66,$FD,$01
+        .byt $04,$66,$69,$DD,$63,$93,$04,$15,$6D,$69,$6E,$56,$28,$08,$67,$61
+        .byt $C7,$72,$64,$65,$A5,$06,$05,$7F,$00,$07,$36,$21,$05,$64,$6F,$09
+        .byt $73,$7F,$00,$13,$0D,$20,$07,$3A,$0B,$0F,$04,$CC,$1A,$05,$5A,$00
+        .byt $12,$DA,$17,$08,$78,$0C,$1A,$04,$A1,$06,$06,$24,$00,$12,$6E,$6F
+        .byt $6D,$2C,$80,$18,$1C,$4D,$64,$2D,$27,$04,$65,$72,$08,$00,$04,$D3
+        .byt $1C,$25,$6C,$94,$0B,$05,$C2,$1C,$01,$04,$28,$0F,$01,$1E,$6F,$18
+        .byt $05,$40,$07,$06,$07,$0B,$15,$20,$38,$7F,$2E,$33,$20,$3B,$20,$42
+        .byt $3A,$45,$1E,$07,$FC,$25,$00,$14,$0E,$0A,$04,$42,$3A,$29,$0D,$0A
+        .byt $2F,$EA,$EE,$12,$0F,$28,$AA,$00,$06,$29,$B4,$16,$07,$3A,$20,$4C
+        .byt $F9,$46,$40,$00,$15,$5A,$00,$04,$2D,$3E,$20,$43,$52,$F0,$21,$00
+        .byt $05,$5C,$1D,$21,$98,$0C,$07,$67,$1F,$06,$2C,$20,$3C,$52,$EB,$45
+        .byt $50,$56,$0C,$15,$3A,$37,$01,$08,$29,$0D,$0A,$FF,$31,$3A,$2F,$44
+        .byt $4F,$43,$53,$2F,$39,$58,$74,$21,$05,$4E,$17,$05,$6D,$69,$6E,$54
+        .byt $1E,$0C,$35,$0F,$15,$A2,$69,$13,$05,$31,$8A,$20,$04,$5F,$09,$16
+        .byt $CD,$0E,$07,$65,$E1,$1D,$06,$30,$F1,$3A,$5F,$00,$06,$20,$00,$08
+        .byt $16,$06,$07,$20,$69,$6E,$74,$83,$65,$72,$85,$1A,$04,$B5,$0B,$15
+        .byt $FD,$02,$06,$2C,$18,$0B,$95,$08,$08,$69,$30,$DB,$06,$04,$4D,$14
+        .byt $04,$87,$02,$06,$B7,$02,$15,$61,$6A,$51,$09,$05,$27,$00,$05,$FE
+        .byt $6E,$01,$06,$0D,$0A,$58,$2E,$44,$53,$4B,$5C,$26,$00,$0B,$C6,$02
+        .byt $07,$72,$65,$66,$36,$32,$04,$28,$81,$15,$19,$E8,$9D,$21,$06,$A7
+        .byt $2B,$04,$81,$27,$08,$3A,$19,$2E,$04,$48,$49,$45,$07,$52,$53,$20
+        .byt $68,$27,$04,$A3,$03,$13,$A9,$03,$08,$B3,$27,$30,$F3,$04,$15,$80
+        .byt $7D,$2E,$06,$6A,$2E,$04,$61,$2E,$22,$D0,$0F,$06,$06,$1E,$0A,$FC
+        .byt $10,$06,$EF,$06,$15,$2D,$7F,$33,$32,$37,$36,$38,$2E,$2E,$07,$00
+        .byt $04,$BD,$37,$4C,$25,$16,$61,$72,$69,$61,$8C,$2A,$04,$20,$7F,$41
+        .byt $20,$61,$20,$5A,$0D,$0A,$EB,$2E,$09,$70,$BE,$00,$09,$A4,$27,$05
+        .byt $65,$11,$04,$84,$0C,$18,$65,$73,$70,$26,$05,$04,$DF,$3A,$20,$58
+        .byt $2B,$38,$80,$11,$15,$4E,$44,$FF,$28,$32,$34,$30,$29,$20,$28,$58
+        .byt $FF,$20,$2A,$20,$32,$29,$0D,$0A,$6F,$CF,$70,$65,$72,$61,$C4,$22
+        .byt $04,$C6,$00,$05,$7C,$20,$FF,$2D,$20,$3B,$20,$2A,$20,$2F,$20,$9F
+        .byt $25,$20,$3B,$20,$2B,$0E,$00,$05,$83,$0D,$15,$3C,$FF,$3E,$20,$3C
+        .byt $20,$3C,$3D,$20,$3E,$FF,$20,$3E,$3D,$20,$3B,$20,$26,$20,$87,$7C
+        .byt $0D,$0A,$85,$0E,$04,$2B,$1B,$05,$26,$00,$07,$6D,$00,$04,$6E,$3F
+        .byt $29,$20,$41,$42,$53,$28,$1A,$0D,$04,$45,$00,$12,$BE,$BE,$18,$05
+        .byt $28,$78,$2C,$79,$29,$36,$35,$04,$45,$FE,$7B,$24,$15,$53,$43,$52
+        .byt $4E,$28,$63,$6F,$1F,$6C,$2C,$6C,$69,$67,$04,$29,$04,$D9,$0A,$0B
+        .byt $E4,$07,$05,$DF,$66,$66,$65,$63,$74,$2D,$31,$07,$4C,$45,$C7,$54
+        .byt $20,$56,$B0,$00,$16,$34,$00,$04,$B5,$15,$07,$41,$54,$78,$E0,$19
+        .byt $06,$19,$00,$04,$6D,$15,$04,$4E,$45,$58,$54,$DA,$24,$05,$9B,$20
+        .byt $56,$6A,$11,$05,$5B,$70,$96,$0C,$04,$1A,$00,$0A,$57,$CF,$48,$49
+        .byt $4C,$45,$4E,$0B,$0B,$1A,$00,$0A,$49,$46,$7C,$95,$08,$0C,$1A,$00
+        .byt $06,$5B,$45,$4C,$53,$45,$0A,$00,$04,$FF,$5D,$20,$45,$4E,$44,$49
+        .byt $46,$0D,$8F,$0A,$53,$55,$42,$DC,$15,$05,$26,$00,$0C,$B7,$0C,$04
+        .byt $55,$FF,$42,$20,$3B,$20,$43,$41,$4C,$4C,$78,$1E,$00,$04,$B4,$00
+        .byt $14,$57,$19,$04,$54,$55,$52,$4E,$E4,$12,$04,$C0,$E7,$19,$04,$83
+        .byt $00,$0A,$67,$32,$0B,$83,$02,$06,$CA,$02,$15,$C3,$09,$04,$65,$6E
+        .byt $2C,$7B,$2A,$06,$5A,$04,$16,$4C,$4F,$1B,$00,$04,$3A,$96,$2B,$04
+        .byt $B6,$0F,$07,$6E,$29,$21,$04,$4E,$55,$4D,$4E,$0C,$04,$20,$79,$28
+        .byt $01,$04,$E0,$B5,$12,$0A,$3A,$19,$0D,$6B,$03,$0C,$B0,$0C,$04,$5C
+        .byt $00,$10,$74,$72,$61,$A1,$64,$14,$0E,$04,$1D,$2B,$08,$90,$2E,$16
+        .byt $4D,$27,$08,$3B,$84,$34,$07,$53,$F0,$08,$01,$15,$3D,$01,$04,$6F
+        .byt $27,$0A,$EB,$00,$15,$61,$76,$65,$63,$7F,$20,$43,$50,$41,$2E,$49
+        .byt $4E,$B2,$03,$15,$87,$47,$52,$58,$1B,$00,$04,$0C,$01,$06,$0A,$00
+        .byt $04,$82,$03,$15,$41,$B7,$4E,$49,$4D,$27,$00,$05,$73,$69,$0C,$00
+        .byt $05,$29,$83,$0D,$0A,$3D,$01,$06,$25,$00,$0A,$50,$2B,$0B,$BB,$2B
+        .byt $04,$18,$16,$14,$20,$1F,$20,$32,$30,$30,$2C,$66,$19,$07,$40,$32
+        .byt $12,$36,$00,$05,$6F,$20,$31,$32,$38,$38,$29,$04,$6E,$73,$BA,$0A
+        .byt $05,$00,$43,$00,$12,$06,$17,$04,$B7,$21,$05,$5C,$32,$10,$48,$2D
+        .byt $0A,$BD,$19,$1A,$58,$00,$07,$05,$29,$05,$14,$BF,$00,$0E,$89,$09
+        .byt $0B,$20,$88,$00,$05,$32,$27,$04,$15,$A6,$2D,$06,$44,$0A,$06,$0C
+        .byt $55,$12,$1A,$67,$00,$07,$20,$6E,$35,$2E,$06,$B8,$1B,$04,$26,$39
+        .byt $0F,$60,$02,$09,$4E,$3D,$19,$07,$20,$31,$36,$DA,$0F,$18,$D5,$1A
+        .byt $04,$3B,$E8,$12,$06,$FC,$E7,$06,$17,$2E,$01,$09,$4C,$4F,$43,$41
+        .byt $54,$45,$06,$A3,$02,$05,$6C,$69,$89,$21,$13,$4E,$1A,$08,$37,$04
+        .byt $04,$4B,$1A,$1D,$49,$1A,$05,$6E,$D1,$2E,$04,$48,$41,$52,$4F,$00
+        .byt $08,$20,$63,$2D,$00,$12,$82,$15,$0E,$06,$63,$25,$1A,$22,$0E,$14
+        .byt $0A,$1B,$1F,$16,$08,$01,$08,$28,$12,$04,$50,$D5,$43,$3C,$1A,$04
+        .byt $78,$48,$0E,$08,$6E,$09,$2D,$06,$6C,$27,$84,$6D,$00,$06,$58,$02
+        .byt $15,$28,$DF,$05,$07,$72,$20,$04,$3B,$09,$06,$9E,$1B,$05,$42,$00
+        .byt $D0,$04,$08,$1C,$04,$06,$FB,$1E,$06,$D6,$1A,$05,$14,$10,$07,$BE
+        .byt $01,$15,$56,$08,$05,$08,$1A,$04,$84,$65,$1F,$05,$2A,$35,$04,$22
+        .byt $18,$02,$05,$5F,$0F,$05,$19,$04,$12,$44,$01,$15,$74,$7B,$65,$6C
+        .byt $68,$22,$04,$6C,$20,$3B,$20,$42,$00,$04,$00,$58,$09,$19,$92,$2D
+        .byt $1B,$26,$20,$07,$D3,$22,$04,$D7,$13,$04,$36,$01,$15,$F7,$06,$04
+        .byt $78,$01,$05,$F6,$E3,$10,$07,$33,$39,$58,$35,$22,$50,$45,$4E,$20
+        .byt $D4,$B6,$2B,$08,$20,$00,$04,$30,$22,$00,$08,$31,$9C,$04,$04,$63
+        .byt $65,$0B,$20,$32,$14,$10,$15,$6E,$36,$21,$04,$FD,$34,$04,$55,$1F
+        .byt $09,$CF,$0E,$05,$FA,$53,$1F,$05,$78,$30,$02,$04,$33,$39,$2C,$20
+        .byt $79,$9E,$8B,$0D,$15,$2D,$31,$39,$39,$A5,$16,$05,$E2,$19,$04,$31
+        .byt $FF,$20,$79,$31,$20,$78,$32,$20,$79,$5C,$67,$00,$13,$0C,$01,$07
+        .byt $42,$4F,$58,$28,$00,$1E,$72,$DA,$06,$04,$8B,$6E,$67,$55,$0C,$04
+        .byt $46,$2D,$00,$04,$F1,$23,$17,$56,$1F,$04,$0D,$A7,$0A,$43,$49,$33
+        .byt $1F,$05,$B6,$00,$04,$72,$05,$03,$05,$65,$05,$72,$0F,$0A,$05,$47
+        .byt $41,$04,$05,$CF,$05,$06,$32,$04,$17,$C5,$2E,$07,$1A,$1F,$1F,$EC
+        .byt $4E,$03,$09,$4F,$0E,$04,$54,$54,$31,$03,$06,$79,$31,$20,$03,$79
+        .byt $32,$7E,$15,$14,$F2,$03,$09,$81,$2A,$04,$36,$1F,$07,$61,$3A,$16
+        .byt $47,$1F,$05,$F0,$34,$1F,$06,$E8,$36,$12,$D8,$30,$04,$60,$3B,$05
+        .byt $48,$49,$5A,$20,$31,$28,$8D,$05,$05,$A1,$15,$16,$FD,$1B,$04,$20
+        .byt $28,$6C,$05,$05,$A0,$00,$04,$07,$4E,$49,$4D,$B0,$0D,$07,$E8,$3D
+        .byt $06,$89,$30,$09,$AD,$30,$05,$67,$02,$16,$02,$5E,$00,$05,$2C,$89
+        .byt $03,$08,$EB,$15,$04,$26,$00,$14,$0E,$0F,$08,$92,$30,$0B,$C5,$37
+        .byt $12,$88,$46,$3A,$06,$81,$0E,$08,$6E,$0E,$07,$57,$3E,$21,$04,$23
+        .byt $01,$0E,$6C,$38,$10,$47,$40,$C1,$08,$05,$23,$00,$1B,$FC,$00,$15
+        .byt $85,$15,$04,$5C,$17,$06,$C3,$01,$04,$56,$10,$28,$05,$13,$41,$59
+        .byt $15,$04,$09,$47,$00,$09,$6E,$C5,$16,$05,$17,$39,$1A,$31,$08,$07
+        .byt $A0,$1C,$01,$19,$BC,$15,$05,$67,$28,$09,$1A,$00,$05,$68,$15,$04
+        .byt $3B,$62,$08,$07,$65,$61,$74,$37,$04,$06,$06,$0D,$16,$97,$20,$0A
+        .byt $DD,$05,$1C,$20,$28,$26,$01,$05,$20,$BA,$28,$05,$2E,$02,$15,$44
+        .byt $00,$05,$CF,$00,$05,$29,$37,$05,$3B,$C8,$00,$0A,$FB,$05,$06,$76
+        .byt $F5,$3A,$04,$6E,$74,$FA,$13,$04,$0D,$0A,$00,$4B,$31,$06,$7E,$40
+        .byt $0C,$0B,$50,$4C,$45,$49,$4E,$20,$95,$18,$05,$10,$47,$0C,$19,$4C
+        .byt $0C,$07,$87,$31,$21,$5D,$2B,$0C,$64,$3D,$3D,$16,$43,$31,$06,$BA
+        .byt $0F,$05,$C1,$28,$96,$38,$09,$25,$00,$10,$5C,$2F,$04,$7D,$40,$06
+        .byt $73,$00,$06,$41,$3A,$00,$E9,$0E,$04,$1C,$00,$04,$05,$1C,$05,$C3
+        .byt $05,$08,$8F,$2E,$07,$42,$00,$14,$54,$0D,$06,$B8,$28,$04,$0F,$58
+        .byt $20,$5E,$57,$F1,$25,$09,$37,$23,$05,$16,$0E,$04,$36,$05,$07,$3E
+        .byt $F6,$1D,$16,$63,$68,$61,$6E,$67,$F1,$1C,$05,$2C,$32,$1E,$FE,$9F
+        .byt $00,$08,$55,$53,$42,$3A,$5B,$63,$68,$00,$F0,$0F,$17,$4C,$2C,$0B
+        .byt $B1,$00,$04,$4E,$00,$14,$41,$00,$04,$16,$0F,$04,$8F,$1C,$05,$1F
+        .byt $00,$12,$00,$F0,$00,$08,$A7,$1A,$04,$FF,$0A,$08,$26,$00,$12,$56
+        .byt $04,$04,$DC,$00,$04,$04,$3F,$1B,$77,$0F,$07,$2F,$2C,$20,$2E,$2E
+        .byt $BD,$2A,$04,$6F,$FF,$16,$05,$27,$00,$12,$C1,$3B,$D9,$2D,$08,$64
+        .byt $2F,$08,$42,$10,$13,$9D,$2D,$13,$D0,$0C,$15,$4C,$46,$18,$47,$10
+        .byt $0E,$75,$0B,$16,$2C,$09,$04,$20,$43,$33,$33,$05,$92,$05,$08,$8C
+        .byt $39,$10,$0C,$AE,$11,$08,$CE,$27,$04,$65,$64,$F5,$18,$04,$7E,$38
+        .byt $16,$62,$27,$08,$30,$3A,$10,$00,$0B,$28,$09,$3D,$00,$05,$BC,$38
+        .byt $18,$7A,$07,$07,$05,$17,$12,$43,$1F,$0A,$EA,$1E,$09,$3F,$00,$12
+        .byt $06,$A4,$00,$07,$0D,$0A,$AE,$0E,$05,$1B,$00,$0B,$6B,$12,$09,$3C
+        .byt $41,$07,$5D,$26,$17,$00,$AB,$03,$06,$CE,$08,$07,$15,$04,$16,$BE
+        .byt $3B,$06,$03,$28,$04,$F3,$2B,$0C,$7D,$3B,$04,$92,$34,$04,$C7,$20
+        .byt $2F,$20,$30,$1C,$04,$3B,$00,$16,$23,$00,$06,$0D,$0A,$00,$C3,$0E
+        .byt $04,$3B,$00,$19,$A1,$05,$06,$3F,$02,$16,$B4,$05,$04,$90,$04,$04
+        .byt $9D,$03,$08,$5E,$18,$06,$C6,$22,$00,$0A,$69,$6E,$1C,$44,$04,$DE
+        .byt $16,$05,$55,$00,$07,$73,$0D,$FF,$0A,$31,$20,$32,$20,$33,$20,$34
+        .byt $0E,$25,$00,$09,$74,$72,$69,$EB,$02,$04,$D3,$10,$05,$61,$16,$05
+        .byt $46,$09,$16,$2F,$79,$70,$65,$2C,$B1,$31,$08,$3B,$99,$08,$16,$94
+        .byt $06,$05,$9F,$3A,$20,$6F,$72,$64,$ED,$0D,$16,$8F,$00,$07,$0D,$13
+        .byt $0A,$2F,$1B,$00,$0F,$84,$04,$07,$28,$67,$04,$04,$17,$12,$04,$94
+        .byt $03,$15,$80,$29,$04,$06,$CD,$32,$08,$27,$0F,$04,$79,$03,$04,$22
+        .byt $00,$0A,$E7,$35,$04,$30,$26,$0B,$5E,$01,$43,$6F,$2E,$0B,$BD,$30
+        .byt $08,$2F,$02,$06,$A6,$15,$05,$30,$02,$15,$A0,$00,$04,$DA,$04,$04
+        .byt $A3,$6F,$75,$CA,$0D,$05,$41,$0F,$05,$26,$00,$12,$3B,$00,$05,$04
+        .byt $28,$08,$2D,$43,$08,$52,$1C,$19,$7E,$13,$05,$29,$9C,$33,$05,$68
+        .byt $3F,$07,$24,$00,$13,$45,$00,$06,$01,$2C,$F0,$33,$0A,$33,$11,$16
+        .byt $02,$05,$06,$1D,$00,$04,$F8,$2D,$10,$45,$41,$07,$27,$22,$05,$00
+        .byt $B6,$2E,$0C,$6E,$0A,$08,$E8,$00,$15,$7E,$0D,$04,$C1,$41,$09,$95
+        .byt $05,$04,$66,$2B,$10,$49,$26,$09,$E7,$52,$20,$28,$3D,$33,$07,$4E
+        .byt $04,$15,$53,$20,$28,$30,$51,$33,$07,$FF,$18,$05,$52,$30,$0B,$DF
+        .byt $33,$0A,$65,$78,$70,$0C,$04,$64,$02,$04,$20,$70,$0C,$15,$8B,$03
+        .byt $08,$9A,$01,$04,$47,$3B,$05,$7F,$2F,$05,$5E,$E4,$46,$0A,$24,$06
+        .byt $08,$5C,$71,$01,$08,$29,$04,$15,$72,$65,$6C,$41,$14,$04,$28,$48
+        .byt $01,$09,$00,$CF,$03,$15,$46,$01,$06,$76,$27,$04,$B4,$2D,$1C,$32
+        .byt $01,$15,$A6,$2D,$08,$D7,$01,$07,$25,$03,$15,$DD,$4D,$64,$03,$05
+        .byt $2C,$20,$54,$B1,$38,$05,$20,$56,$16,$02,$2A,$17,$41,$62,$E6,$3F
+        .byt $04,$73,$D7,$00,$07,$ED,$02,$15,$B9,$07,$09,$E1,$61,$2C,$00,$07
+        .byt $89,$47,$18,$3F,$07,$0E,$D2,$0D,$16,$64,$69,$66,$C7,$66,$65,$72
+        .byt $47,$00,$04,$0F,$3F,$13,$7A,$1A,$06,$72,$0D,$03,$0A,$63,$64,$3E
+        .byt $05,$19,$00,$0A,$0D,$00,$04,$87,$00,$09,$3E,$04,$07,$DB,$09,$16
+        .byt $08,$10,$0F,$05,$C6,$45,$1C,$6E,$21,$09,$00
