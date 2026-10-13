@@ -825,6 +825,20 @@ CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
   (démarrage 6,8 s, COPY 12,6 s, commande inconnue 1,8 s) ; `DIR B:` vide échoue en ~5,8 s,
   puis `DIR` sur A: répond.
 
+- Clock Signal à quatre lecteurs (Pierre, octobre 2026 : attendre l'auteur plutôt que lui
+  proposer un changement ; une version à soi en attendant). Chaque disquette insérée allait
+  dans le lecteur 0 (`insert_disks` de `Oric.cpp`) : une deuxième remplaçait A:.
+  `tools/clk-4lecteurs.patch` : champ `target_drive` de `Analyser::Static::Media` (-1 : au
+  choix de la machine) ; sur l'Oric, une disquette seule va dans le lecteur demandé, sinon
+  dans le premier lecteur vide (A: si tous sont pleins) ; plusieurs à la fois (démarrage,
+  ligne de commande SDL) remplissent A:, B:... comme avant. Application Mac : liste « Drive »
+  dans le panneau Insérer (`MachineDocument.swift`, `CSMediaSet.targetDrive`). Contient aussi
+  le rétablissement de l'interruption du Microdisc. `tools/build_clk_mac.sh` construit
+  l'application (Xcode) ; `setup_clk.sh` applique ce correctif avant celui du banc, qui gagne
+  `insert IMAGE [N]`. Essayé dans le banc : B: et C: remplis d'office, B: remplacé à la
+  demande, A: intact ; mesures inchangées. La partie Mac (Swift, Objective-C) n'a pas pu être
+  compilée ici (pas de macOS) : à construire par Pierre.
+
 ## Suite prévue (par priorité)
 
 **Prochains lots, dans l'ordre voulu par Pierre** (une livraison testée et un commit par lot ;

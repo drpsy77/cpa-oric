@@ -153,6 +153,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py era IMAGE NOM.EXT` | effacer un fichier |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT et la table de HELP.COM |
 | `tools/setup_clk.sh` | installe le banc Clock Signal dans `tools/clk/` (une fois, long) |
+| `tools/build_clk_mac.sh` | sur le Mac, avec Xcode : Clock Signal à quatre lecteurs dans `tools/clk-mac/` |
 | `tools/clk/clkheadless IMAGE tools/clk/roms SCRIPT` | Clock Signal sans écran : frappe, durées en temps émulé d'un vrai Microdisc (`cmd`), écran texte (`screen`) ; syntaxe en tête de `tools/clk-banc.patch` |
 
 ### `run_test.sh` en détail

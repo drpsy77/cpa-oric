@@ -6,19 +6,23 @@
 # Clock Signal simule la rotation du disque et le chargement de la tête du
 # Microdisc, ce que ne font ni Oricutron ni le LOCI : c'est lui qui mesure la
 # vitesse des accès disque d'un vrai lecteur (entrelacement, attentes).
-# Le correctif tools/clk-banc.patch ajoute le banc (harness/headless.cpp) et
-# rend la mémoire de l'Oric lisible par lui. Clock Signal est pris au commit
-# 50e3b4d (12 octobre 2026), qui corrige la sélection des lecteurs B: à D: du
-# Microdisc (défaut signalé par Pierre, corrigé par Thomas Harte, PR #1900).
-# Ce commit ne démarre plus aucune disquette Microdisc (la ligne d'interruption
-# n'y est plus masquée par le registre de contrôle) : le correctif rétablit
-# l'appel à interrupt_request_line() dans Oric.cpp, en attendant l'amont.
+# Clock Signal est pris au commit 50e3b4d (12 octobre 2026), qui corrige la
+# sélection des lecteurs B: à D: du Microdisc (défaut signalé par Pierre,
+# corrigé par Thomas Harte, PR #1900). Deux correctifs, dans l'ordre :
+#   tools/clk-4lecteurs.patch  quatre lecteurs utilisables (une disquette
+#       insérée va dans le premier lecteur vide, ou dans celui demandé), et
+#       interruption du Microdisc de nouveau masquée (50e3b4d ne démarre plus
+#       aucune disquette Microdisc) ; aussi pour l'application Mac
+#       (tools/build_clk_mac.sh) ;
+#   tools/clk-banc.patch       le banc (harness/headless.cpp), et la mémoire
+#       de l'Oric lisible par lui.
 # Usage : ./tools/setup_clk.sh   (après tools/setup_linux.sh, dont il reprend
 #         les paquets et les ROMs d'Oricutron)
 # Exemple :
 #   printf 'waitprompt\nrun 4\ncmd COPY LOGO.COM LOG2.COM\nscreen\n' > /tmp/s.txt
 #   cp build/cpa.dsk /tmp/c.dsk
 #   tools/clk/clkheadless /tmp/c.dsk tools/clk/roms /tmp/s.txt
+#   (« insert /tmp/b.dsk » dans le script met une disquette en B:)
 set -e
 cd "$(dirname "$0")"
 TOOLS=$(pwd)
@@ -41,6 +45,7 @@ if [ ! -x clk/clkheadless ]; then
   git clone -q https://github.com/TomHarte/CLK.git clk/src
   cd clk/src
   git checkout -q $CLK_COMMIT
+  git apply "$TOOLS/clk-4lecteurs.patch"
   git apply "$TOOLS/clk-banc.patch"
   mkdir -p b && cd b
   cmake -DCLK_UI=SDL -DCMAKE_BUILD_TYPE=Release .. >cmake.log

@@ -57,7 +57,9 @@ proche du matériel qu'Oricutron. Jusqu'à sa version du 10 octobre 2026, son Mi
 tous les lecteurs, `A:` compris, dès que CP/A choisit `B:`, `C:` ou `D:` : y rester sur `A:`
 (sans `DIR B:` ni `B:`, une commande inconnue n'est pas cherchée sur les autres lecteurs). Son
 auteur l'a corrigé le 12 octobre 2026 ; l'application ne met de toute façon une disquette que
-dans `A:`.
+dans `A:`. `tools/build_clk_mac.sh` construit sur un Mac (avec Xcode) une version à quatre
+lecteurs : Fichier > Insérer propose le lecteur, et une disquette glissée sur la fenêtre va
+dans le premier lecteur vide.
 
 La disquette contient `README.TXT`, un aide-mémoire de toutes les commandes et de leurs
 paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).
