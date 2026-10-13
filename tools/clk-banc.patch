@@ -13,7 +13,7 @@ index e709556..16d6f2b 100644
 +add_executable(clkheadless ${CLK_HEADLESS_SOURCES} harness/headless.cpp)
 +target_link_libraries(clkheadless PRIVATE ZLIB::ZLIB OpenGL::GL)
 diff --git a/Machines/Oric/Oric.cpp b/Machines/Oric/Oric.cpp
-index 3e7a4ce..20b2078 100644
+index b367a84..6ac22f3 100644
 --- a/Machines/Oric/Oric.cpp
 +++ b/Machines/Oric/Oric.cpp
 @@ -83,6 +83,8 @@ private:
@@ -33,21 +33,12 @@ index 3e7a4ce..20b2078 100644
  		for(auto &c: ram_) {
  			c |= 0x40;
  		}
-@@ -781,7 +784,7 @@ private:
- 
- 		// The Microdisc directly provides an interrupt line.
- 		if constexpr (disk_interface == DiskInterface::Microdisc) {
--			irq_line |= microdisc_.get_interrupt_request_line();
-+			irq_line |= microdisc_.interrupt_request_line();
- 		}
- 
- 		// The Jasmin reroutes its data request line to the processor's interrupt line.
 diff --git a/harness/headless.cpp b/harness/headless.cpp
 new file mode 100644
-index 0000000..87f166d
+index 0000000..c3e4e76
 --- /dev/null
 +++ b/harness/headless.cpp
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,162 @@
 +// Banc d'essai sans écran pour Clock Signal (Oric + Microdisc), pour CP/A
 +// (tools/clk-banc.patch, installé par tools/setup_clk.sh). L'émulation va
 +// aussi vite que possible ; les durées affichées sont en temps émulé.
@@ -60,6 +51,8 @@ index 0000000..87f166d
 +//                    Entrée et le retour du prompt
 +//   screen           affiche l'écran texte
 +//   verbose 1        trace les voyants (tête du Microdisc, moteurs)
++//   insert F [N]     insère l'image F dans le lecteur N (0 = A:) ; sans N,
++//                    dans le premier lecteur vide (tools/clk-4lecteurs.patch)
 +#include "Analyser/Static/StaticAnalyser.hpp"
 +#include "Machines/Utility/MachineForTarget.hpp"
 +#include "Machines/DynamicMachine.hpp"
@@ -176,6 +169,13 @@ index 0000000..87f166d
 +		std::string op = line.substr(0, line.find(' '));
 +		std::string arg = line.size() > op.size() ? line.substr(op.size() + 1) : "";
 +		if(op == "run") run(std::stod(arg));
++		else if(op == "insert") {
++			std::string f = arg.substr(0, arg.find(' '));
++			Analyser::Static::Media media = Analyser::Static::GetMedia(f);
++			if(arg.size() > f.size()) media.target_drive = std::stoi(arg.substr(f.size() + 1));
++			if(media.empty() || !m->media_target() || !m->media_target()->insert_media(media))
++				printf("INSERT %s : refusé\n", f.c_str());
++		}
 +		else if(op == "verbose") obs.verbose = arg == "1";
 +		else if(op == "type") press(unescape(arg));
 +		else if(op == "waitprompt") {

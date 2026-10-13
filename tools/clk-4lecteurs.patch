@@ -1,0 +1,130 @@
+diff --git a/Analyser/Static/StaticAnalyser.hpp b/Analyser/Static/StaticAnalyser.hpp
+index 84af84f..f1c01a2 100644
+--- a/Analyser/Static/StaticAnalyser.hpp
++++ b/Analyser/Static/StaticAnalyser.hpp
+@@ -37,6 +37,10 @@ struct Media {
+ 	std::vector<std::shared_ptr<Storage::MassStorage::MassStorageDevice>> mass_storage_devices;
+ 	std::vector<std::shared_ptr<Storage::FileBundle::FileBundle>> file_bundles;
+ 
++	/// For machines with several disk drives: the drive that should receive the first disk,
++	/// or -1 to let the machine choose (machines that don't support this ignore it).
++	int target_drive = -1;
++
+ 	bool empty() const {
+ 		return
+ 			disks.empty() &&
+diff --git a/Machines/Oric/DiskController.hpp b/Machines/Oric/DiskController.hpp
+index e96a226..59c663c 100644
+--- a/Machines/Oric/DiskController.hpp
++++ b/Machines/Oric/DiskController.hpp
+@@ -22,6 +22,10 @@ public:
+ 		get_drive(size_t(d)).set_disk(disk);
+ 	}
+ 
++	bool has_disk(int d) {
++		return get_drive(size_t(d)).has_disk();
++	}
++
+ 	enum class PagedItem {
+ 		DiskROM,
+ 		BASIC,
+diff --git a/Machines/Oric/Oric.cpp b/Machines/Oric/Oric.cpp
+index 3e7a4ce..b367a84 100644
+--- a/Machines/Oric/Oric.cpp
++++ b/Machines/Oric/Oric.cpp
+@@ -437,7 +437,18 @@ public:
+ 	}
+ 
+ 	template <typename DiskInterface> bool insert_disks(const Analyser::Static::Media &media, DiskInterface &interface, int num_drives) {
++		// Several disks at once (e.g. at startup) fill the drives from the first one. A single disk
++		// goes to the requested drive if any, otherwise to the first empty drive, so that inserting
++		// a second disk fills drive 2 rather than replacing drive 1; if all drives are full, drive 1.
+ 		int drive_index = 0;
++		if(media.target_drive >= 0) {
++			drive_index = std::min(media.target_drive, num_drives - 1);
++		} else if(media.disks.size() == 1) {
++			if constexpr (requires { interface.has_disk(0); }) {
++				while(drive_index < num_drives && interface.has_disk(drive_index)) ++drive_index;
++				if(drive_index == num_drives) drive_index = 0;
++			}
++		}
+ 		for(auto &disk : media.disks) {
+ 			interface.set_disk(disk, drive_index);
+ 			++drive_index;
+@@ -781,7 +792,7 @@ private:
+ 
+ 		// The Microdisc directly provides an interrupt line.
+ 		if constexpr (disk_interface == DiskInterface::Microdisc) {
+-			irq_line |= microdisc_.get_interrupt_request_line();
++			irq_line |= microdisc_.interrupt_request_line();
+ 		}
+ 
+ 		// The Jasmin reroutes its data request line to the processor's interrupt line.
+diff --git a/OSBindings/Mac/Clock Signal/Documents/MachineDocument.swift b/OSBindings/Mac/Clock Signal/Documents/MachineDocument.swift
+index 387b8c6..79575b1 100644
+--- a/OSBindings/Mac/Clock Signal/Documents/MachineDocument.swift	
++++ b/OSBindings/Mac/Clock Signal/Documents/MachineDocument.swift	
+@@ -335,20 +335,29 @@ class MachineDocument:
+ 	@IBAction final func insertMedia(_ sender: AnyObject!) {
+ 		let openPanel = NSOpenPanel()
+ 		openPanel.message = "Hint: you can also insert media by dragging and dropping it onto the machine's window."
++
++		// Drive choice, for machines with several disk drives (the Oric's four, for now).
++		let drivePopUp = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 240, height: 26), pullsDown: false)
++		drivePopUp.addItems(withTitles: ["First empty drive", "Drive 1 (A:)", "Drive 2 (B:)", "Drive 3 (C:)", "Drive 4 (D:)"])
++		openPanel.accessoryView = drivePopUp
++		openPanel.isAccessoryViewDisclosed = true
++
+ 		openPanel.beginSheetModal(for: self.windowControllers[0].window!) { (response) in
+ 			if response == .OK {
++				let drive = drivePopUp.indexOfSelectedItem - 1
+ 				for url in openPanel.urls {
+-					self.insertFile(url)
++					self.insertFile(url, drive: drive)
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+-	private func insertFile(_ URL: URL) {
++	private func insertFile(_ URL: URL, drive: Int = -1) {
+ 		// Try to insert media.
+ 		let mediaSet = CSMediaSet(fileAt: URL)
+ 		checkPermisions(mediaSet)
+ 		if !mediaSet.empty {
++			mediaSet.targetDrive = drive
+ 			mediaSet.apply(to: self.machine)
+ 			return
+ 		}
+diff --git a/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.h b/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.h
+index 9099442..39d41ea 100644
+--- a/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.h	
++++ b/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.h	
+@@ -16,6 +16,8 @@ NS_ASSUME_NONNULL_BEGIN
+ 
+ - (instancetype)initWithFileAtURL:(NSURL *)url;
+ - (void)applyToMachine:(CSMachine *)machine;
++/// Drive that receives the disk: -1 lets the machine choose (first empty drive on the Oric).
++@property(nonatomic) NSInteger targetDrive;
+ - (void)addPermissionHandler;
+ 
+ @property(nonatomic, readonly) BOOL empty;
+diff --git a/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.mm b/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.mm
+index fc8f738..ab0b733 100644
+--- a/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.mm	
++++ b/OSBindings/Mac/Clock Signal/Machine/StaticAnalyser/CSStaticAnalyser.mm	
+@@ -186,6 +186,14 @@ PermissionDelegate permission_delegate;
+ 	return _media.empty();
+ }
+ 
++- (NSInteger)targetDrive {
++	return _media.target_drive;
++}
++
++- (void)setTargetDrive:(NSInteger)targetDrive {
++	_media.target_drive = int(targetDrive);
++}
++
+ - (void)applyToMachine:(CSMachine *)machine {
+ 	[machine applyMedia:_media];
+ }
