@@ -837,7 +837,13 @@ CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
   l'application (Xcode) ; `setup_clk.sh` applique ce correctif avant celui du banc, qui gagne
   `insert IMAGE [N]`. Essayé dans le banc : B: et C: remplis d'office, B: remplacé à la
   demande, A: intact ; mesures inchangées. La partie Mac (Swift, Objective-C) n'a pas pu être
-  compilée ici (pas de macOS) : à construire par Pierre.
+  compilée ici (pas de macOS) : à construire par Pierre. Premier essai de Pierre : ROMs
+  introuvables (l'application construite les cherche dans son paquet, puis dans
+  `~/Library/Containers/TH.Clock-Signal/Data/Library/Application Support/ROMImages/Oric`) ;
+  `build_clk_mac.sh` range désormais `basic11.rom` et `microdisc.rom` dans le paquet
+  (application installée, dossiers de Clock Signal, ou ROMs d'Oricutron de l'atelier ;
+  `colour.rom` est facultative), et le panneau Insérer s'ouvre dans le dossier de la
+  disquette de démarrage.
 
 ## Suite prévue (par priorité)
 
