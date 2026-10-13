@@ -53,9 +53,11 @@ contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
 `oricutron -m atmos -k microdisc -d build/cpa.dsk -d donnees.dsk`). Voir « Lecteurs A: à D: ».
 
 **Clock Signal** (macOS, Linux) démarre aussi `cpa.dsk`, et son minutage du lecteur est plus
-proche du matériel qu'Oricutron. Mais son Microdisc perd tous les lecteurs, `A:` compris, dès
-que CP/A choisit `B:`, `C:` ou `D:` (défaut de l'émulateur, signalé à son auteur) : y rester sur
-`A:` (sans `DIR B:` ni `B:`, une commande inconnue n'est pas cherchée sur les autres lecteurs).
+proche du matériel qu'Oricutron. Jusqu'à sa version du 10 octobre 2026, son Microdisc perd
+tous les lecteurs, `A:` compris, dès que CP/A choisit `B:`, `C:` ou `D:` : y rester sur `A:`
+(sans `DIR B:` ni `B:`, une commande inconnue n'est pas cherchée sur les autres lecteurs). Son
+auteur l'a corrigé le 12 octobre 2026 ; l'application ne met de toute façon une disquette que
+dans `A:`.
 
 La disquette contient `README.TXT`, un aide-mémoire de toutes les commandes et de leurs
 paramètres, à lire sur l'Oric avec `TYPE README.TXT` (une page à la fois).

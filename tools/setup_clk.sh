@@ -6,10 +6,13 @@
 # Clock Signal simule la rotation du disque et le chargement de la tête du
 # Microdisc, ce que ne font ni Oricutron ni le LOCI : c'est lui qui mesure la
 # vitesse des accès disque d'un vrai lecteur (entrelacement, attentes).
-# Le correctif tools/clk-banc.patch ajoute le banc (harness/headless.cpp),
-# rend la mémoire de l'Oric lisible par lui, et corrige la sélection du
-# lecteur du Microdisc (défaut de Clock Signal depuis février 2020 : sans
-# cela, choisir B:, C: ou D: fait perdre tous les lecteurs).
+# Le correctif tools/clk-banc.patch ajoute le banc (harness/headless.cpp) et
+# rend la mémoire de l'Oric lisible par lui. Clock Signal est pris au commit
+# 50e3b4d (12 octobre 2026), qui corrige la sélection des lecteurs B: à D: du
+# Microdisc (défaut signalé par Pierre, corrigé par Thomas Harte, PR #1900).
+# Ce commit ne démarre plus aucune disquette Microdisc (la ligne d'interruption
+# n'y est plus masquée par le registre de contrôle) : le correctif rétablit
+# l'appel à interrupt_request_line() dans Oric.cpp, en attendant l'amont.
 # Usage : ./tools/setup_clk.sh   (après tools/setup_linux.sh, dont il reprend
 #         les paquets et les ROMs d'Oricutron)
 # Exemple :
@@ -19,7 +22,7 @@
 set -e
 cd "$(dirname "$0")"
 TOOLS=$(pwd)
-CLK_COMMIT=5e4ff316d6848f6e1d25ecd5d572ec55c5a72c41
+CLK_COMMIT=50e3b4d9327c211d14eb9dcca5ccc2b8ef5f8786
 
 MISSING=""
 for p in cmake zlib1g-dev libgl-dev libsdl2-dev; do

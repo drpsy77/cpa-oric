@@ -815,6 +815,16 @@ CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
     simulé, trouvé d'emblée ; test complet de l'atelier ; `tools/test_asm.sh` à 0 différence.
     Reste le vrai matériel (LOCI : rien ne doit changer).
 
+- Banc Clock Signal à jour (octobre 2026) : Thomas Harte a corrigé la sélection des lecteurs du
+  Microdisc (PR #1900, commit `50e3b4d`, 12 octobre) ; `tools/setup_clk.sh` prend ce commit et
+  `tools/clk-banc.patch` ne corrige plus la sélection. Trouvé au passage : dans ce commit,
+  `Oric.cpp` appelle encore `get_interrupt_request_line()`, qui désigne désormais la ligne du
+  WD1793 sans le masque du bit 0 du registre de contrôle : l'Oric reçoit des interruptions du
+  contrôleur qu'il n'a pas demandées, et aucune disquette ne démarre. Le correctif du banc
+  rétablit `interrupt_request_line()` (signalé à l'auteur par Pierre). Mesures inchangées
+  (démarrage 6,8 s, COPY 12,6 s, commande inconnue 1,8 s) ; `DIR B:` vide échoue en ~5,8 s,
+  puis `DIR` sur A: répond.
+
 ## Suite prévue (par priorité)
 
 **Prochains lots, dans l'ordre voulu par Pierre** (une livraison testée et un commit par lot ;
