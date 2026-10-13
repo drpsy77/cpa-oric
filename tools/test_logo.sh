@@ -225,6 +225,13 @@ run dessin2 'PUT OUT.TXT LOGO
 ' 3200
 check dessin2
 image dessin2
+echo "== écran texte : FIXECURSEUR CURSEUR TAPE VT CARECRAN FIXECARECRAN TOUCHE"
+run texte 'PUT OUT.TXT LOGO
+|| charge "x1
+|| charge "x2
+|| quitte
+' 2600
+check texte
 grep -v '^carre' "$T/images" > "$T/images2"
 if [ -n "$REF" ]; then cp "$T/images2" "$D/images.ref"; echo "référence écrite : images"
 elif diff "$D/images.ref" "$T/images2"; then echo "identiques : images (DEMO, T2, T14)"

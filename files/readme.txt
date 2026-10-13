@@ -457,6 +457,17 @@ ALLUME? x y   | 1 si le point est
               |   allume
 ECRANTEXTE    | tout en texte
 ECRANMIXTE    | retour a l'image
+VT            | efface le texte
+              |   (VIDETEXTE)
+TAPE x        | ecrit, sans aller a
+              |   la ligne
+FIXECURSEUR c l
+              | curseur colonne 0-39,
+              |   ligne 0-27 (ecran
+              |   entier)
+FIXECARECRAN c l n
+              | code n dans la case
+              |   (attributs 0-31)
 REPETE n [..] | repete la liste
 SI c [..] [..]
               | condition
@@ -511,6 +522,12 @@ ASCII x  CAR n
               |   caractere
 TOUCHE?       | 1 si une touche
               |   attend, 0 sinon
+TOUCHE        | touche enfoncee, sans
+              |   delai (jeux) ; mot
+              |   vide si aucune
+CURSEUR       | [colonne ligne] du
+              |   curseur
+CARECRAN c l  | code de la case
 SON v n vol d | note n (37 = do, 0 =
               |   rien) sur la voix v
               |   (0-2), volume 0-15
