@@ -29,6 +29,17 @@ travail (`$F670`), et la page `$FF00` n'a que 66 octets de marge.
 
 ## 2. Propositions classées par gain
 
+> **Suivi (13 octobre 2026) : A1, A2 et A3 sont faits.** Place libre mesurée après
+> `./build.sh` : `cpa.dsk` 100 → **164 Ko**, `cpa-logo` 198 → 208, `cpa-notes`
+> 264 → 274, `cpa-asm` 154 → **200**, `cpa-anim` 116 → **162**. HELP.COM : 18 901
+> → 9 173 octets (10 → 5 blocs), textes identiques à l'écran rubrique par
+> rubrique (`tools/run_com.py`) ; décodage d'au plus ~0,7 s pour la dernière
+> rubrique, compensé par 40 secteurs de moins à lire. README.TXT : 415 octets.
+> .INC allégés : `tools/strip_inc.py`, contrôlés par `tools/test_inc.sh`
+> (xa et ASM.COM, binaires identiques). Choix faits : espaces simples plutôt
+> que TAB (plus petit, et EDIT n'a rien à apprendre) ; une ligne d'en-tête
+> renvoie aux sources du dépôt.
+
 Gains simulés à partir des répertoires réels des cinq disquettes.
 
 ### A. Fichiers texte — le gros du gain, peu de risque

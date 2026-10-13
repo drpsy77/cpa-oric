@@ -82,11 +82,11 @@ outils, et suit toujours la même boucle.
    puis recommencer à l'étape 2.
 5. Relancer les tests des livraisons précédentes (non-régression), puis faire un commit.
 
-Exemple réel : vérifier que `TYPE README.TXT` met bien en pause en fin d'écran, que `^C`
+Exemple réel : vérifier que `TYPE HIRES.INC` met bien en pause en fin d'écran, que `^C`
 interrompt, et que le prompt revient :
 
     DSK=build/cpa.dsk ORIC_KEYS_AT=400 tools/run_test.sh \
-      $'TYPE README.TXT\n|\x1cC' 900 /tmp/t
+      $'TYPE HIRES.INC\n|\x1cC' 900 /tmp/t
     python3 tools/screen.py /tmp/t.mem
 
 Dans cet exemple, `|` attend 3 s (le temps que la pause s'affiche) et `\x1cC` tape CTRL-C.
@@ -151,7 +151,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py get IMAGE NOM.EXT [local]` | extraire un fichier (ex. un `.ASM` écrit sur l'Oric) |
 | `python3 tools/mkdisk.py put IMAGE local [NOM.EXT]` | ajouter un fichier |
 | `python3 tools/mkdisk.py era IMAGE NOM.EXT` | effacer un fichier |
-| `python3 tools/gen_readme_txt.py` | régénère README.TXT et la table de HELP.COM |
+| `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
+| `tools/test_inc.sh` | les bibliothèques allégées de la disquette s'assemblent comme les originaux (xa et ASM.COM) |
 | `tools/setup_clk.sh` | installe le banc Clock Signal dans `tools/clk/` (une fois, long) |
 | `tools/build_clk_mac.sh` | sur le Mac, avec Xcode : Clock Signal à quatre lecteurs dans `tools/clk-mac/` |
 | `tools/clk/clkheadless IMAGE tools/clk/roms SCRIPT` | Clock Signal sans écran : frappe, durées en temps émulé d'un vrai Microdisc (`cmd`), écran texte (`screen`) ; syntaxe en tête de `tools/clk-banc.patch` |

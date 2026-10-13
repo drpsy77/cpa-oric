@@ -52,10 +52,12 @@ done
 mkdir -p build/src
 cp progs/hello.s build/src/HELLO.ASM
 cp progs/gtest.s build/src/GTEST.ASM
-cp progs/cpa.inc build/src/CPA.INC
-cp progs/hires.inc build/src/HIRES.INC
-cp progs/grx.inc build/src/GRX.INC
-cp progs/anim.inc build/src/ANIM.INC
+# bibliothèques : copies sans commentaires (2 à 4 fois plus petites ; la
+# documentation reste dans progs/*.inc ; tools/test_inc.sh vérifie qu'elles
+# s'assemblent comme les originaux)
+for i in cpa hires grx anim; do
+  python3 tools/strip_inc.py progs/$i.inc build/src/$(echo $i | tr a-z A-Z).INC > /dev/null
+done
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
