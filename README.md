@@ -645,7 +645,7 @@ Une expression seule en fin de ligne (`X = ...`, `IF`, `WHILE`, `PRINT`) peut en
 | `RND(n)` | nombre au hasard de 0 à n-1 |
 | `ABS(n)` | valeur absolue |
 | `POINT(x,y)` | 1 si le point est allumé |
-| `INKEY` | touche tapée (code), 0 si aucune ; n'attend pas |
+| `INKEY` | touche (code), 0 si aucune ; n'attend pas et, comme `KEY$` en BASIC, sans délai de répétition : la touche tapée depuis le dernier `INKEY`, sinon celle qui est encore enfoncée (jeux d'action). `GET` suit, lui, le délai et la cadence de répétition du clavier |
 | `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
 
 **Contrôle**
@@ -692,7 +692,7 @@ La disquette contient cinq exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN
 `ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
 ciel étoilé : boucles, hasard, sous-programme), `ARDOISE.GRX` (un télécran : les flèches
 dessinent, ESPACE efface, ESC finit) et `FLECHES.GRX` (LORES : un `@` qu'on déplace aux
-flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `GET` pour les touches).
+flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `INKEY` pour les touches : le `@` part dès l'appui et s'arrête dès qu'on lâche).
 
 **Traduction en assembleur.** `GRAPHER NOM /A` n'exécute pas le fichier : il écrit `NOM.ASM`,
 qu'ASM assemble en un programme autonome `NOM.COM`, beaucoup plus rapide :

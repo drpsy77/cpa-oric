@@ -936,6 +936,22 @@ codé). Décidé :
     menus de retour ensuite.
   - À vérifier sur le vrai Oric : FLECHES (couleurs, flèches), FUNCT et CTRL-T pendant le
     jeu, retour à la console (ESC, fin, RESET), MOTIFS et ECRAN qui attendent une touche.
+- **INKEY sans délai de répétition** (13 octobre 2026, Pierre : « impossible pour un jeu
+  d'action ») : `INKEY` suivait le tampon du clavier, donc le délai (0,5 s) et la cadence de
+  répétition, et les touches en trop faisaient encore avancer le jeu après qu'on avait lâché.
+  Il fait maintenant comme `KEY$` du BASIC : le tampon est vidé (ESC arrête), la touche tapée
+  depuis le dernier `INKEY` est rendue, sinon celle qui est encore enfoncée (`KB_HELD`,
+  `$0217`, déjà lu à 50 Hz par l'IRQ ; rendu public dans `CPA.INC`). `GET` garde le
+  comportement du BASIC (répétition). Rien de résident, contrat inchangé ; page zéro : `$53`
+  et `$54` dans GRAPHER, `$26` et `$27` dans `GRX.INC` (`$10-$27`). GRAPHER 12 427 octets.
+  `FLECHES.GRX` passe de `GET K` à `K = INKEY` et `DELAY 3`. Banc d'essai : code `\x0e` de
+  `run_test.sh` (touche tenue 1 s ; patch d'Oricutron à réappliquer, `tools/setup_linux.sh`
+  après `rm -rf tools/oricutron`). Mesuré dans Oricutron, flèche tenue 1 s : avant, 1 pas,
+  rien pendant 0,5 s, et 2 pas de plus après le relâchement ; maintenant un pas toutes les
+  5 trames dès l'appui (interprété ; 3 trames traduit, `FLECHES.COM` 5 181 octets), arrêt
+  au relâchement. `test_grapher.sh` et `test_asm.sh` sans différence.
+  - À vérifier sur le vrai Oric : FLECHES et ARDOISE (le télécran dessine maintenant en
+    continu tant qu'on tient la flèche).
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.
