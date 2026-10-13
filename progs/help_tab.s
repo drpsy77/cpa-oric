@@ -276,6 +276,17 @@ h_4
         .asc "              |   allume",13,10
         .asc "ECRANTEXTE    | tout en texte",13,10
         .asc "ECRANMIXTE    | retour a l'image",13,10
+        .asc "VT            | efface le texte",13,10
+        .asc "              |   (VIDETEXTE)",13,10
+        .asc "TAPE x        | ecrit, sans aller a",13,10
+        .asc "              |   la ligne",13,10
+        .asc "FIXECURSEUR c l",13,10
+        .asc "              | curseur colonne 0-39,",13,10
+        .asc "              |   ligne 0-27 (ecran",13,10
+        .asc "              |   entier)",13,10
+        .asc "FIXECARECRAN c l n",13,10
+        .asc "              | code n dans la case",13,10
+        .asc "              |   (attributs 0-31)",13,10
         .asc "REPETE n [..] | repete la liste",13,10
         .asc "SI c [..] [..]",13,10
         .asc "              | condition",13,10
@@ -330,6 +341,12 @@ h_4
         .asc "              |   caractere",13,10
         .asc "TOUCHE?       | 1 si une touche",13,10
         .asc "              |   attend, 0 sinon",13,10
+        .asc "TOUCHE        | touche enfoncee, sans",13,10
+        .asc "              |   delai (jeux) ; mot",13,10
+        .asc "              |   vide si aucune",13,10
+        .asc "CURSEUR       | [colonne ligne] du",13,10
+        .asc "              |   curseur",13,10
+        .asc "CARECRAN c l  | code de la case",13,10
         .asc "SON v n vol d | note n (37 = do, 0 =",13,10
         .asc "              |   rien) sur la voix v",13,10
         .asc "              |   (0-2), volume 0-15",13,10

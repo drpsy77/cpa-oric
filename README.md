@@ -298,7 +298,7 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
@@ -1002,6 +1002,10 @@ décimaux (voir plus bas).
 | `ETIQUETTE x` | écrit x (nombre, mot ou liste, comme `ECRIS`) dans l'image, à droite de la tortue et posé sur sa ligne |
 | `FIXECOULEUR v` | couleur de toute l'image : encre 0 à 7 (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc) ou papier 16 à 23 |
 | `ECRANTEXTE`, `ECRANMIXTE` | passer en écran texte (26 lignes, sans image ni tortue), revenir à l'image et à la tortue |
+| `VIDETEXTE` / `VT` | effacer la console (lignes 1-27 en écran texte, sous la barre en écran mixte), curseur en haut à gauche |
+| `TAPE x` | comme `ECRIS`, sans passer à la ligne (jeux : un score à sa place) |
+| `FIXECURSEUR c l` | placer le curseur de la console (pour `TAPE`, `ECRIS`) : colonne 0-39, ligne 0-27 de l'écran entier (voir « Jeux en écran texte ») |
+| `FIXECARECRAN c l n` | écrire le code n (0-255) dans une case, sans bouger le curseur : caractère, attribut de couleur (0-7 encre, 16-23 papier), +128 pour la vidéo inverse |
 | `REPETE n [ ... ]` | répéter une liste |
 | `SI condition [ ... ] [ ... ]` | condition, avec une liste « sinon » facultative |
 | `POUR NOM :A :B` ... `FIN` | définir une procédure (paramètres facultatifs) |
@@ -1014,6 +1018,8 @@ décimaux (voir plus bas).
 | `LISMOT` | lit une ligne et la rend en un seul mot (sans les blancs du début et de la fin) |
 | `LISCAR` | attend une touche et rend le caractère (`ASCII LISCAR` pour son code) |
 | `TOUCHE?` | 1 si une touche a été tapée (on la lit ensuite avec `LISCAR`), 0 sinon ; n'attend pas |
+| `TOUCHE` | la touche, sans attendre et sans délai de répétition (jeux d'action, comme `KEY$` en BASIC) : celle tapée depuis le dernier `TOUCHE`, sinon celle qui est encore enfoncée, sinon le mot vide |
+| `CURSEUR`, `CARECRAN c l` | position du curseur `[colonne ligne]` ; code de la case (0-255) |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) et commencer par un lecteur (`CHARGE "B:JEU`) |
 | `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
@@ -1035,11 +1041,30 @@ si le point est allumé, 0 sinon. Tous refusent l'écran texte (`ECRANTEXTE`).
     SI ALLUME? 0 0 [ECRIS "ALLUME]
 
 Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`, `ALLUME? x y`,
-`LISCAR`, `TOUCHE?`, `JOUE? v`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
+`LISCAR`, `TOUCHE?`, `TOUCHE`, `CURSEUR`, `CARECRAN c l`, `JOUE? v`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
 tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
 de `a`). Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR` (la
 dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
+
+**Jeux en écran texte.** `FIXECURSEUR`, `CURSEUR`, `CARECRAN` et `FIXECARECRAN` prennent les
+coordonnées de l'écran entier, comme le LORES de GRAPHER : colonnes 0 à 39 (0 et 1 portent
+les attributs de la ligne : `FIXECARECRAN 0 5 20` met la ligne 5 sur fond bleu), lignes 0
+à 27 en écran texte (la ligne 0 est la barre du système, redessinée quand on ouvre un menu),
+16 à 26 en écran mixte (au-dessus, l'image ; la ligne 27 porte les attributs du mode). LOGO
+garde sa console : `TAPE` et `ECRIS` écrivent au curseur, passent à la ligne au bout de la
+ligne et font défiler la console après la ligne 27 ; pour la dernière case de l'écran,
+`FIXECARECRAN`. `TOUCHE` lit le clavier sans attendre et sans le délai de répétition :
+une flèche tenue fait avancer à chaque appel dès l'appui, et plus rien dès qu'on la lâche
+(`LISCAR` et `TOUCHE?` suivent, eux, la répétition du clavier). Les flèches rendent
+`CAR 8` (gauche), `CAR 9` (droite), `CAR 10` (bas), `CAR 11` (haut). Exemple sur
+`cpa-logo.dsk` : `LOGO FLECHES.LOG` (un `@` qu'on déplace dans un cadre, les murs lus par
+`CARECRAN`).
+
+    DONNE "K TOUCHE
+    SI VIDE? :K [STOP]
+    SI :K = CAR 9 [DONNE "X :X + 1]
+    SI (CARECRAN :X :Y) = 32 [FIXECARECRAN :X :Y 64]
 
 **Le son dans LOGO.** Les trois voix de l'AY (0, 1, 2) jouent pendant que le programme
 continue ; chaque durée est en cinquantièmes de seconde (0 à 255 ; 0 : la note tient jusqu'à
@@ -1295,9 +1320,12 @@ fichier inclus entre crochets s'il y a lieu). La liste fait une pause à chaque 
 a une erreur, rien n'est écrit. ESC interrompt l'assemblage.
 
 L'assembleur lit le source ligne à ligne sur le disque, en deux passes : la taille du source
-n'est limitée que par la disquette. La table des symboles et le code produit se partagent la
-mémoire libre (environ 37 Ko en mode texte). Une ligne peut faire environ 1000 caractères.
-À titre d'exemple, LOGO (3 500 lignes, 66 Ko de source) s'assemble en un peu plus d'une minute.
+n'est limitée que par la disquette. La seconde passe écrit le code dans `NOM.COM` au fur et à
+mesure, par enregistrements de 128 octets : la mémoire libre (environ 37 Ko en mode texte) ne
+sert qu'à la table des symboles (environ 10 octets plus la longueur du nom par symbole ; LOGO
+en a 1 500). Une ligne peut faire environ 1000 caractères.
+À titre d'exemple, LOGO (6 500 lignes, 136 Ko de source, 19 Ko de code) s'assemble en un peu
+plus d'une minute et demie (environ 28 millions d'instructions, plus les accès disque).
 
 ## Le débogueur DEBUG
 

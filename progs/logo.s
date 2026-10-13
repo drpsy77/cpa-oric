@@ -210,6 +210,8 @@ ok      jsr ix_build
         sta defmode
         sta stopf
         sta tdrawn
+        lda #$FF                ; TOUCHE : aucune touche retenue
+        sta tki
         lda SYS_TICKS
         sta rnd
         ora #1
@@ -235,7 +237,8 @@ repl
         lda tvis
         beq rp1
         jsr turtle_show
-rp1     lda #<m_prompt
+rp1     jsr crlf_if             ; après TAPE : l'invite sur sa ligne
+        lda #<m_prompt
         ldy #>m_prompt
         ldx defmode
         beq rp2
@@ -2983,6 +2986,232 @@ p_ecris
         jsr eval
         jsr put_val
         jmp crlf
+;
+; ---------------------------------------------------------------------
+; Écran texte (jeux) : coordonnées de l'écran entier, comme GRAPHER :
+;   colonnes 0-39 (0-1 : attributs), lignes 0-27 en ECRANTEXTE (ligne 0 :
+;   barre du système), 16-26 en ECRANMIXTE (au-dessus : l'image ; la
+;   ligne 27 porte les attributs du mode).
+; ---------------------------------------------------------------------
+; TAPE x : comme ECRIS, sans passer à la ligne
+p_tape
+        jsr eval
+        jmp put_val
+
+; VIDETEXTE / VT : efface la console (ECRANTEXTE : lignes 1-27 ;
+;   ECRANMIXTE : sous la barre), curseur en haut à gauche
+p_vt    lda #12
+        jmp putc
+
+; tx_col : val -> A = colonne 0-39 ; tx_lig : val -> A = ligne visible
+tx_col  lda #39
+        jmp rng_b
+tx_lig
+.(
+        lda #27
+        jsr rng_b
+        ldx tmode
+        bne r
+        cmp #16                 ; ECRANMIXTE : l'image au-dessus, la
+        bcc tl_e                ; ligne 27 aux attributs du mode
+        cmp #27
+        bcs tl_e
+r       rts
+.)
+tl_e    jmp e_rng
+
+; tx_addr : tmp <- adresse de la case (colonne Y, ligne A) ; Y gardé
+tx_addr
+.(
+        sta tmp                 ; ligne * 40 = ligne * 8 * 5
+        lda #0
+        sta tmp+1
+        asl tmp
+        asl tmp
+        asl tmp                 ; * 8 (au plus 216 : un octet)
+        lda tmp
+        asl
+        rol tmp+1
+        asl
+        rol tmp+1               ; * 32
+        clc
+        adc tmp
+        sta tmp
+        lda tmp+1
+        adc #>SCREEN
+        sta tmp+1
+        lda tmp
+        clc
+        adc #<SCREEN
+        sta tmp
+        bcc r
+        inc tmp+1
+r       rts
+.)
+
+; tx_cl : deux entiers (commande) -> Y = colonne, A = ligne
+tx_cl   jsr eval_int
+        jsr tx_col
+        pha
+        jsr eval_int
+        jsr tx_lig
+        tax
+        pla
+        tay
+        txa
+        rts
+
+; FIXECURSEUR c l : place le curseur de la console (TAPE, ECRIS, LISMOT...)
+p_fixecur
+        jsr tx_cl
+        php
+        sei                     ; le clignotement est dans l'IRQ
+        pha
+        tya
+        pha
+        lda CON_CURVIS          ; curseur affiché : on le retire
+        beq fc1
+        lda CON_CURY
+        ldy CON_CURX
+        jsr tx_addr
+        lda (tmp),y
+        eor #$80
+        sta (tmp),y
+        lda #0
+        sta CON_CURVIS
+fc1     pla
+        sta CON_CURX
+        pla
+        sta CON_CURY
+        plp
+        rts
+
+; FIXECARECRAN c l n : écrit le code n (0-255 : attributs 0-31, bit 7 =
+;   vidéo inverse) dans la case, sans bouger le curseur
+p_fixecar
+        jsr tx_cl
+        pha                     ; ligne, colonne : l'évaluation de n se
+        tya                     ; sert de tmp
+        pha
+        jsr eval_int
+        lda #255
+        jsr rng_b
+        tax
+        pla
+        tay
+        pla
+        jsr tx_addr             ; garde X
+        txa
+        sta (tmp),y
+        rts
+
+; CARECRAN c l : code de la case (0-255)
+f_carecr
+.(
+        jsr advance
+        jsr sum
+        jsr to_int
+        jsr tx_col
+        pha
+        jsr sum
+        jsr to_int
+        jsr tx_lig
+        tax
+        pla
+        tay
+        txa
+        jsr tx_addr
+        lda (tmp),y
+        sta val
+        lda #0
+        sta val+1
+        lda #T_INT
+        sta vt
+        rts
+.)
+
+; CURSEUR : [colonne ligne] du curseur de la console
+f_curseur
+.(
+        ldx #0
+        lda CON_CURX
+        jsr dec2
+        lda #" "
+        sta llbuf+2,x
+        inx
+        lda CON_CURY
+        jsr dec2
+        lda #<(llbuf+2)
+        sta lstart
+        lda #>(llbuf+2)
+        sta lstart+1
+        txa
+        clc
+        adc lstart
+        sta lend
+        lda lstart+1
+        adc #0
+        sta lend+1
+        jsr lit_list
+        jmp advance
+; dec2 : A (0-99) en décimal dans llbuf+2,x
+dec2    ldy #0
+d10     cmp #10
+        bcc d1
+        sbc #10
+        iny
+        bne d10
+d1      pha
+        tya
+        beq u
+        ora #"0"
+        sta llbuf+2,x
+        inx
+u       pla
+        ora #"0"
+        sta llbuf+2,x
+        inx
+        rts
+.)
+
+; TOUCHE : la touche, sans attendre ni délai de répétition (jeux) : la
+;   touche tapée depuis le dernier TOUCHE (le tampon est vidé, ESC
+;   interrompt), sinon celle qui est encore enfoncée (KB_HELD), sinon le
+;   mot vide
+f_tkey
+.(
+        lda pkey                ; touche lue par check_esc ?
+        ldx #0
+        stx pkey
+v       sta tmp2
+        jsr B_CONST
+        beq e
+        jsr B_CONIN
+        cmp #$1B
+        bne v
+        jmp esc_err
+e       lda KB_HELD
+        ldx tmp2
+        beq h
+        sta tki                 ; touche neuve : on retient sa place
+        stx tkc
+        bne w
+h       cmp #$FF                ; rien de neuf : la même touche encore
+        beq none                ; enfoncée ?
+        cmp tki
+        bne none
+        lda tkc
+        sta tmp2
+w       lda tmp2
+        jsr char_word
+        jmp advance
+none    lda #0
+        sta tl
+        sta tl+1
+        lda #T_WORD
+        jsr mk_text
+        jmp advance
+.)
 
 p_donne
 .(
@@ -5842,6 +6071,10 @@ prims
         .word p_fxy
         .asc "FIXECOULEUR",0
         .word p_fcoul
+        .asc "FIXECURSEUR",0
+        .word p_fixecur
+        .asc "FIXECARECRAN",0
+        .word p_fixecar
         .asc "GAUCHE",0
         .word p_ga
         .asc "GA",0
@@ -5904,12 +6137,18 @@ prims
         .word p_simage
         .asc "TRAIT",0
         .word p_trait
+        .asc "TAPE",0
+        .word p_tape
         .asc "TITRES",0
         .word p_titres
         .asc "VIDEECRAN",0
         .word p_ve
         .asc "VE",0
         .word p_ve
+        .asc "VIDETEXTE",0
+        .word p_vt
+        .asc "VT",0
+        .word p_vt
         .byt 0
 
 w_pour   .asc "POUR",0
@@ -5933,6 +6172,10 @@ funcs
         .word f_car
         .asc "COMPTE",0
         .word f_compte
+        .asc "CURSEUR",0
+        .word f_curseur
+        .asc "CARECRAN",0
+        .word f_carecr
         .asc "DERNIER",0
         .word f_dernier
         .asc "DER",0
@@ -5995,6 +6238,8 @@ funcs
         .word f_sd
         .asc "TOUCHE?",0
         .word f_touche
+        .asc "TOUCHE",0
+        .word f_tkey
         .asc "VIDE?",0
         .word f_videp
         .asc "XCOR",0
@@ -6112,7 +6357,8 @@ m_saved   .asc "Sauve.",13,10,0
 m_loaded  .asc "Charge.",13,10,0
 m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "CT MT VE NETTOIE ORIGINE",13,10
-          .asc "ECRANTEXTE  ECRANMIXTE",13,10
+          .asc "ECRANTEXTE ECRANMIXTE  VT  TAPE x",13,10
+          .asc "FIXECURSEUR c l CURSEUR CARECRAN c l",13,10
           .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
           .asc "POINT x y  TRAIT RECTANGLE PAVE x y x y",13,10
           .asc "CERCLE r  ETIQUETTE x  FIXECOULEUR v",13,10
@@ -6124,8 +6370,8 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "POUR NOM :A ... FIN  DONNE ",$22,"X n",13,10
           .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
           .asc "XCOR YCOR  + - * / ( ) = < >",13,10
-          .asc "LISLISTE LISMOT LISCAR TOUCHE?",13,10
-          .asc "ASCII x  CAR n",13,10
+          .asc "LISLISTE LISMOT LISCAR TOUCHE? TOUCHE",13,10
+          .asc "ASCII x  CAR n  FIXECARECRAN c l n",13,10
           .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
           .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
           .asc "RACINE SIN COS ARCTAN LN EXP",13,10
@@ -6192,7 +6438,9 @@ autold  = tmode+1       ; 1 : la ligne de fbuf sera exécutée au prompt
 rwop    = autold+1      ; r_recs / w_recs : bit 7 = lecture
 ldon    = rwop+1        ; 1 = CHARGE en cours (fichier ouvert dans fcb)
 ensd    = ldon+1        ; ENSEMBLE en cours (niveaux)
-parn_lo = ensd+1
+tkc     = ensd+1        ; TOUCHE : code de la dernière touche lue
+tki     = tkc+1         ;   et sa place dans la matrice (KB_HELD)
+parn_lo = tki+1
 parn_hi = parn_lo+MAXPAR
 parl    = parn_hi+MAXPAR
 fcb     = parl+MAXPAR

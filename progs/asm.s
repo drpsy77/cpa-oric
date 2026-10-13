@@ -89,7 +89,6 @@ pc      = $1E
 org     = $20
 ocnt   = $22
 symtop  = $24
-objbase = $26
 errs    = $28
 scope   = $2A
 scnt    = $2C
@@ -131,6 +130,7 @@ gop_lp  = $5A
 gop_y   = $5C
 gop_x   = $5D
 gop_c   = $5E
+wx      = $60
 rp      = $61
 wy      = $62
 inq     = $5F
@@ -219,61 +219,46 @@ clb     sta bk_lo,x
 found   lda #1
         sta pass
         jsr do_pass
-        ; objet : au-dessus des symboles, aligné sur une page
-        lda #0
-        sta objbase
-        lda symtop+1
-        sta objbase+1
-        lda symtop
-        beq al
-        inc objbase+1
-al
-        jsr obj_size            ; cnt = taille arrondie à 128
-        clc
-        lda objbase
-        adc cnt
-        sta t0
-        lda objbase+1
-        adc cnt+1
-        sta t0+1
-        bcs big
-        lda outlim
-        cmp t0
-        lda outlim+1
-        sbc t0+1
-        bcs fits
-big     lda #<m_big
-        ldy #>m_big
+        ; le code n'est pas gardé en mémoire : la passe 2 l'écrit dans
+        ; NOM.COM au fil de l'eau, par enregistrements de 128 octets
+        ; (wput) ; la mémoire ne sert qu'aux symboles
+        lda ocnt
+        ora ocnt+1
+        bne some
+        lda #<m_empty
+        ldy #>m_empty
         jsr puts
         jmp WBOOT
-fits    lda objbase             ; efface la zone du code
-        sta ptr
-        lda objbase+1
-        sta ptr+1
-        lda cnt
-        sta t0
-        lda cnt+1
-        sta t0+1
-clo     lda t0
-        ora t0+1
-        beq p2
-        ldy #0
-        tya
-        sta (ptr),y
-        inc ptr
-        bne cl1
-        inc ptr+1
-cl1     lda t0
-        bne cl2
-        dec t0+1
-cl2     dec t0
-        jmp clo
-p2      lda #2
+some    jsr clr_out
+        ldx #F_DELETE
+        lda #<fcb_out
+        ldy #>fcb_out
+        jsr BDOS
+        jsr clr_out
+        ldx #F_MAKE
+        lda #<fcb_out
+        ldy #>fcb_out
+        jsr BDOS
+        cmp #$FF
+        bne mk_ok
+        jmp wfull
+mk_ok   lda #0
+        sta rp
+        lda #2
         sta pass
         jsr do_pass
         lda errs
         ora errs+1
         beq write
+        ldx #F_CLOSE            ; erreurs : pas de NOM.COM
+        lda #<fcb_out
+        ldy #>fcb_out
+        jsr BDOS
+        jsr clr_out
+        ldx #F_DELETE
+        lda #<fcb_out
+        ldy #>fcb_out
+        jsr BDOS
         lda errs
         sta val
         lda errs+1
@@ -285,26 +270,6 @@ p2      lda #2
         jmp WBOOT
 write   jmp write_out
 .)
-
-; obj_size : cnt = octets produits, arrondi au multiple de 128 supérieur
-obj_size
-        lda ocnt
-        sta cnt
-        lda ocnt+1
-        sta cnt+1
-        clc
-        lda cnt
-        adc #127
-        and #$80
-        sta t1
-        lda cnt+1
-        adc #0
-        sta t1+1
-        lda t1
-        sta cnt
-        lda t1+1
-        sta cnt+1
-        rts
 
 ; open_fcb : A/Y = FCB, octets 12-35 à zéro, F_OPEN -> A
 open_fcb
@@ -328,70 +293,11 @@ z       sta (ptr),y
 ; ---------------------------------------------------------------------
 write_out
 .(
-        jsr obj_size
-        lda cnt
-        ora cnt+1
-        bne some
-        lda #<m_empty
-        ldy #>m_empty
-        jsr puts
-        jmp WBOOT
-some    ldx #12
-        lda #0
-z       sta fcb_out,x
-        inx
-        cpx #36
-        bne z
-        ldx #F_DELETE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
-        ldx #12
-        lda #0
-z2      sta fcb_out,x
-        inx
-        cpx #36
-        bne z2
-        ldx #F_MAKE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
-        cmp #$FF
-        bne mk_ok
-        jmp full
-mk_ok
-        lda objbase
-        sta ptr
-        lda objbase+1
-        sta ptr+1
-wl      lda cnt
-        ora cnt+1
+pad     lda rp                  ; fin du dernier enregistrement : zéros
         beq done
-        ldx #F_SETDMA
-        lda ptr
-        ldy ptr+1
-        jsr BDOS
-        ldx #F_WRITE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
-        cmp #0
-        beq wr_ok
-        jmp full
-wr_ok
-        clc
-        lda ptr
-        adc #128
-        sta ptr
-        bcc w1
-        inc ptr+1
-w1      sec
-        lda cnt
-        sbc #128
-        sta cnt
-        bcs wl
-        dec cnt+1
-        jmp wl
+        lda #0
+        jsr wput
+        jmp pad
 done    ldx #F_CLOSE
         lda #<fcb_out
         ldy #>fcb_out
@@ -450,14 +356,6 @@ la1     dec val
         jsr putdec
         lda #<m_syms
         ldy #>m_syms
-        jsr puts
-        jmp WBOOT
-full    ldx #F_CLOSE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
-        lda #<m_dfull
-        ldy #>m_dfull
         jsr puts
         jmp WBOOT
 .)
@@ -556,27 +454,39 @@ close   ldx #F_CLOSE
         ldy #>fcb_out
         jmp BDOS
 
-; wput : octet A dans l'enregistrement, écrit tous les 128 octets
+.)
+
+; wput : octet A dans l'enregistrement obuf, écrit dans fcb_out tous les
+;   128 octets (NOM.COM en passe 2, puis NOM.SYM) ; garde Y ; disque
+;   plein : message et fin
 wput    ldx rp
-        sta recb0,x
+        sta obuf,x
         inx
         stx rp
         cpx #128
         bne wr
         sty wy
         ldx #F_SETDMA
-        lda #<recb0
-        ldy #>recb0
+        lda #<obuf
+        ldy #>obuf
         jsr BDOS
         ldx #F_WRITE
         lda #<fcb_out
         ldy #>fcb_out
         jsr BDOS
-        lda #0
+        cmp #0
+        bne wfull
         sta rp
         ldy wy
 wr      rts
-.)
+wfull   ldx #F_CLOSE
+        lda #<fcb_out
+        ldy #>fcb_out
+        jsr BDOS
+        lda #<m_dfull
+        ldy #>m_dfull
+        jsr puts
+        jmp WBOOT
 
 clr_out
         ldx #12
@@ -1398,22 +1308,11 @@ emit
 o1      lda pass
         cmp #2
         bne skip
-        clc                     ; ptr = objbase + octets déjà produits
-        lda ocnt
-        adc objbase
-        sta ptr
-        lda ocnt+1
-        adc objbase+1
-        sta ptr+1
-        cmp outlim+1
-        bcs big
-        pla
-        ldy #0
-        sta (ptr),y
+        pla                     ; passe 2 : dans NOM.COM
+        stx wx
+        jsr wput
+        ldx wx
         jmp einc
-big     pla
-        lda #E_BIG
-        jmp error
 skip    pla
 einc    inc pc
         bne e2
@@ -2682,4 +2581,5 @@ fcb_out = fcb_inc+36
 sstk_lo = fcb_out+36
 sstk_hi = sstk_lo+MAXSCOPE
 dword   = sstk_hi+MAXSCOPE
-SYMBASE = dword+8
+obuf    = dword+8           ; enregistrement écrit (NOM.COM, NOM.SYM)
+SYMBASE = obuf+128

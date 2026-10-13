@@ -1,0 +1,14 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "X1
+ABC13 5
+65
+66
+1
+UN DEUXTROIS
+Z1 27
+Valeur hors limites : FIXECURSEUR
+?  CHARGE "X2
+3 20
+66
+Valeur hors limites : FIXECURSEUR
+?  QUITTE
