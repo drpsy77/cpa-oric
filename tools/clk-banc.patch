@@ -12,21 +12,8 @@ index e709556..16d6f2b 100644
 +list(FILTER CLK_HEADLESS_SOURCES EXCLUDE REGEX "OSBindings/")
 +add_executable(clkheadless ${CLK_HEADLESS_SOURCES} harness/headless.cpp)
 +target_link_libraries(clkheadless PRIVATE ZLIB::ZLIB OpenGL::GL)
-diff --git a/Machines/Oric/Microdisc.cpp b/Machines/Oric/Microdisc.cpp
-index 8863588..199f681 100644
---- a/Machines/Oric/Microdisc.cpp
-+++ b/Machines/Oric/Microdisc.cpp
-@@ -34,7 +34,7 @@ void Microdisc::set_control_register(uint8_t control, uint8_t changes) {
- 
- 	// b65: drive select
- 	if((changes >> 5)&3) {
--		set_drive(1 << (control >> 5)&3);
-+		set_drive(1 << ((control >> 5)&3));
- 	}
- 
- 	// b4: side select
 diff --git a/Machines/Oric/Oric.cpp b/Machines/Oric/Oric.cpp
-index 806be3e..88f5792 100644
+index 3e7a4ce..20b2078 100644
 --- a/Machines/Oric/Oric.cpp
 +++ b/Machines/Oric/Oric.cpp
 @@ -83,6 +83,8 @@ private:
@@ -46,6 +33,15 @@ index 806be3e..88f5792 100644
  		for(auto &c: ram_) {
  			c |= 0x40;
  		}
+@@ -781,7 +784,7 @@ private:
+ 
+ 		// The Microdisc directly provides an interrupt line.
+ 		if constexpr (disk_interface == DiskInterface::Microdisc) {
+-			irq_line |= microdisc_.get_interrupt_request_line();
++			irq_line |= microdisc_.interrupt_request_line();
+ 		}
+ 
+ 		// The Jasmin reroutes its data request line to the processor's interrupt line.
 diff --git a/harness/headless.cpp b/harness/headless.cpp
 new file mode 100644
 index 0000000..87f166d
