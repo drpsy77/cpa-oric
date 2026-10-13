@@ -1065,8 +1065,8 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    - `TERM.COM` : terminal (commandes AT du modem PicoWiFiModemUSB).
 3. Petites améliorations notées : `AUTO.BAT` exécuté au démarrage ; commande `NOTE` au prompt
    (son dans les scripts) ou `PLAY.COM` (partition texte) ; ne pas perdre la frappe anticipée
-   pendant `NOTE`/`ATTENDS` dans LOGO (EDIT : lot L4). Bibliothèque LOGO `MATH.LOG` de Pierre (PI, PUIS, FACT) :
-   hors de la disquette construite pour l'instant.
+   pendant `NOTE`/`ATTENDS` dans LOGO (EDIT : lot L4). (La bibliothèque LOGO `MATH.LOG` :
+   faite par Pierre sur l'Oric et gardée par EXPORT, retirée de la liste le 13 octobre 2026.)
    Son : la partie son du lot B est faite (volume réglable par `SON`) ; restent la commande
    au prompt ou `PLAY.COM`.
 4. Lecteurs : FORMAT, DISKCOPY et COPY avec jokers faits (lots L2, L3, LA) ; la copie d'une

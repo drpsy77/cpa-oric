@@ -225,3 +225,36 @@ désactivées ; **Q3** oui, `INPUT V` pour un entier de 16 bits (voir 2.5) ; **Q
   à la fin des exemples livrés qui en dépendent (`ECRAN.GRX`, `MOTIFS.GRX`, `ANIMS.GRX`...),
   et les programmes de Pierre écrits avant changeraient de comportement. Je penche pour
   oui, pour n'avoir qu'une règle.
+
+### Questions du palier B (préparées le 13 octobre 2026, à voir avec Pierre)
+
+Ce que le § 2 fixe déjà n'est pas repris. Ma proposition est en gras.
+
+- **B1. Indices vérifiés dans le code traduit (`/A`) ?** Interprété : toujours. Traduit :
+  **toujours aussi** (une erreur claire plutôt qu'une case écrite n'importe où ; environ 15 %
+  de plus sur un accès `M$(L,C)`), ou une option de traduction sans vérification pour les
+  jeux les plus rapides.
+- **B2. Nombre de dimensions** : **2 au plus** (une grille de niveau `M$(L,C)` ; plusieurs
+  niveaux = plusieurs fichiers au palier C), ou 3 (`N$(niveau,ligne,colonne)`).
+- **B3. `PRINT` d'une chaîne qui contient des codes 0-31** (attributs de couleur posés dans
+  une grille de niveau) : **en LORES, écrits tels quels** (une ligne de niveau s'affiche avec
+  ses couleurs d'un seul `PRINT M$(L)`) ; dans la console, remplacés par un espace (ils la
+  dérègleraient). Ou toujours remplacés.
+- **B4. Remplir un tableau d'un coup** (nouvelle partie, niveau vidé) : une commande
+  **`FILL A v`** (tout le tableau à v ; `FILL M$ 32` : des espaces). En interprété, une double
+  boucle `FOR` sur une grille de 25 × 38 cases prend plusieurs secondes (~170 lignes/s).
+- **B5. Valeur de départ d'un tableau `$`** : **0** (chaîne vide, comme les entiers), ou des
+  espaces (32) pour une grille prête à afficher (avec B4, `FILL M$ 32` suffit).
+- **B6. Comparer à un texte écrit dans le programme** : `IF R$ = "O"` (et `<>`, `<`...)
+  **oui** ; le § 2.4 ne cite que `A$ = B$`.
+- **B7. Exemples livrés** : **un serpent** (`DIM` pour le corps, `SCRN` pour les collisions,
+  `INKEY`) **et un tableau des meilleurs scores** (`INPUT` du nom, tri par échange de lignes
+  `N$(I) = N$(J)`) ; le tableau sera enregistré au palier C.
+- **B8. Livraisons** : **B seul d'abord** (DIM, éléments, chaînes, INPUT, FILL), C (fichiers)
+  ensuite, chacun testé et commité à part.
+
+Décidé sans question (à corriger si besoin) : un tableau d'entiers à deux dimensions lu avec
+un seul indice est une erreur (`indice manquant`) ; `DIM` d'une taille nulle ou négative :
+`valeur hors limites` ; les tableaux sont réservés sous le texte et l'animation chargés, et
+`ANIM` vérifie qu'il ne déborde pas sur eux ; dans un programme traduit, les tailles calculées
+à l'exécution sont permises (même zone, réservée au lancement).
