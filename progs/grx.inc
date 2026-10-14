@@ -732,6 +732,16 @@ w       sec
 ; g_gload / g_gsave : nom (lecteur, 8 + 3 caractères) après l'appel ;
 ;   type vide : .HIR en HIRES, .IMG en SPLIT ; depuis le mode texte,
 ;   GLOAD choisit le mode d'après le type (HIR par défaut)
+; g_fnm : nom d'un fichier de données (après l'appel) -> g_fcbuf, le
+;   FCB de FIL.INC (incluse seulement si le programme s'en sert)
+g_fnm   jsr g_nm
+        jmp g_fcb
+f_fcb   = g_fcbuf
+f_fmt   = g_fmt
+f_nbuf  = g_num
+f_mlo   = g_m_nolo+9       ; (sans « Erreur : »)
+f_mful  = g_m_full+9
+
 g_gload
 .(
         jsr g_nm

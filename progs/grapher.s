@@ -108,9 +108,7 @@ next    jsr B_CONST             ; ESC : arrêt ; une autre touche est
         sta pkey
         cmp #27
         bne rd
-        lda #<m_esc
-        ldy #>m_esc
-        jmp stop_msg
+        jmp r_esc
 rd      ldy #0
         lda (cur),y
         beq eot
@@ -427,7 +425,10 @@ fik     cmp #5
         jsr p_str
         jsr x_close
         jmp r_len
-fik2    jmp f_inkey
+fik2    cmp #6
+        bne fik3
+        jmp f_fnd               ; FOUND (fil.inc)
+fik3    jmp f_inkey
 f_rnd   jsr arg1
         lda ev+1
         bmi zero
@@ -522,9 +523,7 @@ ikv     sta ev                  ; puis le tampon, vidé (pas de retard
         jsr h_key
         cmp #27
         bne ikv
-        lda #<m_esc
-        ldy #>m_esc
-        jmp stop_msg
+        jmp r_esc
 ike     lda KB_HELD
         ldx ev
         beq ikh
@@ -690,9 +689,7 @@ c_wait  jsr endline
         jsr getkey
         cmp #27
         bne cw_r
-        lda #<m_esc
-        ldy #>m_esc
-        jmp stop_msg
+        jmp r_esc
 cw_r    rts
 c_delay
 .(
@@ -868,9 +865,7 @@ c_get
         jsr getkey
         cmp #27
         bne k
-        lda #<m_esc
-        ldy #>m_esc
-        jmp stop_msg
+        jmp r_esc
 k       sta ev
         lda #0
         sta ev+1
@@ -934,9 +929,7 @@ pl      lda #<ifcb
         bcs er
         cmp #27
         bne r
-        lda #<m_esc
-        ldy #>m_esc
-        jmp stop_msg
+        jmp r_esc
 er      jsr a_msg
         jmp error
 r       rts
@@ -1624,7 +1617,39 @@ go      lda #<rawbuf
         jmp BDOS
 .)
 
-; e_un (interpréteur) finit par neg_ev ; affectations ; ANIM
+; SAVE, LOAD, BSAVE, BLOAD : tableau ou SCREEN, puis nom (fil.inc)
+c_save  lda #0
+        beq c_file
+c_load  lda #1
+        bne c_file
+c_bsave lda #2
+        bne c_file
+c_bload lda #3
+c_file
+.(
+        pha
+        jsr f_arg               ; aal, aak (2 : SCREEN)
+        jsr getname             ; -> ifcb, rien d'autre ensuite
+        pla
+        tax
+        lda aak
+        cmp #2
+        bne ar
+        cpx #2                  ; SCREEN : BSAVE et BLOAD seulement
+        bcc bad
+        inx
+        inx
+        jmp f_go
+ar      stx gd
+        lda aal
+        ldx aak
+        jsr desc_of
+        ldx gd
+        jmp f_go
+bad     jmp e_param
+.)
+
+; affectations ; ANIM
 x_asg   = assign
 x_aasg  = arr_assign
 an_val  jsr getbyte             ; ANIM nom n : passages dans gd
@@ -1633,9 +1658,7 @@ an_val  jsr getbyte             ; ANIM nom n : passages dans gd
 an_none
 o_drop  rts                     ; (pas de fichier de sortie)
 
-m_use   .asc "GRAPHER NOM [p1..p9] : execute",13,10
-        .asc "NOM.GRX (commandes graphiques).",13,10
-        .asc "GRAPHER NOM /A : traduit (GRXASM)",13,10,"$"
+m_use   .asc "GRAPHER NOM [/A] [p1..p9]",13,10,"$"
 m_chain .asc "Ligne trop longue",13,10,"$"
 t_gxa   .asc "GRXASM"
 
@@ -1686,6 +1709,10 @@ cadr
         .word c_dim      ; DIM
         .word c_fill     ; FILL
         .word c_input    ; INPUT
+        .word c_save     ; SAVE
+        .word c_load     ; LOAD
+        .word c_bsave    ; BSAVE
+        .word c_bload    ; BLOAD
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)
@@ -1693,6 +1720,12 @@ r_i     = et
 r_j     = ev
 #include "anim.inc"
 #include "arr.inc"
+f_fcb   = ifcb          ; fil.inc : fichier de données, nombres
+f_fmt   = fmtnum
+f_nbuf  = numbuf
+f_mlo   = m_nolo
+f_mful  = m_full
+#include "fil.inc"
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc, mis à 0 au lancement (bufs à

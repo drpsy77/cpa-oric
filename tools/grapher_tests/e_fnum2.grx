@@ -1,0 +1,4 @@
+DIM A$(10) N(5)
+A$ = "32768"
+SAVE A$ T4
+LOAD N T4

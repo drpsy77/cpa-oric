@@ -812,6 +812,17 @@ qagain   lda #<rz_nbuf
         sta rz_max
         jsr rz_get
         sty rz_nd               ; longueur
+        jsr rz_atoi
+        bcs qbad
+        rts
+qbad     jsr rz_bip
+        jmp qagain
+.)
+
+; rz_atoi : rz_nbuf (rz_nd caractères) -> r_j ; C=1 si ce n'est pas un
+;   entier de -32768 à 32767 (aussi pour fil.inc)
+rz_atoi
+.(
         lda #0
         sta r_j
         sta r_j+1
@@ -878,9 +889,10 @@ qd3      iny
         lda #0
         sbc r_j+1
         sta r_j+1
-qr       rts
-qbad     jsr rz_bip
-        jmp qagain
+qr       clc
+        rts
+qbad     sec
+        rts
 .)
 
 ; rz_get : saisie de rz_max caractères au plus en r_sa -> Y = longueur ;

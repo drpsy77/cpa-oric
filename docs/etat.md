@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 9 509 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 9 693 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,7 +40,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 11 165, 8 580 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur | `grapher.md` |
+| GRAPHER, GRXASM | 12 283, 8 858 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur ; fichiers de données | `grapher.md` |
 | VOIR, VSYNC | 3 418, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -52,22 +52,21 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 
 ## 2. Suite prévue (par priorité)
 
-1. **GRAPHER : fichiers de données** (`LOAD`, `SAVE`, `BLOAD`, `BSAVE`) : spécifié,
-   `docs/grapher.md` § 16.1, sans question ouverte.
-2. **Sprites en mode texte** : format `.SPR` validé, affichage à spécifier :
+1. **Sprites en mode texte** : format `.SPR` validé, affichage à spécifier :
    `docs/spec-sprites.md`. Puis l'éditeur de caractères et de sprites (`.COM` plein écran) et
    une bibliothèque d'affichage (`.INC`), pour GRAPHER d'abord, LOGO ensuite peut-être.
-3. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
+2. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
    § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
-4. **Petites améliorations notées**
+3. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures (vitesse, place), à
      décider sur mesure ;
-   - GRAPHER : `REDIM` (`docs/grapher.md` § 16.2) ;
+   - GRAPHER : `REDIM` (`docs/grapher.md` § 16.1) ; exemples de fichiers de données : un
+     niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
    - EDIT : un paragraphe sur une seule ligne avec défilement horizontal ; une édition plein
      écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
@@ -97,8 +96,11 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (11 165 octets) tient en 6 blocs avec 1 123 octets de reste ; GRXASM (8 580) prend
-  5 blocs pour 388 octets : 4 blocs s'il maigrit d'autant ;
+- GRAPHER (12 283 octets) remplit ses 6 blocs à 5 octets près : le prochain ajout (sprites)
+  prendra un 7e bloc, ou demandera de la place (pistes : messages d'erreur par numéro,
+  ~40 octets ; ANIM partagé avec `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux
+  programmes traduits, `a_grx`, 106 octets inutiles à l'interpréteur). GRXASM (8 858) prend
+  5 blocs ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

@@ -19,7 +19,8 @@ RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
 cp build/progs/GRAPHER.COM build/progs/GRXASM.COM "$T/"
 cp progs/cpa.inc "$T/CPA.INC"; cp progs/grx.inc "$T/GRX.INC"; cp progs/hires.inc "$T/HIRES.INC"
-cp progs/anim.inc "$T/ANIM.INC"; cp progs/arr.inc "$T/ARR.INC"; cp files/anim/CUBE.ANI "$T/"
+cp $D/*.TXT "$T/"   # fichiers de données lus par LOAD
+cp progs/anim.inc "$T/ANIM.INC"; cp progs/arr.inc "$T/ARR.INC"; cp progs/fil.inc "$T/FIL.INC"; cp files/anim/CUBE.ANI "$T/"
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"

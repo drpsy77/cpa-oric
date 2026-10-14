@@ -1,0 +1,4 @@
+DIM A$(3,4) B$(2,4)
+A$(2) = "X"
+SAVE A$ T2
+LOAD B$ T2
