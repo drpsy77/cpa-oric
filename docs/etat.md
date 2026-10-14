@@ -52,9 +52,10 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 
 ## 2. Suite prévue (par priorité)
 
-1. **Sprites en mode texte** : format `.SPR` validé, affichage à spécifier :
-   `docs/spec-sprites.md`. Puis l'éditeur de caractères et de sprites (`.COM` plein écran) et
-   une bibliothèque d'affichage (`.INC`), pour GRAPHER d'abord, LOGO ensuite peut-être.
+1. **Sprites en mode texte** : format `.SPR` et affichage décidés (`docs/spec-sprites.md`),
+   tuiles à préciser. Puis la bibliothèque d'affichage (`SPR.INC`) et les commandes de
+   GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`), puis l'éditeur de caractères et de
+   sprites (`.COM` plein écran) ; LOGO ensuite peut-être.
 2. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
