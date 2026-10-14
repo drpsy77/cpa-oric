@@ -1158,7 +1158,8 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
 8. **Éditeur de caractères et de sprites, avec masque, et bibliothèque d'affichage**
    Format des fichiers de sprites **défini** (14 octobre 2026, validé par Pierre) :
    `docs/spec-sprites.md` (`.SPR`, sprites de 1 à 4 colonnes sur 1 à 4 lignes, dessin et
-   silhouette par case, nom de 4 lettres, modifiable avec HEX). Priorité de Pierre.
+   silhouette par case, nom de 4 lettres, modifiable avec HEX). Priorité de Pierre ; décisions
+   et propositions de l'affichage : même document, § 5 à 7 (palier C de GRAPHER d'abord).
    (backlog, Pierre, octobre 2026 ; **à réfléchir encore**, rien à coder ni à décider avant
    d'en reparler). Cible d'abord GRAPHER, mais pourquoi pas LOGO ou d'autres programmes.
    Idée de Pierre : un fichier de sprites est un ensemble de bits rangés par paquets de 6
