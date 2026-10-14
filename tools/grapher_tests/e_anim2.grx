@@ -1,0 +1,5 @@
+; ANIM : pas de place sous les tableaux
+DIM A(7500)
+ANIM CUBE 1
+TEXT
+PRINT 1

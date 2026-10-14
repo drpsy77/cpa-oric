@@ -81,6 +81,26 @@ r       rts
 ;   programme anime) : même arrêt que les autres erreurs
 a_fail  = g_stop
 
+; arr.inc (incluse seulement si le programme a des tableaux ou des
+;   chaînes) : ses valeurs sont g_et et g_ev, ses erreurs s'arrêtent ici
+r_i     = g_et
+r_j     = g_ev
+r_fail
+        pha
+        tya
+        pha
+        jsr g_totext
+        lda #<g_m_err
+        ldy #>g_m_err
+        jsr g_puts
+        pla
+        tay
+        pla
+        jmp g_stop
+r_esc   lda #<g_m_esc
+        ldy #>g_m_esc
+        jmp g_stop
+
 ; g_stop : message A/Y (0 à la fin), puis fin du programme
 g_stop
         pha
@@ -996,6 +1016,7 @@ g_dhi   .byt >10000,>1000,>100,>10
 g_timg  .asc "IMG"
 g_thir  .asc "HIR"
 g_m_esc   .asc "Interrompu",0
+g_m_err   .asc "Erreur : ",0
 g_m_nolo  .asc "Erreur : LORES d'abord",0
 g_m_lim   .asc "Erreur : valeur hors limites",0
 g_m_div   .asc "Erreur : division par zero",0

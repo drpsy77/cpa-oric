@@ -18,7 +18,7 @@ RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
 cp build/progs/GRAPHER.COM "$T/"
 cp progs/cpa.inc "$T/CPA.INC"; cp progs/grx.inc "$T/GRX.INC"; cp progs/hires.inc "$T/HIRES.INC"
-cp progs/anim.inc "$T/ANIM.INC"; cp files/anim/CUBE.ANI "$T/"
+cp progs/anim.inc "$T/ANIM.INC"; cp progs/arr.inc "$T/ARR.INC"; cp files/anim/CUBE.ANI "$T/"
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"
@@ -29,8 +29,9 @@ for f in $D/*.grx; do
   n=$(basename "$f" .grx)
   N=$(echo "$n" | tr a-z A-Z)
   S=""; case "$n" in lo*) S=1;; esac   # LORES : l'écran texte à la fin
+  IN=""; [ -f "$D/$n.in" ] && IN=$(cat "$D/$n.in")   # saisies (INPUT), séparées par |
   tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/$N.GRX"
-  (cd "$T" && SCREEN=$S python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
+  (cd "$T" && INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
     | grep -v '^\[[0-9]* instructions\]' > "$T/$n.out" || true
   check "$n" ref
   rm -f "$T/$N.ASM" "$T/$N.COM"
@@ -39,7 +40,7 @@ for f in $D/*.grx; do
   if [ -f "$T/$N.ASM" ]; then
     tr -d '\032' < "$T/$N.ASM" > "$T/$n.s"
     (cd "$T" && "$XA" -o "$N.COM" "$n.s" > "$n.xa" 2>&1) || { echo "xa : $n"; cat "$T/$n.xa"; ko=$((ko+1)); }
-    (cd "$T" && SCREEN=$S python3 "$RUN" "$T" "$N.COM" 2>&1) \
+    (cd "$T" && INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" "$N.COM" 2>&1) \
       | grep -v '^\[[0-9]* instructions\]' >> "$T/$n.out" || true
   fi
   check "$n" kref

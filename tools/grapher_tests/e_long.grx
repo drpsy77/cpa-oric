@@ -1,0 +1,5 @@
+; chaine trop longue
+DIM A$(4)
+A$ = "ABCD"
+PRINT A$
+A$ = "ABCDE"

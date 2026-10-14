@@ -952,7 +952,8 @@ hz_fail    lda #2
         rts
 .)
 
-; h_zread : fichier (FCB hq) en mémoire à partir de h_zbuf, jusqu'à $A000
+; h_zread : fichier (FCB hq) en mémoire à partir de h_zbuf, jusqu'à h_ztop
+;   ($A000 ; plus bas quand des tableaux sont réservés, arr.inc)
 h_zread
 .(
         jsr h_fcb0
@@ -966,12 +967,18 @@ hz_o    lda h_zbuf
         sta hs
         lda h_zbuf+1
         sta hs+1
-hz_rd   lda hs+1                ; place pour 128 octets sous l'image ?
-        cmp #>(H_IMG-128)
+hz_rd   lda hs                  ; place pour 128 octets sous h_ztop ?
+        clc
+        adc #128
+        tax
+        lda hs+1
+        adc #0
+        bcs hz_big
+        cmp h_ztop+1
         bcc hz_ok
         bne hz_big
-        lda hs
-        cmp #$81
+        cpx h_ztop
+        beq hz_ok
         bcs hz_big
 hz_ok   jsr h_dma
         ldx #F_READ
@@ -1199,6 +1206,7 @@ h_err   .word 0
 h_e2    .word 0
 h_blk   .byt 0,0,0,0,0,0
 h_zbuf  .word h_free
+h_ztop  .word H_IMG     ; fin de la place des images .HIZ et animations
 h_zel   .byt 0
 h_zeh   .byt 0
 h_zt    .byt 0

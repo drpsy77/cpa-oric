@@ -17,7 +17,7 @@ RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
 mkdir "$T/o" "$T/s"
 # o : originaux ; s : copies allégées (sous les deux noms, comme xa les cherche)
-for i in cpa hires grx anim; do
+for i in cpa hires grx anim arr; do
   I=$(echo $i | tr a-z A-Z)
   cp progs/$i.inc "$T/o/$i.inc"; cp progs/$i.inc "$T/o/$I.INC"
   python3 tools/strip_inc.py progs/$i.inc "$T/s/$i.inc" > /dev/null

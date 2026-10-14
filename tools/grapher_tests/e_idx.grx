@@ -1,0 +1,5 @@
+; indice hors limites (interprete seulement : le traduit ne verifie pas)
+DIM A(3)
+A(2) = 5
+PRINT A(2)
+PRINT A(3) * 0

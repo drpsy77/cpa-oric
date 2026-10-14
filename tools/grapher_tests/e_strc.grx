@@ -1,0 +1,4 @@
+; chaine dans un calcul
+DIM A$(4)
+A$ = "AB"
+X = A$ + 1

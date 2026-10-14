@@ -114,6 +114,8 @@ def main():
                     if f and f[3] is not None: open(f[0], 'wb').write(f[3])
                 elif x == 115:
                     pass        # graphisme : mode texte (GETMODE -> 0)
+                elif x == 116:
+                    pass        # son : rien
                 else:
                     print('BDOS ?', x); break
             # rts

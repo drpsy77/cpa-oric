@@ -1,0 +1,37 @@
+; Palier B : chaines
+DIM A$(8) N$(3,8) C(2)
+A$ = "BONJOUR"
+PRINT A$
+PRINT LEN(A$)
+N$(0) = "PIERRE"
+N$(1) = A$
+N$(2) = ""
+PRINT N$(1)
+PRINT LEN(N$(2))
+PRINT A$ = N$(1)
+PRINT A$ <> "BONJOUR"
+PRINT N$(0) < N$(1)
+PRINT "AB" < "ABC"
+PRINT "ABD" > "ABC"
+IF N$(0) = "PIERRE"
+  ECHO egal
+ENDIF
+I = 0
+WHILE N$(I) <> ""
+  PRINT N$(I)
+  I = I + 1
+NEXT
+; une case d'une ligne : un code
+PRINT N$(0,1)
+N$(0,1) = 65
+PRINT N$(0)
+; echange de deux lignes
+A$ = N$(0)
+N$(0) = N$(1)
+N$(1) = A$
+PRINT N$(0)
+PRINT N$(1)
+PRINT (A$ = "PAERRE") & (LEN(A$) = 6)
+A$ = "AB"
+PRINT A$ ; un commentaire
+PRINT LEN(A$) + LEN("XYZ")

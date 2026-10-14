@@ -989,6 +989,28 @@ codé). Décidé :
   lui-même), `.SYM` identique à l'ancien, erreurs des deux passes sans `.COM` laissé, et sur
   l'Oric émulé `GRAPHER FLECHES /A` puis `ASM FLECHES` donne un `FLECHES.COM` identique à xa.
   - À vérifier sur le vrai Oric : un `ASM` (lectures et écritures alternées sur la disquette).
+- **GRAPHER, palier B : tableaux et chaînes, fait** (14 octobre 2026 ; questions et réponses de
+  Pierre : `docs/spec-grapher-lores.md` § 2 et 5). `DIM A(n) A(n,m) A$(n) A$(n,m)` (indices
+  0 à n-1, éléments à 0), `A(i)` `A(i,j)` `M$(l,c)` éléments, `A(k)` à plat sur deux
+  dimensions (comme en C), chaînes `A$` et `M$(l)` (jusqu'au premier 0, 255 au plus) :
+  affectation (`chaine trop longue`), comparaisons (aussi avec un texte), `LEN`, `PRINT`
+  (LORES : codes 0-31 tels quels), `INPUT A$` / `INPUT V` (LORES : saisie au curseur ;
+  sinon BDOS 10 ; entier refusé : son), `FILL`. Erreurs : `deja dimensionne`, `tableau non
+  dimensionne`, `indice hors limites`, `memoire pleine`, `chaine dans un calcul`. Choix de
+  Pierre : le traduit ne vérifie ni les indices ni les tableaux (l'interprété sert au
+  débogage). Routines communes : **`progs/arr.inc`** (`ARR.INC` : 52 descripteurs de 8 octets
+  en `$9D60`, tableaux réservés vers le bas jusqu'à `h_zbuf`, `r_chk`), page zéro `$C8-$CF`.
+  `hires.inc` : `h_ztop` (fin de la place des `.HIZ` et des animations, abaissée par chaque
+  `DIM`) : `ANIM` ne recouvre jamais les tableaux (`animation trop grande`). GRAPHER
+  12 427 -> 16 840 octets ; le texte du `.GRX` s'arrête à `$9D60`. `GRX.INC` : `r_fail`,
+  `r_esc` (« Erreur : »). `run_com.py` : son (BDOS 116) ignoré ; `test_grapher.sh` : saisies
+  dans `NOM.in`. Tests : 10 cas nouveaux (`tab`, `chaine`, `input`, `e_dim`, `e_idx`,
+  `e_nodim`, `e_long`, `e_strc`, `e_mem`, `e_anim2`), interprété = traduit (sauf `e_idx` :
+  pas de vérification traduite). Exemples `SERPENT.GRX` et `SCORES.GRX` (disquettes
+  complète et LOGO), essayés dans Oricutron (saisie LORES, DEL, tri, attribut en tête de
+  chaîne ; serpent aux flèches) ; traduits, ASM = xa. `REDIM` : plus tard (backlog).
+  - À vérifier sur le vrai Oric : SERPENT, SCORES (saisie au curseur), un programme traduit
+    avec tableaux (ASM sur la disquette Assembleur : `ARR.INC` y est).
 - **EDIT, plus tard** (Pierre, à ne pas faire maintenant) : édition d'un paragraphe sur une
   seule ligne avec défilement horizontal ; et, sujet voisin, une édition plein écran
   (colonnes 0-1 comprises) pour dessiner un écran texte.

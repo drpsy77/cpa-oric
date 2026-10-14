@@ -1,0 +1,3 @@
+; DIM deux fois : erreur
+DIM A(3)
+DIM A(4)
