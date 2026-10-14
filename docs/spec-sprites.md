@@ -99,11 +99,61 @@ animation est une suite de sprites (`HER1`, `HER2`...).
 - Octets 2-3 de chaque sprite à 0 pour l'instant.
 - Taille : 1 à 4 colonnes sur 1 à 4 lignes ; tableau stocké en fichier, modifiable avec HEX.
 
-## 5. Encore ouvert (à voir avant tout code)
+## 5. Affichage : décidé par Pierre (14 octobre 2026)
 
-- Mouvement de case en case, ou au point près (copies décalées, une case de plus en largeur et
-  en hauteur).
-- Nombre de sprites affichés à la fois, codes des caractères réservés (sur les 96 codes
-  32-127), jeu de caractères secondaire ou non.
-- Commandes de GRAPHER (chargement du `.SPR`, pose, retrait) et bibliothèque commune
-  (interprété et traduit, comme `ARR.INC`).
+- **Mouvement de case en case** (pas au point près).
+- **Tailles libres** : de 1 × 1 à 4 × 4, mélangées ; aucun genre de jeu supposé (le RPG à
+  personnages de 2 × 2 n'était qu'un exemple pour estimer le nombre de sprites affichables).
+- **Beaucoup plus de sprites disponibles qu'affichés** : les dessins restent dans le tableau
+  chargé du fichier et ne coûtent aucun caractère ; seul un sprite **affiché** occupe des
+  caractères redéfinis, un par case couverte. L'affectation des caractères est **dynamique** :
+  à chaque affichage, `(décor AND NOT silhouette) OR dessin` est recalculé de toute façon.
+- **Préserver au minimum les chiffres et les lettres majuscules** (36 codes).
+- **Exploiter le jeu de caractères secondaire** (`$B800`) : comme Oricium (une ligne sur deux
+  en standard, l'autre en secondaire ; à vérifier dans ses sources), le décor pose un
+  attribut en début de ligne pour choisir le jeu de la ligne.
+- **Tuiles de décor** : comme des sprites, mais sans silhouette ; placées dans la police à des
+  codes choisis par le programme.
+- **Le langage n'impose pas le partage des caractères** : le programmeur répartit les codes
+  redéfinissables entre tuiles, sprites et lettres, et choisit où afficher les uns et les
+  autres ; c'est sa responsabilité.
+- **Chargement par `BLOAD`** (palier C de GRAPHER, `docs/spec-grapher-lores.md` § 3) :
+  `LOAD`, `SAVE`, `BLOAD`, `BSAVE` passent **avant** les sprites.
+- MOVE : c'est un retrait puis un affichage en une instruction.
+
+## 6. Propositions de Claude, non validées (à reprendre)
+
+Pierre n'est pas à l'aise avec `SCHARS` : à réexpliquer clairement, ou à remplacer.
+
+- **Réserve de codes pour les sprites affichés** (`SCHARS a b [c d]` proposé : codes a à b du jeu
+  standard, c à d du secondaire) : le seul rôle serait de dire à la bibliothèque quels codes
+  elle peut redessiner pour composer les sprites affichés (pris à l'affichage, rendus au
+  retrait) ; elle ne limiterait ni les tuiles ni `CHAR`. Alternative à étudier : le programme
+  donne lui-même les codes à chaque affichage (statique, plus simple, moins pratique).
+- **Jeu de chaque ligne lu dans l'attribut des colonnes 0-1** (8 à 15, bit 0 = secondaire),
+  un seul jeu par ligne ; la tuile et le code réservé sont pris dans ce jeu.
+- **Commandes** (préfixe S, comme GTEXT / GLOAD) : `TILES T$ code [ALT]` (tuiles du tableau
+  copiées dans la police), `TILE n col lig`, `SSHOW k S$ n col lig` (affiche le sprite n du
+  tableau dans l'« emplacement » k ; sur un emplacement déjà affiché : retrait puis affichage,
+  donc pas de MOVE séparé ; un autre n au même emplacement : image suivante d'une animation),
+  `SHIDE k` (décor remis, codes rendus). Retrait dans l'ordre inverse quand deux sprites se
+  chevauchent ; décor modifié sous un sprite : le retirer d'abord.
+- **Emplacements** : un emplacement = un objet affiché (position, taille, codes du décor
+  recouvert, codes pris : ~36 octets) ; nombre fixé par le programme (`SPRITES n`, comme un
+  `DIM`) ?
+- **Genre du fichier** dans l'octet 5 de l'en-tête (0 sprites, cases de 16 octets ; 1 tuiles,
+  cases de 8 octets), ou format unique (silhouette ignorée pour une tuile) ?
+- Réserve épuisée : `plus de caracteres pour les sprites` (interprété).
+
+**Erreurs de la discussion à ne pas reprendre** : la réponse du 14 octobre (7 h) supposait des
+sprites de 2 × 2 et un nombre fixe de 14 emplacements, et son exemple était incohérent (codes
+standard 32-95 « intacts » mais le code 65, la lettre A, utilisé comme tuile ; répartition des
+codes non vérifiée). Repartir des décisions du § 5.
+
+## 7. Prochaines étapes
+
+1. GRAPHER palier C (fichiers : `LOAD`/`SAVE`/`BLOAD`/`BSAVE`) : préparer les questions, puis
+   coder (spécification : `docs/spec-grapher-lores.md` § 3).
+2. Sprites : revoir § 6 avec Pierre (réserve de codes, emplacements, genre tuiles), lire
+   `sprites.s` d'Oricium pour le jeu secondaire, puis écrire la spécification complète des
+   commandes avant tout code.
