@@ -1,0 +1,4 @@
+DIM A$(5)
+A$ = "AB"
+A$(1) = 3
+SAVE A$ TC

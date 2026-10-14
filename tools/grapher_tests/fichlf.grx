@@ -1,0 +1,16 @@
+; LOAD : fins de ligne LF ou CR, tabulations, derniere ligne sans fin
+DIM N(3,3) S$(3,4) F(2,2)
+LOAD N DLF
+PRINT N(0,0)
+PRINT N(0,1)
+PRINT N(0,2)
+PRINT N(1,0)
+PRINT N(1,1)
+PRINT N(2,0)
+LOAD S$ DCR
+PRINT S$(0)
+PRINT S$(1)
+PRINT LEN(S$(2))
+LOAD F DFIN
+PRINT F(0,1)
+PRINT F(1,0)

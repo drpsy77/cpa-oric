@@ -1,0 +1,28 @@
+; fichiers de donnees : BSAVE / BLOAD (binaire)
+DIM A(3,2) B$(5) C(10)
+A(0,0) = 1000
+A(2,1) = -2
+B$ = "XY"
+B$(4) = 26
+BSAVE A TA
+BSAVE B$ TB
+FILL A 5
+FILL B$ 1
+BLOAD A TA
+BLOAD B$ TB.DAT
+PRINT FOUND
+PRINT A(0,0)
+PRINT A(2,1)
+PRINT A(1,1)
+PRINT B$(4)
+PRINT B$
+; plus grand que le fichier : le reste a 0
+FILL C 3
+BLOAD C TA
+PRINT C(0)
+PRINT C(5)
+PRINT C(6)
+PRINT C(9)
+BLOAD A AUCUN
+PRINT FOUND
+PRINT A(0,0)

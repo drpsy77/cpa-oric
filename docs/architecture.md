@@ -133,7 +133,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
   disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
   pour ne gêner aucun programme. `progs/grx.inc` (`GRX.INC`) est la bibliothèque d'exécution
-  des programmes traduits par `GRXASM NOM` (ou `GRAPHER NOM /A`). `progs/anim.inc` (`ANIM.INC`) joue les
+  des programmes traduits par `GRXASM NOM` (ou `GRAPHER NOM /A`). `progs/arr.inc` (`ARR.INC`,
+  tableaux) et `progs/fil.inc` (`FIL.INC`, fichiers de données) servent à l'interpréteur et
+  aux programmes traduits. `progs/anim.inc` (`ANIM.INC`) joue les
   animations `.ANI` ; il s'inclut avant `HIRES.INC`, qui reste à la fin du programme (ses
   tables suivent `h_end`), et utilise aussi les étiquettes internes `hz_`.
 - Écran au programme. HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
@@ -156,7 +158,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT : notation et
   renvoi à HELP) et `progs/help_tab.s` (HELP.COM, textes compressés en LZSS, décodés par
   `help.s`) à partir d'une seule liste.
-- Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC) : copies sans
+- Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
 - Git : un commit par livraison, message en français, testé avant. Le dépôt est publié sur
   GitHub (https://github.com/drpsy77/cpa-oric).

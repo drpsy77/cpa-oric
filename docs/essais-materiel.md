@@ -48,6 +48,9 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   affiché), puis `ASM MOTIFS` et `MOTIFS` ; `GRXASM MOTIFS` directement ; un `.GRX`
   interprété de chaque sorte (HIRES, SPLIT `DESSIN`, LORES, tableaux) ; sur la disquette
   Logo, `GRAPHER X /A` doit dire que GRXASM est introuvable.
+- fichiers de données : `SCORES.GRX` deux fois (le 2e lancement retrouve les scores ;
+  `TYPE HOFN.TXT`, `EDIT HOFS.TXT`) ; `HOFS.TXT` modifié dans EDIT puis relu ; temps
+  d'écriture d'un gros tableau ; disque plein ; traduit (`GRXASM SCORES`, `ASM SCORES`).
 
 ## À vérifier ailleurs
 

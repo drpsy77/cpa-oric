@@ -1,14 +1,22 @@
-; SCORES.GRX : tableau des meilleurs scores (DIM, chaines, INPUT)
-; un nom et un score saisis, le tableau trie, affiche en LORES
+; SCORES.GRX : meilleurs scores (DIM, chaines, INPUT, LOAD, SAVE)
+; un nom et un score saisis, le tableau trie, affiche en LORES ; les
+; cinq meilleurs sont gardes dans HOFN.TXT et HOFS.TXT (EDIT les lit)
 LORES
 DIM N$(6,10) S(6) T$(10) K$(20)
-N$(0) = "PIERRE"
-S(0) = 120
-N$(1) = "ORIC"
-S(1) = 80
-N$(2) = "ATMOS"
-S(2) = 45
-C = 3
+LOAD N$ HOFN
+LOAD S HOFS
+IF FOUND = 0
+  N$(0) = "PIERRE"
+  S(0) = 120
+  N$(1) = "ORIC"
+  S(1) = 80
+  N$(2) = "ATMOS"
+  S(2) = 45
+ENDIF
+C = 0
+WHILE C < 5 & LEN(N$(C)) > 0
+  C = C + 1
+NEXT
 ; le titre en jaune : un attribut (encre 3) en tete de la chaine
 K$ = " MEILLEURS SCORES"
 K$(0) = 3
@@ -41,6 +49,11 @@ FOR I 0 C-1
   LOCATE 20 9+I
   PRINT S(I)
 NEXT
+; les cinq premiers sont gardes
+N$(5) = ""
+S(5) = 0
+SAVE N$ HOFN
+SAVE S HOFS
 LOCATE 4 20
 ECHO "Une touche : fin"
 WAIT

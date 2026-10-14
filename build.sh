@@ -55,7 +55,7 @@ cp progs/gtest.s build/src/GTEST.ASM
 # bibliothèques : copies sans commentaires (2 à 4 fois plus petites ; la
 # documentation reste dans progs/*.inc ; tools/test_inc.sh vérifie qu'elles
 # s'assemblent comme les originaux)
-for i in cpa hires grx anim arr; do
+for i in cpa hires grx anim arr fil; do
   python3 tools/strip_inc.py progs/$i.inc build/src/$(echo $i | tr a-z A-Z).INC > /dev/null
 done
 
@@ -64,7 +64,7 @@ done
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
 EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg files/fleches.grx files/serpent.grx files/scores.grx"
 PROTEGES=""
-for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC files/readme.txt; do
+for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
@@ -84,7 +84,7 @@ theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
 }
 theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx files/fleches.log files/serpent.grx files/scores.grx"
 theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC" \
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # Animations : VOIR visible (il sort des commandes de base), GRAPHER, GRXASM et
@@ -94,7 +94,7 @@ BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
 BASE_TOUT=$BASE
 BASE=$BASE_SANS_VOIR
 theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM" \
-  "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC" \
+  "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT
 echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm,anim}.dsk"

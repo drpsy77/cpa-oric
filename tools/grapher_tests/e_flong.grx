@@ -1,0 +1,5 @@
+DIM A$(2,10) B$(2,3)
+A$(0) = "AB"
+A$(1) = "ABCDEF"
+SAVE A$ T1
+LOAD B$ T1

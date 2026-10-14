@@ -1,0 +1,54 @@
+; fichiers de donnees : SAVE / LOAD (texte), FOUND
+DIM S(5) N$(3,8) M(2,3) L$(10)
+S(0) = 120
+S(1) = -32767 - 1
+S(2) = 32767
+S(4) = -5
+N$(0) = "PIERRE"
+N$(1) = "A B"
+L$ = "BONJOUR"
+FOR I 0 1
+  FOR J 0 2
+    M(I,J) = I*10+J-3
+  NEXT
+NEXT
+PRINT FOUND
+SAVE S TS
+SAVE N$ TN
+SAVE M TM
+SAVE L$ TL
+FILL S 9
+FILL N$ 65
+FILL M 7
+FILL L$ 66
+LOAD S TS
+PRINT FOUND
+LOAD N$ TN
+LOAD M TM
+LOAD L$ TL
+FOR I 0 4
+  PRINT S(I)
+NEXT
+PRINT N$(0)
+PRINT N$(1)
+PRINT LEN(N$(2))
+FOR I 0 1
+  FOR J 0 2
+    PRINT M(I,J)
+  NEXT
+NEXT
+PRINT L$
+; absent : rien ne change
+LOAD S ABSENT
+PRINT FOUND
+PRINT S(0)
+; un tableau plus grand : le reste a 0 ; une ligne plus courte
+DIM T(2,4)
+LOAD T TM
+PRINT T(0,3)
+PRINT T(1,2)
+PRINT T(1,3)
+DIM U(8)
+LOAD U TS.TXT
+PRINT U(4)
+PRINT U(7)

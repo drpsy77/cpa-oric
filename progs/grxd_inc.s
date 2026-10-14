@@ -78,3 +78,4 @@ karr    = $55           ; 1 : tableaux ou chaînes (NOM.ASM inclut ARR.INC)
 ihk     = $53           ; INKEY : code de la dernière touche lue
 ihi     = $54           ;   et sa place dans la matrice (KB_HELD)
 cnum    = $56           ; numéro de la commande trouvée par lookup
+kfil    = $57           ; 1 : fichiers de données (NOM.ASM inclut FIL.INC)

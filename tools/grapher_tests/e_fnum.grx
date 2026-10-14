@@ -1,0 +1,4 @@
+DIM A$(10) N(5)
+A$ = "12 -4 X"
+SAVE A$ T3
+LOAD N T3

@@ -750,7 +750,7 @@ x_comma jsr ws
         rts
 x_bad   jmp e_expr
 
-fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,0
+fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,"FOUND ",6,0
 
 ; mul16 : ev <- et * ev (16 bits bas)
 mul16
@@ -1343,6 +1343,48 @@ da      clc
 .)
 
 ; ---------------------------------------------------------------------
+; f_arg : SAVE, LOAD, BSAVE, BLOAD : tableau (lettre, $ facultatif) ou
+;   SCREEN, suivi d'un espace (lbuf, X) -> aal, aak (0 entiers, 1 $,
+;   2 SCREEN) ; X sur l'espace
+; ---------------------------------------------------------------------
+f_arg
+.(
+        jsr skipsp
+        stx gd
+        ldy #0
+s       lda lbuf,x
+        and #$DF
+        cmp t_scr,y
+        bne ar
+        inx
+        iny
+        cpy #6
+        bne s
+        lda #2
+        bne k
+ar      ldx gd
+        lda lbuf,x
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda lbuf,x
+        cmp #"$"
+        bne k0
+        inx
+        lda #1
+        .byt $2C                ; (BIT abs : saute lda #0)
+k0      lda #0
+k       sta aak
+        lda lbuf,x
+        cmp #" "
+        bne bad
+        rts
+bad     jmp e_param
+.)
+t_scr   .asc "SCREEN"
+
+; ---------------------------------------------------------------------
 ; open_grx : FCB1 -> sfcb (type GRX par défaut), fichier ouvert ; s'il
 ;   est absent : message, puis fin du programme
 ; ---------------------------------------------------------------------
@@ -1474,4 +1516,12 @@ cmds
         .byt "L"|$80,0
         .asc "INPU"
         .byt "T"|$80,0
+        .asc "SAV"
+        .byt "E"|$80,0
+        .asc "LOA"
+        .byt "D"|$80,0
+        .asc "BSAV"
+        .byt "E"|$80,0
+        .asc "BLOA"
+        .byt "D"|$80,0
         .byt 0

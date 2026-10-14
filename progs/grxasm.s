@@ -71,6 +71,7 @@ compile
         sta kn+1
         sta kanim
         sta karr
+        sta kfil
         sta csp
         ldx #51                 ; dimensions des tableaux : aucun
 kz      sta kd_i,x
@@ -146,7 +147,12 @@ bend    lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
         lda #<h_tailR
         ldy #>h_tailR
         jsr os
-bnor    lda kanim
+bnor    lda kfil
+        beq bnof
+        lda #<h_tailF
+        ldy #>h_tailF
+        jsr os
+bnof    lda kanim
         beq bnoa
         lda #<h_tailA
         ldy #>h_tailA
@@ -820,7 +826,13 @@ kfs1
         lda #<s_rlen
         ldy #>s_rlen
         jmp dyn
-fink    lda #<s_inkey
+fink    cmp #6
+        bne fink2
+        jsr k_fil
+        lda #<s_ffnd            ; FOUND
+        ldy #>s_ffnd
+        jmp dyn
+fink2   lda #<s_inkey
         ldy #>s_inkey
         jmp dyn
 f_rnd   jsr x_open
@@ -2218,6 +2230,9 @@ s_rnd   .asc "jsr g_rnd",0
 s_abs   .asc "jsr g_abs",0
 s_point .asc "jsr g_point",0
 s_inkey .asc "jsr g_inkey",0
+s_ffnd  .asc "jsr f_fnd",0
+s_ffnm  .asc "jsr g_fnm",0
+s_fgo   .asc "jsr f_go",0
 s_scrn  .asc "jsr g_scrn",0
 s_lores .asc "jsr h_lores",0
 s_lcls  .asc "jsr g_lcls",0
@@ -2251,6 +2266,7 @@ h_tail1 .asc "; boucles : compte, ou arrivee et pas",13,10,0
 h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
 h_tailR .asc "#include ",34,"ARR.INC",34,13,10,0
+h_tailF .asc "#include ",34,"FIL.INC",34,13,10,0
 h_tail3 .asc "#include ",34,"HIRES.INC",34,13,10,0
 t_asm   .asc "ASM"
 m_done  .asc ".ASM ecrit : ASM ",0
@@ -2267,6 +2283,57 @@ ndim_s
         lda kd_s,x
         rts
 .)
+
+; SAVE, LOAD, BSAVE, BLOAD traduits : « jsr g_fnm » et le nom, puis
+;   le descripteur en A/Y, « ldx #opération », « jsr f_go » (FIL.INC)
+k_save  lda #0
+        beq k_file
+k_load  lda #1
+        bne k_file
+k_bsave lda #2
+        bne k_file
+k_bload lda #3
+k_file
+.(
+        pha
+        jsr f_arg
+        jsr getname
+        jsr k_fil
+        lda #<s_ffnm
+        ldy #>s_ffnm
+        jsr oi_fnm
+        pla
+        tax
+        lda aak
+        cmp #2
+        bne ar
+        cpx #2                  ; SCREEN : BSAVE et BLOAD seulement
+        bcc bad
+        inx
+        inx
+        bne op
+ar      txa
+        pha
+        lda aal
+        ldx aak
+        jsr k_need
+        jsr k_desc
+        pla
+        tax
+op      stx osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+        lda #<s_fgo
+        ldy #>s_fgo
+        jmp oi
+bad     jmp e_param
+.)
+; k_fil : NOM.ASM inclura ARR.INC et FIL.INC
+k_fil   lda #1
+        sta kfil
+        sta karr
+        rts
 
 ; affectations ; ANIM ; console
 x_asg   = k_assign
@@ -2330,6 +2397,10 @@ cadr
         .word k_dim      ; DIM
         .word k_fill     ; FILL
         .word k_input    ; INPUT
+        .word k_save     ; SAVE
+        .word k_load     ; LOAD
+        .word k_bsave    ; BSAVE
+        .word k_bload    ; BLOAD
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

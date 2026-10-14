@@ -53,6 +53,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | `POINT(x,y)` | 1 si le point de l'image est allumé (HIRES ou SPLIT) |
 | `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
 | `INKEY` | touche, 0 si aucune ; n'attend pas ; sans délai de répétition (§ 8) |
+| `FOUND` | 1 si le dernier `LOAD` ou `BLOAD` a trouvé son fichier, 0 sinon (§ 10) |
 | `LEN(A$)` | longueur d'une chaîne (§ 9) |
 
 Une lettre suivie de `(` est un tableau ; les fonctions ont des noms de plusieurs lettres.
@@ -192,16 +193,54 @@ tableau `$` à deux dimensions (`N$(10,12)` : 10 noms).
 - En interprété, chaque accès vérifie le tableau et ses indices (`indice hors limites`). Un
   programme traduit ne vérifie rien (§ 12).
 
-## 10. Images et animations
+## 10. Fichiers : images, animations, données
 
 | Commande | Effet |
 |---|---|
 | `GLOAD nom` | charge une image : `.HIR` (ou `.HIZ` compressée) en HIRES, `.IMG` en SPLIT ; depuis le mode texte, le type choisit le mode (`.HIR` par défaut) |
 | `GSAVE nom` | enregistre l'image au format du mode (`.HIR` ou `.IMG`) |
 | `ANIM nom [n]` | joue l'animation `nom.ANI` n fois (0 ou rien : jusqu'à une touche) ; HIRES plein écran seulement (refusé en SPLIT) ; ESC arrête le programme |
+| `SAVE A nom`, `LOAD A nom` | tableau en **texte** (`.TXT` par défaut), modifiable avec EDIT |
+| `BSAVE A nom`, `BLOAD A nom` | tableau en **binaire** (`.DAT` par défaut), octets tels quels, modifiable avec HEX ; entiers : octet bas puis octet haut |
+| `BSAVE SCREEN nom`, `BLOAD SCREEN nom` | écran texte entier, 1 120 octets (`.SCR` par défaut) ; LORES seulement (`LORES d'abord`) ; le curseur ne bouge pas |
+| `FOUND` | fonction : 1 si le dernier `LOAD` ou `BLOAD` a trouvé son fichier, 0 sinon (0 au lancement) |
 
 Le nom s'écrit sans guillemets, avec un lecteur facultatif ; `$1`-`$9` sont permis. Formats
 `.HIZ` et `.ANI`, outils de fabrication : README, « HIRES plein écran ».
+
+**Fichiers de données.** `A` est le nom du tableau (`SAVE N$ HOF`, `BLOAD M NIVEAU1`).
+`SAVE` et `BSAVE` écrasent un fichier existant sans confirmation.
+
+- **Fichier absent** au `LOAD` ou au `BLOAD` : pas d'erreur, le tableau (ou l'écran) ne
+  change pas, et `FOUND` vaut 0. Les autres erreurs arrêtent le programme.
+
+      LOAD S SCORES
+      IF FOUND = 0
+        FILL S 0
+      ENDIF
+
+- **Texte**, au format de CP/M comme EDIT. `SAVE` termine chaque ligne par CR LF et complète
+  le dernier enregistrement par `^Z` ; `LOAD` accepte CR LF, LF ou CR, et s'arrête au
+  premier `^Z`.
+- Une ligne du fichier correspond toujours à une ligne du tableau (pas de commentaires).
+  Tableau `$` : la ligne telle quelle, espaces compris, jusqu'au premier 0. Tableau
+  d'entiers : les nombres séparés par des espaces (une tabulation compte comme un espace),
+  signe `-` permis. Un tableau à une dimension tient sur une seule ligne (tous ses nombres,
+  ou toute sa chaîne).
+- `LOAD` met d'abord le tableau à 0 : une ligne plus courte laisse la fin de sa ligne à 0 ;
+  des lignes en moins laissent le reste du tableau à 0. Des lignes vides en trop sont
+  ignorées.
+- Erreurs de `LOAD`, avec la ligne du fichier : `ligne trop longue : L n` (trop de
+  caractères ou de nombres), `trop de lignes : L n`, `nombre ? : L n` (pas un entier de
+  -32768 à 32767). Ce qui a été lu avant reste dans le tableau.
+- `SAVE` d'un tableau `$` qui contient un code 1-31 : `code 0-31 : BSAVE` (ces codes ne se
+  tapent pas dans EDIT : les attributs passent par `BSAVE`).
+- **Binaire** : les fichiers de CP/M n'ont pas de taille à l'octet près (enregistrements de
+  128 octets). `BSAVE` complète le dernier enregistrement par des 0. `BLOAD` met le tableau
+  à 0 puis lit sa taille : un fichier plus court laisse la fin à 0, ce qui dépasse est
+  ignoré. `BLOAD SCREEN` n'efface pas l'écran avant.
+- Rien d'autre ne se sauve (ni les variables `A`-`Z`, ni la police) : un programme qui veut
+  garder des variables les range dans un tableau.
 
 ## 11. Erreurs
 
@@ -216,7 +255,7 @@ s'affichent sans numéro de ligne (`Erreur : division par zero`).
 | Modes | `HIRES ou SPLIT d'abord`, `LORES d'abord` |
 | Blocs | `NEXT sans boucle`, `NEXT manquant`, `bloc non ferme`, `fin de bloc en trop`, `trop de blocs imbriques`, `RETURN sans CALL`, `SUB introuvable` |
 | Tableaux | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
-| Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `animation introuvable`, `animation trop grande` |
+| Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `animation introuvable`, `animation trop grande` ; données (§ 10) : `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
 
 Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute normalement.
 
@@ -243,7 +282,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - Un tableau doit être déclaré par un `DIM` placé plus haut dans le fichier (la traduction
   lit le fichier dans l'ordre).
 - ASM a besoin, sur le lecteur de la source, de `CPA.INC`, `GRX.INC`, `HIRES.INC`, plus
-  `ARR.INC` si le programme a des tableaux et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
+  `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il lit ou écrit des fichiers de
+  données (`SAVE`... `FOUND`) et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
   sur la disquette complète, la disquette Assembleur et la disquette Animations (pas sur la
   disquette Logo, qui n'a pas ASM).
 - Un `.COM` traduit pèse au moins 3 Ko (bibliothèques), puis quelques dizaines d'octets par
@@ -251,12 +291,12 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (11 165 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (12 283 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. La zone libre pour le texte, les
-  tableaux et une animation fait environ 25 Ko (texte à partir de `$397C`).
+  tableaux et une animation fait environ 24 Ko (texte à partir de `$3DDA`).
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s).
 - **Limites** : entiers seulement, variables d'une lettre, deux dimensions au plus, ni
@@ -272,7 +312,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `ARDOISE.GRX` | télécran : les flèches dessinent, ESPACE efface, ESC finit (`INKEY`) |
 | `FLECHES.GRX` | LORES : un `@` qu'on déplace aux flèches dans un cadre, `SCRN` pour les murs |
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
-| `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne |
+| `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `ANIMS.GRX` | animations (disquette Animations) |
 
 ## 15. Mise en œuvre
@@ -286,12 +326,13 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), images |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` |
+| `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
 au lancement : ils ne sont pas dans le fichier.
 
 Page zéro : `$10-$56` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$C0-$C7` pour
-`hires.inc`, `$C8-$CF` pour `arr.inc`.
+`hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
 Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque cas interprété
 (GRAPHER) puis traduit (GRXASM), dans le 6502
@@ -300,57 +341,7 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ## 16. Décidé, pas encore fait
 
-### 16.1 Fichiers de données (prochain lot)
-
-| Commande | Effet |
-|---|---|
-| `SAVE A nom`, `LOAD A nom` | tableau en **texte** (`.TXT` par défaut), modifiable avec EDIT |
-| `BSAVE A nom`, `BLOAD A nom` | tableau en **binaire** (`.DAT` par défaut), octets tels quels, modifiable avec HEX ; entiers : octet bas puis octet haut |
-| `BSAVE SCREEN nom`, `BLOAD SCREEN nom` | écran texte entier, 1 120 octets (`.SCR` par défaut) ; LORES seulement (`LORES d'abord`) ; le curseur ne bouge pas |
-
-`A` est le nom du tableau (`SAVE N$ HOF`, `BLOAD M NIVEAU1`). Le nom du fichier s'écrit comme
-pour `GLOAD`. `SAVE` et `BSAVE` écrasent un fichier existant sans confirmation.
-
-**Texte**, au format de CP/M comme EDIT :
-
-- `SAVE` termine chaque ligne par CR LF et complète le dernier enregistrement par `^Z`.
-  `LOAD` accepte CR LF, LF ou CR, et s'arrête au premier `^Z`.
-- Une ligne du fichier correspond à une ligne du tableau, toujours (pas de commentaires).
-  Tableau `$` : la ligne telle quelle, espaces compris, jusqu'au premier 0. Tableau `$` à une
-  dimension : une seule ligne. Tableau d'entiers : les nombres séparés par des espaces (une
-  tabulation compte comme un espace), signe `-` permis. Tableau d'entiers à une dimension :
-  tous les nombres sur une seule ligne.
-- `SAVE` d'un tableau `$` contenant un code 1-31 : erreur `code 0-31 : BSAVE` (ces codes ne
-  se tapent pas dans EDIT ; les attributs passent par `BSAVE`).
-- `LOAD` : une ligne plus courte que la ligne du tableau est complétée par des 0 (`$` comme
-  entiers). Ligne trop longue ou trop de nombres : `ligne trop longue : L n` (n = ligne du
-  fichier). Lignes en trop : erreur ; en moins : le reste du tableau à 0. Nombre invalide ou
-  hors de -32768..32767 : erreur. En cas d'erreur, ce qui a été lu reste dans le tableau.
-
-**Binaire** : les fichiers de CP/M n'ont pas de taille à l'octet près (enregistrements de
-128 octets). `BLOAD` lit la taille du tableau : un fichier plus court laisse la fin à 0, ce
-qui dépasse est ignoré. `BSAVE` complète le dernier enregistrement par des 0.
-
-**Fichier absent** au `LOAD` ou au `BLOAD` : pas d'erreur, le tableau reste tel quel. La
-fonction `FOUND` vaut 1 si le dernier `LOAD` ou `BLOAD` a trouvé le fichier, 0 sinon (0 au
-lancement) :
-
-    LOAD S SCORES
-    IF FOUND = 0
-      FILL S 0
-    ENDIF
-
-Autres erreurs disque : celles de `GSAVE`, qui arrêtent le programme.
-
-Rien d'autre ne se sauve pour l'instant (ni les variables `A`-`Z`, ni la police) : un
-programme qui veut garder des variables les range dans un tableau.
-
-Coût estimé : 1 à 1,5 Ko partagés entre GRAPHER (exécution, environ 12 Ko au total, donc
-moins de 1 Ko pris sur la zone libre) et GRXASM (traduction) ; `GRX.INC` +0,5 Ko, inclus seulement par un programme qui s'en sert. Tests :
-aller-retour texte et binaire (interprété = traduit), erreurs, fichier absent. Exemples : le
-tableau des scores enregistré, un niveau dessiné dans EDIT, un écran titre en binaire.
-
-### 16.2 Plus tard
+### 16.1 Plus tard
 
 - **`REDIM`** : redimensionner un tableau en gardant les éléments dont les indices existent
   encore (comme `ReDim Preserve`) ; les tableaux déclarés après sont déplacés. ~0,3 à 0,5 Ko.
