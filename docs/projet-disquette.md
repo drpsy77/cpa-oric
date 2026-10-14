@@ -948,7 +948,7 @@ codé). Décidé :
     bornée à la capacité de la chaîne et à la fin de la ligne.
   - Fichiers : `LOAD`/`SAVE` en texte, `BLOAD`/`BSAVE` en binaire (proposé) ; idée : les
     mêmes sur l'écran texte entier (écran titre).
-- **Spécification** : `docs/spec-grapher-lores.md` (paliers A LORES, B tableaux et chaînes,
+- **Spécification** : `docs/grapher.md` (référence ; anciennement `spec-grapher-lores.md` : paliers A LORES, B tableaux et chaînes,
   C fichiers). Palier A relu par Pierre le 12 octobre (CLS en attribut 16, pas d'attente
   imposée en fin de programme, GET, `SPC n [x]`, `INPUT V`, `SCR_PROG` accordé) ; B et C à
   relire. Pages 2 et 3 documentées : `docs/memoire-pages-2-3.md`.
@@ -1021,7 +1021,7 @@ codé). Décidé :
   l'Oric émulé `GRAPHER FLECHES /A` puis `ASM FLECHES` donne un `FLECHES.COM` identique à xa.
   - À vérifier sur le vrai Oric : un `ASM` (lectures et écritures alternées sur la disquette).
 - **GRAPHER, palier B : tableaux et chaînes, fait** (14 octobre 2026 ; questions et réponses de
-  Pierre : `docs/spec-grapher-lores.md` § 2 et 5). `DIM A(n) A(n,m) A$(n) A$(n,m)` (indices
+  Pierre : `docs/grapher.md`). `DIM A(n) A(n,m) A$(n) A$(n,m)` (indices
   0 à n-1, éléments à 0), `A(i)` `A(i,j)` `M$(l,c)` éléments, `A(k)` à plat sur deux
   dimensions (comme en C), chaînes `A$` et `M$(l)` (jusqu'au premier 0, 255 au plus) :
   affectation (`chaine trop longue`), comparaisons (aussi avec un texte), `LEN`, `PRINT`

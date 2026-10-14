@@ -117,7 +117,7 @@ animation est une suite de sprites (`HER1`, `HER2`...).
 - **Le langage n'impose pas le partage des caractères** : le programmeur répartit les codes
   redéfinissables entre tuiles, sprites et lettres, et choisit où afficher les uns et les
   autres ; c'est sa responsabilité.
-- **Chargement par `BLOAD`** (palier C de GRAPHER, `docs/spec-grapher-lores.md` § 3) :
+- **Chargement par `BLOAD`** (fichiers de GRAPHER, `docs/grapher.md` § 16.1) :
   `LOAD`, `SAVE`, `BLOAD`, `BSAVE` passent **avant** les sprites.
 - MOVE : c'est un retrait puis un affichage en une instruction.
 
@@ -153,7 +153,7 @@ codes non vérifiée). Repartir des décisions du § 5.
 ## 7. Prochaines étapes
 
 1. GRAPHER palier C (fichiers : `LOAD`/`SAVE`/`BLOAD`/`BSAVE`) : préparer les questions, puis
-   coder (spécification : `docs/spec-grapher-lores.md` § 3).
+   coder (`docs/grapher.md` § 16.1 et 17).
 2. Sprites : revoir § 6 avec Pierre (réserve de codes, emplacements, genre tuiles), lire
    `sprites.s` d'Oricium pour le jeu secondaire, puis écrire la spécification complète des
    commandes avant tout code.
