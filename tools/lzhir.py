@@ -47,7 +47,7 @@ BLANK = 0x40        # octet de points vide (h_cls)
 SIZE_FULL = 8000
 SIZE_SPLIT = 5120
 TOP_FULL = 34 * 1024    # place estimée pour une animation dans VOIR
-TOP_GRAPHER = 22 * 1024  # et dans GRAPHER interprété (après son texte)
+TOP_GRAPHER = 27 * 1024  # et dans GRAPHER interprété (après son texte)
 
 # coûts du décodeur h_unz (cycles du 6502), mesurés : tools/test_anim.py
 # recale ce modèle sur le décodeur exécuté dans py65 (écart < 1 %)

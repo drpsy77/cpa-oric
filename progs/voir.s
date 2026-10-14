@@ -139,7 +139,7 @@ e       ldx #F_PRINT
         jmp BDOS
 .)
 
-; a_fail : demandée par anim.inc (pour GRAPHER /A seulement)
+; a_fail : demandée par anim.inc (pour les programmes traduits par GRXASM)
 a_fail  jmp v_puts
 
 t_hir   .asc "HIR"

@@ -112,6 +112,10 @@ def main():
                 elif x == 16:
                     f = files.get(adr)
                     if f and f[3] is not None: open(f[0], 'wb').write(f[3])
+                elif x == 47:       # CHAIN : la ligne est affichée, puis fin
+                    l = bytes(mem[adr:mem.index(0, adr)]).decode()
+                    out.append('[CHAIN %s]\n' % l)
+                    break
                 elif x == 115:
                     pass        # graphisme : mode texte (GETMODE -> 0)
                 elif x == 116:

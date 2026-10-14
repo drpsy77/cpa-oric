@@ -43,7 +43,11 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - `MOTIFS.GRX` et `ECRAN.GRX` attendent une touche avant de finir ;
 - `SERPENT.GRX`, `SCORES.GRX` (saisie au curseur) ; un programme traduit avec tableaux (ASM sur
   la disquette Assembleur) ;
-- animations : déchirure, flèches gauche / droite, débit.
+- animations : déchirure, flèches gauche / droite, débit ;
+- GRAPHER séparé de GRXASM : `GRAPHER MOTIFS /A` (passage par CHAIN, `GRXASM motifs /a`
+  affiché), puis `ASM MOTIFS` et `MOTIFS` ; `GRXASM MOTIFS` directement ; un `.GRX`
+  interprété de chaque sorte (HIRES, SPLIT `DESSIN`, LORES, tableaux) ; sur la disquette
+  Logo, `GRAPHER X /A` doit dire que GRXASM est introuvable.
 
 ## À vérifier ailleurs
 

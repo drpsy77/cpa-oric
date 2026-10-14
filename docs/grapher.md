@@ -4,7 +4,8 @@ GRAPHER exécute un fichier texte `.GRX` (écrit avec EDIT) : une commande par l
 C'est un langage de bas niveau, proche de l'écran. Il manipule des entiers, des variables
 d'une lettre, des tableaux, l'image HIRES ou SPLIT et l'écran texte. Il sert à fabriquer des
 écrans (titre, décor) et de petits jeux. Le même fichier peut être **interprété**, ou
-**traduit** en assembleur puis assemblé en un `.COM` autonome, 5 à 20 fois plus rapide (§ 12).
+**traduit** en assembleur par GRXASM puis assemblé en un `.COM` autonome, 5 à 20 fois plus
+rapide (§ 12).
 
 Ce document est la seule référence de GRAPHER. Le README n'en donne qu'un aperçu. HELP et
 README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`).
@@ -21,7 +22,8 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | Commande | Effet |
 |---|---|
 | `GRAPHER NOM [p1 ... p9]` | charge `NOM.GRX` (lecteur facultatif) en mémoire et l'exécute ; `p1`-`p9` remplacent `$1`-`$9` |
-| `GRAPHER NOM [p1 ... p9] /A` | n'exécute pas : écrit `NOM.ASM`, à assembler par `ASM NOM` (§ 12) |
+| `GRXASM NOM [p1 ... p9]` | n'exécute pas : écrit `NOM.ASM`, à assembler par `ASM NOM` (§ 12) |
+| `GRAPHER NOM /A [p1 ... p9]` | la même chose : GRAPHER passe la main à GRXASM (`/A` juste après le nom) |
 
 ## 2. Écriture d'un programme
 
@@ -218,13 +220,17 @@ s'affichent sans numéro de ligne (`Erreur : division par zero`).
 
 Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute normalement.
 
-## 12. Traduction en assembleur (`/A`)
+## 12. Traduction en assembleur (GRXASM)
 
-    A>GRAPHER MOTIFS /A
+    A>GRXASM MOTIFS
     MOTIFS.ASM ecrit : ASM MOTIFS
     A>ASM MOTIFS
     A>MOTIFS
 
+- La traduction est faite par `GRXASM.COM`, un programme à part (l'interpréteur n'en garde
+  pas le code en mémoire). `GRAPHER NOM /A` le lance par CHAIN : la ligne devient
+  `GRXASM NOM /A ...`, 78 caractères au plus (`Ligne trop longue`). GRXASM doit être sur un
+  lecteur où les commandes sont cherchées.
 - La traduction fait la même analyse que l'interpréteur. Les erreurs de syntaxe et de blocs
   sont signalées avec la ligne, et `NOM.ASM` n'est alors pas écrit.
 - Le `.ASM` est lisible : chaque ligne du `.GRX` y figure en commentaire. Variables `V_A` à
@@ -237,19 +243,20 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - Un tableau doit être déclaré par un `DIM` placé plus haut dans le fichier (la traduction
   lit le fichier dans l'ordre).
 - ASM a besoin, sur le lecteur de la source, de `CPA.INC`, `GRX.INC`, `HIRES.INC`, plus
-  `ARR.INC` si le programme a des tableaux et `ANIM.INC` s'il anime. Ils sont sur la
-  disquette complète, la disquette Assembleur et la disquette Animations.
+  `ARR.INC` si le programme a des tableaux et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
+  sur la disquette complète, la disquette Assembleur et la disquette Animations (pas sur la
+  disquette Logo, qui n'a pas ASM).
 - Un `.COM` traduit pèse au moins 3 Ko (bibliothèques), puis quelques dizaines d'octets par
   commande. ASM met moins d'une minute pour `MOTIFS`.
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (16 840 octets) en `$0500`, puis les tables de
-  `hires.inc` et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
+- **Mémoire** (interprété) : GRAPHER.COM (11 165 octets) en `$0500`, puis les tables de
+  `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. La zone libre pour le texte, les
-  tableaux et une animation fait environ 20 Ko.
+  tableaux et une animation fait environ 25 Ko (texte à partir de `$397C`).
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s).
 - **Limites** : entiers seulement, variables d'une lettre, deux dimensions au plus, ni
@@ -272,16 +279,22 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 | Fichier | Rôle |
 |---|---|
-| `progs/grapher.s` | interpréteur et traducteur : une table des commandes à deux adresses (exécution, traduction), les commandes fréquentes en tête |
+| `progs/grapher.s` | interpréteur (`GRAPHER.COM`) ; `/A` : CHAIN vers GRXASM |
+| `progs/grxasm.s` | traducteur (`GRXASM.COM`) |
+| `progs/grxd_inc.s`, `progs/grxc_inc.s` | communs aux deux : constantes et page zéro ; lecture du `.GRX` et des lignes, paramètres, table des noms de commandes (les fréquentes en tête), analyse des noms, nombres et fonctions, calcul des constantes, sous-programmes, erreurs. Chaque programme a sa table `cadr` d'adresses des commandes, dans l'ordre de la table des noms, et ses propres affectations (`x_asg`, `x_aasg`), `ANIM` (`an_val`, `an_none`), `ndim_s`, `to_text`, `o_drop` et tampons |
 | `progs/grx.inc` (`GRX.INC`) | bibliothèque d'exécution des programmes traduits |
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), images |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` |
 
-Page zéro : `$10-$55` pour GRAPHER, `$10-$27` pour `GRX.INC`, `$C0-$C7` pour
+Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
+au lancement : ils ne sont pas dans le fichier.
+
+Page zéro : `$10-$56` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$C0-$C7` pour
 `hires.inc`, `$C8-$CF` pour `arr.inc`.
 
-Tests : `tools/test_grapher.sh` exécute chaque cas interprété puis traduit, dans le 6502
+Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque cas interprété
+(GRAPHER) puis traduit (GRXASM), dans le 6502
 simulé (`tools/run_com.py`, sans émulateur), et compare au résultat attendu (`.ref`, `.kref`,
 saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
@@ -306,7 +319,7 @@ pour `GLOAD`. `SAVE` et `BSAVE` écrasent un fichier existant sans confirmation.
   Tableau `$` : la ligne telle quelle, espaces compris, jusqu'au premier 0. Tableau `$` à une
   dimension : une seule ligne. Tableau d'entiers : les nombres séparés par des espaces (une
   tabulation compte comme un espace), signe `-` permis. Tableau d'entiers à une dimension :
-  voir la question C2.
+  tous les nombres sur une seule ligne.
 - `SAVE` d'un tableau `$` contenant un code 1-31 : erreur `code 0-31 : BSAVE` (ces codes ne
   se tapent pas dans EDIT ; les attributs passent par `BSAVE`).
 - `LOAD` : une ligne plus courte que la ligne du tableau est complétée par des 0 (`$` comme
@@ -318,10 +331,22 @@ pour `GLOAD`. `SAVE` et `BSAVE` écrasent un fichier existant sans confirmation.
 128 octets). `BLOAD` lit la taille du tableau : un fichier plus court laisse la fin à 0, ce
 qui dépasse est ignoré. `BSAVE` complète le dernier enregistrement par des 0.
 
-**Fichier absent** : voir la question C1. Autres erreurs disque : celles de `GSAVE`.
+**Fichier absent** au `LOAD` ou au `BLOAD` : pas d'erreur, le tableau reste tel quel. La
+fonction `FOUND` vaut 1 si le dernier `LOAD` ou `BLOAD` a trouvé le fichier, 0 sinon (0 au
+lancement) :
 
-Coût estimé : GRAPHER +1 à 1,5 Ko (environ 18 Ko), donc 1 à 1,5 Ko de moins pour la zone
-libre ; `GRX.INC` +0,5 Ko, inclus seulement par un programme qui s'en sert. Tests :
+    LOAD S SCORES
+    IF FOUND = 0
+      FILL S 0
+    ENDIF
+
+Autres erreurs disque : celles de `GSAVE`, qui arrêtent le programme.
+
+Rien d'autre ne se sauve pour l'instant (ni les variables `A`-`Z`, ni la police) : un
+programme qui veut garder des variables les range dans un tableau.
+
+Coût estimé : 1 à 1,5 Ko partagés entre GRAPHER (exécution, environ 12 Ko au total, donc
+moins de 1 Ko pris sur la zone libre) et GRXASM (traduction) ; `GRX.INC` +0,5 Ko, inclus seulement par un programme qui s'en sert. Tests :
 aller-retour texte et binaire (interprété = traduit), erreurs, fichier absent. Exemples : le
 tableau des scores enregistré, un niveau dessiné dans EDIT, un écran titre en binaire.
 
@@ -334,11 +359,4 @@ tableau des scores enregistré, un niveau dessiné dans EDIT, un écran titre en
 
 ## 17. Questions ouvertes
 
-- **C1. Fichier absent au `LOAD` ou au `BLOAD`** (le tableau des scores au premier
-  lancement). (a) Erreur qui arrête le programme, comme `GLOAD`. (b) Pas d'erreur : le
-  tableau reste tel quel, et une fonction `FOUND` vaut 1 si le dernier `LOAD`/`BLOAD` a
-  trouvé le fichier, 0 sinon ; les autres erreurs disque arrêtent toujours. Proposé : (b).
-- **C2. Tableau d'entiers à une dimension en texte** : tous les nombres sur une ligne, ou
-  un nombre par ligne (plus lisible dans EDIT pour des scores) ? Proposé : un par ligne.
-- **C3. Autres données à sauver** : les variables `A`-`Z` (`SAVE VARS`), la police
-  (`BSAVE FONT`) ? Proposé : ni l'un ni l'autre pour l'instant.
+Aucune.

@@ -4,7 +4,8 @@
 # tools/run_com.py (mode texte : PRINT et messages d'erreur seulement ;
 # pour les fichiers lo*.grx, l'écran texte du LORES en plus),
 # et la sortie est comparée au fichier .ref ; puis il est traduit
-# (GRAPHER NOM /A), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
+# (GRXASM NOM ; GRAPHER NOM /A passe la main à GRXASM par CHAIN,
+# vérifié une fois au début), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
 # ANIM.INC ; CUBE.ANI pour ANIM) et
 # exécuté : messages de la traduction et sortie comparés au fichier .kref.
 #   tools/test_grapher.sh          compare aux références
@@ -16,7 +17,7 @@ XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
-cp build/progs/GRAPHER.COM "$T/"
+cp build/progs/GRAPHER.COM build/progs/GRXASM.COM "$T/"
 cp progs/cpa.inc "$T/CPA.INC"; cp progs/grx.inc "$T/GRX.INC"; cp progs/hires.inc "$T/HIRES.INC"
 cp progs/anim.inc "$T/ANIM.INC"; cp progs/arr.inc "$T/ARR.INC"; cp files/anim/CUBE.ANI "$T/"
 ko=0
@@ -25,6 +26,10 @@ check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   elif diff "$D/$1.$2" "$T/$1.out" > "$T/$1.diff"; then echo "identique : $1.$2"
   else echo "DIFFERENT : $1.$2"; cat "$T/$1.diff"; ko=$((ko+1)); fi
 }
+# GRAPHER NOM /A : CHAIN vers GRXASM avec le reste de la ligne
+c=$(cd "$T" && python3 "$RUN" "$T" GRAPHER.COM CALC /A 12 Ab 2>&1 | grep '^\[CHAIN')
+if [ "$c" = "[CHAIN GRXASM CALC /A 12 Ab]" ]; then echo "identique : CHAIN"
+else echo "DIFFERENT : CHAIN ($c)"; ko=$((ko+1)); fi
 for f in $D/*.grx; do
   n=$(basename "$f" .grx)
   N=$(echo "$n" | tr a-z A-Z)
@@ -35,7 +40,7 @@ for f in $D/*.grx; do
     | grep -v '^\[[0-9]* instructions\]' > "$T/$n.out" || true
   check "$n" ref
   rm -f "$T/$N.ASM" "$T/$N.COM"
-  (cd "$T" && python3 "$RUN" "$T" GRAPHER.COM "$N" /A 2>&1) \
+  (cd "$T" && python3 "$RUN" "$T" GRXASM.COM "$N" 2>&1) \
     | grep -v '^\[[0-9]* instructions\]' > "$T/$n.out" || true
   if [ -f "$T/$N.ASM" ]; then
     tr -d '\032' < "$T/$N.ASM" > "$T/$n.s"

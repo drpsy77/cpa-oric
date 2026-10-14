@@ -19,7 +19,7 @@
 ;            de 8 lignes (calage de la ligne de déchirure, à la main,
 ;            gardé jusqu'au prochain démarrage, comme celui de VSYNC).
 ;  a_msg     A = code d'erreur -> A/Y = message (terminé par 0)
-;  a_grx     pour GRAPHER /A : A = passages, nom après l'appel (lecteur,
+;  a_grx     pour GRXASM : A = passages, nom après l'appel (lecteur,
 ;            puis 11 caractères) ; une erreur ou ESC appelle a_fail (A/Y =
 ;            message), que le programme définit.
 ;
@@ -262,7 +262,7 @@ hz_m4   lda #<a_m4
         rts
 .)
 
-; a_grx : GRAPHER /A (A = passages ; nom après l'appel)
+; a_grx : GRXASM (A = passages ; nom après l'appel)
 a_grx
 .(
         sta a_n2

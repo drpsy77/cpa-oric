@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 9 455 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 9 509 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,7 +40,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER | 16 840 | langage de dessin et de jeux (`.GRX`), interprété ou traduit | `grapher.md` |
+| GRAPHER, GRXASM | 11 165, 8 580 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur | `grapher.md` |
 | VOIR, VSYNC | 3 418, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -53,7 +53,7 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 ## 2. Suite prévue (par priorité)
 
 1. **GRAPHER : fichiers de données** (`LOAD`, `SAVE`, `BLOAD`, `BSAVE`) : spécifié,
-   `docs/grapher.md` § 16.1 ; questions C1-C3 au § 17.
+   `docs/grapher.md` § 16.1, sans question ouverte.
 2. **Sprites en mode texte** : format `.SPR` validé, affichage à spécifier :
    `docs/spec-sprites.md`. Puis l'éditeur de caractères et de sprites (`.COM` plein écran) et
    une bibliothèque d'affichage (`.INC`), pour GRAPHER d'abord, LOGO ensuite peut-être.
@@ -95,8 +95,10 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :
 
-- tampons stockés dans le fichier, à sortir après la fin du programme : GRAPHER (175
-  octets), DEBUG (122), EDIT (842), HEX (432), XDO (512) ;
+- tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
+  (842), HEX (432), XDO (512) ;
+- GRAPHER (11 165 octets) tient en 6 blocs avec 1 123 octets de reste ; GRXASM (8 580) prend
+  5 blocs pour 388 octets : 4 blocs s'il maigrit d'autant ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

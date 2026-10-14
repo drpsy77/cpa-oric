@@ -102,7 +102,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/smoke_test.sh              # construction + démarrage disquette et ROM dans l'émulateur
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
-    tools/test_grapher.sh            # GRAPHER.COM : calculs, boucles, erreurs (sans émulateur)
+    tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM : calculs, boucles, erreurs (sans émulateur)
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
     python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
 
@@ -123,7 +123,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | Système (BIOS, BDOS, CCP, menus) | en plus : essai Oricutron ciblé sur ce qui change, `tools/smoke_test.sh` |
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
-| GRAPHER.COM, `hires.inc` | en plus : `tools/test_grapher.sh`, essai Oricutron des exemples `.GRX` (dessin) |
+| GRAPHER.COM, GRXASM.COM (`grx*_inc.s`), `hires.inc` | en plus : `tools/test_grapher.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
 
@@ -133,7 +133,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
   disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
   pour ne gêner aucun programme. `progs/grx.inc` (`GRX.INC`) est la bibliothèque d'exécution
-  des programmes traduits par `GRAPHER NOM /A`. `progs/anim.inc` (`ANIM.INC`) joue les
+  des programmes traduits par `GRXASM NOM` (ou `GRAPHER NOM /A`). `progs/anim.inc` (`ANIM.INC`) joue les
   animations `.ANI` ; il s'inclut avant `HIRES.INC`, qui reste à la fin du programme (ses
   tables suivent `h_end`), et utilise aussi les étiquettes internes `hz_`.
 - Écran au programme. HIRES plein écran : une convention, pas une fonction du contrat. Un programme qui met `$1E`
