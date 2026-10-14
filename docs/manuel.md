@@ -55,8 +55,8 @@ Autres programmes de la disquette :
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG`.
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
-- `GRAPHER.COM NOM [/A]`, le petit langage de dessin des fichiers `.GRX` (exécuté, ou traduit en
-  assembleur avec `GRX.INC`), avec ses exemples (`docs/grapher.md` § 14), et
+- `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX` (exécuté), et
+  `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (avec `GRX.INC`), avec ses exemples (`docs/grapher.md` § 14), et
   `VOIR.COM NOM`, qui affiche une image (`docs/grapher.md`, « HIRES plein écran »).
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
   `CPA.INC` et `HIRES.INC`.
@@ -256,8 +256,8 @@ y est partout, protégé et visible.
 |---|---|---|---|
 | `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
@@ -574,7 +574,7 @@ mais une règle : **le programme prend l'écran pour lui**, et rend la main prop
 - `VOIR NOM` affiche `NOM.HIR` en plein écran, `VOIR NOM.HIZ` la même image compressée, ou
   `VOIR NOM.IMG` une image du mode SPLIT, et revient au texte à la première touche.
 - `VOIR NOM.ANI [n]` joue une animation plein écran n fois (0 ou rien : jusqu'à une touche) ;
-  `ANIM NOM [n]` fait de même dans GRAPHER (interprété ou traduit par `/A`). Voir
+  `ANIM NOM [n]` fait de même dans GRAPHER (interprété, ou traduit par GRXASM). Voir
   « Animations » plus bas.
 - Une image `.HIR` est la copie brute de l'écran : 8 000 octets, le format usuel sur Oric.
   `GSAVE` dans GRAPHER en écrit ; `tools/png2hir.py image.png NOM.HIR` en fabrique une sur le
@@ -628,7 +628,7 @@ longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
   (à 1 % près) et la cadence obtenue. `--seuil` est conseillé : le tramage change tout l'écran
   d'une image à l'autre, et une vidéo tramée plein écran ne dépasse pas 2 à 3 images/s.
   `--longue` donne un fichier plus petit mais plus lent. Les démos : `tools/anim_demos.py`.
-- L'animation entière est chargée en mémoire : ~34 Ko dans VOIR, ~20 Ko dans GRAPHER (après le
+- L'animation entière est chargée en mémoire : ~34 Ko dans VOIR, ~25 Ko dans GRAPHER (après le
   texte du `.GRX`). La 1re image est dessinée sur un écran effacé ; la dernière est suivie
   d'une image de retour vers la 1re, pour boucler sans tout redessiner.
 - Cadence : chaque image a son délai (1/50 s) et part au top 50 Hz qui suit ; si le décodage
@@ -649,7 +649,7 @@ longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
   cycles) : la déchirure y reste, à un endroit fixe. À faire une fois après l'allumage ; à
   essayer sur un vrai Oric.
 - Dans un programme : `#include "ANIM.INC"` **avant** `HIRES.INC` (qui reste à la fin), puis
-  `a_play` (A/Y = FCB, X = passages ; C=1 si erreur, `a_msg` donne le message). `GRAPHER /A`
+  `a_play` (A/Y = FCB, X = passages ; C=1 si erreur, `a_msg` donne le message). GRXASM
   n'inclut `ANIM.INC` que si le programme se sert d'ANIM.
 
 ## Le son (fonction 116 du BDOS)

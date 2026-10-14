@@ -1,6 +1,6 @@
 ; =====================================================================
 ;  grx.inc — bibliothèque d'exécution des programmes traduits par
-;  GRAPHER NOM /A (NOM.GRX -> NOM.ASM). Incluse par NOM.ASM, avant
+;  GRXASM NOM (NOM.GRX -> NOM.ASM). Incluse par NOM.ASM, avant
 ;  hires.inc ; jamais assemblée seule.
 ;
 ;  Modèle : la valeur d'une expression est dans g_ev ; l'opérande de

@@ -1,6 +1,6 @@
 ; =====================================================================
 ;  arr.inc — tableaux et chaînes de GRAPHER (palier B), commune à
-;  l'interpréteur (GRAPHER.COM) et aux programmes traduits par /A (qui
+;  l'interpréteur (GRAPHER.COM) et aux programmes traduits par GRXASM (qui
 ;  ne l'incluent que s'ils ont un DIM). Incluse avant hires.inc.
 ;
 ;  À définir par le programme qui l'inclut :

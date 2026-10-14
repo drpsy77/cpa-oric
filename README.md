@@ -17,9 +17,9 @@ Deux variantes sont construites à partir des mêmes sources :
 - Un système compatible dans l'esprit avec CP/M 2.2 : prompt `A>`, fichiers CP/M sur quatre
   lecteurs, programmes `.COM` chargés en `$0500`, scripts `.BAT`, menus déroulants (FUNCT),
   édition de ligne avec historique et complétion par ESC, imprimante, graphisme et son.
-- Des commandes de fichiers et de disquettes qui marchent avec un seul lecteur (COPY, FORMAT,
+- Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
-- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR).
+- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
 - **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
@@ -66,7 +66,7 @@ Version disque : l'EPROM du Microdisc fait appel à la ROM BASIC 1.1, il faut do
 
 Version ROM : copier `build/cpa.rom` dans `roms/`, puis mettre `atmosrom = 'roms/cpa'` dans `oricutron.cfg`.
 
-Sur le matériel, copier `cpa.dsk` sur la clé USB ou la carte SD du LOCI (ou du Cumulus) et
+Sur le matériel, copier `cpa.dsk` sur la clé USB (resp. la carte SD) du LOCI (resp. du Cumulus) et
 démarrer dessus. CP/A est utilisé sur un vrai Oric Atmos avec un LOCI ; les couleurs des
 menus, peu lisibles dans certains émulateurs, sont nettes sur un vrai écran.
 

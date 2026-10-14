@@ -84,16 +84,16 @@ theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
 }
 theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx files/fleches.log files/serpent.grx files/scores.grx"
 theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC" \
+theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
-# Animations : VOIR visible (il sort des commandes de base), GRAPHER et
-# ASM avec les bibliothèques (GRAPHER ANIMS /A) ; animations fabriquées
+# Animations : VOIR visible (il sort des commandes de base), GRAPHER, GRXASM et
+# ASM avec les bibliothèques (GRXASM ANIMS) ; animations fabriquées
 # par tools/anim_demos.py et gardées dans files/anim/ (pas de Pillow ici)
 BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
 BASE_TOUT=$BASE
 BASE=$BASE_SANS_VOIR
-theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/ASM.COM" \
+theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM" \
   "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT
