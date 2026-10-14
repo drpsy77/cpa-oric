@@ -226,35 +226,29 @@ désactivées ; **Q3** oui, `INPUT V` pour un entier de 16 bits (voir 2.5) ; **Q
   et les programmes de Pierre écrits avant changeraient de comportement. Je penche pour
   oui, pour n'avoir qu'une règle.
 
-### Questions du palier B (préparées le 13 octobre 2026, à voir avec Pierre)
+### Questions du palier B : réponses de Pierre (14 octobre 2026)
 
-Ce que le § 2 fixe déjà n'est pas repris. Ma proposition est en gras.
-
-- **B1. Indices vérifiés dans le code traduit (`/A`) ?** Interprété : toujours. Traduit :
-  **toujours aussi** (une erreur claire plutôt qu'une case écrite n'importe où ; environ 15 %
-  de plus sur un accès `M$(L,C)`), ou une option de traduction sans vérification pour les
-  jeux les plus rapides.
-- **B2. Nombre de dimensions** : **2 au plus** (une grille de niveau `M$(L,C)` ; plusieurs
-  niveaux = plusieurs fichiers au palier C), ou 3 (`N$(niveau,ligne,colonne)`).
-- **B3. `PRINT` d'une chaîne qui contient des codes 0-31** (attributs de couleur posés dans
-  une grille de niveau) : **en LORES, écrits tels quels** (une ligne de niveau s'affiche avec
-  ses couleurs d'un seul `PRINT M$(L)`) ; dans la console, remplacés par un espace (ils la
-  dérègleraient). Ou toujours remplacés.
-- **B4. Remplir un tableau d'un coup** (nouvelle partie, niveau vidé) : une commande
-  **`FILL A v`** (tout le tableau à v ; `FILL M$ 32` : des espaces). En interprété, une double
-  boucle `FOR` sur une grille de 25 × 38 cases prend plusieurs secondes (~170 lignes/s).
-- **B5. Valeur de départ d'un tableau `$`** : **0** (chaîne vide, comme les entiers), ou des
-  espaces (32) pour une grille prête à afficher (avec B4, `FILL M$ 32` suffit).
-- **B6. Comparer à un texte écrit dans le programme** : `IF R$ = "O"` (et `<>`, `<`...)
-  **oui** ; le § 2.4 ne cite que `A$ = B$`.
-- **B7. Exemples livrés** : **un serpent** (`DIM` pour le corps, `SCRN` pour les collisions,
-  `INKEY`) **et un tableau des meilleurs scores** (`INPUT` du nom, tri par échange de lignes
-  `N$(I) = N$(J)`) ; le tableau sera enregistré au palier C.
-- **B8. Livraisons** : **B seul d'abord** (DIM, éléments, chaînes, INPUT, FILL), C (fichiers)
-  ensuite, chacun testé et commité à part.
-
-Décidé sans question (à corriger si besoin) : un tableau d'entiers à deux dimensions lu avec
-un seul indice est une erreur (`indice manquant`) ; `DIM` d'une taille nulle ou négative :
-`valeur hors limites` ; les tableaux sont réservés sous le texte et l'animation chargés, et
-`ANIM` vérifie qu'il ne déborde pas sur eux ; dans un programme traduit, les tailles calculées
-à l'exécution sont permises (même zone, réservée au lancement).
+- **B1. Pas de vérification des indices dans le code traduit (`/A`).** Pierre : « si le
+  programme fait n'importe quoi en assemblé, on revient en interprété, qui est alors un mode
+  de débogage ». L'interprété vérifie tout ; le traduit va au plus vite.
+- **Lecture à un seul indice d'un tableau à deux dimensions** : permise, comme en C (« le
+  développeur sait ce qu'il fait ; pour la vitesse, ça peut être utile ») : `A(K)` sur
+  `DIM A(3,5)` est l'élément K du tableau mis à plat, ligne après ligne (`A(K)` = `A(K/5,K%5)`).
+  En interprété, K est vérifié contre la taille totale. (Pour un tableau `$` à deux
+  dimensions, `M$(I)` reste la ligne I comme chaîne, § 2.4.) GRAPHER vérifie ; LOGO, lui, est
+  le langage de la pédagogie et des contrôles.
+- **B2.** 2 dimensions au plus.
+- **B3.** `PRINT` d'une chaîne : en LORES, les codes 0-31 sont écrits tels quels (couleurs
+  d'une ligne de niveau) ; dans la console, remplacés par un espace. Le premier 0 reste la fin
+  de la chaîne : un attribut 0 ne peut donc pas figurer dans une chaîne affichée par `PRINT`
+  (il s'écrit par `CHAR` ou `M$(L,C) = 0`).
+- **B4.** `FILL A v` : tout le tableau à v (`FILL M$ 32`).
+- **B5.** Valeur de départ : 0, la fin de chaîne (chaîne vide), comme les entiers.
+- **B6.** Comparaison avec un texte écrit : oui (`IF R$ = "O"`, `<>`, `<`...).
+- **B7.** Exemples : un serpent et un tableau des meilleurs scores.
+- **B8.** Palier B seul d'abord, C ensuite.
+- **DIM** : taille nulle ou négative refusée. **Redimensionner sans perdre les données**
+  (`REDIM`, comme `ReDim Preserve`) : possible (tableaux contigus, ceux d'après déplacés,
+  0,3 à 0,5 Ko), **plus tard** (backlog).
+- **ANIM** : vérifie toujours la place libre (texte, animation, tableaux), interprété et
+  traduit.

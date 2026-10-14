@@ -1152,6 +1152,10 @@ voir « Choix déjà faits »), avec la confirmation d'ERA. La complétion par E
    - la bibliothèque : un `.INC` pour les programmes en assembleur et la traduction GRAPHER
      (comme `HIRES.INC`, prévoir large), puis des primitives LOGO éventuelles.
 
+9. **GRAPHER : `REDIM`** (Pierre, 14 octobre 2026, plus tard) : redimensionner un tableau en
+   gardant les éléments dont les indices existent encore (comme `ReDim Preserve`) ; les
+   tableaux restent contigus (ceux déclarés après sont déplacés). Estimé 0,3 à 0,5 Ko.
+
 ## Contraintes à garder en tête
 
 - 479 octets libres dans la zone du code (602 sans l'option `CPLCMD`) et 66 dans la page `$FF00` : tout ajout résident se
