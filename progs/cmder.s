@@ -22,7 +22,7 @@
 ;  Écran : ligne 0 barre de menus (FUNCT), 1 en-tête, 2 titres des
 ;  colonnes, 3-24 liste (22 fichiers), 25 informations, 26 messages et
 ;  questions, 27 aide. Les menus « tapent » un code $81-$98 traité comme
-;  une touche (comme EDIT). Spécification : docs/spec-cmder.md.
+;  une touche (comme EDIT). Référence : docs/cmder.md.
 ; =====================================================================
 
 #include "cpa.inc"

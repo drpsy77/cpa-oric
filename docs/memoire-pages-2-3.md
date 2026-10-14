@@ -1,7 +1,7 @@
 # CP/A — pages 2 et 3 de la mémoire (`$0200-$03FF`)
 
 Référence : `src/hw.inc` (système), `progs/cpa.inc` (interface publique des programmes).
-Document à tenir à jour avec eux (octobre 2026).
+Document à tenir à jour avec eux.
 
 **Public** : fait partie du contrat d'interface (`docs/architecture.md`), donc stable et commun
 aux versions disquette et ROM ; un programme peut s'en servir. **Interne** : variable du

@@ -2,14 +2,16 @@
 
 Mini système « à la CP/M » pour Oric Atmos (6502, assembleur `xa`). Deux variantes des mêmes
 sources : `build/cpa.dsk` (disquette Microdisc, système en RAM overlay) et `build/cpa.rom`.
-À lire : `README.md`, `docs/architecture.md`, `docs/atelier.md` ; état et lots prévus dans
-`docs/projet-disquette.md` (« Suite prévue »).
+Au début de chaque conversation, lire **seulement** `docs/architecture.md` et `docs/etat.md`,
+puis les documents et les sources utiles à la demande (index : `README.md`). Règles de
+documentation : `docs/architecture.md` § 7.
 
 ## Contexte de travail
 
 - Machine : Raspberry Pi 400 (machine de test). Pierre parle souvent depuis son téléphone
   (Remote Control) : réponses concises, en français, pas de longues sorties de terminal.
-- Tout ce qui se construit reste dans `~/Projets/cpa-oric`.
+- Tout ce qui se construit reste dans le dépôt (`~/Projets/cpa-oric` sur le Pi,
+  `~/Documents/GitHub/cpa-oric` sur le Mac).
 - **Aucune action système** (sudo, apt, /etc, services, installation hors du projet) sans
   confirmation de Pierre que sa sauvegarde est faite. S'il manque un outil système : donner
   la commande, Pierre la lance.

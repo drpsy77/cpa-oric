@@ -1,8 +1,9 @@
-# Sprites en mode texte : format des fichiers `.SPR`
+# Sprites en mode texte — spécification
 
-Format validé par Pierre le 14 octobre 2026. Rien n'est codé : les commandes de GRAPHER (et
-peut-être de LOGO), la bibliothèque d'affichage et l'éditeur de sprites viendront ensuite
-(backlog, `docs/projet-disquette.md`).
+Rien n'est codé. Décidé : le format des fichiers `.SPR` (§ 1-4) et les principes de
+l'affichage (§ 5). À spécifier : les commandes (§ 6), avant tout code. Viendront ensuite les
+commandes de GRAPHER (et peut-être de LOGO), une bibliothèque d'affichage (`.INC`) et un
+éditeur de sprites (`.COM` plein écran).
 
 ## 1. Principe
 
@@ -90,16 +91,15 @@ animation est une suite de sprites (`HER1`, `HER2`...).
     0020  12 12 33 00 00 00 00 00   ..3.....   case (0,1) : dessin
     0028  12 12 33 00 00 00 00 00   ..3.....   case (0,1) : silhouette
 
-## 4. Choix de Pierre
+## 4. Choix
 
 - Silhouette : 1 = le point appartient au personnage (le contraire du masque d'Oricium,
   `tuile AND masque OR sprite` : la routine l'inversera).
 - Sprites de tailles différentes à la suite (pas d'emplacements fixes) ; le nom dans le
-  fichier, pratique dans HEX et pour l'éditeur à venir.
+  fichier, pratique dans HEX et pour l'éditeur.
 - Octets 2-3 de chaque sprite à 0 pour l'instant.
-- Taille : 1 à 4 colonnes sur 1 à 4 lignes ; tableau stocké en fichier, modifiable avec HEX.
 
-## 5. Affichage : décidé par Pierre (14 octobre 2026)
+## 5. Affichage : décidé
 
 - **Mouvement de case en case** (pas au point près).
 - **Tailles libres** : de 1 × 1 à 4 × 4, mélangées ; aucun genre de jeu supposé (le RPG à
@@ -117,43 +117,34 @@ animation est une suite de sprites (`HER1`, `HER2`...).
 - **Le langage n'impose pas le partage des caractères** : le programmeur répartit les codes
   redéfinissables entre tuiles, sprites et lettres, et choisit où afficher les uns et les
   autres ; c'est sa responsabilité.
-- **Chargement par `BLOAD`** (fichiers de GRAPHER, `docs/grapher.md` § 16.1) :
-  `LOAD`, `SAVE`, `BLOAD`, `BSAVE` passent **avant** les sprites.
+- **Chargement par `BLOAD`** dans un tableau `$` (fichiers de GRAPHER, `docs/grapher.md`
+  § 16.1, à faire avant les sprites).
 - MOVE : c'est un retrait puis un affichage en une instruction.
 
-## 6. Propositions de Claude, non validées (à reprendre)
+## 6. Questions ouvertes (propositions à revoir)
 
-Pierre n'est pas à l'aise avec `SCHARS` : à réexpliquer clairement, ou à remplacer.
-
-- **Réserve de codes pour les sprites affichés** (`SCHARS a b [c d]` proposé : codes a à b du jeu
-  standard, c à d du secondaire) : le seul rôle serait de dire à la bibliothèque quels codes
-  elle peut redessiner pour composer les sprites affichés (pris à l'affichage, rendus au
-  retrait) ; elle ne limiterait ni les tuiles ni `CHAR`. Alternative à étudier : le programme
-  donne lui-même les codes à chaque affichage (statique, plus simple, moins pratique).
-- **Jeu de chaque ligne lu dans l'attribut des colonnes 0-1** (8 à 15, bit 0 = secondaire),
-  un seul jeu par ligne ; la tuile et le code réservé sont pris dans ce jeu.
+- **Réserve de codes pour les sprites affichés.** Un sprite affiché a besoin d'un caractère
+  redéfini par case couverte, pris à l'affichage et rendu au retrait. Proposition : `SCHARS a
+  b [c d]` dit à la bibliothèque quels codes elle peut redessiner (a à b du jeu standard, c à
+  d du secondaire) ; il ne limite ni les tuiles ni `CHAR`. Autre choix : le programme donne
+  lui-même les codes à chaque affichage (plus simple, moins pratique). Pierre n'est pas à
+  l'aise avec `SCHARS` : à réexpliquer ou à remplacer.
+- **Jeu de caractères d'une ligne** lu dans l'attribut des colonnes 0-1 (8 à 15, bit 0 =
+  secondaire), un seul jeu par ligne ; la tuile et le code réservé sont pris dans ce jeu. À
+  vérifier dans `sprites.s` d'Oricium (une ligne sur deux en secondaire). Attention : en
+  CP/A, `$B800-$BB7F` sert aux menus, à la ligne éditée et à l'historique.
 - **Commandes** (préfixe S, comme GTEXT / GLOAD) : `TILES T$ code [ALT]` (tuiles du tableau
   copiées dans la police), `TILE n col lig`, `SSHOW k S$ n col lig` (affiche le sprite n du
-  tableau dans l'« emplacement » k ; sur un emplacement déjà affiché : retrait puis affichage,
-  donc pas de MOVE séparé ; un autre n au même emplacement : image suivante d'une animation),
-  `SHIDE k` (décor remis, codes rendus). Retrait dans l'ordre inverse quand deux sprites se
-  chevauchent ; décor modifié sous un sprite : le retirer d'abord.
+  tableau dans l'« emplacement » k ; sur un emplacement déjà affiché : retrait puis
+  affichage, donc pas de MOVE séparé ; un autre n : image suivante d'une animation),
+  `SHIDE k` (décor remis, codes rendus). Deux sprites qui se chevauchent : retrait dans
+  l'ordre inverse ; décor modifié sous un sprite : le retirer d'abord.
 - **Emplacements** : un emplacement = un objet affiché (position, taille, codes du décor
   recouvert, codes pris : ~36 octets) ; nombre fixé par le programme (`SPRITES n`, comme un
   `DIM`) ?
 - **Genre du fichier** dans l'octet 5 de l'en-tête (0 sprites, cases de 16 octets ; 1 tuiles,
   cases de 8 octets), ou format unique (silhouette ignorée pour une tuile) ?
-- Réserve épuisée : `plus de caracteres pour les sprites` (interprété).
+- Réserve épuisée : `plus de caracteres pour les sprites`.
 
-**Erreurs de la discussion à ne pas reprendre** : la réponse du 14 octobre (7 h) supposait des
-sprites de 2 × 2 et un nombre fixe de 14 emplacements, et son exemple était incohérent (codes
-standard 32-95 « intacts » mais le code 65, la lettre A, utilisé comme tuile ; répartition des
-codes non vérifiée). Repartir des décisions du § 5.
-
-## 7. Prochaines étapes
-
-1. GRAPHER palier C (fichiers : `LOAD`/`SAVE`/`BLOAD`/`BSAVE`) : préparer les questions, puis
-   coder (`docs/grapher.md` § 16.1 et 17).
-2. Sprites : revoir § 6 avec Pierre (réserve de codes, emplacements, genre tuiles), lire
-   `sprites.s` d'Oricium pour le jeu secondaire, puis écrire la spécification complète des
-   commandes avant tout code.
+Ne pas repartir d'un nombre fixe d'emplacements ni de sprites de 2 × 2 : les décisions du
+§ 5 priment.

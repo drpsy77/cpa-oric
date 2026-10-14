@@ -14,12 +14,13 @@ même table BIOS, mêmes fonctions BDOS (console, graphisme 115, son 116), charg
 
 ## État actuel de la ROM (`build/cpa.rom`)
 
-Construite par `build.sh` à partir des sources communes, sans `-DDISK`. Elle occupe
-`$C000-$E3A0` environ (8,9 Ko) : **près de 7,3 Ko libres**.
+Construite par `build.sh` à partir des sources communes, sans `-DDISK`. Son code occupe
+`$C000-$E3D4` (9 Ko), ses tables la page `$FF00` : **environ 7 Ko libres** entre les deux.
 
 Elle contient : BIOS (console, clavier, IRQ, reprise après plantage, test de la RAM), menus,
 graphisme SPLIT (BDOS 115, sauf GSAVE/GLOAD), son (BDOS 116), CCP avec HELP (interne, en anglais),
-VER, CLS, MEM, DUMP, POKE, GO, SPLIT, TEXT, GCLS, commandes graphiques, ECHO, PAUSE. La
+VER, CLS, MEM, DUMP, POKE, GO, SPLIT, TEXT, GCLS, commandes graphiques, ECHO, PAUSE, PAPER,
+INK, PAGE. La
 lecture de ligne (BDOS 10) a l'édition par les flèches et l'historique, comme la disquette
 (pas la complétion, qui lit le répertoire). Les
 fonctions fichiers du BDOS renvoient `$FF`, DIR répond « No disk in the ROM version. ».
@@ -27,7 +28,7 @@ fonctions fichiers du BDOS renvoient `$FF`, DIR répond « No disk in the ROM ve
 Essai : Oricutron avec `ORIC_ROM=cpa` (copier `build/cpa.rom` dans `roms/cpa.rom`) ; sur le
 matériel, le LOCI permet de choisir le fichier ROM (le Cumulus ne remplace pas la ROM).
 
-## À faire (proposition à valider)
+## Suite proposée (à valider)
 
 1. **Cassette** (BIOS) : lecture et écriture au format standard de l'Oric, pour que les fichiers
    `.TAP` (produits sur PC, lus par le LOCI) fonctionnent :

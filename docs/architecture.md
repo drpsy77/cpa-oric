@@ -3,7 +3,7 @@
 Ce document est la référence partagée par les deux projets issus de CP/A :
 
 - **la version disquette** (`build/cpa.dsk`) : système évolutif, mémoire étendue par le disque,
-  orienté développement, gestion et communication — voir `docs/projet-disquette.md` ;
+  orienté développement, gestion et communication — voir `docs/etat.md` ;
 - **la version ROM** (`build/cpa.rom`) : ROM dédiée à l'exécution autonome d'un programme
   (cassette, cartouche) — voir `docs/projet-rom.md`.
 
@@ -52,7 +52,7 @@ plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservée
 | `$0200` / `$0203` | `JMP WBOOT` / `JMP BDOS` |
 | `$0206` / `$0209` | `JMP` IRQ / NMI, détournables (DEBUG s'en sert) |
 | `$020C` | haut de la TPA (mot) : `$B400` en texte, `$A000` en SPLIT, moins si un plafond est posé |
-| `$020E` | `SCR_PROG` : 1 = un programme a l'écran texte entier (LORES) ; la console est muette (ni menus, ni voyants, FUNCT et CTRL-T sans effet) ; remis à 0 au démarrage à chaud (octobre 2026) |
+| `$020E` | `SCR_PROG` : 1 = un programme a l'écran texte entier (LORES) ; la console est muette (ni menus, ni voyants, FUNCT et CTRL-T sans effet) ; remis à 0 au démarrage à chaud |
 | `$0210-$0214` | console : curseur X, Y, visible, actif, clignotement |
 | `$021B` | compteur 50 Hz (mot) |
 | `$02A3` | 1 = pause en fin d'écran |
@@ -91,7 +91,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` (fin réelle `$F5B0`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3A0` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -170,5 +170,28 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `progs/` | programmes `.COM` et `cpa.inc` |
 | `files/` | fichiers copiés tels quels sur la disquette (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | outils PC : images disque, tables, tests |
-| `docs/` | ce document, les deux projets, notes matérielles (modem WiFi du LOCI) |
+| `docs/` | documentation (index dans `README.md`) |
 | `build/` | résultats ; seuls `cpa.dsk` et `cpa.rom` sont versionnés |
+
+## 7. Documentation
+
+Une seule source par sujet, au présent : un document décrit ce qui **est** (ou ce qui est
+décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'histoire est dans git.
+
+| Sujet | Où |
+|---|---|
+| contrat, conventions, construction | ce document |
+| état, suite prévue, réserves de place | `docs/etat.md` (court : relu à chaque conversation) |
+| fonctionnement interne du système | `docs/systeme.md` |
+| mode d'emploi d'un programme | `docs/manuel.md`, ou sa référence (`logo.md`, `grapher.md`, `cmder.md`) |
+| choix de mise en œuvre d'un programme | section « Mise en œuvre » de sa référence |
+| essais sur le vrai matériel | `docs/essais-materiel.md` (lu seulement au besoin) |
+| aide sur l'Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
+
+- Une spécification de travail suit le même plan : ce qui est fait, « Décidé, pas encore
+  fait », « Questions ouvertes ». Une question disparaît dès qu'elle a sa réponse : la
+  réponse est intégrée au texte. Une fois le travail livré, la spécification devient (ou
+  rejoint) la référence du programme.
+- À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge, suite) et
+  `docs/essais-materiel.md` (« À vérifier ») sont mis à jour ; rien n'est raconté.
+
