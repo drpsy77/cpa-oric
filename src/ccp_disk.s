@@ -546,6 +546,29 @@ type_tab .asc "COMBAT"
 ;   possesseurs n'en ont qu'un). Le LOCI refuse d'emblée ses lecteurs sans
 ;   image (loci_abs) : on y cherche partout. Trouvé : le lecteur reste dans
 ;   l'octet 0 du FCB.
+; drv_ok : C=1 si le lecteur X (0-3) est à essayer après oc_first dans
+;   la recherche d'un programme (open_com, complétion par ESC) : pas
+;   oc_first, pas sans réponse (bad_vec) et, sans LOCI, déjà lu depuis
+;   le démarrage à froid (seen_vec). X gardé.
+drv_ok
+.(
+        cpx oc_first
+        beq no
+        lda bitmask,x
+        and bad_vec
+        bne no
+        ldy LOCI_ID
+        cpy #"L"
+        beq y                   ; LOCI : tous les lecteurs montés
+        lda bitmask,x
+        and seen_vec
+        beq no                  ; jamais lu depuis le démarrage : sauté
+y       sec
+        rts
+no      clc
+        rts
+.)
+
 open_com
 .(
         ldy #0
@@ -562,18 +585,9 @@ f       stx oc_first
         bne r
         inc io_quiet            ; lecteurs suivants : sans message
         ldx #0
-l       cpx oc_first
-        beq nx
-        lda bitmask,x
-        and bad_vec
-        bne nx
-        ldy LOCI_ID
-        cpy #"L"
-        beq t                   ; LOCI : tous les lecteurs montés
-        lda bitmask,x
-        and seen_vec
-        beq nx                  ; jamais lu depuis le démarrage : sauté
-t       inx
+l       jsr drv_ok
+        bcc nx
+        inx
         jsr try
         bne r
         ldy #0

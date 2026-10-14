@@ -496,21 +496,34 @@ ppd     jsr rl_here             ; la ligne recommence ici
 cp_scan
 .(
         lda #0
-        sta dir_i
         sta cp_col
-loop    jsr dir_get
-        bcs end
-        jsr one
-        inc dir_i
-        lda dir_i
-        cmp #DIR_ENT
-        bcc loop
-end
 #ifdef CPLCMD
-        lda cp_first            ; premier mot : aussi les commandes internes
-        beq r0
+        sta cp_tn
+#endif
+        jsr cp_dir              ; lecteur choisi par k_cpl
+#ifdef CPLCMD
+        lda cp_first            ; premier mot : les programmes des autres
+        beq r0                  ; lecteurs, comme open_com (mêmes
+        lda cur_drv             ; lecteurs sautés), puis les commandes
+        sta oc_first            ; internes
+        inc io_quiet            ; autres lecteurs : sans message
+        ldx #0
+dl      stx cp_ti
+        jsr drv_ok
+        bcc dn
+        txa
+        jsr drv_select
+        bcs dn
+        jsr cp_dir
+dn      ldx cp_ti
+        inx
+        cpx #NDRV
+        bcc dl
         lda #0
+        sta io_quiet
         sta cp_ti
+        lda cur_drv             ; de nouveau le lecteur courant (seconde
+        jsr drv_select          ; passe : affichage de la liste)
 tl      ldx cp_ti               ; une entrée : nom (dernier caractère avec
         lda cmd_table,x         ; le bit 7), adresse ; 0 à la fin
         beq r0
@@ -533,6 +546,16 @@ tc      lda cmd_table,x
 r0
 #endif
 rone    rts
+cp_dir  lda #0                  ; répertoire du lecteur act_drv
+        sta dir_i
+loop    jsr dir_get
+        bcs rone
+        jsr one
+        inc dir_i
+        lda dir_i
+        cmp #DIR_ENT
+        bcc loop
+        rts
 one     ldy #0
         lda (ZP_DIRP),y         ; utilisateur 0 ($E5 = libre)
         bne rone
@@ -583,7 +606,12 @@ cu      cmp cp_txt,y
         inx
         iny
         bne cw
-ok      bit cp_mode
+ok
+#ifdef CPLCMD
+        jsr cp_seen             ; déjà vu (autre lecteur) : compté une fois
+        bcs r
+#endif
+        bit cp_mode
         bmi prt
         ldy #$FF                ; préfixe commun
 cm      iny
@@ -624,6 +652,47 @@ pw      lda #0
 .)
 
 #ifdef CPLCMD
+; cp_seen : C=1 si le nom cp_txt est déjà dans CP_TAB (même programme
+;   sur un autre lecteur) ; sinon l'y ajoute (s'il reste de la place)
+cp_seen
+.(
+        lda #<CP_TAB
+        sta ZP_PTR2
+        lda #>CP_TAB
+        sta ZP_PTR2+1
+        ldx cp_tn
+lp      ldy #0
+        txa
+        beq add
+c       lda (ZP_PTR2),y
+        cmp cp_txt,y
+        bne nx
+        iny
+        cmp #0
+        bne c
+        sec                     ; trouvé
+        rts
+nx      lda ZP_PTR2
+        clc
+        adc #13
+        sta ZP_PTR2
+        bcc n2
+        inc ZP_PTR2+1
+n2      dex
+        jmp lp
+add     lda cp_tn
+        cmp #CP_TMAX
+        bcs nf                  ; table pleine : le nom passe
+a1      lda cp_txt,y
+        sta (ZP_PTR2),y
+        beq ad
+        iny
+        bne a1
+ad      inc cp_tn
+nf      clc
+        rts
+.)
+
 ; cp_cmdty : C=0 si l'entrée ZP_DIRP est de type COM ou BAT (X gardé)
 cp_cmdty
 .(

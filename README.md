@@ -338,10 +338,13 @@ affiche les noms possibles et réécrit la ligne en dessous. Sans majuscules (CT
 est complété en minuscules. Un mot vide + ESC montre tout le disque.
 
 **Premier mot : les commandes.** En début de ligne, ESC complète une commande : les
-commandes internes (`DIRS` après `DIR` + ESC) et les programmes `.COM` et `.BAT` du lecteur
-courant, sans leur type (`ED` → `EDIT `, `GR` → `GRAPHER `). `D` + ESC montre `DEBUG DISKCOPY
-DIR DIRS DO`. Les autres fichiers ne sont pas proposés en début de ligne. Cette complétion
-coûte environ 120 octets dans le système ; elle est assemblée avec l'option `CPLCMD`, et
+commandes internes (`DIRS` après `DIR` + ESC) et les programmes `.COM` et `.BAT`, sans leur
+type (`ED` → `EDIT `, `GR` → `GRAPHER `). Les programmes sont cherchés sur les mêmes lecteurs
+que quand on lance une commande : le lecteur courant, puis les autres (sans LOCI, ceux déjà
+lus depuis la mise en route, par `DIR B:` par exemple) ; un programme présent sur deux
+lecteurs n'est proposé qu'une fois. `D` + ESC montre `DEBUG DISKCOPY DIR DIRS DO`. Les autres
+fichiers ne sont pas proposés en début de ligne. Cette complétion coûte environ 250 octets
+dans le système ; elle est assemblée avec l'option `CPLCMD`, et
 `DISK_OPTS="" ./build.sh` construit un système sans elle (la complétion des noms de fichiers
 reste).
 
