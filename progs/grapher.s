@@ -14,7 +14,12 @@
 ;  Opérateurs, du plus fort au plus faible : - (signe) ; * / % ; + - ;
 ;  = <> < <= > >= (1 si vrai, 0 sinon) ; & | (bit à bit).
 ;  Fonctions : RND(n) (0 à n-1), ABS(n), POINT(x,y) (1 si allumé),
-;  INKEY (touche tapée, 0 si aucune ; n'attend pas).
+;  INKEY (touche, 0 si aucune ; n'attend pas, sans délai de répétition),
+;  LEN(A$).
+;  Tableaux   DIM A(n) A(n,m) A$(n) A$(n,m) : entiers, octets ($), indices
+;             0 à n-1 ; A(i) A(i,j) M$(l,c) éléments ; A$, M$(l) chaînes
+;             (jusqu'au premier 0) : =, comparaisons, LEN, PRINT, INPUT ;
+;             FILL A v ; INPUT V (entier). Routines : arr.inc.
 ;
 ;  Modes      HIRES, SPLIT, TEXT, LORES (écran texte 40 x 28 au programme)
 ;  LORES      CLS, LOCATE col lig, CHAR col lig code, SPC n [x], TAB n,
@@ -45,7 +50,8 @@ LF      = 10
 NPAR    = 9
 NCS     = 16            ; profondeur de la pile de contrôle
 NVS     = 24            ; pile des valeurs de l'évaluateur
-PTOP    = $9F00         ; le texte du fichier reste sous l'image HIRES
+PTOP    = $9D60         ; le texte du fichier reste sous les descripteurs des
+                        ;   tableaux (R_DESC, arr.inc), sous l'image HIRES
 
 ; types de la pile de contrôle
 T_REP   = 1
@@ -111,6 +117,7 @@ kin     = $4E
 kst     = $4F
 osa     = $50           ; instruction à écrire (2 octets)
 kanim   = $52           ; 1 : ANIM traduit (NOM.ASM inclut ANIM.INC)
+karr    = $55           ; 1 : tableaux ou chaînes (NOM.ASM inclut ARR.INC)
 ihk     = $53           ; INKEY : code de la dernière touche lue
 ihi     = $54           ;   et sa place dans la matrice (KB_HELD)
 
@@ -173,6 +180,9 @@ opened  jsr load_text
         sta h_zbuf
         lda pe+1
         sta h_zbuf+1
+        lda #1                  ; tableaux : indices vérifiés (interprété)
+        sta r_chk
+        jsr r_init
         lda #0
         sta cmode
         sta oopen
@@ -642,6 +652,11 @@ wend    lda #0
         stx lx
         cpy #1                  ; une lettre puis = : affectation
         bne cmd
+        lda lbuf,x              ; une lettre puis ( ou $ : un tableau
+        cmp #"("
+        beq kar
+        cmp #"$"
+        beq kar
         jsr skipsp
         cmp #"="
         bne cmd
@@ -650,6 +665,10 @@ wend    lda #0
         bne kas
         jmp assign
 kas     jmp k_assign
+kar     ldy cmode
+        bne kar2
+        jmp arr_assign
+kar2    jmp k_aassign
 cmd     jsr lookup
         bcs bad
         lda cmode               ; traduction : la 2e adresse
@@ -831,6 +850,8 @@ r       rts
 ; e_cmp : = <> < <= > >= (une comparaison au plus)
 e_cmp
 .(
+        jsr is_str              ; deux chaînes comparées ?
+        bcc str
         jsr e_sum
         jsr relop
         bcs r
@@ -842,6 +863,19 @@ e_cmp
         pla
         jmp binop
 r       rts
+str     jsr p_str
+        jsr r_save
+        jsr ws
+        jsr relop
+        bcs bad
+        and #$7F
+        pha
+        jsr ws
+        jsr p_str
+        pla
+        tax
+        jmp r_cmp               ; -> ev : 1 ou 0
+bad     jmp e_strc
 .)
 
 ; relop : opérateur de comparaison en ex ? -> C=0, A = $81 à $86
@@ -1078,7 +1112,9 @@ e_prim
         inc edep
         jsr e_or
         jmp x_close             ; (x_close redescend edep)
-nopar   cmp #"0"
+nopar   cmp #34                 ; une chaîne dans un calcul
+        beq strc
+        cmp #"0"
         bcc id
         cmp #"9"+1
         bcs id
@@ -1086,7 +1122,23 @@ nopar   cmp #"0"
 id      jsr parse_id
         cpx #1
         bne func
+        jsr gch                 ; A( ou A$( : un élément de tableau
+        cmp #"("
+        beq ael
+        cmp #"$"
+        beq bel
         jmp getv_kw             ; variable
+ael     lda kw
+        ldx #0
+        jmp a_get
+bel     inc ex
+        jsr gch
+        cmp #"("
+        bne strc                ; A$ : une chaîne
+        lda kw
+        ldx #1
+        jmp a_get
+strc    jmp e_strc
 func    jsr find_fn
         cmp #0
         beq f_rnd
@@ -1097,7 +1149,13 @@ func    jsr find_fn
         cmp #4
         bne fik
         jmp f_scrn
-fik     jmp f_inkey
+fik     cmp #5
+        bne fik2
+        jsr x_open              ; LEN(chaîne)
+        jsr p_str
+        jsr x_close
+        jmp r_len
+fik2    jmp f_inkey
 f_rnd   jsr arg1
         lda ev+1
         bmi zero
@@ -1346,7 +1404,7 @@ x_comma jsr ws
         rts
 x_bad   jmp e_expr
 
-fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,0
+fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,0
 
 ; rand : et <- nombre pseudo-aléatoire de 0 à 32767
 ;   (rnd = rnd * 5 + 13849 sur 16 bits, puis échange des octets)
@@ -1641,7 +1699,21 @@ lo3     lda lbuf,x
         bne lo3
         rts
 .)
-c_print jsr lexpr
+c_print stx ex                  ; une chaîne ?
+        lda #1
+        sta edep
+        lda #0
+        sta vsp
+        jsr is_str
+        bcs cpn
+        jsr str_only
+        bcs cpn
+        jsr p_str
+        ldx ex
+        jsr endline
+        jmp r_print
+cpn     ldx ex
+        jsr lexpr
         lda h_lo
         beq cp_c
         jsr fmtnum              ; LORES : au curseur, sans passer à la ligne
@@ -1965,6 +2037,455 @@ upc     cmp #"a"
         bcs upr
         and #$DF
 upr     rts
+
+; ---------------------------------------------------------------------
+; Tableaux et chaînes (palier B ; les routines sont dans arr.inc)
+; ---------------------------------------------------------------------
+; desc_of : A = lettre, X = 0 (entiers) ou 1 ($) -> A/Y = descripteur
+desc_of
+.(
+        sec
+        sbc #"A"
+        asl
+        asl
+        asl
+        ldy #0
+        cpx #0
+        beq da
+        clc
+        adc #208
+        bcc da
+        iny
+da      clc
+        adc #<R_DESC
+        pha
+        tya
+        adc #>R_DESC
+        tay
+        pla
+        rts
+.)
+
+; dsel : A = lettre, X = sorte -> A/Y = descripteur, X = octets par élément
+dsel    stx gd
+        jsr desc_of
+        pha
+        lda gd
+        eor #1
+        clc
+        adc #1
+        tax
+        pla
+        rts
+
+; ndim_s : A = lettre -> A = dimensions de son tableau $ (0 : pas
+;   réservé) : descripteur à l'exécution, table kd_s à la traduction
+ndim_s
+.(
+        ldx cmode
+        bne k
+        ldx #1
+        jsr desc_of
+        sta gv
+        sty gv+1
+        ldy #7
+        lda (gv),y
+        rts
+k       sec
+        sbc #"A"
+        tax
+        lda kd_s,x
+        rts
+.)
+
+; is_str : une chaîne en ex ? (texte entre guillemets, A$, ou M$(i) d'un
+;   tableau à deux dimensions) -> C=0 ; C=1 sinon ; ex ne bouge pas
+is_str
+.(
+        jsr ws
+        jsr gch
+        cmp #34
+        beq yes
+        jsr isalpha
+        bcs no
+        sta gd
+        iny
+        lda lbuf,y
+        cmp #"$"
+        bne no
+        iny
+        lda lbuf,y
+        cmp #"("
+        bne yes                 ; A$ sans indice
+        ldx #0                  ; M$(...) : une virgule au premier niveau
+s       iny                     ;   -> un élément
+        lda lbuf,y
+        beq no
+        cmp #"("
+        bne s1
+        inx
+        bne s
+s1      cmp #")"
+        bne s2
+        dex
+        bmi e
+        jmp s
+s2      cmp #","
+        bne s
+        cpx #0
+        bne s
+        beq no
+e       lda gd                  ; un seul indice : une ligne si le
+        jsr ndim_s              ;   tableau a deux dimensions
+        cmp #2
+        bne no
+yes     clc
+        rts
+no      sec
+        rts
+.)
+
+; str_only : la chaîne en ex va-t-elle jusqu'au bout de la ligne ? (PRINT
+;   A$ affiche la chaîne, PRINT A$ = B$ la comparaison) -> C=0 si oui
+str_only
+.(
+        ldy ex
+        lda lbuf,y
+        cmp #34
+        bne v
+q       iny                     ; texte : jusqu'au guillemet final
+        lda lbuf,y
+        beq no
+        cmp #34
+        bne q
+        iny
+        jmp e
+v       iny                     ; lettre, $, puis (...) éventuel
+        iny
+        lda lbuf,y
+        cmp #"("
+        bne e
+        ldx #0
+p       iny
+        lda lbuf,y
+        beq no
+        cmp #"("
+        bne p1
+        inx
+        bne p
+p1      cmp #")"
+        bne p
+        dex
+        bpl p
+        iny
+e       lda lbuf,y              ; ensuite : rien (ou un commentaire)
+        beq yes
+        cmp #";"
+        beq yes
+        cmp #" "
+        bne no
+        iny
+        bne e
+no      sec
+        rts
+yes     clc
+        rts
+.)
+
+e_strc  lda #<m_strc
+        ldy #>m_strc
+        jmp error
+
+; p_str : chaîne en ex -> chaîne courante (r_sa, r_sc)
+p_str
+.(
+        jsr is_str
+        bcs bad
+        jsr gch
+        cmp #34
+        bne var
+        inc ex                  ; texte entre guillemets : dans lbuf
+        lda ex
+        clc
+        adc #<lbuf
+        sta r_sa
+        lda #>lbuf
+        adc #0
+        sta r_sa+1
+        ldx #0
+l       jsr gch
+        beq bad                 ; pas de guillemet final
+        inc ex
+        cmp #34
+        beq e
+        inx
+        bne l
+e       stx r_sc
+        rts
+var     jsr isalpha
+        pha
+        inc ex                  ; la lettre et le $
+        inc ex
+        jsr gch
+        cmp #"("
+        beq row
+        pla
+        ldx #1
+        jsr desc_of
+        jmp r_whole
+row     jsr x_open
+        jsr e_or                ; ev = ligne
+        jsr x_close
+        pla
+        ldx #1
+        jsr desc_of
+        jmp r_row
+bad     jmp e_strc
+.)
+
+; a_get : élément du tableau (lettre A, X = 0 entiers / 1 $), indices
+;   en ex -> ev
+a_get
+.(
+        pha
+        txa
+        pha
+        jsr x_open
+        jsr e_or
+        jsr ws
+        jsr gch
+        cmp #","
+        beq two
+        jsr x_close
+        pla
+        tax
+        pla
+        cpx #0
+        beq one
+        pha                     ; M$(i) d'un tableau à deux dimensions :
+        jsr ndim_s              ;   une ligne, donc une chaîne
+        cmp #2
+        bne o1
+        jmp e_strc
+o1      pla
+        ldx #1
+one     jsr desc_of
+        jmp r_get1
+two     inc ex
+        jsr pushv
+        jsr e_or
+        jsr x_close
+        jsr popt
+        pla
+        tax
+        pla
+        jsr desc_of
+        jmp r_get2
+.)
+
+; arr_assign : A(i[,j]) = expr, M$(l,c) = expr, A$ = chaîne,
+;   M$(l) = chaîne (X sur le « ( » ou le « $ »)
+arr_assign
+.(
+        stx ex
+        lda #0
+        sta vsp
+        sta edep
+        sta aak
+        lda word
+        sta aal
+        jsr gch
+        cmp #"$"
+        bne t1
+        inc ex
+        inc aak
+t1      jsr gch
+        cmp #"("
+        beq idx
+        lda aal                 ; A$ = chaîne
+        ldx #1
+        jsr desc_of
+        jsr r_whole
+        jmp sas
+idx     jsr x_open
+        jsr e_or
+        jsr ws
+        jsr gch
+        cmp #","
+        beq two
+        jsr x_close
+        lda aak
+        beq one
+        lda aal
+        jsr ndim_s
+        cmp #2
+        bne one
+        lda aal                 ; M$(l) = chaîne
+        ldx #1
+        jsr desc_of
+        jsr r_row
+        jmp sas
+one     lda aal
+        ldx aak
+        jsr desc_of
+        jsr r_ea1
+        jmp elt
+two     inc ex
+        jsr pushv
+        jsr e_or
+        jsr x_close
+        jsr popt
+        lda aal
+        ldx aak
+        jsr desc_of
+        jsr r_ea2
+elt     lda r_sa+1              ; adresse de l'élément gardée
+        pha
+        lda r_sa
+        pha
+        jsr aeq
+        jsr lexpr               ; valeur -> ev
+        pla
+        sta et
+        pla
+        sta et+1
+        lda aak
+        bne b
+        jmp r_stw
+b       jmp r_stb
+sas     jsr r_save              ; destination gardée
+        jsr aeq
+        jsr p_str               ; source
+        ldx ex
+        jsr endline
+        jsr r_swap
+        jmp r_copy
+.)
+; aeq : « = » attendu en ex -> X après lui (espaces permis)
+aeq
+.(
+        lda #1
+        sta edep
+        jsr ws
+        jsr gch
+        cmp #"="
+        bne bad
+        inc ex
+        ldx ex
+        rts
+bad     jmp e_param
+.)
+
+; DIM A(n) B$(n,m)... : tableaux réservés (indices de 0 à n-1)
+c_dim
+.(
+        jsr skipsp
+        beq bad
+item    jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda #0
+        sta aak
+        lda lbuf,x
+        cmp #"$"
+        bne i1
+        inx
+        inc aak
+i1      stx ex
+        lda #0
+        sta vsp
+        sta edep
+        jsr x_open
+        jsr e_or
+        jsr ws
+        jsr gch
+        cmp #","
+        beq two
+        jsr x_close
+        lda aal
+        ldx aak
+        jsr dsel
+        jsr r_dim1
+        jmp nx
+two     inc ex
+        jsr pushv
+        jsr e_or
+        jsr x_close
+        jsr popt
+        lda aal
+        ldx aak
+        jsr dsel
+        jsr r_dim2
+nx      ldx ex
+        lda lbuf,x
+        beq r
+        cmp #" "
+        bne bad
+        jsr skipsp
+        beq r
+        cmp #";"
+        bne item
+r       rts
+bad     jmp e_param
+.)
+
+; FILL A v / FILL A$ v : tout le tableau à v
+c_fill
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda #0
+        sta aak
+        lda lbuf,x
+        cmp #"$"
+        bne f1
+        inx
+        inc aak
+f1      lda lbuf,x
+        cmp #" "
+        bne bad
+        jsr pexpr
+        jsr endline
+        lda aal
+        ldx aak
+        jsr desc_of
+        jmp r_fill
+bad     jmp e_param
+.)
+
+; INPUT V (entier) ou INPUT A$ / INPUT M$(l) (chaîne)
+c_input
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        lda lbuf+1,x
+        cmp #"$"
+        beq str
+        jsr getvar
+        jsr endline
+        jsr r_ninput            ; -> ev
+        jmp setvar
+str     stx ex
+        lda #1
+        sta edep
+        lda #0
+        sta vsp
+        jsr p_str
+        ldx ex
+        jsr endline
+        jmp r_input
+bad     jmp e_param
+.)
+
+; r_esc : ESC pendant une saisie (arr.inc)
+r_esc   lda #<m_esc
+        ldy #>m_esc
+        jmp stop_msg
 
 ; ---------------------------------------------------------------------
 ; Calcul et contrôle
@@ -2345,7 +2866,12 @@ compile
         sta kn
         sta kn+1
         sta kanim
+        sta karr
         sta csp
+        ldx #51                 ; dimensions des tableaux : aucun
+kz      sta kd_i,x
+        dex
+        bpl kz
 kloop   jsr B_CONST             ; ESC : arrêt
         beq krd
         jsr h_key
@@ -2411,7 +2937,12 @@ bl2     lda #0
 bend    lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
         ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
         jsr os                  ;  suivent le programme)
-        lda kanim
+        lda karr
+        beq bnor
+        lda #<h_tailR
+        ldy #>h_tailR
+        jsr os
+bnor    lda kanim
         beq bnoa
         lda #<h_tailA
         ldy #>h_tailA
@@ -2910,6 +3441,8 @@ r       rts
 
 k_cmp
 .(
+        jsr is_str              ; deux chaînes comparées ?
+        bcc str
         jsr k_sum
         jsr relop
         bcs r
@@ -2920,6 +3453,29 @@ k_cmp
         pla
         jmp k_apply
 r       rts
+str     jsr k_str
+        lda #<s_rsave
+        ldy #>s_rsave
+        jsr oi
+        jsr ws
+        jsr relop
+        bcs bad
+        and #$7F
+        pha
+        jsr ws
+        jsr k_str
+        pla
+        sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+        lda #<s_rcmp
+        ldy #>s_rcmp
+        jsr oi
+        lda #0
+        sta kc
+        rts
+bad     jmp e_strc
 .)
 
 k_sum
@@ -2999,7 +3555,9 @@ k_prim
         inc edep
         jsr k_or
         jmp x_close
-nopar   cmp #"0"
+nopar   cmp #34                 ; une chaîne dans un calcul
+        beq kstrc
+        cmp #"0"
         bcc id
         cmp #"9"+1
         bcs id
@@ -3014,6 +3572,11 @@ nopar   cmp #"0"
 id      jsr parse_id
         cpx #1
         bne func
+        jsr gch                 ; A( ou A$( : un élément de tableau
+        cmp #"("
+        beq kael
+        cmp #"$"
+        beq kbel
         lda kw                  ; variable -> g_ev
         sec
         sbc #"A"
@@ -3023,6 +3586,17 @@ id      jsr parse_id
         lda #<s_ldai            ; (o_st16 à l'envers : var -> g_ev)
         jsr ld_var
         rts
+kael    lda kw
+        ldx #0
+        jmp k_aget
+kbel    inc ex
+        jsr gch
+        cmp #"("
+        bne kstrc               ; A$ : une chaîne
+        lda kw
+        ldx #1
+        jmp k_aget
+kstrc   jmp e_strc
 func    jsr find_fn
         cmp #0
         beq f_rnd
@@ -3031,8 +3605,18 @@ func    jsr find_fn
         cmp #2
         beq f_point
         cmp #4
-        beq f_scrn
-        lda #<s_inkey
+        bne kfs1
+        jmp f_scrn
+kfs1
+        cmp #5
+        bne fink
+        jsr x_open              ; LEN(chaîne)
+        jsr k_str
+        jsr x_close
+        lda #<s_rlen
+        ldy #>s_rlen
+        jmp dyn
+fink    lda #<s_inkey
         ldy #>s_inkey
         jmp dyn
 f_rnd   jsr x_open
@@ -3289,7 +3873,10 @@ k_p4    jsr k_p2
         jmp endline
 
 ; o_text : texte de lbuf (X) jusqu'à la fin, en .byt (guillemets à part)
-o_text
+o_lit   lda #34                 ; texte jusqu'au guillemet final
+        bne ot0
+o_text  lda #0                  ; texte jusqu'à la fin de la ligne
+ot0     sta kterm
 .(
         stx lx
         jsr o_tab
@@ -3303,6 +3890,8 @@ l       ldx lx
         lda lbuf,x
         beq end
         inc lx
+        cmp kterm
+        beq end
         cmp #34
         beq num
         cmp #" "
@@ -3532,7 +4121,23 @@ k_delay jsr k_pexpr
         lda #<s_delay
         ldy #>s_delay
         jmp oi
-k_print jsr k_lexpr
+k_print stx ex                  ; une chaîne ?
+        lda #1
+        sta edep
+        lda #0
+        sta vsp
+        jsr is_str
+        bcs kpn
+        jsr str_only
+        bcs kpn
+        jsr k_str
+        ldx ex
+        jsr endline
+        lda #<s_rprint
+        ldy #>s_rprint
+        jmp oi
+kpn     ldx ex
+        jsr k_lexpr
         jsr k_mat
         lda #<s_print
         ldy #>s_print
@@ -3600,6 +4205,423 @@ k_rebyte
 krb1    lda #<s_byte
         ldy #>s_byte
         jmp oi
+
+; ---------------------------------------------------------------------
+; Tableaux et chaînes traduits (appels à ARR.INC)
+; ---------------------------------------------------------------------
+; kd_get : A = lettre, X = sorte -> A = dimensions notées par DIM (Y changé)
+kd_get
+.(
+        sec
+        sbc #"A"
+        tay
+        cpx #0
+        beq i
+        lda kd_s,y
+        rts
+i       lda kd_i,y
+        rts
+.)
+; k_need : A = lettre, X = sorte : tableau déclaré par un DIM plus haut,
+;   sinon erreur ; kdn = ses dimensions ; A et X gardés
+k_need
+.(
+        pha
+        jsr kd_get
+        sta kdn
+        pla
+        ldy kdn
+        beq bad
+        rts
+bad     lda #<m_nodim
+        ldy #>m_nodim
+        jmp error
+.)
+; k_desc : A = lettre, X = sorte : « lda #lo / ldy #hi » du descripteur
+k_desc  jsr desc_of
+        sty kdh
+        sta osv
+        lda #<s_ldai
+        ldy #>s_ldai
+        jsr oimm
+        lda kdh
+        sta osv
+        lda #<s_ldyi
+        ldy #>s_ldyi
+        jmp oimm
+; k_oi : instruction A/Y, puis valeur à l'exécution (kc = 0)
+k_oi    jsr oi
+        lda #0
+        sta kc
+        rts
+k_push  lda #<s_push
+        ldy #>s_push
+        jmp oi
+k_pop   lda #<s_pop
+        ldy #>s_pop
+        jmp oi
+
+; k_aget : élément du tableau (lettre A, X = sorte), indices en ex -> g_ev
+k_aget
+.(
+        jsr k_need
+        pha
+        txa
+        pha
+        jsr x_open
+        jsr k_or
+        jsr k_mat
+        jsr ws
+        jsr gch
+        cmp #","
+        beq two
+        jsr x_close
+        pla
+        tax
+        pla
+        cpx #0
+        beq one
+        pha                     ; M$(i) d'un tableau à deux dimensions :
+        jsr kd_get              ;   une ligne, donc une chaîne
+        cmp #2
+        bne o1
+        jmp e_strc
+o1      pla
+        ldx #1
+one     jsr k_desc
+        lda #<s_get1
+        ldy #>s_get1
+        jmp k_oi
+two     inc ex
+        jsr k_push
+        jsr k_or
+        jsr k_mat
+        jsr x_close
+        jsr k_pop
+        pla
+        tax
+        pla
+        jsr k_desc
+        lda #<s_get2
+        ldy #>s_get2
+        jmp k_oi
+.)
+
+; k_str : chaîne en ex -> code qui en fait la chaîne courante
+k_str
+.(
+        jsr is_str
+        bcs bad
+        lda #1
+        sta karr
+        jsr gch
+        cmp #34
+        bne var
+        inc ex                  ; texte : « jsr r_lit », puis .byt
+        ldy ex
+l       lda lbuf,y              ; un guillemet final ?
+        beq bad
+        iny
+        cmp #34
+        bne l
+        lda #<s_rlit
+        ldy #>s_rlit
+        jsr oi
+        ldx ex
+        jsr o_lit
+        lda lx
+        sta ex
+        rts
+var     jsr isalpha
+        pha
+        inc ex
+        inc ex
+        jsr gch
+        cmp #"("
+        beq row
+        pla                     ; A$ : un tableau à une dimension
+        ldx #1
+        jsr k_need
+        ldy kdn
+        cpy #1
+        bne bad
+        jsr k_desc
+        lda #<s_whole
+        ldy #>s_whole
+        jmp oi
+row     jsr x_open
+        jsr k_or
+        jsr k_mat
+        jsr x_close
+        pla
+        ldx #1
+        jsr k_desc
+        lda #<s_row
+        ldy #>s_row
+        jmp oi
+bad     jmp e_strc
+.)
+
+; k_aassign : affectation d'un élément ou d'une chaîne (voir arr_assign)
+k_aassign
+.(
+        stx ex
+        lda #0
+        sta vsp
+        sta edep
+        sta aak
+        lda word
+        sta aal
+        jsr gch
+        cmp #"$"
+        bne t1
+        inc ex
+        inc aak
+t1      lda aal
+        ldx aak
+        jsr k_need
+        jsr gch
+        cmp #"("
+        beq idx
+        ldy kdn                 ; A$ = chaîne
+        cpy #1
+        beq ksb1
+        jmp bad
+ksb1
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_whole
+        ldy #>s_whole
+        jsr oi
+        jmp sas
+idx     jsr x_open
+        jsr k_or
+        jsr k_mat
+        jsr ws
+        jsr gch
+        cmp #","
+        beq two
+        jsr x_close
+        lda aak
+        beq one
+        lda aal
+        ldx #1
+        jsr kd_get
+        cmp #2
+        bne one
+        lda aal                 ; M$(l) = chaîne
+        ldx #1
+        jsr k_desc
+        lda #<s_row
+        ldy #>s_row
+        jsr oi
+        jmp sas
+one     lda aal
+        ldx aak
+        jsr k_desc
+        lda #<s_ea1
+        ldy #>s_ea1
+        jsr oi
+        jmp elt
+two     inc ex
+        jsr k_push
+        jsr k_or
+        jsr k_mat
+        jsr x_close
+        jsr k_pop
+        lda aal
+        ldx aak
+        jsr k_desc
+        lda #<s_ea2
+        ldy #>s_ea2
+        jsr oi
+elt     lda #<s_atoj            ; adresse de l'élément gardée
+        ldy #>s_atoj
+        jsr oi
+        jsr k_push
+        jsr aeq
+        jsr k_lexpr             ; valeur -> g_ev
+        jsr k_mat
+        jsr k_pop               ; g_et = adresse
+        lda aak
+        bne b
+        lda #<s_stw
+        ldy #>s_stw
+        jmp oi
+b       lda #<s_stb
+        ldy #>s_stb
+        jmp oi
+sas     lda #<s_rsave           ; destination gardée
+        ldy #>s_rsave
+        jsr oi
+        jsr aeq
+        jsr k_str               ; source
+        ldx ex
+        jsr endline
+        lda #<s_rswap
+        ldy #>s_rswap
+        jsr oi
+        lda #<s_rcopy
+        ldy #>s_rcopy
+        jmp oi
+bad     jmp e_strc
+.)
+
+; DIM traduit
+k_dim
+.(
+        jsr skipsp
+        bne kfb1
+        jmp bad
+kfb1
+item    jsr isalpha
+        bcc kfb2
+        jmp bad
+kfb2
+        sta aal
+        inx
+        lda #0
+        sta aak
+        lda lbuf,x
+        cmp #"$"
+        bne i1
+        inx
+        inc aak
+i1      stx ex
+        lda #0
+        sta vsp
+        sta edep
+        lda #1
+        sta karr
+        jsr x_open
+        jsr k_or
+        jsr k_mat
+        jsr ws
+        jsr gch
+        ldy #1
+        cmp #","
+        bne one
+        inc ex
+        jsr k_push
+        jsr k_or
+        jsr k_mat
+        jsr k_pop
+        ldy #2
+one     sty kdn
+        jsr x_close
+        lda aal                 ; dimensions notées pour la suite
+        sec
+        sbc #"A"
+        tay
+        lda kdn
+        ldx aak
+        bne s1
+        sta kd_i,y
+        beq s2
+        bne s2
+s1      sta kd_s,y
+s2      lda aak                 ; « ldx #octets », descripteur, r_dim
+        eor #1
+        clc
+        adc #1
+        sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+        lda aal
+        ldx aak
+        jsr k_desc
+        lda kdn
+        cmp #2
+        beq d2
+        lda #<s_dim1
+        ldy #>s_dim1
+        jsr oi
+        jmp nx
+d2      lda #<s_dim2
+        ldy #>s_dim2
+        jsr oi
+nx      ldx ex
+        lda lbuf,x
+        beq r
+        cmp #" "
+        bne bad
+        jsr skipsp
+        beq r
+        cmp #";"
+        beq kdn1
+        jmp item
+kdn1
+r       rts
+bad     jmp e_param
+.)
+
+; FILL traduit
+k_fill
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda #0
+        sta aak
+        lda lbuf,x
+        cmp #"$"
+        bne f1
+        inx
+        inc aak
+f1      lda lbuf,x
+        cmp #" "
+        bne bad
+        jsr k_pexpr
+        jsr endline
+        jsr k_mat
+        lda aal
+        ldx aak
+        jsr k_need
+        jsr k_desc
+        lda #<s_rfill
+        ldy #>s_rfill
+        jmp oi
+bad     jmp e_param
+.)
+
+; INPUT traduit
+k_input
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        lda lbuf+1,x
+        cmp #"$"
+        beq str
+        jsr getvar
+        jsr endline
+        lda #1
+        sta karr
+        lda #<s_rninp
+        ldy #>s_rninp
+        jsr oi
+        lda #0
+        sta kc
+        lda vix
+        jsr dest_var
+        jmp o_st16
+str     stx ex
+        lda #1
+        sta edep
+        lda #0
+        sta vsp
+        jsr k_str
+        ldx ex
+        jsr endline
+        lda #<s_rinput
+        ldy #>s_rinput
+        jmp oi
+bad     jmp e_param
+.)
 
 ; affectation : X sur le « = », A = lettre
 k_let   jsr getvar
@@ -3917,6 +4939,28 @@ s_ldalo .asc "lda #<",0
 s_ldyhi .asc "ldy #>",0
 s_ldai  .asc "lda #",0
 s_ldxi  .asc "ldx #",0
+s_ldyi  .asc "ldy #",0
+s_get1  .asc "jsr r_get1",0
+s_get2  .asc "jsr r_get2",0
+s_ea1   .asc "jsr r_ea1",0
+s_ea2   .asc "jsr r_ea2",0
+s_atoj  .asc "jsr r_atoj",0
+s_stw   .asc "jsr r_stw",0
+s_stb   .asc "jsr r_stb",0
+s_whole .asc "jsr r_whole",0
+s_row   .asc "jsr r_row",0
+s_rlit  .asc "jsr r_lit",0
+s_rsave .asc "jsr r_save",0
+s_rswap .asc "jsr r_swap",0
+s_rcopy .asc "jsr r_copy",0
+s_rcmp  .asc "jsr r_cmp",0
+s_rlen  .asc "jsr r_len",0
+s_rprint .asc "jsr r_print",0
+s_rinput .asc "jsr r_input",0
+s_rninp .asc "jsr r_ninput",0
+s_rfill .asc "jsr r_fill",0
+s_dim1  .asc "jsr r_dim1",0
+s_dim2  .asc "jsr r_dim2",0
 s_lda   .asc "lda ",0
 s_sta   .asc "sta ",0
 s_ldaev .asc "lda g_ev",0
@@ -4002,6 +5046,7 @@ h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
 h_tail1 .asc "; boucles : compte, ou arrivee et pas",13,10,0
 h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
+h_tailR .asc "#include ",34,"ARR.INC",34,13,10,0
 h_tail3 .asc "#include ",34,"HIRES.INC",34,13,10,0
 t_asm   .asc "ASM"
 m_done  .asc ".ASM ecrit : ASM ",0
@@ -4346,6 +5391,18 @@ cmds
         .byt "S"|$80,0
         .word c_lores
         .word k_lores
+        .asc "DI"
+        .byt "M"|$80,0
+        .word c_dim
+        .word k_dim
+        .asc "FIL"
+        .byt "L"|$80,0
+        .word c_fill
+        .word k_fill
+        .asc "INPU"
+        .byt "T"|$80,0
+        .word c_input
+        .word k_input
         .byt 0
 
 t_grx   .asc "GRX"
@@ -4376,6 +5433,8 @@ m_open  .asc "bloc non ferme",0
 m_struct .asc "fin de bloc en trop",0
 m_noret .asc "RETURN sans CALL",0
 m_nosub .asc "SUB introuvable",0
+m_strc  .asc "chaine dans un calcul",0
+m_nodim .asc "tableau non dimensionne",0
 
 sfcb    .dsb 36,0
 ifcb    .dsb 36,0
@@ -4387,12 +5446,23 @@ kw      .dsb 9,0
 cname   .dsb 9,0
 numbuf  .dsb 8,0
 fvar    .byt 0
+aal     .byt 0          ; tableau en cours : lettre
+aak     .byt 0          ;   et sorte (0 entiers, 1 $)
+kdn     .byt 0          ; traduction : dimensions du tableau
+kdh     .byt 0
+kterm   .byt 0          ; o_text : 0, ou le guillemet final
+kd_i    .dsb 26,0       ; traduction : dimensions des tableaux d'entiers
+kd_s    .dsb 26,0       ;   et des tableaux $
 ofcb    .dsb 36,0
 flim    .word 0
 fstep   .word 0
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
+r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)
+r_i     = et
+r_j     = ev
 #include "anim.inc"
+#include "arr.inc"
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc

@@ -102,6 +102,21 @@ Les routines LORES (prendre l'écran, effacer, case, curseur d'écriture, texte 
 
 ## 2. Palier B : DIM, tableaux et chaînes
 
+**Fait** (14 octobre 2026), avec les réponses de Pierre plus bas (§ 5) ; écarts et choix de la
+réalisation :
+
+- Routines communes à l'interpréteur et aux programmes traduits dans **`progs/arr.inc`**
+  (`ARR.INC`, incluse par un `.ASM` traduit seulement s'il a des tableaux ou des chaînes) ;
+  `r_chk` : vérifications en interprété seulement. Descripteurs (8 octets par tableau) en
+  `$9D60-$9EFF` ; le texte du `.GRX` s'arrête donc à `$9D60` (416 octets de moins).
+- Une chaîne fait **255 caractères au plus** (un tableau `$` plus grand se lit case par case).
+- `PRINT A$` n'affiche la chaîne que si elle va jusqu'au bout de la ligne ; `PRINT A$ = B$`
+  affiche la comparaison.
+- À la traduction, un tableau doit être déclaré par un `DIM` placé **plus haut** dans le
+  fichier (la traduction lit le fichier dans l'ordre et doit savoir si `M$(I)` est une ligne
+  ou une case).
+- `INPUT` d'un élément (`INPUT A(I)`) : non ; `INPUT V` puis `A(I) = V`.
+
 ### 2.1 Les noms
 
 | Nom | Sorte | Élément |

@@ -1,0 +1,46 @@
+; SCORES.GRX : tableau des meilleurs scores (DIM, chaines, INPUT)
+; un nom et un score saisis, le tableau trie, affiche en LORES
+LORES
+DIM N$(6,10) S(6) T$(10) K$(20)
+N$(0) = "PIERRE"
+S(0) = 120
+N$(1) = "ORIC"
+S(1) = 80
+N$(2) = "ATMOS"
+S(2) = 45
+C = 3
+; le titre en jaune : un attribut (encre 3) en tete de la chaine
+K$ = " MEILLEURS SCORES"
+K$(0) = 3
+LOCATE 4 2
+PRINT K$
+LOCATE 4 5
+ECHO "Votre nom : "
+INPUT N$(C)
+LOCATE 4 6
+ECHO "Votre score : "
+INPUT V
+S(C) = V
+C = C + 1
+; tri par echange, le plus grand d'abord
+FOR I 0 C-2
+  FOR J I+1 C-1
+    IF S(J) > S(I)
+      V = S(I)
+      S(I) = S(J)
+      S(J) = V
+      T$ = N$(I)
+      N$(I) = N$(J)
+      N$(J) = T$
+    ENDIF
+  NEXT
+NEXT
+FOR I 0 C-1
+  LOCATE 6 9+I
+  PRINT N$(I)
+  LOCATE 20 9+I
+  PRINT S(I)
+NEXT
+LOCATE 4 20
+ECHO "Une touche : fin"
+WAIT

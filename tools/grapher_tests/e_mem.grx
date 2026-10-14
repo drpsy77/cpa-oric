@@ -1,0 +1,2 @@
+; memoire pleine
+DIM A(10000) B(10000)

@@ -1,0 +1,11 @@
+; INPUT : chaines et entiers (saisie de la console)
+DIM N$(5) M$(2,4)
+INPUT N$
+PRINT N$
+PRINT LEN(N$)
+INPUT M$(1)
+PRINT M$(1)
+INPUT V
+PRINT V * 2
+INPUT W
+PRINT W

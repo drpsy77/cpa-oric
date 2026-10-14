@@ -647,6 +647,7 @@ Une expression seule en fin de ligne (`X = ...`, `IF`, `WHILE`, `PRINT`) peut en
 | `POINT(x,y)` | 1 si le point est allumé |
 | `INKEY` | touche (code), 0 si aucune ; n'attend pas et, comme `KEY$` en BASIC, sans délai de répétition : la touche tapée depuis le dernier `INKEY`, sinon celle qui est encore enfoncée (jeux d'action). `GET` suit, lui, le délai et la cadence de répétition du clavier |
 | `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
+| `LEN(A$)` | longueur d'une chaîne (voir « Tableaux et chaînes ») |
 
 **Contrôle**
 
@@ -668,7 +669,8 @@ Les blocs s'imbriquent (16 niveaux de boucles et d'appels) ; le retrait est libr
 | `GET V` | attend une touche et range son code dans la variable V (ESC arrête) ; flèches : 8 gauche, 9 droite, 10 bas, 11 haut |
 | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier (cadence d'une animation, d'un jeu) |
 | `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran ; en LORES : voir plus haut) |
-| `PRINT expr` | affiche un nombre (sauf en HIRES ; en LORES : au curseur) |
+| `PRINT expr` | affiche un nombre (sauf en HIRES ; en LORES : au curseur) ; `PRINT A$` affiche une chaîne |
+| `INPUT V`, `INPUT A$` | saisie d'un entier, d'une chaîne (voir « Tableaux et chaînes ») |
 | `END` | fin du programme |
 | `; texte` | commentaire (aussi en fin de ligne) |
 
@@ -682,17 +684,50 @@ le programme finit par `WAIT` ou `GET` (les exemples le font). Une image SPLIT r
 du prompt. Lancé en mode SPLIT, GRAPHER dessine sur l'image en place (après un
 programme LOGO, par exemple).
 
+**Tableaux et chaînes.** `DIM` réserve des tableaux d'entiers (`S(10)`, `G(25,38)`) et des
+tableaux d'octets, marqués par `$` (`N$(12)`, `M$(25,38)`), à une ou deux dimensions. Chaque
+lettre sert aux trois sortes sans mélange : `A`, `A(...)` et `A$` sont trois choses.
+
+    DIM S(10) N$(10,12) M$(25,38)
+
+| Élément | Effet |
+|---|---|
+| `DIM A(n)`, `DIM A(n,m)`, `DIM A$(n)`... | réserve le tableau : **indices de 0 à n-1** (comme en C), éléments à 0 ; plusieurs tableaux par ligne ; les tailles sont des expressions. Un tableau se déclare une fois (`deja dimensionne`) ; plus de place : `memoire pleine` |
+| `A(i)`, `A(i,j)` | élément d'entier, dans un calcul ou à gauche de `=` (`A(I,J) = A(I,J) + 1`) |
+| `A(k)` sur un tableau à deux dimensions | élément k du tableau mis à plat, ligne après ligne, comme en C (`G(7)` est `G(1,3)` sur `DIM G(3,4)`) |
+| `M$(l,c)`, `A$(i)` (une dimension) | code d'une case, de 0 à 255, en lecture et en écriture (`M$(L,C) = 35`) |
+| `A$` (une dimension), `M$(l)` (deux dimensions) | une **chaîne** : le contenu jusqu'au premier 0, ou jusqu'à la capacité (255 au plus) ; `M$(l)` est la ligne l : un tableau de chaînes est un tableau `$` à deux dimensions |
+| `A$ = "texte"`, `A$ = B$`, `N$(I) = N$(J)` | affectation ; le reste de la capacité est mis à 0 ; plus long que la capacité : `chaine trop longue` |
+| `A$ = B$`, `<>`, `<`, `<=`, `>`, `>=` | comparaison (1 ou 0), aussi avec un texte : `IF R$ = "O"` ; ordre des codes (`"AB" < "ABC"`) |
+| `LEN(A$)` | longueur |
+| `PRINT A$` | en LORES au curseur, les codes 0-31 écrits tels quels (une ligne de niveau garde ses couleurs) ; dans la console, remplacés par un espace ; `PRINT A$ = B$` affiche, lui, la comparaison |
+| `INPUT A$`, `INPUT M$(l)` | saisie : en LORES au curseur (vidéo inverse), DEL efface, RETURN valide, arrêt à la capacité ou au bord de l'écran ; ailleurs, la saisie de ligne de la console |
+| `INPUT V` | un entier de -32768 à 32767 (chiffres et `-`) ; refusé : un son, et on recommence |
+| `FILL A v`, `FILL M$ 32` | tout le tableau à v |
+
+Une chaîne ne se mélange pas aux calculs (`chaine dans un calcul`) : pour afficher un texte et
+un nombre, `ECHO` puis `PRINT`. Les tableaux sont rangés en haut de la mémoire libre, sous
+`$9D60` ; les animations et les images `.HIZ` chargées ensuite ne peuvent pas les recouvrir
+(`animation trop grande`). En interprété, chaque accès vérifie le tableau et ses indices
+(`tableau non dimensionne`, `indice hors limites`) ; un programme traduit par `/A` ne vérifie
+rien, pour aller plus vite : si un programme traduit se comporte bizarrement, on le relance
+en interprété pour trouver l'erreur. À la traduction, un tableau doit être déclaré par un
+`DIM` placé plus haut dans le fichier.
+
 Vitesse : GRAPHER interprète de 150 à quelques centaines de lignes par seconde selon les
 calculs : un ciel de 400 étoiles tirées au hasard (`PLOT 1+RND(238) 1+RND(198)` dans un
 `REPEAT`) prend environ 5 secondes. Limites : des entiers
-seulement, des variables d'une lettre, et un `ENDIF` oublié après un `IF` vrai n'est pas
+seulement, des variables d'une lettre, ni concaténation ni conversion de chaînes, et un `ENDIF` oublié après un `IF` vrai n'est pas
 signalé (le reste s'exécute normalement).
 
-La disquette contient cinq exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
+La disquette contient sept exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
 `ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
 ciel étoilé : boucles, hasard, sous-programme), `ARDOISE.GRX` (un télécran : les flèches
 dessinent, ESPACE efface, ESC finit) et `FLECHES.GRX` (LORES : un `@` qu'on déplace aux
-flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `INKEY` pour les touches : le `@` part dès l'appui et s'arrête dès qu'on lâche).
+flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `INKEY` pour les touches : le `@` part dès l'appui et s'arrête dès qu'on lâche), `SERPENT.GRX` (le serpent qui grandit en
+mangeant des `$` : son corps dans deux tableaux en anneau, `SCRN` pour les collisions) et
+`SCORES.GRX` (un tableau des meilleurs scores : nom et score saisis par `INPUT`, tri par
+échange de lignes, titre coloré par un attribut en tête de chaîne).
 
 **Traduction en assembleur.** `GRAPHER NOM /A` n'exécute pas le fichier : il écrit `NOM.ASM`,
 qu'ASM assemble en un programme autonome `NOM.COM`, beaucoup plus rapide :
@@ -709,7 +744,8 @@ des mots en mémoire (`V_A` à `V_Z`), les boucles et les `IF` des étiquettes e
 division, `RND`, `PRINT`, images) est dans la bibliothèque `GRX.INC`. Les parties constantes
 des expressions sont calculées pendant la traduction (`120+8` devient `128`), et une valeur
 constante hors de 0-255 est signalée tout de suite. ASM a besoin de `CPA.INC`, `GRX.INC` et
-`HIRES.INC` sur le lecteur de la source (ils sont sur la disquette complète et sur la disquette
+`HIRES.INC` (et `ARR.INC` pour un programme qui a des tableaux ou des chaînes, `ANIM.INC`
+s'il anime) sur le lecteur de la source (ils sont sur la disquette complète et sur la disquette
 Assembleur, avec GRAPHER) ; il met moins d'une minute pour un programme comme `MOTIFS`.
 
 Gain mesuré : 5 à 20 fois plus rapide selon les calculs (le ciel de 400 étoiles de `MOTIFS` :
