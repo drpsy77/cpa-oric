@@ -542,6 +542,30 @@ CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
     `ORIC_SWAP`, posée par `DSKSWAP=` de `run_test.sh`) ; celle qui sort est enregistrée.
   - Deux erreurs trouvées aux essais : `cmp` de l'empreinte qui finissait avec Z=0 (DEX) même
     à égalité, et `STA` suivi de `BNE` (STA ne touche pas aux indicateurs) dans la réponse T.
+- Complétion des commandes sur tous les lecteurs (Pierre, 14 octobre 2026 : « si on peut
+  exécuter une commande qui n'est pas sur le lecteur courant, on s'attend aussi à pouvoir la
+  lister avec ESC » ; choix (a) : la liste montre les noms seuls, sans lecteur). Au premier
+  mot de la ligne, ESC parcourt les mêmes lecteurs que `open_com`, dans le même ordre :
+  lecteur courant, puis A: à D: sauf ceux sans réponse (`bad_vec`) et, sans LOCI, ceux jamais
+  lus depuis le démarrage à froid (`seen_vec`), sans message d'erreur. Une seule routine
+  `drv_ok` (`src/ccp_disk.s`) choisit les lecteurs pour les deux. Les arguments (noms de
+  fichiers) restent cherchés sur un seul lecteur.
+  - Doublons (EDIT sur A: et B:, commandes de base SYS des disquettes par usage) : table des
+    noms déjà vus `CP_TAB` en `$B800` (zone de sauvegarde des menus, libre pendant ESC : les
+    menus ne s'ouvrent que depuis `conin_raw`), 39 noms de 13 octets, nombre en `cp_tn`
+    (`$FDAF`, dernier octet libre). Table pleine : les noms suivants passent (doublons
+    possibles dans une liste de plus de 39 noms différents, jamais dans le compte d'un seul).
+  - La seconde passe (affichage de la liste) repart du lecteur courant (trouvé à l'essai :
+    sinon elle commençait par le dernier lecteur lu et sautait le courant).
+  - Coût : 135 octets résidents (marge 212 -> 77), plus que les 60-90 annoncés (la table
+    des noms). Rien dans le contrat. Avec la remise à 0 d'`io_quiet` au démarrage à chaud
+    (`src/bios.s`, 3 octets, déjà faite dans le dépôt : erreurs disque de nouveau signalées
+    après un programme interrompu, CMDER figé puis RESET).
+  - Essayé dans Oricutron : `ZZ` + ESC (programme seulement sur B:) sans effet avant `DIR B:`,
+    `ZZTOP` après, puis lancé ; `ED` + ESC : `EDIT EDNA` (EDIT une fois) ; mot vide : liste
+    complète de A:, puis les deux programmes de B:, puis les commandes internes, sans
+    doublon ; depuis B:, `HE` : `HELP HEX HELLO` ; `TYPE REA`, `TYPE B:ZZ` inchangés ; LOCI
+    simulé ; `tools/smoke_test.sh` ; `tools/test_asm.sh` à 0 différence. Reste le LOCI.
 - CMDER, clé USB : `..` dans un chemin relatif (Pierre, 14 octobre 2026, vrai Oric + LOCI :
   `CMDER USB:FILES`, RETURN sur `..`, l'Oric semble planté). `path_up` cherchait un `:` dans
   un chemin qui n'en avait pas (`FILES`) : boucle sans fin à travers la mémoire. Corrigé :

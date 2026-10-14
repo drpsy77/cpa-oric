@@ -90,6 +90,9 @@ wb_h    lda lst_echo            ; édition de ligne interrompue
         lda #0
         sta m_act
         sta top_cap             ; plus de débogueur résident
+#ifdef DISK
+        sta io_quiet            ; messages d'erreur disque rendus (programme
+#endif                          ; interrompu : CMDER figé, RESET)
         lda #>TPA_END           ; haut de la TPA selon le mode
         ldx vmode
         beq wb_t
