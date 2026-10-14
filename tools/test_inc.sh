@@ -1,6 +1,6 @@
 #!/bin/sh
 # Non-régression des bibliothèques allégées de la disquette
-# (tools/strip_inc.py : CPA.INC, HIRES.INC, GRX.INC, ANIM.INC sans
+# (tools/strip_inc.py : CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC sans
 # commentaires). Le même programme doit donner le même binaire avec la
 # copie allégée qu'avec l'original :
 #   1. chaque programme de progs/, assemblé par xa ;
@@ -17,7 +17,7 @@ RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
 mkdir "$T/o" "$T/s"
 # o : originaux ; s : copies allégées (sous les deux noms, comme xa les cherche)
-for i in cpa hires grx anim arr fil; do
+for i in cpa hires grx anim arr fil spr; do
   I=$(echo $i | tr a-z A-Z)
   cp progs/$i.inc "$T/o/$i.inc"; cp progs/$i.inc "$T/o/$I.INC"
   python3 tools/strip_inc.py progs/$i.inc "$T/s/$i.inc" > /dev/null

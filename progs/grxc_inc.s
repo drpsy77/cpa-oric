@@ -1385,6 +1385,72 @@ bad     jmp e_param
 t_scr   .asc "SCREEN"
 
 ; ---------------------------------------------------------------------
+; Sprites : arguments de SPOOL et SSHOW
+; ---------------------------------------------------------------------
+; intarg : tableau d'entiers (une lettre) en lbuf (X) -> aal ; X après
+intarg
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda lbuf,x
+        beq ok
+        cmp #" "
+        beq ok
+        cmp #";"
+        bne bad
+ok      rts
+bad     jmp e_param
+.)
+
+; sprarg : tableau $ (lettre, $) suivi d'un espace -> aal
+sprarg
+.(
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda lbuf,x
+        cmp #"$"
+        bne bad
+        inx
+        lda lbuf,x
+        cmp #" "
+        bne bad
+        rts
+bad     jmp e_param
+.)
+
+; altopt : « ALT » facultatif, puis fin de ligne -> A = 1 (jeu
+;   secondaire), 0 sinon
+altopt
+.(
+        jsr skipsp
+        beq no
+        cmp #";"
+        beq no
+        ldy #0
+l       lda lbuf,x
+        and #$DF
+        cmp t_alt,y
+        bne bad
+        inx
+        iny
+        cpy #3
+        bne l
+        jsr endline
+        lda #1
+        rts
+no      lda #0
+        rts
+bad     jmp e_param
+.)
+t_alt   .asc "ALT"
+
+; ---------------------------------------------------------------------
 ; open_grx : FCB1 -> sfcb (type GRX par défaut), fichier ouvert ; s'il
 ;   est absent : message, puis fin du programme
 ; ---------------------------------------------------------------------
@@ -1442,6 +1508,10 @@ cmds
         .byt "E"|$80,0
         .asc "CHA"
         .byt "R"|$80,0
+        .asc "SSHO"
+        .byt "W"|$80,0
+        .asc "SHID"
+        .byt "E"|$80,0
         .asc "PLO"
         .byt "T"|$80,0
         .asc "LIN"
@@ -1524,4 +1594,8 @@ cmds
         .byt "E"|$80,0
         .asc "BLOA"
         .byt "D"|$80,0
+        .asc "SPRITE"
+        .byt "S"|$80,0
+        .asc "SPOO"
+        .byt "L"|$80,0
         .byt 0

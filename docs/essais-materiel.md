@@ -51,6 +51,10 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - fichiers de données : `SCORES.GRX` deux fois (le 2e lancement retrouve les scores ;
   `TYPE HOFN.TXT`, `EDIT HOFS.TXT`) ; `HOFS.TXT` modifié dans EDIT puis relu ; temps
   d'écriture d'un gros tableau ; disque plein ; traduit (`GRXASM SCORES`, `ASM SCORES`).
+- sprites : `SPRITES.GRX` (bonhomme aux flèches, balle) : netteté des dessins sur le décor,
+  couleur prise de la ligne, scintillement au déplacement, vitesse ; ESC puis `DIR` (police
+  et console rendues) ; traduit (`GRXASM SPRITES`, `ASM SPRITES` : durée de l'assemblage,
+  puis `SPRITES`).
 
 ## À vérifier ailleurs
 

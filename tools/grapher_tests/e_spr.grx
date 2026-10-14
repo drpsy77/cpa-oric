@@ -1,0 +1,15 @@
+; plus de caracteres : 3 codes pour deux sprites de 2 cases
+DIM S$(48) T(3)
+BLOAD S$ HERO.SPR
+T(0) = 91
+T(1) = 92
+T(2) = 93
+LORES
+SPC 40
+LOCATE 0 1
+SPC 40
+SPRITES 2
+SPOOL T
+SSHOW 0 S$ 0 3 0
+SSHOW 1 S$ 0 9 0
+PRINT 1

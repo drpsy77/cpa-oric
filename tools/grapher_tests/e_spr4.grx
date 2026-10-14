@@ -1,0 +1,6 @@
+; tas secondaire : codes de 32 a 111 seulement
+DIM T(2)
+T(0) = 100
+T(1) = 112
+SPRITES 1
+SPOOL T ALT

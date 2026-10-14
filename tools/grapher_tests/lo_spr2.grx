@@ -1,0 +1,16 @@
+; sprite dans le jeu secondaire (ALT) ; en fin de programme,
+; l'historique des lignes ($BA80, code 80 du jeu secondaire) est vide
+DIM S$(48) T(2)
+BLOAD S$ HERO.SPR
+T(0) = 100
+T(1) = 101
+LORES
+CHAR 0 3 9             ; jeu secondaire sur les lignes 3 et 4
+CHAR 0 4 9
+LOCATE 2 3
+SPC 10 65
+LOCATE 2 4
+SPC 10 65
+SPRITES 1
+SPOOL T ALT
+SSHOW 0 S$ 0 5 3 ALT

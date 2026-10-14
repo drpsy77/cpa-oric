@@ -133,6 +133,62 @@ où il veut.
 - `HIRES` ou `SPLIT` depuis le LORES : l'écran texte est perdu. `GLOAD` d'une image `.IMG`
   depuis le LORES rend d'abord la console.
 
+### 7.1 Sprites
+
+Un sprite est un petit personnage de 1 à 4 colonnes sur 1 à 4 lignes de cases, dessiné dans
+un fichier `.SPR` (format : § 10.1), chargé par `BLOAD` dans un tableau `$`. Il se déplace
+de case en case sur le décor de l'écran texte, sans l'abîmer : chaque case qu'il recouvre
+reçoit un caractère redessiné, combinaison du décor de la case et du sprite.
+
+    case affichée = (décor AND NOT silhouette) OR dessin
+
+Le décor reste visible autour de la silhouette du sprite, dans ses propres cases. La couleur
+est celle de la ligne (attributs) : le sprite prend la couleur des lignes où il passe.
+
+    DIM S$(112) T(16)
+    BLOAD S$ HEROS.SPR
+    FOR I 0 15
+      T(I) = 112+I          ; codes 112-127 réservés aux sprites
+    NEXT
+    LORES
+    ...                     ; le décor
+    SPRITES 2
+    SPOOL T
+    SSHOW 0 S$ 0 X Y        ; le sprite 0 du fichier, emplacement 0
+
+| Commande | Effet |
+|---|---|
+| `SPRITES n` | réserve n emplacements (0 à n-1, n de 1 à 255), une fois, avant `SPOOL` ; un emplacement est un objet affiché |
+| `SPOOL T [ALT]` | le tableau d'entiers T (déclaré, ou lu par `LOAD`) donne les codes que les sprites peuvent prendre : 32 à 127 (`ALT` : jeu secondaire, 32 à 111), 96 au plus, dans n'importe quel ordre ; ils deviennent tous libres. C'est le **tas** du jeu de caractères |
+| `SSHOW k S$ n col lig [ALT]` | affiche le sprite n (rang dans le fichier, à partir de 0) du tableau `S$` dans l'emplacement k, coin haut-gauche en (col, lig), avec le tas du jeu indiqué. Sur un emplacement déjà occupé, l'ancien sprite est d'abord retiré : c'est aussi le déplacement et l'image suivante d'une animation |
+| `SHIDE k` | retire le sprite de l'emplacement k : le décor revient, les codes sont rendus au tas (rien si l'emplacement est libre) |
+
+`SSHOW` et `SHIDE` demandent le LORES (`LORES d'abord`).
+
+**Règles pour le programmeur** (le programme traduit ne vérifie rien, § 12) :
+
+- Un code du tas n'apparaît jamais dans le décor ; on garde au moins les chiffres, les
+  majuscules et l'espace (il reste 59 codes : 33-47, 58-64, 91-127). Un sprite affiché
+  occupe un code par case recouverte ; il faut assez de codes pour tous les sprites affichés
+  en même temps (`plus de caracteres pour les sprites`).
+- **Les attributs sont prioritaires** : une case qui contient un attribut (code 0-31) n'est
+  jamais recouverte, le sprite y est invisible. Or `CLS` met l'attribut 16 partout : la zone
+  où passent les sprites doit être remplie d'espaces (ou de décor), par exemple
+  `SPC 40` sur chaque ligne. Les attributs de couleur se mettent là où les sprites ne passent
+  pas (colonnes 0-1, bord de la zone de jeu).
+- Le sprite doit tenir dans l'écran (`valeur hors limites`).
+- Deux sprites qui se chevauchent partagent le caractère commun (le second se dessine sur le
+  premier). Retirer l'un remet le décor sur la partie commune : on réaffiche l'autre. Aucun
+  code n'est perdu, quel que soit l'ordre des retraits.
+- On ne change pas le décor sous un sprite affiché (le retirer d'abord), ni le tableau du tas
+  pendant que des sprites sont affichés. Un nouveau `SPOOL` rend tous les codes du tas
+  libres : les sprites encore affichés avec lui sont à réafficher.
+- Le tas correspond au jeu de caractères des lignes où passe le sprite (attribut 8 : standard,
+  9 : secondaire). Un personnage à cheval sur deux jeux est découpé en deux sprites. Le jeu
+  secondaire n'a pas de dessins à lui (le système y range la ligne en cours d'édition et
+  l'historique) : il servira avec les tuiles (§ 16). Un `INPUT` abîme ses codes 64 à 111 ; à
+  la fin d'un programme qui s'en est servi, l'historique des lignes est vidé.
+
 ## 8. Touches et temps
 
 | Élément | Effet |
@@ -242,6 +298,49 @@ Le nom s'écrit sans guillemets, avec un lecteur facultatif ; `$1`-`$9` sont per
 - Rien d'autre ne se sauve (ni les variables `A`-`Z`, ni la police) : un programme qui veut
   garder des variables les range dans un tableau.
 
+### 10.1 Fichiers de sprites (`.SPR`)
+
+Un fichier `.SPR` se charge tel quel dans un tableau `$` assez grand
+(`BLOAD S$ HEROS.SPR` : le type est à écrire, `BLOAD` met `.DAT` par défaut). Tout est
+aligné sur 8 octets, la largeur d'une ligne de HEX : chaque bloc commence en début de ligne,
+chaque case d'un sprite tient sur deux lignes (dessin, silhouette). Les sprites se suivent
+sans trou, de tailles différentes ; leur nom aide à les retrouver dans HEX et servira à
+l'éditeur.
+
+**En-tête du fichier (8 octets)** : `SPR` (signature), version 1, nombre de sprites (1 à
+255), genre (0 : sprites, cases de 16 octets ; 1 : tuiles, cases de 8 octets, dessin seul,
+§ 16), puis deux octets à 0 (réservés).
+
+**Chaque sprite** : un en-tête de 8 octets (largeur en colonnes 1-4, hauteur en lignes 1-4,
+deux octets à 0 réservés, nom de 4 caractères ASCII complété par des espaces : `HER1`), puis
+ses cases, ligne par ligne puis colonne par colonne (2 × 2 : haut-gauche, haut-droite,
+bas-gauche, bas-droite), 16 octets chacune : le **dessin** (8 octets, de la ligne du haut à
+celle du bas), puis la **silhouette** (8 octets, 1 = le point appartient au personnage).
+
+| Dessin | Silhouette | À l'écran |
+|---|---|---|
+| 0 | 0 | le décor (transparent) |
+| 1 | 0 ou 1 | point allumé |
+| 0 | 1 | point éteint : le décor y est caché (yeux, contour noir) |
+
+Chaque octet : 6 points dans les bits 5 à 0 (bit 5 à gauche, comme la police de l'Oric),
+bits 7 et 6 à 0. Taille : 8 octets, puis par sprite 8 + 16 × largeur × hauteur (1 × 1 : 24
+octets ; 4 × 4 : 264). Une animation est une suite de sprites (`HER1`, `HER2`...) affichés
+tour à tour dans le même emplacement.
+
+Exemple : un bonhomme de 1 colonne sur 2 lignes, seul dans son fichier (48 octets, dans HEX) :
+
+    0000  53 50 52 01 01 00 00 00   SPR.....   version 1, 1 sprite, genre 0
+    0008  01 02 00 00 48 45 52 4F   ....HERO   1 colonne, 2 lignes, HERO
+    0010  1E 12 1E 0C 3F 2D 0C 12   ........   case (0,0) : dessin
+    0018  1E 1E 1E 0C 3F 2D 0C 12   ........   case (0,0) : silhouette (yeux opaques)
+    0020  12 12 33 00 00 00 00 00   ..3.....   case (0,1) : dessin
+    0028  12 12 33 00 00 00 00 00   ..3.....   case (0,1) : silhouette
+
+La silhouette suit la convention « 1 = le personnage » (le contraire du masque d'Oricium,
+`tuile AND masque OR sprite`). En attendant l'éditeur de sprites, un `.SPR` se fabrique dans
+HEX ou par un petit programme qui remplit un tableau `$` et fait `BSAVE`.
+
 ## 11. Erreurs
 
 Une erreur arrête le programme : retour à la console, puis `L n COMMANDE : message`
@@ -255,6 +354,7 @@ s'affichent sans numéro de ligne (`Erreur : division par zero`).
 | Modes | `HIRES ou SPLIT d'abord`, `LORES d'abord` |
 | Blocs | `NEXT sans boucle`, `NEXT manquant`, `bloc non ferme`, `fin de bloc en trop`, `trop de blocs imbriques`, `RETURN sans CALL`, `SUB introuvable` |
 | Tableaux | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
+| Sprites | `SPRITES d'abord`, `SPOOL d'abord`, `fichier .SPR ?` (pas un `.SPR` de sprites, ou sprite mal formé), `plus de caracteres pour les sprites` (tas vide) ; `valeur hors limites` : emplacement, rang du sprite, code du tas, sprite hors de l'écran |
 | Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `animation introuvable`, `animation trop grande` ; données (§ 10) : `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
 
 Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute normalement.
@@ -283,7 +383,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   lit le fichier dans l'ordre).
 - ASM a besoin, sur le lecteur de la source, de `CPA.INC`, `GRX.INC`, `HIRES.INC`, plus
   `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il lit ou écrit des fichiers de
-  données (`SAVE`... `FOUND`) et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
+  données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
   sur la disquette complète, la disquette Assembleur et la disquette Animations (pas sur la
   disquette Logo, qui n'a pas ASM).
 - Un `.COM` traduit pèse au moins 3 Ko (bibliothèques), puis quelques dizaines d'octets par
@@ -291,14 +391,17 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (12 283 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (13 940 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
-  Les descripteurs des tableaux occupent `$9D60-$9EFF`. La zone libre pour le texte, les
-  tableaux et une animation fait environ 24 Ko (texte à partir de `$3DDA`).
+  Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
+  5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
+  tableaux et une animation fait environ 22 Ko (texte à partir de `$4454`).
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
-  étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s).
+  étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
+  déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
+  puis affichage).
 - **Limites** : entiers seulement, variables d'une lettre, deux dimensions au plus, ni
   concaténation ni conversion de chaînes.
 
@@ -313,6 +416,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `FLECHES.GRX` | LORES : un `@` qu'on déplace aux flèches dans un cadre, `SCRN` pour les murs |
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
 | `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
+| `SPRITES.GRX` | LORES : un bonhomme mené aux flèches (deux images de marche) et une balle qui rebondit, sur un décor en deux couleurs ; sprites de `HEROS.SPR` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 
 ## 15. Mise en œuvre
@@ -326,13 +430,43 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), images |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` |
+| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
 au lancement : ils ne sont pas dans le fichier.
 
-Page zéro : `$10-$56` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$C0-$C7` pour
-`hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
+Page zéro : `$10-$58` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
+`spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
+
+**Sprites** (`spr.inc`) :
+
+- Un **tas** par jeu de caractères : le tableau du programmeur sert de pile (les `sommet`
+  premiers éléments sont les codes libres ; prendre : `sommet - 1` puis lire ; rendre :
+  écrire puis `sommet + 1` ; l'ordre des codes change, sans importance), son sommet, sa
+  taille (96 au plus), et `SOUS` : 96 octets, pour chaque code de 32 à 127 l'octet du décor
+  caché par le caractère qui porte ce code (0 : code libre). Les deux `SOUS` et les
+  emplacements sont réservés par `SPRITES`, sous les tableaux.
+- Un **emplacement** : 5 octets, tas + 1 (0 : libre), colonne, ligne, largeur, hauteur. Le
+  rang du sprite n'est pas gardé : `SHIDE` n'a besoin que du rectangle ; les codes pris se
+  lisent à l'écran, ce qu'ils cachent dans `SOUS`.
+- `SSHOW` : retire l'ancien sprite de l'emplacement ; parcourt le fichier jusqu'au sprite n
+  (taille de chaque sprite dans son en-tête) ; en interprété, vérifie le fichier, l'écran,
+  puis compte les codes à prendre avant de rien dessiner (rien n'est posé à moitié) ; pour
+  chaque case : attribut → rien ; code déjà pris dans ce tas (`SOUS` non nul) → on dessine
+  sur lui ; sinon un code pris au tas, `SOUS` reçoit l'octet du décor. Le caractère est
+  dessiné (`(décor AND NOT silhouette) OR dessin`, 8 lignes) avant d'être montré ; le bit 7
+  (vidéo inverse) du décor est gardé. Traduit, un tas vide laisse la case sans sprite.
+- `SHIDE` : pour chaque case du rectangle, si son code a un `SOUS` non nul : le décor revient,
+  `SOUS` à 0, le code retourne au tas.
+- **Historique des lignes** : `SPOOL ... ALT` met `s_hst` à 1 ; en rendant la console
+  (`to_text` de GRAPHER, `g_totext` de `GRX.INC`), le programme vide alors l'historique
+  (`$BA80`), recouvert par les dessins du jeu secondaire. Le système n'y est pour rien (aucun
+  octet résident) ; après un plantage ou CTRL-C, l'historique peut garder des lignes sans
+  sens, sans autre effet.
+- Tests : `lo_spr.grx` (affichage, déplacement, chevauchement, attribut, inverse ; dessins
+  vérifiés sur une police factice, `NOM.env`), `lo_spr2.grx` (jeu secondaire, historique
+  vidé), `e_spr*.grx` (erreurs).
 
 Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque cas interprété
 (GRAPHER) puis traduit (GRXASM), dans le 6502
@@ -345,9 +479,15 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 - **`REDIM`** : redimensionner un tableau en gardant les éléments dont les indices existent
   encore (comme `ReDim Preserve`) ; les tableaux déclarés après sont déplacés. ~0,3 à 0,5 Ko.
-- **Sprites en mode texte** : `docs/spec-sprites.md` ; les fichiers `.SPR` se chargent par
-  `BLOAD`.
+- **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes
 
-Aucune.
+- **Tuiles** (fichier `.SPR` de genre 1) : commandes `TILES T$ ...` (dessins copiés dans la
+  police) et `TILE n col lig` (codes posés à l'écran) ; comment le programme choisit les
+  codes d'une tuile de plusieurs cases (codes consécutifs, ou liste comme pour les tas). Les
+  tuiles donneront aussi ses dessins au jeu secondaire.
+- Si le parcours du fichier par `SSHOW` est trop lent pour les derniers sprites : table des
+  positions construite au chargement.
+- Plus tard : sprites qui apportent leur couleur (cases « attribut » dans le fichier, posées
+  telles quelles, remises au retrait).

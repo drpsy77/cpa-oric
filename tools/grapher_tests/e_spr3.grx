@@ -1,0 +1,8 @@
+; sprite hors de l'ecran
+DIM S$(48) T(1)
+BLOAD S$ HERO.SPR
+T(0) = 91
+LORES
+SPRITES 1
+SPOOL T
+SSHOW 0 S$ 0 3 27
