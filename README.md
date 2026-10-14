@@ -18,6 +18,7 @@ Il existe deux variantes construites à partir des mêmes sources :
   construction et tests, conventions ;
 - `docs/projet-disquette.md` : la version disquette (état, choix, suite prévue) ;
 - `docs/projet-rom.md` : la version ROM dédiée (but, état, à faire) ;
+- `docs/grapher.md` : le langage GRAPHER (référence complète) ;
 - `docs/atelier.md` : comment construire et tester comme Claude (Raspberry Pi, Windows) ;
 - `docs/loci-modem-wifi.md` : relier un modem WiFi (Pico W) au LOCI.
 
@@ -569,195 +570,35 @@ Hors du mode SPLIT, les primitives 0 à 9 renvoient `$FF`. `GTEST.COM` est un ex
 complet : il passe en SPLIT et dessine un cadre, des diagonales, des cercles, des
 rectangles et du texte.
 
-## GRAPHER : dessiner avec un fichier de commandes (.GRX)
+## GRAPHER : dessiner et programmer avec un fichier `.GRX`
 
     A>GRAPHER MOTIFS
     A>GRAPHER DESSIN Bonjour
+    A>GRAPHER MOTIFS /A          (traduit en MOTIFS.ASM, puis ASM MOTIFS)
 
-`GRAPHER NOM [p1 ... p9]` exécute `NOM.GRX`, un fichier texte (écrit avec EDIT) qui contient
-une commande par ligne. C'est un petit langage, plus près du système que LOGO : coordonnées
-entières, attributs de couleur, HIRES plein écran ou SPLIT, images, variables, boucles et
-sous-programmes. Il sert à fabriquer des écrans (écran titre d'un jeu, décor, motifs) et à les
-enregistrer, et même à de petits programmes interactifs (`ARDOISE.GRX`). Le fichier est chargé
-en mémoire puis exécuté ; le dessin passe par la bibliothèque `hires.inc`.
+`GRAPHER NOM [p1 ... p9]` exécute `NOM.GRX`, un fichier texte écrit avec EDIT, une commande
+par ligne. C'est un petit langage proche de l'écran, plus bas niveau que LOGO :
+
+- entiers, variables `A` à `Z`, expressions, `RND`, boucles `REPEAT` / `FOR` / `WHILE`, `IF`,
+  sous-programmes ;
+- dessin en HIRES plein écran ou en SPLIT (`PLOT`, `LINE`, `BOX`, `CIRCLE`, `GTEXT`,
+  `ATTR`...), images (`GLOAD`, `GSAVE`) et animations (`ANIM`) ;
+- écran texte entier au programme (`LORES` : `LOCATE`, `CHAR`, `SCRN`...), touches sans délai
+  (`INKEY`) pour les jeux ;
+- tableaux et chaînes (`DIM`, `INPUT`, `LEN`, `FILL`).
+
+`GRAPHER NOM /A` traduit le programme en assembleur ; ASM en fait un `.COM` autonome, 5 à 20
+fois plus rapide. Huit exemples sont livrés (`MOTIFS`, `ARDOISE`, `FLECHES`, `SERPENT`,
+`SCORES`...).
 
     ; un eventail en plein ecran
     HIRES
     FOR X 0 239 6
       LINE X 0 239-X 199
     NEXT
+    WAIT
 
-**Dessin et modes**
-
-| Commande | Effet |
-|---|---|
-| `HIRES` | HIRES plein écran : 240 × 200 points, image effacée, pas de console |
-| `SPLIT` | mode SPLIT : 240 × 128 points, console dessous, image effacée |
-| `TEXT` | retour au mode texte |
-| `GCLS` | efface l'image |
-| `PEN m` | crayon : 0 efface, 1 trace, 2 inverse |
-| `PLOT x y` | point (x de 0 à 239, y de 0 à 199, ou 127 en SPLIT) |
-| `LINE x1 y1 x2 y2` | ligne |
-| `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, rectangle plein |
-| `CIRCLE x y r` | cercle (r ≤ 127) |
-| `GTEXT col y texte` | texte dans l'image, à la case `col` (0 à 39, 6 points), à la ligne de points `y` |
-| `GNUM col y n` | nombre dans l'image (un score, par exemple) |
-| `ATTR col y1 y2 v` | attribut dans la case `col`, lignes `y1` à `y2` : encre 0-7, papier 16-23 |
-| `GLOAD nom` | charge une image : `.HIR` en HIRES, `.IMG` en SPLIT ; depuis le mode texte, le type choisit le mode (`.HIR` par défaut) |
-| `GSAVE nom` | enregistre l'image, au format du mode |
-
-Les valeurs du dessin vont de 0 à 255 (au-delà : `valeur hors de 0-255`).
-
-**L'écran texte (LORES).** `LORES` donne au programme tout l'écran texte, comme `LORES 0` en
-BASIC : 40 colonnes (0-39) × 28 lignes (0-27), ligne 0 et colonnes 0-1 comprises, sans console
-ni menus (FUNCT et CTRL-T n'y font rien ; leurs codes arrivent au programme comme des touches).
-On y écrit et on y lit des cases, et l'on pose soi-même les attributs de couleur où l'on veut.
-`TEXT` rend la console.
-
-| Commande | Effet |
-|---|---|
-| `LORES` | prend l'écran texte et l'efface (`CLS`) |
-| `CLS` | en LORES : attribut 16 (papier noir) dans les 1 120 cases, curseur en (0, 0) ; ailleurs : efface la console |
-| `LOCATE col lig` | place le curseur d'écriture |
-| `CHAR col lig code` | écrit l'octet `code` dans la case : caractère (32-127, +128 en inverse) ou attribut (encre 0-7, papier 16-23...) ; le curseur ne bouge pas |
-| `ECHO texte` | écrit au curseur, qui avance ; entre guillemets, le texte est pris tel quel, espaces compris (`ECHO "  Score : "`) |
-| `ECHO` (seul) | colonne 0 de la ligne suivante (après la ligne 27 : ligne 0) |
-| `PRINT expr` | écrit le nombre au curseur, sans passer à la ligne |
-| `SPC n [x]` | écrit n fois l'octet x (espace par défaut) : effacer, remettre l'attribut 16, tracer un trait |
-| `TAB n` | avance le curseur de n colonnes sans rien écrire (relatif ; `LOCATE` donne la colonne absolue) |
-| `SCRN(col,lig)` | fonction : l'octet de la case |
-
-Rien ne s'écrit au-delà de la colonne 39 : ce qui dépasse est perdu, sans erreur et sans
-passer sur la ligne suivante (dont les colonnes 0-1 portent souvent des attributs) ; rien ne
-fait défiler l'écran. Hors du LORES, `LOCATE`, `CHAR`, `SPC`, `TAB` et `SCRN` donnent
-`LORES d'abord` ; une colonne ou une ligne hors de l'écran, `valeur hors limites`. Les
-commandes de dessin restent réservées à HIRES et SPLIT.
-
-**Calcul.** Les nombres sont des entiers de -32768 à 32767. Il y a 26 variables, `A` à `Z`
-(à 0 au départ). `X = expr` (ou `LET X = expr`) donne une valeur à une variable. Partout où
-une commande attend un nombre, on peut écrire une expression : `12`, `X`, `X+8`,
-`239-X`, `RND(240)`, `(X * 2)`. Entre plusieurs paramètres, l'espace sépare : **une
-expression ne contient pas d'espace, sauf entre parenthèses** (`LINE X 0 (239 - X) 199`).
-Une expression seule en fin de ligne (`X = ...`, `IF`, `WHILE`, `PRINT`) peut en contenir.
-
-| Élément | Sens |
-|---|---|
-| `-` (signe) ; `*` `/` `%` ; `+` `-` | du plus fort au plus faible ; `/` tronque vers 0, `%` est le reste |
-| `=` `<>` `<` `<=` `>` `>=` | comparaisons : 1 si vrai, 0 sinon (`X = X + (X < 239)`) |
-| `&` `\|` | et, ou (bit à bit : `(X > 0) & (Y > 0)`) |
-| `RND(n)` | nombre au hasard de 0 à n-1 |
-| `ABS(n)` | valeur absolue |
-| `POINT(x,y)` | 1 si le point est allumé |
-| `INKEY` | touche (code), 0 si aucune ; n'attend pas et, comme `KEY$` en BASIC, sans délai de répétition : la touche tapée depuis le dernier `INKEY`, sinon celle qui est encore enfoncée (jeux d'action). `GET` suit, lui, le délai et la cadence de répétition du clavier |
-| `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
-| `LEN(A$)` | longueur d'une chaîne (voir « Tableaux et chaînes ») |
-
-**Contrôle**
-
-| Bloc | Effet |
-|---|---|
-| `REPEAT n` ... `NEXT` | n fois (rien si n ≤ 0) |
-| `FOR V a b [pas]` ... `NEXT` | V de a à b, pas de 1 par défaut (négatif : en descendant) ; rien si a est déjà au-delà de b |
-| `WHILE expr` ... `NEXT` | tant que l'expression n'est pas nulle (`WHILE 1` : sans fin, ESC arrête) |
-| `IF expr` ... [`ELSE` ...] `ENDIF` | si l'expression n'est pas nulle |
-| `SUB NOM` ... `ENDSUB` | sous-programme, appelé par `CALL NOM` ; `RETURN` en sort avant la fin. Rencontré en chemin, il est sauté : on peut le placer n'importe où. |
-
-Les blocs s'imbriquent (16 niveaux de boucles et d'appels) ; le retrait est libre.
-
-**Divers**
-
-| Commande | Effet |
-|---|---|
-| `WAIT` | attend une touche (ESC arrête) |
-| `GET V` | attend une touche et range son code dans la variable V (ESC arrête) ; flèches : 8 gauche, 9 droite, 10 bas, 11 haut |
-| `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier (cadence d'une animation, d'un jeu) |
-| `ECHO texte` | affiche le texte (sauf en HIRES : pas de console sous une image plein écran ; en LORES : voir plus haut) |
-| `PRINT expr` | affiche un nombre (sauf en HIRES ; en LORES : au curseur) ; `PRINT A$` affiche une chaîne |
-| `INPUT V`, `INPUT A$` | saisie d'un entier, d'une chaîne (voir « Tableaux et chaînes ») |
-| `END` | fin du programme |
-| `; texte` | commentaire (aussi en fin de ligne) |
-
-`$1` à `$9` sont remplacés par les paramètres donnés après le nom du fichier (en gardant leur
-casse) : `X = $1`. Une ligne fait 126 caractères au plus. ESC entre deux lignes arrête ; une
-autre touche tapée pendant le dessin est gardée pour `WAIT`, `GET` ou `INKEY`. Une
-erreur arrête aussi, avec la ligne et la commande en cause : `L 3 LINE : valeur hors de
-0-255`, `L 12 NEXT : NEXT sans boucle`, `L 7 IF : bloc non ferme`. En fin de fichier (ou à
-`END`), HIRES et LORES rendent aussitôt la console : pour laisser l'image ou l'écran affiché,
-le programme finit par `WAIT` ou `GET` (les exemples le font). Une image SPLIT reste au-dessus
-du prompt. Lancé en mode SPLIT, GRAPHER dessine sur l'image en place (après un
-programme LOGO, par exemple).
-
-**Tableaux et chaînes.** `DIM` réserve des tableaux d'entiers (`S(10)`, `G(25,38)`) et des
-tableaux d'octets, marqués par `$` (`N$(12)`, `M$(25,38)`), à une ou deux dimensions. Chaque
-lettre sert aux trois sortes sans mélange : `A`, `A(...)` et `A$` sont trois choses.
-
-    DIM S(10) N$(10,12) M$(25,38)
-
-| Élément | Effet |
-|---|---|
-| `DIM A(n)`, `DIM A(n,m)`, `DIM A$(n)`... | réserve le tableau : **indices de 0 à n-1** (comme en C), éléments à 0 ; plusieurs tableaux par ligne ; les tailles sont des expressions. Un tableau se déclare une fois (`deja dimensionne`) ; plus de place : `memoire pleine` |
-| `A(i)`, `A(i,j)` | élément d'entier, dans un calcul ou à gauche de `=` (`A(I,J) = A(I,J) + 1`) |
-| `A(k)` sur un tableau à deux dimensions | élément k du tableau mis à plat, ligne après ligne, comme en C (`G(7)` est `G(1,3)` sur `DIM G(3,4)`) |
-| `M$(l,c)`, `A$(i)` (une dimension) | code d'une case, de 0 à 255, en lecture et en écriture (`M$(L,C) = 35`) |
-| `A$` (une dimension), `M$(l)` (deux dimensions) | une **chaîne** : le contenu jusqu'au premier 0, ou jusqu'à la capacité (255 au plus) ; `M$(l)` est la ligne l : un tableau de chaînes est un tableau `$` à deux dimensions |
-| `A$ = "texte"`, `A$ = B$`, `N$(I) = N$(J)` | affectation ; le reste de la capacité est mis à 0 ; plus long que la capacité : `chaine trop longue` |
-| `A$ = B$`, `<>`, `<`, `<=`, `>`, `>=` | comparaison (1 ou 0), aussi avec un texte : `IF R$ = "O"` ; ordre des codes (`"AB" < "ABC"`) |
-| `LEN(A$)` | longueur |
-| `PRINT A$` | en LORES au curseur, les codes 0-31 écrits tels quels (une ligne de niveau garde ses couleurs) ; dans la console, remplacés par un espace ; `PRINT A$ = B$` affiche, lui, la comparaison |
-| `INPUT A$`, `INPUT M$(l)` | saisie : en LORES au curseur (vidéo inverse), DEL efface, RETURN valide, arrêt à la capacité ou au bord de l'écran ; ailleurs, la saisie de ligne de la console |
-| `INPUT V` | un entier de -32768 à 32767 (chiffres et `-`) ; refusé : un son, et on recommence |
-| `FILL A v`, `FILL M$ 32` | tout le tableau à v |
-
-Une chaîne ne se mélange pas aux calculs (`chaine dans un calcul`) : pour afficher un texte et
-un nombre, `ECHO` puis `PRINT`. Les tableaux sont rangés en haut de la mémoire libre, sous
-`$9D60` ; les animations et les images `.HIZ` chargées ensuite ne peuvent pas les recouvrir
-(`animation trop grande`). En interprété, chaque accès vérifie le tableau et ses indices
-(`tableau non dimensionne`, `indice hors limites`) ; un programme traduit par `/A` ne vérifie
-rien, pour aller plus vite : si un programme traduit se comporte bizarrement, on le relance
-en interprété pour trouver l'erreur. À la traduction, un tableau doit être déclaré par un
-`DIM` placé plus haut dans le fichier.
-
-Vitesse : GRAPHER interprète de 150 à quelques centaines de lignes par seconde selon les
-calculs : un ciel de 400 étoiles tirées au hasard (`PLOT 1+RND(238) 1+RND(198)` dans un
-`REPEAT`) prend environ 5 secondes. Limites : des entiers
-seulement, des variables d'une lettre, ni concaténation ni conversion de chaînes, et un `ENDIF` oublié après un `IF` vrai n'est pas
-signalé (le reste s'exécute normalement).
-
-La disquette contient sept exemples : `DESSIN.GRX` (mode SPLIT, l'ancien `DESSIN.BAT`),
-`ECRAN.GRX` (un écran titre en couleurs par attributs), `MOTIFS.GRX` (éventail, cercles,
-ciel étoilé : boucles, hasard, sous-programme), `ARDOISE.GRX` (un télécran : les flèches
-dessinent, ESPACE efface, ESC finit) et `FLECHES.GRX` (LORES : un `@` qu'on déplace aux
-flèches dans un cadre de `#` sur fond bleu, `SCRN` pour les murs, `INKEY` pour les touches : le `@` part dès l'appui et s'arrête dès qu'on lâche), `SERPENT.GRX` (le serpent qui grandit en
-mangeant des `$` : son corps dans deux tableaux en anneau, `SCRN` pour les collisions) et
-`SCORES.GRX` (un tableau des meilleurs scores : nom et score saisis par `INPUT`, tri par
-échange de lignes, titre coloré par un attribut en tête de chaîne).
-
-**Traduction en assembleur.** `GRAPHER NOM /A` n'exécute pas le fichier : il écrit `NOM.ASM`,
-qu'ASM assemble en un programme autonome `NOM.COM`, beaucoup plus rapide :
-
-    A>GRAPHER MOTIFS /A
-    MOTIFS.ASM ecrit : ASM MOTIFS
-    A>ASM MOTIFS
-    A>MOTIFS
-
-Le `.ASM` produit est lisible : chaque ligne du `.GRX` y figure en commentaire, suivie de son
-code. Le dessin appelle `HIRES.INC` (`lda #$78`, `sta h_x1`... `jsr h_line`), les variables sont
-des mots en mémoire (`V_A` à `V_Z`), les boucles et les `IF` des étiquettes et des sauts
-(`L3T`, `L3E`), `CALL` un `jsr` vers `P_NOM`, et ce qui est plus long (multiplication,
-division, `RND`, `PRINT`, images) est dans la bibliothèque `GRX.INC`. Les parties constantes
-des expressions sont calculées pendant la traduction (`120+8` devient `128`), et une valeur
-constante hors de 0-255 est signalée tout de suite. ASM a besoin de `CPA.INC`, `GRX.INC` et
-`HIRES.INC` (et `ARR.INC` pour un programme qui a des tableaux ou des chaînes, `ANIM.INC`
-s'il anime) sur le lecteur de la source (ils sont sur la disquette complète et sur la disquette
-Assembleur, avec GRAPHER) ; il met moins d'une minute pour un programme comme `MOTIFS`.
-
-Gain mesuré : 5 à 20 fois plus rapide selon les calculs (le ciel de 400 étoiles de `MOTIFS` :
-0,6 seconde au lieu de 5). Le programme produit se comporte comme le `.GRX` interprété (ESC
-dans une boucle, attente de fin en HIRES), avec deux différences : `$1` à `$9` sont remplacés
-par les paramètres donnés à `GRAPHER NOM /A`, au moment de la traduction ; et une erreur qui
-ne peut se voir qu'à l'exécution (division par zéro, valeur hors de 0-255 calculée) s'affiche
-sans numéro de ligne (`Erreur : division par zero`). Les erreurs de syntaxe et de blocs sont
-signalées par la traduction, avec la ligne, et `NOM.ASM` n'est alors pas écrit.
+Référence complète (commandes, erreurs, traduction, mémoire) : **`docs/grapher.md`**.
 
 ## HIRES plein écran : VOIR, hires.inc, png2hir.py, animations
 
@@ -822,7 +663,7 @@ longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
   (à 1 % près) et la cadence obtenue. `--seuil` est conseillé : le tramage change tout l'écran
   d'une image à l'autre, et une vidéo tramée plein écran ne dépasse pas 2 à 3 images/s.
   `--longue` donne un fichier plus petit mais plus lent. Les démos : `tools/anim_demos.py`.
-- L'animation entière est chargée en mémoire : ~34 Ko dans VOIR, ~22 Ko dans GRAPHER (après le
+- L'animation entière est chargée en mémoire : ~34 Ko dans VOIR, ~20 Ko dans GRAPHER (après le
   texte du `.GRX`). La 1re image est dessinée sur un écran effacé ; la dernière est suivie
   d'une image de retour vers la 1re, pour boucler sans tout redessiner.
 - Cadence : chaque image a son délai (1/50 s) et part au top 50 Hz qui suit ; si le décodage
