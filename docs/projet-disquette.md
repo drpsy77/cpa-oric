@@ -542,6 +542,13 @@ CMDER (lot LJ : surtout les échanges de disquettes par le menu du LOCI).
     `ORIC_SWAP`, posée par `DSKSWAP=` de `run_test.sh`) ; celle qui sort est enregistrée.
   - Deux erreurs trouvées aux essais : `cmp` de l'empreinte qui finissait avec Z=0 (DEX) même
     à égalité, et `STA` suivi de `BNE` (STA ne touche pas aux indicateurs) dans la réponse T.
+- CMDER, clé USB : `..` dans un chemin relatif (Pierre, 14 octobre 2026, vrai Oric + LOCI :
+  `CMDER USB:FILES`, RETURN sur `..`, l'Oric semble planté). `path_up` cherchait un `:` dans
+  un chemin qui n'en avait pas (`FILES`) : boucle sans fin à travers la mémoire. Corrigé :
+  `FILES` remonte à `/`, `1:REP` à `1:`, `A/B` à `A` (avant : `A/`, que `is_root` prenait
+  pour une racine, sans `..`) ; `is_root` reconnaît vide, `/`, `1:`, `1:/` ; un `/` final
+  tapé (`USB:FILES/`) est retiré. Essayé dans Oricutron (clé simulée) : `USB:FILES`,
+  `USB:FILES/SUB/`, `USB:1:FILES`, remontées jusqu'à la racine. CMDER.COM 13 552 octets.
 - DISKCOPY.COM (lot L3, octobre 2026) : 2 216 octets (deux blocs), rien de résident.
   Choix :
   - Les secteurs passent par SELDSK, SETSEC, SETDMA, READ et WRITE du BIOS (leur première

@@ -5216,7 +5216,16 @@ lp      lda args,x
         iny
         cpy #99
         bne lp
-e       lda #0
+e       cpy #2                  ; « / » final retiré (sauf « / », « 1:/ »)
+        bcc ez
+        lda upath-1,y
+        cmp #"/"
+        bne ez
+        lda upath-2,y
+        cmp #":"
+        beq ez
+        dey
+ez      lda #0
         sta upath,y
         cpy #0
         bne hp
@@ -5643,55 +5652,57 @@ e       sty t2
         rts
 .)
 
-; is_root : C=1 si upath est la racine (Â« / Â», Â« 1:/ Â», Â« 0: Â»)
+; is_root : C=1 si upath est la racine (vide, « / », « 1: », « 1:/ »)
+; (t0, t1, t2 posés par slashes, comme avant)
 is_root
 .(
         jsr slashes
-        lda t1
-        bmi nos
-        cmp t0                  ; un seul Â« / Â», en dernier
-        bne no
-        clc
-        adc #1
-        cmp t2
-        bne no
-        sec
-        rts
-nos     ldy t2                  ; Â« 0: Â»
-        beq y
+        ldy t2
+        beq y                   ; chemin vide
         lda upath-1,y
         cmp #":"
+        beq y                   ; « 1: »
+        cmp #"/"
         bne no
-y       sec
-        rts
+        dey
+        beq y                   ; « / »
+        lda upath-1,y
+        cmp #":"
+        beq y                   ; « 1:/ »
 no      clc
+        rts
+y       sec
         rts
 .)
 
-; path_up : upath remonte d'un rÃ©pertoire
+; path_up : upath remonte d'un répertoire. « /REP » -> « / »,
+; « 1:/REP » -> « 1:/ », « A/B » -> « A », « 1:REP » -> « 1: »,
+; « REP » (relatif, sans « / » ni « : ») -> « / »
 path_up
 .(
         jsr is_root
         bcs rt
-        lda t1
-        bmi nos
-        cmp t0
-        bne cut
-        tay                     ; le premier Â« / Â» : on le garde
-        iny
+        ldy t1
+        bmi nos                 ; aucun « / »
+        beq kp                  ; « / » en tête : on le garde
+        lda upath-1,y
+        cmp #":"
         bne z
-cut     tay
+kp      iny                     ; « / » de la racine : on le garde
 z       lda #0
         sta upath,y
 rt      rts
-nos     ldy #0                  ; Â« 0:REP Â» -> Â« 0: Â»
+nos     ldy #0                  ; « 1:REP » -> « 1: »
 f       lda upath,y
+        beq sl                  ; ni « / » ni « : » : la racine
         iny
         cmp #":"
         bne f
-        lda #0
-        sta upath,y
-        rts
+        beq z
+sl      lda #"/"
+        sta upath
+        ldy #1
+        bne z
 .)
 
 ; u_full : ufull = upath + Â« / Â» + nom (A/Y, 0 Ã  la fin) ; C=1 si trop long
