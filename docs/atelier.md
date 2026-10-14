@@ -74,7 +74,7 @@ outils, et suit toujours la même boucle.
 
 ### La boucle
 
-1. Lire les sources et la table des symboles (`build/cpa_sys.sym` : `f4bf rom_end`).
+1. Lire les sources et la table des symboles (`build/cpa_sys.sym`, par exemple la ligne `rom_end`).
 2. Modifier les sources, puis lancer `./build.sh`. Une erreur d'assemblage s'affiche dans
    `build/*.err`.
 3. Écrire un scénario de frappe, lancer l'émulateur, lire l'écran à la trame voulue.
@@ -99,7 +99,7 @@ Dans cet exemple, `|` attend 3 s (le temps que la pause s'affiche) et `\x1cC` ta
   tête) se mesure avec le banc Clock Signal (`tools/setup_clk.sh`), pas avec Oricutron.
 - **Le rendu des couleurs** sur un vrai écran : les captures donnent une idée, sans plus.
 
-D'où les essais sur matériel notés dans `docs/projet-disquette.md`.
+D'où les essais sur matériel, notés dans `docs/essais-materiel.md`.
 
 ## 3. Installer l'atelier sur le Raspberry Pi 400
 
