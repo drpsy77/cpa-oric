@@ -8,6 +8,10 @@ Variables :
   SCREEN=1      écran texte ($BB80, 40 x 28) affiché à la fin, lignes non
                 vides seulement : attribut 16 « . », autre code 0-31 « ^ »,
                 caractère inversé (128 et plus) « * »
+  FONT=1        police factice (octets calculés d'après l'adresse) dans
+                les deux jeux de caractères, codes 32-127 ($B500, $B900)
+  CHARS=91,s80  dessins de ces caractères affichés à la fin (s : jeu
+                secondaire, $B800)
   PROF=adr      chronomètre la routine à cette adresse (hexa) : cycle de
                 départ et durée de chaque appel, écrits dans PROF_OUT
                 (défaut : prof.txt)
@@ -44,6 +48,9 @@ def main():
     # ligne de commande d'origine ($F670, ORIG_LINE) : programme et paramètres
     orig = (os.path.splitext(os.path.basename(prog))[0] + ' ' + ' '.join(sys.argv[3:])).encode()
     mem[0xF670:0xF670+len(orig)+1] = orig + b'\0'
+    if os.environ.get('FONT'):
+        for a in list(range(0xB500, 0xB800)) + list(range(0xB900, 0xBB80)):
+            mem[a] = (a * 37 + (a >> 8)) & 0x3F
     m = MPU(memory=mem)
     m.pc = 0x500; m.sp = 0xFD
     mem[0x1FE] = 0xFF; mem[0x1FF] = 0x01  # rts -> $0200
@@ -135,6 +142,11 @@ def main():
             row = mem[0xBB80 + 40 * r:0xBB80 + 40 * r + 40]
             t = ''.join('.' if c == 16 else '^' if c < 32 else '*' if c >= 128 else chr(c) for c in row)
             if t.strip('.') != '': out.append('%2d|%s|\n' % (r, t))
+    if os.environ.get('CHARS'):
+        for c in os.environ['CHARS'].split(','):
+            b = 0xB800 if c.startswith('s') else 0xB400
+            a = b + 8 * int(c.lstrip('s'))
+            out.append('[car %s] %s\n' % (c, ' '.join('%02X' % x for x in mem[a:a+8])))
     if os.environ.get('DUMP'):
         open(os.environ['DUMP'], 'wb').write(bytes(mem))
     if prof is not None:

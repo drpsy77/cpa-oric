@@ -28,6 +28,8 @@
 ;             SCRN(col,lig) ; ECHO et PRINT au curseur, sans déborder de
 ;             la ligne ; ECHO seul : colonne 0 de la ligne suivante
 ;  Touches    GET V (attend une touche), WAIT, INKEY
+;  Sprites    SPRITES n, SPOOL T [ALT], SSHOW k S$ n col lig [ALT],
+;             SHIDE k (LORES ; fichiers .SPR lus par BLOAD) : spr.inc
 ;  Image      GCLS, PEN m, PLOT x y, LINE x1 y1 x2 y2, BOX / FBOX x1 y1
 ;             x2 y2, CIRCLE x y r, GTEXT col y texte, GNUM col y n,
 ;             ATTR col y1 y2 v, GLOAD nom, GSAVE nom   (valeurs 0-255)
@@ -1552,8 +1554,14 @@ c_call
         sta nxt+1
         rts
 
-; to_text : quitte le HIRES plein écran ou le LORES (console rendue)
-to_text lda h_lo
+; to_text : quitte le HIRES plein écran ou le LORES (console rendue) ;
+;   l'historique des lignes est vidé si le jeu secondaire a servi aux
+;   sprites (il l'a recouvert)
+to_text lda s_hst
+        beq tt_0
+        lda #0
+        sta S_HIST
+tt_0    lda h_lo
         bne tt_t
         lda h_lines
         cmp #200
@@ -1649,6 +1657,49 @@ ar      stx gd
 bad     jmp e_param
 .)
 
+; ---------------------------------------------------------------------
+; Sprites (spr.inc)
+; ---------------------------------------------------------------------
+; SPRITES n : n emplacements
+c_sprites
+        jsr pexpr
+        jsr endline
+        jmp s_res
+; SPOOL T [ALT] : le tableau d'entiers T devient le tas du jeu
+c_spool jsr intarg
+        jsr altopt
+        sta gd
+        lda aal
+        ldx #0
+        jsr desc_of
+        ldx gd
+        jmp s_pool
+; SSHOW k S$ n col lig [ALT]
+c_sshow jsr needlo
+        jsr getbyte
+        sta s_k
+        jsr sprarg
+        jsr getbyte
+        sta s_n
+        jsr getbyte
+        sta s_col
+        jsr getbyte
+        sta s_lig
+        jsr altopt
+        sta gd
+        lda aal
+        ldx #1
+        jsr desc_of
+        ldx gd
+        jmp s_show
+; SHIDE k
+c_shide jsr needlo
+        jsr getbyte
+        pha
+        jsr endline
+        pla
+        jmp s_hide
+
 ; affectations ; ANIM
 x_asg   = assign
 x_aasg  = arr_assign
@@ -1672,6 +1723,8 @@ cadr
         .word c_else     ; ELSE
         .word c_locate   ; LOCATE
         .word c_char     ; CHAR
+        .word c_sshow    ; SSHOW
+        .word c_shide    ; SHIDE
         .word c_plot     ; PLOT
         .word c_line     ; LINE
         .word c_let      ; LET
@@ -1713,6 +1766,8 @@ cadr
         .word c_load     ; LOAD
         .word c_bsave    ; BSAVE
         .word c_bload    ; BLOAD
+        .word c_sprites  ; SPRITES
+        .word c_spool    ; SPOOL
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)
@@ -1726,6 +1781,7 @@ f_nbuf  = numbuf
 f_mlo   = m_nolo
 f_mful  = m_full
 #include "fil.inc"
+#include "spr.inc"
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc, mis à 0 au lancement (bufs à
@@ -1743,7 +1799,8 @@ numbuf  = cname+9       ; nombre écrit
 fvar    = numbuf+8
 aal     = fvar+1        ; tableau en cours : lettre
 aak     = aal+1         ;   et sorte (0 entiers, 1 $)
-flim    = aak+1         ; FOR : arrivée
+s_hst   = aak+1         ; 1 : jeu secondaire redessiné (spr.inc)
+flim    = s_hst+1       ; FOR : arrivée
 fstep   = flim+2        ;   et pas
 vars    = fstep+2       ; A à Z (2 octets chacune)
 NBUF    = vars+52-bufs

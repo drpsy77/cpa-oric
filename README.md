@@ -23,7 +23,8 @@ Deux variantes sont construites à partir des mêmes sources :
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
 - **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
-  langage de dessin et de jeux, interprété ou traduit en assembleur.
+  langage de dessin et de jeux (sprites en mode texte compris), interprété ou traduit en
+  assembleur.
 - Images HIRES compressées et animations plein écran (VOIR).
 
 ## Documentation
@@ -41,7 +42,6 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/projet-rom.md` | la version ROM |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
-| `docs/spec-sprites.md` | sprites en mode texte (en préparation) |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi au LOCI (en préparation) |
 
 ## Construire

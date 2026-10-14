@@ -1,0 +1,23 @@
+; sprites : affichage, deplacement, chevauchement, retrait
+DIM S$(48) T(6)
+BLOAD S$ HERO.SPR
+FOR I 0 5
+  T(I) = 91+I
+NEXT
+LORES
+SPRITES 3
+SPOOL T
+FOR L 1 5
+  LOCATE 2 L
+  SPC 30
+NEXT
+LOCATE 2 1
+ECHO "ABCDEFG"
+CHAR 5 2 66+128
+CHAR 6 2 1
+SSHOW 0 S$ 0 4 1
+SSHOW 1 S$ 0 5 1 ; a cote
+SSHOW 2 S$ 0 6 1 ; sur un attribut
+SHIDE 1
+SSHOW 0 S$ 0 4 2 ; deplacement
+SSHOW 1 S$ 0 4 3 ; chevauche le 0 en (4,3)

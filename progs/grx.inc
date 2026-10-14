@@ -68,7 +68,11 @@ g_end   jsr g_totext
 ; g_totext : quitte le HIRES plein écran ou le LORES (console rendue)
 g_totext
 .(
-        lda h_lo
+        lda s_hst               ; jeu secondaire redessiné par SPR.INC :
+        beq tn                  ;   l'historique des lignes est vidé
+        lda #0
+        sta $BA80
+tn      lda h_lo
         bne t
         lda h_lines
         cmp #200
@@ -1039,6 +1043,7 @@ g_m_full  .asc "Erreur : disque plein",0
 g_num   .dsb 8,0
 g_fcbuf .dsb 36,0
 g_ln    .byt 0
+s_hst   .byt 0          ; 1 : jeu secondaire redessiné (SPR.INC)
 g_vlo   .dsb 24,0
 g_vhi   .dsb 24,0
 g_vars  .dsb 52,0

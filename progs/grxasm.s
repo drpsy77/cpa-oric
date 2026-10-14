@@ -72,6 +72,7 @@ compile
         sta kanim
         sta karr
         sta kfil
+        sta kspr
         sta csp
         ldx #51                 ; dimensions des tableaux : aucun
 kz      sta kd_i,x
@@ -152,7 +153,12 @@ bnor    lda kfil
         lda #<h_tailF
         ldy #>h_tailF
         jsr os
-bnof    lda kanim
+bnof    lda kspr
+        beq bnos
+        lda #<h_tailS
+        ldy #>h_tailS
+        jsr os
+bnos    lda kanim
         beq bnoa
         lda #<h_tailA
         ldy #>h_tailA
@@ -2267,6 +2273,15 @@ h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
 h_tailR .asc "#include ",34,"ARR.INC",34,13,10,0
 h_tailF .asc "#include ",34,"FIL.INC",34,13,10,0
+h_tailS .asc "#include ",34,"SPR.INC",34,13,10,0
+s_sres  .asc "jsr s_res",0
+s_spool .asc "jsr s_pool",0
+s_sshow .asc "jsr s_show",0
+s_shide .asc "jsr s_hide",0
+s_sk    .asc "s_k",0
+s_sn    .asc "s_n",0
+s_scol  .asc "s_col",0
+s_slig  .asc "s_lig",0
 h_tail3 .asc "#include ",34,"HIRES.INC",34,13,10,0
 t_asm   .asc "ASM"
 m_done  .asc ".ASM ecrit : ASM ",0
@@ -2329,6 +2344,71 @@ op      stx osv
         jmp oi
 bad     jmp e_param
 .)
+; ---------------------------------------------------------------------
+; Sprites traduits (appels à SPR.INC)
+; ---------------------------------------------------------------------
+k_sprites
+        jsr k_pexpr
+        jsr endline
+        jsr k_mat
+        jsr k_spr
+        lda #<s_sres
+        ldy #>s_sres
+        jmp oi
+k_spool jsr intarg
+        jsr altopt
+        jsr k_ldxa
+        lda aal
+        ldx #0
+        jsr k_need
+        jsr k_desc
+        lda #<s_spool
+        ldy #>s_spool
+        jmp oi
+k_sshow lda #<s_sk
+        ldy #>s_sk
+        jsr k_p
+        jsr sprarg
+        txa
+        pha
+        lda aal
+        ldx #1
+        jsr k_need
+        pla
+        tax
+        lda #<s_sn
+        ldy #>s_sn
+        jsr k_p
+        lda #<s_scol
+        ldy #>s_scol
+        jsr k_p
+        lda #<s_slig
+        ldy #>s_slig
+        jsr k_p
+        jsr altopt
+        jsr k_ldxa
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_sshow
+        ldy #>s_sshow
+        jmp oi
+k_shide jsr k_byte
+        jsr endline
+        jsr k_spr
+        lda #<s_shide
+        ldy #>s_shide
+        jmp oi
+; k_ldxa : « ldx #A » (tas) ; NOM.ASM inclura SPR.INC
+k_ldxa  sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+k_spr   lda #1
+        sta kspr
+        sta karr
+        rts
+
 ; k_fil : NOM.ASM inclura ARR.INC et FIL.INC
 k_fil   lda #1
         sta kfil
@@ -2360,6 +2440,8 @@ cadr
         .word k_else     ; ELSE
         .word k_locate   ; LOCATE
         .word k_char     ; CHAR
+        .word k_sshow    ; SSHOW
+        .word k_shide    ; SHIDE
         .word k_plot     ; PLOT
         .word k_line     ; LINE
         .word k_let      ; LET
@@ -2401,6 +2483,8 @@ cadr
         .word k_load     ; LOAD
         .word k_bsave    ; BSAVE
         .word k_bload    ; BLOAD
+        .word k_sprites  ; SPRITES
+        .word k_spool    ; SPOOL
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

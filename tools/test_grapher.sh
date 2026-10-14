@@ -2,11 +2,12 @@
 # Non-régression de GRAPHER.COM sans émulateur : chaque fichier de
 # tools/grapher_tests/*.grx est exécuté dans le 6502 simulé de
 # tools/run_com.py (mode texte : PRINT et messages d'erreur seulement ;
-# pour les fichiers lo*.grx, l'écran texte du LORES en plus),
+# pour les fichiers lo*.grx, l'écran texte du LORES en plus ; NOM.env :
+# variables de run_com.py, police factice et dessins des caractères),
 # et la sortie est comparée au fichier .ref ; puis il est traduit
 # (GRXASM NOM ; GRAPHER NOM /A passe la main à GRXASM par CHAIN,
 # vérifié une fois au début), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
-# ANIM.INC ; CUBE.ANI pour ANIM) et
+# ANIM.INC, ARR.INC, FIL.INC, SPR.INC ; CUBE.ANI pour ANIM, *.SPR) et
 # exécuté : messages de la traduction et sortie comparés au fichier .kref.
 #   tools/test_grapher.sh          compare aux références
 #   REF=1 tools/test_grapher.sh    réécrit les références (après vérification !)
@@ -21,6 +22,7 @@ cp build/progs/GRAPHER.COM build/progs/GRXASM.COM "$T/"
 cp progs/cpa.inc "$T/CPA.INC"; cp progs/grx.inc "$T/GRX.INC"; cp progs/hires.inc "$T/HIRES.INC"
 cp $D/*.TXT "$T/"   # fichiers de données lus par LOAD
 cp progs/anim.inc "$T/ANIM.INC"; cp progs/arr.inc "$T/ARR.INC"; cp progs/fil.inc "$T/FIL.INC"; cp files/anim/CUBE.ANI "$T/"
+cp progs/spr.inc "$T/SPR.INC"; cp $D/*.SPR "$T/"   # sprites
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"
@@ -36,8 +38,9 @@ for f in $D/*.grx; do
   N=$(echo "$n" | tr a-z A-Z)
   S=""; case "$n" in lo*) S=1;; esac   # LORES : l'écran texte à la fin
   IN=""; [ -f "$D/$n.in" ] && IN=$(cat "$D/$n.in")   # saisies (INPUT), séparées par |
+  EV=""; [ -f "$D/$n.env" ] && EV=$(cat "$D/$n.env")  # variables de run_com.py (FONT, CHARS)
   tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/$N.GRX"
-  (cd "$T" && INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
+  (cd "$T" && env $EV INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" GRAPHER.COM "$N" 2>&1) \
     | grep -v '^\[[0-9]* instructions\]' > "$T/$n.out" || true
   check "$n" ref
   rm -f "$T/$N.ASM" "$T/$N.COM"
@@ -46,7 +49,7 @@ for f in $D/*.grx; do
   if [ -f "$T/$N.ASM" ]; then
     tr -d '\032' < "$T/$N.ASM" > "$T/$n.s"
     (cd "$T" && "$XA" -o "$N.COM" "$n.s" > "$n.xa" 2>&1) || { echo "xa : $n"; cat "$T/$n.xa"; ko=$((ko+1)); }
-    (cd "$T" && INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" "$N.COM" 2>&1) \
+    (cd "$T" && env $EV INPUT="$IN" SCREEN=$S python3 "$RUN" "$T" "$N.COM" 2>&1) \
       | grep -v '^\[[0-9]* instructions\]' >> "$T/$n.out" || true
   fi
   check "$n" kref

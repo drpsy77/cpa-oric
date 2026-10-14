@@ -1,0 +1,9 @@
+LO_SPR2.ASM ecrit : ASM LO_SPR2
+
+[ecran]
+ 3|^.AAAeAAAAAA............................|
+ 4|^.AAAdAAAAAA............................|
+[car s100] 32 17 3F 11 36 1B 00 25
+[car s101] 3E 13 3E 1D 3F 3F 0C 37
+[car s65] 22 07 2C 11 36 1B 00 25
+[car s80] 00 1F 04 29 0E 33 18 3D

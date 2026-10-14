@@ -236,10 +236,10 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 tous les fichiers.
 
 Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC et FIL.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+ASM...), README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC et SPR.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
-copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`) restent
+copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`, HEROS.SPR) restent
 modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
 reste à la disposition de l'utilisateur.
 
@@ -254,10 +254,10 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
