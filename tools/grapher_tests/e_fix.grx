@@ -1,0 +1,7 @@
+; tableau $ fixe : valeur hors de 0-255, a l'execution
+DIM B$(4)
+I = 1
+B$(I) = 65
+PRINT B$(1)
+B$(I) = 300
+PRINT 0

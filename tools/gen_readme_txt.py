@@ -117,7 +117,7 @@ SECTIONS = [
   ("IF expr", "... [ELSE ...] ENDIF"),
   ("SUB NOM", "... ENDSUB ; CALL NOM ; RETURN"),
   ("PRINT expr", "affiche un nombre (pas en HIRES ; LORES : au curseur)"),
-  ("DIM A(n) M$(l,c)", "tableaux d'entiers, d'octets ($) ; nom d'une lettre ; indices 0 a n-1"),
+  ("DIM A(n) M$(l,c)", "tableaux d'entiers, d'octets ($) ; nom d'une lettre ; indices 0 a n-1 ; tailles constantes, hors de tout bloc : acces rapides une fois traduit"),
   ("A(i) A(i,j)", "element ; M$(l,c) : un code 0-255"),
   ("A$ M$(l)", "chaine (jusqu'au premier 0) : = < > LEN PRINT"),
   ("A$ = \"texte\"", "affectation ; IF A$ = B$ : comparaison"),

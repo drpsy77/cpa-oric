@@ -1,0 +1,118 @@
+; tableaux a adresse fixe (GRXASM) : indices constants, variables,
+; calcules ; petits et grands tableaux ; meme resultat interprete et traduit
+N = 3
+IF N > 0
+ DIM Z(4)
+ENDIF
+DIM K(N+2)
+DIM S(5) B$(6) G(3,4) M$(4,5) W(200) V$(20,30) P(4)
+; une dimension, entiers
+S(0) = 7
+S(4) = S(0) * 2
+S(2) = -1
+PRINT S(0) + S(4) + S(2)
+I = 1
+S(I) = 300
+S(I+2) = S(I) + 1
+PRINT S(1)
+PRINT S(3)
+A = 100
+PRINT A - S(3)
+PRINT A - S(I)
+PRINT A < S(I+2)
+S(I) = A
+PRINT S(1)
+S(I) = S(I) + 1
+PRINT S(I)
+; une dimension, octets
+B$(0) = 65
+B$(I) = 66
+B$(I+1) = B$(I) + 1
+J = 68
+B$(3) = J
+PRINT B$
+PRINT LEN(B$)
+PRINT B$(2)
+PRINT B$(3)
+; deux dimensions, entiers : constantes, variables, calculs
+FOR I 0 2
+ FOR J 0 3
+  G(I,J) = I * 10 + J
+ NEXT
+NEXT
+I = 2
+J = 3
+PRINT G(1,2)
+PRINT G(I,J)
+PRINT G(I,1)
+PRINT G(0,J)
+PRINT G(I-1,J-1)
+PRINT G(I-1,2)
+PRINT G(1,J-2)
+PRINT G(I,J-1)
+PRINT G(7)
+PRINT G(I*4)
+G(I,J) = 99
+G(1,J-1) = 55
+G(I-1,0) = G(I,J) + G(1,2)
+PRINT G(2,3)
+PRINT G(1,2)
+PRINT G(1,0)
+PRINT A - G(I,J)
+PRINT A - G(1,2)
+; deux dimensions, octets ; lignes en chaines
+FILL M$ 46
+M$(1) = "ABC"
+M$(I,J) = 90
+M$(0,J-1) = 89
+M$(I+1,0) = M$(1,1)
+PRINT M$(1)
+PRINT M$(2)
+PRINT M$(0)
+PRINT M$(3)
+PRINT M$(1) = "ABC"
+PRINT M$(I,J) + M$(0,2)
+; indice qui lit un tableau
+P(0) = 2
+P(1) = 3
+P(2) = 1
+PRINT S(P(2))
+PRINT G(P(2),P(1))
+PRINT G(P(0)-1,P(P(2)))
+; grands tableaux : par le descripteur, sauf les indices constants
+FOR I 0 199
+ W(I) = I * 2
+NEXT
+PRINT W(150)
+PRINT W(199)
+PRINT W(I-50)
+W(5) = 1234
+PRINT W(5) + W(6)
+V$(19,29) = 42
+I = 19
+V$(I,10) = 43
+V$(0) = "OK"
+PRINT V$(19,29)
+PRINT V$(I,29)
+PRINT V$(19,10)
+PRINT V$(0)
+; noms de deux caracteres, minuscules, espaces dans les parentheses
+PX = 2
+PY = 1
+g( py , px ) = 77
+PRINT G(1,2)
+PRINT s( py )
+S(PX) = PY + 40
+PRINT S(2)
+; tableaux ordinaires a cote
+Z(3) = 5
+K(4) = 6
+PRINT Z(3) + K(4)
+FILL S 9
+PRINT S(0) + S(5-1)
+CALL T
+PRINT S(2)
+END
+SUB T
+ S(2) = S(2) + G(2,3)
+ENDSUB

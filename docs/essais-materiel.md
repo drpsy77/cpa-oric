@@ -62,6 +62,11 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - GRXASM optimisé : un jeu traduit (`MONSTRE2`, `SERPENT`, `SPRITES`) tourne comme en
   interprété ; `ASM` lit le nouveau `.ASM` (un espace devant les instructions, directives en
   colonne 1) et met moins de temps qu'avant.
+- tableaux à adresse fixe : `MONSTRES` (ou `SERPENT`, `SPRITES`, `SCORES`) traduit de nouveau
+  (`GRXASM`, `ASM`) tourne comme en interprété, et nettement plus vite ; `ASM` accepte la fin
+  du `.ASM` (`G_INIT`, `TR_x .byt`, `T_x = $9Dxx`) ; `SCORES` traduit retrouve ses scores
+  (`LOAD`, `SAVE` sur des tableaux fixes) ; un tableau trop grand pour la mémoire donne
+  `memoire pleine` dès le lancement.
 
 ## À vérifier ailleurs
 
