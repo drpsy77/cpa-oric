@@ -160,6 +160,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `help.s`) à partir d'une seule liste.
 - Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
+  Les six bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, HIRES) sont en
+  plus marquées par `tools/mark_inc.py` (lignes de commentaire `;@`) : GRXASM n'en recopie
+  que les routines utiles (`docs/grapher.md` § 12, § 15).
 - Git : un commit par livraison, message en français, testé avant. Le dépôt est publié sur
   GitHub (https://github.com/drpsy77/cpa-oric).
 

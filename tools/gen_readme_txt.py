@@ -132,7 +132,7 @@ SECTIONS = [
   ("SPOOL T [ALT]", "codes libres pour les sprites (tableau d'entiers T, 32-127 ; ALT : jeu secondaire, 32-111)"),
   ("SSHOW k S$ n c l", "sprite n du .SPR (BLOAD S$ NOM.SPR) en col c, lig l, emplacement k ; deplace ; [ALT]"),
   ("SHIDE k", "retire le sprite de l'emplacement k"),
-  ("GRXASM nom [p]", "traduit NOM.GRX en NOM.ASM ; puis ASM NOM -> NOM.COM (avec CPA.INC GRX.INC HIRES.INC, ARR.INC si tableaux, FIL.INC si fichiers de donnees, SPR.INC si sprites, ANIM.INC si ANIM)"),
+  ("GRXASM nom [p]", "traduit NOM.GRX en NOM.ASM, avec les seules routines utiles de GRX.INC HIRES.INC ARR.INC FIL.INC SPR.INC ANIM.INC (sur le lecteur du .GRX) ; puis ASM NOM -> NOM.COM (avec CPA.INC)"),
   ("GRAPHER nom /A", "la meme chose : passe la main a GRXASM"),
   ("HIRES", "plein ecran 240 x 200, efface"),
   ("SPLIT", "240 x 128, console dessous"),
