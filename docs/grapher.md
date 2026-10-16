@@ -383,7 +383,18 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - Le `.ASM` est lisible : chaque ligne du `.GRX` y figure en commentaire. Variables `V_A` à
   `V_Z` (dans `GRX.INC`) et `V_PX`, `V_N1`... (réservées à la fin de `NOM.ASM`, seulement
   celles que le programme utilise), étiquettes `L3T`, `L3E`, `L3X` pour les blocs, `P_NOM`
-  pour les sous-programmes.
+  pour les sous-programmes, `B1`, `B2`... pour les boucles `FOR` et `REPEAT`. Pour tenir peu
+  de place sur la disquette, une instruction est précédée d'un seul espace ; étiquettes et
+  directives (`.byt`, `.word`, `*=`) sont en colonne 1.
+- Code produit, en plus des constantes calculées :
+  - un opérande de droite simple (un nombre ou une variable, sans rien qui lie plus fort
+    après lui : `K = 9`, `X - Y`, `N + 1`) va directement dans `g_et`, sans passer par la
+    pile des valeurs ; l'opération est faite à l'envers (`<` devient `>`, `X - 2` devient
+    `X + (-2)`, `X - Y` appelle `g_rsub`). `/` et `%` passent toujours par la pile ;
+  - `IF` et `WHILE` testent directement le résultat d'une comparaison, d'un `&` ou d'un `|`
+    (drapeau Z rendu par `g_cmp`, `g_and`, `g_or`) ;
+  - `V = V + 1` et `V = V - 1` (rien d'autre sur la ligne) deviennent `inc` et `dec` ;
+  - une constante dont les deux octets sont égaux (`0`, `-1`, `257`) est chargée une fois.
 - Les parties constantes des expressions sont calculées pendant la traduction (`120+8` donne
   `128`) ; une constante hors de 0-255 est signalée tout de suite.
 - `$1`-`$9` sont remplacés au moment de la traduction.
@@ -401,7 +412,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (14 210 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (14 213 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
@@ -457,7 +468,18 @@ second caractère dans `vc` (0 : aucun, 1-26 : lettre, 27-36 : chiffre) ; `IF` e
 (`o_sym`) ; il note les variables de deux caractères rencontrées (`kvu` : 5 octets par
 lettre, un bit par second caractère) et les réserve à la fin de `NOM.ASM` (`o_vars`,
 `.word 0`). Un bloc de boucle `Bn` a 6 octets : arrivée, pas, puis l'adresse de la variable,
-écrite à l'entrée du `FOR` ; `g_forok` et `g_forstep` la lisent là.
+écrite à l'entrée du `FOR` ; `g_forok` et `g_forstep` la lisent là. Les boucles ont leur
+propre numéro (`knb`, `k_newloop`, gardé dans `cs_bl`/`cs_bh`), distinct de celui des blocs
+(`kn`, étiquettes `L`) : seuls les `FOR` et `REPEAT` ont un `Bn`.
+
+**Expressions traduites** : la gauche d'une opération reste en constante (`vs_f` = 1), passe
+par `g_push` (`vs_f` = 0), ou reste dans `g_ev` quand `k_simple` voit, en lisant la suite de
+la ligne, que la droite est un nombre ou une variable sans opérateur plus fort derrière
+(`vs_f` = 2) : `kdst` envoie alors la variable dans `g_et` (`ld_var`), et `k_apply` (`lreg`)
+y met la constante puis choisit l'opération inversée (`cswp` pour les comparaisons, `"r"`
+pour `g_rsub`). `kz` vaut 1 juste après un `jsr g_cmp`, `g_and` ou `g_or` ; toute autre
+instruction le remet à 0 (`o_tab`) ; `o_skipz` n'écrit alors que `bne *+5` / `jmp`.
+`k_incdec` reconnaît `V = V + 1` et `V = V - 1`.
 
 Page zéro : `$10-$5C` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
@@ -501,21 +523,27 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 ### 16.1 Plus tard
 
 - **Programmes traduits plus petits et plus rapides** (mesure : `MONSTRES`, 130 lignes,
-  11,4 Ko, dont 5,2 Ko de code traduit et 6,3 Ko de bibliothèques), dans cet ordre :
-  1. GRXASM seul : pas de pile des valeurs quand l'opérande de droite est une constante ou une
-     variable ; `IF` testé sur le drapeau Z rendu par `g_cmp`, `g_and`, `g_or` ;
-     `V = V + 1`, `V = V - 1`, `V = k` en `inc`, `dec`, `lda`/`sta` ; tables `Bn` des boucles
-     `FOR` et `REPEAT` seulement ; constante dont les deux octets sont égaux chargée une fois.
-  2. Tableaux à adresse fixe : un `DIM` de tailles constantes, hors de tout bloc, est réservé
+  11 Ko, dont 4,8 Ko de code traduit, presque tout en accès aux tableaux, et 6,3 Ko de
+  bibliothèques), dans cet ordre :
+  1. Tableaux à adresse fixe : un `DIM` de tailles constantes, hors de tout bloc, est réservé
      par GRXASM après la fin du programme (pas dans le fichier) ; le descripteur est écrit au
      lancement et pointe vers cette zone (`LOAD`, `SAVE`, `FILL`, `SPRITES`, chaînes s'en
      servent) ; un élément d'indice constant se lit en une instruction (`lda A_P+2`). Un `DIM`
      de taille calculée reste comme aujourd'hui.
-  3. Bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) : `NOM.ASM` n'inclut
+  2. Bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) : `NOM.ASM` n'inclut
      que ceux qu'il utilise.
 - **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes
+
+- **Phases d'un jeu** (`RUN NOM [p...]`) : le programme passe la main à un autre `.GRX` ou
+  `.COM` traduit en gardant variables, tableaux et écran (LORES, HIRES, sprites). En
+  interprété, seul le texte est remplacé (il doit tenir sous les tableaux). En traduit : les
+  variables dans une zone fixe commune à tous les `.COM` (rangées comme dans
+  l'interpréteur), les tableaux déjà sous `$9D60`, un chargeur recopié en `$9F00` qui lit le
+  `.COM` en `$0500` et y saute sans remettre les variables à 0 ; chaque phase garde ses
+  bibliothèques. Restent à choisir : le nom (`RUN` ou `CHAIN`) ; comment une phase déclare
+  les tableaux qu'elle reçoit (un `DIM` identique accepté sans effacer, ou `COMMON`).
 
 - **Tuiles** (fichier `.SPR` de genre 1) : commandes `TILES T$ ...` (dessins copiés dans la
   police) et `TILE n col lig` (codes posés à l'écran) ; comment le programme choisit les

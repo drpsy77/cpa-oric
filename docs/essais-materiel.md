@@ -59,6 +59,9 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   traduit (`GRXASM`, `ASM`) ; les boucles `FOR` d'un programme traduit déjà connu
   (`MOTIFS`, `SERPENT`) tournent comme avant (blocs `Bn` de 6 octets) ; un gros `.GRX` près
   de la limite (environ 20 Ko au lieu de 22) : `Fichier trop gros` au bon moment.
+- GRXASM optimisé : un jeu traduit (`MONSTRE2`, `SERPENT`, `SPRITES`) tourne comme en
+  interprété ; `ASM` lit le nouveau `.ASM` (un espace devant les instructions, directives en
+  colonne 1) et met moins de temps qu'avant.
 
 ## À vérifier ailleurs
 

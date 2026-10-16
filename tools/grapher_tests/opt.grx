@@ -1,0 +1,70 @@
+; optimisations de GRXASM : operandes simples, operations inversees,
+; IF sur Z, inc/dec, constantes ; meme resultat interprete et traduit
+X = 7
+Y = -3
+AB = 300
+PRINT X - Y
+PRINT X - 2
+PRINT X - -2
+PRINT 2 - X
+PRINT X + Y * 2
+PRINT X * Y
+PRINT X * Y - 1
+PRINT X / 2
+PRINT X % Y
+PRINT (X+1) - Y
+PRINT X < Y
+PRINT X > Y
+PRINT X <= 7
+PRINT X >= 8
+PRINT Y < X
+PRINT X <> AB
+PRINT X = 7 & Y = -3
+PRINT X = 7 | Y = 0
+PRINT X & 3
+PRINT X | 8
+PRINT X - Y < AB - X
+PRINT X + 1 = 8
+IF X & 8
+ PRINT 111
+ELSE
+ PRINT 222
+ENDIF
+IF X > Y
+ PRINT 333
+ENDIF
+IF X - 7
+ PRINT 444
+ENDIF
+I = 0
+WHILE I < 3
+ I = I + 1
+NEXT
+PRINT I
+AB = AB+1
+PRINT AB
+AB = AB - 1
+PRINT AB
+N = 0
+N = N - 1
+PRINT N
+N = N + 1
+PRINT N
+N = 255
+N = N + 1
+PRINT N
+N = N - 1
+PRINT N
+N = -1
+PRINT N
+N = 257
+PRINT N
+N = N + 10
+PRINT N
+N = X + 1
+PRINT N
+REPEAT 2
+ FOR J 1 2
+  PRINT J
+ NEXT
+NEXT
