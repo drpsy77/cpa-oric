@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 9 934 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 9 977 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,7 +40,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 13 940, 9 233 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur ; fichiers de données, sprites en mode texte (`.SPR`) | `grapher.md` |
+| GRAPHER, GRXASM | 14 210, 9 604 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur ; fichiers de données, sprites en mode texte (`.SPR`) | `grapher.md` |
 | VOIR, VSYNC | 3 418, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -52,30 +52,32 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 
 ## 2. Suite prévue (par priorité)
 
-1. **Sprites en mode texte** : faits dans GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
+1. **Programmes GRAPHER traduits plus petits et plus rapides** : variables de deux
+   caractères faites ; puis optimisations de GRXASM, tableaux à adresse fixe, bibliothèques
+   en modules (`docs/grapher.md` § 16.1).
+2. **Sprites en mode texte** : faits dans GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
    bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1). Reste : les tuiles, à préciser
    (`docs/grapher.md` § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
    écran) ; LOGO ensuite peut-être.
-2. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
+3. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
    § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
-3. **Petites améliorations notées**
+4. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures (vitesse, place), à
      décider sur mesure ;
-   - GRAPHER : `REDIM` (`docs/grapher.md` § 16.1) ; exemples de fichiers de données : un
+   - GRAPHER : exemples de fichiers de données : un
      niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
    - EDIT : un paragraphe sur une seule ligne avec défilement horizontal ; une édition plein
      écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
-   - `GRX.INC` et `HIRES.INC` découpés en modules, pour des `.COM` traduits plus petits
-     (700 à 900 octets pour `HIRES` + `LINE`, au lieu de 3 Ko) : pas maintenant ;
    - une base de données simple sur l'accès direct (piste).
 
-Écarté : modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
+Écarté : `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
+l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
 suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT.
 
 ## 3. Réserves de place
@@ -97,10 +99,10 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (13 940 octets) prend 7 blocs, 396 octets libres dans le dernier (les tuiles y
-  tiendront peut-être) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM
+- GRAPHER (14 210 octets) prend 7 blocs, 126 octets libres dans le dernier (les tuiles
+  demanderont un 8e bloc, ou la place des pistes qui suivent) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM
   partagé avec `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux programmes
-  traduits, `a_grx`, 106 octets inutiles à l'interpréteur. GRXASM (9 233) prend 5 blocs ;
+  traduits, `a_grx`, 106 octets inutiles à l'interpréteur. GRXASM (9 604) prend 5 blocs ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

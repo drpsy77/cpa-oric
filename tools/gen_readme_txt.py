@@ -105,7 +105,8 @@ SECTIONS = [
  ]),
  ("GRAPHER : FICHIERS .GRX", [
   ("GRAPHER nom [p]", "execute NOM.GRX ($1..$9 = p, ESC arrete)"),
-  ("nombres", "entiers -32768..32767, variables A a Z"),
+  ("nombres", "entiers -32768..32767"),
+  ("variables", "A a Z, ou deux car. : PX N1 (sauf IF)"),
   ("parametre", "expression sans espace : X+8 RND(240) (X * 2)"),
   ("operateurs", "- ; * / % ; + - ; = <> < <= > >= ; & |"),
   ("fonctions", "RND(n) ABS(n) POINT(x,y) INKEY SCRN(col,lig) LEN(A$) FOUND"),
@@ -116,7 +117,7 @@ SECTIONS = [
   ("IF expr", "... [ELSE ...] ENDIF"),
   ("SUB NOM", "... ENDSUB ; CALL NOM ; RETURN"),
   ("PRINT expr", "affiche un nombre (pas en HIRES ; LORES : au curseur)"),
-  ("DIM A(n) M$(l,c)", "tableaux d'entiers, d'octets ($) ; indices 0 a n-1"),
+  ("DIM A(n) M$(l,c)", "tableaux d'entiers, d'octets ($) ; nom d'une lettre ; indices 0 a n-1"),
   ("A(i) A(i,j)", "element ; M$(l,c) : un code 0-255"),
   ("A$ M$(l)", "chaine (jusqu'au premier 0) : = < > LEN PRINT"),
   ("A$ = \"texte\"", "affectation ; IF A$ = B$ : comparaison"),

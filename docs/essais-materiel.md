@@ -55,6 +55,10 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   couleur prise de la ligne, scintillement au déplacement, vitesse ; ESC puis `DIR` (police
   et console rendues) ; traduit (`GRXASM SPRITES`, `ASM SPRITES` : durée de l'assemblage,
   puis `SPRITES`).
+- variables de deux caractères (`PX`, `N1`) : un jeu en LORES qui s'en sert, interprété puis
+  traduit (`GRXASM`, `ASM`) ; les boucles `FOR` d'un programme traduit déjà connu
+  (`MOTIFS`, `SERPENT`) tournent comme avant (blocs `Bn` de 6 octets) ; un gros `.GRX` près
+  de la limite (environ 20 Ko au lieu de 22) : `Fichier trop gros` au bon moment.
 
 ## À vérifier ailleurs
 

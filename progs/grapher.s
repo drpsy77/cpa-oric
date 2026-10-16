@@ -61,11 +61,24 @@
         lda #<m_use
         ldy #>m_use
         jmp BDOS
-named   ldx #NBUF               ; tampons et variables à 0
+named   ldx #NBUF               ; tampons à 0
         lda #0
 z1      sta bufs-1,x
         dex
         bne z1
+        lda #<vars              ; variables à 0 (8 pages : déborde sur le
+        sta lp                  ;   texte, pas encore chargé)
+        lda #>vars
+        sta lp+1
+        ldx #8
+        ldy #0
+        tya
+z2      sta (lp),y
+        iny
+        bne z2
+        inc lp+1
+        dex
+        bne z2
         sta cmode
         jsr get_params
         lda cmode               ; /A : la traduction est faite par GRXASM
@@ -197,15 +210,45 @@ needgfx
         jmp error
 ng_ok   rts
 
-; setvar : variable vix <- ev
-setvar  lda vix
-        asl
-        tay
+; setvar : variable vix, vc <- ev
+setvar  jsr vaddr
+setv_p  ldy #0                  ; (variable d'adresse vptr)
         lda ev
-        sta vars,y
+        sta (vptr),y
+        iny
         lda ev+1
-        sta vars+1,y
+        sta (vptr),y
         rts
+
+; vaddr : adresse de la variable vix, vc -> vptr
+;   vars + 2 * (26 * vc + vix) : A à Z, puis AA à ZA, AB à ZB... puis A0..
+vaddr
+.(
+        lda #0
+        sta vptr+1
+        lda vc                  ; vc * 13 (468 au plus)
+        asl
+        adc vc                  ; * 3 (C=0 : 108 au plus)
+        asl                     ; * 6
+        asl                     ; * 12
+        rol vptr+1
+        adc vc                  ; * 13 (C=0 après le rol)
+        bcc a1
+        inc vptr+1
+a1      asl                     ; * 26
+        rol vptr+1
+        adc vix                 ; + vix (C=0)
+        bcc a2
+        inc vptr+1
+a2      asl                     ; * 2
+        rol vptr+1
+        adc #<vars              ; (C=0)
+        sta vptr
+        lda vptr+1
+        adc #>vars
+        sta vptr+1
+        rts
+.)
 
 ; ---------------------------------------------------------------------
 ; Expressions
@@ -392,14 +435,16 @@ nopar   cmp #34                 ; une chaîne dans un calcul
         bcs id
         jmp parse_num
 id      jsr parse_id
+        cpx #3
+        bcs func
         cpx #1
-        bne func
+        bne v2
         jsr gch                 ; A( ou A$( : un élément de tableau
         cmp #"("
         beq ael
         cmp #"$"
         beq bel
-        jmp getv_kw             ; variable
+v2      jmp getv_kw             ; variable
 ael     lda kw
         ldx #0
         jmp a_get
@@ -546,15 +591,14 @@ arg1    jsr x_open
         jmp x_close
 .)
 
-; getv_kw : ev <- variable kw (une lettre)
-getv_kw lda kw
-        sec
-        sbc #"A"
-        asl
-        tay
-        lda vars,y
+; getv_kw : ev <- variable lue par parse_id (kw, X = longueur)
+getv_kw jsr kw_var
+        jsr vaddr
+getv_p  ldy #0                  ; (variable d'adresse vptr)
+        lda (vptr),y
         sta ev
-        lda vars+1,y
+        iny
+        lda (vptr),y
         sta ev+1
         rts
 
@@ -1306,18 +1350,21 @@ r_esc   lda #<m_esc
 c_let   jsr getvar
         jsr skipsp
         cmp #"="
-        beq let1
+        beq assign
         jmp e_param
-let1    lda vix
-        clc
-        adc #"A"
-; assign : variable A (lettre), X sur le « = »
-assign  sec
-        sbc #"A"
-        sta vix
+; assign : variable vix, vc ; X sur le « = »
+assign  jsr vaddr               ; (l'expression change vix, vc et vptr)
+        lda vptr
+        pha
+        lda vptr+1
+        pha
         inx
         jsr lexpr
-        jmp setvar
+        pla
+        sta vptr+1
+        pla
+        sta vptr
+        jmp setv_p
 
 ; body : l'entrée Y reprend à la ligne qui suit (nxt)
 body    lda nxt
@@ -1348,12 +1395,14 @@ skip    lda #4                  ; jusqu'au NEXT
 c_for
 .(
         jsr getvar
-        lda vix
+        jsr vaddr
+        lda vptr
         sta fvar
+        lda vptr+1
+        sta fvar+1
         jsr pexpr               ; départ
-        lda fvar
-        sta vix
-        jsr setvar
+        jsr fv_ptr
+        jsr setv_p
         jsr pexpr               ; arrivée
         lda ev
         sta flim
@@ -1382,6 +1431,8 @@ nostep  jsr endline
         jsr cs_push
         lda fvar
         sta cs_v,y
+        lda fvar+1
+        sta cs_vh,y
         lda flim
         sta cs_al,y
         lda flim+1
@@ -1405,14 +1456,12 @@ for_ok
 .(
         ldy csp
         dey
-        lda cs_v,y
-        asl
-        tax
+        jsr cs_var
         sec                     ; var - arrivée (signé)
-        lda vars,x
+        lda gv
         sbc cs_al,y
         sta mt
-        lda vars+1,x
+        lda gv+1
         sbc cs_ah,y
         sta mt+1
         ora mt                  ; (ORA et LDA laissent V)
@@ -1436,6 +1485,28 @@ down    lda mt+1                ; pas < 0 : var >= arrivée
 ok      clc
         rts
 .)
+
+; cs_var : gv <- variable de la boucle de l'entrée Y (vptr ; Y gardé)
+cs_var  lda cs_v,y
+        sta vptr
+        lda cs_vh,y
+        sta vptr+1
+        sty gd
+        ldy #0
+        lda (vptr),y
+        sta gv
+        iny
+        lda (vptr),y
+        sta gv+1
+        ldy gd
+        rts
+
+; fv_ptr : vptr <- fvar (variable du FOR en cours)
+fv_ptr  lda fvar
+        sta vptr
+        lda fvar+1
+        sta vptr+1
+        rts
 
 c_while
 .(
@@ -1487,16 +1558,17 @@ pop     dec csp
         rts
 while   dec csp                 ; la ligne du WHILE refait le test
         jmp again
-for     lda cs_v,y              ; var += pas
-        asl
-        tax
+for     jsr cs_var              ; var += pas
         clc
-        lda vars,x
+        lda gv
         adc cs_bl,y
-        sta vars,x
-        lda vars+1,x
+        sta ev
+        lda gv+1
         adc cs_bh,y
-        sta vars+1,x
+        sta ev+1
+        php
+        jsr setv_p              ; (vptr de cs_var)
+        plp
         bvs pop                 ; dépassement : fin de la boucle
         jsr for_ok
         bcs pop
@@ -1785,7 +1857,7 @@ f_mful  = m_full
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc, mis à 0 au lancement (bufs à
-;   vars+51)
+;   fstep+1), puis les variables (vars, VSIZE octets)
 bufs    = h_free
 sfcb    = bufs          ; .GRX
 ifcb    = sfcb+36       ; image, animation
@@ -1796,17 +1868,17 @@ word    = par_len+NPAR  ; commande en cours
 kw      = word+9        ; mot cherché dans la table
 cname   = kw+9          ; nom de sous-programme
 numbuf  = cname+9       ; nombre écrit
-fvar    = numbuf+8
-aal     = fvar+1        ; tableau en cours : lettre
+fvar    = numbuf+8  ; FOR : adresse de la variable (2 octets)
+aal     = fvar+2        ; tableau en cours : lettre
 aak     = aal+1         ;   et sorte (0 entiers, 1 $)
 s_hst   = aak+1         ; 1 : jeu secondaire redessiné (spr.inc)
 flim    = s_hst+1       ; FOR : arrivée
 fstep   = flim+2        ;   et pas
-vars    = fstep+2       ; A à Z (2 octets chacune)
-NBUF    = vars+52-bufs
-cs_t    = vars+52       ; pile de contrôle : type
-cs_v    = cs_t+NCS      ;   variable (FOR)
-cs_pl   = cs_v+NCS      ;   ligne de reprise
+NBUF    = fstep+2-bufs
+cs_t    = fstep+2       ; pile de contrôle : type
+cs_v    = cs_t+NCS      ;   adresse de la variable (FOR)
+cs_vh   = cs_v+NCS
+cs_pl   = cs_vh+NCS     ;   ligne de reprise
 cs_ph   = cs_pl+NCS
 cs_al   = cs_ph+NCS     ;   compte (REPEAT) ou arrivée (FOR)
 cs_ah   = cs_al+NCS
@@ -1816,4 +1888,6 @@ vs_lo   = cs_bh+NCS     ; pile des valeurs
 vs_hi   = vs_lo+NVS
 rawbuf  = vs_hi+NVS     ; ligne lue
 lbuf    = rawbuf+LMAX+1 ;   puis $1-$9 remplacés
-ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP
+vars    = lbuf+LMAX+1   ; variables : 26 * 37 de 2 octets (vaddr)
+VSIZE   = 1924
+ptext   = vars+VSIZE    ; texte du fichier, jusqu'à PTOP

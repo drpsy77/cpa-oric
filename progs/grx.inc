@@ -5,8 +5,10 @@
 ;
 ;  Modèle : la valeur d'une expression est dans g_ev ; l'opérande de
 ;  gauche d'une opération dans g_et (g_pop le reprend sur la pile des
-;  valeurs, où g_push l'a mis). Variables V_A à V_Z (2 octets).
-;  Une boucle a 4 octets Bn : compte (REPEAT), ou arrivée et pas (FOR).
+;  valeurs, où g_push l'a mis). Variables V_A à V_Z (2 octets) ; celles
+;  à deux caractères (V_AX, V_A1...) sont écrites par GRXASM dans NOM.ASM.
+;  Une boucle a 6 octets Bn : compte (REPEAT), ou arrivée, pas et adresse
+;  de la variable (FOR).
 ;  Les textes (GTEXT, ECHO) et les noms d'images (GLOAD, GSAVE) suivent
 ;  l'appel dans le code (g_str les y prend).
 ;  Page zéro : $10-$27. ESC est testé à chaque tour de boucle (NEXT) et
@@ -883,7 +885,8 @@ end     sec
         rts
 .)
 
-; g_forok : A/Y = arrivée, pas ; X = variable (0 à 50) ; C=1 si elle a
+; g_forok : A/Y = bloc de la boucle (arrivée, pas, adresse de la
+;   variable) ; C=1 si la variable a
 ;   dépassé l'arrivée (pas > 0 : var > arrivée ; pas < 0 : var < arrivée)
 g_forok
 .(
@@ -897,13 +900,14 @@ g_forok
         lda #<g_m_step
         ldy #>g_m_step
         jmp g_stop
-ok      sec                     ; var - arrivée (signé)
+ok      jsr g_fvar              ; g_ip <- adresse de la variable
+        sec                     ; var - arrivée (signé)
         ldy #0
-        lda g_vars,x
+        lda (g_ip),y
         sbc (g_t),y
         sta g_mt
         iny
-        lda g_vars+1,x
+        lda (g_ip),y
         sbc (g_t),y
         sta g_mt+1
         ora g_mt
@@ -929,25 +933,39 @@ in      clc
         rts
 .)
 
-; g_forstep : var X += pas (A/Y) ; C=1 en cas de dépassement (fin)
+; g_forstep : variable += pas (bloc A/Y) ; C=1 en cas de dépassement (fin)
 g_forstep
 .(
         sta g_t
         sty g_t+1
-        ldy #2
+        jsr g_fvar
+        ldy #0
         clc
-        lda g_vars,x
+        lda (g_ip),y
+        ldy #2
         adc (g_t),y
-        sta g_vars,x
+        ldy #0
+        sta (g_ip),y
         iny
-        lda g_vars+1,x
+        lda (g_ip),y
+        ldy #3
         adc (g_t),y
-        sta g_vars+1,x
+        ldy #1
+        sta (g_ip),y
         clc
         bvc r
         sec
 r       rts
 .)
+
+; g_fvar : g_ip <- adresse de la variable de la boucle (bloc g_t, +4)
+g_fvar  ldy #4
+        lda (g_t),y
+        sta g_ip
+        iny
+        lda (g_t),y
+        sta g_ip+1
+        rts
 
 ; ---------------------------------------------------------------------
 ; Affichage

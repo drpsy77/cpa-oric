@@ -1,0 +1,33 @@
+; variables a deux caracteres : une lettre, puis une lettre ou un chiffre
+AX = 3
+AY = AX * 2 + 1
+PRINT AY
+A1 = 10
+A = 1
+PRINT A1 + A
+B9 = -5
+PRINT AX + A1 * B9
+ZZ = 32767
+LET Z0 = ZZ - 1
+PRINT Z0
+S = 0
+FOR XI 1 10
+ FOR J 1 2
+  S = S + XI
+ NEXT
+NEXT
+PRINT S
+PRINT XI
+FOR K9 10 1 -3
+ PRINT K9
+NEXT
+ax = 7
+IF AX = 7
+ PRINT AX
+ENDIF
+AB = 1
+BA = 2
+PRINT AB * 10 + BA
+DIM A(3)
+A(1) = AB + BA + A
+PRINT A(1)
