@@ -28,7 +28,11 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
+<<<<<<< Updated upstream
 | HELP | 10 047 | aide par rubriques (textes compressés) | `manuel.md` |
+=======
+| HELP | 10 029 | aide par rubriques (textes compressés) | `manuel.md` |
+>>>>>>> Stashed changes
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,7 +44,11 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
+<<<<<<< Updated upstream
 | GRAPHER, GRXASM | 14 213, 13 981 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) | `grapher.md` |
+=======
+| GRAPHER, GRXASM | 14 213, 13 004 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (tableaux à adresse fixe) ; fichiers de données, sprites en mode texte (`.SPR`) | `grapher.md` |
+>>>>>>> Stashed changes
 | VOIR, VSYNC | 3 418, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -52,9 +60,15 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 
 ## 2. Suite prévue (par priorité)
 
+<<<<<<< Updated upstream
 1. **Phases d'un jeu** (`RUN`, à décider : `docs/grapher.md` § 17). Les programmes
    traduits sont maintenant petits (seules routines utiles des bibliothèques : 1,5 à 6,4 Ko
    pour les exemples) et rapides (tableaux à adresse fixe).
+=======
+1. **Programmes GRAPHER traduits plus petits** : variables de deux caractères,
+   optimisations simples de GRXASM et tableaux à adresse fixe faits ; puis bibliothèques en
+   modules (`docs/grapher.md` § 16.1) ; phases d'un jeu (`RUN`, à décider : § 17).
+>>>>>>> Stashed changes
 2. **Sprites en mode texte** : faits dans GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
    bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1). Reste : les tuiles, à préciser
    (`docs/grapher.md` § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
@@ -102,9 +116,14 @@ multiple de 2 048) :
 - GRAPHER (14 213 octets) prend 7 blocs, 123 octets libres dans le dernier (les tuiles
   demanderont un 8e bloc, ou la place des pistes qui suivent) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM
   partagé avec `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux programmes
+<<<<<<< Updated upstream
   traduits, `a_grx`, 106 octets inutiles à l'interpréteur. GRXASM (13 981) prend 7 blocs,
   355 octets libres dans le dernier ; GRX.INC (10 887, marques `;@` comprises) prend 6 blocs,
   647 octets de trop pour 5 ;
+=======
+  traduits, `a_grx`, 106 octets inutiles à l'interpréteur. GRXASM (13 004) prend 7 blocs,
+  1 332 octets libres dans le dernier ;
+>>>>>>> Stashed changes
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

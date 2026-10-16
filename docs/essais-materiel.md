@@ -67,10 +67,13 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   du `.ASM` (`G_INIT`, `TR_x .byt`, `T_x = $9Dxx`) ; `SCORES` traduit retrouve ses scores
   (`LOAD`, `SAVE` sur des tableaux fixes) ; un tableau trop grand pour la mémoire donne
   `memoire pleine` dès le lancement.
+<<<<<<< Updated upstream
 - bibliothèques recopiées par GRXASM : `GRXASM SPRITES` puis `ASM SPRITES` (durée de chacun,
   place sur la disquette pendant la traduction : `SPRITES.ASM` fait 34 Ko) ; `SPRITES`,
   `SERPENT`, `SCORES`, `MOTIFS` traduits tournent comme en interprété ; `GRXASM` sur un
   lecteur sans `GRX.INC` dit `GRX.INC absente (bibliotheque)` et n'écrit pas de `.ASM`.
+=======
+>>>>>>> Stashed changes
 
 ## À vérifier ailleurs
 
