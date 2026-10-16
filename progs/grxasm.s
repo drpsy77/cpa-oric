@@ -78,10 +78,17 @@ compile
         sta kfil
         sta kspr
         sta csp
-        ldx #51                 ; dimensions des tableaux : aucun
-kz      sta kd_i,x
+        sta kyx
+        ldx #51                 ; dimensions des tableaux : aucun ; aucun
+kz      sta kd_i,x              ;   tableau fixe
+        sta kf_ah,x
+        sta kf_rt,x
         dex
         bpl kz
+        lda #<PTOP              ; place des tableaux fixes : sous les
+        sta kftop               ;   descripteurs, comme r_top
+        lda #>PTOP
+        sta kftop+1
 kloop   jsr B_CONST             ; ESC : arrêt
         beq krd
         jsr B_CONIN
@@ -145,6 +152,8 @@ bl2     lda #0
         jsr os
         jmp bl
 bend    jsr o_vars
+        jsr kf_init             ; G_INIT, tables des lignes, adresses des
+                                ;   tableaux fixes
         lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
         ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
         jsr os                  ;  suivent le programme)
@@ -171,6 +180,7 @@ bnos    lda kanim
 bnoa    lda #<h_tail3
         ldy #>h_tail3
         jsr os
+        jsr kf_none             ; sans tableau fixe : « G_INIT = g_init »
         jsr o_close
         jsr o_name              ; message : NOM.ASM ecrit
         lda #<m_done
@@ -363,13 +373,13 @@ o_tab   lda #0                  ; Z ne vient plus de g_cmp/g_and/g_or
         ldy #>s_tab
         jmp os
 
-; ohex : A en hexadécimal ($xx)
-ohex
-.(
-        pha
+; ohex : A en hexadécimal ($xx) ; ohexd : sans « $ »
+ohex    pha
         lda #"$"
         jsr oc
         pla
+ohexd
+.(
         pha
         lsr
         lsr
@@ -513,7 +523,8 @@ osz1    jsr os
         jmp o_jmp
 
 ; ---------------------------------------------------------------------
-; Destinations : ksym = « V_x », « Bn » ou un nom fixe ; koff = décalage
+; Destinations : ksym = « V_x », « Bn », un nom fixe, ou (3) un élément
+;   de tableau fixe (« T_S+kfo », suivi de « ,y » si kyx) ; koff = décalage
 ; ---------------------------------------------------------------------
 ; o_sym : nom de la destination, avec +koff
 o_sym
@@ -522,7 +533,10 @@ o_sym
         beq var
         cmp #1
         beq blk
-        lda ksym+1              ; nom fixe : adresse en ksym+1/+2
+        cmp #3
+        bne fix
+        jmp o_asym
+fix     lda ksym+1              ; nom fixe : adresse en ksym+1/+2
         ldy ksym+2
         jsr os
         jmp off
@@ -1111,6 +1125,7 @@ ks_lv   stx kvt
         bcc ks_num
         jsr isalpha
         bcs ks_no
+        sty ksn
         iny                     ; variable : une lettre, puis lettre ou chiffre
         lda lbuf,y
         jsr isalpha
@@ -1120,8 +1135,12 @@ ks_lv   stx kvt
 ks_2    iny
 ks_nm   lda lbuf,y              ; ni ( ni $, ni lettre ou chiffre collés
         cmp #"("
-        beq ks_no
-        cmp #"$"
+        bne ks_n1
+        jsr ks_arr              ; sauf un élément d'indices constants d'un
+        bcs ks_no               ;   tableau d'entiers fixe
+        lda lbuf,y
+        jmp ks_end
+ks_n1   cmp #"$"
         beq ks_no
 ks_end  jsr isalpha
         bcc ks_no
@@ -1161,6 +1180,64 @@ ks_spl  lda lbuf,y
         iny
         bne ks_spl
 ks_spr  rts
+; ks_arr : Y sur « ( » après un nom (en ksn) ; C=0 si c'est un élément
+;   d'un tableau d'entiers fixe dont les indices sont des nombres (adresse
+;   connue : « S(3) ») ou, pour un petit tableau, des variables simples
+;   (« X(I) », « G(I,J) ») : lu sans toucher g_ev ; Y après « ) »
+ks_arr  tya
+        sec
+        sbc ksn
+        cmp #1                  ; nom d'une lettre
+        bne ks_an
+        sty ksy
+        ldx ksn
+        lda lbuf,x
+        jsr isalpha
+        ldx #0
+        jsr kf_isf
+        bcs ks_an
+        lda kf_sm,y
+        sta kvt+1               ; (kvt+1 : variables permises)
+        ldy ksy
+        jsr ks_tk
+        bcs ks_an
+        cmp #","
+        bne ks_a1
+        jsr ks_tk
+        bcs ks_an
+ks_a1   cmp #")"
+        bne ks_an
+        iny
+        clc
+        rts
+ks_an   sec
+        rts
+ks_tk   iny                     ; nombre, ou variable ; A = ce qui suit
+        lda lbuf,y
+        jsr isdig
+        bcc ks_dl
+        ldx kvt+1
+        beq ks_dn
+        jsr isalpha
+        bcs ks_dr
+        iny
+        lda lbuf,y
+        jsr isalpha
+        bcc ks_v2
+        jsr isdig
+        bcs ks_v1
+ks_v2   iny
+ks_v1   lda lbuf,y
+        clc
+        rts
+ks_dl   iny
+        lda lbuf,y
+        jsr isdig
+        bcc ks_dl
+        clc
+ks_dr   rts
+ks_dn   sec
+        rts
 .)
 
 ; ks_in : C=0 si A est dans la liste qui suit l'appel (terminée par 0) ;
@@ -1796,7 +1873,10 @@ k_pop   lda #<s_pop
 k_aget
 .(
         jsr k_need
-        pha
+        jsr kf_isf              ; tableau fixe : accès direct
+        bcs old
+        jmp kf_get
+old     pha
         txa
         pha
         jsr x_open
@@ -1926,7 +2006,19 @@ ksb1
         ldy #>s_whole
         jsr oi
         jmp sas
-idx     jsr x_open
+idx     lda aal                 ; élément d'un tableau fixe : accès direct
+        ldx aak
+        jsr kf_isf
+        bcs idx0
+        cpx #0
+        beq kfp
+        jsr kd_get              ; M$(l) = chaîne : une ligne
+        cmp #2
+        bne kfp
+        jsr kf_hcom
+        bcs idx0
+kfp     jmp kf_put
+idx0    jsr x_open
         jsr k_or
         jsr k_mat
         jsr ws
@@ -1999,7 +2091,9 @@ sas     lda #<s_rsave           ; destination gardée
 bad     jmp e_strc
 .)
 
-; DIM traduit
+; DIM traduit. Un tableau de tailles constantes, hors de tout bloc et
+;   déclaré pour la première fois, est fixe (kf_new) : réservé au lancement
+;   par G_INIT, à une adresse connue ici ; rien n'est écrit à la ligne du DIM
 k_dim
 .(
         jsr skipsp
@@ -2023,36 +2117,60 @@ i1      stx ex
         lda #0
         sta vsp
         sta edep
+        sta kf_s2
+        sta kf_s2+1
         lda #1
         sta karr
         jsr x_open
-        jsr k_or
-        jsr k_mat
+        jsr k_or                ; taille 1 : constante gardée (kfc)
+        lda kc
+        sta kfc
+        lda kv
+        sta kf_s1
+        lda kv+1
+        sta kf_s1+1
         jsr ws
         jsr gch
-        ldy #1
         cmp #","
         bne one
         inc ex
-        jsr k_push
-        jsr k_or
-        jsr k_mat
-        jsr k_pop
-        ldy #2
-one     sty kdn
+        lda kfc
+        bne t1
+        jsr k_push              ; taille 1 calculée : sur la pile
+t1      jsr k_or                ; taille 2
         jsr x_close
-        lda aal                 ; dimensions notées pour la suite
-        sec
-        sbc #"A"
-        tay
-        lda kdn
-        ldx aak
-        bne s1
-        sta kd_i,y
-        beq s2
-        bne s2
-s1      sta kd_s,y
-s2      lda aak                 ; « ldx #octets », descripteur, r_dim
+        lda #2
+        sta kdn
+        lda kc
+        beq t2d
+        lda kv
+        sta kf_s2
+        lda kv+1
+        sta kf_s2+1
+        lda kfc
+        beq t2c
+        jsr kf_new              ; deux constantes : fixe ?
+        bcc fix
+        jsr k_mat               ; non : taille 2 -> g_ev,
+        jsr kd_et               ;   taille 1 -> g_et
+        jmp emit
+t2c     jsr k_mat               ; taille 1 calculée, 2 constante
+t2p     jsr k_pop
+        jmp emit
+t2d     lda kfc                 ; taille 2 calculée
+        beq t2p
+        jsr kd_et
+        jmp emit
+one     jsr x_close
+        lda #1
+        sta kdn
+        lda kfc
+        beq emit
+        jsr kf_new              ; constante : fixe ?
+        bcc fix
+        jsr k_mat
+emit    jsr kd_note
+        lda aak                 ; « ldx #octets », descripteur, r_dim
         eor #1
         clc
         adc #1
@@ -2073,6 +2191,8 @@ s2      lda aak                 ; « ldx #octets », descripteur, r_dim
 d2      lda #<s_dim2
         ldy #>s_dim2
         jsr oi
+        jmp nx
+fix     jsr kd_note
 nx      ldx ex
         lda lbuf,x
         beq r
@@ -2087,6 +2207,35 @@ kdn1
 r       rts
 bad     jmp e_param
 .)
+
+; kd_note : dimensions (kdn) du tableau aal, aak notées pour la suite
+kd_note lda aal
+        sec
+        sbc #"A"
+        tay
+        lda kdn
+        ldx aak
+        bne kdn_s
+        sta kd_i,y
+        rts
+kdn_s   sta kd_s,y
+        rts
+
+; kd_et : taille 1 constante (kf_s1) -> g_et
+kd_et   lda kf_s1
+        sta kv
+        lda kf_s1+1
+        sta kv+1
+; k_etc : constante kv -> g_et
+k_etc   lda #1
+        sta kc
+        lda #<s_etn
+        ldy #>s_etn
+        jsr dest_fix
+        jsr o_st16
+        lda #0
+        sta kc
+        rts
 
 ; FILL traduit
 k_fill
@@ -2628,6 +2777,22 @@ s_rfill .asc "jsr r_fill",0
 s_dim1  .asc "jsr r_dim1",0
 s_dim2  .asc "jsr r_dim2",0
 s_lda   .asc "lda ",0
+s_ldx   .asc "ldx ",0
+s_ldy   .asc "ldy ",0
+s_adc   .asc "adc ",0
+s_adci  .asc "adc #",0
+s_asl   .asc "asl",0
+s_clc   .asc "clc",0
+s_tay   .asc "tay",0
+s_pha   .asc "pha",0
+s_pla   .asc "pla",0
+s_cx    .asc ",x",0
+s_equ   .asc " = ",0
+s_ginit .asc "; tableaux fixes : reserves au lancement",13,10
+        .asc "G_INIT jsr g_init",13,10
+        .asc " inc g_sp",13,10
+        .asc " inc g_sp",13,10,0
+s_ginone .asc "G_INIT = g_init",13,10,0
 s_inc   .asc "inc ",0
 s_dec   .asc "dec ",0
 s_etn   .asc "g_et",0
@@ -2716,7 +2881,7 @@ h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
         .asc "; HIRES.INC sur le meme lecteur)",13,10
         .asc "#include ",34,"CPA.INC",34,13,10
         .asc "*= $0500",13,10
-        .asc " jsr g_init",13,10,0
+        .asc " jsr G_INIT",13,10,0
 h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
 h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
@@ -2864,6 +3029,1150 @@ k_fil   lda #1
         sta karr
         rts
 
+; ---------------------------------------------------------------------
+; Tableaux à adresse fixe
+; ---------------------------------------------------------------------
+; Un tableau fixe (k_dim, kf_new) est réservé au lancement par G_INIT
+;   (r_dim1, r_dim2 dans l'ordre des DIM, avant tout autre), sous R_DESC :
+;   son adresse est donc connue ici (kftop suit r_top) et NOM.ASM la nomme
+;   T_S (entiers) ou C_S (tableau $). Un élément d'indices constants est
+;   une adresse fixe (« lda T_S+6 ») ; dans un petit tableau (256 octets au
+;   plus), un indice calculé donne le décalage dans Y (« lda T_S,y ») ;
+;   pour deux indices, une table des lignes (TR_S : décalage du début de
+;   chaque ligne) évite la multiplication. Un grand tableau passe par son
+;   descripteur, comme un tableau ordinaire. Cases 0-25 : entiers, 26-51 :
+;   tableaux $.
+
+; kf_isf : A = lettre, X = sorte : C=0 si le tableau est fixe (Y = case) ;
+;   A et X gardés
+kf_isf
+.(
+        pha
+        sec
+        sbc #"A"
+        cpx #0
+        beq i1
+        adc #25                 ; (C=1) + 26
+i1      tay
+        lda kf_ah,y
+        beq no
+        pla
+        clc
+        rts
+no      pla
+        sec
+        rts
+.)
+
+; kf_set : comme kf_isf, et si fixe : kfy, kfe (octets par élément), kfsm
+kf_set
+.(
+        jsr kf_isf
+        bcs r
+        sty kfy
+        pha
+        lda kf_sm,y
+        sta kfsm
+        lda #2
+        cpx #0
+        beq e
+        lda #1
+e       sta kfe
+        pla
+        clc
+r       rts
+.)
+
+; kf_new : le tableau aal, aak du DIM (tailles kf_s1, kf_s2, kdn
+;   dimensions) peut-il être fixe ? C=0 : oui, il est réservé ici
+kf_new
+.(
+        lda csp                 ; hors de tout bloc
+        beq k0
+nt      sec
+        rts
+k0      lda aal                 ; premier DIM de ce tableau
+        ldx aak
+        jsr kd_get
+        bne nt
+        lda kf_s1+1             ; taille 1 : 1 à 32767
+        bmi nt
+        ora kf_s1
+        beq nt
+        lda kf_s1
+        sta km_a
+        lda kf_s1+1
+        sta km_a+1
+        lda #1
+        sta km_b
+        lda #0
+        sta km_b+1
+        lda kdn
+        cmp #2
+        bne n1
+        lda kf_s2+1             ; taille 2 : 1 à 32767
+        bmi nt
+        ora kf_s2
+        beq nt
+        lda kf_s2
+        sta km_b
+        lda kf_s2+1
+        sta km_b+1
+n1      jsr kmul                ; éléments, puis octets (comme r_dim)
+        bcs no
+        lda aak
+        bne n2
+        asl km_p
+        rol km_p+1
+        bmi no
+n2      sec                     ; adresse = haut - octets
+        lda kftop
+        sbc km_p
+        sta kt
+        lda kftop+1
+        sbc km_p+1
+        bcc no
+        cmp #>$0500             ; trop bas : DIM ordinaire (« memoire
+        bcc no                  ;   pleine » au lancement)
+        sta kt+1
+        lda aal
+        ldx aak
+        jsr kf_isf              ; Y = case
+        lda kt
+        sta kf_al,y
+        sta kftop
+        lda kt+1
+        sta kf_ah,y
+        sta kftop+1
+        lda kf_s1
+        sta kf_1l,y
+        lda kf_s1+1
+        sta kf_1h,y
+        lda kf_s2
+        sta kf_2l,y
+        lda kf_s2+1
+        sta kf_2h,y
+        ldx #0                  ; petit : 256 octets au plus
+        lda km_p+1
+        beq sm
+        cmp #1
+        bne sm0
+        lda km_p
+        bne sm0
+sm      inx
+sm0     txa
+        sta kf_sm,y
+        clc
+        rts
+no      sec
+        rts
+.)
+
+; kmul : km_p <- km_a * km_b (positifs) ; C=1 au-delà de 32767
+kmul
+.(
+        lda #0
+        sta km_p
+        sta km_p+1
+l       lda km_b
+        ora km_b+1
+        beq d
+        lsr km_b+1
+        ror km_b
+        bcc n
+        clc
+        lda km_p
+        adc km_a
+        sta km_p
+        lda km_p+1
+        adc km_a+1
+        sta km_p+1
+        bcs o
+        bmi o
+n       lda km_b
+        ora km_b+1
+        beq d
+        asl km_a
+        rol km_a+1
+        bcs o
+        bpl l
+o       sec
+        rts
+d       clc
+        rts
+.)
+
+; kf_init : fin de NOM.ASM, s'il y a des tableaux fixes : G_INIT (les DIM
+;   fixes, du plus haut au plus bas), les tables des lignes utilisées, les
+;   adresses (« T_S = $9D56 »)
+kf_init
+.(
+        lda kftop
+        cmp #<PTOP
+        bne go
+        lda kftop+1
+        cmp #>PTOP
+        bne go
+        rts
+go      lda #<s_ginit
+        ldy #>s_ginit
+        jsr os
+        lda #<PTOP
+        sta kt
+        lda #>PTOP
+        sta kt+1
+loop    lda #$FF                ; le plus haut sous kt
+        sta kfy
+        lda #0
+        sta km_a
+        sta km_a+1
+        ldy #51
+f       lda kf_ah,y
+        beq fn
+        lda kf_al,y
+        cmp kt
+        lda kf_ah,y
+        sbc kt+1
+        bcs fn
+        lda km_a
+        cmp kf_al,y
+        lda km_a+1
+        sbc kf_ah,y
+        bcs fn
+        lda kf_al,y
+        sta km_a
+        lda kf_ah,y
+        sta km_a+1
+        sty kfy
+fn      dey
+        bpl f
+        ldy kfy
+        bmi done
+        lda km_a
+        sta kt
+        lda km_a+1
+        sta kt+1
+        jsr kf_dimo
+        jmp loop
+done    lda #<s_rts
+        ldy #>s_rts
+        jsr oi
+        ldy #0                  ; tables des lignes
+t       lda kf_rt,y
+        beq tn
+        sty kfy
+        jsr kf_rows
+        ldy kfy
+tn      iny
+        cpy #52
+        bne t
+        ldy #0                  ; adresses
+e       lda kf_ah,y
+        beq en
+        sty kfy
+        clc
+        jsr o_aname
+        lda #<s_equ
+        ldy #>s_equ
+        jsr os
+        ldy kfy
+        lda kf_ah,y
+        jsr ohex
+        ldy kfy
+        lda kf_al,y
+        jsr ohexd
+        jsr ocrlf
+        ldy kfy
+en      iny
+        cpy #52
+        bne e
+        rts
+.)
+
+; kf_none : sans tableau fixe, G_INIT est g_init
+kf_none
+.(
+        lda kftop
+        cmp #<PTOP
+        bne r
+        lda kftop+1
+        cmp #>PTOP
+        bne r
+        lda #<s_ginone
+        ldy #>s_ginone
+        jmp os
+r       rts
+.)
+
+; kf_dimo : le DIM du tableau fixe kfy, dans G_INIT
+kf_dimo
+.(
+        ldy kfy
+        lda kf_1l,y
+        sta kv
+        lda kf_1h,y
+        sta kv+1
+        lda kf_2l,y
+        ora kf_2h,y
+        beq d1
+        jsr k_etc               ; taille 1 -> g_et
+        ldy kfy
+        lda kf_2l,y
+        sta kv
+        lda kf_2h,y
+        sta kv+1
+        lda #2
+        bne d2
+d1      lda #1
+d2      sta kdn
+        lda #1                  ; taille (2) -> g_ev
+        sta kc
+        jsr k_mat
+        lda #2                  ; « ldx #octets »
+        ldy kfy
+        cpy #26
+        bcc d3
+        lda #1
+d3      sta osv
+        lda #<s_ldxi
+        ldy #>s_ldxi
+        jsr oimm
+        jsr kf_desc
+        lda #<s_dim1
+        ldy #>s_dim1
+        ldx kdn
+        cpx #2
+        bne d4
+        lda #<s_dim2
+        ldy #>s_dim2
+d4      jmp oi
+.)
+
+; kf_rows : table des lignes du tableau kfy (« TR_S .byt $00,$10,... »)
+kf_rows
+.(
+        sec
+        jsr o_aname
+        lda #" "
+        jsr oc
+        ldy kfy
+        lda kf_2l,y             ; octets par ligne
+        cpy #26
+        bcs r1
+        asl
+r1      sta kfrs
+        lda kf_1l,y             ; nombre de lignes
+        sta kt
+        lda kf_1h,y
+        sta kt+1
+        lda #0
+        sta kfv0
+ln      lda #<s_byt
+        ldy #>s_byt
+        jsr os
+        ldx #16
+nx      lda kfv0
+        jsr ohex
+        clc
+        lda kfv0
+        adc kfrs
+        sta kfv0
+        lda kt
+        bne d
+        dec kt+1
+d       dec kt
+        lda kt
+        ora kt+1
+        beq end
+        dex
+        beq eol
+        lda #","
+        jsr oc
+        jmp nx
+eol     jsr ocrlf
+        jmp ln
+end     jmp ocrlf
+.)
+
+; o_aname : nom du tableau fixe kfy (« T_S », « C_S ») ; C=1 : sa table
+;   des lignes (« TR_S », « CR_S »)
+o_aname
+.(
+        php
+        lda #"T"
+        ldx kfy
+        cpx #26
+        bcc a1
+        lda #"C"
+a1      jsr oc
+        plp
+        bcc a2
+        lda #"R"
+        jsr oc
+a2      lda #"_"
+        jsr oc
+        txa
+        cmp #26
+        bcc a3
+        sbc #26
+a3      clc
+        adc #"A"
+        jmp oc
+.)
+
+; o_asym : (o_sym, ksym = 3) « T_S », +kfo+koff, « ,y » si kyx
+o_asym
+.(
+        clc
+        jsr o_aname
+        clc
+        lda kfo
+        adc koff
+        sta kt
+        lda kfo+1
+        adc #0
+        sta kt+1
+        ora kt
+        beq y
+        lda #"+"
+        jsr oc
+        lda kl                  ; décimal (odec écrit kl)
+        pha
+        lda kl+1
+        pha
+        lda kt
+        sta kl
+        lda kt+1
+        sta kl+1
+        jsr odec
+        pla
+        sta kl+1
+        pla
+        sta kl
+y       lda kyx
+        beq r
+        lda #","
+        jsr oc
+        lda #"y"
+        jmp oc
+r       rts
+.)
+
+; kf_desc : « lda #lo / ldy #hi » du descripteur du tableau kfy
+kf_desc
+.(
+        lda kfy
+        ldx #0
+        cmp #26
+        bcc d
+        sbc #26
+        inx
+d       clc
+        adc #"A"
+        jmp k_desc
+.)
+
+; kf_dst : destination = élément du tableau kfy (kfo, kyx)
+kf_dst  lda #3
+        sta ksym
+        lda #0
+        sta koff
+        rts
+
+; kf_look : nature de ce qui commence en ex : 1 une variable simple, 2 un
+;   nombre (« -3 » compris), 0 autre chose ; suivi (espaces permis) de ) ou ,
+;   (kfvm = 0, un indice) ou de la fin de la ligne (kfvm = 1, une valeur)
+kf_look
+.(
+        ldy ex
+        jsr sp
+        lda lbuf,y
+        cmp #"-"
+        bne v0
+        iny
+        lda lbuf,y
+        jsr isdig
+        bcs no
+v0      jsr isdig
+        bcc num
+        jsr isalpha
+        bcs no
+        iny
+        lda lbuf,y
+        jsr isalpha
+        bcc v2
+        jsr isdig
+        bcs v1
+v2      iny
+v1      lda #1
+        bne e
+num     iny
+        lda lbuf,y
+        jsr isdig
+        bcc num
+        lda #2
+e       sta kq2
+        jsr sp
+        lda lbuf,y
+        ldx kfvm
+        bne val
+        cmp #")"
+        beq yes
+        cmp #","
+        beq yes
+no      lda #0
+        rts
+val     cmp #0
+        beq yes
+        cmp #";"
+        bne no
+yes     lda kq2
+        rts
+sp      lda lbuf,y
+        cmp #" "
+        bne r
+        iny
+        bne sp
+r       rts
+.)
+
+; kf_one : indice X (0 ou 1) en ex -> kcl,x = 0 calculé (g_ev), 1 variable
+;   (kix,x, kic,x : petit tableau seulement), 2 constante (kil,x, kih,x)
+kf_one
+.(
+        stx kw1
+        lda kfsm
+        beq e
+        lda #0
+        sta kfvm
+        jsr kf_look
+        cmp #1
+        bne e
+        ldx ex
+        jsr getvar
+        stx ex
+        ldx kw1
+        lda vix
+        sta kix,x
+        lda vc
+        sta kic,x
+        lda #1
+        bne r
+e       jsr k_or
+        ldx kw1
+        lda kc
+        beq r
+        lda kv
+        sta kil,x
+        lda kv+1
+        sta kih,x
+        lda #2
+r       sta kcl,x
+        rts
+.)
+
+; kq_fr : l'opérande de kf_op est l'indice X (variable, sinon g_ev)
+kq_fr   lda kcl,x
+        and #1
+        sta kq
+        lda kix,x
+        sta kqx
+        lda kic,x
+        sta kqc
+        rts
+
+; kf_mat : indice constant X -> g_ev (kcl,x = 0)
+kf_mat  lda kil,x
+        sta kv
+        lda kih,x
+        sta kv+1
+        lda #0
+        sta kcl,x
+        lda #1
+        sta kc
+        jmp k_mat
+
+; kf_op : instruction A/Y (« lda ») sur l'opérande kq : variable kqx, kqc,
+;   sinon g_ev
+kf_op
+.(
+        pha
+        tya
+        pha
+        lda kq
+        beq vg
+        lda kqx
+        ldx kqc
+        jsr dest_var
+        jmp go
+vg      lda #<s_gev
+        ldy #>s_gev
+        jsr dest_fix
+go      pla
+        tay
+        pla
+        jmp o_ins_sym
+.)
+kf_lda  lda #<s_lda
+        ldy #>s_lda
+        jmp kf_op
+kf_adc  lda #<s_adc
+        ldy #>s_adc
+        jmp kf_op
+o_asl   lda #<s_asl
+        ldy #>s_asl
+        jmp oi
+o_clc   lda #<s_clc
+        ldy #>s_clc
+        jmp oi
+
+; kf_row : « ldx op / lda TR_S,x » : début de la ligne de l'indice kq
+kf_row
+.(
+        lda #<s_ldx
+        ldy #>s_ldx
+        jsr kf_op
+        jsr o_tab
+        lda #<s_lda
+        ldy #>s_lda
+        jsr os
+        sec
+        jsr o_aname
+        lda #<s_cx
+        ldy #>s_cx
+        jsr os
+        jsr ocrlf
+        ldy kfy
+        lda #1
+        sta kf_rt,y
+        rts
+.)
+
+; kf_r1 : kfr1 <- début constant de la ligne kil (octet bas)
+kf_r1
+.(
+        ldy kfy
+        lda kf_2l,y
+        ldx kfe
+        cpx #2
+        bne r0
+        asl
+r0      sta kt
+        lda #0
+        ldx kil
+        beq r2
+r1      clc
+        adc kt
+        dex
+        bne r1
+r2      sta kfr1
+        rts
+.)
+
+; kf_st1 : indice constant kil -> kfo = décalage ; C=1 s'il ne convient pas
+kf_st1
+.(
+        lda kih
+        bmi no
+        sta kfo+1
+        lda kil
+        sta kfo
+        lda kfe
+        cmp #2
+        bne ok
+        asl kfo
+        rol kfo+1
+        bmi no
+ok      clc
+        rts
+no      sec
+        rts
+.)
+
+; kf_st2 : indices constants kil, kil+1 -> kfo ; C=1 s'il ne convient pas
+kf_st2
+.(
+        lda kih
+        ora kih+1
+        bmi no
+        lda kil
+        sta km_a
+        lda kih
+        sta km_a+1
+        ldy kfy
+        lda kf_2l,y
+        sta km_b
+        lda kf_2h,y
+        sta km_b+1
+        jsr kmul
+        bcs no
+        clc
+        lda km_p
+        adc kil+1
+        sta kfo
+        lda km_p+1
+        adc kih+1
+        sta kfo+1
+        bmi no
+        lda kfe
+        cmp #2
+        bne ok
+        asl kfo
+        rol kfo+1
+        bmi no
+ok      clc
+        rts
+no      sec
+        rts
+.)
+
+; kf_ix : indices de l'élément du tableau fixe kfy (ex sur « ( ») ->
+;   kfm = 0 : adresse fixe (kfo) ; 1 : décalage dans A (code écrit) ;
+;   3 : décalage = octet bas de l'opérande kq (pas encore lu) ;
+;   2 : par le descripteur : g_ev (kfn = 1), ou g_et et g_ev (kfn = 2)
+kf_ix
+.(
+        lda #0
+        sta kyx
+        sta kfr
+        jsr x_open
+        ldx #0
+        jsr kf_one
+        jsr ws
+        jsr gch
+        cmp #","
+        bne one
+        jmp two
+one     jsr x_close             ; ---- un indice (tableau mis à plat)
+        lda kfe                 ; M$(i) : une chaîne
+        cmp #2
+        beq o0
+        ldy kfy
+        lda kf_2l,y
+        ora kf_2h,y
+        beq o0
+        jmp e_strc
+o0      lda kcl
+        cmp #2
+        bne o1
+        jsr kf_st1              ; constant : adresse fixe
+        bcc stat
+        ldx #0
+        jsr kf_mat
+o1      lda kfsm
+        bne o2
+        lda #1                  ; grand tableau : par le descripteur
+        jmp desc
+o2      ldx #0
+        jsr kq_fr
+        lda kfe
+        cmp #2
+        beq o3
+        lda #3                  ; octets : le décalage est l'indice
+        sta kfm
+        rts
+o3      jsr kf_lda
+        jsr o_asl
+        jmp m1
+stat    lda #0
+        sta kfm
+        rts
+two     inc ex                  ; ---- deux indices
+        lda kfsm
+        bne s0
+        lda kcl                 ; grand tableau
+        bne b1
+        jsr k_push              ; premier calculé : sur la pile
+b1      jsr k_or
+        jsr x_close
+        lda kcl
+        bne b2
+        jsr k_mat
+        jsr k_pop
+        jmp desc2
+b2      lda kc                  ; premier constant
+        beq b3
+        lda kv
+        sta kil+1
+        lda kv+1
+        sta kih+1
+        jsr kf_st2
+        bcc stat
+b3      jsr k_mat               ; second -> g_ev, premier -> g_et
+        lda kil
+        sta kv
+        lda kih
+        sta kv+1
+        jsr k_etc
+desc2   lda #2
+desc    sta kfn
+        lda #2
+        sta kfm
+        rts
+s0      lda kcl                 ; petit tableau
+        bne s1
+        lda #0                  ; premier calculé : sa ligne dans A, gardée
+        sta kfvm                ;   sur la pile si le second est calculé
+        jsr kf_look
+        pha
+        ldx #0
+        jsr kq_fr
+        jsr kf_row
+        pla
+        beq s0p
+        lda #1
+        bne s0r
+s0p     lda #<s_pha
+        ldy #>s_pha
+        jsr oi
+        lda #2
+s0r     sta kfr
+s1      ldx #1
+        jsr kf_one
+        jsr x_close
+        lda kcl
+        cmp #2
+        bne cv
+        lda kcl+1               ; premier constant
+        cmp #2
+        bne c1
+        jsr kf_st2
+        bcs c0
+        jmp stat
+c0      ldx #1
+        jsr kf_mat
+c1      jsr kf_r1               ; second (* 2) + début constant de la ligne
+        ldx #1
+        jsr kq_fr
+        lda kfe
+        cmp #2
+        beq c2
+        lda kfr1
+        bne c3
+        lda #3
+        sta kfm
+        rts
+c3      jsr kf_lda
+        jmp c4
+c2      jsr kf_lda
+        jsr o_asl
+        lda kfr1
+        beq m1
+c4      jsr o_clc
+        lda kfr1
+        sta osv
+        lda #<s_adci
+        ldy #>s_adci
+        jsr oimm
+        jmp m1
+cv      cmp #1                  ; premier variable : sa ligne maintenant
+        bne ce
+        ldx #0
+        jsr kq_fr
+        jsr kf_row
+        jmp ca
+ce      lda kfr                 ; premier calculé : ligne sur la pile ?
+        cmp #2
+        bne ca
+        lda #<s_pla
+        ldy #>s_pla
+        jsr oi
+ca      lda kcl+1               ; + second (* 2)
+        cmp #2
+        bne ca1
+        lda kil+1
+        ldx kfe
+        cpx #2
+        bne ca0
+        asl
+ca0     cmp #0
+        beq m1
+        sta osv
+        jsr o_clc
+        lda #<s_adci
+        ldy #>s_adci
+        jsr oimm
+        jmp m1
+ca1     ldx #1
+        jsr kq_fr
+        jsr o_clc
+        jsr kf_adc
+        lda kfe
+        cmp #2
+        bne m1
+        jsr kf_adc
+m1      lda #1
+        sta kfm
+        rts
+.)
+
+; kf_toy : décalage -> Y (« tay », ou « ldy op »)
+kf_toy
+.(
+        lda kfm
+        cmp #3
+        beq t3
+        lda #<s_tay
+        ldy #>s_tay
+        jmp oi
+t3      lda #<s_ldy
+        ldy #>s_ldy
+        jmp kf_op
+.)
+; kf_pha : décalage -> pile du 6502
+kf_pha
+.(
+        lda kfm
+        cmp #3
+        bne p
+        jsr kf_lda
+p       lda #<s_pha
+        ldy #>s_pha
+        jmp oi
+.)
+
+; kf_get : (k_aget) élément du tableau fixe A, X -> g_ev ; l'état des
+;   tableaux fixes est gardé sur la pile (un indice peut lire un autre
+;   tableau : « X(P(I)) »)
+kf_get
+.(
+        sta kfa
+        stx kfk
+        ldx #KFN-1
+s       lda kfst,x
+        pha
+        dex
+        bpl s
+        lda kfa
+        ldx kfk
+        jsr kf_set
+        jsr kf_ix
+        lda kfm
+        cmp #2
+        bne g1
+        jsr kf_desc             ; par le descripteur
+        lda #<s_get1
+        ldy #>s_get1
+        ldx kfn
+        cpx #2
+        bne g0
+        lda #<s_get2
+        ldy #>s_get2
+g0      jsr oi
+        jmp z
+g1      cmp #0
+        beq g3
+        jsr kf_toy              ; décalage dans Y
+        lda #0
+        sta kfo
+        sta kfo+1
+        lda #1
+        sta kyx
+g3      jsr kf_dst
+        lda kfe
+        cmp #2
+        bne g4
+        jsr ld_var              ; « lda T_S+n / sta g_ev ... »
+        jmp z
+g4      jsr kf_ldb
+z       ldx #0
+r       pla
+        sta kfst,x
+        inx
+        cpx #KFN
+        bne r
+        lda #0
+        sta kc
+        rts
+.)
+
+; kf_ldb : octet de la destination -> g_ev
+kf_ldb  lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        lda #<s_stev
+        ldy #>s_stev
+        jsr oi
+        lda #<s_lda0
+        ldy #>s_lda0
+        jsr oi
+        lda #<s_stev1
+        ldy #>s_stev1
+        jmp oi
+
+; kf_stb : valeur (kc/kv ou g_ev) -> A, de 0 à 255 (sinon erreur, à
+;   l'exécution comme r_stb)
+kf_stb
+.(
+        lda kc
+        beq dyn
+        lda kv+1
+        bne big
+        lda kv
+        sta osv
+        lda #<s_ldai
+        ldy #>s_ldai
+        jmp oimm
+big     jsr k_mat
+dyn     lda #<s_byte
+        ldy #>s_byte
+        jmp oi
+.)
+
+; kf_put : (k_aassign, ex sur « ( ») affectation d'un élément du tableau
+;   fixe aal, aak
+kf_put
+.(
+        lda aal
+        ldx aak
+        jsr kf_set
+        jsr kf_ix
+        lda kfm
+        cmp #2
+        bne p1
+        jsr kf_desc             ; par le descripteur : comme un tableau
+        lda #<s_ea1             ;   ordinaire
+        ldy #>s_ea1
+        ldx kfn
+        cpx #2
+        bne p0
+        lda #<s_ea2
+        ldy #>s_ea2
+p0      jsr oi
+        lda #<s_atoj
+        ldy #>s_atoj
+        jsr oi
+        jsr k_push
+        jsr aeq
+        jsr k_lexpr
+        jsr k_mat
+        jsr k_pop
+        lda #<s_stw
+        ldy #>s_stw
+        ldx kfe
+        cpx #2
+        beq pw
+        lda #<s_stb
+        ldy #>s_stb
+pw      jmp oi
+p1      cmp #0
+        bne p2
+        jsr aeq                 ; adresse fixe
+        jsr k_lexpr
+        jmp st
+p2      jsr aeq                 ; décalage dans Y
+        lda #1
+        sta kfvm
+        jsr kf_look
+        sta kq2
+        bne p3
+        jsr kf_pha              ; valeur calculée : décalage gardé
+        ldx ex
+        jsr k_lexpr
+        lda #<s_pla
+        ldy #>s_pla
+        jsr oi
+        lda #<s_tay
+        ldy #>s_tay
+        jsr oi
+        jmp sy
+p3      jsr kf_toy              ; nombre ou variable : Y n'est pas touché
+        lda kq2
+        cmp #1
+        bne p4
+        lda kfe
+        cmp #2
+        bne p4
+        ldx ex                  ; entier <- variable : copie directe
+        jsr getvar
+        jsr endline
+        jmp kf_cpv
+p4      ldx ex
+        jsr k_lexpr
+sy      lda #0
+        sta kfo
+        sta kfo+1
+        lda #1
+        sta kyx
+st      lda kfe
+        cmp #2
+        bne sb
+        jsr kf_dst
+        jsr o_st16
+        jmp z
+sb      jsr kf_stb
+        jsr kf_dst
+        lda #<s_sta
+        ldy #>s_sta
+        jsr o_ins_sym
+z       lda #0
+        sta kyx
+        sta kc
+        rts
+.)
+
+; kf_cpv : variable vix, vc -> élément (Y)
+kf_cpv
+.(
+        lda #0
+        sta kfo
+        sta kfo+1
+        sta kt
+l       lda vix
+        ldx vc
+        jsr dest_var
+        lda kt
+        sta koff
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        jsr kf_dst
+        lda kt
+        sta koff
+        lda #1
+        sta kyx
+        lda #<s_sta
+        ldy #>s_sta
+        jsr o_ins_sym
+        lda #0
+        sta kyx
+        inc kt
+        lda kt
+        cmp #2
+        bne l
+        lda #0
+        sta kc
+        rts
+.)
+
+; kf_hcom : C=0 si l'élément en ex (« ( ») a deux indices
+kf_hcom
+.(
+        ldy ex
+        ldx #0
+l       lda lbuf,y
+        beq no
+        cmp #"("
+        bne c1
+        inx
+        bne nx
+c1      cmp #")"
+        bne c2
+        dex
+        beq no
+        bne nx
+c2      cmp #","
+        bne nx
+        cpx #1
+        beq yes
+nx      iny
+        bne l
+no      sec
+        rts
+yes     clc
+        rts
+.)
+
 ; affectations ; ANIM ; console
 x_asg   = k_assign
 x_aasg  = k_aassign
@@ -2974,7 +4283,51 @@ vs_f    = vs_hi+NVS     ; gauche constante ?
 kvt     = vs_f+NVS      ; dest_var, o_vars, k_simple : travail (2 octets)
 kvu     = kvt+2         ; variables à deux caractères rencontrées : 5 octets
 KVU     = 130           ;   par lettre, bit (second caractère - 1)
-obuf    = kvu+KVU       ; NOM.ASM : enregistrement en cours
+kf_al   = kvu+KVU       ; tableaux fixes (52 cases : entiers, puis $) :
+kf_ah   = kf_al+52      ;   adresse (octet haut 0 : pas fixe)
+kf_1l   = kf_ah+52      ;   taille 1
+kf_1h   = kf_1l+52
+kf_2l   = kf_1h+52      ;   taille 2 (0 : une dimension)
+kf_2h   = kf_2l+52
+kf_sm   = kf_2h+52      ;   1 : petit (256 octets au plus)
+kf_rt   = kf_sm+52      ;   1 : table des lignes utilisée
+kftop   = kf_rt+52      ; haut de leur place, comme r_top (2 octets)
+kt      = kftop+2       ; travail (2 octets)
+km_a    = kt+2          ; kmul (2 octets chacun)
+km_b    = km_a+2
+km_p    = km_b+2
+kf_s1   = km_p+2        ; DIM : tailles (2 octets chacune)
+kf_s2   = kf_s1+2
+kfc     = kf_s2+2       ;   1 : taille 1 constante
+kfrs    = kfc+1         ; kf_rows : octets par ligne
+kfv0    = kfrs+1        ;   valeur
+ksn     = kfv0+1        ; k_simple : début du nom
+ksy     = ksn+1
+kfa     = ksy+1         ; kf_get : lettre, sorte
+kfk     = kfa+1
+kfvm    = kfk+1         ; kf_look : 0 indice, 1 valeur
+kfst    = kfvm+1        ; état d'un accès, gardé par kf_get :
+kfy     = kfst          ;   case du tableau
+kfe     = kfy+1         ;   octets par élément
+kfsm    = kfe+1         ;   petit tableau ?
+kfm     = kfsm+1        ;   kf_ix : mode
+kfn     = kfm+1         ;   dimensions (descripteur)
+kfr     = kfn+1         ;   ligne : 1 dans A, 2 sur la pile
+kfo     = kfr+1         ;   décalage constant (2 octets)
+kyx     = kfo+2         ;   1 : « ,y » après le nom
+kq      = kyx+1         ;   opérande de kf_op : 0 g_ev, 1 variable
+kqx     = kq+1          ;     (vix, vc)
+kqc     = kqx+1
+kw1     = kqc+1         ;   kf_one : indice 0 ou 1
+kcl     = kw1+1         ;   indices : nature (2 octets)
+kix     = kcl+2         ;     variable (2 + 2 octets)
+kic     = kix+2
+kil     = kic+2         ;     constante (2 + 2 octets)
+kih     = kil+2
+kfr1    = kih+2         ;   début constant de la ligne
+kq2     = kfr1+1        ;   kf_look
+KFN     = kq2+1-kfst
+obuf    = kq2+1         ; NOM.ASM : enregistrement en cours
 rawbuf  = obuf+128      ; ligne lue
 lbuf    = rawbuf+LMAX+1 ;   puis $1-$9 remplacés
 ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP

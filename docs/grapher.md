@@ -47,7 +47,8 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 - Bonne pratique : des variables nommées pour ce qui est unique (le joueur `PX PY`, le score
   `SC`), un tableau pour ce qui se parcourt en boucle (des monstres `X(3) Y(3)`), et les
   constantes écrites en clair. Dans un programme traduit, une variable simple se lit en
-  une instruction ; un élément de tableau passe par le descripteur (§ 12).
+  une instruction ; un élément d'un tableau déclaré en tête du programme, de taille
+  constante, se lit presque aussi vite (§ 12).
 - Affectation : `V = expr` ou `LET V = expr`.
 - Opérateurs, du plus fort au plus faible : `-` (signe) ; `*` `/` `%` (`/` tronque vers 0,
   `%` est le reste) ; `+` `-` ; comparaisons `=` `<>` `<` `<=` `>` `>=` (1 si vrai, 0 sinon) ;
@@ -402,6 +403,25 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   traduit se comporte mal, on le relance en interprété pour trouver l'erreur.
 - Un tableau doit être déclaré par un `DIM` placé plus haut dans le fichier (la traduction
   lit le fichier dans l'ordre).
+- **Tableaux à adresse fixe.** Un `DIM` de tailles constantes (`DIM X(8) G$(16,16)`),
+  hors de tout bloc (ni `IF`, ni boucle, ni `SUB`), premier `DIM` de ce tableau, est
+  réservé au lancement du programme, avant la première ligne : son adresse est connue à
+  la traduction (`T_X` pour `X()`, `C_G` pour `G$()`, écrites à la fin de `NOM.ASM`).
+  Ses éléments sont alors lus et écrits sans passer par le descripteur :
+  - indices constants : une adresse fixe (`S(3)` : `lda T_S+6`) ; `A - S(3)` va
+    directement dans l'opérande de droite, comme une variable ;
+  - tableau de 256 octets au plus (128 entiers), indices calculés : le décalage est mis
+    dans Y (`lda T_X,y`) ; avec deux indices, une table du début de chaque ligne
+    (`TR_G`, quelques octets dans le fichier) évite la multiplication. `X(I)` ou
+    `G(I,J)` (indices constants ou variables simples) passe aussi directement dans
+    l'opérande de droite ;
+  - tableau plus grand, indices calculés : par le descripteur.
+
+  Le descripteur est écrit aussi (`LOAD`, `SAVE`, `FILL`, `SPRITES` et les chaînes s'en
+  servent). Un `DIM` de taille calculée, ou dans un bloc, reste exécuté à sa place.
+  Exemple mesuré : 8 « monstres » déplacés 50 fois (tableaux `X Y D E` de 8 entiers,
+  grille `G$(16,16)`) : 3,2 fois moins d'instructions que par les descripteurs, et un
+  programme un peu plus petit.
 - ASM a besoin, sur le lecteur de la source, de `CPA.INC`, `GRX.INC`, `HIRES.INC`, plus
   `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il lit ou écrit des fichiers de
   données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
@@ -419,6 +439,9 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
   tableaux et une animation fait environ 20 Ko (texte à partir de `$4CC6`).
+- **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
+  tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
+  lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
@@ -481,6 +504,26 @@ pour `g_rsub`). `kz` vaut 1 juste après un `jsr g_cmp`, `g_and` ou `g_or` ; tou
 instruction le remet à 0 (`o_tab`) ; `o_skipz` n'écrit alors que `bne *+5` / `jmp`.
 `k_incdec` reconnaît `V = V + 1` et `V = V - 1`.
 
+**Tableaux fixes** (GRXASM) : `kf_new` décide, au `DIM`, qu'un tableau est fixe et calcule
+son adresse comme `r_dim` le fera (`kftop` suit `r_top`, à partir de `$9D60`) ; rien n'est
+écrit à la ligne du `DIM`. L'en-tête de `NOM.ASM` appelle `G_INIT` : sans tableau fixe,
+`G_INIT = g_init` (écrit après `HIRES.INC`) ; sinon une routine (`kf_init`) qui appelle
+`g_init`, corrige `g_sp` (deux `inc` : la pile du lancement), puis fait les `r_dim1` /
+`r_dim2` des tableaux fixes du plus haut au plus bas, c'est-à-dire dans l'ordre des `DIM`.
+Suivent les tables des lignes utilisées (`TR_G .byt`) et les adresses (`T_G = $9D38`).
+Cases `kf_*` : 0-25 entiers, 26-51 tableaux `$` ; un tableau est petit (`kf_sm`) s'il fait
+256 octets au plus. Un accès (`kf_get`, `kf_put`) lit ses indices par `kf_ix` : chacun est
+calculé (`g_ev`), une variable simple (lue plus tard, sans code ; petit tableau seulement)
+ou une constante (`kcl`) ; le résultat est une adresse fixe (`kfm` = 0, `kfo`), un
+décalage dans A (1) ou à charger dans Y depuis l'opérande (3, octets), ou le descripteur
+(2). La destination `ksym` = 3 écrit `T_S+kfo` puis `,y` (`kyx`), ce qui permet de reprendre
+`ld_var` et `o_st16`. Une affectation garde le décalage sur la pile du 6502 (`pha` / `pla`)
+seulement si la valeur demande un calcul (`kf_look`) ; un entier reçu d'une variable est
+copié directement (`kf_cpv`). `kf_get` garde l'état (`kfst`, `KFN` octets) sur la pile :
+un indice peut lire un autre tableau fixe. `ks_arr` étend `k_simple` aux éléments d'indices
+constants, ou de variables simples dans un petit tableau d'entiers. Tests : `fix.grx`,
+`e_fix.grx`.
+
 Page zéro : `$10-$5C` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
@@ -522,16 +565,9 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ### 16.1 Plus tard
 
-- **Programmes traduits plus petits et plus rapides** (mesure : `MONSTRES`, 130 lignes,
-  11 Ko, dont 4,8 Ko de code traduit, presque tout en accès aux tableaux, et 6,3 Ko de
-  bibliothèques), dans cet ordre :
-  1. Tableaux à adresse fixe : un `DIM` de tailles constantes, hors de tout bloc, est réservé
-     par GRXASM après la fin du programme (pas dans le fichier) ; le descripteur est écrit au
-     lancement et pointe vers cette zone (`LOAD`, `SAVE`, `FILL`, `SPRITES`, chaînes s'en
-     servent) ; un élément d'indice constant se lit en une instruction (`lda A_P+2`). Un `DIM`
-     de taille calculée reste comme aujourd'hui.
-  2. Bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) : `NOM.ASM` n'inclut
-     que ceux qu'il utilise.
+- **Programmes traduits plus petits** (mesure : `MONSTRES`, 130 lignes, 11 Ko, dont 6,3 Ko
+  de bibliothèques) : bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) :
+  `NOM.ASM` n'inclut que ceux qu'il utilise.
 - **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes
