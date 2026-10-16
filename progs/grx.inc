@@ -190,12 +190,14 @@ g_sub   sec
         sta g_ev+1
         rts
 
+; g_and, g_or (comme g_cmp) : Z=1 si le résultat est nul (IF traduit)
 g_and   lda g_et
         and g_ev
         sta g_ev
         lda g_et+1
         and g_ev+1
         sta g_ev+1
+        ora g_ev
         rts
 
 g_or    lda g_et
@@ -203,6 +205,17 @@ g_or    lda g_et
         sta g_ev
         lda g_et+1
         ora g_ev+1
+        sta g_ev+1
+        ora g_ev
+        rts
+
+; g_rsub : g_ev <- g_ev - g_et (opérandes inversés : X - Y, Y dans g_et)
+g_rsub  sec
+        lda g_ev
+        sbc g_et
+        sta g_ev
+        lda g_ev+1
+        sbc g_et+1
         sta g_ev+1
         rts
 

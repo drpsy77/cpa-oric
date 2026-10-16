@@ -127,11 +127,11 @@ ok      lda #<s_jend            ; fin, puis les boucles et les inclusions
         lda #0
         sta kl
         sta kl+1
-bl      lda kl                  ; B1 à Bn
-        cmp kn
+bl      lda kl                  ; B1 à Bn (boucles seulement)
+        cmp knb
         bne bl1
         lda kl+1
-        cmp kn+1
+        cmp knb+1
         beq bend
 bl1     inc kl
         bne bl2
@@ -357,7 +357,9 @@ oi      sta osa
         ldy osa+1
         jsr os
         jmp ocrlf
-o_tab   lda #<s_tab
+o_tab   lda #0                  ; Z ne vient plus de g_cmp/g_and/g_or
+        sta kz
+        lda #<s_tab
         ldy #>s_tab
         jmp os
 
@@ -465,28 +467,48 @@ o_label sta ksuf
         jmp o_lab
 
 ; o_ab : « lda #<Bn » puis « ldy #>Bn »
-o_ab    lda #0
-        sta ksuf
-        jsr o_tab
+o_ab    jsr o_tab
         lda #<s_ldalo
         ldy #>s_ldalo
         jsr os
-        lda #"B"
-        jsr o_lname
+        jsr o_bname
         jsr ocrlf
         jsr o_tab
         lda #<s_ldyhi
         ldy #>s_ldyhi
         jsr os
-        lda #"B"
-        jsr o_lname
+        jsr o_bname
         jmp ocrlf
 
+; o_bname : « Bn », n = kb (numéro de la boucle)
+o_bname lda kl
+        pha
+        lda kl+1
+        pha
+        lda kb
+        sta kl
+        lda kb+1
+        sta kl+1
+        lda #0
+        sta ksuf
+        lda #"B"
+        jsr o_lname
+        pla
+        sta kl+1
+        pla
+        sta kl
+        rts
+
 ; o_skipz : « lda g_ev / ora g_ev+1 / bne *+5 / jmp L<kl><A> » (si nul)
+;   (« bne *+5 / jmp » seul quand kz : Z rendu par g_cmp, g_and, g_or)
 o_skipz pha
         lda #<s_tst
         ldy #>s_tst
-        jsr os
+        ldx kz
+        beq osz1
+        lda #<s_bne5
+        ldy #>s_bne5
+osz1    jsr os
         pla
         jmp o_jmp
 
@@ -521,10 +543,7 @@ var     lda #<s_v
 dg      adc #"0"-28             ; (C=1) chiffre
         jsr oc
         jmp off
-blk     lda #0
-        sta ksuf
-        lda #"B"
-        jsr o_lname
+blk     jsr o_bname
 off     lda koff
         beq r
         lda #"+"
@@ -560,6 +579,9 @@ o_st16
         pla
         jsr oimm
         jsr sta1
+        lda kv+1                ; même octet : A le contient déjà
+        cmp kv
+        beq sta2
         lda #<s_ldai
         ldy #>s_ldai
         pha
@@ -1005,20 +1027,32 @@ ld_var
         jsr o_ins_sym
         lda #<s_stev
         ldy #>s_stev
-        jsr oi
+        ldx kdst                ; opérande droit simple : vers g_et
+        beq lda1
+        lda #<s_stet
+        ldy #>s_stet
+lda1    jsr oi
         inc koff
         lda #<s_lda
         ldy #>s_lda
         jsr o_ins_sym
         lda #<s_stev1
         ldy #>s_stev1
-        jmp oi
+        ldx kdst
+        beq lda2
+        lda #<s_stet1
+        ldy #>s_stet1
+lda2    jmp oi
 .)
 
 ; k_left : opérande de gauche gardé (constante ici, valeur sur la pile
 ;   des valeurs à l'exécution)
+;   A = opérateur. Gauche calculée et droite simple (un nombre ou une
+;   variable, rien de plus fort après) : ni g_push ni g_pop, la gauche reste
+;   dans g_ev, la droite ira dans g_et (vs_f = 2, kdst)
 k_left
 .(
+        sta kop
         ldy vsp
         cpy #NVS
         bcs deep
@@ -1031,11 +1065,142 @@ k_left
         inc vsp
         lda kc
         bne r
-        lda #<s_push
+        jsr k_simple
+        bcs push
+        ldy vsp
+        lda #2
+        sta vs_f-1,y
+        sta kdst                ; (non nul)
+        rts
+push    lda #<s_push
         ldy #>s_push
         jmp oi
 r       rts
 deep    jmp e_expr
+.)
+
+; k_simple : C=0 si l'opérande droit de kop (en ex) est simple : un nombre
+;   ou une variable, suivi de rien qui lie plus fort que kop. / et % : non
+;   (pas d'opération inversée)
+k_simple
+.(
+        lda kop
+        cmp #"/"
+        beq ks_n0
+        cmp #"%"
+        bne ks_go
+ks_n0   sec
+        rts
+ks_go   ldx #0                  ; niveau : 0 * ; 1 + - ; 2 comparaison ; 3 & |
+        cmp #"*"
+        beq ks_lv
+        inx
+        cmp #"+"
+        beq ks_lv
+        cmp #"-"
+        beq ks_lv
+        inx
+        cmp #$80
+        bcs ks_lv
+        inx
+ks_lv   stx kvt
+        ldy ex
+        jsr ks_sp
+        lda lbuf,y
+        jsr isdig
+        bcc ks_num
+        jsr isalpha
+        bcs ks_no
+        iny                     ; variable : une lettre, puis lettre ou chiffre
+        lda lbuf,y
+        jsr isalpha
+        bcc ks_2
+        jsr isdig
+        bcs ks_nm
+ks_2    iny
+ks_nm   lda lbuf,y              ; ni ( ni $, ni lettre ou chiffre collés
+        cmp #"("
+        beq ks_no
+        cmp #"$"
+        beq ks_no
+ks_end  jsr isalpha
+        bcc ks_no
+        jsr isdig
+        bcc ks_no
+        jsr ks_sp
+        lda lbuf,y
+        ldx kvt
+        beq ks_yes              ; * : l'opérande est complet
+        jsr ks_in
+        .asc "*/%",0
+        bcc ks_no
+        dex
+        beq ks_yes
+        jsr ks_in
+        .asc "+-",0
+        bcc ks_no
+        dex
+        beq ks_yes
+        jsr ks_in
+        .asc "=<>",0
+        bcc ks_no
+ks_yes  clc
+        rts
+ks_num  iny
+        lda lbuf,y
+        jsr isdig
+        bcc ks_num
+        bcs ks_end
+ks_no   sec
+        rts
+ks_sp   lda edep                ; espaces sautés si edep > 0
+        beq ks_spr
+ks_spl  lda lbuf,y
+        cmp #" "
+        bne ks_spr
+        iny
+        bne ks_spl
+ks_spr  rts
+.)
+
+; ks_in : C=0 si A est dans la liste qui suit l'appel (terminée par 0) ;
+;   on revient après la liste. A, X, Y gardés
+ks_in
+.(
+        sta gd
+        sty kvt+1
+        pla
+        sta gv
+        pla
+        sta gv+1
+        lda #1                  ; kvt : 1 pas trouvé, 0 trouvé
+        sta kvt
+        ldy #0
+l       iny
+        lda (gv),y
+        beq e
+        cmp gd
+        bne l
+        lda #0
+        sta kvt
+f       iny                     ; jusqu'au 0
+        lda (gv),y
+        bne f
+e       tya                     ; retour : gv + Y (le 0, dernier octet)
+        clc
+        adc gv
+        sta gv
+        bcc n
+        inc gv+1
+n       lda gv+1
+        pha
+        lda gv
+        pha
+        lda kvt                 ; C = pas trouvé
+        lsr
+        lda gd
+        ldy kvt+1
+        rts
 .)
 
 ; k_apply : gauche (k_left) op A droite (kc/kv)
@@ -1052,7 +1217,10 @@ k_apply
         sta lv+1
         lda klf
         beq lstk
-        lda kc
+        cmp #2
+        bne kcst
+        jmp lreg
+kcst    lda kc
         beq lcst
         lda lv                  ; deux constantes : calcul ici
         sta et
@@ -1079,6 +1247,9 @@ lcst    lda #<s_ldai            ; gauche constante -> g_et
         lda #<s_stet
         ldy #>s_stet
         jsr oi
+        lda lv+1                ; même octet : A le contient déjà
+        cmp lv
+        beq lc1
         lda #<s_ldai
         ldy #>s_ldai
         pha
@@ -1086,7 +1257,7 @@ lcst    lda #<s_ldai            ; gauche constante -> g_et
         sta osv
         pla
         jsr oimm
-        lda #<s_stet1
+lc1     lda #<s_stet1
         ldy #>s_stet1
         jsr oi
         jmp eop
@@ -1105,7 +1276,48 @@ eop     lda #0
         jsr oimm
         lda #<s_cmp
         ldy #>s_cmp
-        jmp oi
+        jsr oi
+zset    lda #1                  ; Z rendu (IF, WHILE : sans lda/ora)
+        sta kz
+        rts
+; gauche dans g_ev, droite simple : dans g_et (variable, déjà écrite), ou
+;   constante écrite ici ; opération inversée
+lreg    lda #0
+        sta kdst
+        lda kc
+        beq swp
+        lda kop                 ; X - k : X + (-k)
+        cmp #"-"
+        bne lr1
+        lda kv
+        sta ev
+        lda kv+1
+        sta ev+1
+        jsr neg_ev
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+        lda #"+"
+        sta kop
+lr1     lda #<s_etn
+        ldy #>s_etn
+        jsr dest_fix
+        jsr o_st16
+swp     lda kop
+        bpl sa
+        and #$7F                ; < et >, <= et >= échangés
+        tax
+        lda cswp,x
+        ora #$80
+        sta kop
+        jmp eop
+sa      cmp #"-"
+        bne eopj
+        lda #"r"                ; X - Y : g_rsub
+        sta kop
+eopj    jmp eop
+cswp    .byt 0,1,2,5,6,3,4
 ar      ldx #0                  ; opération -> sa routine
 f       lda ops,x
         beq r
@@ -1117,7 +1329,12 @@ f       lda ops,x
         bne f
 found   lda ops+1,x
         ldy ops+2,x
-        jmp oi
+        jsr oi
+        lda kop
+        cmp #"&"
+        beq zset
+        cmp #"|"
+        beq zset
 r       rts
 ops     .byt "+"
         .word s_add
@@ -1133,6 +1350,8 @@ ops     .byt "+"
         .word s_and
         .byt "|"
         .word s_or
+        .byt "r"
+        .word s_rsub
         .byt 0
 .)
 
@@ -1193,7 +1412,6 @@ o_text  lda #0                  ; texte jusqu'à la fin de la ligne
 ot0     sta kterm
 .(
         stx lx
-        jsr o_tab
         lda #<s_byt
         ldy #>s_byt
         jsr os
@@ -1484,14 +1702,12 @@ oi_fnm  jsr oi
 ; k_fnm : lecteur et nom de ifcb, écrits après l'appel (.byt, .asc)
 k_fnm
 .(
-        jsr o_tab
         lda #<s_byt
         ldy #>s_byt
         jsr os
         lda ifcb
         jsr ohex
         jsr ocrlf
-        jsr o_tab
         lda #<s_asc
         ldy #>s_asc
         jsr os
@@ -1946,6 +2162,8 @@ k_let   jsr getvar
         beq k_assign
         jmp e_param
 k_assign
+        jsr k_incdec            ; V = V + 1, V = V - 1 : inc, dec
+        bcc kas_r
         lda vix                 ; (l'expression change vix et vc)
         pha
         lda vc
@@ -1957,6 +2175,98 @@ k_assign
         pla
         jsr dest_var
         jmp o_st16
+kas_r   rts
+
+; k_incdec : X sur le « = » de V = ... ; si c'est V = V + 1 ou V = V - 1
+;   (rien d'autre sur la ligne), écrit inc ou dec, C=0 ; sinon C=1, X gardé
+k_incdec
+.(
+        txa
+        tay
+        iny
+        jsr sp
+        lda lbuf,y
+        jsr isalpha
+        bcs no
+        sec
+        sbc #"A"
+        cmp vix
+        bne no
+        iny
+        lda lbuf,y              ; second caractère, comme getvar
+        jsr isalpha
+        bcs dg
+        sbc #"A"-2              ; (C=0) lettre : 1-26
+        jmp c2
+dg      jsr isdig
+        bcs n1
+        sbc #"0"-28             ; (C=0) chiffre : 27-36
+c2      iny
+        cmp vc
+        bne no
+        beq op
+n1      lda vc
+        bne no
+op      jsr sp
+        lda lbuf,y
+        cmp #"+"
+        beq ok
+        cmp #"-"
+        bne no
+ok      sta kop
+        iny
+        jsr sp
+        lda lbuf,y
+        cmp #"1"
+        bne no
+        iny
+        jsr sp
+        lda lbuf,y
+        beq yes
+        cmp #";"
+        beq yes
+no      sec
+        rts
+sp      lda lbuf,y
+        cmp #" "
+        bne spr
+        iny
+        bne sp
+spr     rts
+yes     lda vix
+        ldx vc
+        jsr dest_var
+        lda kop
+        cmp #"-"
+        beq kdec
+        lda #<s_inc             ; inc V / bne *+5 / inc V+1
+        ldy #>s_inc
+        jsr o_ins_sym
+        jsr bne5
+        inc koff
+        lda #<s_inc
+        ldy #>s_inc
+        jsr o_ins_sym
+        clc
+        rts
+kdec    lda #<s_lda             ; lda V / bne *+5 / dec V+1 / dec V
+        ldy #>s_lda
+        jsr o_ins_sym
+        jsr bne5
+        inc koff
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_ins_sym
+        dec koff
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_ins_sym
+        clc
+        rts
+bne5    lda #<s_bne5
+        ldy #>s_bne5
+        jmp os
+.)
 
 ; k_newblk : nouveau bloc kl = ++kn, empilé avec le type A
 k_newblk
@@ -1988,15 +2298,35 @@ k_top
         sta kl
         lda cs_ah,y
         sta kl+1
+        lda cs_bl,y             ; boucle : son numéro
+        sta kb
+        lda cs_bh,y
+        sta kb+1
         lda cs_t,y
         rts
 none    lda #0
         rts
 .)
 
+; k_newloop : la boucle du sommet (Y) reçoit le numéro kb = ++knb (Bn)
+k_newloop
+.(
+        inc knb
+        bne n
+        inc knb+1
+n       lda knb
+        sta kb
+        sta cs_bl,y
+        lda knb+1
+        sta kb+1
+        sta cs_bh,y
+        rts
+.)
+
 k_repeat
         lda #T_REP
         jsr k_newblk
+        jsr k_newloop
         jsr k_pexpr
         jsr endline
         jsr dest_blk
@@ -2022,6 +2352,7 @@ k_for
         sta fvar+1
         lda #T_FOR
         jsr k_newblk
+        jsr k_newloop
         jsr k_pexpr             ; départ -> variable
         txa                     ; (position dans la ligne)
         pha
@@ -2264,7 +2595,8 @@ o_pname lda #<s_p
         jmp os
 
 ; textes de l'assembleur produit
-s_tab   .asc "        ",0
+s_tab   .asc " ",0        ; retrait des instructions (directives et
+                                ;   étiquettes en colonne 1)
 s_jmp   .asc "jmp ",0
 s_jsr   .asc "jsr ",0
 s_jend  .asc "jmp g_end",0
@@ -2296,6 +2628,10 @@ s_rfill .asc "jsr r_fill",0
 s_dim1  .asc "jsr r_dim1",0
 s_dim2  .asc "jsr r_dim2",0
 s_lda   .asc "lda ",0
+s_inc   .asc "inc ",0
+s_dec   .asc "dec ",0
+s_etn   .asc "g_et",0
+s_rsub  .asc "jsr g_rsub",0
 s_sta   .asc "sta ",0
 s_ldaev .asc "lda g_ev",0
 s_ldaev1 .asc "lda g_ev+1",0
@@ -2306,15 +2642,15 @@ s_stet1 .asc "sta g_et+1",0
 s_gev   .asc "g_ev",0
 s_v     .asc "V_",0
 s_p     .asc "P_",0
-s_tst   .asc "        lda g_ev",13,10,"        ora g_ev+1",13,10
-        .asc "        bne *+5",13,10,0
+s_tst   .asc " lda g_ev",13,10," ora g_ev+1",13,10
+s_bne5  .asc " bne *+5",13,10,0
 s_bcc   .asc "bcc *+5",0
 s_bcs   .asc "bcs *+5",0
 s_rts   .asc "rts",0
 s_byt   .asc ".byt ",0
 s_asc   .asc ".asc ",34,0
-s_bdata .asc "    .word 0,0,0",13,10,0
-s_vdata .asc "  .word 0",13,10,0
+s_bdata .asc " .word 0,0,0",13,10,0
+s_vdata .asc " .word 0",13,10,0
 s_hx1   .asc "h_x1",0
 s_hy1   .asc "h_y1",0
 s_hx2   .asc "h_x2",0
@@ -2379,8 +2715,8 @@ h_head2b .asc ".GRX par GRXASM",13,10
 h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
         .asc "; HIRES.INC sur le meme lecteur)",13,10
         .asc "#include ",34,"CPA.INC",34,13,10
-        .asc "        *= $0500",13,10
-        .asc "        jsr g_init",13,10,0
+        .asc "*= $0500",13,10
+        .asc " jsr g_init",13,10,0
 h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
 h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
@@ -2618,7 +2954,11 @@ kdh     = kdn+1
 kterm   = kdh+1         ; o_text : 0, ou le guillemet final
 kd_i    = kterm+1       ; dimensions des tableaux d'entiers
 kd_s    = kd_i+26       ;   et des tableaux $ (à la suite)
-ofcb    = kd_s+26       ; NOM.ASM
+knb     = kd_s+26       ; boucles numérotées (Bn, 2 octets)
+kb      = knb+2         ;   boucle en cours (2 octets)
+kz      = kb+2          ; 1 : Z vient de la dernière instruction (g_cmp...)
+kdst    = kz+1          ; 1 : l'opérande droit simple va dans g_et
+ofcb    = kdst+1        ; NOM.ASM
 NBUF    = ofcb+36-bufs
 cs_t    = ofcb+36       ; pile de contrôle : type
 cs_v    = cs_t+NCS      ;   IF : 1 après ELSE
@@ -2631,8 +2971,8 @@ cs_bh   = cs_bl+NCS
 vs_lo   = cs_bh+NCS     ; pile des valeurs
 vs_hi   = vs_lo+NVS
 vs_f    = vs_hi+NVS     ; gauche constante ?
-kvt     = vs_f+NVS      ; dest_var, o_vars : octet de travail
-kvu     = kvt+1         ; variables à deux caractères rencontrées : 5 octets
+kvt     = vs_f+NVS      ; dest_var, o_vars, k_simple : travail (2 octets)
+kvu     = kvt+2         ; variables à deux caractères rencontrées : 5 octets
 KVU     = 130           ;   par lettre, bit (second caractère - 1)
 obuf    = kvu+KVU       ; NOM.ASM : enregistrement en cours
 rawbuf  = obuf+128      ; ligne lue
