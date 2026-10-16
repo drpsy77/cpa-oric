@@ -2,7 +2,7 @@
 
 GRAPHER exécute un fichier texte `.GRX` (écrit avec EDIT) : une commande par ligne, en anglais.
 C'est un langage de bas niveau, proche de l'écran. Il manipule des entiers, des variables
-d'une lettre, des tableaux, l'image HIRES ou SPLIT et l'écran texte. Il sert à fabriquer des
+d'une ou deux lettres, des tableaux, l'image HIRES ou SPLIT et l'écran texte. Il sert à fabriquer des
 écrans (titre, décor) et de petits jeux. Le même fichier peut être **interprété**, ou
 **traduit** en assembleur par GRXASM puis assemblé en un `.COM` autonome, 5 à 20 fois plus
 rapide (§ 12).
@@ -39,7 +39,15 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 
 ## 3. Nombres, variables, expressions
 
-- Entiers de 16 bits signés (-32768 à 32767) ; variables `A` à `Z`, à 0 au départ.
+- Entiers de 16 bits signés (-32768 à 32767) ; variables à 0 au départ.
+- Nom d'une variable : une lettre (`A` à `Z`), suivie ou non d'une lettre ou d'un chiffre
+  (`PX`, `PY`, `N1`), soit 961 variables. Majuscules et minuscules sont confondues. `IF` est
+  réservé. Les noms de deux caractères servent aux variables simples seulement : un tableau
+  ou une chaîne garde une lettre (`AX(3)` et `AX$` sont refusés).
+- Bonne pratique : des variables nommées pour ce qui est unique (le joueur `PX PY`, le score
+  `SC`), un tableau pour ce qui se parcourt en boucle (des monstres `X(3) Y(3)`), et les
+  constantes écrites en clair. Dans un programme traduit, une variable simple se lit en
+  une instruction ; un élément de tableau passe par le descripteur (§ 12).
 - Affectation : `V = expr` ou `LET V = expr`.
 - Opérateurs, du plus fort au plus faible : `-` (signe) ; `*` `/` `%` (`/` tronque vers 0,
   `%` est le reste) ; `+` `-` ; comparaisons `=` `<>` `<` `<=` `>` `>=` (1 si vrai, 0 sinon) ;
@@ -56,7 +64,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | `FOUND` | 1 si le dernier `LOAD` ou `BLOAD` a trouvé son fichier, 0 sinon (§ 10) |
 | `LEN(A$)` | longueur d'une chaîne (§ 9) |
 
-Une lettre suivie de `(` est un tableau ; les fonctions ont des noms de plusieurs lettres.
+Une lettre suivie de `(` est un tableau ; les fonctions ont des noms de trois lettres ou plus.
 
 ## 4. Contrôle
 
@@ -349,7 +357,7 @@ s'affichent sans numéro de ligne (`Erreur : division par zero`).
 
 | Sujet | Messages |
 |---|---|
-| Lecture | `commande inconnue`, `parametres ?`, `ligne de plus de 126 car.`, `expression ?`, `variable ? (A a Z)` |
+| Lecture | `commande inconnue`, `parametres ?`, `ligne de plus de 126 car.`, `expression ?`, `variable ? (A, AB ou A1)` |
 | Valeurs | `valeur hors de 0-255`, `valeur hors limites`, `division par zero`, `pas nul` |
 | Modes | `HIRES ou SPLIT d'abord`, `LORES d'abord` |
 | Blocs | `NEXT sans boucle`, `NEXT manquant`, `bloc non ferme`, `fin de bloc en trop`, `trop de blocs imbriques`, `RETURN sans CALL`, `SUB introuvable` |
@@ -373,7 +381,9 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - La traduction fait la même analyse que l'interpréteur. Les erreurs de syntaxe et de blocs
   sont signalées avec la ligne, et `NOM.ASM` n'est alors pas écrit.
 - Le `.ASM` est lisible : chaque ligne du `.GRX` y figure en commentaire. Variables `V_A` à
-  `V_Z`, étiquettes `L3T`, `L3E`, `L3X` pour les blocs, `P_NOM` pour les sous-programmes.
+  `V_Z` (dans `GRX.INC`) et `V_PX`, `V_N1`... (réservées à la fin de `NOM.ASM`, seulement
+  celles que le programme utilise), étiquettes `L3T`, `L3E`, `L3X` pour les blocs, `P_NOM`
+  pour les sous-programmes.
 - Les parties constantes des expressions sont calculées pendant la traduction (`120+8` donne
   `128`) ; une constante hors de 0-255 est signalée tout de suite.
 - `$1`-`$9` sont remplacés au moment de la traduction.
@@ -391,18 +401,19 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (13 940 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (14 210 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 22 Ko (texte à partir de `$4454`).
+  tableaux et une animation fait environ 20 Ko (texte à partir de `$4CC6`).
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
   puis affichage).
-- **Limites** : entiers seulement, variables d'une lettre, deux dimensions au plus, ni
+- **Limites** : entiers seulement, variables d'une ou deux lettres (tableaux et chaînes : une
+  lettre), deux dimensions au plus, ni
   concaténation ni conversion de chaînes.
 
 ## 14. Exemples livrés
@@ -436,7 +447,19 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
 au lancement : ils ne sont pas dans le fichier.
 
-Page zéro : `$10-$58` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
+**Variables** : `getvar` (une instruction : `FOR`, `GET`, `INPUT`, affectation) et `kw_var`
+(dans une expression, après `parse_id`) rendent la première lettre dans `vix` (0-25) et le
+second caractère dans `vc` (0 : aucun, 1-26 : lettre, 27-36 : chiffre) ; `IF` est refusé
+(`not_if`). L'interpréteur range les 962 variables dans une table `vars` de 1 924 octets
+(entre `lbuf` et le texte, mise à 0 au lancement) : `vaddr` calcule
+`vars + 2 * (26 * vc + vix)`, sans recherche, donc aussi vite qu'avec une lettre ; une boucle
+`FOR` garde l'adresse de sa variable (`cs_v`, `cs_vh`). Le traducteur écrit `V_` puis le nom
+(`o_sym`) ; il note les variables de deux caractères rencontrées (`kvu` : 5 octets par
+lettre, un bit par second caractère) et les réserve à la fin de `NOM.ASM` (`o_vars`,
+`.word 0`). Un bloc de boucle `Bn` a 6 octets : arrivée, pas, puis l'adresse de la variable,
+écrite à l'entrée du `FOR` ; `g_forok` et `g_forstep` la lisent là.
+
+Page zéro : `$10-$5C` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
 **Sprites** (`spr.inc`) :
@@ -477,8 +500,19 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ### 16.1 Plus tard
 
-- **`REDIM`** : redimensionner un tableau en gardant les éléments dont les indices existent
-  encore (comme `ReDim Preserve`) ; les tableaux déclarés après sont déplacés. ~0,3 à 0,5 Ko.
+- **Programmes traduits plus petits et plus rapides** (mesure : `MONSTRES`, 130 lignes,
+  11,4 Ko, dont 5,2 Ko de code traduit et 6,3 Ko de bibliothèques), dans cet ordre :
+  1. GRXASM seul : pas de pile des valeurs quand l'opérande de droite est une constante ou une
+     variable ; `IF` testé sur le drapeau Z rendu par `g_cmp`, `g_and`, `g_or` ;
+     `V = V + 1`, `V = V - 1`, `V = k` en `inc`, `dec`, `lda`/`sta` ; tables `Bn` des boucles
+     `FOR` et `REPEAT` seulement ; constante dont les deux octets sont égaux chargée une fois.
+  2. Tableaux à adresse fixe : un `DIM` de tailles constantes, hors de tout bloc, est réservé
+     par GRXASM après la fin du programme (pas dans le fichier) ; le descripteur est écrit au
+     lancement et pointe vers cette zone (`LOAD`, `SAVE`, `FILL`, `SPRITES`, chaînes s'en
+     servent) ; un élément d'indice constant se lit en une instruction (`lda A_P+2`). Un `DIM`
+     de taille calculée reste comme aujourd'hui.
+  3. Bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) : `NOM.ASM` n'inclut
+     que ceux qu'il utilise.
 - **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes

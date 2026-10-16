@@ -371,21 +371,34 @@ wend    lda #0
         cpy #0
         beq bad
         stx lx
-        cpy #1                  ; une lettre puis = : affectation
-        bne cmd
+        cpy #3                  ; une ou deux lettres : variable ?
+        bcs cmd
+        txa                     ; ex = début du nom
+        sty ex
+        sec
+        sbc ex
+        sta ex
+        cpy #1
+        bne two
         lda lbuf,x              ; une lettre puis ( ou $ : un tableau
         cmp #"("
         beq kar
         cmp #"$"
         beq kar
+        bne asg
+two     jsr lookup              ; IF
+        bcc found
+asg     ldx ex
+        jsr getvar
         jsr skipsp
         cmp #"="
         bne cmd
-        lda word
-        jmp x_asg               ; affectation (propre à chaque programme)
+        jmp x_asg               ; affectation (propre à chaque programme) :
+                                ;   vix, vc, X sur le « = »
 kar     jmp x_aasg
 cmd     jsr lookup
         bcs bad
+found
         lda cnum                ; adresse : table cadr du programme
         asl
         tay
@@ -426,7 +439,9 @@ e_param lda #<m_param
         jmp error
 
 
-; getvar : lettre de variable (lbuf, X) -> vix
+; getvar : variable en lbuf, X -> vix, vc ; X après elle. Une lettre,
+;   suivie ou non d'une lettre ou d'un chiffre (A, AX, A1) ; IF est
+;   réservé
 getvar
 .(
         jsr skipsp
@@ -435,14 +450,85 @@ getvar
         sec
         sbc #"A"
         sta vix
+        lda #0
+        sta vc
         inx
-        lda lbuf,x              ; une seule lettre
+        lda lbuf,x
+        jsr isalpha
+        bcs dig
+        sbc #"A"-2              ; (C=0) lettre : 1-26
+        sta vc
+        jsr not_if
+        jmp nx
+dig     jsr isdig
+        bcs end
+        sbc #"0"-28             ; (C=0) chiffre : 27-36
+        sta vc
+nx      inx
+end     lda lbuf,x              ; rien d'autre collé au nom
         jsr isalpha
         bcc bad
+        jsr isdig
+        bcc bad
         rts
-bad     lda #<m_var
+bad     jmp v_bad
+.)
+v_bad   lda #<m_var
         ldy #>m_var
         jmp error
+
+; isdig : C=0 si A est un chiffre
+isdig   cmp #"0"
+        bcc nd
+        cmp #"9"+1
+        bcs nd
+        clc
+        rts
+nd      sec
+        rts
+
+; not_if : erreur si la variable vix, vc est IF (mot réservé)
+not_if  lda vix
+        cmp #"I"-"A"
+        bne ni
+        lda vc
+        cmp #"F"-"A"+1
+        beq v_bad
+ni      rts
+
+; kw_var : variable lue par parse_id (kw, X = 1 ou 2 lettres), suivie en
+;   ex d'un chiffre ou non -> vix, vc ; ex après elle
+kw_var
+.(
+        lda kw
+        sec
+        sbc #"A"
+        sta vix
+        lda #0
+        sta vc
+        cpx #1
+        beq one
+        lda kw+1
+        sec
+        sbc #"A"-1              ; lettre : 1-26
+        sta vc
+        jsr not_if
+        jmp chk
+one     jsr gch
+        jsr isdig
+        bcs chk
+        sbc #"0"-28             ; (C=0) chiffre : 27-36
+        sta vc
+        inc ex
+chk     jsr gch                 ; ni ( ni $ ni chiffre collé au nom
+        cmp #"("
+        beq bad
+        cmp #"$"
+        beq bad
+        jsr isdig
+        bcc bad
+        rts
+bad     jmp e_expr
 .)
 
 e_expr  lda #<m_expr
@@ -1306,7 +1392,7 @@ m_esc   .asc "Interrompu",0
 m_big   .asc "Fichier trop gros",0
 m_expr  .asc "expression ?",0
 m_range .asc "valeur hors de 0-255",0
-m_var   .asc "variable ? (A a Z)",0
+m_var   .asc "variable ? (A, AB ou A1)",0
 m_div   .asc "division par zero",0
 m_deep  .asc "trop de blocs imbriques",0
 m_step  .asc "pas nul",0

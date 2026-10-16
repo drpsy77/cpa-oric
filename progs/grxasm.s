@@ -28,6 +28,10 @@ named   ldx #NBUF               ; tampons à 0
 z1      sta bufs-1,x
         dex
         bne z1
+        ldx #KVU
+z2      sta kvu-1,x             ; variables à deux caractères : aucune
+        dex
+        bne z2
         sta oopen
         sta csp
         jsr open_grx
@@ -140,7 +144,8 @@ bl2     lda #0
         ldy #>s_bdata
         jsr os
         jmp bl
-bend    lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
+bend    jsr o_vars
+        lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
         ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
         jsr os                  ;  suivent le programme)
         lda karr
@@ -506,6 +511,15 @@ var     lda #<s_v
         clc
         adc #"A"
         jsr oc
+        lda kvc                 ; second caractère
+        beq off
+        cmp #27
+        bcs dg
+        adc #"A"-1              ; (C=0) lettre
+        jsr oc
+        jmp off
+dg      adc #"0"-28             ; (C=1) chiffre
+        jsr oc
         jmp off
 blk     lda #0
         sta ksuf
@@ -571,12 +585,88 @@ sta1    lda #<s_sta
 .)
 
 ; dest_var / dest_blk / dest_fix : choix de la destination
-dest_var
+dest_var                        ; A = lettre (0-25), X = second caractère
         sta kvar
+        stx kvc
         lda #0
         sta ksym
         sta koff
-        rts
+        txa
+        beq dv_r
+        dex                     ; deux caractères : marquée dans kvu
+        txa                     ;   (5 octets par lettre)
+        and #7
+        tay
+        txa
+        lsr
+        lsr
+        lsr
+        sta kvt
+        lda kvar
+        asl
+        asl
+        adc kvar                ; (C=0) lettre * 5
+        adc kvt
+        tax
+        lda #1
+dv_b    dey
+        bmi dv_s
+        asl
+        bne dv_b
+dv_s    ora kvu,x
+        sta kvu,x
+dv_r    rts
+
+; o_vars : « V_xy .word 0 » pour chaque variable à deux caractères
+;   rencontrée (les autres sont dans GRX.INC)
+o_vars
+.(
+        lda #0
+        sta kvar
+ov1     lda #1
+        sta kvc
+ov2     lda kvar                ; marquée ?
+        asl
+        asl
+        adc kvar
+        sta kvt
+        ldx kvc
+        dex
+        txa
+        and #7
+        tay
+        txa
+        lsr
+        lsr
+        lsr
+        clc
+        adc kvt
+        tax
+        lda kvu,x
+b       dey
+        bmi t
+        lsr
+        bpl b                   ; (lsr met N à 0)
+t       lsr
+        bcc nx
+        lda #0
+        sta ksym
+        sta koff
+        jsr o_sym
+        lda #<s_vdata
+        ldy #>s_vdata
+        jsr os
+nx      inc kvc
+        lda kvc
+        cmp #37
+        bcc ov2
+        inc kvar
+        lda kvar
+        cmp #26
+        bcs ov3
+        jmp ov1
+ov3     rts
+.)
 dest_blk
         lda #1
         sta ksym
@@ -786,16 +876,18 @@ nopar   cmp #34                 ; une chaîne dans un calcul
         sta kc
         rts
 id      jsr parse_id
+        cpx #3
+        bcs func
         cpx #1
-        bne func
+        bne v2
         jsr gch                 ; A( ou A$( : un élément de tableau
         cmp #"("
         beq kael
         cmp #"$"
         beq kbel
-        lda kw                  ; variable -> g_ev
-        sec
-        sbc #"A"
+v2      jsr kw_var              ; variable -> g_ev
+        lda vix
+        ldx vc
         jsr dest_var
         lda #0
         sta kc
@@ -1262,6 +1354,7 @@ k_get   jsr getvar              ; GET V : g_get -> g_ev -> V
         lda #0
         sta kc
         lda vix
+        ldx vc
         jsr dest_var
         jmp o_st16
 k_pen   jsr k_pexpr
@@ -1829,6 +1922,7 @@ k_input
         lda #0
         sta kc
         lda vix
+        ldx vc
         jsr dest_var
         jmp o_st16
 str     stx ex
@@ -1845,22 +1939,22 @@ str     stx ex
 bad     jmp e_param
 .)
 
-; affectation : X sur le « = », A = lettre
+; affectation : variable vix, vc ; X sur le « = »
 k_let   jsr getvar
         jsr skipsp
         cmp #"="
-        beq klet1
+        beq k_assign
         jmp e_param
-klet1   lda vix
-        clc
-        adc #"A"
 k_assign
-        sec
-        sbc #"A"
-        sta vix
+        lda vix                 ; (l'expression change vix et vc)
+        pha
+        lda vc
+        pha
         inx
         jsr k_lexpr
-        lda vix
+        pla
+        tax
+        pla
         jsr dest_var
         jmp o_st16
 
@@ -1924,14 +2018,29 @@ k_for
         jsr getvar
         lda vix
         sta fvar
+        lda vc
+        sta fvar+1
         lda #T_FOR
         jsr k_newblk
-        lda fvar
-        sta cs_v,y
         jsr k_pexpr             ; départ -> variable
-        lda fvar
-        jsr dest_var
+        txa                     ; (position dans la ligne)
+        pha
+        jsr fv_dest
         jsr o_st16
+        jsr fv_dest             ; adresse de la variable -> Bn+4
+        lda #<s_ldalo
+        ldy #>s_ldalo
+        jsr o_ins_sym
+        lda #4
+        jsr fv_sta
+        jsr fv_dest
+        lda #<s_ldahi
+        ldy #>s_ldahi
+        jsr o_ins_sym
+        lda #5
+        jsr fv_sta
+        pla
+        tax
         jsr k_pexpr             ; arrivée -> Bn
         jsr dest_blk
         jsr o_st16
@@ -1961,7 +2070,6 @@ step    jsr endline
         lda #"T"
         jsr o_label
         jsr o_ab
-        jsr o_ldxv
         lda #<s_forok
         ldy #>s_forok
         jsr oi
@@ -1972,15 +2080,19 @@ step    jsr endline
         jmp o_jmp
 .)
 
-; o_ldxv : « ldx #2*var » (variable de la boucle du sommet)
-o_ldxv  ldy csp
-        dey
-        lda cs_v,y
-        asl
-        sta osv
-        lda #<s_ldxi
-        ldy #>s_ldxi
-        jmp oimm
+; fv_dest : destination = variable du FOR (fvar)
+fv_dest lda fvar
+        ldx fvar+1
+        jmp dest_var
+
+; fv_sta : « sta Bn+A » (bloc en cours)
+fv_sta  pha
+        jsr dest_blk
+        pla
+        sta koff
+        lda #<s_sta
+        ldy #>s_sta
+        jmp o_ins_sym
 
 k_while
 .(
@@ -2021,7 +2133,6 @@ ok      pha
         cmp #T_FOR
         bne back
         jsr o_ab
-        jsr o_ldxv
         lda #<s_fstep
         ldy #>s_fstep
         jsr oi
@@ -2160,6 +2271,7 @@ s_jend  .asc "jmp g_end",0
 s_ldalo .asc "lda #<",0
 s_ldyhi .asc "ldy #>",0
 s_ldai  .asc "lda #",0
+s_ldahi .asc "lda #>",0
 s_ldxi  .asc "ldx #",0
 s_ldyi  .asc "ldy #",0
 s_get1  .asc "jsr r_get1",0
@@ -2201,7 +2313,8 @@ s_bcs   .asc "bcs *+5",0
 s_rts   .asc "rts",0
 s_byt   .asc ".byt ",0
 s_asc   .asc ".asc ",34,0
-s_bdata .asc "    .word 0,0",13,10,0
+s_bdata .asc "    .word 0,0,0",13,10,0
+s_vdata .asc "  .word 0",13,10,0
 s_hx1   .asc "h_x1",0
 s_hy1   .asc "h_y1",0
 s_hx2   .asc "h_x2",0
@@ -2268,7 +2381,7 @@ h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
         .asc "#include ",34,"CPA.INC",34,13,10
         .asc "        *= $0500",13,10
         .asc "        jsr g_init",13,10,0
-h_tail1 .asc "; boucles : compte, ou arrivee et pas",13,10,0
+h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
 h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
 h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
 h_tailR .asc "#include ",34,"ARR.INC",34,13,10,0
@@ -2497,8 +2610,8 @@ word    = par_len+NPAR  ; commande en cours
 kw      = word+9        ; mot cherché dans la table
 cname   = kw+9          ; nom de sous-programme
 numbuf  = cname+9       ; nombre écrit
-fvar    = numbuf+8
-aal     = fvar+1        ; tableau en cours : lettre
+fvar    = numbuf+8  ; FOR : variable (lettre, second caractère)
+aal     = fvar+2        ; tableau en cours : lettre
 aak     = aal+1         ;   et sorte (0 entiers, 1 $)
 kdn     = aak+1         ; dimensions du tableau
 kdh     = kdn+1
@@ -2508,7 +2621,7 @@ kd_s    = kd_i+26       ;   et des tableaux $ (à la suite)
 ofcb    = kd_s+26       ; NOM.ASM
 NBUF    = ofcb+36-bufs
 cs_t    = ofcb+36       ; pile de contrôle : type
-cs_v    = cs_t+NCS      ;   variable (FOR)
+cs_v    = cs_t+NCS      ;   IF : 1 après ELSE
 cs_pl   = cs_v+NCS      ;   ligne de reprise
 cs_ph   = cs_pl+NCS
 cs_al   = cs_ph+NCS     ;   compte (REPEAT) ou arrivée (FOR)
@@ -2518,7 +2631,10 @@ cs_bh   = cs_bl+NCS
 vs_lo   = cs_bh+NCS     ; pile des valeurs
 vs_hi   = vs_lo+NVS
 vs_f    = vs_hi+NVS     ; gauche constante ?
-obuf    = vs_f+NVS      ; NOM.ASM : enregistrement en cours
+kvt     = vs_f+NVS      ; dest_var, o_vars : octet de travail
+kvu     = kvt+1         ; variables à deux caractères rencontrées : 5 octets
+KVU     = 130           ;   par lettre, bit (second caractère - 1)
+obuf    = kvu+KVU       ; NOM.ASM : enregistrement en cours
 rawbuf  = obuf+128      ; ligne lue
 lbuf    = rawbuf+LMAX+1 ;   puis $1-$9 remplacés
 ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP
