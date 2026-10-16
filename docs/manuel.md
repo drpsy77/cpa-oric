@@ -56,7 +56,7 @@ Autres programmes de la disquette :
 - `LOGO.COM`, avec `DEMO.LOG`.
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
 - `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX` (exécuté), et
-  `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (avec `GRX.INC`), avec ses exemples (`docs/grapher.md` § 14), et
+  `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (en recopiant les routines utiles de `GRX.INC`, `HIRES.INC`...), avec ses exemples (`docs/grapher.md` § 14), et
   `VOIR.COM NOM`, qui affiche une image (`docs/grapher.md`, « HIRES plein écran »).
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
   `CPA.INC` et `HIRES.INC`.

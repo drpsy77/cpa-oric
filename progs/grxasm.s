@@ -79,6 +79,12 @@ compile
         sta kspr
         sta csp
         sta kyx
+        sta ktl                 ; noms des bibliothèques : aucun
+        sta kbad
+        sta kroot
+        lda #1
+        sta kcap
+        lda #0
         ldx #51                 ; dimensions des tableaux : aucun ; aucun
 kz      sta kd_i,x              ;   tableau fixe
         sta kf_ah,x
@@ -154,32 +160,7 @@ bl2     lda #0
 bend    jsr o_vars
         jsr kf_init             ; G_INIT, tables des lignes, adresses des
                                 ;   tableaux fixes
-        lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
-        ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
-        jsr os                  ;  suivent le programme)
-        lda karr
-        beq bnor
-        lda #<h_tailR
-        ldy #>h_tailR
-        jsr os
-bnor    lda kfil
-        beq bnof
-        lda #<h_tailF
-        ldy #>h_tailF
-        jsr os
-bnof    lda kspr
-        beq bnos
-        lda #<h_tailS
-        ldy #>h_tailS
-        jsr os
-bnos    lda kanim
-        beq bnoa
-        lda #<h_tailA
-        ldy #>h_tailA
-        jsr os
-bnoa    lda #<h_tail3
-        ldy #>h_tail3
-        jsr os
+        jsr kl_libs             ; routines utiles des bibliothèques
         jsr kf_none             ; sans tableau fixe : « G_INIT = g_init »
         jsr o_close
         jsr o_name              ; message : NOM.ASM ecrit
@@ -265,7 +246,10 @@ oc
 .(
         stx osx
         sty osy
-        ldy oidx
+        ldy kcap
+        beq nc
+        jsr kcapt               ; noms des bibliothèques relevés
+nc      ldy oidx
         sta obuf,y
         iny
         sty oidx
@@ -2877,17 +2861,13 @@ h_head1 .asc "; ",0
 h_head2 .asc ".ASM : traduit de ",0
 h_head2b .asc ".GRX par GRXASM",13,10
         .asc "; ASM ",0
-h_head3 .asc " donne le .COM (CPA.INC, GRX.INC et",13,10
-        .asc "; HIRES.INC sur le meme lecteur)",13,10
+h_head3 .asc " donne le .COM (CPA.INC sur le meme",13,10
+        .asc "; lecteur ; les routines utiles des",13,10
+        .asc "; bibliotheques sont recopiees a la fin)",13,10
         .asc "#include ",34,"CPA.INC",34,13,10
         .asc "*= $0500",13,10
         .asc " jsr G_INIT",13,10,0
 h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
-h_tail2 .asc "#include ",34,"GRX.INC",34,13,10,0
-h_tailA .asc "#include ",34,"ANIM.INC",34,13,10,0
-h_tailR .asc "#include ",34,"ARR.INC",34,13,10,0
-h_tailF .asc "#include ",34,"FIL.INC",34,13,10,0
-h_tailS .asc "#include ",34,"SPR.INC",34,13,10,0
 s_sres  .asc "jsr s_res",0
 s_spool .asc "jsr s_pool",0
 s_sshow .asc "jsr s_show",0
@@ -2896,7 +2876,6 @@ s_sk    .asc "s_k",0
 s_sn    .asc "s_n",0
 s_scol  .asc "s_col",0
 s_slig  .asc "s_lig",0
-h_tail3 .asc "#include ",34,"HIRES.INC",34,13,10,0
 t_asm   .asc "ASM"
 m_done  .asc ".ASM ecrit : ASM ",0
 m_nodim .asc "tableau non dimensionne",0
@@ -4173,6 +4152,550 @@ yes     clc
         rts
 .)
 
+; ---------------------------------------------------------------------
+; Bibliothèques : seules les routines utiles sont recopiées dans NOM.ASM
+; ---------------------------------------------------------------------
+; Les copies de la disquette (GRX.INC... HIRES.INC) sont marquées par
+;   tools/mark_inc.py : « ;@#NNN » (numéro de la routine qui précède la
+;   première du fichier), « ;@DDDEEE » (une routine commence, son étiquette
+;   suit ; elle a besoin des routines DDD, EEE ; « ;@* » : toujours gardée),
+;   « ;@+DDD » (suite), « ;@=NNN » (lignes de la routine NNN ; 000 :
+;   toujours). Pendant la traduction, oc relève les noms écrits (kcapt) ;
+;   à la fin, kl_libs lit les marques (routines appelées par leur nom ou
+;   par une constante qui le vaut), complète par les besoins (kl_clos),
+;   puis recopie les lignes des routines gardées.
+kp      = $5E           ; pointeurs de travail (2 octets chacun)
+kp2     = $60
+
+; kcapt : (oc) A = caractère écrit ; garde les noms qui commencent par une
+;   minuscule et contiennent « _ » (ktok -> liste kroot). A gardé
+kcapt
+.(
+        sta kca
+        cmp #"_"
+        beq id
+        cmp #"0"
+        bcc fin
+        cmp #"9"+1
+        bcc id
+        cmp #"A"
+        bcc fin
+        cmp #"Z"+1
+        bcs lo
+        inc kbad                ; majuscule : pas un nom de bibliothèque
+        bne id
+lo      cmp #"a"
+        bcc fin
+        cmp #"z"+1
+        bcs fin
+id      ldx ktl
+        cpx #15
+        bcc id1
+        inc kbad                ; trop long
+        bne r
+id1     sta ktok,x
+        inc ktl
+        bne r
+fin     lda ktl
+        beq r
+        tax
+        lda #0
+        sta ktok,x
+        lda kbad
+        bne z
+        lda ktok
+        cmp #"a"
+        bcc z
+z0      lda ktok,x              ; un « _ » ?
+        cmp #"_"
+        beq ok
+        dex
+        bpl z0
+        bmi z
+ok      jsr kr_find
+        bcc z
+        jsr kr_add
+z       lda #0
+        sta ktl
+        sta kbad
+r       lda kca
+        rts
+.)
+
+; kr_find : ktok dans la liste kroot ? C=0 : oui ; sinon C=1, kp sur la fin
+kr_find
+.(
+        lda #<kroot
+        sta kp
+        lda #>kroot
+        sta kp+1
+l       ldy #0
+        lda (kp),y
+        beq no
+c       lda (kp),y
+        cmp ktok,y
+        bne d
+        cmp #0
+        beq yes
+        iny
+        bne c
+d       lda (kp),y              ; nom suivant
+        beq n
+        iny
+        bne d
+n       iny
+        tya
+        clc
+        adc kp
+        sta kp
+        bcc l
+        inc kp+1
+        bcs l
+yes     clc
+        rts
+no      sec
+        rts
+.)
+
+; kr_add : ajoute ktok (kp : fin de la liste)
+kr_add
+.(
+        lda kp                  ; place : 18 octets au moins
+        cmp #<(kroot+KROOT-18)
+        lda kp+1
+        sbc #>(kroot+KROOT-18)
+        bcs full
+        ldy #$FF
+l       iny
+        lda ktok,y
+        sta (kp),y
+        bne l
+        iny
+        sta (kp),y              ; nouvelle fin
+        rts
+full    lda #<m_names
+        ldy #>m_names
+        jmp stop_msg
+.)
+
+; kl_libs : bibliothèques de NOM.ASM, routines utiles seulement
+kl_libs
+.(
+        lda #0
+        sta kcap
+        lda #<KMK               ; aucune routine gardée, sauf 000
+        sta kp
+        lda #>KMK
+        sta kp+1
+        ldx #>KMAXR
+        ldy #0
+        tya
+z       sta (kp),y
+        iny
+        bne z
+        inc kp+1
+        dex
+        bne z
+        lda #1
+        sta KMK
+        lda #<KEDG
+        sta kep
+        lda #>KEDG
+        sta kep+1
+        lda #0                  ; lecture des marques
+        jsr kl_run
+        jsr kl_clos
+        lda #1                  ; recopie
+.)
+; kl_run : A = 0 : lit les marques ; 1 : recopie ; chaque bibliothèque utile
+kl_run
+.(
+        sta kpass
+        lda #0
+        sta kli
+l       ldy kli
+        ldx klfl,y              ; drapeau (0 : toujours)
+        beq go
+        lda 0,x
+        beq nx
+go      jsr kl_file
+nx      inc kli
+        lda kli
+        cmp #6
+        bne l
+        rts
+.)
+
+; kl_file : la bibliothèque kli
+kl_file
+.(
+        ldx #0                  ; FCB : lecteur du .GRX, nom de la table
+        ldy kli
+        beq n0
+n9      txa
+        clc
+        adc #11
+        tax
+        dey
+        bne n9
+n0
+        ldy #0
+n       lda klnm,x
+        sta ifcb+1,y
+        inx
+        iny
+        cpy #11
+        bne n
+        lda sfcb
+        sta ifcb
+        lda #0
+        ldy #12
+c       sta ifcb,y
+        iny
+        cpy #36
+        bne c
+        ldx #F_OPEN
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        cmp #$FF
+        bne ok
+        jsr to_text             ; absente : « GRX.INC absente »
+        ldx #1
+p       lda ifcb,x
+        cmp #" "
+        beq p1
+        stx kli
+        jsr putc
+        ldx kli
+p1      inx
+        cpx #9
+        bne p2
+        lda #"."
+        stx kli
+        jsr putc
+        ldx kli
+p2      cpx #12
+        bne p
+        lda #<m_noinc
+        ldy #>m_noinc
+        jmp stop_msg
+ok      lda #128
+        sta ipos
+        lda #0
+        sta ieof
+        sta cnt
+        sta cnt+1
+        sta cur
+        sta cur+1
+        sta kname
+line    jsr kl_getl
+        bcc ln
+        rts
+ln      lda lbuf
+        cmp #";"
+        bne norm
+        lda lbuf+1
+        cmp #"@"
+        bne norm
+        ldx #3
+        lda lbuf+2
+        cmp #"#"
+        bne m1
+        jsr khex3               ; ;@#NNN
+        lda gv
+        sta cnt
+        lda gv+1
+        sta cnt+1
+        jmp line
+m1      cmp #"="
+        bne m2
+        jsr khex3               ; ;@=NNN
+        lda gv
+        sta cur
+        lda gv+1
+        sta cur+1
+        jmp line
+m2      cmp #"+"
+        beq dep
+        inc cnt                 ; ;@DDD... : une routine commence
+        bne m3
+        inc cnt+1
+m3      lda cnt
+        sta cur
+        lda cnt+1
+        sta cur+1
+        lda #1
+        sta kname
+        dex
+        lda lbuf+2
+        cmp #"*"
+        bne dep
+        jsr kmark               ; toujours gardée
+        ldx #3
+dep     lda kpass
+        bne dl
+dl0     lda lbuf,x              ; besoins : une arête cur -> DDD chacun
+        beq dl
+        jsr khex3
+        jsr kedge
+        jmp dl0
+dl      jmp line
+norm    lda kpass
+        beq names
+        jsr kmk_cur             ; recopie si la routine est gardée
+        beq nl
+        lda #<lbuf
+        ldy #>lbuf
+        jsr os
+        jsr ocrlf
+nl      jmp line
+names   lda kname               ; l'étiquette de la routine, ou une
+        bne nm                  ;   constante qui la vaut
+        lda cur
+        ora cur+1
+        beq nl
+nm      ldx #0                  ; nom en colonne 0 -> ktok
+nm1     lda lbuf,x
+        jsr kl_idc
+        bcs nm2
+        sta ktok,x
+        inx
+        cpx #15
+        bne nm1
+nm2     lda #0
+        sta ktok,x
+        lda kname
+        bne nm4
+nm3     lda lbuf,x              ; constante : « nom = »
+        inx
+        cmp #" "
+        beq nm3
+        cmp #"="
+        bne nm5
+nm4     jsr kr_find
+        bcs nm5
+        jsr kmark
+nm5     lda #0
+        sta kname
+        jmp line
+.)
+
+; kl_idc : C=0 si A peut faire partie d'un nom
+kl_idc
+.(
+        cmp #"_"
+        beq y
+        cmp #"0"
+        bcc n
+        cmp #"9"+1
+        bcc y
+        jsr isalpha
+        bcs n
+        lda lbuf,x              ; (isalpha met en majuscule)
+y       clc
+        rts
+n       sec
+        rts
+.)
+
+; khex3 : 3 chiffres hexadécimaux en lbuf,x -> gv ; X après eux
+khex3
+.(
+        lda #0
+        sta gv
+        sta gv+1
+        ldy #3
+l       lda lbuf,x
+        inx
+        sec
+        sbc #"0"
+        cmp #10
+        bcc d
+        sbc #7
+d       pha
+        asl gv
+        rol gv+1
+        asl gv
+        rol gv+1
+        asl gv
+        rol gv+1
+        asl gv
+        rol gv+1
+        pla
+        ora gv
+        sta gv
+        dey
+        bne l
+        rts
+.)
+
+; kedge : arête cur -> gv (4 octets en kep)
+kedge
+.(
+        lda kep
+        sta kp
+        lda kep+1
+        sta kp+1
+        cmp #>(PTOP-4)
+        bcs full
+        ldy #0
+        lda cur
+        sta (kp),y
+        iny
+        lda cur+1
+        sta (kp),y
+        iny
+        lda gv
+        sta (kp),y
+        iny
+        lda gv+1
+        sta (kp),y
+        clc
+        lda kep
+        adc #4
+        sta kep
+        bcc r
+        inc kep+1
+r       rts
+full    lda #<m_names
+        ldy #>m_names
+        jmp stop_msg
+.)
+
+; kmk_cur : A = marque de la routine cur (Z=1 : pas gardée) ; kmark : la
+;   marque
+kmk_cur jsr kmk_p
+        lda (kp2),y
+        rts
+kmark   jsr kmk_p
+        lda #1
+        sta (kp2),y
+        rts
+kmk_p   clc                     ; kp2 = KMK + cur, Y = 0
+        lda cur
+        adc #<KMK
+        sta kp2
+        lda cur+1
+        adc #>KMK
+        sta kp2+1
+        ldy #0
+        rts
+
+; kl_clos : une routine gardée garde celles dont elle a besoin (arêtes
+;   parcourues jusqu'à ce que rien ne change)
+kl_clos
+.(
+again   lda #0
+        sta kch
+        lda #<KEDG
+        sta kp
+        lda #>KEDG
+        sta kp+1
+l       lda kp
+        cmp kep
+        lda kp+1
+        sbc kep+1
+        bcs end
+        ldy #0
+        lda (kp),y
+        sta cur
+        iny
+        lda (kp),y
+        sta cur+1
+        jsr kmk_cur
+        beq nx
+        ldy #2
+        lda (kp),y
+        sta cur
+        iny
+        lda (kp),y
+        sta cur+1
+        jsr kmk_cur
+        bne nx
+        jsr kmark
+        sta kch
+nx      clc
+        lda kp
+        adc #4
+        sta kp
+        bcc l
+        inc kp+1
+        bcs l
+end     lda kch
+        bne again
+        rts
+.)
+
+; kl_getl : ligne suivante de la bibliothèque -> lbuf ; C=1 à la fin
+kl_getl
+.(
+        ldx #0
+l       jsr kl_getc
+        bcs eof
+        cmp #10
+        beq end
+        cmp #13
+        beq l
+        cpx #LMAX
+        bcs l
+        sta lbuf,x
+        inx
+        bne l
+eof     cpx #0
+        bne end
+        sec
+        rts
+end     lda #0
+        sta lbuf,x
+        clc
+        rts
+.)
+kl_getc
+.(
+        lda ieof
+        bne e
+        ldy ipos
+        cpy #128
+        bne g
+        stx kcx                 ; enregistrement suivant
+        ldx #F_SETDMA
+        lda #<ibuf
+        ldy #>ibuf
+        jsr BDOS
+        ldx #F_READ
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        ldx kcx
+        cmp #0
+        bne e1
+        ldy #0
+g       lda ibuf,y
+        iny
+        sty ipos
+        cmp #$1A
+        beq e1
+        clc
+        rts
+e1      lda #1
+        sta ieof
+e       sec
+        rts
+.)
+
+; bibliothèques, dans l'ordre de NOM.ASM (HIRES.INC à la fin : ses
+;   tables suivent h_end) ; drapeau en page zéro (0 : toujours)
+klnm    .asc "GRX     INC"
+        .asc "ARR     INC"
+        .asc "FIL     INC"
+        .asc "SPR     INC"
+        .asc "ANIM    INC"
+        .asc "HIRES   INC"
+klfl    .byt 0,karr,kfil,kspr,kanim,0
+m_noinc .asc " absente (bibliotheque)",0
+m_names .asc "Trop de noms (bibliotheques)",0
+
 ; affectations ; ANIM ; console
 x_asg   = k_assign
 x_aasg  = k_aassign
@@ -4327,7 +4850,27 @@ kih     = kil+2
 kfr1    = kih+2         ;   début constant de la ligne
 kq2     = kfr1+1        ;   kf_look
 KFN     = kq2+1-kfst
-obuf    = kq2+1         ; NOM.ASM : enregistrement en cours
+kcap    = kq2+1         ; 1 : oc relève les noms (kcapt)
+kca     = kcap+1
+kcx     = kca+1
+ktl     = kcx+1         ; nom en cours : longueur
+kbad    = ktl+1         ;   <> 0 : pas un nom de bibliothèque
+ktok    = kbad+1        ;   16 octets
+kpass   = ktok+16       ; kl_run : 0 marques, 1 recopie
+kli     = kpass+1       ; bibliothèque en cours
+kname   = kli+1         ; 1 : la ligne porte l'étiquette d'une routine
+kch     = kname+1       ; kl_clos : une marque ajoutée
+ipos    = kch+1         ; lecture d'une bibliothèque : position dans ibuf
+ieof    = ipos+1
+cnt     = ieof+1        ; numéro de la dernière routine lue (2 octets)
+kep     = cnt+2         ; fin des arêtes (2 octets)
+ibuf    = kep+2         ; 128 octets
+kroot   = ibuf+128      ; noms relevés (terminés par 0 ; 0 à la fin)
+KROOT   = 768
+obuf    = kroot+KROOT   ; NOM.ASM : enregistrement en cours
 rawbuf  = obuf+128      ; ligne lue
 lbuf    = rawbuf+LMAX+1 ;   puis $1-$9 remplacés
 ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP
+KMK     = ptext         ; fin de la traduction : marques des routines
+KMAXR   = 1024          ;   (une par numéro)
+KEDG    = KMK+KMAXR     ;   puis les arêtes (4 octets : de, vers)

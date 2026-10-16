@@ -58,6 +58,8 @@ cp progs/gtest.s build/src/GTEST.ASM
 for i in cpa hires grx anim arr fil spr; do
   python3 tools/strip_inc.py progs/$i.inc build/src/$(echo $i | tr a-z A-Z).INC > /dev/null
 done
+# marques ;@ des routines : GRXASM n'en recopie que les utiles (tools/mark_inc.py)
+python3 tools/mark_inc.py build/src
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit

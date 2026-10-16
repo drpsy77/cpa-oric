@@ -1,13 +1,14 @@
 #!/bin/sh
 # Non-régression des bibliothèques allégées de la disquette
 # (tools/strip_inc.py : CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC sans
-# commentaires). Le même programme doit donner le même binaire avec la
-# copie allégée qu'avec l'original :
-#   1. chaque programme de progs/, assemblé par xa ;
-#   2. les programmes traduits par GRXASM NOM (tools/grapher_tests),
-#      assemblés par xa ;
+# commentaires, puis marques ;@ de tools/mark_inc.py) :
+#   1. chaque programme de progs/ donne le même binaire avec la copie
+#      allégée et marquée qu'avec l'original (xa) ;
+#   2. les programmes traduits par GRXASM NOM (tools/grapher_tests), qui
+#      recopient les routines utiles des copies marquées, s'assemblent par
+#      xa (une routine oubliée : étiquette non définie) ;
 #   3. VOIR et un programme traduit, assemblés par ASM.COM (6502 simulé,
-#      tools/run_com.py) avec les copies allégées, comparés à xa.
+#      tools/run_com.py), donnent le même binaire que xa.
 #   XA=chemin/vers/xa tools/test_inc.sh
 set -e
 cd "$(dirname "$0")/.."
@@ -21,7 +22,15 @@ for i in cpa hires grx anim arr fil spr; do
   I=$(echo $i | tr a-z A-Z)
   cp progs/$i.inc "$T/o/$i.inc"; cp progs/$i.inc "$T/o/$I.INC"
   python3 tools/strip_inc.py progs/$i.inc "$T/s/$i.inc" > /dev/null
-  cp "$T/s/$i.inc" "$T/s/$I.INC"
+done
+for i in grx arr fil spr anim hires; do   # marques, comme build.sh
+  I=$(echo $i | tr a-z A-Z); mv "$T/s/$i.inc" "$T/s/$I.INC"
+done
+python3 tools/mark_inc.py "$T/s" > /dev/null
+for i in cpa hires grx anim arr fil spr; do
+  I=$(echo $i | tr a-z A-Z)
+  [ -f "$T/s/$I.INC" ] || mv "$T/s/$i.inc" "$T/s/$I.INC"
+  cp "$T/s/$I.INC" "$T/s/$i.inc"
 done
 cp progs/*_tab.s progs/*_inc.s "$T/o/"; cp progs/*_tab.s progs/*_inc.s "$T/s/"
 ok=0; ko=0
@@ -36,18 +45,18 @@ for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   (cd "$T/s" && $XA -o $n.bin $n.s > /dev/null)
   same "$n (xa)" "$T/o/$n.bin" "$T/s/$n.bin"
 done
-# 2. programmes traduits par GRXASM
+# 2. programmes traduits par GRXASM (bibliothèques marquées à côté du .GRX)
 cp build/progs/GRXASM.COM "$T/"; cp build/progs/ASM.COM "$T/s/"; cp files/anim/CUBE.ANI "$T/"
+cp "$T/s/"*.INC "$T/"
 last=""
 for f in tools/grapher_tests/*.grx; do
   N=$(basename "$f" .grx | tr a-z A-Z)
   tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/$N.GRX"
   (cd "$T" && python3 "$RUN" "$T" GRXASM.COM "$N" > /dev/null 2>&1) || true
   [ -f "$T/$N.ASM" ] || continue
-  tr -d '\032' < "$T/$N.ASM" > "$T/o/$N.s"; cp "$T/o/$N.s" "$T/s/$N.s"
-  (cd "$T/o" && $XA -o $N.bin $N.s > /dev/null 2>&1) || continue   # erreur voulue du test
-  (cd "$T/s" && $XA -o $N.bin $N.s > /dev/null)
-  same "$N (GRXASM, xa)" "$T/o/$N.bin" "$T/s/$N.bin"
+  tr -d '\032' < "$T/$N.ASM" > "$T/s/$N.s"; cp "$T/s/$N.s" "$T/o/$N.s"
+  if (cd "$T/s" && $XA -o $N.bin $N.s > $N.err 2>&1); then ok=$((ok+1)); cp "$T/s/$N.bin" "$T/o/$N.bin"
+  else echo "DIFFERENT : $N (GRXASM, xa)"; head -3 "$T/s/$N.err"; ko=$((ko+1)); fi
   last=$N
 done
 # 3. ASM.COM avec les copies allégées
