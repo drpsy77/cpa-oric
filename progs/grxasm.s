@@ -79,15 +79,12 @@ compile
         sta kspr
         sta csp
         sta kyx
-<<<<<<< Updated upstream
         sta ktl                 ; noms des bibliothèques : aucun
         sta kbad
         sta kroot
         lda #1
         sta kcap
         lda #0
-=======
->>>>>>> Stashed changes
         ldx #51                 ; dimensions des tableaux : aucun ; aucun
 kz      sta kd_i,x              ;   tableau fixe
         sta kf_ah,x
@@ -163,36 +160,7 @@ bl2     lda #0
 bend    jsr o_vars
         jsr kf_init             ; G_INIT, tables des lignes, adresses des
                                 ;   tableaux fixes
-<<<<<<< Updated upstream
         jsr kl_libs             ; routines utiles des bibliothèques
-=======
-        lda #<h_tail2           ; GRX.INC, ANIM.INC si besoin, HIRES.INC
-        ldy #>h_tail2           ; (HIRES.INC reste à la fin : ses tables
-        jsr os                  ;  suivent le programme)
-        lda karr
-        beq bnor
-        lda #<h_tailR
-        ldy #>h_tailR
-        jsr os
-bnor    lda kfil
-        beq bnof
-        lda #<h_tailF
-        ldy #>h_tailF
-        jsr os
-bnof    lda kspr
-        beq bnos
-        lda #<h_tailS
-        ldy #>h_tailS
-        jsr os
-bnos    lda kanim
-        beq bnoa
-        lda #<h_tailA
-        ldy #>h_tailA
-        jsr os
-bnoa    lda #<h_tail3
-        ldy #>h_tail3
-        jsr os
->>>>>>> Stashed changes
         jsr kf_none             ; sans tableau fixe : « G_INIT = g_init »
         jsr o_close
         jsr o_name              ; message : NOM.ASM ecrit
@@ -4184,7 +4152,6 @@ yes     clc
         rts
 .)
 
-<<<<<<< Updated upstream
 ; ---------------------------------------------------------------------
 ; Bibliothèques : seules les routines utiles sont recopiées dans NOM.ASM
 ; ---------------------------------------------------------------------
@@ -4729,8 +4696,6 @@ klfl    .byt 0,karr,kfil,kspr,kanim,0
 m_noinc .asc " absente (bibliotheque)",0
 m_names .asc "Trop de noms (bibliotheques)",0
 
-=======
->>>>>>> Stashed changes
 ; affectations ; ANIM ; console
 x_asg   = k_assign
 x_aasg  = k_aassign
@@ -4885,7 +4850,6 @@ kih     = kil+2
 kfr1    = kih+2         ;   début constant de la ligne
 kq2     = kfr1+1        ;   kf_look
 KFN     = kq2+1-kfst
-<<<<<<< Updated upstream
 kcap    = kq2+1         ; 1 : oc relève les noms (kcapt)
 kca     = kcap+1
 kcx     = kca+1
@@ -4904,9 +4868,6 @@ ibuf    = kep+2         ; 128 octets
 kroot   = ibuf+128      ; noms relevés (terminés par 0 ; 0 à la fin)
 KROOT   = 768
 obuf    = kroot+KROOT   ; NOM.ASM : enregistrement en cours
-=======
-obuf    = kq2+1         ; NOM.ASM : enregistrement en cours
->>>>>>> Stashed changes
 rawbuf  = obuf+128      ; ligne lue
 lbuf    = rawbuf+LMAX+1 ;   puis $1-$9 remplacés
 ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP

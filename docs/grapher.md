@@ -422,7 +422,6 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   Exemple mesuré : 8 « monstres » déplacés 50 fois (tableaux `X Y D E` de 8 entiers,
   grille `G$(16,16)`) : 3,2 fois moins d'instructions que par les descripteurs, et un
   programme un peu plus petit.
-<<<<<<< Updated upstream
 - **Bibliothèques.** GRXASM recopie à la fin de `NOM.ASM` les seules routines dont le
   programme a besoin (celles qu'il appelle, et celles qu'elles appellent), prises dans
   `GRX.INC` et `HIRES.INC`, plus `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il
@@ -436,15 +435,6 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   bibliothèques entières). `NOM.ASM` est plus long (10 Ko pour `DESSIN`, 34 Ko pour
   `SPRITES`) : il faut la place sur la disquette pendant la traduction. ASM met moins d'une
   minute pour `MOTIFS`.
-=======
-- ASM a besoin, sur le lecteur de la source, de `CPA.INC`, `GRX.INC`, `HIRES.INC`, plus
-  `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il lit ou écrit des fichiers de
-  données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et `ANIM.INC` s'il anime. Ils sont, avec GRXASM,
-  sur la disquette complète, la disquette Assembleur et la disquette Animations (pas sur la
-  disquette Logo, qui n'a pas ASM).
-- Un `.COM` traduit pèse au moins 3 Ko (bibliothèques), puis quelques dizaines d'octets par
-  commande. ASM met moins d'une minute pour `MOTIFS`.
->>>>>>> Stashed changes
 
 ## 13. Mémoire, vitesse, limites
 
@@ -520,7 +510,6 @@ pour `g_rsub`). `kz` vaut 1 juste après un `jsr g_cmp`, `g_and` ou `g_or` ; tou
 instruction le remet à 0 (`o_tab`) ; `o_skipz` n'écrit alors que `bne *+5` / `jmp`.
 `k_incdec` reconnaît `V = V + 1` et `V = V - 1`.
 
-<<<<<<< Updated upstream
 **Bibliothèques recopiées** (GRXASM) : `build.sh` passe les copies allégées de la
 disquette (`tools/strip_inc.py`) dans `tools/mark_inc.py`, qui découpe les six
 bibliothèques des programmes traduits en routines (d'une étiquette en colonne 0, hors bloc
@@ -541,8 +530,6 @@ du `.GRX`, qui ne sert plus. `tools/test_inc.sh` vérifie que les copies marqué
 comme les originaux et que chaque programme traduit s'assemble (une routine oubliée donne
 une étiquette non définie) ; `test_grapher.sh` traduit avec elles.
 
-=======
->>>>>>> Stashed changes
 **Tableaux fixes** (GRXASM) : `kf_new` décide, au `DIM`, qu'un tableau est fixe et calcule
 son adresse comme `r_dim` le fera (`kftop` suit `r_top`, à partir de `$9D60`) ; rien n'est
 écrit à la ligne du `DIM`. L'en-tête de `NOM.ASM` appelle `G_INIT` : sans tableau fixe,
@@ -563,11 +550,7 @@ un indice peut lire un autre tableau fixe. `ks_arr` étend `k_simple` aux élém
 constants, ou de variables simples dans un petit tableau d'entiers. Tests : `fix.grx`,
 `e_fix.grx`.
 
-<<<<<<< Updated upstream
 Page zéro : `$10-$5C` pour GRAPHER et GRXASM (plus `$5E-$61` pour GRXASM), `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
-=======
-Page zéro : `$10-$5C` pour GRAPHER et GRXASM, `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
->>>>>>> Stashed changes
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
 **Sprites** (`spr.inc`) :
@@ -608,12 +591,6 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ### 16.1 Plus tard
 
-<<<<<<< Updated upstream
-=======
-- **Programmes traduits plus petits** (mesure : `MONSTRES`, 130 lignes, 11 Ko, dont 6,3 Ko
-  de bibliothèques) : bibliothèques en modules (`ASM` n'a pas d'assemblage conditionnel) :
-  `NOM.ASM` n'inclut que ceux qu'il utilise.
->>>>>>> Stashed changes
 - **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes
