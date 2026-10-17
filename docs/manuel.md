@@ -204,7 +204,7 @@ jusqu'à 26 caractères en plein écran). RETURN entre dans un dossier, ou remon
 un fichier, il le montre. La clé est une passerelle : on y copie (Copier vers `USB:`, ou vers
 la colonne de la clé) et on en copie, mais on n'y efface ni ne renomme rien. Depuis la clé, un
 nom long est ramené en 8 + 3 (comme IMPORT) ; `/T` à la fin de la réponse (ou menu « Copier
-texte... ») change un LF seul en CR LF. Vers la clé, les `^Z` de fin sont retirés (comme
+texte... ») change un LF seul en CR LF et une tabulation en un espace. Vers la clé, les `^Z` de fin sont retirés (comme
 EXPORT) et un `.DSK` est refusé.
 
 Copier vers le lecteur de la liste sans changer de nom (`A:` quand la liste est celle de A:)
@@ -406,7 +406,7 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 |---|---|
 | `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, à la racine) |
 | `EXPORT afn [dossier]` | avec des jokers (`*.LOG`, `B:*.*`) : chaque fichier sous son nom, en minuscules si le modèle a été tapé en minuscules, à la racine ou dans le dossier donné ; un `.DSK` est sauté, ESC arrête entre deux fichiers |
-| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
+| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF et une tabulation (que l'Oric n'a pas) un espace — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
 | `USBDIR [chemin]` | liste un dossier de la clé (la racine par défaut) : nom et taille, `<REP>` pour un dossier |
 
     A>EXPORT LETTRE.TXT
@@ -1049,7 +1049,7 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
   place en `$03B0-$03B7`, après l'opération 0 (au démarrage d'une disquette, le firmware y
   laisse autre chose) ; sans LOCI, ces adresses sont celles du VIA. Chemins sans lecteur : la
   première clé montée. Casse d'origine prise dans `ORIG_LINE`. `^Z` retirés à l'EXPORT,
-  ajoutés à l'IMPORT ; `/T` change LF seul en CR LF. Un `.DSK` est refusé à l'EXPORT (on
+  ajoutés à l'IMPORT ; `/T` change LF seul en CR LF et TAB en un espace. Un `.DSK` est refusé à l'EXPORT (on
   écraserait l'image en service). Transferts par enregistrements de 128 octets. API de la MIA
   (`$03A0-$03B9`) : `loci-rom/src/asminc/loci.inc`.
 - **EDIT** : 8 192 octets exactement (tout ajout coûte un bloc de 2 Ko ; 842 octets de

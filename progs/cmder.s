@@ -153,7 +153,7 @@ ptype   = $94           ; 1 = la colonne montre la clé USB du LOCI
 ufd     = $95           ; descripteur d'un fichier ou répertoire de la clé
 urp     = $96           ; copie depuis la clé : position dans l'enregistrement
 ulast   = $97           ;   dernier octet (/T)
-textf   = $98           ; 1 = /T : LF seul -> CR LF
+textf   = $98           ; 1 = /T : LF seul -> CR LF, TAB -> espace
 dd      = $99           ; 1 = la liste de la clé commence par « .. »
 ucut    = $9A           ; 1 = plus de 128 entrées (liste coupée)
 ctext   = $9B           ; 1 = « Copier texte... » (/T proposé)
@@ -5866,7 +5866,8 @@ rp      lda #<m_copied
 r2      jmp report
 .)
 
-; ucopy_in : clé (colonne active) -> disquette ; /T : LF seul -> CR LF ;
+; ucopy_in : clé (colonne active) -> disquette ; /T : LF seul -> CR LF,
+; TAB -> espace ;
 ; dernier enregistrement complété par des ^Z (comme IMPORT)
 ucopy_in
 .(
@@ -5959,7 +5960,7 @@ rl      lda ufd
         beq eof
         sta ucnt
         ldx #0
-by      lda iobuf,x
+by      jsr u_getc          ; octet lu (/T : TAB -> un espace)
         cmp #10                 ; /T : LF seul -> CR LF
         bne em
         ldy textf
@@ -6006,6 +6007,19 @@ ue      jsr kill_dst
         lda #>m_usberr
         sta errm+1
         jmp u_end
+.)
+
+; u_getc : A = iobuf,X ; avec /T, une tabulation (TAB, 9) devient un
+; espace (l'Oric n'a pas de tabulation)
+u_getc
+.(
+        lda iobuf,x
+        ldy textf
+        beq r
+        cmp #9
+        bne r
+        lda #" "
+r       rts
 .)
 
 ; emit : A dans l'enregistrement (bp) ; plein : écrit sur dfcb. C=1 si

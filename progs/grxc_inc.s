@@ -12,6 +12,7 @@
 
 ; ---------------------------------------------------------------------
 ; Chargement du fichier : ptext, terminé par 0 (au premier ^Z)
+; (TAB, 9, remplacé par un espace : l'Oric n'a pas de tabulation)
 ; ---------------------------------------------------------------------
 load_text
 .(
@@ -51,15 +52,19 @@ eof     ldx #F_SETDMA
         ldy #0
         tya
         sta (pe),y
-        lda #<ptext             ; le premier ^Z termine le texte
-        sta sk
+        lda #<ptext             ; le premier ^Z termine le texte ;
+        sta sk                  ; une tabulation devient un espace
         lda #>ptext
         sta sk+1
 z       lda (sk),y
         beq r
         cmp #$1A
         beq end
-        inc sk
+        cmp #9
+        bne zn
+        lda #" "
+        sta (sk),y
+zn      inc sk
         bne z
         inc sk+1
         bne z

@@ -24,6 +24,11 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - DEBUG en usage réel : points d'arrêt, pas à pas ;
 - HEX : écriture sur place ;
 - disquettes par usage (`cpa-logo`, `cpa-notes`, `cpa-asm`) : DIR, DIRS, STAT, `ASM HELLO`.
+- tabulations : un `.GRX` écrit sur le Mac avec des tabulations (retrait et séparateurs),
+  passé par `IMPORT nom /T` puis par CMDER (`Copier texte...`, ou `/T` à la fin de la
+  réponse) : plus aucune tabulation sur la disquette (EDIT, HEX), fins de ligne CR LF ;
+  `GRAPHER NOM` le lance sans erreur ; le même fichier importé sans `/T` (tabulations
+  gardées) tourne aussi dans GRAPHER et dans un programme traduit par `GRXASM`.
 
 **LOGO**
 
