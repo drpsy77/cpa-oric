@@ -231,7 +231,7 @@ SPLIT). Les octets sont copiés tels quels, attributs compris. Dans la console :
   les colonnes 0-1 gardent leurs attributs si le rectangle commence à la colonne 2.
 
 **Une carte plus grande que l'écran.** La carte est dans un tableau `$` (un octet par case,
-attributs permis) ; à chaque pas, `PASTE` redessine la fenêtre depuis le coin de la caméra.
+attributs permis) ; après chaque pas, `PASTE` redessine la fenêtre depuis le coin de la caméra.
 C'est la méthode normale : la position de la caméra suffit à décrire l'écran (déplacements en
 diagonale, sauts, retour au début : la même ligne).
 
@@ -240,9 +240,14 @@ diagonale, sauts, retour au début : la même ligne).
     LORES
     ...
     WHILE 1
-      ...                       ; CX, CY : coin de la caméra, bornés
-      PASTE T$(CY,CX) 2 1 38 26
+      K = INKEY
+      IF K>7 & K<12
+        ...                     ; pas du joueur, CX, CY : coin de la camera, bornes
+        PASTE T$(CY,CX) 2 1 38 26
+      ENDIF
     NEXT
+
+Le redessin se fait seulement après un pas (§ 8, « Boucle de jeu ») : `CARTE.GRX` (§ 14).
 
 **Défiler puis compléter.** Quand le décor n'est pas entier en mémoire (calculé au fur et à
 mesure, tiré au hasard, sans fin), on fait glisser la zone de jeu d'une case et on écrit la
@@ -625,7 +630,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
 | `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `SPRITES.GRX` | LORES : un bonhomme mené aux flèches (deux images de marche) et une balle qui rebondit, sur un décor en deux couleurs ; sprites de `HEROS.SPR` |
-| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches |
+| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q ou ESC : fin |
 | `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 

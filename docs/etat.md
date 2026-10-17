@@ -71,9 +71,6 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures (vitesse, place), à
      décider sur mesure ;
-   - GRAPHER : `CARTE.GRX` à reprendre : `INKEY` au lieu de `GET`,
-     calcul de la caméra et redessin dans un sous-programme (`CALC`), appelés seulement
-     après une flèche (plus de scintillement) ;
    - GRAPHER : exemples de fichiers de données : un
      niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
    - EDIT : un paragraphe sur une seule ligne avec défilement horizontal ; une édition plein
