@@ -19,9 +19,7 @@
 ;            de 8 lignes (calage de la ligne de déchirure, à la main,
 ;            gardé jusqu'au prochain démarrage, comme celui de VSYNC).
 ;  a_msg     A = code d'erreur -> A/Y = message (terminé par 0)
-;  a_grx     pour GRXASM : A = passages, nom après l'appel (lecteur,
-;            puis 11 caractères) ; une erreur ou ESC appelle a_fail (A/Y =
-;            message), que le programme définit.
+;  (a_grx, l'ANIM des programmes traduits, est dans GRX.INC)
 ;
 ;  Cadence : chaque image s'affiche au top 50 Hz qui suit son délai (pas
 ;  de dérive si le décodage déborde). Le timer du système tourne à
@@ -262,68 +260,12 @@ hz_m4   lda #<a_m4
         rts
 .)
 
-; a_grx : GRXASM (A = passages ; nom après l'appel)
-a_grx
-.(
-        sta a_n2
-        pla                     ; adresse du nom - 1
-        sta hs
-        pla
-        sta hs+1
-        ldy #12
-hz_c    lda (hs),y
-        sta a_fcb-1,y
-        dey
-        bne hz_c
-        clc                     ; retour après le nom
-        lda hs
-        adc #12
-        tax
-        lda hs+1
-        adc #0
-        pha
-        txa
-        pha
-        lda a_fcb+9             ; type ANI par défaut
-        cmp #" "
-        bne hz_ty
-        ldx #2
-hz_t    lda a_sig,x
-        sta a_fcb+9,x
-        dex
-        bpl hz_t
-hz_ty   lda h_lines             ; depuis le texte : plein écran
-        bne hz_md
-        jsr h_full
-        jmp hz_go
-hz_md   cmp #200
-        beq hz_go
-        lda #<a_mh              ; SPLIT : refusé
-        ldy #>a_mh
-        jmp a_fail
-hz_go   lda #<a_fcb
-        ldy #>a_fcb
-        ldx a_n2
-        jsr a_play
-        bcs hz_er
-        cmp #27
-        bne hz_r
-        lda #<a_me
-        ldy #>a_me
-        jmp a_fail
-hz_er   jsr a_msg
-        jmp a_fail
-hz_r    rts
-.)
-
 a_sig   .asc "ANI",1
 a_m1    .asc "animation introuvable",0
 a_m3    .asc "animation trop grande",0
 a_m4    .asc "pas une animation",0
 a_mh    .asc "HIRES d'abord",0
-a_me    .asc "Interrompu",0
 a_n     .byt 0
-a_n2    .byt 0
 a_nf    .word 0
 a_k     .word 0
 a_lp    .byt 0

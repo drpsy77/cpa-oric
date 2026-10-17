@@ -1,0 +1,3 @@
+; division par une constante nulle : signalee a la traduction
+X = 5
+PRINT X/0

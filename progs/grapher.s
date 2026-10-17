@@ -481,8 +481,27 @@ f_rnd   jsr arg1
         bmi zero
         ora ev
         beq zero
-        jsr rand                ; et = hasard (0 à 32767), puis modulo
-        jsr udiv
+        jsr rand                ; et = hasard (0 à 32767)
+        lda ev+1                ; n < 256 : (graine * n) / 65536, sans
+        bne fr_big                ;   division (bits hauts de la graine)
+        sta mt
+        ldx #8
+fr_l    lsr ev
+        bcc fr_n
+        pha
+        clc
+        lda mt
+        adc rnd
+        sta mt
+        pla
+        adc rnd+1
+fr_n    ror
+        ror mt
+        dex
+        bne fr_l
+        sta ev
+        rts
+fr_big  jsr udiv                ; sinon : reste de la division
         lda mr
         sta ev
         lda mr+1
