@@ -1,5 +1,6 @@
 ; CARTE.GRX : un monde de 128 x 64 cases dans T$, vu par une fenetre
-; de 38 x 26 (PASTE) qui suit le joueur ; fleches, ESC : fin
+; de 38 x 26 (PASTE) qui suit le joueur ; fleches, Q ou ESC : fin
+; INKEY : pas d'attente ; l'ecran n'est redessine (CALC) qu'apres un pas
 DIM T$(64,128)
 ECHO Construction du monde...
 FILL T$ 32
@@ -38,9 +39,39 @@ FOR L 0 27
 NEXT
 CHAR 1 0 3
 LOCATE 2 0
-ECHO "CARTE : fleches, ESC : fin"
+ECHO "CARTE : fleches, Q ou ESC : fin"
 CHAR 1 27 6
+CALL CALC
 WHILE 1
+  K = INKEY
+  IF K>7 & K<12
+    NX = PX
+    NY = PY
+    IF K = 8
+      NX = PX-1
+    ENDIF
+    IF K = 9
+      NX = PX+1
+    ENDIF
+    IF K = 10
+      NY = PY+1
+    ENDIF
+    IF K = 11
+      NY = PY-1
+    ENDIF
+    IF T$(NY,NX) = 32
+      PX = NX
+      PY = NY
+      CALL CALC
+    ENDIF
+  ENDIF
+  IF K = 81 | K = 113          ; Q ou q
+    END
+  ENDIF
+NEXT
+
+; CALC : camera bornee, fenetre, joueur et position
+SUB CALC
   CX = PX-19
   IF CX < 0
     CX = 0
@@ -63,23 +94,4 @@ WHILE 1
   ECHO "  Y "
   PRINT PY
   ECHO "  "
-  GET K
-  NX = PX
-  NY = PY
-  IF K = 8
-    NX = PX-1
-  ENDIF
-  IF K = 9
-    NX = PX+1
-  ENDIF
-  IF K = 10
-    NY = PY+1
-  ENDIF
-  IF K = 11
-    NY = PY-1
-  ENDIF
-  IF T$(NY,NX) = 32
-    PX = NX
-    PY = NY
-  ENDIF
-NEXT
+ENDSUB
