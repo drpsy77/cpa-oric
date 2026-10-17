@@ -77,6 +77,11 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   `GRXASM DEFILE` et `ASM DEFILE`) ; `ROTH` et `ROTV` sur une bande de décor ; `PRINTV`,
   `ECHOV`, `SPCV` (colonnes de texte, murs) ; dans l'image, `SCROLV` en HIRES plein écran
   (durée, environ 150 ms) et en SPLIT (la console sous l'image reste intacte).
+- traduit sans contrôles : `SERPENT`, `SPRITES`, `DEFILE`, `CARTE` traduits de nouveau
+  (`GRXASM`, `ASM`) tournent comme en interprété, plus vite ; ESC les arrête par `INKEY` ou
+  `GET` ; une boucle qui ne lit pas le clavier (`WHILE 1` ... `NEXT`) ne s'arrête que par le
+  bouton RESET, qui rend le système ; `MOTIFS` (ciel étoilé, `RND`) : les étoiles restent bien
+  réparties.
 
 ## À vérifier ailleurs
 

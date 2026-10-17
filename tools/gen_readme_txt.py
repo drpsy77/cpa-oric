@@ -134,6 +134,7 @@ SECTIONS = [
   ("SHIDE k", "retire le sprite de l'emplacement k"),
   ("GRXASM nom [p]", "traduit NOM.GRX en NOM.ASM, avec les seules routines utiles de GRX.INC HIRES.INC ARR.INC FIL.INC SPR.INC ANIM.INC (sur le lecteur du .GRX) ; puis ASM NOM -> NOM.COM (avec CPA.INC)"),
   ("GRAPHER nom /A", "la meme chose : passe la main a GRXASM"),
+  ("traduit", "aucun controle a l'execution ; ESC seulement par GET WAIT INPUT INKEY ; sinon RESET"),
   ("HIRES", "plein ecran 240 x 200, efface"),
   ("SPLIT", "240 x 128, console dessous"),
   ("TEXT", "retour au texte (console)"),

@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 10 353 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 10 420 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,8 +40,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 15 582, 14 406 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
-| VOIR, VSYNC | 3 471, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
+| GRAPHER, GRXASM | 15 513, 14 490 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
+| VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
 Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
@@ -101,11 +101,9 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (15 582 octets) prend 8 blocs, 802 octets libres dans le dernier (place des
-  tuiles) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM partagé avec
-  `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux programmes traduits, `a_grx`,
-  106 octets inutiles à l'interpréteur. GRXASM (14 406) prend 8 blocs ; GRX.INC (11 369,
-  marques `;@` comprises) prend 6 blocs. HELP (10 353) prend 6 blocs. Les disquettes se
+- GRAPHER (15 513 octets) prend 8 blocs, 871 octets libres dans le dernier (place des
+  tuiles) ; piste de place : messages d'erreur par numéro, ~40 octets. GRXASM (14 490) prend
+  8 blocs ; GRX.INC (10 720, marques `;@` comprises) prend 6 blocs. HELP (10 420) prend 6 blocs. Les disquettes se
   spécialisent plutôt que de gratter des octets ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;

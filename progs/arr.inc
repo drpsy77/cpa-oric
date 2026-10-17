@@ -411,6 +411,8 @@ r_stw   ldy #0
         rts
 r_stb   lda r_j+1
         beq qstb1
+        lda r_chk               ; traduit : l'octet bas, sans erreur
+        beq qstb1
         jmp rz_rng
 qstb1    ldy #0
         lda r_j
@@ -443,7 +445,9 @@ r_fill
         sta rz_es
         cmp #2
         beq qw
-        lda rz_v+1              ; tableau $ : 0-255
+        lda rz_v+1              ; tableau $ : 0-255 (vérifié en interprété)
+        beq qa
+        lda r_chk
         bne qbad
         beq qa
 qw       asl rz_p
@@ -726,6 +730,9 @@ r_copy
         cpx r_sc
         beq qok
         bcc qok
+        ldx r_sc                ; traduit : coupée à la capacité
+        lda r_chk
+        beq qok
         lda #<rz_m_long
         ldy #>rz_m_long
         jmp r_fail

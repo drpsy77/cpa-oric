@@ -73,7 +73,7 @@ Une lettre suivie de `(` est un tableau ; les fonctions ont des noms de trois le
 |---|---|
 | `REPEAT n` ... `NEXT` | n fois (rien si n ≤ 0) |
 | `FOR V a b [pas]` ... `NEXT` | V de a à b, pas de 1 par défaut, négatif pour descendre ; rien si a est déjà au-delà de b ; pas nul : `pas nul` |
-| `WHILE expr` ... `NEXT` | tant que l'expression n'est pas nulle (`WHILE 1` : sans fin, ESC arrête) |
+| `WHILE expr` ... `NEXT` | tant que l'expression n'est pas nulle (`WHILE 1` : sans fin ; ESC arrête en interprété, § 8) |
 | `IF expr` ... [`ELSE` ...] `ENDIF` | si l'expression n'est pas nulle |
 | `SUB NOM` ... `ENDSUB` | sous-programme, appelé par `CALL NOM` ; `RETURN` en sort avant la fin ; rencontré en chemin, il est sauté (on peut le placer n'importe où) |
 | `END` | fin du programme |
@@ -261,6 +261,11 @@ Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut. **ESC** arrête le pro
 deux lignes et pendant `GET`, `WAIT` et `INPUT` (message `Interrompu`). Une autre touche tapée
 pendant l'exécution est gardée pour `WAIT`, `GET` ou `INKEY`.
 
+Dans un programme traduit (§ 12), ESC n'est plus regardé entre les lignes ni dans les
+boucles : il arrête seulement quand le programme lit le clavier (`GET`, `WAIT`, `INPUT`,
+`INKEY`). Une boucle qui ne lit jamais le clavier ne s'arrête que par le bouton RESET, qui
+rend le système.
+
 ## 9. Tableaux et chaînes
 
 **Noms.** Chaque lettre sert à trois choses indépendantes : `A` (entier), `A(...)` (tableau
@@ -403,8 +408,10 @@ HEX ou par un petit programme qui remplit un tableau `$` et fait `BSAVE`.
 ## 11. Erreurs
 
 Une erreur arrête le programme : retour à la console, puis `L n COMMANDE : message`
-(`L 3 LINE : valeur hors de 0-255`). Dans un programme traduit, les erreurs d'exécution
-s'affichent sans numéro de ligne (`Erreur : division par zero`).
+(`L 3 LINE : valeur hors de 0-255`). Un programme traduit ne vérifie rien pendant
+l'exécution (§ 12) ; il ne lui reste que les erreurs qui ne sont pas des fautes du programme,
+sans numéro de ligne : fichiers (`Erreur : disque plein`...), `memoire pleine` à un `DIM`
+de taille calculée, et ESC (`Interrompu`).
 
 | Sujet | Messages |
 |---|---|
@@ -449,8 +456,19 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - Les parties constantes des expressions sont calculées pendant la traduction (`120+8` donne
   `128`) ; une constante hors de 0-255 est signalée tout de suite.
 - `$1`-`$9` sont remplacés au moment de la traduction.
-- Les indices et les tableaux ne sont pas vérifiés, pour aller plus vite : si un programme
-  traduit se comporte mal, on le relance en interprété pour trouver l'erreur.
+- **Aucun contrôle à l'exécution.** L'interprété sert à la mise au point ; le programme
+  traduit va droit au but, sous la responsabilité du programmeur (comme en C). Si un
+  programme traduit se comporte mal, on le relance en interprété pour trouver l'erreur.
+  - Vérifié pendant la traduction (avec le numéro de ligne) : la syntaxe et les blocs, une
+    constante hors de 0-255 (paramètre ou octet d'un tableau `$`), un pas constant nul, une
+    division par une constante nulle, la profondeur des expressions.
+  - Plus vérifié du tout : un paramètre calculé hors de 0-255 (seul son octet bas compte),
+    une colonne ou une ligne hors de l'écran, une commande du LORES hors du LORES, les
+    indices et les tableaux, une chaîne trop longue (coupée à la capacité), une division par
+    zéro (le résultat n'a pas de sens), un pas calculé nul (la boucle ne finit pas), ESC dans
+    les boucles (§ 8).
+  - Un paramètre qui est une variable simple se lit en une instruction (`lda V_L`, son
+    octet bas).
 - Un tableau doit être déclaré par un `DIM` placé plus haut dans le fichier (la traduction
   lit le fichier dans l'ordre).
 - **Tableaux à adresse fixe.** Un `DIM` de tailles constantes (`DIM X(8) G$(16,16)`),
@@ -480,21 +498,21 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   `GRX.INC absente (bibliotheque)`) ; ASM n'a ensuite besoin que de `CPA.INC`. Ils sont,
   avec GRXASM, sur la disquette complète, la disquette Assembleur et la disquette
   Animations (pas sur la disquette Logo, qui n'a pas ASM).
-- Taille d'un `.COM` traduit : 1,5 Ko pour `ARDOISE` ou `DESSIN`, 2,3 Ko pour `MOTIFS`,
-  4,4 Ko pour `SERPENT`, 6,4 Ko pour `SPRITES` (37 à 68 % de moins qu'avec les
-  bibliothèques entières). `NOM.ASM` est plus long (10 Ko pour `DESSIN`, 34 Ko pour
+- Taille d'un `.COM` traduit : 1,4 Ko pour `ARDOISE`, 1,7 Ko pour `DESSIN`, 2,2 Ko pour
+  `MOTIFS`, 4,0 Ko pour `SERPENT`, 6,0 Ko pour `SPRITES` (les contrôles retirés en ont ôté
+  4 à 15 %). `NOM.ASM` est plus long (10 Ko pour `DESSIN`, 34 Ko pour
   `SPRITES`) : il faut la place sur la disquette pendant la traduction. ASM met moins d'une
   minute pour `MOTIFS`.
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (15 582 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (15 513 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 19 Ko (texte à partir de `$5247`).
+  tableaux et une animation fait environ 19 Ko (texte à partir de `$5202`).
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
@@ -505,6 +523,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   estimée en cycles) : `PASTE` ou `SCROLV`, environ 20 ms (une trame) ; `SCROLH`, `ROTH`,
   environ 40 ms (chaque ligne passe par un tampon) ; `ROTV n` : n passes d'une ligne, dans le
   sens le plus court. Dans l'image, compter 8 000 octets pour tout le HIRES : environ 150 ms.
+  Sans contrôles à l'exécution (§ 12), une boucle de 1 000 `RND` et `CHAR` va 2,2 fois plus
+  vite qu'avec, et 1 064 `LOCATE` et `CHAR` 1,65 fois (6502 simulé, en instructions).
 - **Limites** : entiers seulement, variables d'une ou deux lettres (tableaux et chaînes : une
   lettre), deux dimensions au plus, ni
   concaténation ni conversion de chaînes.
@@ -535,7 +555,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/grx.inc` (`GRX.INC`) | bibliothèque d'exécution des programmes traduits |
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` ; rectangles de l'écran (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
-| `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` |
+| `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |
 | `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
 
@@ -604,6 +624,22 @@ copié directement (`kf_cpv`). `kf_get` garde l'état (`kfst`, `KFN` octets) sur
 un indice peut lire un autre tableau fixe. `ks_arr` étend `k_simple` aux éléments d'indices
 constants, ou de variables simples dans un petit tableau d'entiers. Tests : `fix.grx`,
 `e_fix.grx`.
+
+**Contrôles** : un programme traduit n'en fait aucun (§ 12). GRXASM écrit `lda g_ev` (ou
+`lda V_x` pour une variable seule : `kv_one`) là où il écrivait `jsr g_byte`, appelle
+directement `h_loc`, `h_chr`, `h_ltab`, `h_lvon`, `r_scrl`, et n'écrit plus `jsr g_brk` à
+chaque `NEXT`. `GRX.INC` n'a plus ni `g_byte`, ni `g_needlo`, ni `g_chk`, ni `g_brk`, ni les
+tests de `g_push`, `g_sdiv`, `g_forok`, `g_scrn`. Dans `arr.inc`, `r_chk` (0 en traduit)
+commande aussi la plage 0-255 de `r_stb` et `r_fill`, et `r_copy` coupe une chaîne trop
+longue au lieu de s'arrêter. `k_apply` refuse une division par une constante nulle ; la
+profondeur des expressions est bornée pendant la traduction (`NVS`), comme la pile des
+valeurs de `GRX.INC` (24).
+
+**Hasard** : `RND(n)` fait avancer la graine (`rnd * 5 + 13849`, 16 bits), puis, pour n < 256,
+rend (graine × n) / 65 536 : une multiplication de 8 pas, sur les bits hauts de la graine,
+les meilleurs ; pour n plus grand, le reste de la division (octets échangés), comme avant.
+L'interpréteur (`f_rnd`) et `GRX.INC` (`g_rnd`) font le même calcul. Tests : `rnd.grx`,
+`e_div0.grx`.
 
 **Rectangles** (`arr.inc`) : ils sont dans `ARR.INC` plutôt que dans `HIRES.INC`, que d'autres
 programmes incluent (VOIR) sans s'en servir ; un programme traduit qui fait défiler inclut

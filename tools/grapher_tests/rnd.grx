@@ -1,0 +1,26 @@
+; RND : valeurs dans 0..n-1, toutes atteintes (n < 256 : multiplication)
+DIM C(7)
+FOR I 1 700
+  R = RND(7)
+  C(R) = C(R)+1
+NEXT
+OK = 1
+FOR I 0 6
+  IF C(I) < 60
+    OK = 0
+  ENDIF
+NEXT
+PRINT OK
+M = 0
+FOR I 1 300
+  R = RND(1000)
+  IF R > M
+    M = R
+  ENDIF
+  IF R < 0
+    M = -1
+  ENDIF
+NEXT
+PRINT M > 900
+PRINT RND(1)
+PRINT RND(0)

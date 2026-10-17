@@ -107,6 +107,64 @@ r_esc   lda #<g_m_esc
         ldy #>g_m_esc
         jmp g_stop
 
+; a_grx : ANIM traduit (A = passages ; nom après l'appel) : se sert de
+;   ANIM.INC (a_play, a_fcb, a_sig, a_msg), inclus si le programme anime
+a_grx
+.(
+        sta a_n2
+        pla                     ; adresse du nom - 1
+        sta hs
+        pla
+        sta hs+1
+        ldy #12
+hz_c    lda (hs),y
+        sta a_fcb-1,y
+        dey
+        bne hz_c
+        clc                     ; retour après le nom
+        lda hs
+        adc #12
+        tax
+        lda hs+1
+        adc #0
+        pha
+        txa
+        pha
+        lda a_fcb+9             ; type ANI par défaut
+        cmp #" "
+        bne hz_ty
+        ldx #2
+hz_t    lda a_sig,x
+        sta a_fcb+9,x
+        dex
+        bpl hz_t
+hz_ty   lda h_lines             ; depuis le texte : plein écran
+        bne hz_md
+        jsr h_full
+        jmp hz_go
+hz_md   cmp #200
+        beq hz_go
+        lda #<a_mh              ; SPLIT : refusé
+        ldy #>a_mh
+        jmp a_fail
+hz_go   lda #<a_fcb
+        ldy #>a_fcb
+        ldx a_n2
+        jsr a_play
+        bcs hz_er
+        cmp #27
+        bne hz_r
+        lda #<a_me
+        ldy #>a_me
+        jmp a_fail
+hz_er   jsr a_msg
+        jmp a_fail
+hz_r    rts
+.)
+
+a_me    .asc "Interrompu",0
+a_n2    .byt 0
+
 ; g_stop : message A/Y (0 à la fin), puis fin du programme
 g_stop
         pha
@@ -122,21 +180,6 @@ g_stop
         txs
         rts
 
-; g_brk : ESC arrête ; une autre touche est gardée (WAIT, INKEY, fin)
-g_brk
-.(
-        jsr B_CONST
-        beq r
-        jsr h_key
-        sta g_pk
-        cmp #27
-        bne r
-        lda #<g_m_esc
-        ldy #>g_m_esc
-        jmp g_stop
-r       rts
-.)
-
 g_getkey
         lda g_pk
         beq gk1
@@ -148,21 +191,13 @@ gk1     jmp h_key
 ; ---------------------------------------------------------------------
 ; Pile des valeurs et opérations (g_et op g_ev -> g_ev)
 ; ---------------------------------------------------------------------
-g_push
-.(
-        ldy g_vsp
-        cpy #24
-        bcs deep
+g_push  ldy g_vsp                ; (profondeur vérifiée par GRXASM)
         lda g_ev
         sta g_vlo,y
         lda g_ev+1
         sta g_vhi,y
         inc g_vsp
         rts
-deep    lda #<g_m_deep
-        ldy #>g_m_deep
-        jmp g_stop
-.)
 
 g_pop   dec g_vsp
         ldy g_vsp
@@ -293,13 +328,7 @@ g_mod   jsr g_sdiv
 g_div
 g_sdiv
 .(
-        lda g_ev
-        ora g_ev+1
-        bne ok
-        lda #<g_m_div
-        ldy #>g_m_div
-        jmp g_stop
-ok      lda g_et+1
+        lda g_et+1              ; (division par zéro : non vérifiée)
         sta g_sg
         eor g_ev+1
         sta g_sg+1
@@ -429,7 +458,26 @@ g_rnd
         lda g_seed
         and #$7F
         sta g_et+1
-        jsr g_udiv
+        lda g_ev+1              ; n < 256 : (graine * n) / 65536, sans
+        bne big                 ;   division (bits hauts de la graine)
+        sta g_mt
+        ldx #8
+l       lsr g_ev
+        bcc n
+        pha
+        clc
+        lda g_mt
+        adc g_seed
+        sta g_mt
+        pla
+        adc g_seed+1
+n       ror
+        ror g_mt
+        dex
+        bne l
+        sta g_ev
+        rts
+big     jsr g_udiv              ; sinon : reste de la division
         lda g_mr
         sta g_ev
         lda g_mr+1
@@ -510,16 +558,6 @@ r       lda #0
         sta g_ev+1
         rts
 .)
-
-; g_byte : A <- g_ev, qui doit aller de 0 à 255
-g_byte
-        lda g_ev+1
-        bne gb_bad
-        lda g_ev
-        rts
-gb_bad  lda #<g_m_range
-        ldy #>g_m_range
-        jmp g_stop
 
 ; ---------------------------------------------------------------------
 ; Commandes
@@ -640,23 +678,6 @@ r       rts
 ; ---------------------------------------------------------------------
 ; LORES (h_x1 = colonne, h_y1 = ligne)
 ; ---------------------------------------------------------------------
-g_needlo
-        lda h_lo
-        bne gnl_r
-        lda #<g_m_nolo
-        ldy #>g_m_nolo
-        jmp g_stop
-gnl_r   rts
-g_chk   lda h_x1
-        cmp #40
-        bcs g_lim
-        lda h_y1
-        cmp #28
-        bcs g_lim
-        rts
-g_lim   lda #<g_m_lim
-        ldy #>g_m_lim
-        jmp g_stop
 g_lcls
 .(
         lda h_lo
@@ -669,29 +690,6 @@ c       lda h_lines             ; hors du LORES : la console (pas en HIRES)
         jmp g_putc
 r       rts
 .)
-g_loc   jsr g_needlo
-        jsr g_chk
-        jmp h_loc
-g_chr   pha
-        jsr g_needlo
-        jsr g_chk
-        pla
-        jmp h_chr
-; g_vlon : PRINTV, ECHOV, SPCV : LORES, écriture verticale (h_lvoff après)
-g_vlon  jsr g_needlo
-        jmp h_lvon
-; g_needsc : LORES, HIRES ou SPLIT
-g_needsc
-        lda h_lines
-        bne gns_r
-        jmp g_needlo
-gns_r   rts
-; g_scrl : A = SCROLH 0, SCROLV 1, ROTH 2, ROTV 3 (r_sn, rectangle et
-;   r_sf posés)
-g_scrl  pha
-        jsr g_needsc
-        pla
-        jmp r_scrl
 ; g_paste, g_grab : A/Y = descripteur du tableau $ ; ligne puis colonne
 ;   sur la pile des valeurs ; coin h_x1 h_y1, largeur h_x2, hauteur h_y2
 g_grab  ldx #1
@@ -701,7 +699,6 @@ g_paste ldx #0
         pha
         tya
         pha
-        jsr g_needsc
         jsr g_pop               ; colonne -> g_ev
         lda g_et
         sta g_ev
@@ -724,14 +721,9 @@ g_paste ldx #0
         sta hs+1
         lda g_gd
         jmp r_blit
-g_spc   jsr g_needlo
-        lda h_x1
+g_spc   lda h_x1
         ldx h_y1
         jmp h_lspc
-g_tab   pha
-        jsr g_needlo
-        pla
-        jmp h_ltab
 ; g_get : attend une touche -> g_ev (ESC arrête)
 g_get   jsr g_wait
         sta g_ev
@@ -741,10 +733,6 @@ g_get   jsr g_wait
 ; g_scrn : g_et = colonne, g_ev = ligne -> octet de la case
 g_scrn
 .(
-        jsr g_needlo
-        lda g_et+1
-        ora g_ev+1
-        bne g_lim
         lda h_x1                ; les paramètres en cours sont gardés
         pha
         lda h_y1
@@ -753,7 +741,6 @@ g_scrn
         sta h_x1
         lda g_ev
         sta h_y1
-        jsr g_chk
         jsr h_scrn
         sta g_ev
         pla
@@ -952,15 +939,7 @@ g_forok
 .(
         sta g_t
         sty g_t+1
-        ldy #2                  ; pas nul : erreur
-        lda (g_t),y
-        iny
-        ora (g_t),y
-        bne ok
-        lda #<g_m_step
-        ldy #>g_m_step
-        jmp g_stop
-ok      jsr g_fvar              ; g_ip <- adresse de la variable
+        jsr g_fvar              ; (pas nul : non vérifié)              ; g_ip <- adresse de la variable
         sec                     ; var - arrivée (signé)
         ldy #0
         lda (g_ip),y
@@ -1110,11 +1089,6 @@ g_thir  .asc "HIR"
 g_m_esc   .asc "Interrompu",0
 g_m_err   .asc "Erreur : ",0
 g_m_nolo  .asc "Erreur : LORES d'abord",0
-g_m_lim   .asc "Erreur : valeur hors limites",0
-g_m_div   .asc "Erreur : division par zero",0
-g_m_range .asc "Erreur : valeur hors de 0-255",0
-g_m_step  .asc "Erreur : pas nul",0
-g_m_deep  .asc "Erreur : expression trop longue",0
 g_m_noimg .asc "Erreur : image introuvable",0
 g_m_full  .asc "Erreur : disque plein",0
 

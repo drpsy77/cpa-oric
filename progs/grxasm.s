@@ -1268,7 +1268,19 @@ n       lda gv+1
 k_apply
 .(
         sta kop
-        dec vsp
+        cmp #"/"                ; division par une constante nulle : à la
+        beq kz0                 ;   traduction (l'exécution ne vérifie
+        cmp #"%"                ;   rien)
+        bne kz1
+kz0     lda kc
+        beq kz1
+        lda kv
+        ora kv+1
+        bne kz1
+        lda #<m_div
+        ldy #>m_div
+        jmp error
+kz1     dec vsp
         ldy vsp
         lda vs_f,y
         sta klf
@@ -1416,10 +1428,29 @@ ops     .byt "+"
         .byt 0
 .)
 
-; k_byte : paramètre de 0 à 255 -> A (à l'exécution)
+; k_byte : paramètre de 0 à 255 -> A (à l'exécution) ; une variable
+;   seule : « lda V_x » (son octet bas) ; rien n'est vérifié à l'exécution
 k_byte
 .(
-        jsr k_pexpr
+        jsr skipsp
+        jsr kv_one
+        bcc kb_v
+        jmp kb_ex
+kb_v    jsr getvar
+        txa
+        pha
+        lda vix
+        ldx vc
+        jsr dest_var
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        pla
+        tax
+        lda #0
+        sta kc
+        rts
+kb_ex   jsr k_pexpr
         lda kc
         beq dyn
         lda kv+1                ; constante : vérifiée ici
@@ -1434,9 +1465,36 @@ k_byte
 bad     lda #<m_range
         ldy #>m_range
         jmp error
-dyn     lda #<s_byte
-        ldy #>s_byte
+dyn     lda #<s_ldaev
+        ldy #>s_ldaev
         jmp oi
+.)
+
+; kv_one : en lbuf (X), une variable simple seule (A, AB, A1, puis fin,
+;   espace ou « ; ») ? -> C=0 ; X ne change pas
+kv_one
+.(
+        lda lbuf,x
+        jsr isalpha
+        bcs no
+        lda lbuf+1,x
+        jsr isalpha
+        bcc two
+        lda lbuf+1,x
+        jsr isdig
+        bcs one
+two     lda lbuf+2,x
+        jmp chk
+one     lda lbuf+1,x
+chk     beq yes
+        cmp #" "
+        beq yes
+        cmp #";"
+        beq yes
+no      sec
+        rts
+yes     clc
+        rts
 .)
 
 ; k_p : paramètre de 0 à 255 -> destination fixe A/Y (« h_x1 »)
@@ -1626,7 +1684,7 @@ k_tab   jsr k_byte
         ldy #>s_ltab
         jmp oi
 
-; PRINTV, ECHOV, SPCV : la même chose entre g_vlon et h_lvoff
+; PRINTV, ECHOV, SPCV : la même chose entre h_lvon et h_lvoff
 k_printv
         jsr k_vlon
         jsr k_print
@@ -1645,7 +1703,7 @@ k_vlon  lda #<s_vlon
 
 ; SCROLH n, SCROLV n [c1 l1 c2 l2 [x]], ROTH n, ROTV n [c1 l1 c2 l2] :
 ;   r_sdef, r_sn, rectangle et octet facultatifs, puis « lda #op » et
-;   g_scrl
+;   r_scrl
 k_scrolh
         lda #0
         .byt $2C                ; (BIT abs : saute l'instruction suivante)
@@ -1931,8 +1989,8 @@ k_rebyte
         sta osv
         pla
         jmp oimm
-krb1    lda #<s_byte
-        ldy #>s_byte
+krb1    lda #<s_ldaev
+        ldy #>s_ldaev
         jmp oi
 
 ; ---------------------------------------------------------------------
@@ -2726,12 +2784,7 @@ k_next
         lda #<m_nofor
         ldy #>m_nofor
         jmp error
-ok      pha
-        lda #<s_brk
-        ldy #>s_brk
-        jsr oi
-        pla
-        cmp #T_FOR
+ok      cmp #T_FOR                  ; (pas de test d'ESC dans les boucles)
         bne back
         jsr o_ab
         lda #<s_fstep
@@ -2963,7 +3016,6 @@ s_gload .asc "jsr g_gload",0
 s_gsave .asc "jsr g_gsave",0
 s_anim  .asc "jsr a_grx",0
 s_lda0  .asc "lda #0",0
-s_byte  .asc "jsr g_byte",0
 s_push  .asc "jsr g_push",0
 s_pop   .asc "jsr g_pop",0
 s_neg   .asc "jsr g_neg",0
@@ -2977,16 +3029,16 @@ s_fgo   .asc "jsr f_go",0
 s_scrn  .asc "jsr g_scrn",0
 s_lores .asc "jsr h_lores",0
 s_lcls  .asc "jsr g_lcls",0
-s_loc   .asc "jsr g_loc",0
-s_chr   .asc "jsr g_chr",0
+s_loc   .asc "jsr h_loc",0
+s_chr   .asc "jsr h_chr",0
 s_spc   .asc "jsr g_spc",0
-s_ltab  .asc "jsr g_tab",0
-s_vlon  .asc "jsr g_vlon",0
+s_ltab  .asc "jsr h_ltab",0
+s_vlon  .asc "jsr h_lvon",0
 s_vloff .asc "jsr h_lvoff",0
 s_sdef  .asc "jsr r_sdef",0
 s_hsn   .asc "r_sn",0
 s_hsf   .asc "r_sf",0
-s_scrl  .asc "jsr g_scrl",0
+s_scrl  .asc "jsr r_scrl",0
 s_paste .asc "jsr g_paste",0
 s_grab  .asc "jsr g_grab",0
 s_get   .asc "jsr g_get",0
@@ -3001,7 +3053,6 @@ s_or    .asc "jsr g_or",0
 s_rept  .asc "jsr g_rept",0
 s_forok .asc "jsr g_forok",0
 s_fstep .asc "jsr g_forstep",0
-s_brk   .asc "jsr g_brk",0
 h_head1 .asc "; ",0
 h_head2 .asc ".ASM : traduit de ",0
 h_head2b .asc ".GRX par GRXASM",13,10
@@ -4137,9 +4188,11 @@ kf_stb
         lda #<s_ldai
         ldy #>s_ldai
         jmp oimm
-big     jsr k_mat
-dyn     lda #<s_byte
-        ldy #>s_byte
+big     lda #<m_range           ; constante hors de 0-255 : à la traduction
+        ldy #>m_range
+        jmp error
+dyn     lda #<s_ldaev
+        ldy #>s_ldaev
         jmp oi
 .)
 

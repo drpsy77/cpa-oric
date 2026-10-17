@@ -1,4 +1,4 @@
-; tableau $ fixe : valeur hors de 0-255, a l'execution
+; tableau $ fixe : valeur hors de 0-255 (traduit : signalee a la traduction)
 DIM B$(4)
 I = 1
 B$(I) = 65

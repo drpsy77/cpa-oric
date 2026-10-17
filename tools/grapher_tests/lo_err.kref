@@ -1,5 +1,4 @@
 LO_ERR.ASM ecrit : ASM LO_ERR
-Erreur : valeur hors limites
 
 [ecran]
  0|avant...................................|
