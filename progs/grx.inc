@@ -11,7 +11,7 @@
 ;  de la variable (FOR).
 ;  Les textes (GTEXT, ECHO) et les noms d'images (GLOAD, GSAVE) suivent
 ;  l'appel dans le code (g_str les y prend).
-;  Page zéro : $10-$27. ESC est testé à chaque tour de boucle (NEXT) et
+;  Page zéro : $10-$2C. ESC est testé à chaque tour de boucle (NEXT) et
 ;  par WAIT.
 ; =====================================================================
 
@@ -20,7 +20,6 @@ g_et    = $12           ; opérande de gauche (2 octets)
 g_mt    = $14           ; multiplication, comparaison (2 octets)
 g_mr    = $16           ; reste (2 octets)
 g_sg    = $18           ; signes de la division (2 octets)
-g_seed  = $1A           ; hasard (2 octets)
 g_vsp   = $1C           ; pile des valeurs
 g_pk    = $1D           ; touche gardée par le test d'ESC
 g_sp    = $1E           ; pile du 6502 au lancement
@@ -31,6 +30,8 @@ g_lx    = $24
 g_fl    = $25
 g_hk    = $26           ; INKEY : code de la dernière touche lue
 g_hi    = $27           ;   et sa place dans la matrice (KB_HELD)
+g_seed  = $28           ; hasard : xorshift 32 bits (4 octets)
+g_rok   = $2C           ; 0 : graine pas encore tirée (premier RND)
 
 g_init
 .(
@@ -38,12 +39,8 @@ g_init
         inx
         inx
         stx g_sp
-        lda SYS_TICKS           ; graine du hasard
-        sta g_seed
-        lda SYS_TICKS+1
-        ora #1
-        sta g_seed+1
         lda #0
+        sta g_rok               ; graine tirée au premier RND
         sta g_vsp
         sta g_pk
         sta g_hk
@@ -426,40 +423,37 @@ yes     lda #1
 ; Fonctions
 ; ---------------------------------------------------------------------
 ; g_rnd : g_ev <- nombre au hasard de 0 à g_ev - 1 (0 si g_ev <= 0)
+;   Graine : le compteur 50 Hz au premier appel, puis 4 tours pour que
+;   deux tirages proches divergent. Générateur : step.
 g_rnd
 .(
         lda g_ev+1
         bmi zero
         ora g_ev
         beq zero
-        lda g_seed               ; g_rnd = g_rnd * 5 + 13849
+        lda g_rok
+        bne go
+        inc g_rok
+        lda SYS_TICKS
+        sta g_seed
+        lda SYS_TICKS+1
+        sta g_seed+1
+        lda #$5A                ; jamais nulle
+        sta g_seed+2
+        lda #$A5
+        sta g_seed+3
+        ldx #4
+w       jsr step
+        dex
+        bne w
+go      jsr step
+        lda g_seed+2            ; mot haut, 15 bits, pour la division
         sta g_et
-        lda g_seed+1
-        sta g_et+1
-        asl g_seed
-        rol g_seed+1
-        asl g_seed
-        rol g_seed+1
-        clc
-        lda g_seed
-        adc g_et
-        sta g_seed
-        lda g_seed+1
-        adc g_et+1
-        sta g_seed+1
-        clc
-        lda g_seed
-        adc #<13849
-        sta g_seed
-        lda g_seed+1
-        adc #>13849
-        sta g_seed+1
-        sta g_et                ; octets échangés
-        lda g_seed
+        lda g_seed+3
         and #$7F
         sta g_et+1
-        lda g_ev+1              ; n < 256 : (graine * n) / 65536, sans
-        bne big                 ;   division (bits hauts de la graine)
+        lda g_ev+1              ; n < 256 : (mot haut * n) / 65536, sans
+        bne big                 ;   division
         sta g_mt
         ldx #8
 l       lsr g_ev
@@ -467,10 +461,10 @@ l       lsr g_ev
         pha
         clc
         lda g_mt
-        adc g_seed
+        adc g_seed+2
         sta g_mt
         pla
-        adc g_seed+1
+        adc g_seed+3
 n       ror
         ror g_mt
         dex
@@ -486,6 +480,45 @@ big     jsr g_udiv              ; sinon : reste de la division
 zero    lda #0
         sta g_ev
         sta g_ev+1
+        rts
+
+; step : xorshift 32 bits (8, 9, 23) : x ^= x << 8 ; x ^= x >> 9 ;
+;   x ^= x << 23 ; période 2^32 - 1 (X conservé)
+step    lda g_seed+3
+        eor g_seed+2
+        sta g_seed+3
+        lda g_seed+2
+        eor g_seed+1
+        sta g_seed+2
+        lda g_seed+1
+        eor g_seed
+        sta g_seed+1
+        lda g_seed+2
+        lsr
+        lda g_seed+1
+        ror
+        eor g_seed
+        sta g_seed
+        lda g_seed+3
+        lsr
+        lda g_seed+2
+        ror
+        eor g_seed+1
+        sta g_seed+1
+        lda g_seed+3
+        lsr
+        eor g_seed+2
+        sta g_seed+2
+        lda g_seed+1
+        lsr
+        lda g_seed
+        ror
+        eor g_seed+3
+        sta g_seed+3
+        lda #0
+        ror
+        eor g_seed+2
+        sta g_seed+2
         rts
 .)
 

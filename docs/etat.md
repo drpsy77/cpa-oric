@@ -40,7 +40,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 15 521, 14 498 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
+| GRAPHER, GRXASM | 15 555, 14 498 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -101,9 +101,9 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (15 521 octets) prend 8 blocs, 863 octets libres dans le dernier (place des
+- GRAPHER (15 555 octets) prend 8 blocs, 829 octets libres dans le dernier (place des
   tuiles) ; piste de place : messages d'erreur par numéro, ~40 octets. GRXASM (14 498) prend
-  8 blocs ; GRX.INC (10 720, marques `;@` comprises) prend 6 blocs. HELP (10 507) prend 6 blocs. Les disquettes se
+  8 blocs ; GRX.INC (12 138 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 150 octets avant le 7e. HELP (10 507) prend 6 blocs. Les disquettes se
   spécialisent plutôt que de gratter des octets ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;

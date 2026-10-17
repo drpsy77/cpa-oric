@@ -42,6 +42,9 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 
 **GRAPHER, VOIR, animations**
 
+- hasard (xorshift 32 bits) : `CARTE.GRX` (arbres, montagnes, lacs répartis sur toute la
+  carte, sans bandes, en interprété puis traduit par `GRXASM CARTE` et `ASM CARTE`) ; deux
+  lancements de suite donnent deux mondes différents ; `MOTIFS.GRX` (ciel étoilé) ;
 - `FLECHES.GRX` (couleurs, flèches, `INKEY` sans délai), `ARDOISE.GRX` (dessin continu tant
   qu'on tient la flèche) ;
 - en LORES : FUNCT et CTRL-T sans effet ; retour à la console par ESC, fin normale et RESET ;

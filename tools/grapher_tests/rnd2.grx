@@ -1,0 +1,16 @@
+; RND : couples de tirages consecutifs repartis (pas de bandes)
+; 3200 couples (RND(8), RND(8)) : environ 50 dans chacune des 64
+; cases ; l'ancien generateur (graine * 5) en laissait des vides
+DIM P(64)
+REPEAT 3200
+  A = RND(8)
+  B = RND(8)
+  P(A*8+B) = P(A*8+B)+1
+NEXT
+OK = 1
+FOR I 0 63
+  IF P(I) < 20
+    OK = 0
+  ENDIF
+NEXT
+PRINT OK

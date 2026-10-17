@@ -47,7 +47,6 @@ smask   = $28           ; classes qui terminent le saut
 mt      = $29           ; multiplication / comparaison (2 octets)
 mr      = $2B           ; reste (2 octets)
 msg_s   = $2D           ; signes de la division (2 octets)
-rnd     = $2F           ; générateur pseudo-aléatoire (2 octets)
 vix     = $31           ; variable : première lettre (0-25)
 vsp     = $32           ; pile des valeurs
 pe      = $33           ; fin du texte chargé (2 octets)
@@ -84,3 +83,4 @@ vc      = $59           ; variable : second caractère (0 aucun, 1-26 lettre,
                         ;   27-36 chiffre)
 vptr    = $5A           ; adresse de la variable (2 octets, interpréteur)
 kvc     = $5C           ; second caractère de la variable kvar (traduction)
+rnd     = $5E           ; hasard de l'interpréteur (4 octets, xorshift 32 bits)
