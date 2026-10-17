@@ -88,11 +88,18 @@ interp  sta ihk
         sta pkey
         sta csp
         sta word
-        lda SYS_TICKS           ; graine du hasard
-        sta rnd
-        lda SYS_TICKS+1
-        ora #1
+        lda SYS_TICKS           ; graine du hasard : le compteur 50 Hz,
+        sta rnd                 ;   jamais nulle, puis 4 tours pour que
+        lda SYS_TICKS+1         ;   deux lancements proches divergent
         sta rnd+1
+        lda #$5A
+        sta rnd+2
+        lda #$A5
+        sta rnd+3
+        ldx #4
+seedw   jsr rand
+        dex
+        bne seedw
         jsr h_init
         lda #G_GETMODE          ; lancé en mode SPLIT : on y reste
         jsr h_gfx
@@ -491,10 +498,10 @@ fr_l    lsr ev
         pha
         clc
         lda mt
-        adc rnd
+        adc rnd+2
         sta mt
         pla
-        adc rnd+1
+        adc rnd+3
 fr_n    ror
         ror mt
         dex
@@ -621,33 +628,48 @@ getv_p  ldy #0                  ; (variable d'adresse vptr)
         sta ev+1
         rts
 
-; rand : et <- nombre pseudo-aléatoire de 0 à 32767
-;   (rnd = rnd * 5 + 13849 sur 16 bits, puis échange des octets)
+; rand : et <- nombre pseudo-aléatoire de 0 à 32767 (X conservé)
+;   xorshift 32 bits (8, 9, 23) : x ^= x << 8 ; x ^= x >> 9 ;
+;   x ^= x << 23 ; période 2^32 - 1. Le résultat est le mot haut
+;   (rnd+2, rnd+3), le mieux mélangé.
 rand
+        lda rnd+3               ; x ^= x << 8 : chaque octet reçoit
+        eor rnd+2               ;   celui du dessous (du haut vers le bas)
+        sta rnd+3
+        lda rnd+2
+        eor rnd+1
+        sta rnd+2
+        lda rnd+1
+        eor rnd
+        sta rnd+1
+        lda rnd+2               ; x ^= x >> 9 : octet du dessus décalé
+        lsr                     ;   d'un bit (du bas vers le haut)
+        lda rnd+1
+        ror
+        eor rnd
+        sta rnd
+        lda rnd+3
+        lsr
+        lda rnd+2
+        ror
+        eor rnd+1
+        sta rnd+1
+        lda rnd+3
+        lsr
+        eor rnd+2
+        sta rnd+2
+        lda rnd+1               ; x ^= x << 23 : les 9 bits du bas
+        lsr                     ;   montent en haut
         lda rnd
+        ror
+        eor rnd+3
+        sta rnd+3
+        lda #0
+        ror
+        eor rnd+2
+        sta rnd+2
         sta et
-        lda rnd+1
-        sta et+1
-        asl rnd
-        rol rnd+1
-        asl rnd
-        rol rnd+1
-        clc
-        lda rnd
-        adc et
-        sta rnd
-        lda rnd+1
-        adc et+1
-        sta rnd+1
-        clc
-        lda rnd
-        adc #<13849
-        sta rnd
-        lda rnd+1
-        adc #>13849
-        sta rnd+1
-        sta et                  ; octets échangés : le bas varie mieux
-        lda rnd
+        lda rnd+3
         and #$7F
         sta et+1
         rts

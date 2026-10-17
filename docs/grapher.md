@@ -58,7 +58,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 
 | Fonction | Valeur |
 |---|---|
-| `RND(n)` | nombre au hasard de 0 à n-1 |
+| `RND(n)` | nombre au hasard de 0 à n-1 (tirages successifs indépendants : pas de bandes ni de motifs quand ils servent de coordonnées) |
 | `ABS(n)` | valeur absolue |
 | `POINT(x,y)` | 1 si le point de l'image est allumé (HIRES ou SPLIT) |
 | `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
@@ -566,13 +566,13 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (15 521 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (15 555 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 19 Ko (texte à partir de `$520A`).
+  tableaux et une animation fait environ 19 Ko (texte à partir de `$522C`).
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
@@ -695,10 +695,18 @@ longue au lieu de s'arrêter. `k_apply` refuse une division par une constante nu
 profondeur des expressions est bornée pendant la traduction (`NVS`), comme la pile des
 valeurs de `GRX.INC` (24).
 
-**Hasard** : `RND(n)` fait avancer la graine (`rnd * 5 + 13849`, 16 bits), puis, pour n < 256,
-rend (graine × n) / 65 536 : une multiplication de 8 pas, sur les bits hauts de la graine,
-les meilleurs ; pour n plus grand, le reste de la division (octets échangés), comme avant.
-L'interpréteur (`f_rnd`) et `GRX.INC` (`g_rnd`) font le même calcul. Tests : `rnd.grx`,
+**Hasard** : xorshift 32 bits (`x ^= x << 8`, `x ^= x >> 9`, `x ^= x << 23`), de période
+2³² − 1. Les décalages ont été choisis parmi ceux qui donnent cette période pour se faire par
+octets : recopies d'octets et un seul décalage d'un bit (63 octets, sans boucle). `RND(n)`
+fait un pas, puis, pour n < 256, rend (mot haut × n) / 65 536 (multiplication de 8 pas) ;
+pour n plus grand, le reste de la division du mot haut (15 bits) par n. Graine : le compteur
+50 Hz, complété par `$5A` `$A5` (jamais nulle), puis 4 pas, sans quoi deux lancements à un tic
+d'écart commencent par des valeurs voisines. L'interpréteur (`rand`, `f_rnd`) tire la graine
+au lancement ; `GRX.INC` (`g_rnd`) au premier `RND`, pour qu'un programme sans `RND`
+n'emporte pas le générateur. Un générateur de 16 bits (graine × 5 + 13849, par exemple)
+lie chaque tirage au précédent : des coordonnées tirées par paires s'alignent en bandes ;
+aucun générateur de 16 bits ne tient en trois dimensions. Tests : `rnd.grx`
+(valeurs, bornes), `rnd2.grx` (couples de tirages : 64 cases toutes remplies),
 `e_div0.grx`.
 
 **Rectangles** (`arr.inc`) : ils sont dans `ARR.INC` plutôt que dans `HIRES.INC`, que d'autres
@@ -728,7 +736,7 @@ donc `ARR.INC`, dont GRXASM ne recopie que les routines utiles.
 - Tests : `lo_rect.grx` (LORES : rectangles, signes, octet, rotations, écriture verticale,
   `PASTE`, `GRAB`), `rect.grx` (image, par `POINT`), `e_rect*.grx` (erreurs).
 
-Page zéro : `$10-$5C` pour GRAPHER et GRXASM (plus `$5E-$61` pour GRXASM), `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
+Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine du hasard ; GRXASM : pointeurs), `$10-$2C` pour `GRX.INC`, `$B0-$BF` pour
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
 **Sprites** (`spr.inc`) :
