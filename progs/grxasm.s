@@ -1625,6 +1625,143 @@ k_tab   jsr k_byte
         lda #<s_ltab
         ldy #>s_ltab
         jmp oi
+
+; PRINTV, ECHOV, SPCV : la même chose entre g_vlon et h_lvoff
+k_printv
+        jsr k_vlon
+        jsr k_print
+        jmp k_vloff
+k_echov jsr k_vlon
+        jsr k_echo
+        jmp k_vloff
+k_spcv  jsr k_vlon
+        jsr k_spc
+k_vloff lda #<s_vloff
+        ldy #>s_vloff
+        jmp oi
+k_vlon  lda #<s_vlon
+        ldy #>s_vlon
+        jmp oi
+
+; SCROLH n, SCROLV n [c1 l1 c2 l2 [x]], ROTH n, ROTV n [c1 l1 c2 l2] :
+;   r_sdef, r_sn, rectangle et octet facultatifs, puis « lda #op » et
+;   g_scrl
+k_scrolh
+        lda #0
+        .byt $2C                ; (BIT abs : saute l'instruction suivante)
+k_scrolv
+        lda #1
+        .byt $2C
+k_roth  lda #2
+        .byt $2C
+k_rotv  lda #3
+.(
+        pha
+        lda #1                  ; NOM.ASM inclura ARR.INC (r_scrl)
+        sta karr
+        lda #<s_sdef
+        ldy #>s_sdef
+        jsr oi
+        jsr k_pexpr
+        lda #<s_hsn
+        ldy #>s_hsn
+        jsr dest_fix
+        jsr o_st16
+        lda #0
+        sta kc
+        jsr skipsp
+        beq e
+        cmp #";"
+        beq e
+        jsr k_p2
+        lda #<s_hx2
+        ldy #>s_hx2
+        jsr k_p
+        lda #<s_hy2
+        ldy #>s_hy2
+        jsr k_p
+        pla
+        pha
+        and #2
+        bne e                   ; rotation : pas d'octet de remplissage
+        jsr skipsp
+        beq e
+        cmp #";"
+        beq e
+        lda #<s_hsf
+        ldy #>s_hsf
+        jsr k_p
+e       jsr endline
+        pla
+        sta osv
+        lda #<s_ldai
+        ldy #>s_ldai
+        jsr oimm
+        lda #<s_scrl
+        ldy #>s_scrl
+        jmp oi
+.)
+
+; PASTE T$(l,c) col lig larg haut, GRAB : indices sur la pile des
+;   valeurs, coin et taille dans h_x1 h_y1 h_x2 h_y2, descripteur dans
+;   A/Y, puis g_paste ou g_grab
+k_paste lda #0
+        .byt $2C
+k_grab  lda #1
+.(
+        pha
+        jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda lbuf,x
+        cmp #"$"
+        bne bad
+        inx
+        stx ex
+        lda aal
+        ldx #1
+        jsr k_need
+        lda #1
+        sta karr
+        lda #0
+        sta vsp
+        sta edep
+        jsr x_open
+        jsr k_or
+        jsr k_mat
+        jsr k_push
+        jsr x_comma
+        jsr k_or
+        jsr k_mat
+        jsr k_push
+        jsr x_close
+        ldx ex
+        lda lbuf,x
+        cmp #" "
+        bne bad
+        jsr k_p2
+        lda #<s_hx2
+        ldy #>s_hx2
+        jsr k_p
+        lda #<s_hy2
+        ldy #>s_hy2
+        jsr k_p
+        jsr endline
+        lda aal
+        ldx #1
+        jsr k_desc
+        pla
+        bne g
+        lda #<s_paste
+        ldy #>s_paste
+        jmp oi
+g       lda #<s_grab
+        ldy #>s_grab
+        jmp oi
+bad     jmp e_param
+.)
 k_get   jsr getvar              ; GET V : g_get -> g_ev -> V
         jsr endline
         lda #<s_get
@@ -2844,6 +2981,14 @@ s_loc   .asc "jsr g_loc",0
 s_chr   .asc "jsr g_chr",0
 s_spc   .asc "jsr g_spc",0
 s_ltab  .asc "jsr g_tab",0
+s_vlon  .asc "jsr g_vlon",0
+s_vloff .asc "jsr h_lvoff",0
+s_sdef  .asc "jsr r_sdef",0
+s_hsn   .asc "r_sn",0
+s_hsf   .asc "r_sf",0
+s_scrl  .asc "jsr g_scrl",0
+s_paste .asc "jsr g_paste",0
+s_grab  .asc "jsr g_grab",0
 s_get   .asc "jsr g_get",0
 s_cmp   .asc "jsr g_cmp",0
 s_add   .asc "jsr g_add",0
@@ -4766,6 +4911,15 @@ cadr
         .word k_bload    ; BLOAD
         .word k_sprites  ; SPRITES
         .word k_spool    ; SPOOL
+        .word k_paste    ; PASTE
+        .word k_grab     ; GRAB
+        .word k_scrolh   ; SCROLH
+        .word k_scrolv   ; SCROLV
+        .word k_roth     ; ROTH
+        .word k_rotv     ; ROTV
+        .word k_printv   ; PRINTV
+        .word k_echov    ; ECHOV
+        .word k_spcv     ; SPCV
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

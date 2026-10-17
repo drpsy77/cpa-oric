@@ -904,6 +904,190 @@ c_tab   jsr needlo
         jsr endline
         pla
         jmp h_ltab
+
+; PRINTV, ECHOV, SPCV : comme PRINT, ECHO, SPC, le curseur descend
+c_printv
+        jsr needlo
+        jsr h_lvon
+        jsr c_print
+        jmp h_lvoff
+c_echov jsr needlo
+        jsr h_lvon
+        jsr c_echo
+        jmp h_lvoff
+c_spcv  jsr h_lvon
+        jsr c_spc
+        jmp h_lvoff
+
+; needscr : LORES, HIRES ou SPLIT (pas la console)
+needscr lda h_lines
+        bne ns_ok
+        jmp needlo
+ns_ok   rts
+
+; SCROLH n, SCROLV n [c1 l1 c2 l2 [x]], ROTH n, ROTV n [c1 l1 c2 l2]
+c_scrolh
+        lda #0
+        .byt $2C                ; (BIT abs : saute l'instruction suivante)
+c_scrolv
+        lda #1
+        .byt $2C
+c_roth  lda #2
+        .byt $2C
+c_rotv  lda #3
+.(
+        pha
+        jsr needscr
+        jsr r_sdef              ; tout l'écran, remplissage par défaut
+        jsr pexpr
+        lda ev
+        sta r_sn
+        lda ev+1
+        sta r_sn+1
+        jsr skipsp
+        beq e
+        cmp #";"
+        beq e
+        jsr p2
+        jsr getbyte
+        sta h_x2
+        jsr getbyte
+        sta h_y2
+        cmp h_y1                ; y1 <= y2 < lignes, x1 <= x2 < 40
+        bcc lim
+        jsr r_rows
+        sta gd
+        lda h_y2
+        cmp gd
+        bcs lim
+        lda h_x2
+        cmp #40
+        bcs lim
+        cmp h_x1
+        bcc lim
+        pla
+        pha
+        and #2
+        bne e                   ; rotation : pas d'octet de remplissage
+        jsr skipsp
+        beq e
+        cmp #";"
+        beq e
+        jsr getbyte
+        sta r_sf
+e       jsr endline
+        pla
+        jmp r_scrl
+lim     jmp e_lim
+.)
+
+; PASTE T$(l,c) col lig larg haut : rectangle du tableau vers l'écran ;
+;   GRAB : de l'écran vers le tableau
+c_paste lda #0
+        .byt $2C
+c_grab  lda #1
+.(
+        pha
+        jsr needscr
+        jmp go
+bad     jmp e_param
+lim     jmp e_lim
+go      jsr skipsp
+        jsr isalpha
+        bcs bad
+        sta aal
+        inx
+        lda lbuf,x
+        cmp #"$"
+        bne bad
+        inx
+        stx ex
+        lda #0
+        sta vsp
+        sta edep
+        jsr x_open              ; indices -> flim, fstep
+        jsr e_or
+        lda ev
+        sta flim
+        lda ev+1
+        sta flim+1
+        jsr x_comma
+        jsr e_or
+        lda ev
+        sta fstep
+        lda ev+1
+        sta fstep+1
+        jsr x_close
+        ldx ex
+        lda lbuf,x
+        cmp #" "
+        bne bad
+        jsr p2                  ; coin à l'écran
+        jsr getbyte             ; largeur, hauteur : au moins 1, dans
+        sta h_x2                ;   l'écran
+        jsr getbyte
+        sta h_y2
+        jsr endline
+        lda h_x2
+        beq lim
+        clc
+        adc h_x1
+        cmp #41
+        bcs lim
+        lda h_y2
+        beq lim
+        clc
+        adc h_y1
+        bcs lim
+        sta gd
+        jsr r_rows
+        cmp gd
+        bcc lim
+        ldx h_y2                ; coin opposé dans le tableau : vérifié
+        dex                     ;   par r_ea2
+        txa
+        clc
+        adc flim
+        sta et
+        lda flim+1
+        adc #0
+        sta et+1
+        ldx h_x2
+        dex
+        txa
+        clc
+        adc fstep
+        sta ev
+        lda fstep+1
+        adc #0
+        sta ev+1
+        jsr pg_ea
+        lda flim                ; coin de départ
+        sta et
+        lda flim+1
+        sta et+1
+        lda fstep
+        sta ev
+        lda fstep+1
+        sta ev+1
+        jsr pg_ea
+        ldy #4                  ; octets par ligne du tableau
+        lda (r_dp),y
+        sta r_bst
+        iny
+        lda (r_dp),y
+        sta r_bst+1
+        lda r_sa
+        sta hs
+        lda r_sa+1
+        sta hs+1
+        pla
+        jmp r_blit
+pg_ea   lda aal
+        ldx #1
+        jsr desc_of
+        jmp r_ea2
+.)
 c_get
 .(
         jsr getvar              ; GET V : attend une touche, code dans V
@@ -1840,6 +2024,15 @@ cadr
         .word c_bload    ; BLOAD
         .word c_sprites  ; SPRITES
         .word c_spool    ; SPOOL
+        .word c_paste    ; PASTE
+        .word c_grab     ; GRAB
+        .word c_scrolh   ; SCROLH
+        .word c_scrolv   ; SCROLV
+        .word c_roth     ; ROTH
+        .word c_rotv     ; ROTV
+        .word c_printv   ; PRINTV
+        .word c_echov    ; ECHOV
+        .word c_spcv     ; SPCV
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)

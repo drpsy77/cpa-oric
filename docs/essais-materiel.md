@@ -71,6 +71,12 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   place sur la disquette pendant la traduction : `SPRITES.ASM` fait 34 Ko) ; `SPRITES`,
   `SERPENT`, `SCORES`, `MOTIFS` traduits tournent comme en interprété ; `GRXASM` sur un
   lecteur sans `GRX.INC` dit `GRX.INC absente (bibliotheque)` et n'écrit pas de `.ASM`.
+- rectangles : `CARTE.GRX` (la fenêtre suit le joueur aux flèches, `PASTE` : temps de
+  construction du monde en interprété, scintillement ou déchirure du redessin), `DEFILE.GRX`
+  (route qui défile, `SCROLV` : régularité, vitesse en interprété puis traduit par
+  `GRXASM DEFILE` et `ASM DEFILE`) ; `ROTH` et `ROTV` sur une bande de décor ; `PRINTV`,
+  `ECHOV`, `SPCV` (colonnes de texte, murs) ; dans l'image, `SCROLV` en HIRES plein écran
+  (durée, environ 150 ms) et en SPLIT (la console sous l'image reste intacte).
 
 ## À vérifier ailleurs
 

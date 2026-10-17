@@ -23,7 +23,8 @@ Deux variantes sont construites à partir des mêmes sources :
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
 - **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
-  langage de dessin et de jeux (sprites en mode texte compris), interprété ou traduit en
+  langage de dessin et de jeux (sprites en mode texte, cartes plus grandes que l'écran,
+  défilement compris), interprété ou traduit en
   assembleur.
 - Images HIRES compressées et animations plein écran (VOIR).
 

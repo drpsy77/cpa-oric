@@ -1,0 +1,85 @@
+; CARTE.GRX : un monde de 128 x 64 cases dans T$, vu par une fenetre
+; de 38 x 26 (PASTE) qui suit le joueur ; fleches, ESC : fin
+DIM T$(64,128)
+ECHO Construction du monde...
+FILL T$ 32
+FOR I 0 127
+  T$(0,I) = 35
+  T$(63,I) = 35
+NEXT
+FOR I 1 62
+  T$(I,0) = 35
+  T$(I,127) = 35
+NEXT
+REPEAT 300
+  T$(1+RND(62),1+RND(126)) = 94
+NEXT
+REPEAT 80
+  Y = 1+RND(62)
+  X = 1+RND(125)
+  T$(Y,X) = 47
+  T$(Y,X+1) = 92
+NEXT
+REPEAT 30
+  Y = 1+RND(59)
+  X = 1+RND(123)
+  FOR I 0 2
+    FOR J 0 3
+      T$(Y+I,X+J) = 126
+    NEXT
+  NEXT
+NEXT
+PX = 64
+PY = 32
+T$(PY,PX) = 32
+LORES
+FOR L 0 27
+  CHAR 1 L 2
+NEXT
+CHAR 1 0 3
+LOCATE 2 0
+ECHO "CARTE : fleches, ESC : fin"
+CHAR 1 27 6
+WHILE 1
+  CX = PX-19
+  IF CX < 0
+    CX = 0
+  ENDIF
+  IF CX > 90
+    CX = 90
+  ENDIF
+  CY = PY-13
+  IF CY < 0
+    CY = 0
+  ENDIF
+  IF CY > 38
+    CY = 38
+  ENDIF
+  PASTE T$(CY,CX) 2 1 38 26
+  CHAR 2+PX-CX 1+PY-CY 64
+  LOCATE 2 27
+  ECHO "X "
+  PRINT PX
+  ECHO "  Y "
+  PRINT PY
+  ECHO "  "
+  GET K
+  NX = PX
+  NY = PY
+  IF K = 8
+    NX = PX-1
+  ENDIF
+  IF K = 9
+    NX = PX+1
+  ENDIF
+  IF K = 10
+    NY = PY+1
+  ENDIF
+  IF K = 11
+    NY = PY-1
+  ENDIF
+  IF T$(NY,NX) = 32
+    PX = NX
+    PY = NY
+  ENDIF
+NEXT

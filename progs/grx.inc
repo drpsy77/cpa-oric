@@ -677,6 +677,53 @@ g_chr   pha
         jsr g_chk
         pla
         jmp h_chr
+; g_vlon : PRINTV, ECHOV, SPCV : LORES, écriture verticale (h_lvoff après)
+g_vlon  jsr g_needlo
+        jmp h_lvon
+; g_needsc : LORES, HIRES ou SPLIT
+g_needsc
+        lda h_lines
+        bne gns_r
+        jmp g_needlo
+gns_r   rts
+; g_scrl : A = SCROLH 0, SCROLV 1, ROTH 2, ROTV 3 (r_sn, rectangle et
+;   r_sf posés)
+g_scrl  pha
+        jsr g_needsc
+        pla
+        jmp r_scrl
+; g_paste, g_grab : A/Y = descripteur du tableau $ ; ligne puis colonne
+;   sur la pile des valeurs ; coin h_x1 h_y1, largeur h_x2, hauteur h_y2
+g_grab  ldx #1
+        .byt $2C                ; (BIT abs : saute ldx #0)
+g_paste ldx #0
+        stx g_gd
+        pha
+        tya
+        pha
+        jsr g_needsc
+        jsr g_pop               ; colonne -> g_ev
+        lda g_et
+        sta g_ev
+        lda g_et+1
+        sta g_ev+1
+        jsr g_pop               ; ligne -> g_et
+        pla
+        tay
+        pla
+        jsr r_ea2
+        ldy #4                  ; octets par ligne du tableau
+        lda (r_dp),y
+        sta r_bst
+        iny
+        lda (r_dp),y
+        sta r_bst+1
+        lda r_sa
+        sta hs
+        lda r_sa+1
+        sta hs+1
+        lda g_gd
+        jmp r_blit
 g_spc   jsr g_needlo
         lda h_x1
         ldx h_y1

@@ -131,13 +131,16 @@ où il veut.
 | `PRINT expr`, `PRINT A$` | écrit le nombre ou la chaîne au curseur, sans passer à la ligne |
 | `SPC n [x]` | écrit n fois l'octet x (32 par défaut) : effacer, remettre l'attribut 16, tracer un trait |
 | `TAB n` | avance le curseur de n colonnes sans rien écrire (relatif : `LOCATE` donne la colonne absolue) |
+| `PRINTV`, `ECHOV`, `SPCV` | comme `PRINT`, `ECHO` et `SPC`, mais le curseur **descend** : un caractère par ligne, dans la même colonne (une colonne de chiffres, un mot vertical, un mur : `SPCV 20 35`). `ECHOV` seul : ligne 0 de la colonne suivante |
 
 - **Bord droit** : rien ne s'écrit au-delà de la colonne 39. Ce qui dépasse est perdu, sans
   erreur ; le curseur reste au bout jusqu'au prochain `LOCATE` ou `ECHO` seul. Rien ne passe
-  sur la ligne suivante, et rien ne fait défiler l'écran.
+  sur la ligne suivante, et rien ne fait défiler l'écran. En vertical (`PRINTV`...), rien ne
+  s'écrit sous la ligne 27, de la même façon.
 - Colonne ou ligne hors de l'écran : `valeur hors limites` ; `n` de `SPC` et `TAB`, `x` et
   `code` : 0-255 (`valeur hors de 0-255`).
-- Hors LORES, `LOCATE`, `CHAR`, `SCRN`, `SPC` et `TAB` donnent `LORES d'abord`. En LORES,
+- Hors LORES, `LOCATE`, `CHAR`, `SCRN`, `SPC`, `TAB`, `PRINTV`, `ECHOV` et `SPCV` donnent
+  `LORES d'abord`. En LORES,
   les commandes de dessin donnent `HIRES ou SPLIT d'abord`.
 - `HIRES` ou `SPLIT` depuis le LORES : l'écran texte est perdu. `GLOAD` d'une image `.IMG`
   depuis le LORES rend d'abord la console.
@@ -197,6 +200,53 @@ est celle de la ligne (attributs) : le sprite prend la couleur des lignes où il
   secondaire n'a pas de dessins à lui (le système y range la ligne en cours d'édition et
   l'historique) : il servira avec les tuiles (§ 16). Un `INPUT` abîme ses codes 64 à 111 ; à
   la fin d'un programme qui s'en est servi, l'historique des lignes est vidé.
+
+### 7.2 Rectangles : copie, défilement, rotation
+
+Ces commandes travaillent sur l'écran texte (LORES) comme sur l'image (HIRES, SPLIT). En LORES,
+une case est un caractère (ou un attribut) ; dans l'image, une case est un octet de 6 points
+en largeur (colonnes 0-39) et une ligne de points en hauteur (lignes 0-199, ou 0-127 en
+SPLIT). Les octets sont copiés tels quels, attributs compris. Dans la console :
+`LORES d'abord`.
+
+| Commande | Effet |
+|---|---|
+| `PASTE T$(l,c) col lig larg haut` | colle à l'écran, coin haut-gauche en (col, lig), le rectangle de `larg` × `haut` cases du tableau `$` à deux dimensions qui commence à `T$(l,c)` (ligne l, colonne c du tableau) |
+| `GRAB T$(l,c) col lig larg haut` | l'inverse : copie le rectangle de l'écran dans le tableau |
+| `SCROLH n [c1 l1 c2 l2 [x]]` | fait glisser le rectangle de n cases : n > 0 vers la droite, n < 0 vers la gauche. Les cases libérées reçoivent l'octet x : un espace par défaut en LORES, l'octet vide (64) dans l'image |
+| `SCROLV n [c1 l1 c2 l2 [x]]` | la même chose en hauteur : n > 0 vers le bas, n < 0 vers le haut |
+| `ROTH n [c1 l1 c2 l2]`, `ROTV n [c1 l1 c2 l2]` | rotation : ce qui sort d'un côté rentre de l'autre (n modulo la taille) |
+
+- Sans rectangle, c'est tout l'écran. Le rectangle se donne par ses coins, comme pour `BOX` :
+  colonnes c1 à c2, lignes l1 à l2. Hors de l'écran, ou c2 < c1, ou l2 < l1 : `valeur hors
+  limites`. n = 0, ou une rotation d'un tour complet : rien. Un défilement d'au moins la
+  taille du rectangle le remplit de x.
+- `PASTE` et `GRAB` : le rectangle doit tenir dans l'écran (`valeur hors limites`) et dans le
+  tableau (`indice hors limites`) ; `larg` et `haut` valent au moins 1. Il n'y a pas de
+  découpage automatique aux bords : le programme borne lui-même sa caméra.
+- **Sprites** : on ne fait pas glisser ni ne recouvre un décor sous un sprite affiché. On
+  retire les sprites (`SHIDE`), puis `PASTE` ou `SCROL...`, puis on les réaffiche (§ 7.1).
+- `CLS` met l'attribut 16 partout : un décor collé par `PASTE` le remplace dans sa zone, et
+  les colonnes 0-1 gardent leurs attributs si le rectangle commence à la colonne 2.
+
+**Une carte plus grande que l'écran.** La carte est dans un tableau `$` (un octet par case,
+attributs permis) ; à chaque pas, `PASTE` redessine la fenêtre depuis le coin de la caméra.
+C'est la méthode normale : la position de la caméra suffit à décrire l'écran (déplacements en
+diagonale, sauts, retour au début : la même ligne).
+
+    DIM T$(64,128)
+    BLOAD T$ CARTE
+    LORES
+    ...
+    WHILE 1
+      ...                       ; CX, CY : coin de la caméra, bornés
+      PASTE T$(CY,CX) 2 1 38 26
+    NEXT
+
+**Défiler puis compléter.** Quand le décor n'est pas entier en mémoire (calculé au fur et à
+mesure, tiré au hasard, sans fin), on fait glisser la zone de jeu d'une case et on écrit la
+bande qui entre : une ligne par `LOCATE` et `SPC` ou `PRINT A$`, une colonne par `PRINTV A$`
+ou `SPCV`, ou un `PASTE` d'une ligne ou d'une colonne. Exemple : `DEFILE.GRX` (§ 14).
 
 ## 8. Touches et temps
 
@@ -438,20 +488,23 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (14 213 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (15 582 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 20 Ko (texte à partir de `$4CC6`).
+  tableaux et une animation fait environ 19 Ko (texte à partir de `$5247`).
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
-  puis affichage).
+  puis affichage). Une zone de 38 × 26 cases (programme traduit, mesure du 6502 simulé,
+  estimée en cycles) : `PASTE` ou `SCROLV`, environ 20 ms (une trame) ; `SCROLH`, `ROTH`,
+  environ 40 ms (chaque ligne passe par un tampon) ; `ROTV n` : n passes d'une ligne, dans le
+  sens le plus court. Dans l'image, compter 8 000 octets pour tout le HIRES : environ 150 ms.
 - **Limites** : entiers seulement, variables d'une ou deux lettres (tableaux et chaînes : une
   lettre), deux dimensions au plus, ni
   concaténation ni conversion de chaînes.
@@ -468,6 +521,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
 | `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `SPRITES.GRX` | LORES : un bonhomme mené aux flèches (deux images de marche) et une balle qui rebondit, sur un décor en deux couleurs ; sprites de `HEROS.SPR` |
+| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches |
+| `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 
 ## 15. Mise en œuvre
@@ -478,8 +533,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/grxasm.s` | traducteur (`GRXASM.COM`) |
 | `progs/grxd_inc.s`, `progs/grxc_inc.s` | communs aux deux : constantes et page zéro ; lecture du `.GRX` et des lignes, paramètres, table des noms de commandes (les fréquentes en tête), analyse des noms, nombres et fonctions, calcul des constantes, sous-programmes, erreurs. Chaque programme a sa table `cadr` d'adresses des commandes, dans l'ordre de la table des noms, et ses propres affectations (`x_asg`, `x_aasg`), `ANIM` (`an_val`, `an_none`), `ndim_s`, `to_text`, `o_drop` et tampons |
 | `progs/grx.inc` (`GRX.INC`) | bibliothèque d'exécution des programmes traduits |
-| `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` |
-| `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), images |
+| `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` ; rectangles de l'écran (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
+| `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` |
 | `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
@@ -550,6 +605,33 @@ un indice peut lire un autre tableau fixe. `ks_arr` étend `k_simple` aux élém
 constants, ou de variables simples dans un petit tableau d'entiers. Tests : `fix.grx`,
 `e_fix.grx`.
 
+**Rectangles** (`arr.inc`) : ils sont dans `ARR.INC` plutôt que dans `HIRES.INC`, que d'autres
+programmes incluent (VOIR) sans s'en servir ; un programme traduit qui fait défiler inclut
+donc `ARR.INC`, dont GRXASM ne recopie que les routines utiles.
+
+- `rz_ra` : adresse du début d'une ligne à la colonne `h_x1` (LORES : `hz_rows` ; image :
+  `h_ylo`, `h_yhi`). `rz_mv` copie `rz_bn` octets de `hp` vers `hq` (`lda (hp),y` /
+  `sta (hq),y`, environ 18 cycles par octet) ; `rz_fl` remplit.
+- `r_blit` (`PASTE`, `GRAB`) : une ligne de l'écran par ligne du tableau ; la mémoire avance de
+  `r_bst` octets (la taille 2 du tableau, lue dans son descripteur), l'écran d'une ligne.
+  L'interpréteur vérifie le coin opposé par `r_ea2` avant de copier ; les indices sont gardés
+  dans `flim` et `fstep` (temporaires de `FOR`) pendant le calcul des quatre autres
+  paramètres. Traduit, les deux indices passent par la pile des valeurs (`g_push`), puis
+  `g_paste` ou `g_grab` les reprend.
+- `r_scrl` : `|n|` ramené à la taille (modulo pour une rotation). En largeur, chaque ligne
+  passe par `h_buf`, puis revient décalée en deux morceaux (le reste, puis les k cases
+  libérées : `r_sf`, ou le début du tampon en rotation). En hauteur, des lignes entières sont
+  recopiées dans le bon ordre (de bas en haut pour descendre) ; une rotation fait k passes
+  d'une ligne, k ramené au plus à la moitié de la hauteur en changeant de sens, la ligne qui
+  sort passant par `h_buf`.
+- `r_sdef` pose le rectangle de tout l'écran et l'octet par défaut ; les paramètres présents
+  le remplacent ensuite (interprété et traduit font de même).
+- `PRINTV`, `ECHOV`, `SPCV` : `h_lv` (`h_lvon` / `h_lvoff`) change seulement l'avance du
+  curseur dans `h_lput` et le sens de `h_lnl` ; GRXASM entoure la traduction de `PRINT`,
+  `ECHO` ou `SPC` de `jsr g_vlon` et `jsr h_lvoff`.
+- Tests : `lo_rect.grx` (LORES : rectangles, signes, octet, rotations, écriture verticale,
+  `PASTE`, `GRAB`), `rect.grx` (image, par `POINT`), `e_rect*.grx` (erreurs).
+
 Page zéro : `$10-$5C` pour GRAPHER et GRXASM (plus `$5E-$61` pour GRXASM), `$10-$27` pour `GRX.INC`, `$B0-$BF` pour
 `spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
 
@@ -589,8 +671,34 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ## 16. Décidé, pas encore fait
 
-### 16.1 Plus tard
+### 16.1 Tuiles (prochaine étape)
 
+Une carte de tuiles : un octet de la carte donne une tuile de 1 à 4 colonnes sur 1 à 4 lignes
+de caractères. C'est un décor plus riche en dessins pour la même carte (une tuile de 1 × 1 qui
+donne son propre code, c'est `PASTE`).
+
+    DIM D$(16,4) T$(32,64)
+    BLOAD D$ TUILES          ; 16 tuiles de 2 x 2 codes, ligne par ligne
+    LOAD T$ NIVEAU1          ; la carte, ecrite dans EDIT
+    TILESET D$ 2 2 " ~/\T#"
+    TMAP T$ X Y 2 1 38 26    ; X, Y : coin de la camera, en caracteres du monde
+
+- `TILESET D$ larg haut [K$]` : chaque ligne de `D$` donne les codes d'une tuile. `K$`
+  (facultatif) liste les caractères de la carte dans l'ordre des tuiles : la carte s'écrit
+  alors en clair dans EDIT (`~` eau, `/` et `\` montagne, `T` arbre, `#` mur). Sans `K$`,
+  l'octet de la carte est le numéro de la tuile. `TILESET` prépare une table de conversion
+  de 256 octets, en mémoire.
+- `TMAP T$ X Y col lig larg haut` : dessine la fenêtre de `larg` × `haut` caractères, coin à
+  l'écran en (col, lig), à partir du caractère (X, Y) du monde ; la caméra avance d'un
+  caractère, pas d'une tuile. Environ 35 cycles par caractère.
+- La vraie limite est le nombre de codes : 96 dans le jeu standard, dont les chiffres, les
+  lettres et le tas des sprites. Les tuiles partagent leurs caractères ; 2 × 2 est la taille
+  conseillée pour commencer.
+
+### 16.2 Plus tard
+
+- Dessins des tuiles copiés dans la police depuis un `.SPR` de genre 1 (§ 10.1).
+- Caractères animés au rythme du 50 Hz (l'eau qui ondule), sans toucher à la carte.
 - **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
 
 ## 17. Questions ouvertes
@@ -604,10 +712,9 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
   bibliothèques. Restent à choisir : le nom (`RUN` ou `CHAIN`) ; comment une phase déclare
   les tableaux qu'elle reçoit (un `DIM` identique accepté sans effacer, ou `COMMON`).
 
-- **Tuiles** (fichier `.SPR` de genre 1) : commandes `TILES T$ ...` (dessins copiés dans la
-  police) et `TILE n col lig` (codes posés à l'écran) ; comment le programme choisit les
-  codes d'une tuile de plusieurs cases (codes consécutifs, ou liste comme pour les tas). Les
-  tuiles donneront aussi ses dessins au jeu secondaire.
+- **Dessins des tuiles** (fichier `.SPR` de genre 1) : la commande qui copie les dessins dans
+  la police, et comment elle choisit les codes (consécutifs, ou une liste comme pour les
+  tas). Les tuiles donneront aussi ses dessins au jeu secondaire.
 - Si le parcours du fichier par `SSHOW` est trop lent pour les derniers sprites : table des
   positions construite au chargement.
 - Plus tard : sprites qui apportent leur couleur (cases « attribut » dans le fichier, posées

@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 10 047 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 10 353 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 552 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,8 +40,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 14 213, 13 981 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) | `grapher.md` |
-| VOIR, VSYNC | 3 418, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
+| GRAPHER, GRXASM | 15 582, 14 406 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
+| VOIR, VSYNC | 3 471, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
 Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
@@ -56,8 +56,10 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
    traduits sont maintenant petits (seules routines utiles des bibliothèques : 1,5 à 6,4 Ko
    pour les exemples) et rapides (tableaux à adresse fixe).
 2. **Sprites en mode texte** : faits dans GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
-   bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1). Reste : les tuiles, à préciser
-   (`docs/grapher.md` § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
+   bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1). Rectangles faits (`PASTE`,
+   `GRAB`, `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2). Reste :
+   les tuiles, `TILESET` et `TMAP`, décidées (`docs/grapher.md` § 16.1), puis leurs dessins
+   depuis un `.SPR` et les caractères animés (§ 16.2, § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
    écran) ; LOGO ensuite peut-être.
 3. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
@@ -99,12 +101,12 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (14 213 octets) prend 7 blocs, 123 octets libres dans le dernier (les tuiles
-  demanderont un 8e bloc, ou la place des pistes qui suivent) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM
-  partagé avec `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux programmes
-  traduits, `a_grx`, 106 octets inutiles à l'interpréteur. GRXASM (13 981) prend 7 blocs,
-  355 octets libres dans le dernier ; GRX.INC (10 887, marques `;@` comprises) prend 6 blocs,
-  647 octets de trop pour 5 ;
+- GRAPHER (15 582 octets) prend 8 blocs, 802 octets libres dans le dernier (place des
+  tuiles) ; pistes de place : messages d'erreur par numéro, ~40 octets ; ANIM partagé avec
+  `a_grx` de `anim.inc`, ~40 ; code de `anim.inc` propre aux programmes traduits, `a_grx`,
+  106 octets inutiles à l'interpréteur. GRXASM (14 406) prend 8 blocs ; GRX.INC (11 369,
+  marques `;@` comprises) prend 6 blocs. HELP (10 353) prend 6 blocs. Les disquettes se
+  spécialisent plutôt que de gratter des octets ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
