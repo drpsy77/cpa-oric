@@ -28,7 +28,8 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 ## 2. Écriture d'un programme
 
 - Une commande par ligne, 126 caractères au plus (`ligne de plus de 126 car.`). Le retrait
-  est libre. Le texte s'arrête au premier `^Z`.
+  est libre. Le texte s'arrête au premier `^Z`. Une tabulation (TAB, code 9) compte comme
+  un espace (l'Oric n'en a pas ; `IMPORT nom /T` les remplace déjà à l'arrivée).
 - `;` commence un commentaire, en début ou en fin de ligne.
 - `$1` à `$9` sont remplacés par les paramètres de la ligne de commande, avec leur casse
   d'origine (`X = $1`, `GTEXT 2 90 $2`).
@@ -506,13 +507,13 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (15 513 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (15 521 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 19 Ko (texte à partir de `$5202`).
+  tableaux et une animation fait environ 19 Ko (texte à partir de `$520A`).
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.

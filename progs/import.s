@@ -8,7 +8,8 @@
 ;         la clé sans son chemin, coupé à 8 + 3 caractères ; B: seul :
 ;         ce nom-là, sur le lecteur B:
 ;    /T   texte : un LF seul (fin de ligne du Mac, de Linux) devient
-;         CR LF, la fin de ligne de CP/A
+;         CR LF, la fin de ligne de CP/A ; une tabulation (TAB, 9)
+;         devient un espace (l'Oric n'a pas de tabulation)
 ;  Un fichier de CP/A du même nom est remplacé. Le dernier
 ;  enregistrement est complété par des ^Z ($1A), comme le font EDIT et
 ;  mkdisk.py. En cas d'erreur, le fichier commencé est effacé.
@@ -202,7 +203,11 @@ byte    cpy n
         lda iobuf,y
         ldx text
         beq put
-        cmp #10
+        cmp #9                  ; TAB -> un espace
+        bne nt
+        lda #32
+        bne put
+nt      cmp #10
         bne put
         ldx last                ; LF seul -> CR LF
         cpx #13
@@ -443,7 +448,8 @@ badc    .asc "*?.,;:<>=[]|/",$5C,$22
 
 m_use   .asc "IMPORT nom [fic] [/T] : copie un",13,10
         .asc "fichier de la cle USB du LOCI",13,10
-        .asc "/T : texte, LF seul -> CR LF",13,10,0
+        .asc "/T : texte, LF seul -> CR LF,",13,10
+        .asc "     TAB -> espace",13,10,0
 m_name  .asc "Nom CP/A invalide : IMPORT nom fic",13,10,0
 m_dir   .asc "Repertoire plein",13,10,0
 m_ro    .asc "Fichier protege (SET fic RW)",13,10,0

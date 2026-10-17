@@ -2,7 +2,7 @@
 
 Gestionnaire de fichiers en plein écran : une ou deux colonnes, disquettes A: à D: et clé USB
 du LOCI. Liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer,
-Attributs, tailles exactes ; copie avec un seul lecteur. Un `.COM` (13 552 octets), rien de
+Attributs, tailles exactes ; copie avec un seul lecteur. Un `.COM` (13 566 octets), rien de
 résident. C'est d'abord un outil de liste et de tri ; pour copier une disquette entière,
 DISKCOPY est plus rapide.
 
@@ -160,7 +160,7 @@ Après toute opération : répertoire(s) relu(s), curseur gardé sur le même fi
 (comme EXPORT et IMPORT : `^Z` retirés à l'envoi, ajoutés à l'arrivée, noms ramenés en 8 + 3
 avec `_` pour un caractère interdit, `.DSK` refusé à l'envoi, fichier de la clé remplacé sans
 question). `/T` à la fin de la réponse de Copier (ou `Copier texte...`) change un LF seul en
-CR LF. Déplacer d'une disquette vers la clé, pas l'inverse. Effacer, Renommer, Attributs
+CR LF et une tabulation (TAB) en un espace. Déplacer d'une disquette vers la clé, pas l'inverse. Effacer, Renommer, Attributs
 refusés : `Cle USB : lecture et copie seulement`. Pas de copie de répertoire entier.
 
 ## 7. Mise en œuvre

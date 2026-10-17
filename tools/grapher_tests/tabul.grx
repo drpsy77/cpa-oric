@@ -1,0 +1,8 @@
+; tabulations : comptent comme des espaces
+	X	=	3
+FOR	I	1	3
+		PRINT	X*I	; commentaire
+NEXT
+IF	X = 3
+	ECHO	fin
+ENDIF
