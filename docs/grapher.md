@@ -267,6 +267,30 @@ boucles : il arrête seulement quand le programme lit le clavier (`GET`, `WAIT`,
 `INKEY`). Une boucle qui ne lit jamais le clavier ne s'arrête que par le bouton RESET, qui
 rend le système.
 
+**Boucle de jeu : ne redessiner que ce qui change.** Avec `INKEY`, la boucle tourne sans
+attendre : si elle redessine l'écran à chaque tour (`PASTE`, `CLS`, un score), l'image
+scintille, car elle est sans cesse effacée et réécrite pendant que le balayage l'affiche.
+`GET` cachait le problème en arrêtant la boucle jusqu'à la touche suivante, mais il subit le
+délai et la cadence de répétition du clavier. La bonne forme : lire la touche, et ne
+calculer puis redessiner que si elle a changé quelque chose ; le dessin va dans un
+sous-programme, appelé une fois avant la boucle.
+
+    CALL DESSIN                 ; premier affichage
+    WHILE 1
+      K = INKEY
+      IF K>7 & K<12             ; une fleche : deplacement, puis dessin
+        ...                     ; nouvelle position, verifiee
+        CALL DESSIN
+      ENDIF
+      IF K = 81                 ; Q : fin (ESC arrete aussi)
+        END
+      ENDIF
+    NEXT
+
+Une touche maintenue est rendue à chaque tour par `INKEY` : le déplacement suit la vitesse
+de la boucle, bien plus grande dans un programme traduit. Un `DELAY n` après le dessin
+règle la vitesse du jeu.
+
 ## 9. Tableaux et chaînes
 
 **Noms.** Chaque lettre sert à trois choses indépendantes : `A` (entier), `A(...)` (tableau
