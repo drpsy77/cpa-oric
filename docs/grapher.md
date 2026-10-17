@@ -360,6 +360,8 @@ Le nom s'écrit sans guillemets, avec un lecteur facultatif ; `$1`-`$9` sont per
   128 octets). `BSAVE` complète le dernier enregistrement par des 0. `BLOAD` met le tableau
   à 0 puis lit sa taille : un fichier plus court laisse la fin à 0, ce qui dépasse est
   ignoré. `BLOAD SCREEN` n'efface pas l'écran avant.
+- Ce que contient le fichier selon la commande, et les pièges (CR LF, attributs, largeurs) :
+  § 10.2.
 - Rien d'autre ne se sauve (ni les variables `A`-`Z`, ni la police) : un programme qui veut
   garder des variables les range dans un tableau.
 
@@ -405,6 +407,63 @@ Exemple : un bonhomme de 1 colonne sur 2 lignes, seul dans son fichier (48 octet
 La silhouette suit la convention « 1 = le personnage » (le contraire du masque d'Oricium,
 `tuile AND masque OR sprite`). En attendant l'éditeur de sprites, un `.SPR` se fabrique dans
 HEX ou par un petit programme qui remplit un tableau `$` et fait `BSAVE`.
+
+### 10.2 Du tableau ou de l'écran au fichier : ce qu'on obtient
+
+Un tableau `$` déclaré `DIM T$(l,c)` a `l` lignes (0 à l-1) de `c` octets (colonnes 0 à
+c-1) ; les octets sont rangés ligne après ligne. Ce que chaque commande en fait :
+
+| | `SAVE T$ nom` (texte) | `BSAVE T$ nom` (binaire) | `BSAVE SCREEN nom` |
+|---|---|---|---|
+| Contenu | une ligne de fichier par ligne du tableau : ses octets jusqu'au premier 0, au plus `c` | les `l` × `c` octets, à la suite, sans séparateur | les 28 lignes de 40 cases de l'écran, colonnes 0-1 (attributs) comprises : 1 120 octets |
+| Fin de ligne | CR LF, **ajoutés par `SAVE`** | aucune | aucune |
+| Octets permis | 32-255 ; un code 1-31 arrête le programme (`code 0-31 : BSAVE`) | tous | tous |
+| Fin du fichier | dernier enregistrement complété par `^Z` | complété par des 0 | complété par des 0 |
+| Pour | EDIT, `LOAD` | HEX, `BLOAD` | HEX, `BLOAD SCREEN` |
+
+Conséquences pratiques :
+
+- **Ne pas écrire soi-même CR et LF** dans un tableau destiné à `SAVE` : ce sont des codes
+  0-31, refusés ; `SAVE` les ajoute à chaque ligne.
+- **`BSAVE` n'écrit pas un texte.** Ouvert dans EDIT, un `.DAT` est un seul paragraphe (pas
+  de CR LF), terminé par des octets nuls ; si l'on y range soi-même CR et LF, EDIT les
+  comprend, mais la fin reste faite de 0 au lieu de `^Z`. EDIT lit CR LF ou un LF seul
+  comme une fin de paragraphe, et un CR qui n'est pas suivi de LF comme une fin de plus
+  (donc LF puis CR donne une ligne vide entre deux lignes).
+- **Les espaces sont écrits, les 0 non** : une ligne s'arrête au premier 0, mais les espaces de
+  fin de ligne restent dans le fichier.
+- **Largeurs** : l'écran a 40 colonnes, dont les deux premières sont des attributs ; EDIT en
+  montre 38. Un tableau de 38 colonnes pris sur les colonnes 2-39 de l'écran donne des lignes
+  qui remplissent exactement une ligne d'EDIT. Une ligne plus longue que les colonnes du
+  tableau arrête `LOAD` (`ligne trop longue : L n`).
+- **Écran du LORES** : après `LORES` ou `CLS`, chaque case contient l'attribut 16 (papier
+  noir), pas un espace. `GRAB` d'une zone jamais écrite, puis `SAVE`, donne `code 0-31 :
+  BSAVE` : remplir d'abord la zone d'espaces (`SPC`). Les colonnes 0-1 contiennent des
+  attributs : commencer le `GRAB` à la colonne 2. Un caractère en vidéo inverse (code + 128)
+  passe tel quel.
+- **Tableau d'entiers** : `SAVE` écrit les nombres d'une ligne séparés par un espace
+  (`DIM N(2,3)` donne deux lignes `0 0 0`) ; `BSAVE` écrit chaque entier sur deux octets, bas
+  puis haut (-5 : `FB FF`).
+- **Taille sur la disquette** : toujours un multiple de 128 octets (`BSAVE SCREEN` : 1 152).
+  `BLOAD` lit seulement la taille du tableau ; le reste est ignoré.
+
+Exemple : l'écran texte en fichier lisible et modifiable dans EDIT, puis relu.
+
+    DIM T$(28,38)
+    LORES
+    FOR Y 0 27
+      LOCATE 2 Y
+      SPC 38             ; des espaces, pas l'attribut 16
+    NEXT
+    ; ... dessin du texte avec LOCATE, ECHO, CHAR ...
+    GRAB T$(0,0) 2 0 38 28
+    SAVE T$ ECRAN        ; ECRAN.TXT : 28 lignes de 38 caracteres + CR LF
+    ; plus tard, ou dans un autre programme :
+    LOAD T$ ECRAN
+    PASTE T$(0,0) 2 0 38 28
+
+Les couleurs (attributs, codes 0-31) ne passent pas par `SAVE` : pour un écran en couleurs,
+`BSAVE SCREEN` (tout l'écran) ou `BSAVE` d'un tableau, retouchés avec HEX.
 
 ## 11. Erreurs
 
