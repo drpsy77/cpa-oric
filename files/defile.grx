@@ -1,0 +1,57 @@
+; DEFILE.GRX : une route qui defile vers le bas (SCROLV, puis une
+; ligne neuve en haut) ; fleches gauche et droite, ESC : fin
+LORES
+FOR L 0 27
+  CHAR 0 L 16
+  CHAR 1 L 2
+  LOCATE 2 L
+  SPC 12 58
+  SPC 12
+  SPC 14 58
+NEXT
+CHAR 1 0 3
+LOCATE 2 0
+SPC 38
+LOCATE 2 0
+ECHO "DEFILE : fleches, ESC : fin"
+LOCATE 2 27
+SPC 38
+G = 14
+X = 20
+SC = 0
+WHILE 1
+  CHAR X 25 32
+  SCROLV 1 2 1 39 26
+  LOCATE 2 1
+  SPC G-2 58
+  SPC 12
+  SPC 28-G 58
+  G = G+RND(3)-1
+  IF G < 3
+    G = 3
+  ENDIF
+  IF G > 27
+    G = 27
+  ENDIF
+  K = INKEY
+  IF K = 8
+    X = X-1
+  ENDIF
+  IF K = 9
+    X = X+1
+  ENDIF
+  IF SCRN(X,25) <> 32
+    LOCATE 2 27
+    SPC 38
+    LOCATE 2 27
+    ECHO "Perdu ! Score : "
+    PRINT SC
+    WAIT
+    END
+  ENDIF
+  CHAR X 25 86
+  SC = SC+1
+  LOCATE 30 27
+  PRINT SC
+  DELAY 2
+NEXT

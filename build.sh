@@ -64,7 +64,7 @@ python3 tools/mark_inc.py build/src
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
-EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg files/fleches.grx files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr"
+EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg files/fleches.grx files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx files/defile.grx"
 PROTEGES=""
 for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC files/readme.txt; do
   case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
@@ -84,7 +84,7 @@ theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
   python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \
     --ro --sys $BASE $3 --rw files/edit.cfg --ro --dir $P/EDIT.COM $2 --rw $4 | tail -1
 }
-theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx files/fleches.log files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr"
+theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx files/fleches.log files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx files/defile.grx"
 theme build/cpa-notes.dsk "" "" ""
 theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \

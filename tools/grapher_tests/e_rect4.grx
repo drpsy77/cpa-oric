@@ -1,0 +1,3 @@
+DIM T$(4,4)
+LORES
+PASTE T$(0,0) 38 0 3 2

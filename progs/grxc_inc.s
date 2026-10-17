@@ -1684,4 +1684,22 @@ cmds
         .byt "S"|$80,0
         .asc "SPOO"
         .byt "L"|$80,0
+        .asc "PAST"
+        .byt "E"|$80,0
+        .asc "GRA"
+        .byt "B"|$80,0
+        .asc "SCROL"
+        .byt "H"|$80,0
+        .asc "SCROL"
+        .byt "V"|$80,0
+        .asc "ROT"
+        .byt "H"|$80,0
+        .asc "ROT"
+        .byt "V"|$80,0
+        .asc "PRINT"
+        .byt "V"|$80,0
+        .asc "ECHO"
+        .byt "V"|$80,0
+        .asc "SPC"
+        .byt "V"|$80,0
         .byt 0

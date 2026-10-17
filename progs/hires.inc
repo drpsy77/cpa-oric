@@ -59,12 +59,16 @@
 ;    h_lspc    A fois l'octet X au curseur, même règle
 ;    h_ltab    avance le curseur de A colonnes sans rien écrire
 ;    h_lnl     colonne 0 de la ligne suivante (après la 27 : ligne 0)
+;    h_lvon    écriture verticale : h_lput descend d'une ligne au lieu
+;              d'avancer d'une colonne (rien sous la ligne 27), h_lnl passe
+;              à la ligne 0 de la colonne suivante ; h_lvoff : normale
 ;    h_lo = 1 en LORES ; h_lx, h_ly : curseur d'écriture (h_lx = 40 :
 ;    bout de la ligne atteint)
 ;  x 0-239, y 0-199 (0-127 en SPLIT) ; hors de l'image, rien n'est
 ;  dessiné. Les cases d'attribut sont épargnées par les tracés.
 ;  h_lines : 200 en plein écran, 128 en SPLIT, 0 en mode texte.
 ;
+;  h_buf : 40 octets libres après les tables (ARR.INC : r_scrl).
 ;  Page zéro : $C0-$C7. Tables après la fin du programme : h_free est
 ;  la première adresse libre pour les tampons du programme.
 ; =====================================================================
@@ -285,13 +289,17 @@ h_scrn  ldx h_x1
         lda (hq),y
         rts
 
-; h_lput : octet A au curseur (X et Y gardés)
+; h_lput : octet A au curseur (X et Y gardés) ; le curseur avance d'une
+;   colonne, ou d'une ligne si h_lv = 1 (PRINTV, ECHOV, SPCV)
 h_lput
 .(
         sta h_lc
         lda h_lx
         cmp #40
         bcs hz_lp9              ; bout de la ligne : rien
+        lda h_ly
+        cmp #28
+        bcs hz_lp9              ; bas de l'écran (vertical) : rien
         txa
         pha
         tya
@@ -302,13 +310,24 @@ h_lput
         lda h_lc
         ldy #0
         sta (hq),y
-        inc h_lx
-        pla
+        lda h_lv
+        beq hz_lp1
+        inc h_ly
+        bne hz_lp2
+hz_lp1  inc h_lx
+hz_lp2  pla
         tay
         pla
         tax
 hz_lp9  rts
 .)
+
+; h_lvon / h_lvoff : écriture verticale (le curseur descend) ou normale
+h_lvon  lda #1
+        .byt $2C                ; (BIT abs : saute lda #0)
+h_lvoff lda #0
+        sta h_lv
+        rts
 
 h_lstr
 .(
@@ -348,6 +367,8 @@ hz_lt2  sta h_lx
 
 h_lnl
 .(
+        lda h_lv
+        bne hz_ln5
         lda #0
         sta h_lx
         inc h_ly
@@ -357,6 +378,15 @@ h_lnl
         lda #0
         sta h_ly
 hz_ln9  rts
+hz_ln5  lda #0                  ; vertical : ligne 0 de la colonne
+        sta h_ly                ;   suivante (après la 39 : colonne 0)
+        inc h_lx
+        lda h_lx
+        cmp #40
+        bcc hz_ln9
+        lda #0
+        sta h_lx
+        rts
 .)
 
 hz_rows .word SCREEN,SCREEN+40,SCREEN+80,SCREEN+120,SCREEN+160
@@ -1215,6 +1245,7 @@ h_lo    .byt 0
 h_lx    .byt 0
 h_ly    .byt 0
 h_lc    .byt 0
+h_lv    .byt 0          ; 1 : écriture verticale (h_lput)
 h_end
 
 h_ylo   = h_end
@@ -1222,4 +1253,5 @@ h_yhi   = h_ylo+200
 h_xcol  = h_yhi+200
 h_xbit  = h_xcol+240
 h_fnt   = h_xbit+240
-h_free  = h_fnt+768
+h_buf   = h_fnt+768     ; 40 octets libres (une ligne, ARR.INC : r_scrl)
+h_free  = h_buf+40

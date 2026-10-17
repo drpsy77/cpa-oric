@@ -37,6 +37,17 @@
 ;               sinon dans la console avec passage à la ligne
 ;    r_input    saisie dans la chaîne courante ; r_ninput : entier -> r_j
 ;    r_fill     A/Y : tout le tableau à r_j
+;  Rectangles de l'écran (LORES : cases ; image : octets sur lignes de
+;  points), sans vérification (se servent de hires.inc : hz_rows, h_ylo,
+;  h_yhi, h_buf, page zéro hp hq hs) :
+;    r_rows     nombre de lignes de l'écran -> A (28 en LORES)
+;    r_sdef     h_x1..h_y2 = tout l'écran, r_sf = octet vide (32 ou 64)
+;    r_blit     A = 0 : mémoire (hs, lignes de r_bst octets) -> écran en
+;               (h_x1, h_y1), h_x2 colonnes sur h_y2 lignes ; A = 1 : écran
+;               -> mémoire (PASTE, GRAB)
+;    r_scrl     A = 0 SCROLH, 1 SCROLV, 2 ROTH, 3 ROTV : le rectangle
+;               (h_x1, h_y1)-(h_x2, h_y2) glisse de r_sn (signé) ; cases
+;               libérées : r_sf
 ;  Page zéro : $C8-$CF.
 ; =====================================================================
 
@@ -1050,3 +1061,419 @@ rz_b    .word 0
 rz_p    .word 0
 rz_v    .word 0
 rz_nbuf .dsb 8,0
+
+; ---------------------------------------------------------------------
+; Rectangles : copie (PASTE, GRAB), défilement et rotation (SCROLH,
+; SCROLV, ROTH, ROTV). LORES : une case = un caractère ; image (HIRES,
+; SPLIT) : un octet (6 points) en largeur, une ligne de points en
+; hauteur. Rien n'est vérifié : c'est au programme de rester dans
+; l'écran.
+; ---------------------------------------------------------------------
+; r_rows : nombre de lignes de l'écran -> A (28 en LORES, h_lines sinon)
+r_rows
+.(
+        lda h_lo
+        beq rz_ro1
+        lda #28
+        rts
+rz_ro1  lda h_lines
+        rts
+.)
+
+; r_sdef : rectangle = tout l'écran ; remplissage par défaut : espace en
+;   LORES, octet vide (64) dans l'image
+r_sdef
+.(
+        lda #0
+        sta h_x1
+        sta h_y1
+        lda #39
+        sta h_x2
+        jsr r_rows
+        sec
+        sbc #1
+        sta h_y2
+        lda h_lo                ; (X et Y gardés)
+        beq rz_sd1
+        lda #32
+        .byt $2C                ; (BIT abs : saute lda #64)
+rz_sd1  lda #64
+        sta r_sf
+        rts
+.)
+
+; rz_ra : hq = adresse de la ligne Y, colonne h_x1
+rz_ra
+.(
+        lda h_lo
+        beq rz_ra1
+        tya
+        asl
+        tay
+        lda hz_rows+1,y
+        tax
+        lda hz_rows,y
+        jmp rz_ra2
+rz_ra1  ldx h_yhi,y
+        lda h_ylo,y
+rz_ra2  clc
+        adc h_x1
+        sta hq
+        txa
+        adc #0
+        sta hq+1
+        rts
+.)
+
+; rz_mv : rz_bn octets de (hp) vers (hq) ; rz_fl : rz_bn fois r_sf en (hq)
+rz_mv
+.(
+        ldy #0
+        ldx rz_bn
+        beq rz_mv9
+rz_mv1  lda (hp),y
+        sta (hq),y
+        iny
+        dex
+        bne rz_mv1
+rz_mv9  rts
+.)
+rz_fl
+.(
+        ldy #0
+        ldx rz_bn
+        beq rz_fl9
+        lda r_sf
+rz_fl1  sta (hq),y
+        iny
+        dex
+        bne rz_fl1
+rz_fl9  rts
+.)
+; rz_mvr : rotation : rz_mv ; défilement : rz_fl
+rz_mvr  lda rz_op
+        and #2
+        bne rz_mv
+        beq rz_fl
+
+; rz_pb : hp = h_buf + A ; rz_qb : hq = h_buf + A ; rz_rq : hq = rz_rw + A
+rz_pb   clc
+        adc #<h_buf
+        sta hp
+        lda #>h_buf
+        adc #0
+        sta hp+1
+        rts
+rz_qb   clc
+        adc #<h_buf
+        sta hq
+        lda #>h_buf
+        adc #0
+        sta hq+1
+        rts
+rz_rq   clc
+        adc rz_rw
+        sta hq
+        lda rz_rw+1
+        adc #0
+        sta hq+1
+        rts
+; rz_q2p : hp = hq
+rz_q2p  lda hq
+        sta hp
+        lda hq+1
+        sta hp+1
+        rts
+
+; r_blit : A = 0 : rectangle de la mémoire (hs ; lignes de r_bst octets)
+;   vers l'écran, coin en (h_x1, h_y1), h_x2 colonnes sur h_y2 lignes ;
+;   A = 1 : de l'écran vers la mémoire
+r_blit
+.(
+        sta rz_op
+        lda h_x2
+        sta rz_bn
+        lda h_y1
+        sta rz_y
+        lda h_y2
+        sta rz_c
+        beq rz_cp9
+rz_cp1  ldy rz_y
+        jsr rz_ra               ; hq = ligne de l'écran
+        lda rz_op
+        bne rz_cp2
+        lda hs                  ; mémoire -> écran
+        sta hp
+        lda hs+1
+        sta hp+1
+        jmp rz_cp3
+rz_cp2  jsr rz_q2p              ; écran -> mémoire
+        lda hs
+        sta hq
+        lda hs+1
+        sta hq+1
+rz_cp3  jsr rz_mv
+        clc
+        lda hs
+        adc r_bst
+        sta hs
+        lda hs+1
+        adc r_bst+1
+        sta hs+1
+        inc rz_y
+        dec rz_c
+        bne rz_cp1
+rz_cp9  rts
+.)
+
+; r_scrl : A = 0 SCROLH, 1 SCROLV, 2 ROTH, 3 ROTV : le rectangle
+;   (h_x1, h_y1)-(h_x2, h_y2) glisse de r_sn cases (signé : > 0 vers la
+;   droite ou vers le bas). Défilement : les cases libérées reçoivent
+;   r_sf ; rotation : ce qui sort d'un côté rentre de l'autre
+r_scrl
+.(
+        sta rz_op
+        lda h_x2
+        sec
+        sbc h_x1
+        sta rz_w
+        inc rz_w
+        lda h_y2
+        sec
+        sbc h_y1
+        sta rz_h
+        inc rz_h
+        lda r_sn+1              ; |n| -> rz_bt, signe -> rz_sg (bit 7)
+        sta rz_sg
+        bpl rz_s1
+        lda #0
+        sec
+        sbc r_sn
+        sta rz_bt
+        lda #0
+        sbc r_sn+1
+        sta rz_bt+1
+        jmp rz_s2
+rz_s1   lda r_sn
+        sta rz_bt
+        lda r_sn+1
+        sta rz_bt+1
+rz_s2   lda rz_op               ; taille dans le sens du glissement
+        lsr
+        lda rz_w
+        bcc rz_s3
+        lda rz_h
+rz_s3   sta rz_z
+        lda rz_op
+        and #2
+        beq rz_s5
+rz_s4   lda rz_bt                ; rotation : |n| modulo la taille
+        sec
+        sbc rz_z
+        tax
+        lda rz_bt+1
+        sbc #0
+        bcc rz_s6
+        sta rz_bt+1
+        stx rz_bt
+        jmp rz_s4
+rz_s5   lda rz_bt+1              ; défilement : |n| au plus la taille
+        bne rz_s5a
+        lda rz_bt
+        cmp rz_z
+        bcc rz_s6
+rz_s5a  lda rz_z
+        sta rz_bt
+rz_s6   lda rz_bt
+        sta rz_k
+        beq rz_s9               ; rien à faire
+        lda rz_op
+        lsr
+        bcs rz_s8
+        jmp rz_horz
+rz_s8   jmp rz_vert
+rz_s9   rts
+.)
+
+; rz_horz : ligne par ligne, par le tampon h_buf (40 octets)
+rz_horz
+.(
+        lda h_y1
+        sta rz_y
+rz_h1   ldy rz_y
+        jsr rz_ra               ; ligne -> tampon
+        lda hq
+        sta rz_rw
+        lda hq+1
+        sta rz_rw+1
+        jsr rz_q2p
+        lda #0
+        jsr rz_qb
+        lda rz_w
+        sta rz_bn
+        jsr rz_mv
+        lda rz_w                ; ce qui reste dans le rectangle
+        sec
+        sbc rz_k
+        sta rz_bn
+        bit rz_sg
+        bmi rz_h2
+        lda #0                  ; vers la droite : tampon -> ligne + k
+        jsr rz_pb
+        lda rz_k
+        jsr rz_rq
+        jmp rz_h3
+rz_h2   lda rz_k                ; vers la gauche : tampon + k -> ligne
+        jsr rz_pb
+        lda #0
+        jsr rz_rq
+rz_h3   jsr rz_mv
+        lda rz_k                ; les k cases libérées
+        sta rz_bn
+        lda rz_w
+        sec
+        sbc rz_k
+        bit rz_sg
+        bmi rz_h4
+        jsr rz_pb               ; droite : tampon + w - k -> début
+        lda #0
+        jsr rz_rq
+        jmp rz_h5
+rz_h4   jsr rz_rq               ; gauche : tampon -> ligne + w - k
+        lda #0
+        jsr rz_pb
+rz_h5   jsr rz_mvr
+        lda rz_y
+        cmp h_y2
+        beq rz_h9
+        inc rz_y
+        jmp rz_h1
+rz_h9   rts
+.)
+
+; rz_vert : lignes entières recopiées ; rotation : k fois d'une ligne,
+;   dans le sens le plus court, la ligne qui sort passant par h_buf
+rz_vert
+.(
+        lda rz_op
+        and #2
+        beq rz_v5
+        lda rz_h                ; h - k < k : k' = h - k dans l'autre sens
+        sec
+        sbc rz_k
+        cmp rz_k
+        bcs rz_v1
+        sta rz_k
+        lda rz_sg
+        eor #$80
+        sta rz_sg
+rz_v1   lda rz_k
+        sta rz_c
+        lda #1
+        sta rz_k
+rz_v2   jsr rz_eout             ; ligne qui sort -> tampon
+        jsr rz_ra
+        jsr rz_q2p
+        lda #0
+        jsr rz_qb
+        jsr rz_mv
+        jsr rz_vcp
+        jsr rz_ein              ; tampon -> ligne qui entre
+        jsr rz_ra
+        lda #0
+        jsr rz_pb
+        jsr rz_mv
+        dec rz_c
+        bne rz_v2
+        rts
+rz_v5   jsr rz_vcp              ; défilement, puis k lignes remplies
+        lda rz_k
+        sta rz_c
+        lda h_y1
+        bit rz_sg
+        bmi rz_v6
+        sta rz_y                ; vers le bas : à partir de y1
+        jmp rz_v7
+rz_v6   lda h_y2                ; vers le haut : de y2 - k + 1 à y2
+        sec
+        sbc rz_k
+        sta rz_y
+        inc rz_y
+rz_v7   ldy rz_y
+        jsr rz_ra
+        jsr rz_fl
+        inc rz_y
+        dec rz_c
+        bne rz_v7
+        rts
+.)
+; rz_eout / rz_ein : Y = ligne qui sort, qui entre ; rz_bn = largeur
+rz_eout lda rz_w
+        sta rz_bn
+        ldy h_y2
+        bit rz_sg
+        bpl rz_eo1
+        ldy h_y1
+rz_eo1  rts
+rz_ein  ldy h_y1
+        bit rz_sg
+        bpl rz_ei1
+        ldy h_y2
+rz_ei1  rts
+
+; rz_vcp : h - k lignes recopiées de k lignes plus haut (vers le bas)
+;   ou plus bas (vers le haut)
+rz_vcp
+.(
+        lda rz_w
+        sta rz_bn
+        lda rz_h
+        sec
+        sbc rz_k
+        beq rz_vc9
+        sta rz_bc2
+        lda h_y2                ; vers le bas : de y2 en remontant
+        bit rz_sg
+        bpl rz_vc1
+        lda h_y1                ; vers le haut : de y1 en descendant
+rz_vc1  sta rz_y
+rz_vc2  lda rz_y                ; source : y - k (bas) ou y + k (haut)
+        bit rz_sg
+        bmi rz_vc3
+        sec
+        sbc rz_k
+        jmp rz_vc4
+rz_vc3  clc
+        adc rz_k
+rz_vc4  tay
+        jsr rz_ra
+        jsr rz_q2p
+        ldy rz_y
+        jsr rz_ra
+        jsr rz_mv
+        bit rz_sg
+        bmi rz_vc5
+        dec rz_y
+        jmp rz_vc6
+rz_vc5  inc rz_y
+rz_vc6  dec rz_bc2
+        bne rz_vc2
+rz_vc9  rts
+.)
+
+; variables des rectangles
+r_sn    .word 0         ; glissement de r_scrl (signé)
+r_sf    .byt 32         ; octet des cases libérées
+r_bst   .word 0         ; r_blit : octets par ligne de la mémoire
+rz_op   .byt 0
+rz_w    .byt 0
+rz_h    .byt 0
+rz_k    .byt 0
+rz_bn   .byt 0
+rz_y    .byt 0
+rz_c    .byt 0
+rz_bc2  .byt 0
+rz_z    .byt 0
+rz_sg   .byt 0
+rz_bt   .word 0
+rz_rw   .word 0
