@@ -33,7 +33,7 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
 3. **Ouvert sur l'extérieur.** Clé USB, réseau par le modem WiFi du LOCI, et le pont vers
    l'Oric de base (`.TAP`, cassette).
 4. **Le plaisir d'usage.** Mêmes touches partout, menus, complétion, historique, messages
-   clairs : rien ne doit demander d'héroïsme.
+   clairs : tout doit être simple à prendre en main.
 5. **La sobriété.** Tout ajout résident se justifie, le reste va en `.COM` ; tout marche avec
    un seul lecteur.
 
