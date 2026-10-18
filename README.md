@@ -26,6 +26,10 @@ prompt:
 
 The FUNCT key opens the menus everywhere.
 
+**See it run**: GRAPHER and the scrolling road of `DEFILE.GRX` (video).
+
+[![CP/A: GRAPHER demo with DEFILE](https://img.youtube.com/vi/ax6hLICHst0/hqdefault.jpg)](https://www.youtube.com/watch?v=ax6hLICHst0)
+
 A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version 0.9.
 
 Two variants are built from the same sources:

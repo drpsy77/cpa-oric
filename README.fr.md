@@ -27,6 +27,10 @@ prompt `A>` :
 
 La touche FUNCT ouvre les menus partout.
 
+**En vidéo** : GRAPHER et la route qui défile de `DEFILE.GRX`.
+
+[![CP/A : démonstration de GRAPHER avec DEFILE](https://img.youtube.com/vi/ax6hLICHst0/hqdefault.jpg)](https://www.youtube.com/watch?v=ax6hLICHst0)
+
 Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Version 0.9.
 
 Deux variantes sont construites à partir des mêmes sources :
