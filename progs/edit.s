@@ -230,17 +230,18 @@ none    rts
 ;   ^O ouvrir, ^P imprimer, ^Q quitter, ^S enregistrer, ^V coller,
 ;   ^X couper, ESC ôte la marque, 28 ^H remplacer, 29 ^I insérer un
 ;   fichier, 31 ^K eff. paragraphe ; SHIFT <- -> bas haut : début, fin de
-;   ligne, page suivante, précédente ; CTRL bas haut : fin, début du texte
+;   ligne, page suivante, précédente ; CTRL <- -> : mot précédent, suivant ;
+;   CTRL bas haut : fin, début du texte
 cvec_lo .byt <(k_mark-1),<(k_none-1),<(k_none-1),<(k_copy-1),<(k_delr-1),<(k_ins-1),<(k_find-1),<(k_next-1)
         .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_long-1),<(k_cr-1),<(k_none-1),<(k_open-1)
         .byt <(k_print-1),<(k_quit-1),<(k_none-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_paste-1),<(k_none-1)
         .byt <(k_cut-1),<(k_none-1),<(k_none-1),<(k_esc-1),<(k_repl-1),<(k_insert-1),<(k_none-1),<(k_delpara-1)
-        .byt <(k_home-1),<(k_end-1),<(k_pgdn-1),<(k_pgup-1),<(k_none-1),<(k_none-1),<(k_bot-1),<(k_top-1)
+        .byt <(k_home-1),<(k_end-1),<(k_pgdn-1),<(k_pgup-1),<(k_wleft-1),<(k_wright-1),<(k_bot-1),<(k_top-1)
 cvec_hi .byt >(k_mark-1),>(k_none-1),>(k_none-1),>(k_copy-1),>(k_delr-1),>(k_ins-1),>(k_find-1),>(k_next-1)
         .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_long-1),>(k_cr-1),>(k_none-1),>(k_open-1)
         .byt >(k_print-1),>(k_quit-1),>(k_none-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_paste-1),>(k_none-1)
         .byt >(k_cut-1),>(k_none-1),>(k_none-1),>(k_esc-1),>(k_repl-1),>(k_insert-1),>(k_none-1),>(k_delpara-1)
-        .byt >(k_home-1),>(k_end-1),>(k_pgdn-1),>(k_pgup-1),>(k_none-1),>(k_none-1),>(k_bot-1),>(k_top-1)
+        .byt >(k_home-1),>(k_end-1),>(k_pgdn-1),>(k_pgup-1),>(k_wleft-1),>(k_wright-1),>(k_bot-1),>(k_top-1)
 mvec_lo .byt <(k_new-1),<(k_open-1),<(k_save-1),<(k_saveas-1),<(k_quit-1),<(k_mark-1),<(k_copy-1),<(k_cut-1)
         .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wrap-1),<(k_ins-1),<(k_stats-1)
         .byt <(k_insert-1),<(k_print-1),<(k_long-1)
@@ -382,6 +383,45 @@ k_right
         jsr gap_right1
         jmp moved
 kr_r    rts
+
+; CTRL-> : début du mot suivant (un mot finit à un espace ou à une fin
+; de paragraphe : tout code inférieur à "!")
+k_wright
+.(
+        ldx #0                  ; X = 1 : les blancs après le mot sont atteints
+l       jsr at_text_end
+        beq e
+        ldy #0
+        lda (ge),y
+        cmp #"!"
+        bcc b
+        txa
+        bne e                   ; premier caractère du mot suivant
+        beq n
+b       ldx #1
+n       jsr gap_right1
+        jmp l
+e       jmp moved
+.)
+
+; CTRL-<- : début du mot où est le curseur, ou du mot précédent
+k_wleft
+.(
+        ldx #0                  ; X = 1 : on est entré dans un mot
+l       jsr at_text_start
+        beq e
+        jsr gap_left1           ; le caractère passé est en (ge)
+        ldy #0
+        lda (ge),y
+        cmp #"!"
+        bcc b
+        ldx #1
+        bne l
+b       txa
+        beq l                   ; encore des blancs avant le mot
+        jsr gap_right1          ; un blanc de trop : on le rend
+e       jmp moved
+.)
 
 k_top
         lda #0

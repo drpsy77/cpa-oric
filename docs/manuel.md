@@ -279,6 +279,7 @@ comprennent de la même façon.
 | SHIFT-← / SHIFT-→ | début / fin de la ligne |
 | SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
 | CTRL-↑ / CTRL-↓ | début / fin du texte (du fichier, de la liste) |
+| CTRL-← / CTRL-→ | mot précédent / suivant (EDIT) |
 | CTRL-I | TAB : compléter un nom, changer de zone ou de colonne (EDIT : insérer un fichier) |
 | CTRL-ESPACE | marquer un bout du bloc (EDIT) ; ESC ôte la marque |
 | CTRL-X / CTRL-C / CTRL-V | couper / copier / coller (CMDER : déplacer / copier) |
@@ -747,6 +748,7 @@ et son numéro (`max 177 (L4)`).
 |---|---|
 | Flèches | déplacer le curseur |
 | SHIFT-← / SHIFT-→ | début / fin de ligne |
+| CTRL-← / CTRL-→ | début du mot (ou du précédent) / du mot suivant ; un mot finit à un espace ou à une fin de paragraphe |
 | SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
 | CTRL-↑ / CTRL-↓ | début / fin du texte |
 | RETURN | nouveau paragraphe |
