@@ -65,7 +65,23 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
    § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
-4. **Petites améliorations notées**
+4. **Défauts constatés** (reproduits dans Oricutron sur `cpa.dsk`)
+   - GRAPHER, `SAVE`, `BSAVE`, `BSAVE SCREEN` (`progs/fil.inc`) : l'ancien fichier est effacé
+     avant l'écriture ; disque plein en cours d'écriture : ancien contenu perdu, fichier de
+     0 octet. À écrire comme EDIT (`NOM.$$$` puis remplacement). Un fichier R/O reste intact
+     (le BDOS le protège) mais le message dit à tort `disque plein`.
+   - EDIT, Enregistrer sous : depuis un document R/O (README.TXT), tout nom est refusé
+     (`Fichier protege (R/O)`, même un nom nouveau) : l'indicateur R/O que l'ouverture met
+     dans le FCB (octet 13) reste après `take_name`, qui ne recopie que le nom.
+   - EDIT, Enregistrer sous un fichier existant : remplacé sans question (HELLO.ASM sous
+     HELLO.COM écrase le programme) ; demander `Remplacer NOM.EXT (O/N) ?`.
+   - EDIT, Enregistrer sous un fichier R/O : `Enregistre` affiché, rien n'est remplacé (le
+     fichier R/O reste intact) et `NOM.$$$` reste sur la disquette ; le résultat du
+     renommage n'est pas regardé.
+   - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
+     qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
+     pose `FOUND`, à décider.
+5. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
