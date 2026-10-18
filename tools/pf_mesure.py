@@ -57,7 +57,7 @@ COMPOSANTS = [
 NOMS = {"SYS": "Système et commandes", "EDIT": "EDIT", "GRA": "GRAPHER + GRXASM",
         "LOGO": "LOGO", "CMD": "CMDER", "HEX": "HEX", "VOIR": "VOIR", "USB": "USB",
         "ASM": "ASM", "DBG": "DEBUG", "EX": "Exemples", "OUT": "Outillage PC",
-        "TRA": "Transverse (projet)",
+        "TRA": "Transverse (projet)", "EN": "Traduction anglaise (docs/en)",
         "CPM": "CP/M 2.2 : système et utilitaires", "CPMED": "CP/M 2.2 : ED",
         "CPMASM": "CP/M 2.2 : ASM, LOAD", "CPMDDT": "CP/M 2.2 : DDT"}
 # comparaison avec CP/M 2.2 (§ 11 du document) : domaine, composants CP/A, composants CP/M
@@ -81,7 +81,8 @@ DOCS = {"architecture.md": "SYS", "systeme.md": "SYS", "memoire-pages-2-3.md": "
         "projet-rom.md": "SYS", "logo.md": "LOGO", "grapher.md": "GRA", "cmder.md": "CMD",
         "atelier.md": "OUT", "etat.md": "TRA", "essais-materiel.md": "TRA",
         "oric-basic.md": "TRA", "loci-modem-wifi.md": "TRA", "points-de-fonction.md": "TRA",
-        "../README.md": "TRA", "../README.fr.md": "TRA", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
+        "../README.md": "TRA", "../README.fr.md": "TRA",
+        "en/manuel.md": "EN", "en/logo.md": "EN", "en/grapher.md": "EN", "en/cmder.md": "EN", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
 MANUEL = [("Échange de fichiers", "USB"), ("HIRES plein", "VOIR"), ("L'éditeur de texte", "EDIT"),
           ("L'éditeur hexa", "HEX"), ("L'assembleur", "ASM"), ("Le débogueur", "DBG"),
           ("Outils", "OUT")]          # les autres sections : SYS
@@ -385,7 +386,7 @@ def tableaux(journal):
         m.append("")
     m.append("| Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |")
     m.append("|---|---:|---:|---:|---:|")
-    for c in ORDRE + ["TRA"]:
+    for c in ORDRE + ["TRA", "EN"]:
         p = tot_pf.get(c, 0)
         m.append("| %s | %s | %s | %s | %s |" % (
             NOMS[c], fr(doc.get(c, 0)), aide.get(c, 0) or "—",

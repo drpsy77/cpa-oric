@@ -63,6 +63,7 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/logo.md` | LOGO |
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
+| `docs/en/` | les quatre documents ci-dessus en anglais |
 | `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
 | `docs/systeme.md` | fonctionnement interne du système |

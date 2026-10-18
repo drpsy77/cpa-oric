@@ -57,14 +57,14 @@ The programs and their messages are in French for now; an English version is pla
 
 ## Documentation
 
-The documents are in French.
+The user documents are in English in `docs/en/`; the others are in French.
 
 | Document | Contents |
 |---|---|
-| `docs/manuel.md` | user manual: commands, drives, scripts, EDIT, HEX, ASM, DEBUG, pictures, sound, programming |
-| `docs/logo.md` | LOGO |
-| `docs/grapher.md` | GRAPHER |
-| `docs/cmder.md` | CMDER |
+| [`docs/en/manuel.md`](docs/en/manuel.md) | user manual: commands, drives, scripts, EDIT, HEX, ASM, DEBUG, pictures, sound, programming |
+| [`docs/en/logo.md`](docs/en/logo.md) | LOGO |
+| [`docs/en/grapher.md`](docs/en/grapher.md) | GRAPHER |
+| [`docs/en/cmder.md`](docs/en/cmder.md) | CMDER |
 | `docs/vision.md` | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
 | `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
 | `docs/systeme.md` | how the system works inside |

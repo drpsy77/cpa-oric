@@ -114,8 +114,9 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.
-   - Documentation : `README.md` en anglais (fait ; français : `README.fr.md`), documents
-     d'utilisation dans `docs/en/` (mêmes noms), documents internes en français seulement.
+   - Documentation : faite. `README.md` en anglais (français : `README.fr.md`), documents
+     d'utilisation dans `docs/en/` (mêmes noms, `tools/check_en.py`), documents internes en
+     français seulement.
 
 Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
