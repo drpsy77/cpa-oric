@@ -11,16 +11,25 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   (126 caractères au plus), l'historique est en `$BA80-$BB7F` (fin du jeu de caractères
   secondaire). Un seul historique pour le CCP et les programmes ; il est gardé au démarrage
   à chaud, sauf après un HIRES plein écran (zone recouverte par l'image).
+- **Codes du clavier** (`kb_scan`, `src/bios.s`, sous interruption) : flèches `$08` gauche,
+  `$09` droite, `$0A` bas, `$0B` haut ; avec SHIFT `$F0-$F3`, avec CTRL `$F4-$F7` (même
+  ordre ; CTRL l'emporte). CTRL + lettre : 1-26, sauf CTRL-H, I, J, K qui donnent 28-31
+  pour ne pas se confondre avec les flèches (TAB = CTRL-I = 29) ; CTRL-ESPACE et CTRL-@
+  donnent 0, CTRL-[ 27 ; CTRL avec une autre touche (chiffre, signe, RETURN, ESC, DEL) ne
+  donne rien. CTRL-T (20) bascule les majuscules sauf quand l'écran est au programme.
 - Flèches : gauche `$08` n'efface pas (DEL le fait), bas `$0A` ne valide pas la ligne.
-  CTRL-I vaut `$09`, la flèche droite : la complétion est donc sur ESC.
-- **Complétion par ESC** (comme `filec` du C-shell) : elle lit le répertoire directement
+  SHIFT-<- / SHIFT-> (ou CTRL-A / CTRL-E) : début / fin de la ligne ; CTRL-U l'efface.
+  Table des touches : `src/rl_keys.s`, rangée dans la page `$FF00` (données seulement).
+- CTRL-C sur une ligne vide fait un démarrage à chaud seulement au prompt du CCP (tampon
+  `CMDBUF`, `$0400`) ; quand un programme lit une ligne (fonction 10), il ne fait rien.
+- **Complétion par TAB ou ESC** (comme `filec` du C-shell) : elle lit le répertoire directement
   (`dir_get`), sans toucher au DMA ni au FCB des programmes ; seule une recherche 17/18 en
   cours chez l'appelant serait perdue. Pas de jokers ; noms en minuscules quand les
   majuscules sont coupées. Au premier mot de la ligne du CCP (option `CPLCMD`, commit à part,
   `DISK_OPTS="" ./build.sh` pour s'en passer) : commandes internes, puis `.COM` / `.BAT` sans
   leur type, sur les lecteurs que parcourt la recherche des programmes (§ 3, `drv_ok`), sans
   message d'erreur. Noms déjà vus dans `CP_TAB` (`$B800`, zone de sauvegarde des menus,
-  libre pendant ESC ; 39 noms). Pas dans LOGO ni DEBUG.
+  libre pendant la complétion ; 39 noms). Pas dans LOGO ni DEBUG.
 - **Majuscules** : verrouillage gardé ; le CCP et LOGO passent leurs lignes en majuscules,
   mais les fonctions 1 et 10 rendent ce qui est tapé (comme CP/M).
 - **Voyants** (barre de menus) : colonne 37 `A`/`a` (majuscules), colonne 38 `P`

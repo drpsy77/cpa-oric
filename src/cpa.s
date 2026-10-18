@@ -94,6 +94,7 @@ rom_end
         .dsb $FF00-*,$FF
 page_ff
 #include "tables_ff.s"
+#include "rl_keys.s"
 ff_end
 
 ; ---------------------------------------------------------------------

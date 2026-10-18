@@ -176,10 +176,10 @@ page ; `<` `>` : premier, dernier ; une lettre : fichier suivant qui commence pa
 `ESPACE` marque, `+` / `-` marquent ou démarquent selon un modèle, `*` inverse ; `1` à `4`
 trient par ordre disque, nom, type, taille (la même touche inverse l'ordre) ; `/` filtre
 (`B:*.TXT` change aussi de lecteur). Les opérations portent sur les fichiers marqués, ou sur
-celui du curseur : RETURN les montre (texte, par pages), `^C` copie, `^D` déplace, `^N`
+celui du curseur : RETURN les montre (texte, par pages), `^C` copie, `^X` déplace, `^N`
 renomme, DEL efface (après confirmation), `^A` change les attributs, `?` donne la taille
 exacte du fichier et `^E` celle de tous (règle de STAT), `^L` change de lecteur, `^R` relit
-(disquette changée), ESC quitte. Les mêmes actions sont dans les menus (FUNCT) Fichier,
+(disquette changée), ESC ou `^Q` quitte. Les mêmes actions sont dans les menus (FUNCT) Fichier,
 Marque, Trier et Vue. Une copie garde les attributs de l'original ; un fichier déjà présent
 est remplacé après accord (`O/N/T`, T pour tous), un fichier protégé de la destination est
 laissé ; disque plein : la copie commencée est effacée.
@@ -267,8 +267,26 @@ Usage conseillé : la disquette d'usage en `A:`, une disquette de données par p
 le travail en cours. `build/cpa.dsk` reste la disquette complète, tout visible.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
-la barre de menus), CTRL-C en début de ligne fait un démarrage à
+la barre de menus), CTRL-C sur une ligne vide du prompt fait un démarrage à
 chaud. Le bouton RESET revient au CCP.
+
+**Les mêmes touches partout.** L'Oric n'a ni TAB, ni Début, ni Fin, ni pages : le système
+les remplace par des combinaisons, que EDIT, HEX, CMDER et la ligne de commande
+comprennent de la même façon.
+
+| Touche | Effet |
+|---|---|
+| SHIFT-← / SHIFT-→ | début / fin de la ligne |
+| SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
+| CTRL-↑ / CTRL-↓ | début / fin du texte (du fichier, de la liste) |
+| CTRL-I | TAB : compléter un nom, changer de zone ou de colonne (EDIT : insérer un fichier) |
+| CTRL-ESPACE | marquer un bout du bloc (EDIT) ; ESC ôte la marque |
+| CTRL-X / CTRL-C / CTRL-V | couper / copier / coller (CMDER : déplacer / copier) |
+| CTRL-F / CTRL-G | chercher / suivant |
+| CTRL-S / CTRL-Q | enregistrer / quitter |
+
+CTRL-H, CTRL-I, CTRL-J et CTRL-K sont des touches à part, distinctes des flèches. CTRL avec
+un chiffre ou un signe ne donne rien.
 
 **Édition de la ligne, historique, complétion.** Au prompt `A>` comme dans les programmes qui
 lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
@@ -277,17 +295,19 @@ lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
 |---|---|
 | ← / → | déplacer le curseur dans la ligne ; ce qu'on tape s'insère |
 | ↑ / ↓ | lignes déjà validées (historique), de la plus récente à la plus ancienne |
-| ESC | compléter le nom de fichier qui se termine au curseur ; en début de ligne, la commande |
+| TAB (CTRL-I) ou ESC | compléter le nom de fichier qui se termine au curseur ; en début de ligne, la commande |
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
-| CTRL-A / CTRL-E | début / fin de la ligne |
-| CTRL-X | effacer toute la ligne |
+| SHIFT-← / SHIFT-→, CTRL-A / CTRL-E | début / fin de la ligne |
+| CTRL-U | effacer toute la ligne |
+| CTRL-C | sur une ligne vide du prompt `A>` : démarrage à chaud (sans effet dans un programme) |
 | CTRL-P | imprimante : copier tout ce qui s'affiche, oui / non (voyant `P` ; voir plus bas) |
 
 L'historique garde les dernières lignes (256 octets, une vingtaine de commandes courtes) ; il
 survit au démarrage à chaud, et une ligne identique à la précédente n'y entre pas deux fois.
 
 La complétion s'inspire du `filec` du C-shell, qui complétait déjà par ESC — touche placée sur
-l'Oric à l'endroit de la touche TAB d'un clavier de PC. `TYPE REA` + ESC donne
+l'Oric à l'endroit de la touche TAB d'un clavier de PC ; TAB (CTRL-I) fait de même, comme
+dans les shells d'aujourd'hui. `TYPE REA` + ESC donne
 `TYPE README.TXT ` (avec l'espace, prêt pour la suite). Si plusieurs fichiers conviennent, ESC
 ajoute la partie commune (`DIR HELL` → `DIR HELLO.`) ; si rien ne peut être ajouté, ESC
 affiche les noms possibles et réécrit la ligne en dessous. Sans majuscules (CTRL-T), le nom
@@ -719,25 +739,27 @@ disquettes livrées l'ont, modifiable (`EDIT EDIT.CFG`) ; il est caché (SYS) su
 par usage.
 
 Quand le paragraphe du curseur dépasse la longueur maxi, la ligne d'état montre `C 127!` en
-vidéo inverse. **CTRL-N** (menu Chercher, Trop long) va au premier caractère en trop du
+vidéo inverse. **CTRL-L** (menu Chercher, Trop long) va au premier caractère en trop du
 paragraphe trop long suivant ; les Statistiques donnent la longueur du plus long paragraphe
 et son numéro (`max 177 (L4)`).
 
 | Touche | Action |
 |---|---|
 | Flèches | déplacer le curseur |
+| SHIFT-← / SHIFT-→ | début / fin de ligne |
+| SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
+| CTRL-↑ / CTRL-↓ | début / fin du texte |
 | RETURN | nouveau paragraphe |
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
-| CTRL-Y | effacer le paragraphe |
-| CTRL-A / CTRL-E | début / fin de ligne |
-| CTRL-R / CTRL-C | page précédente / suivante |
-| CTRL-Q / CTRL-Z | début / fin du texte |
-| CTRL-O | insertion / remplacement |
-| CTRL-F / CTRL-G | chercher / suivant (repart du début si besoin) |
-| CTRL-S | enregistrer |
-| CTRL-L | insérer un fichier au curseur (Fichier, Insérer...) |
+| CTRL-ESPACE | marquer un bout du bloc (Edition, Marquer) ; ESC ôte la marque |
+| CTRL-X / CTRL-C / CTRL-V | couper / copier le bloc (de la marque au curseur) / coller |
+| CTRL-K | effacer le paragraphe |
+| CTRL-E | insertion / remplacement |
+| CTRL-F / CTRL-G / CTRL-H | chercher / suivant (repart du début si besoin) / remplacer |
+| CTRL-O / CTRL-S / CTRL-Q | ouvrir / enregistrer / quitter |
+| CTRL-I (TAB) | insérer un fichier au curseur (Fichier, Insérer...) |
 | CTRL-P | imprimer le texte (Fichier, Imprimer) |
-| CTRL-N | paragraphe trop long suivant (Chercher, Trop long) |
+| CTRL-L | paragraphe trop long suivant (Chercher, Trop long) |
 | FUNCT | menus |
 
 Menus :
@@ -753,7 +775,8 @@ Menus :
   Lancé depuis LOGO par `EDITE`, EDIT montre Retour au lieu de Quitter : il enregistre le texte
   s'il a changé et revient dans LOGO (voir LOGO).
 - **Edition** : Marquer, Copier, Couper, Coller, Eff. paragr. Le presse-papiers fait 4 Ko au plus.
-  On marque un bout du bloc, on déplace le curseur à l'autre bout, puis on copie ou on coupe.
+  On marque un bout du bloc (CTRL-ESPACE), on déplace le curseur à l'autre bout, puis on copie
+  (CTRL-C) ou on coupe (CTRL-X) ; CTRL-V colle au curseur. ESC ôte la marque.
 - **Chercher** : Chercher..., Suivant, Remplacer..., Trop long. Pour chaque occurrence, on répond
   O (oui), N (non), T (tous) ou Esc. La recherche ignore la différence majuscules/minuscules.
 - **Options** : Coupure mots (entre les mots, ou à 38 caractères ; le réglage de départ vient
@@ -783,13 +806,14 @@ dans la zone où l'on tape.
 |---|---|
 | Flèches | octet précédent / suivant, ligne précédente / suivante |
 | RETURN, DEL | début de la ligne suivante, octet précédent |
-| CTRL-R / CTRL-C | page précédente / suivante |
-| CTRL-Q / CTRL-Z | début / fin du fichier |
-| CTRL-A | aller à une adresse (en hexa) |
+| SHIFT-← / SHIFT-→ | début / fin de la ligne |
+| SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
+| CTRL-↑ / CTRL-↓ | début / fin du fichier |
+| CTRL-L | aller à une adresse (en hexa) |
 | CTRL-F / CTRL-G | chercher / suivant |
-| CTRL-O | modifier en hexa ou en ASCII |
-| CTRL-S | enregistrer |
-| ESC | quitter (confirmation si le fichier est modifié) |
+| TAB (CTRL-I) | modifier en hexa ou en ASCII |
+| CTRL-S / CTRL-R | enregistrer / recharger |
+| ESC ou CTRL-Q | quitter (confirmation si le fichier est modifié) |
 | FUNCT | menus Fichier (Enregistrer, Recharger, Quitter), Aller, Mode |
 
 En mode HEX, on tape deux chiffres par octet (le premier remplace le demi-octet fort,

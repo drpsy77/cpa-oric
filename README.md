@@ -16,7 +16,7 @@ Deux variantes sont construites à partir des mêmes sources :
 
 - Un système compatible dans l'esprit avec CP/M 2.2 : prompt `A>`, fichiers CP/M sur quatre
   lecteurs, programmes `.COM` chargés en `$0500`, scripts `.BAT`, menus déroulants (FUNCT),
-  édition de ligne avec historique et complétion par ESC, imprimante, graphisme et son.
+  édition de ligne avec historique et complétion par TAB ou ESC, mêmes touches dans tous les programmes (SHIFT et CTRL avec les flèches, CTRL-X/C/V), imprimante, graphisme et son.
 - Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
 - L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER).

@@ -45,6 +45,13 @@ LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 at
 plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservées au port série
 (réseau, version disquette).
 
+### Codes du clavier (CONIN, fonctions 1, 6, 10)
+
+ASCII ; DEL `$7F` ; flèches `$08` gauche, `$09` droite, `$0A` bas, `$0B` haut ; avec SHIFT
+`$F0-$F3`, avec CTRL `$F4-$F7` (même ordre). CTRL + lettre : 1-26, sauf CTRL-H à CTRL-K :
+28-31 (TAB = CTRL-I = 29) ; CTRL-ESPACE et CTRL-@ : 0 ; CTRL-[ : 27 ; CTRL avec une autre
+touche : rien. FUNCT : menus (codes `$81` et suivants choisis par le programme).
+
 ### Vecteurs et page 2
 
 | Adresse | Contenu |
@@ -67,7 +74,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 | N° | Fonction | Versions |
 |---|---|---|
-| 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par ESC en version disquette), 126 caractères au plus | les deux |
+| 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus | les deux |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |

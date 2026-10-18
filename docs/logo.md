@@ -64,7 +64,7 @@ Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`,
 tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
 de `a`). Une touche tapée pendant qu'un programme tourne est gardée pour `LISCAR` (la
-dernière seulement) ; elle est oubliée au retour au prompt. ESC interrompt aussi `LISCAR`.
+dernière seulement) ; elle est oubliée au retour au prompt. ESC et CTRL-C interrompent aussi `LISCAR` (`LISCAR` ne les rend donc jamais).
 
 **Jeux en écran texte.** `FIXECURSEUR`, `CURSEUR`, `CARECRAN` et `FIXECARECRAN` prennent les
 coordonnées de l'écran entier, comme le LORES de GRAPHER : colonnes 0 à 39 (0 et 1 portent
@@ -76,7 +76,8 @@ ligne et font défiler la console après la ligne 27 ; pour la dernière case de
 `FIXECARECRAN`. `TOUCHE` lit le clavier sans attendre et sans le délai de répétition :
 une flèche tenue fait avancer à chaque appel dès l'appui, et plus rien dès qu'on la lâche
 (`LISCAR` et `TOUCHE?` suivent, eux, la répétition du clavier). Les flèches rendent
-`CAR 8` (gauche), `CAR 9` (droite), `CAR 10` (bas), `CAR 11` (haut). Exemple sur
+`CAR 8` (gauche), `CAR 9` (droite), `CAR 10` (bas), `CAR 11` (haut) ; avec SHIFT, `CAR 240`
+à `CAR 243`, avec CTRL `CAR 244` à `CAR 247` (même ordre). Exemple sur
 `cpa-logo.dsk` : `LOGO FLECHES.LOG` (un `@` qu'on déplace dans un cadre, les murs lus par
 `CARECRAN`).
 
@@ -186,7 +187,8 @@ permises (elles servent au retour), et `XCOR`, `YCOR`, `CAP` répondent toujours
 pour les procédures et les textes ne change pas.
 
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
-une soustraction. ESC interrompt un programme. La barre de menus (Fichier, Tortue, Aide) tape
+une soustraction. ESC ou CTRL-C interrompt un programme (on reste dans LOGO, procédures et
+variables gardées) ; au prompt `?`, CTRL-C ne fait rien. La barre de menus (Fichier, Tortue, Aide) tape
 les commandes à la place de l'utilisateur.
 
 Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut modifier avec

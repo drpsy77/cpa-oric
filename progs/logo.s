@@ -984,16 +984,21 @@ drop    jsr x_rest
         jmp loop
 .)
 
-; check_esc : ESC interrompt l'exécution
+; check_esc : ESC ou CTRL-C interrompt l'exécution
 ;   (une autre touche est gardée dans pkey pour LISCAR et TOUCHE?)
 check_esc
         jsr B_CONST
         beq ce_r
         jsr B_CONIN
-        cmp #$1B
+        jsr is_brk
         beq esc_err
         sta pkey
         rts
+; is_brk : Z=1 si A est ESC ou CTRL-C (interruption)
+is_brk  cmp #$1B
+        beq ib_r
+        cmp #3
+ib_r    rts
 esc_err lda #0
         sta clen
         lda #<e_esc
@@ -1571,7 +1576,7 @@ f_liscar
         lda pkey                ; touche déjà lue par check_esc ?
         bne have
         jsr B_CONIN
-        cmp #$1B
+        jsr is_brk
         bne have
         jmp esc_err
 have    ldx #0
@@ -3187,7 +3192,7 @@ v       sta tmp2
         jsr B_CONST
         beq e
         jsr B_CONIN
-        cmp #$1B
+        jsr is_brk
         bne v
         jmp esc_err
 e       lda KB_HELD
