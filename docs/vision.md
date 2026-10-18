@@ -11,8 +11,8 @@ quel Oric.
 ## Pourquoi
 
 Un Oric reste dans son armoire quand rien n'y est agréable. Le BASIC et son éditeur ont
-vieilli, SEDORIC est difficile d'accès, les éditeurs et assembleurs de l'époque demandaient de
-l'héroïsme. On développe alors sur le PC (OSDK) et on joue dans un émulateur : la machine ne
+vieilli, SEDORIC est difficile d'accès, les éditeurs et assembleurs de l'époque étaient laborieux
+à utiliser. On développe alors sur le PC (OSDK) et on joue dans un émulateur : la machine ne
 sert plus. Le LOCI a réglé le stockage ; il manquait un environnement qui donne envie de
 s'asseoir devant l'Oric. CP/A est cet environnement : un système fluide, des outils qui
 parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machine.
