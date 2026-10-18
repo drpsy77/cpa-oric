@@ -4,6 +4,29 @@
 
 *My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
 
+<p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO dessine un arbre"> <img src="cpa-menus-oricutron.png" width="320" alt="Menus déroulants au prompt A>"></p>
+
+- **Votre Oric devient un vrai poste de travail** : menus déroulants, historique, complétion,
+  éditeur et gestionnaire de fichiers plein écran. Fini l'héroïsme.
+- **Écrivez un jeu, dessinez-le, compilez-le** en 6502 rapide, sans jamais quitter la machine.
+- **Puis partagez-le** : par la clé USB du LOCI aujourd'hui, sur une simple cassette pour tout
+  Oric bientôt.
+
+**L'essayer en cinq minutes.** Téléchargez [`cpa.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa.dsk), copiez-le sur la clé USB du LOCI
+(ou la carte SD du Cumulus) et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
+prompt `A>` :
+
+    DIR               ce qu'il y a sur la disquette
+    HELP              les rubriques d'aide
+    LOGO DEMO         puis tapez DEMO : la tortue dessine un arbre
+    GRAPHER CARTE     un monde de 128 x 64 cases tiré au hasard (flèches, Q pour finir)
+    GRXASM SERPENT    traduit le jeu du serpent en assembleur...
+    ASM SERPENT       ...l'assemble sur l'Oric...
+    SERPENT           ...et lance la version compilée
+    CMDER             gestionnaire de fichiers plein écran (ESC pour finir)
+
+La touche FUNCT ouvre les menus partout.
+
 Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Version 0.9.
 
 Deux variantes sont construites à partir des mêmes sources :
