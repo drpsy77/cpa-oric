@@ -211,5 +211,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   `docs/essais-materiel.md` (« À vérifier ») et, si une fonction change,
   `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
 - `README.md` (anglais) et `README.fr.md` (français) vont ensemble : un changement de l'un
-  est reporté dans l'autre.
+  est reporté dans l'autre. De même pour les documents d'utilisation (`manuel.md`, `logo.md`,
+  `grapher.md`, `cmder.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
+  signale une traduction en retard (titres, tableaux, exemples).
 

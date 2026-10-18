@@ -191,7 +191,7 @@ ascenseur montre la partie visible de la liste. Une erreur disque s'affiche en l
 
 **Deux colonnes** : `CMDER A: B:` (un filtre par lecteur : `CMDER A:*.COM B:`) montre deux
 disquettes côte à côte (nom, type, taille en Ko) ; l'en-tête de la colonne active est en vidéo
-inverse. `^X` passe à l'autre colonne, `^W` échange leurs places, `^Z` met la colonne active
+inverse. TAB passe à l'autre colonne, `^W` échange leurs places, `^Z` met la colonne active
 en plein écran (et revient). Copier propose le lecteur de l'autre colonne (RETURN suffit) et
 vérifie d'abord la place (`Libre 14K, requis 18K : O/N ?`). Menu Vue, « Absents autre » : la
 colonne ne montre que les fichiers absents de l'autre, ou présents avec une autre taille ou
