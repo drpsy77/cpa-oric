@@ -64,11 +64,14 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
    les tuiles, `TILESET` et `TMAP`, décidées (`docs/grapher.md` § 16.1), puis leurs dessins
    depuis un `.SPR` et les caractères animés (§ 16.2, § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
    écran) ; LOGO ensuite peut-être.
-3. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
+3. **CP/A pour l'Oric sous BASIC** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
+   (décidé), puis une boîte à outils appelée par `!` depuis le BASIC, ou GRXASM vers un
+   programme autonome (`.TAP`) ; ordre à choisir.
+4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
    § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
-4. **Défauts constatés** (reproduits dans Oricutron sur `cpa.dsk`)
+5. **Défauts constatés** (reproduits dans Oricutron sur `cpa.dsk`)
    - GRAPHER, `SAVE`, `BSAVE`, `BSAVE SCREEN` (`progs/fil.inc`) : l'ancien fichier est effacé
      avant l'écriture ; disque plein en cours d'écriture : ancien contenu perdu, fichier de
      0 octet. À écrire comme EDIT (`NOM.$$$` puis remplacement). Un fichier R/O reste intact
@@ -84,7 +87,7 @@ Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
-5. **Petites améliorations notées**
+6. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des

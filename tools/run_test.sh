@@ -30,6 +30,8 @@
 # Exemples :
 #   DSK=build/cpa.dsk tools/run_test.sh $'DIR\n' 600 /tmp/t && python3 tools/screen.py /tmp/t.mem
 #   ORIC_ROM=cpa tools/run_test.sh $'VER\n' 300 /tmp/r
+#   tools/run_test.sh $'||CALL#9000\n' 900 /tmp/c --turbotape on -t JEU.TAP
+#     (ROM BASIC, cassette : Oricutron tape lui-même CLOAD"")
 set -e
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 ORIC=${ORICUTRON:-$HERE/tools/oricutron}
