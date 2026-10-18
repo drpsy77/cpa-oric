@@ -1,5 +1,7 @@
 # CP/A — Control Program for Atmos
 
+*My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
+
 Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Version 0.9.
 
 Deux variantes sont construites à partir des mêmes sources :
@@ -36,6 +38,7 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/logo.md` | LOGO |
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
+| `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
 | `docs/systeme.md` | fonctionnement interne du système |
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |

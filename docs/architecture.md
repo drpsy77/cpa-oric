@@ -193,6 +193,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 
 | Sujet | Où |
 |---|---|
+| but, public, principes, ce que CP/A n'est pas | `docs/vision.md` (critère pour ordonner la suite) |
 | contrat, conventions, construction | ce document |
 | état, suite prévue, réserves de place | `docs/etat.md` (court : relu à chaque conversation) |
 | fonctionnement interne du système | `docs/systeme.md` |

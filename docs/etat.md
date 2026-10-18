@@ -102,6 +102,11 @@ octets et documentation dans `docs/points-de-fonction.md`.
      écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - une base de données simple sur l'accès direct (piste).
+7. **Version anglaise** (plus tard, approche à valider) : un build par langue (`LANG=en`),
+   messages de chaque programme dans un fichier inclus par langue, aide de HELP en deux
+   listes, primitives de LOGO en anglais (FORWARD, TO... END : les `.LOG` dépendent de la
+   langue), exemples traduits ; documentation : `README.md` en anglais, documents
+   d'utilisation dans `docs/en/` (mêmes noms), documents internes en français seulement.
 
 Écarté : `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
