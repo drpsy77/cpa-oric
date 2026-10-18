@@ -1,92 +1,98 @@
 # CP/A — Control Program for Atmos
 
+[Version française](README.fr.md)
+
 *My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
 
-Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Version 0.9.
+A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version 0.9.
 
-Deux variantes sont construites à partir des mêmes sources :
+Two variants are built from the same sources:
 
-- **`build/cpa.dsk`**, la version principale : une disquette amorçable pour le contrôleur
-  Microdisc, donc aussi pour le Cumulus et le LOCI. Le système se charge dans les 16 Ko de RAM
-  overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
-  programmes reste intact. Quatre autres disquettes, par usage : `cpa-logo.dsk`,
-  `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk`.
-- **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
-  disque.
+- **`build/cpa.dsk`**, the main version: a bootable disk for the Microdisc controller, and
+  therefore also for the Cumulus and the LOCI. The system loads into the 16 KB of overlay RAM
+  (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
+  intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
+  `cpa-anim.dsk`.
+- **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
-## Ce qu'il y a dedans
+The programs and their messages are in French for now; an English version is planned.
 
-- Un système compatible dans l'esprit avec CP/M 2.2 : prompt `A>`, fichiers CP/M sur quatre
-  lecteurs, programmes `.COM` chargés en `$0500`, scripts `.BAT`, menus déroulants (FUNCT),
-  édition de ligne avec historique et complétion par TAB ou ESC, mêmes touches dans tous les programmes (SHIFT et CTRL avec les flèches, CTRL-X/C/V), imprimante, graphisme et son.
-- Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
-  DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
-- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER).
-- Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
-  **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
-- **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
-  langage de dessin et de jeux (sprites en mode texte, cartes plus grandes que l'écran,
-  défilement compris), interprété ou traduit en
-  assembleur.
-- Images HIRES compressées et animations plein écran (VOIR).
+## What's inside
+
+- A system in the spirit of CP/M 2.2: `A>` prompt, CP/M files on four drives, `.COM`
+  programs loaded at `$0500`, `.BAT` scripts, pull-down menus (FUNCT), line editing with
+  history and TAB or ESC completion, the same keys in every program (SHIFT and CTRL with the
+  arrows, CTRL-X/C/V), printer, graphics and sound.
+- File and disk commands that work with one drive or several (COPY, FORMAT, DISKCOPY...),
+  and **CMDER**, a full-screen two-panel file manager.
+- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER).
+- Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
+  **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step).
+- **LOGO** in French (turtle, decimals, words and lists, sound) and **GRAPHER**, a small
+  language for drawings and games (text-mode sprites, maps larger than the screen,
+  scrolling), interpreted or translated into assembly.
+- Compressed HIRES pictures and full-screen animations (VOIR).
 
 ## Documentation
 
-| Document | Contenu |
+The documents are in French.
+
+| Document | Contents |
 |---|---|
-| `docs/manuel.md` | mode d'emploi : commandes, lecteurs, scripts, EDIT, HEX, ASM, DEBUG, images, son, programmation |
+| `docs/manuel.md` | user manual: commands, drives, scripts, EDIT, HEX, ASM, DEBUG, pictures, sound, programming |
 | `docs/logo.md` | LOGO |
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
-| `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
-| `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
-| `docs/systeme.md` | fonctionnement interne du système |
-| `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
-| `docs/etat.md` | état du projet, suite prévue, réserves de place |
-| `docs/projet-rom.md` | la version ROM |
-| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
-| `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
-| `docs/essais-materiel.md` | essais sur le vrai Oric |
-| `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
-| `docs/loci-modem-wifi.md` | relier un modem WiFi au LOCI (en préparation) |
+| `docs/vision.md` | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
+| `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
+| `docs/systeme.md` | how the system works inside |
+| `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
+| `docs/etat.md` | project status, what comes next, space reserves |
+| `docs/projet-rom.md` | the ROM version |
+| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output, routines for BASIC, standalone GRAPHER games (specification) |
+| `docs/atelier.md` | building and testing (tools, emulators, test benches) |
+| `docs/essais-materiel.md` | tests on a real Oric |
+| `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
+| `docs/loci-modem-wifi.md` | connecting a WiFi modem to the LOCI (in preparation) |
 
-## Construire
+## Building
 
-Il faut Python 3 et l'assembleur `xa` de l'OSDK. Le script `tools/build_xa.sh` le télécharge et
-le compile dans `tools/xa` (macOS ou Linux, il faut git et un compilateur C++) :
+You need Python 3 and the OSDK `xa` assembler. `tools/build_xa.sh` downloads and compiles it
+into `tools/xa` (macOS or Linux; needs git and a C++ compiler):
 
     ./tools/build_xa.sh
     ./build.sh
 
-`build.sh` prend `tools/xa` s'il existe ; sinon il utilise la variable `XA` ou le `xa` du PATH.
+`build.sh` uses `tools/xa` if it exists; otherwise the `XA` variable or the `xa` on the PATH.
 
-Sur Linux (Raspberry Pi compris), `tools/setup_linux.sh` installe en une fois tout l'atelier de
-test : xa, py65 et un Oricutron piloté par script. Voir `docs/atelier.md`.
+On Linux (Raspberry Pi included), `tools/setup_linux.sh` installs the whole test bench at
+once: xa, py65 and a script-driven Oricutron. See `docs/atelier.md`.
 
-## Lancer dans Oricutron
+## Running in Oricutron
 
-Version disque : l'EPROM du Microdisc fait appel à la ROM BASIC 1.1, il faut donc garder
-`atmosrom = 'roms/basic11b'` et avoir `roms/microdis.rom`.
+Disk version: the Microdisc EPROM calls the BASIC 1.1 ROM, so keep
+`atmosrom = 'roms/basic11b'` and have `roms/microdis.rom`.
 
     oricutron -m atmos -k microdisc -d build/cpa.dsk
 
-Version ROM : copier `build/cpa.rom` dans `roms/`, puis mettre `atmosrom = 'roms/cpa'` dans `oricutron.cfg`.
+ROM version: copy `build/cpa.rom` into `roms/`, then set `atmosrom = 'roms/cpa'` in
+`oricutron.cfg`.
 
-Sur le matériel, copier `cpa.dsk` sur la clé USB (resp. la carte SD) du LOCI (resp. du Cumulus) et
-démarrer dessus. CP/A est utilisé sur un vrai Oric Atmos avec un LOCI ; les couleurs des
-menus, peu lisibles dans certains émulateurs, sont nettes sur un vrai écran.
+On real hardware, copy `cpa.dsk` to the USB stick of the LOCI (or the SD card of the Cumulus)
+and boot from it. CP/A is used on a real Oric Atmos with a LOCI; the menu colours, hard to read
+in some emulators, are sharp on a real screen.
 
-**Plusieurs lecteurs.** La version disquette gère quatre lecteurs, `A:` à `D:`, comme le
-contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
-`oricutron -m atmos -k microdisc -d build/cpa.dsk -d donnees.dsk`) ; voir `docs/manuel.md`.
+**Several drives.** The disk version handles four drives, `A:` to `D:`, like the Microdisc
+controller, the LOCI and Oricutron (one `-d` per drive:
+`oricutron -m atmos -k microdisc -d build/cpa.dsk -d data.dsk`); see `docs/manuel.md`.
 
-**Clock Signal** (macOS, Linux) démarre aussi `cpa.dsk`, et son minutage du lecteur est plus
-proche du matériel qu'Oricutron. L'application ne met une disquette que dans `A:` ;
-`tools/build_clk_mac.sh` construit sur un Mac (avec Xcode) une version à quatre lecteurs.
+**Clock Signal** (macOS, Linux) also boots `cpa.dsk`, and its drive timing is closer to the
+hardware than Oricutron's. The application only puts a disk in `A:`;
+`tools/build_clk_mac.sh` builds a four-drive version on a Mac (with Xcode).
 
-Sur l'Oric, `HELP` donne l'aide de chaque commande (`HELP` seul : la liste des rubriques).
+On the Oric, `HELP` gives help on each command (`HELP` alone: the list of topics).
 
 ## Licence
 
-CP/A est distribué sous licence MIT (voir `LICENSE`). Les images `build/cpa.dsk` et
-`build/cpa.rom` sont fournies prêtes à l'emploi ; `./build.sh` les reconstruit.
+CP/A is distributed under the MIT licence (see `LICENSE`). The `build/cpa.dsk` and
+`build/cpa.rom` images are ready to use; `./build.sh` rebuilds them.

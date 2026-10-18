@@ -210,4 +210,6 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 - À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge, suite),
   `docs/essais-materiel.md` (« À vérifier ») et, si une fonction change,
   `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
+- `README.md` (anglais) et `README.fr.md` (français) vont ensemble : un changement de l'un
+  est reporté dans l'autre.
 

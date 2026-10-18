@@ -58,18 +58,23 @@ octets et documentation dans `docs/points-de-fonction.md`.
 
 ## 2. Suite prévue (par priorité)
 
-1. **Phases d'un jeu** (`RUN`, à décider : `docs/grapher.md` § 17). Les programmes
-   traduits sont maintenant petits (seules routines utiles des bibliothèques : 1,5 à 6,4 Ko
-   pour les exemples) et rapides (tableaux à adresse fixe).
-2. **Sprites en mode texte** : faits dans GRAPHER (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
-   bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1). Rectangles faits (`PASTE`,
-   `GRAB`, `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2). Reste :
-   les tuiles, `TILESET` et `TMAP`, décidées (`docs/grapher.md` § 16.1), puis leurs dessins
-   depuis un `.SPR` et les caractères animés (§ 16.2, § 17), puis l'éditeur de caractères et de sprites (`.COM` plein
-   écran) ; LOGO ensuite peut-être.
-3. **CP/A pour l'Oric sous BASIC** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
-   (décidé), puis une boîte à outils appelée par `!` depuis le BASIC, ou GRXASM vers un
-   programme autonome (`.TAP`) ; ordre à choisir.
+Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
+
+1. **Atelier créatif**
+   - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
+     bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1), rectangles (`PASTE`, `GRAB`,
+     `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2).
+   - Reste : les tuiles, `TILESET` et `TMAP`, décidées (`docs/grapher.md` § 16.1), puis leurs
+     dessins depuis un `.SPR` et les caractères animés (§ 16.2, § 17) ; l'éditeur de
+     caractères et de sprites (`.COM` plein écran) ; un **dessin assisté** (`.COM`, plus
+     précis que la tortue de LOGO : points, traits, formes, remplissage, couleurs par
+     attributs, vers `.HIR` / `.HIZ`), à spécifier.
+2. **GRAPHER, plateforme de développement** : phases d'un jeu (`RUN`, à décider :
+   `docs/grapher.md` § 17). Les programmes traduits sont petits (seules routines utiles des
+   bibliothèques : 1,5 à 6,4 Ko pour les exemples) et rapides (tableaux à adresse fixe).
+3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM`, `tools/mktap.py` et
+   `CASSETTE.COM` (décidés), puis une boîte à outils appelée par `!` depuis le BASIC, ou
+   GRXASM vers un programme autonome (`.TAP`) ; ordre à choisir.
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
@@ -101,14 +106,18 @@ octets et documentation dans `docs/points-de-fonction.md`.
    - EDIT : un paragraphe sur une seule ligne avec défilement horizontal ; une édition plein
      écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
-   - une base de données simple sur l'accès direct (piste).
-7. **Version anglaise** (plus tard, approche à valider) : un build par langue (`LANG=en`),
-   messages de chaque programme dans un fichier inclus par langue, aide de HELP en deux
-   listes, primitives de LOGO en anglais (FORWARD, TO... END : les `.LOG` dépendent de la
-   langue), exemples traduits ; documentation : `README.md` en anglais, documents
-   d'utilisation dans `docs/en/` (mêmes noms), documents internes en français seulement.
+   - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
+     LOGO ou un `.COM`, à trouver.
+7. **Version anglaise** (plus tard, approche à valider)
+   - Programmes : un build par langue (`LANG=en`), messages de chaque programme dans un
+     fichier inclus par langue, aide de HELP en deux listes, exemples traduits.
+   - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
+     traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
+     traduit que les primitives, pas les procédures de l'utilisateur.
+   - Documentation : `README.md` en anglais (fait ; français : `README.fr.md`), documents
+     d'utilisation dans `docs/en/` (mêmes noms), documents internes en français seulement.
 
-Écarté : `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
+Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
 suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT.
 
