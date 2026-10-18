@@ -524,20 +524,38 @@ got_col tya
         sta kb_rep
         jmp emit
 held    dec kb_rep
-        bne done
+        bne kdone
         lda kb_rate             ; puis ~16 caractères/s par défaut
         sta kb_rep
 
 emit    ldx kb_last
         lda kb_mods
-        and #1
-        beq unsh
+        lsr                     ; C = SHIFT
+        lda keymap_norm,x
+        bcc gotc
         lda keymap_shift,x
-        jmp gotc
-unsh    lda keymap_norm,x
-gotc    beq done
-        sta ZP_IRQ
+gotc    bne gc
+kdone   rts
+gc      sta ZP_IRQ
 
+        ; flèches (8-11 : <- -> bas haut) avec SHIFT : $F0-$F3, avec
+        ; CTRL : $F4-$F7 (CTRL l'emporte)
+        sec
+        sbc #8
+        cmp #4
+        bcs noarr
+        tay
+        lda kb_mods
+        and #3
+        beq push                ; flèche seule
+        and #2                  ; CTRL : +4
+        asl
+        sty ZP_IRQ
+        adc ZP_IRQ              ; (C=0)
+        adc #$F0
+        sta ZP_IRQ
+        bne push
+noarr
         ; verrouillage majuscules : inverse la casse des lettres
         lda caps
         beq nocaps
@@ -551,13 +569,26 @@ gotc    beq done
         eor #$20
         sta ZP_IRQ
 nocaps
-        ; CTRL : code de contrôle
+        ; CTRL : code de contrôle. Lettre -> 1-26, sauf H I J K -> 28-31
+        ; (8-11 sont les flèches) ; ESPACE et @ -> 0 ; [ -> 27 ; toute
+        ; autre touche (chiffres, signes, RETURN, ESC, DEL) : ignorée
         lda kb_mods
         and #2
         beq push
         lda ZP_IRQ
-        and #$1F
-        sta ZP_IRQ
+        and #$DF
+        beq ctl                 ; ESPACE
+        cmp #"@"
+        bcc kdone
+        cmp #"["+1
+        bcs kdone
+ctl     and #$1F
+        cmp #8
+        bcc ctl2
+        cmp #12
+        bcs ctl2
+        adc #20                 ; (C=0) CTRL-H..K -> 28..31
+ctl2    sta ZP_IRQ
         cmp #$14                ; CTRL-T : bascule majuscules (comme l'Atmos)
         bne push
         jsr hires_on            ; écran au programme : code ordinaire

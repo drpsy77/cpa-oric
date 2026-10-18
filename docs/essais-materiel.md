@@ -8,6 +8,12 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 
 **Système**
 
+- clavier : CTRL avec une lettre (CTRL-I, H, J, K différents des flèches), CTRL-ESPACE et
+  CTRL-@ (code 0), SHIFT et CTRL avec les quatre flèches (`GET K` puis `PRINT K` dans un
+  `.GRX` : CTRL-I 29, CTRL-ESPACE 0, SHIFT-← 240, CTRL-↓ 246) ; CTRL avec un chiffre : rien ;
+  frappe rapide avec SHIFT ou CTRL tenue (pas de touche perdue ni doublée) ;
+- prompt : TAB complète comme ESC, SHIFT-←/→, CTRL-U ; CTRL-C sur ligne vide redémarre au
+  prompt, mais pas dans LOGO ;
 - complétion des commandes par ESC sur tous les lecteurs (programme présent seulement sur
   B:) ;
 - recherche des programmes limitée aux lecteurs déjà lus : rien ne doit changer avec le LOCI ;
@@ -17,8 +23,13 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 
 **Programmes**
 
-- EDIT : impression (`^P`) et coupure à la largeur sur une vraie imprimante ; `^L` ;
-  `C nnn!`, `^N`, Statistiques ;
+- EDIT : impression (`^P`) et coupure à la largeur sur une vraie imprimante ; `^I` (insérer
+  un fichier) ; `C nnn!`, `^L` (trop long), Statistiques ; nouvelles touches : CTRL-ESPACE,
+  CTRL-X/C/V, ESC (marque ôtée : `M` disparaît de la ligne d'état), CTRL-K, CTRL-H, CTRL-O,
+  CTRL-Q, SHIFT et CTRL avec les flèches ; libellés des menus (largeur) ;
+- HEX et CMDER : SHIFT et CTRL avec les flèches, TAB (mode HEX/ASCII ; autre colonne),
+  `^L` et `^R` dans HEX, `^X` (déplacer) et `^Q` dans CMDER ;
+- LOGO : CTRL-C interrompt une boucle (`REPETE 30000 [DR 1]`) comme ESC ;
 - ASM : un assemblage (jamais lancé sur le vrai Oric ; lectures et écritures alternées sur la
   disquette) ;
 - DEBUG en usage réel : points d'arrêt, pas à pas ;

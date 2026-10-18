@@ -7,12 +7,15 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code `$C000-$F623`, **marge 77 octets** jusqu'à `$F670` (200 sans l'option
-`CPLCMD`) ; page `$FF00-$FFB7`, marge 66 octets. `./build.sh` affiche les deux marges.
+**Système** : code `$C000-$F633`, **marge 61 octets** jusqu'à `$F670` (184 sans l'option
+`CPLCMD`) ; page `$FF00-$FFE7`, marge 18 octets (table des touches de l'édition de ligne). `./build.sh` affiche les deux marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
   et pagination (`PAPER`, `INK`, `PAGE`) ;
-- lecture de ligne (BDOS 10) : édition, historique, complétion par ESC des noms de fichiers
+- clavier : CTRL-H à CTRL-K distincts des flèches (28-31), CTRL-ESPACE (0), SHIFT et CTRL
+  avec les flèches (`$F0-$F7`) ; mêmes touches dans EDIT, HEX, CMDER et la ligne de commande
+  (`docs/manuel.md`, « Les mêmes touches partout ») ;
+- lecture de ligne (BDOS 10) : édition, historique, complétion par TAB ou ESC des noms de fichiers
   et, en début de ligne, des commandes (sur les lecteurs où elles seraient cherchées) ;
 - fichiers CP/M 2.2 (séquentiel, accès direct, attributs R/O et SYS), lecteurs A: à D: ;
 - programmes et scripts cherchés sur le lecteur du script (ou le courant), puis A: à D: ;
@@ -31,7 +34,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | HELP | 10 552 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
-| CMDER | 13 566 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
+| CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 192 | éditeur de texte | `manuel.md` |
@@ -39,7 +42,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | ASM | 5 949 | assembleur 6502 (identique à xa sur nos sources) | `manuel.md` |
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
-| LOGO | 18 950 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
+| LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | GRAPHER, GRXASM | 15 555, 14 498 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
@@ -100,7 +103,7 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 
 ## 3. Réserves de place
 
-**Système** (marge 77 octets) :
+**Système** (marge 61 octets ; page `$FF00` : 18 octets) :
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
@@ -121,8 +124,9 @@ multiple de 2 048) :
   tuiles) ; piste de place : messages d'erreur par numéro, ~40 octets. GRXASM (14 498) prend
   8 blocs ; GRX.INC (11 816 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 472 octets avant le 7e. HELP (10 552) prend 6 blocs. Les disquettes se
   spécialisent plutôt que de gratter des octets ;
-- EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
-  de 260 octets du bloc suivant ;
+- EDIT fait exactement 8 192 octets : 119 octets de code de plus le feraient passer au bloc
+  suivant (tampon de texte aligné sur une page). HEX : 47 octets ; ASM est à moins de 260
+  octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
   disquettes illisibles ; en dernier recours.
 

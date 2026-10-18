@@ -12,14 +12,15 @@
 ;
 ;     OOOO XX XX XX XX XX XX XX XX ........
 ;
-;  On modifie les octets en hexadécimal ou en ASCII (^O bascule) ; la
+;  On modifie les octets en hexadécimal ou en ASCII (TAB bascule) ; la
 ;  taille du fichier ne change jamais. ^S écrit les modifications.
 ;
 ;  Touches : flèches, RETURN (ligne suivante), DEL (recule),
-;    ^R / ^C page précédente / suivante, ^Q début, ^Z fin,
-;    ^A aller à une adresse, ^F chercher (texte, ou #41 42 en hexa),
-;    ^G occurrence suivante, ^O mode HEX/ASCII, ^S enregistrer,
-;    ESC quitter. FUNCT ouvre les menus.
+;    SHIFT-<- / SHIFT-> début / fin de ligne, SHIFT-haut / SHIFT-bas
+;    page précédente / suivante, CTRL-haut / CTRL-bas début / fin,
+;    ^L aller à une adresse, ^F chercher (texte, ou #41 42 en hexa),
+;    ^G occurrence suivante, TAB (^I) mode HEX/ASCII, ^S enregistrer,
+;    ^R recharger, ^Q ou ESC quitter. FUNCT ouvre les menus.
 ; =====================================================================
 
 #include "cpa.inc"
@@ -184,18 +185,23 @@ fatal   ldx #F_PRINT
 ; dispatch : A = touche ou code de menu ($81-$89)
 dispatch
 .(
+        cmp #$F0
+        bcs arr
         cmp #$81
         bcs menu
         cmp #$7F
         beq dl
         cmp #$20
         bcs ch
-        tax
+ct      tax
         lda cvec_hi,x
         pha
         lda cvec_lo,x
         pha
         rts
+arr     and #$0F                ; SHIFT ou CTRL + flèche ($F0-$F7) :
+        ora #$20                ;   entrées 32-39 de la table
+        bne ct
 menu    cmp #$8A
         bcs none
         sec
@@ -210,14 +216,22 @@ dl      jmp k_left
 ch      jmp k_char
 .)
 
-cvec_lo .byt <(k_none-1),<(k_goto-1),<(k_none-1),<(k_pgdn-1),<(k_none-1),<(k_none-1),<(k_find-1),<(k_next-1)
-        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_none-1),<(k_cr-1),<(k_none-1),<(k_mode-1)
-        .byt <(k_none-1),<(k_top-1),<(k_pgup-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
-        .byt <(k_none-1),<(k_none-1),<(k_bot-1),<(k_quit-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
-cvec_hi .byt >(k_none-1),>(k_goto-1),>(k_none-1),>(k_pgdn-1),>(k_none-1),>(k_none-1),>(k_find-1),>(k_next-1)
-        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_none-1),>(k_cr-1),>(k_none-1),>(k_mode-1)
-        .byt >(k_none-1),>(k_top-1),>(k_pgup-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
-        .byt >(k_none-1),>(k_none-1),>(k_bot-1),>(k_quit-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
+; codes de contrôle $00-$1F (28-31 : CTRL-H..K), puis SHIFT / CTRL + flèche
+; ($F0-$F7 : entrées 32-39) : ^F ^G chercher, suivant ; 8-11 flèches ;
+; ^L aller à une adresse ; RETURN ; ^Q quitter ; ^R recharger ;
+; ^S enregistrer ; ESC quitter ; 29 TAB (^I) hexa / ASCII ; SHIFT <- -> bas
+; haut : début, fin de ligne, page suivante, précédente ; CTRL bas haut :
+; fin, début du fichier
+cvec_lo .byt <(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_find-1),<(k_next-1)
+        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_goto-1),<(k_cr-1),<(k_none-1),<(k_none-1)
+        .byt <(k_none-1),<(k_quit-1),<(k_reload-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
+        .byt <(k_none-1),<(k_none-1),<(k_none-1),<(k_quit-1),<(k_none-1),<(k_mode-1),<(k_none-1),<(k_none-1)
+        .byt <(k_home-1),<(k_end-1),<(k_pgdn-1),<(k_pgup-1),<(k_none-1),<(k_none-1),<(k_bot-1),<(k_top-1)
+cvec_hi .byt >(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_find-1),>(k_next-1)
+        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_goto-1),>(k_cr-1),>(k_none-1),>(k_none-1)
+        .byt >(k_none-1),>(k_quit-1),>(k_reload-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
+        .byt >(k_none-1),>(k_none-1),>(k_none-1),>(k_quit-1),>(k_none-1),>(k_mode-1),>(k_none-1),>(k_none-1)
+        .byt >(k_home-1),>(k_end-1),>(k_pgdn-1),>(k_pgup-1),>(k_none-1),>(k_none-1),>(k_bot-1),>(k_top-1)
 mvec_lo .byt <(k_save-1),<(k_reload-1),<(k_quit-1),<(k_top-1),<(k_bot-1),<(k_goto-1),<(k_find-1),<(k_next-1),<(k_mode-1)
 mvec_hi .byt >(k_save-1),>(k_reload-1),>(k_quit-1),>(k_top-1),>(k_bot-1),>(k_goto-1),>(k_find-1),>(k_next-1),>(k_mode-1)
 
@@ -296,6 +310,23 @@ k_top
         sta top+1
         jmp moved
 
+k_home                          ; SHIFT-<- : début de la ligne
+        lda pos
+        and #$F8
+        sta pos
+        jmp moved
+
+k_end                           ; SHIFT-> : fin de la ligne, ou du fichier
+        lda pos
+        ora #7
+        sta t0
+        lda pos+1
+        sta t0+1
+        lda t0
+        cmp size
+        lda t0+1
+        sbc size+1
+        bcc set_pos
 k_bot
         sec
         lda size
@@ -1596,22 +1627,22 @@ mn_fic  .byt 3,14
         .asc "Enregistrer ^S",0
         .byt MA_TYPE
         .word c_save
-        .asc "Recharger",0
+        .asc "Recharger   ^R",0
         .byt MA_TYPE
         .word c_reload
-        .asc "Quitter  ESC",0
+        .asc "Quitter     ^Q",0
         .byt MA_TYPE
         .word c_quit
 
 mn_all  .byt 5,13
         .asc "Aller",0
-        .asc "Debut      ^Q",0
+        .asc "Debut  C-haut",0
         .byt MA_TYPE
         .word c_top
-        .asc "Fin        ^Z",0
+        .asc "Fin     C-bas",0
         .byt MA_TYPE
         .word c_bot
-        .asc "Adresse... ^A",0
+        .asc "Adresse... ^L",0
         .byt MA_TYPE
         .word c_goto
         .asc "Chercher.. ^F",0
@@ -1621,9 +1652,9 @@ mn_all  .byt 5,13
         .byt MA_TYPE
         .word c_next
 
-mn_mod  .byt 1,12
+mn_mod  .byt 1,13
         .asc "Mode",0
-        .asc "Hex/ASCII ^O",0
+        .asc "Hex/ASCII TAB",0
         .byt MA_TYPE
         .word c_mode
 

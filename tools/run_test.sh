@@ -7,7 +7,8 @@
 #   TOUCHES  texte tapé à partir de la trame ORIC_KEYS_AT (défaut 100) ;
 #            codes spéciaux (écrire la chaîne avec $'...' en bash) :
 #            \n Entrée  ~ DEL  | pause 3 s  \x1b ESC  \x01-\x04 flèches G D H B
-#            \x05 FUNCT  \x1c préfixe CTRL (\x1cC = ^C)  \x06 bouton RESET (NMI)
+#            \x05 FUNCT  \x1c préfixe CTRL (\x1cC = ^C)  \x0f préfixe SHIFT
+#            \x06 bouton RESET (NMI)
 #            \x07 échange la disquette du lecteur A: (voir DSKSWAP)
 #   TRAME    trame (1/50 s) du vidage mémoire ; l'émulateur s'arrête juste après
 #   SORTIE   préfixe des résultats : SORTIE.mem (64 Ko, $0300-$03FF à zéro),

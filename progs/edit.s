@@ -196,6 +196,8 @@ dispatch
         cmp #$7F
         bcc jchar
         beq del
+        cmp #$F0
+        bcs arr
         cmp #$81
         bcc none
         cmp #$94
@@ -208,6 +210,8 @@ dispatch
         lda mvec_lo,x
         pha
         rts
+arr     and #$0F                ; SHIFT ou CTRL + flèche ($F0-$F7) :
+        ora #$20                ;   entrées 32-39 de la table
 ctrl    tax
         lda cvec_hi,x
         pha
@@ -219,15 +223,24 @@ del     jmp k_del
 none    rts
 .)
 
-; tables de saut : codes de contrôle $00-$1F, puis codes de menu $81-$93
-cvec_lo .byt <(k_none-1),<(k_home-1),<(k_none-1),<(k_pgdn-1),<(k_delr-1),<(k_end-1),<(k_find-1),<(k_next-1)
-        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_insert-1),<(k_cr-1),<(k_long-1),<(k_ins-1)
-        .byt <(k_print-1),<(k_top-1),<(k_pgup-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
-        .byt <(k_none-1),<(k_delpara-1),<(k_bot-1),<(k_esc-1),<(k_none-1),<(k_none-1),<(k_none-1),<(k_none-1)
-cvec_hi .byt >(k_none-1),>(k_home-1),>(k_none-1),>(k_pgdn-1),>(k_delr-1),>(k_end-1),>(k_find-1),>(k_next-1)
-        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_insert-1),>(k_cr-1),>(k_long-1),>(k_ins-1)
-        .byt >(k_print-1),>(k_top-1),>(k_pgup-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
-        .byt >(k_none-1),>(k_delpara-1),>(k_bot-1),>(k_esc-1),>(k_none-1),>(k_none-1),>(k_none-1),>(k_none-1)
+; tables de saut : codes de contrôle $00-$1F (28-31 : CTRL-H..K), puis
+; SHIFT / CTRL + flèche ($F0-$F7 : entrées 32-39), puis codes de menu $81-$93
+;   0 ^ESPACE marquer, ^C copier, ^D eff. sous le curseur, ^E ins./rempl.,
+;   ^F ^G chercher, suivant, 8-11 flèches, ^L trop long, 13 RETURN,
+;   ^O ouvrir, ^P imprimer, ^Q quitter, ^S enregistrer, ^V coller,
+;   ^X couper, ESC ôte la marque, 28 ^H remplacer, 29 ^I insérer un
+;   fichier, 31 ^K eff. paragraphe ; SHIFT <- -> bas haut : début, fin de
+;   ligne, page suivante, précédente ; CTRL bas haut : fin, début du texte
+cvec_lo .byt <(k_mark-1),<(k_none-1),<(k_none-1),<(k_copy-1),<(k_delr-1),<(k_ins-1),<(k_find-1),<(k_next-1)
+        .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_long-1),<(k_cr-1),<(k_none-1),<(k_open-1)
+        .byt <(k_print-1),<(k_quit-1),<(k_none-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_paste-1),<(k_none-1)
+        .byt <(k_cut-1),<(k_none-1),<(k_none-1),<(k_esc-1),<(k_repl-1),<(k_insert-1),<(k_none-1),<(k_delpara-1)
+        .byt <(k_home-1),<(k_end-1),<(k_pgdn-1),<(k_pgup-1),<(k_none-1),<(k_none-1),<(k_bot-1),<(k_top-1)
+cvec_hi .byt >(k_mark-1),>(k_none-1),>(k_none-1),>(k_copy-1),>(k_delr-1),>(k_ins-1),>(k_find-1),>(k_next-1)
+        .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_long-1),>(k_cr-1),>(k_none-1),>(k_open-1)
+        .byt >(k_print-1),>(k_quit-1),>(k_none-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_paste-1),>(k_none-1)
+        .byt >(k_cut-1),>(k_none-1),>(k_none-1),>(k_esc-1),>(k_repl-1),>(k_insert-1),>(k_none-1),>(k_delpara-1)
+        .byt >(k_home-1),>(k_end-1),>(k_pgdn-1),>(k_pgup-1),>(k_none-1),>(k_none-1),>(k_bot-1),>(k_top-1)
 mvec_lo .byt <(k_new-1),<(k_open-1),<(k_save-1),<(k_saveas-1),<(k_quit-1),<(k_mark-1),<(k_copy-1),<(k_cut-1)
         .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wrap-1),<(k_ins-1),<(k_stats-1)
         .byt <(k_insert-1),<(k_print-1),<(k_long-1)
@@ -235,8 +248,12 @@ mvec_hi .byt >(k_new-1),>(k_open-1),>(k_save-1),>(k_saveas-1),>(k_quit-1),>(k_ma
         .byt >(k_paste-1),>(k_delpara-1),>(k_find-1),>(k_next-1),>(k_repl-1),>(k_wrap-1),>(k_ins-1),>(k_stats-1)
         .byt >(k_insert-1),>(k_print-1),>(k_long-1)
 
+k_esc                           ; ESC : ôte la marque
+        lda #0
+        sta markset
+        lda #1
+        sta dirty
 k_none
-k_esc
         rts
 
 ; ---------------------------------------------------------------------
@@ -3355,10 +3372,10 @@ mn_fic  .byt 7,14
         .asc "Nouveau",0
         .byt MA_TYPE
         .word c_new
-        .asc "Ouvrir...",0
+        .asc "Ouvrir...   ^O",0
         .byt MA_TYPE
         .word c_open
-        .asc "Inserer... ^L",0
+        .asc "Inserer...  ^I",0
         .byt MA_TYPE
         .word c_insert
         .asc "Enregistrer ^S",0
@@ -3370,25 +3387,25 @@ mn_fic  .byt 7,14
         .asc "Imprimer    ^P",0
         .byt MA_TYPE
         .word c_print
-it_quit .asc "Quitter",0
+it_quit .asc "Quitter     ^Q",0
         .byt MA_TYPE
         .word c_quit
 
 mn_edi  .byt 5,15
         .asc "Edition",0
-        .asc "Marquer",0
+        .asc "Marquer    ^Esp",0
         .byt MA_TYPE
         .word c_mark
-        .asc "Copier",0
+        .asc "Copier       ^C",0
         .byt MA_TYPE
         .word c_copy
-        .asc "Couper",0
+        .asc "Couper       ^X",0
         .byt MA_TYPE
         .word c_cut
-        .asc "Coller",0
+        .asc "Coller       ^V",0
         .byt MA_TYPE
         .word c_paste
-        .asc "Eff. paragr. ^Y",0
+        .asc "Eff. paragr. ^K",0
         .byt MA_TYPE
         .word c_delp
 
@@ -3400,10 +3417,10 @@ mn_chr  .byt 4,14
         .asc "Suivant     ^G",0
         .byt MA_TYPE
         .word c_next
-        .asc "Remplacer...",0
+        .asc "Remplacer.. ^H",0
         .byt MA_TYPE
         .word c_repl
-        .asc "Trop long   ^N",0
+        .asc "Trop long   ^L",0
         .byt MA_TYPE
         .word c_long
 
@@ -3412,7 +3429,7 @@ mn_opt  .byt 3,14
         .asc "Coupure mots",0
         .byt MA_TYPE
         .word c_wrap
-        .asc "Ins/Rempl. ^O",0
+        .asc "Ins/Rempl. ^E",0
         .byt MA_TYPE
         .word c_ins
         .asc "Statistiques",0

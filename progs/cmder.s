@@ -496,7 +496,7 @@ ktab    .byt 11
         .word k_del-1
         .byt 3
         .word k_copy-1
-        .byt 4
+        .byt 24                 ; ^X
         .word k_move-1
         .byt 14
         .word k_ren-1
@@ -512,6 +512,16 @@ ktab    .byt 11
         .word k_reload-1
         .byt 27
         .word k_quit-1
+        .byt 17                 ; ^Q
+        .word k_quit-1
+        .byt $F3                ; SHIFT-haut, SHIFT-bas : pages
+        .word k_pgup-1
+        .byt $F2
+        .word k_pgdn-1
+        .byt $F7                ; CTRL-haut, CTRL-bas : premier, dernier
+        .word k_first-1
+        .byt $F6
+        .word k_last-1
         .byt $81
         .word k_view-1
         .byt $82
@@ -560,7 +570,7 @@ ktab    .byt 11
         .word k_sys-1
         .byt $98
         .word k_exact-1
-        .byt 24
+        .byt 29                 ; TAB (^I)
         .word k_x-1
         .byt 26
         .word k_z-1
@@ -4955,7 +4965,7 @@ mn_f    .byt 12,16
         .asc "Copier texte...",0
         .byt MA_TYPE
         .word c9e
-        .asc "Deplacer...   ^D",0
+        .asc "Deplacer...   ^X",0
         .byt MA_TYPE
         .word c83
         .asc "Renommer...   ^N",0
@@ -4979,7 +4989,7 @@ mn_f    .byt 12,16
         .asc "Relire        ^R",0
         .byt MA_TYPE
         .word c89
-        .asc "Quitter      ESC",0
+        .asc "Quitter       ^Q",0
         .byt MA_TYPE
         .word c8a
 
@@ -5042,7 +5052,7 @@ it_sys  .asc "Cacher SYS ",0
         .asc "Echanger      ^W",0
         .byt MA_TYPE
         .word c9c
-        .asc "Autre colonne ^X",0
+        .asc "Autre col.   TAB",0
         .byt MA_TYPE
         .word c9d
 

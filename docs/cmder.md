@@ -76,8 +76,8 @@ exacte, et les blocs qu'il occuperait sur une disquette.
 | Touche | Effet |
 |---|---|
 | ↑ ↓ | fichier précédent / suivant |
-| ← → | page précédente / suivante |
-| `<` `>` | premier / dernier fichier |
+| ← →, SHIFT-↑ SHIFT-↓ | page précédente / suivante |
+| `<` `>`, CTRL-↑ CTRL-↓ | premier / dernier fichier |
 | A-Z | fichier suivant dont le nom commence par cette lettre |
 | ESPACE | marque / ôte la marque, puis descend |
 | `+` `-` | marque / ôte selon un motif (RETURN seul = `*.*`) |
@@ -87,21 +87,21 @@ exacte, et les blocs qu'il occuperait sur une disquette.
 | RETURN | Voir ; sur `<REP>` : entrer ; sur `..` : remonter |
 | DEL | Effacer |
 | `^C` | Copier... |
-| `^D` | Déplacer... |
+| `^X` | Déplacer... |
 | `^N` | Renommer... |
 | `^A` | Attributs... |
 | `?` | Infos (taille exacte, blocs) |
 | `^E` | Tailles exactes |
 | `^L` | Lecteur... (colonne active) |
 | `^R` | Relire le répertoire (après un changement de disquette) |
-| `^X` | autre colonne (l'Oric n'a pas de TAB : CTRL-I est la flèche droite) |
-| `^Z` | zoom : colonne active en plein écran, et retour (`^X` y montre l'autre) |
+| TAB (`^I`) | autre colonne |
+| `^Z` | zoom : colonne active en plein écran, et retour (TAB y montre l'autre) |
 | `^W` | échange les deux colonnes de place |
 | FUNCT | menus |
-| ESC | quitter ; dans une question : annuler |
+| ESC, `^Q` | quitter ; dans une question, ESC annule |
 
-Touches évitées : `^H ^I ^J ^K` (flèches), `^M` (RETURN), `^T` et `^P` (système). `^C` ne
-quitte pas. **Les opérations portent sur les fichiers marqués, ou sur le fichier sous le
+Touches communes avec EDIT et HEX (`docs/manuel.md`, « Les mêmes touches partout ») ;
+`^M` (RETURN), `^T` et `^P` (système) ne servent pas. `^C` ne quitte pas. **Les opérations portent sur les fichiers marqués, ou sur le fichier sous le
 curseur s'il n'y en a pas.** Un modèle sans point vaut pour tous les types (`LO*` = `LO*.*`).
 À clé égale, le tri se fait par nom, de A à Z.
 
@@ -110,13 +110,13 @@ curseur s'il n'y en a pas.** Un modèle sans point vaut pour tous les types (`LO
 Les articles tapent des codes (`$81-$98`) : un article et son raccourci passent par le même
 aiguillage ; le raccourci est écrit à droite du libellé.
 
-- **Fichier** : Voir RET, Copier... ^C, Copier texte..., Deplacer... ^D, Renommer... ^N,
+- **Fichier** : Voir RET, Copier... ^C, Copier texte..., Deplacer... ^X, Renommer... ^N,
   Effacer DEL, Attributs... ^A, Infos ?, Imprimer liste, Lecteur... ^L, Relire ^R,
-  Quitter ESC.
+  Quitter ^Q (ou ESC).
 - **Marque** : Marquer ESP, Marquer... +, Oter... -, Inverser *, Tout, Rien.
 - **Trier** : Ordre disque 1, Nom 2, Type 3, Taille 4.
 - **Vue** : Filtrer... /, Sans filtre, Cacher SYS (devient Montrer SYS), Taille exacte ^E,
-  Absents autre, Zoom ^Z, Echanger ^W, Autre colonne ^X.
+  Absents autre, Zoom ^Z, Echanger ^W, Autre col. TAB.
 
 ## 6. Opérations
 

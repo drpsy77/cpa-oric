@@ -263,7 +263,8 @@ ou `SPCV`, ou un `PASTE` d'une ligne ou d'une colonne. Exemple : `DEFILE.GRX` (�
 | `WAIT` | attend une touche, sans la garder |
 | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier |
 
-Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut. Une touche tapée pendant
+Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut ; avec SHIFT 240 à 243, avec CTRL
+244 à 247 (même ordre). CTRL + lettre : 1 à 26, sauf CTRL-H à CTRL-K : 28 à 31. Une touche tapée pendant
 l'exécution est gardée pour `WAIT`, `GET` ou `INKEY`.
 
 **ESC est la touche de l'interpréteur, pas celle du programme.**

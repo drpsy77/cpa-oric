@@ -396,7 +396,7 @@ index 00b7b0e..8cb8314 100644
        return microdisc_read(&oric->md, addr);
  
 diff --git a/main.c b/main.c
-index a47cd0c..53f87c6 100644
+index a47cd0c..e129fbe 100644
 --- a/main.c
 +++ b/main.c
 @@ -513,6 +513,51 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
@@ -460,7 +460,7 @@ index a47cd0c..53f87c6 100644
      if(read_config_option(&sto->lctmp[i], "machine", &sto->start_machine, machtypes)) continue;
      if(read_config_option(&sto->lctmp[i], "disktype", &sto->start_disktype, disktypes)) continue;
      if(read_config_bool(&sto->lctmp[i], "debug", &sto->start_debug)) continue;
-@@ -1759,9 +1806,170 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1806,171 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -572,6 +572,7 @@ index a47cd0c..53f87c6 100644
 +    int c = (unsigned char)keys[idx];
 +    if (c == '|') { pause_until = fr + 150; idx++; return; }   /* | = pause de 3 s */
 +    if (c == 0x1c) { shifted |= 2; idx++; return; }   /* préfixe CTRL */
++    if (c == 0x0f) { shifted |= 4; idx++; return; }   /* \x0f : préfixe SHIFT */
 +    if (c == 0x0e) { hold = 50; idx++; return; }   /* \x0e : touche suivante tenue 1 s */
 +    if (c == 6) { oric->cpu.nmi = SDL_TRUE; oric->cpu.nmicount = 2; idx++; pause_until = fr + 50; return; } /* bouton RESET */
 +    if (c == 7) {   /* \x07 : disquette suivante de ORIC_SWAP (a:b:...) dans le lecteur A: */
@@ -611,7 +612,7 @@ index a47cd0c..53f87c6 100644
 +    else if (c == 4) k = SDLK_DOWN;
 +    else if (c == 5) k = SDLK_LALT;   /* FUNCT */
 +    else k = c;
-+    if (phase == 0) { if (shifted & 2) ay_keypress(&oric->ay, SDLK_LCTRL, SDL_TRUE); if (needshift) { ay_keypress(&oric->ay, SDLK_LSHIFT, SDL_TRUE); shifted |= 1; } ay_keypress(&oric->ay, k, SDL_TRUE); }
++    if (phase == 0) { if (shifted & 2) ay_keypress(&oric->ay, SDLK_LCTRL, SDL_TRUE); if (needshift || (shifted & 4)) { ay_keypress(&oric->ay, SDLK_LSHIFT, SDL_TRUE); shifted |= 1; } ay_keypress(&oric->ay, k, SDL_TRUE); }
 +    if (phase == hold) { ay_keypress(&oric->ay, k, SDL_FALSE); if (shifted & 1) ay_keypress(&oric->ay, SDLK_LSHIFT, SDL_FALSE); if (shifted & 2) ay_keypress(&oric->ay, SDLK_LCTRL, SDL_FALSE); shifted = 0; }
 +    if (++phase >= hold + 4) { phase = 0; idx++; hold = 4; }
 +  }
@@ -631,7 +632,7 @@ index a47cd0c..53f87c6 100644
  
    if(oric->diskautosave)
    {
-@@ -2102,6 +2310,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+@@ -2102,6 +2311,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
    emscripten_fetch_close(fetch); // Also free data on failure.
  }
  
@@ -658,7 +659,7 @@ index a47cd0c..53f87c6 100644
  void EMSCRIPTEN_KEEPALIVE www_async_dload()
  {
  
-@@ -2192,6 +2420,10 @@ int main(int argc, char* argv[])
+@@ -2192,6 +2421,10 @@ int main(int argc, char* argv[])
  #ifdef WWW
    // save the context to a global
    gCtx = &ctx;
@@ -669,7 +670,7 @@ index a47cd0c..53f87c6 100644
    // create read-write fs
    EM_ASM(
      FS.mkdir('/readwritefs');
-@@ -2207,6 +2439,7 @@ int main(int argc, char* argv[])
+@@ -2207,6 +2440,7 @@ int main(int argc, char* argv[])
    });
    );
  
