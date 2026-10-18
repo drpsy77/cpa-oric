@@ -44,6 +44,7 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
+| `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi au LOCI (en préparation) |
 
 ## Construire

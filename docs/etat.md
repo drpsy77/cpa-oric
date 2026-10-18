@@ -50,6 +50,9 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 `cpa-anim.dsk` ; contenu dans `docs/manuel.md`.
 
+**Mesure** : 1 254 points de fonction IFPUG et 300 points d'algorithmes ; détail, lignes,
+octets et documentation dans `docs/points-de-fonction.md`.
+
 **Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
 `docs/essais-materiel.md`, à lire seulement quand on en a besoin.
 

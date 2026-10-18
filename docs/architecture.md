@@ -112,6 +112,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM : calculs, boucles, erreurs (sans émulateur)
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
     python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
+    python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
   vecteurs (`$FFFA`) et une ROM qui ne fait pas 16 Ko ; il affiche les deux marges.
@@ -199,11 +200,13 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 | choix de mise en œuvre d'un programme | section « Mise en œuvre » de sa référence |
 | essais sur le vrai matériel | `docs/essais-materiel.md` (lu seulement au besoin) |
 | aide sur l'Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
+| mesure (points de fonction, lignes, octets) | `docs/points-de-fonction.md` |
 
 - Une spécification de travail suit le même plan : ce qui est fait, « Décidé, pas encore
   fait », « Questions ouvertes ». Une question disparaît dès qu'elle a sa réponse : la
   réponse est intégrée au texte. Une fois le travail livré, la spécification devient (ou
   rejoint) la référence du programme.
-- À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge, suite) et
-  `docs/essais-materiel.md` (« À vérifier ») sont mis à jour ; rien n'est raconté.
+- À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge, suite),
+  `docs/essais-materiel.md` (« À vérifier ») et, si une fonction change,
+  `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
 
