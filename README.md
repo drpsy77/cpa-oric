@@ -41,6 +41,7 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
+| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi au LOCI (en préparation) |
