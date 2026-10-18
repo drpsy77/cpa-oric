@@ -173,6 +173,7 @@ SECTIONS = [
  ("EDIT", [
   ("fleches", "deplacement"),
   ("SHIFT <- ->", "debut / fin de ligne"),
+  ("CTRL <- ->", "mot precedent / suivant"),
   ("SHIFT haut bas", "page prec. / suiv."),
   ("CTRL haut bas", "debut / fin du texte"),
   ("DEL ^D", "efface avant / sous"),

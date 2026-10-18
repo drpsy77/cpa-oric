@@ -26,7 +26,8 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - EDIT : impression (`^P`) et coupure à la largeur sur une vraie imprimante ; `^I` (insérer
   un fichier) ; `C nnn!`, `^L` (trop long), Statistiques ; nouvelles touches : CTRL-ESPACE,
   CTRL-X/C/V, ESC (marque ôtée : `M` disparaît de la ligne d'état), CTRL-K, CTRL-H, CTRL-O,
-  CTRL-Q, SHIFT et CTRL avec les flèches ; libellés des menus (largeur) ;
+  CTRL-Q, SHIFT et CTRL avec les flèches (CTRL-←/→ : de mot en mot, à travers les fins de
+  paragraphe) ; libellés des menus (largeur) ;
 - HEX et CMDER : SHIFT et CTRL avec les flèches, TAB (mode HEX/ASCII ; autre colonne),
   `^L` et `^R` dans HEX, `^X` (déplacer) et `^Q` dans CMDER ;
 - LOGO : CTRL-C interrompt une boucle (`REPETE 30000 [DR 1]`) comme ESC ;
