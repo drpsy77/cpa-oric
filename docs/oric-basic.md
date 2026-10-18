@@ -47,6 +47,10 @@ font la même chose :
   `CLOAD""`. Dans Oricutron : `-t JEU.TAP` (il tape lui-même `CLOAD""`).
 - Taille estimée : moins de 1 Ko. Essais : `tools/run_test.sh` sur la ROM BASIC avec `-t`
   (le crochet de test tape maintenant `!`).
+- **`CASSETTE.COM`** : écrit un `.TAP` sur le port cassette (vrai magnétophone) et lit une
+  cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`, rien dans le système de
+  la version disquette ; dans la version ROM, ce sera une fonction du système
+  (`docs/projet-rom.md`).
 
 ## 3. Niveau 2 : boîte à outils pour le BASIC, par `!` (proposé)
 
