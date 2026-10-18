@@ -19,6 +19,7 @@ Ce que le script fait seul :
   - commits qui touchent chaque composant ;
   - réutilisation : lignes assemblées dans les .COM (bibliothèques comprises)
     par rapport aux lignes écrites ;
+  - comparaison avec CP/M 2.2 (§ 11), comptée avec les mêmes règles ;
   - points de fonction : relit les tableaux détaillés du document (lignes dont
     la première case est un identifiant comme SYS.T01 ou LOGO.A03), vérifie la
     complexité d'après les RET/FTR et DET (matrices IFPUG 4.3) et le nombre de
@@ -56,7 +57,14 @@ COMPOSANTS = [
 NOMS = {"SYS": "Système et commandes", "EDIT": "EDIT", "GRA": "GRAPHER + GRXASM",
         "LOGO": "LOGO", "CMD": "CMDER", "HEX": "HEX", "VOIR": "VOIR", "USB": "USB",
         "ASM": "ASM", "DBG": "DEBUG", "EX": "Exemples", "OUT": "Outillage PC",
-        "TRA": "Transverse (projet)"}
+        "TRA": "Transverse (projet)",
+        "CPM": "CP/M 2.2 : système et utilitaires", "CPMED": "CP/M 2.2 : ED",
+        "CPMASM": "CP/M 2.2 : ASM, LOAD", "CPMDDT": "CP/M 2.2 : DDT"}
+# comparaison avec CP/M 2.2 (§ 11 du document) : domaine, composants CP/A, composants CP/M
+COMPARAISON = [("Système, commandes, utilitaires de fichiers", ["SYS"], ["CPM"]),
+               ("Éditeur (EDIT / ED)", ["EDIT"], ["CPMED"]),
+               ("Assembleur (ASM / ASM et LOAD)", ["ASM"], ["CPMASM"]),
+               ("Débogueur (DEBUG / DDT)", ["DBG"], ["CPMDDT"])]
 GROUPES = [("Système", ["SYS"]),
            ("Applications", ["EDIT", "GRA", "LOGO", "CMD", "HEX", "VOIR", "USB", "ASM", "DBG"]),
            ("Exemples", ["EX"]), ("Outillage", ["OUT"])]
@@ -425,7 +433,20 @@ def tableaux(journal):
         fr(gt[5]), str(FACTEUR).replace(".", ","), fr(round(gt[5] * FACTEUR))))
     s.append("")
     s.append("Nombre de fonctions comptées : %s." % ", ".join("%d %s" % (n[t], t) for t in POIDS))
-    return "\n".join(m), "\n".join(s), err
+    c = []
+    c.append("| Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |")
+    c.append("|---|---:|---:|---:|---:|---:|---:|---:|")
+    sa = [0] * 6
+    for dom, ca, cm in COMPARAISON:
+        a = sum(tot_pf.get(x, 0) for x in ca), sum(algo.get(x, 0) for x in ca)
+        b = sum(sum(pf.get(x, {}).values()) for x in cm), sum(algo.get(x, 0) for x in cm)
+        v = [a[0], a[1], a[0] + a[1], b[0], b[1], b[0] + b[1]]
+        sa = [x + y for x, y in zip(sa, v)]
+        c.append("| %s | %s | %s |" % (dom, " | ".join(str(x) for x in v),
+                                        ("%.1f" % (v[2] / v[5])).replace(".", ",") if v[5] else "—"))
+    c.append("| **Total** | %s | **%s** |" % (" | ".join("**%d**" % x for x in sa),
+                                            ("%.1f" % (sa[2] / sa[5])).replace(".", ",") if sa[5] else "—"))
+    return "\n".join(m), "\n".join(s), "\n".join(c), err
 
 
 def remplacer(texte, marque, contenu):
@@ -440,19 +461,21 @@ def main():
     journal = None
     if "--git-log" in sys.argv:
         journal = sys.argv[sys.argv.index("--git-log") + 1]
-    mes, syn, err = tableaux(journal)
+    mes, syn, cmp, err = tableaux(journal)
     if err:
         print("\n".join(err))
         sys.exit(1)
     if "--ecrire" in sys.argv:
         t = open(DOC, encoding="utf-8").read()
-        t = remplacer(remplacer(t, "mesures", mes), "synthese", syn)
+        t = remplacer(remplacer(remplacer(t, "mesures", mes), "synthese", syn), "comparaison", cmp)
         open(DOC, "w", encoding="utf-8").write(t)
         print("docs/points-de-fonction.md mis à jour")
     else:
         print(syn)
         print()
         print(mes)
+        print()
+        print(cmp)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ par `python3 tools/pf_mesure.py --ecrire` (après `./build.sh`), qui vérifie au
 ligne des tableaux.
 
 Comptage de référence : version 0.9, commit `b86817e` (18 octobre 2026).
+Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 
 ## 1. Synthèse
 
@@ -744,8 +745,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 2 | 2 392 | 117 | 76 | 70 | 5 % | 5 949 | 266 | 661 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
 | Exemples | 27 | 888 | 53 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 147 | 5 780 | 568 | 322 | 0 | 9 % | — | 39 | — |
-| **Total** | 236 | 56 621 | 4 205 | 2 239 | 921 | 7 % | 131 458 | 45 | 105 |
+| Outillage PC | 147 | 5 801 | 570 | 322 | 0 | 9 % | — | 39 | — |
+| **Total** | 236 | 56 642 | 4 207 | 2 239 | 921 | 7 % | 131 458 | 45 | 105 |
 
 Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 407 octets.
 
@@ -763,8 +764,8 @@ Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, 
 | DEBUG | 40 | 12 | 0,5 | 1 |
 | Exemples | 0 | — | 0,0 | 17 |
 | Outillage PC | 291 | — | 2,0 | 85 |
-| Transverse (projet) | 1 201 | — | — | 24 |
-| **Total** | 4 133 | 286 | 3,3 | 131 |
+| Transverse (projet) | 1 486 | — | — | 24 |
+| **Total** | 4 418 | 286 | 3,5 | 131 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
@@ -819,3 +820,261 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | Date | Commit | Version | PF IFPUG | Algorithmes | Total | Commits | Ce qui a changé |
 |---|---|---|---:|---:|---:|---:|---|
 | 2026-10-18 | `b86817e` | 0.9 | 1 254 | 300 | 1 554 | 131 | comptage de référence |
+
+## 11. Comparaisons
+
+### 11.1 CP/M 2.2
+
+CP/M 2.2 (Digital Research, 1979-1980), compté avec les mêmes règles (§ 2) d'après ses sources
+d'origine et son manuel. Correspondance : le système de CP/M (BDOS, CCP, BIOS type) et ses
+utilitaires (STAT, PIP, SUBMIT, XSUB, DUMP, SYSGEN, MOVCPM) en face du système de CP/A et de
+ses commandes ; ED en face d'EDIT ; ASM et LOAD en face d'ASM ; DDT en face de DEBUG. CP/M n'a
+ni graphisme, ni son, ni langage, ni gestionnaire de fichiers : le reste de CP/A n'a pas
+d'équivalent.
+
+<!-- comparaison:debut -->
+| Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Système, commandes, utilitaires de fichiers | 322 | 68 | 390 | 261 | 41 | 302 | 1,3 |
+| Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
+| Assembleur (ASM / ASM et LOAD) | 9 | 12 | 21 | 13 | 13 | 26 | 0,8 |
+| Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
+| **Total** | **480** | **111** | **591** | **396** | **78** | **474** | **1,2** |
+<!-- comparaison:fin -->
+
+| Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |
+|---|---:|---:|---:|---:|
+| Système et utilitaires | 11 053 (6502) | 5 255 (8080) + 2 134 (PL/M) | 36 311 | 21 706 |
+| Éditeur | 3 313 | 1 127 (PL/M) | 8 192 | 6 563 |
+| Assembleur | 2 392 | 2 788 (8080) + 255 (PL/M) | 5 949 | 9 921 |
+| Débogueur | 2 378 | 2 170 (8080) | 6 496 | 4 864 |
+
+Lignes de code sans commentaires ni lignes vides. CCP et BDOS : version reformatée à une
+instruction par ligne (l'original en met plusieurs, séparées par `!`) ; BIOS : le BIOS type
+de Digital Research (`CBIOS`, `DEBLOCK`, `DISKDEF`, amorçage), que chaque constructeur
+réécrivait. PL/M : langage évolué, une ligne vaut plusieurs instructions. Octets CP/M : CCP
+2 Ko, BDOS 3,5 Ko, `.COM` des utilitaires, sans le BIOS (propre à chaque machine) ni MOVCPM
+(9,5 Ko, qui contient une image du système).
+
+Lecture :
+
+- Le système de CP/A rend environ 1,2 fois les points de fonction de celui de CP/M (1,3 avec
+  les algorithmes) : graphisme et son (fonctions 115, 116), menus, couleurs, complétion,
+  historique, scripts imbriqués, formatage et copie de disquettes avec un seul lecteur.
+  CP/M a ce que CP/A n'a pas : zones utilisateur, périphériques logiques (IOBYTE,
+  `STAT DEV:`), PIP vers les périphériques, XSUB, et six fonctions du BDOS (27, 28, 29, 31,
+  37, 40).
+- Densité : 34 lignes de 6502 par PF pour le système de CP/A, 28 lignes (8080 et PL/M) pour
+  CP/M ; 113 octets par PF contre 83, mais CP/A compte son pilote de disque, que CP/M laisse
+  au BIOS de chaque constructeur, et le 6502 n'a que trois registres de 8 bits.
+- EDIT est un éditeur plein écran, ED un éditeur ligne à ligne : nombre de fonctions voisin,
+  mais l'essentiel d'EDIT est dans l'affichage (algorithmes).
+- DDT a ce que DEBUG n'a pas (mini-assembleur, remplir, déplacer, chargement à un décalage) ;
+  DEBUG a les symboles et des points d'arrêt permanents.
+
+**CP/M 2.2 : système et utilitaires**
+
+| Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
+|---|---|---|---:|---:|---|---:|
+| CPM.D01 | Fichiers des lecteurs A: à P: (répertoire, extents, attributs, 16 zones utilisateur) | ILF | 3 | 26 | M | 10 |
+| CPM.D02 | Réglages de la session (IOBYTE, lecteur courant, zone utilisateur, disques protégés) | ILF | 1 | 6 | F | 7 |
+| CPM.D03 | File d'attente `$$$.SUB` (écrite par SUBMIT, lue par le CCP) | ILF | 1 | 2 | F | 7 |
+| CPM.D04 | Fichiers `.SUB` (écrits par ED) | EIF | 1 | 3 | F | 5 |
+| CPM.D05 | Image du système (pistes système, fichier de MOVCPM) | ILF | 1 | 3 | F | 7 |
+| CPM.T01 | DIR | EQ | 1 | 4 | F | 3 |
+| CPM.T02 | ERA (`ALL (Y/N)?`) | EI | 1 | 3 | F | 3 |
+| CPM.T03 | REN | EI | 1 | 3 | F | 3 |
+| CPM.T04 | SAVE | EI | 1 | 3 | F | 3 |
+| CPM.T05 | TYPE | EQ | 1 | 2 | F | 3 |
+| CPM.T06 | USER n | EI | 1 | 1 | F | 3 |
+| CPM.T07 | `d:` : changer de lecteur | EI | 2 | 2 | F | 3 |
+| CPM.T08 | Lancer un programme | EI | 2 | 3 | F | 3 |
+| CPM.T09 | Exécuter la file `$$$.SUB` | EI | 2 | 3 | F | 3 |
+| CPM.T10 | Démarrage à chaud (CTRL-C, fonction 0, WBOOT) | EI | 2 | 2 | F | 3 |
+| CPM.T11 | Démarrage à froid (BOOT) | EI | 2 | 2 | F | 3 |
+| CPM.T12 | CTRL-P : copie sur l'imprimante | EI | 1 | 1 | F | 3 |
+| CPM.T20 | 0 réinitialisation (= CPM.T10) | — | — | — | — | 0 |
+| CPM.T21 | 1 lecture console avec écho | EQ | 1 | 2 | F | 3 |
+| CPM.T22 | 2 écriture console (tabulations, CTRL-S, CTRL-P) | EO | 1 | 2 | F | 4 |
+| CPM.T23 | 3 lecteur auxiliaire | EQ | 1 | 1 | F | 3 |
+| CPM.T24 | 4 perforateur | EO | 1 | 1 | F | 4 |
+| CPM.T25 | 5 imprimante | EO | 1 | 1 | F | 4 |
+| CPM.T26 | 6 entrée-sortie directe | EQ | 0 | 2 | F | 3 |
+| CPM.T27 | 7 lire l'IOBYTE | EQ | 1 | 1 | F | 3 |
+| CPM.T28 | 8 fixer l'IOBYTE | EI | 1 | 1 | F | 3 |
+| CPM.T29 | 9 afficher une chaîne | EO | 1 | 2 | F | 4 |
+| CPM.T30 | 10 lecture d'une ligne (CTRL-E, R, U, X, H) | EI | 1 | 4 | F | 3 |
+| CPM.T31 | 11 état de la console | EQ | 0 | 1 | F | 3 |
+| CPM.T32 | 12 version | EQ | 0 | 1 | F | 3 |
+| CPM.T33 | 13 réinitialisation des disques | EI | 1 | 1 | F | 3 |
+| CPM.T34 | 14 choisir le lecteur courant | EI | 2 | 2 | F | 3 |
+| CPM.T35 | 15 ouvrir | EQ | 1 | 6 | F | 3 |
+| CPM.T36 | 16 fermer | EI | 1 | 4 | F | 3 |
+| CPM.T37 | 17, 18 chercher le premier, le suivant | EQ | 1 | 8 | F | 3 |
+| CPM.T38 | 19 effacer | EI | 1 | 3 | F | 3 |
+| CPM.T39 | 20 lecture séquentielle | EQ | 1 | 4 | F | 3 |
+| CPM.T40 | 21 écriture séquentielle | EI | 1 | 4 | F | 3 |
+| CPM.T41 | 22 créer | EI | 1 | 3 | F | 3 |
+| CPM.T42 | 23 renommer | EI | 1 | 3 | F | 3 |
+| CPM.T43 | 24 lecteurs lus | EQ | 1 | 1 | F | 3 |
+| CPM.T44 | 25 lecteur courant | EQ | 1 | 1 | F | 3 |
+| CPM.T45 | 26 adresse DMA (réglage) | — | — | — | — | 0 |
+| CPM.T46 | 27 vecteur d'allocation | EQ | 1 | 1 | F | 3 |
+| CPM.T47 | 28 protéger un disque | EI | 1 | 1 | F | 3 |
+| CPM.T48 | 29 vecteur des disques protégés | EQ | 1 | 1 | F | 3 |
+| CPM.T49 | 30 attributs | EI | 1 | 3 | F | 3 |
+| CPM.T50 | 31 paramètres du disque | EQ | 1 | 10 | F | 3 |
+| CPM.T51 | 32 zone utilisateur (lire, fixer) | EI | 1 | 1 | F | 3 |
+| CPM.T52 | 33 lecture directe | EQ | 1 | 4 | F | 3 |
+| CPM.T53 | 34 écriture directe | EI | 1 | 4 | F | 3 |
+| CPM.T54 | 35 taille d'un fichier | EO | 1 | 3 | F | 4 |
+| CPM.T55 | 36 position directe d'après la séquentielle | EO | 1 | 3 | F | 4 |
+| CPM.T56 | 37 réinitialiser des lecteurs | EI | 1 | 1 | F | 3 |
+| CPM.T57 | 40 écriture directe avec remplissage | EI | 1 | 4 | F | 3 |
+| CPM.T60 | CONST (= fonction 11) | — | — | — | — | 0 |
+| CPM.T61 | CONIN | EQ | 1 | 1 | F | 3 |
+| CPM.T62 | CONOUT | EO | 1 | 1 | F | 4 |
+| CPM.T63 | LIST, PUNCH, READER (= fonctions 5, 4, 3) | — | — | — | — | 0 |
+| CPM.T64 | SELDSK (rend les tables du disque) | EQ | 1 | 2 | F | 3 |
+| CPM.T65 | Lire un secteur | EQ | 1 | 4 | F | 3 |
+| CPM.T66 | Écrire un secteur | EI | 1 | 4 | F | 3 |
+| CPM.T67 | LISTST : état de l'imprimante | EQ | 0 | 1 | F | 3 |
+| CPM.T68 | BOOT, WBOOT, SECTRAN, HOME, SETTRK, SETSEC, SETDMA (comptés ou réglages) | — | — | — | — | 0 |
+| CPM.T80 | STAT : place libre | EO | 1 | 4 | F | 4 |
+| CPM.T81 | STAT afn : tailles (enregistrements, Ko, extents, attributs) | EO | 1 | 8 | F | 4 |
+| CPM.T82 | STAT afn `$R/O` `$R/W` `$SYS` `$DIR` | EI | 1 | 3 | F | 3 |
+| CPM.T83 | STAT `d:=R/O` | EI | 1 | 2 | F | 3 |
+| CPM.T84 | STAT `DSK:` : paramètres des disques | EQ | 1 | 10 | F | 3 |
+| CPM.T85 | STAT `USR:` : zones utilisées | EQ | 1 | 2 | F | 3 |
+| CPM.T86 | STAT `DEV:`, `VAL:` : affectations, aide | EQ | 1 | 4 | F | 3 |
+| CPM.T87 | STAT `CON:=TTY:`... : affecter un périphérique | EI | 1 | 2 | F | 3 |
+| CPM.T88 | PIP : copier (jokers ; options V E O N T U L Z F P Q S G R W D H I) | EI | 2 | 18 | É | 6 |
+| CPM.T89 | PIP : concaténer | EI | 2 | 6 | M | 4 |
+| CPM.T90 | PIP : périphériques (CON: LST: PUN: RDR: NUL: EOF: PRN:) | EI | 2 | 6 | M | 4 |
+| CPM.T91 | SUBMIT : écrire la file `$$$.SUB` (`$1`-`$9`, `^x`) | EI | 2 | 4 | F | 3 |
+| CPM.T92 | XSUB : entrée des programmes lue dans la file | EI | 1 | 2 | F | 3 |
+| CPM.T93 | DUMP : fichier en hexa | EQ | 1 | 2 | F | 3 |
+| CPM.T94 | SYSGEN : copier le système (disque ou fichier) | EI | 1 | 3 | F | 3 |
+| CPM.T95 | MOVCPM : système pour une autre taille de mémoire | EO | 1 | 2 | F | 4 |
+
+| Id | Algorithme | Où | Points |
+|---|---|---|---:|
+| CPM.A01 | Système de fichiers (allocation par carte de bits, extents, accès direct) | BDOS | 5 |
+| CPM.A02 | Changement de disquette reconnu (somme de contrôle du répertoire) | BDOS | 3 |
+| CPM.A03 | Console : tabulations, CTRL-S, CTRL-P, édition de ligne | BDOS | 3 |
+| CPM.A04 | Erreurs (Bad Sector, Select, R/O), zones utilisateur | BDOS | 1 |
+| CPM.A05 | Noms en FCB, jokers, commandes internes | CCP | 1 |
+| CPM.A06 | File `$$$.SUB` lue par le dernier enregistrement | CCP | 1 |
+| CPM.A07 | Dégroupage des secteurs physiques | `DEBLOCK` | 3 |
+| CPM.A08 | Tables des disques produites par macros | `DISKDEF` | 3 |
+| CPM.A09 | Chargeur d'amorçage | `BOOT` | 1 |
+| CPM.A10 | Place libre, tailles, affectations de l'IOBYTE | STAT | 3 |
+| CPM.A11 | Copie avec filtres et options (extraction Q/S, tabulations, numéros, pages, Intel HEX) | PIP | 5 |
+| CPM.A12 | Concaténation, périphériques, vérification | PIP | 3 |
+| CPM.A13 | Remplacement de `$1`-`$9`, lignes écrites à l'envers | SUBMIT | 1 |
+| CPM.A14 | Fonction 10 détournée, résident sous le CCP | XSUB | 3 |
+| CPM.A15 | Copie des pistes système | SYSGEN | 1 |
+| CPM.A16 | Relogement par carte de bits | MOVCPM | 3 |
+| CPM.A17 | Vidage hexa | DUMP | 1 |
+
+**CP/M 2.2 : ED**
+
+| Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
+|---|---|---|---:|---:|---|---:|
+| CPMED.D01 | Fichier édité (tampon, fichier temporaire, `.BAK`) | ILF | 1 | 3 | F | 7 |
+| CPMED.D02 | Bloc transféré (X, R) | ILF | 1 | 1 | F | 7 |
+| CPMED.D03 | Bibliothèques `.LIB` (R) | EIF | 1 | 2 | F | 5 |
+| CPMED.T01 | A : ajouter des lignes au tampon | EI | 2 | 2 | F | 3 |
+| CPMED.T02 | W : écrire des lignes | EI | 2 | 2 | F | 3 |
+| CPMED.T03 | E : fin (enregistre, `.BAK`) | EI | 1 | 1 | F | 3 |
+| CPMED.T04 | H : enregistrer et reprendre | EI | 1 | 1 | F | 3 |
+| CPMED.T05 | O : abandonner les modifications | EI | 1 | 1 | F | 3 |
+| CPMED.T06 | Q : quitter sans rien changer | EI | 1 | 1 | F | 3 |
+| CPMED.T07 | I : insérer | EI | 1 | 2 | F | 3 |
+| CPMED.T08 | D, K : effacer des caractères, des lignes | EI | 1 | 2 | F | 3 |
+| CPMED.T09 | T, P : afficher des lignes, une page | EQ | 1 | 2 | F | 3 |
+| CPMED.T10 | F, N : chercher (N : au-delà du tampon) | EQ | 2 | 2 | F | 3 |
+| CPMED.T11 | S : substituer | EI | 1 | 3 | F | 3 |
+| CPMED.T12 | J : juxtaposer | EI | 1 | 3 | F | 3 |
+| CPMED.T13 | X : transférer vers le bloc | EI | 2 | 2 | F | 3 |
+| CPMED.T14 | R : lire une bibliothèque ou le bloc | EI | 3 | 2 | M | 4 |
+| CPMED.T15 | M : macro (répéter des commandes) | EI | 1 | 2 | F | 3 |
+| CPMED.T16 | U : majuscules oui/non | EI | 0 | 1 | F | 3 |
+| CPMED.T17 | V : numéros de ligne oui/non | EI | 0 | 1 | F | 3 |
+
+| Id | Algorithme | Où | Points |
+|---|---|---|---:|
+| CPMED.A01 | Tampon de lignes avec va-et-vient sur disque (A, W, fichier temporaire, `.BAK`) | ED | 5 |
+| CPMED.A02 | Recherche, substitution, juxtaposition | ED | 1 |
+| CPMED.A03 | Macros, bibliothèques, transfert | ED | 3 |
+
+**CP/M 2.2 : ASM et LOAD**
+
+| Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
+|---|---|---|---:|---:|---|---:|
+| CPMASM.D01 | Source `.ASM` | EIF | 1 | 3 | F | 5 |
+| CPMASM.T01 | ASM : `.HEX` et `.PRN` (lecteurs choisis) | EO | 1 | 6 | F | 4 |
+| CPMASM.T02 | LOAD : `.HEX` en `.COM` | EO | 1 | 3 | F | 4 |
+
+| Id | Algorithme | Où | Points |
+|---|---|---|---:|
+| CPMASM.A01 | Assembleur 8080 en deux passes | ASM | 5 |
+| CPMASM.A02 | Expressions (opérateurs, priorités) | ASM | 3 |
+| CPMASM.A03 | Table des symboles par hachage | ASM | 3 |
+| CPMASM.A04 | Sortie Intel HEX et listing | ASM | 1 |
+| CPMASM.A05 | Lecture Intel HEX (sommes de contrôle) | LOAD | 1 |
+
+**CP/M 2.2 : DDT**
+
+| Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
+|---|---|---|---:|---:|---|---:|
+| CPMDDT.D01 | Programme en mémoire | ILF | 1 | 3 | F | 7 |
+| CPMDDT.D02 | Registres | ILF | 1 | 12 | F | 7 |
+| CPMDDT.T01 | I, R : charger un fichier `.HEX` ou `.COM` (décalage) | EI | 1 | 3 | F | 3 |
+| CPMDDT.T02 | D : mémoire | EQ | 1 | 3 | F | 3 |
+| CPMDDT.T03 | F : remplir | EI | 1 | 3 | F | 3 |
+| CPMDDT.T04 | M : déplacer | EI | 1 | 3 | F | 3 |
+| CPMDDT.T05 | S : modifier la mémoire octet par octet | EI | 1 | 2 | F | 3 |
+| CPMDDT.T06 | A : assembler une ligne | EI | 1 | 3 | F | 3 |
+| CPMDDT.T07 | L : désassembler | EO | 1 | 3 | F | 4 |
+| CPMDDT.T08 | G : exécuter (deux points d'arrêt) | EI | 2 | 3 | F | 3 |
+| CPMDDT.T09 | T : pas à pas avec trace | EI | 2 | 3 | F | 3 |
+| CPMDDT.T10 | U : pas à pas sans trace | EI | 2 | 3 | F | 3 |
+| CPMDDT.T11 | X : registres | EQ | 1 | 12 | F | 3 |
+| CPMDDT.T12 | X r : modifier un registre | EI | 1 | 2 | F | 3 |
+
+| Id | Algorithme | Où | Points |
+|---|---|---|---:|
+| CPMDDT.A01 | Désassembleur 8080 | DDT | 3 |
+| CPMDDT.A02 | Mini-assembleur | DDT | 3 |
+| CPMDDT.A03 | Pas à pas et points d'arrêt par RST 7, trace | DDT | 5 |
+| CPMDDT.A04 | Relogement de DDT sous le BDOS | DDT | 3 |
+| CPMDDT.A05 | Lecture Intel HEX avec décalage | DDT | 1 |
+
+### 11.2 Applications de CP/M qui manquent à CP/A
+
+Ce qu'on achetait avec CP/M (l'Osborne 1 était livré avec WordStar, SuperCalc, dBASE II,
+MBASIC, CBASIC et un programme de communication), et les utilitaires du domaine public
+qu'on disait indispensables. Place d'après la règle de `docs/architecture.md` : tout est en
+`.COM`.
+
+| Application de CP/M | Rôle | Dans CP/A | Ce qui manque |
+|---|---|---|---|
+| WordStar, MailMerge, Spellguard | traitement de texte | EDIT (édition, impression mise en page) | mise en forme à l'impression (gras, souligné, en-têtes, numéros de page, justification), publipostage, orthographe |
+| SuperCalc, Multiplan | tableur | — | tout ; les décimaux de LOGO (`fp_inc.s`) servent tels quels |
+| dBASE II | base de données | fichiers de données de GRAPHER | une base simple sur l'accès direct (déjà notée, `docs/etat.md` § 2.6) |
+| MBASIC, CBASIC | BASIC avec décimaux et fichiers | LOGO (décimaux), GRAPHER (fichiers) | pas de BASIC sous CP/A : le pont va dans l'autre sens, vers le BASIC de l'Oric (`docs/oric-basic.md`) |
+| Turbo Pascal, BDS C | langage compilé avec éditeur | GRAPHER : interprété pour la mise au point, traduit en assembleur par GRXASM pour la vitesse ; ASM | peu de chose : les phases d'un jeu, les tuiles (`docs/grapher.md` § 16, § 17) |
+| MODEM7, Kermit, XMODEM | communication | — | prévu : `XFER.COM`, `TERM.COM` (`docs/etat.md` § 2.4) |
+| NSWEEP, SD | gestion des fichiers | CMDER, DIR, STAT | rien |
+| UNERA | récupérer un fichier effacé | — | tout (le répertoire garde les entrées effacées, comme CP/M) |
+| FINDBAD | repérer les secteurs défectueux | relecture de FORMAT et de DISKCOPY `/V` | verrouiller les blocs défectueux |
+| SQ, USQ, LU, NULU, CRUNCH | compression, archives `.LBR` | décompression LZSS (HELP, `.HIZ`) | un compresseur sur l'Oric, un format d'archive |
+| MAC, RMAC, LINK-80 | assembleur à macros, éditeur de liens | ASM | macros, assemblage conditionnel, modules |
+| Adventure, Zork (Infocom) | jeux d'aventure | — | un interpréteur de jeux (machine Z) ouvrirait tout le catalogue Infocom |
+| (CP/M lui-même) | zones utilisateur, IOBYTE, XSUB, PIP vers les périphériques | — | voir § 11.1 |
+
+Le traitement de texte, le tableur et la base de données ne sont pas le but de CP/A : EDIT
+reste un éditeur (de programmes, de scripts, de données). Le manque qui compte est du côté
+de la création (dessin assisté, éditeur de sprites et de caractères), du développement sur
+l'Oric et des échanges avec l'extérieur.
