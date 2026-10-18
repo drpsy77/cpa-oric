@@ -7,7 +7,7 @@
 <p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO draws a tree"> <img src="cpa-menus-oricutron.png" width="320" alt="Pull-down menus at the A> prompt"></p>
 
 - **Your Oric becomes a real workstation**: pull-down menus, command history, completion, a
-  full-screen editor and file manager. No more heroics.
+  full-screen editor and file manager.
 - **Write a game, draw it, compile it** to fast 6502 code, without ever leaving the machine.
 - **Then share it**: through the LOCI's USB stick today, on a plain cassette for any Oric soon.
 
