@@ -81,7 +81,7 @@ DOCS = {"architecture.md": "SYS", "systeme.md": "SYS", "memoire-pages-2-3.md": "
         "projet-rom.md": "SYS", "logo.md": "LOGO", "grapher.md": "GRA", "cmder.md": "CMD",
         "atelier.md": "OUT", "etat.md": "TRA", "essais-materiel.md": "TRA",
         "oric-basic.md": "TRA", "loci-modem-wifi.md": "TRA", "points-de-fonction.md": "TRA",
-        "../README.md": "TRA", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
+        "../README.md": "TRA", "../README.fr.md": "TRA", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
 MANUEL = [("Échange de fichiers", "USB"), ("HIRES plein", "VOIR"), ("L'éditeur de texte", "EDIT"),
           ("L'éditeur hexa", "HEX"), ("L'assembleur", "ASM"), ("Le débogueur", "DBG"),
           ("Outils", "OUT")]          # les autres sections : SYS
