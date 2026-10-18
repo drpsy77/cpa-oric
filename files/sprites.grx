@@ -8,7 +8,7 @@ NEXT
 LORES
 CHAR 0 0 6             ; titre en bleu clair
 LOCATE 2 0
-ECHO "FLECHES : BONHOMME   ESC : FIN"
+ECHO "FLECHES : BONHOMME   Q : FIN"
 FOR L 1 27
   CHAR 0 L 2+(L%2)     ; vert et jaune, une ligne sur deux
   LOCATE 2 L
@@ -28,6 +28,9 @@ D = 1
 E = 1
 WHILE 1
   K = INKEY
+  IF K = 81 | K = 113          ; Q ou q : fin
+    END
+  ENDIF
   IF K = 8 & X > 2
     X = X - 1
   ENDIF

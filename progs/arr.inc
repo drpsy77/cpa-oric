@@ -6,7 +6,8 @@
 ;  À définir par le programme qui l'inclut :
 ;    r_i, r_j   deux mots (r_j sert aussi de valeur, r_v)
 ;    r_fail     erreur : A/Y = message (0 à la fin) ; ne revient pas
-;    r_esc      ESC pendant une saisie ; ne revient pas
+;    r_esc      ESC pendant une saisie : l'interpréteur arrête le
+;               programme (ne revient pas) ; GRX.INC l'ignore (revient)
 ;
 ;  Descripteurs : 8 octets par tableau, en R_DESC (26 tableaux
 ;  d'entiers, puis 26 tableaux d'octets « $ ») : adresse, taille 1,
@@ -984,9 +985,9 @@ qnocur   jsr h_key
         lda rz_v                ; la case reprend son contenu
         jsr h_chr
 qnc2     pla
-        cmp #27
-        bne qk1
-        jmp r_esc
+        cmp #27                 ; ESC : arrêt en interprété ; ignoré
+        bne qk1                 ;   dans un programme traduit (r_esc)
+        jsr r_esc
 qk1      cmp #13
         beq qdone
         cmp #127

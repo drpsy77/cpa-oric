@@ -1,5 +1,5 @@
 ; CARTE.GRX : un monde de 128 x 64 cases dans T$, vu par une fenetre
-; de 38 x 26 (PASTE) qui suit le joueur ; fleches, Q ou ESC : fin
+; de 38 x 26 (PASTE) qui suit le joueur ; fleches, Q : fin
 ; INKEY : pas d'attente ; l'ecran n'est redessine (CALC) qu'apres un pas
 DIM T$(64,128)
 ECHO Construction du monde...
@@ -39,7 +39,7 @@ FOR L 0 27
 NEXT
 CHAR 1 0 3
 LOCATE 2 0
-ECHO "CARTE : fleches, Q ou ESC : fin"
+ECHO "CARTE : fleches, Q : fin"
 CHAR 1 27 6
 CALL CALC
 WHILE 1
@@ -65,7 +65,7 @@ WHILE 1
       CALL CALC
     ENDIF
   ENDIF
-  IF K = 81 | K = 113          ; Q ou q
+  IF K = 81 | K = 113          ; Q ou q : fin
     END
   ENDIF
 NEXT

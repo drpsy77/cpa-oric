@@ -1,6 +1,6 @@
 ; ANIMS.GRX : les animations dans GRAPHER
 ; ANIM nom [n] joue nom.ANI n fois (0 ou
-; rien : jusqu'a une touche ; ESC arrete)
+; rien : jusqu'a une touche ; ESC arrete en interprete)
 ; pendant une animation, fleches gauche
 ; et droite : deplacer la ligne de
 ; dechirure (calage sur l'ecran)

@@ -104,7 +104,7 @@ SECTIONS = [
   ("X.DSK", "EXPORT refuse (image disque)"),
  ]),
  ("GRAPHER : FICHIERS .GRX", [
-  ("GRAPHER nom [p]", "execute NOM.GRX ($1..$9 = p, ESC arrete)"),
+  ("GRAPHER nom [p]", "execute NOM.GRX ($1..$9 = p, ESC arrete a tout moment)"),
   ("nombres", "entiers -32768..32767"),
   ("variables", "A a Z, ou deux car. : PX N1 (sauf IF)"),
   ("parametre", "expression sans espace : X+8 RND(240) (X * 2)"),
@@ -134,7 +134,7 @@ SECTIONS = [
   ("SHIDE k", "retire le sprite de l'emplacement k"),
   ("GRXASM nom [p]", "traduit NOM.GRX en NOM.ASM, avec les seules routines utiles de GRX.INC HIRES.INC ARR.INC FIL.INC SPR.INC ANIM.INC (sur le lecteur du .GRX) ; puis ASM NOM -> NOM.COM (avec CPA.INC)"),
   ("GRAPHER nom /A", "la meme chose : passe la main a GRXASM"),
-  ("traduit", "aucun controle a l'execution ; ESC seulement par GET WAIT INPUT INKEY ; sinon RESET"),
+  ("traduit", "aucun controle a l'execution ; ESC n'arrete rien : INKEY GET WAIT le rendent (27) ; sortie : une autre touche (Q), sinon RESET"),
   ("HIRES", "plein ecran 240 x 200, efface"),
   ("SPLIT", "240 x 128, console dessous"),
   ("TEXT", "retour au texte (console)"),

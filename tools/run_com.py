@@ -4,6 +4,8 @@ minimal sur un dossier du PC. Pour tester ASM.COM hors de l'émulateur.
   run_com.py DOSSIER PROG.COM [ARGS]
 Variables :
   INPUT=l1|l2   lignes lues par la fonction 10
+  KEYS=27,65    touches rendues par CONST et CONIN du BIOS, dans l'ordre
+                (ensuite : CONST 0, CONIN 13)
   DUMP=fichier  mémoire (64 Ko) écrite à la fin
   SCREEN=1      écran texte ($BB80, 40 x 28) affiché à la fin, lignes non
                 vides seulement : attribut 16 « . », autre code 0-31 « ^ »,
@@ -35,6 +37,7 @@ def main():
     mem[0xFFFE] = 0x06; mem[0xFFFF] = 0x02
     mem[0x210] = 2                                   # CON_CURX
     lines = [l for l in os.environ.get('INPUT', '').split('|')]
+    keys = [int(k) for k in os.environ.get('KEYS', '').split(',') if k]
     def setfcb(a, name):
         mem[a:a+36] = bytes(36)
         n, _, e = name.partition('.')
@@ -86,8 +89,10 @@ def main():
         if pc in (0x203, 0xC006, 0xC009, 0xC00C):
             a = m.a
             if pc == 0xC00C: out.append(chr(a))
-            elif pc == 0xC006: m.a = 0
-            elif pc == 0xC009: m.a = 13
+            elif pc in (0xC006, 0xC009):       # CONST, CONIN : drapeaux N et Z
+                if pc == 0xC006: m.a = 0xFF if keys else 0  # comme le BIOS
+                else: m.a = keys.pop(0) if keys else 13
+                m.p = (m.p & ~0x82) | (0x80 if m.a & 0x80 else 0) | (0 if m.a else 0x02)
             else:
                 x = m.x; adr = a | (m.y << 8); m.a = 0
                 if x == 2: out.append(chr(a))

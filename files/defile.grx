@@ -1,5 +1,5 @@
 ; DEFILE.GRX : une route qui defile vers le bas (SCROLV, puis une
-; ligne neuve en haut) ; fleches gauche et droite, ESC : fin
+; ligne neuve en haut) ; fleches gauche et droite, Q : fin
 LORES
 FOR L 0 27
   CHAR 0 L 16
@@ -13,7 +13,7 @@ CHAR 1 0 3
 LOCATE 2 0
 SPC 38
 LOCATE 2 0
-ECHO "DEFILE : fleches, ESC : fin"
+ECHO "DEFILE : fleches, Q : fin"
 LOCATE 2 27
 SPC 38
 G = 14
@@ -34,6 +34,9 @@ WHILE 1
     G = 27
   ENDIF
   K = INKEY
+  IF K = 81 | K = 113          ; Q ou q : fin
+    END
+  ENDIF
   IF K = 8
     X = X-1
   ENDIF

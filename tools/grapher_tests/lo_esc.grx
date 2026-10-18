@@ -1,0 +1,8 @@
+; ESC pendant INPUT (LORES) : arrete en interprete ; ignore dans un
+; programme traduit (la saisie continue : A, puis RETURN)
+DIM A$(5)
+LORES
+LOCATE 2 1
+INPUT A$
+LOCATE 2 2
+PRINT A$

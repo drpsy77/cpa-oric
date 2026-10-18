@@ -47,7 +47,10 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   lancements de suite donnent deux mondes différents ; `MOTIFS.GRX` (ciel étoilé) ;
 - `CARTE.GRX` par `INKEY` : pas de scintillement à l'arrêt, une flèche maintenue fait avancer
   sans délai de répétition (vitesse en interprété, puis traduit), le joueur bute sur les
-  obstacles sans redessin, Q (majuscule ou minuscule) et ESC arrêtent ;
+  obstacles sans redessin, Q (majuscule ou minuscule) arrête ;
+- ESC : en interprété, il arrête `CARTE`, `SERPENT`, `ARDOISE` à tout moment ; traduits
+  (`GRXASM`, `ASM`), ces jeux continuent sur ESC et s'arrêtent par Q ; `ANIMS` traduit :
+  ESC finit l'animation sans arrêter le programme ;
 - `FLECHES.GRX` (couleurs, flèches, `INKEY` sans délai), `ARDOISE.GRX` (dessin continu tant
   qu'on tient la flèche) ;
 - en LORES : FUNCT et CTRL-T sans effet ; retour à la console par ESC, fin normale et RESET ;
@@ -89,8 +92,7 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   `ECHOV`, `SPCV` (colonnes de texte, murs) ; dans l'image, `SCROLV` en HIRES plein écran
   (durée, environ 150 ms) et en SPLIT (la console sous l'image reste intacte).
 - traduit sans contrôles : `SERPENT`, `SPRITES`, `DEFILE`, `CARTE` traduits de nouveau
-  (`GRXASM`, `ASM`) tournent comme en interprété, plus vite ; ESC les arrête par `INKEY` ou
-  `GET` ; une boucle qui ne lit pas le clavier (`WHILE 1` ... `NEXT`) ne s'arrête que par le
+  (`GRXASM`, `ASM`) tournent comme en interprété, plus vite ; Q les arrête ; une boucle qui ne lit pas le clavier (`WHILE 1` ... `NEXT`) ne s'arrête que par le
   bouton RESET, qui rend le système ; `MOTIFS` (ciel étoilé, `RND`) : les étoiles restent bien
   réparties.
 
