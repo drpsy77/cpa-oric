@@ -263,14 +263,22 @@ ou `SPCV`, ou un `PASTE` d'une ligne ou d'une colonne. Exemple : `DEFILE.GRX` (�
 | `WAIT` | attend une touche, sans la garder |
 | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier |
 
-Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut. **ESC** arrête le programme, entre
-deux lignes et pendant `GET`, `WAIT` et `INPUT` (message `Interrompu`). Une autre touche tapée
-pendant l'exécution est gardée pour `WAIT`, `GET` ou `INKEY`.
+Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut. Une touche tapée pendant
+l'exécution est gardée pour `WAIT`, `GET` ou `INKEY`.
 
-Dans un programme traduit (§ 12), ESC n'est plus regardé entre les lignes ni dans les
-boucles : il arrête seulement quand le programme lit le clavier (`GET`, `WAIT`, `INPUT`,
-`INKEY`). Une boucle qui ne lit jamais le clavier ne s'arrête que par le bouton RESET, qui
-rend le système.
+**ESC est la touche de l'interpréteur, pas celle du programme.**
+
+- **En interprété**, ESC arrête le programme à tout moment : entre deux lignes, dans une
+  boucle, pendant `GET`, `WAIT`, `INPUT` et `ANIM` (message `Interrompu`). Le programme ne
+  le voit jamais : c'est la sortie de secours de la mise au point.
+- **Dans un programme traduit** (§ 12), ESC n'arrête plus rien : le programme a la main sur
+  tout. `INKEY`, `GET` et `WAIT` le rendent comme une autre touche (27), `INPUT` l'ignore,
+  `ANIM` s'arrête comme sur une autre touche. Une boucle qui ne prévoit pas de sortie ne
+  s'arrête que par le bouton RESET, qui rend le système.
+- **La sortie d'un jeu se fait donc par une autre touche**, choisie par le programme (Q dans
+  les exemples, `IF K = 81 | K = 113` pour Q majuscule ou minuscule), qui marche de la même
+  façon dans les deux modes. Un programme traduit peut aussi donner un rôle à ESC (menu,
+  inventaire) avec `IF K = 27`, qui ne sert jamais en interprété.
 
 **Boucle de jeu : ne redessiner que ce qui change.** Avec `INKEY`, la boucle tourne sans
 attendre : si elle redessine l'écran à chaque tour (`PASTE`, `CLS`, un score), l'image
@@ -287,7 +295,7 @@ sous-programme, appelé une fois avant la boucle.
         ...                     ; nouvelle position, verifiee
         CALL DESSIN
       ENDIF
-      IF K = 81                 ; Q : fin (ESC arrete aussi)
+      IF K = 81 | K = 113       ; Q ou q : fin
         END
       ENDIF
     NEXT
@@ -349,7 +357,7 @@ tableau `$` à deux dimensions (`N$(10,12)` : 10 noms).
 |---|---|
 | `GLOAD nom` | charge une image : `.HIR` (ou `.HIZ` compressée) en HIRES, `.IMG` en SPLIT ; depuis le mode texte, le type choisit le mode (`.HIR` par défaut) |
 | `GSAVE nom` | enregistre l'image au format du mode (`.HIR` ou `.IMG`) |
-| `ANIM nom [n]` | joue l'animation `nom.ANI` n fois (0 ou rien : jusqu'à une touche) ; HIRES plein écran seulement (refusé en SPLIT) ; ESC arrête le programme |
+| `ANIM nom [n]` | joue l'animation `nom.ANI` n fois (0 ou rien : jusqu'à une touche) ; HIRES plein écran seulement (refusé en SPLIT) ; ESC arrête le programme en interprété ; dans un programme traduit, ESC finit l'animation comme une autre touche |
 | `SAVE A nom`, `LOAD A nom` | tableau en **texte** (`.TXT` par défaut), modifiable avec EDIT |
 | `BSAVE A nom`, `BLOAD A nom` | tableau en **binaire** (`.DAT` par défaut), octets tels quels, modifiable avec HEX ; entiers : octet bas puis octet haut |
 | `BSAVE SCREEN nom`, `BLOAD SCREEN nom` | écran texte entier, 1 120 octets (`.SCR` par défaut) ; LORES seulement (`LORES d'abord`) ; le curseur ne bouge pas |
@@ -500,7 +508,7 @@ Une erreur arrête le programme : retour à la console, puis `L n COMMANDE : mes
 (`L 3 LINE : valeur hors de 0-255`). Un programme traduit ne vérifie rien pendant
 l'exécution (§ 12) ; il ne lui reste que les erreurs qui ne sont pas des fautes du programme,
 sans numéro de ligne : fichiers (`Erreur : disque plein`...), `memoire pleine` à un `DIM`
-de taille calculée, et ESC (`Interrompu`).
+de taille calculée. ESC ne l'arrête pas (§ 8).
 
 | Sujet | Messages |
 |---|---|
@@ -554,8 +562,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   - Plus vérifié du tout : un paramètre calculé hors de 0-255 (seul son octet bas compte),
     une colonne ou une ligne hors de l'écran, une commande du LORES hors du LORES, les
     indices et les tableaux, une chaîne trop longue (coupée à la capacité), une division par
-    zéro (le résultat n'a pas de sens), un pas calculé nul (la boucle ne finit pas), ESC dans
-    les boucles (§ 8).
+    zéro (le résultat n'a pas de sens), un pas calculé nul (la boucle ne finit pas), ESC (une
+    touche comme une autre, § 8).
   - Un paramètre qui est une variable simple se lit en une instruction (`lda V_L`, son
     octet bas).
 - Un tableau doit être déclaré par un `DIM` placé plus haut dans le fichier (la traduction
@@ -625,12 +633,12 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `DESSIN.GRX` | mode SPLIT, avec paramètre |
 | `ECRAN.GRX` | écran titre en couleurs par attributs (HIRES) |
 | `MOTIFS.GRX` | éventail, cercles, ciel étoilé : boucles, hasard, sous-programme |
-| `ARDOISE.GRX` | télécran : les flèches dessinent, ESPACE efface, ESC finit (`INKEY`) |
+| `ARDOISE.GRX` | télécran : les flèches dessinent, ESPACE efface, Q finit (`INKEY`) |
 | `FLECHES.GRX` | LORES : un `@` qu'on déplace aux flèches dans un cadre, `SCRN` pour les murs |
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
 | `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `SPRITES.GRX` | LORES : un bonhomme mené aux flèches (deux images de marche) et une balle qui rebondit, sur un décor en deux couleurs ; sprites de `HEROS.SPR` |
-| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q ou ESC : fin |
+| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q : fin |
 | `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 

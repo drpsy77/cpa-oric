@@ -1,5 +1,5 @@
 ; FLECHES.GRX : l'ecran texte (LORES)
-; fleches : bouger le @ ; ESC : finir
+; fleches : bouger le @ ; Q : finir
 ; INKEY : touche enfoncee, sans delai
 LORES
 ; fond bleu (papier 20), encre jaune (3)
@@ -25,7 +25,7 @@ NEXT
 LOCATE 2 0
 ECHO "      LORES : l'ecran texte"
 LOCATE 2 27
-ECHO "Fleches, ESC : fin    Pas :"
+ECHO "Fleches, Q : fin      Pas :"
 X = 10
 Y = 13
 N = 0
@@ -34,6 +34,9 @@ WHILE 1
   LOCATE 30 27
   PRINT N
   K = INKEY
+  IF K = 81 | K = 113          ; Q ou q : fin
+    END
+  ENDIF
   DELAY 3
   A = X - (K = 8) + (K = 9)
   B = Y - (K = 11) + (K = 10)

@@ -11,8 +11,8 @@
 ;  de la variable (FOR).
 ;  Les textes (GTEXT, ECHO) et les noms d'images (GLOAD, GSAVE) suivent
 ;  l'appel dans le code (g_str les y prend).
-;  Page zéro : $10-$2C. ESC est testé à chaque tour de boucle (NEXT) et
-;  par WAIT.
+;  Page zéro : $10-$2C. ESC n'arrête jamais le programme : INKEY, GET
+;  et WAIT le rendent comme une autre touche (27), INPUT l'ignore.
 ; =====================================================================
 
 g_ev    = $10           ; valeur (2 octets)
@@ -100,9 +100,9 @@ r_fail
         tay
         pla
         jmp g_stop
-r_esc   lda #<g_m_esc
-        ldy #>g_m_esc
-        jmp g_stop
+; r_esc : ESC pendant INPUT (arr.inc) : ignoré ; le programme traduit
+;   ne s'arrête jamais sur ESC (A gardé)
+r_esc   rts
 
 ; a_grx : ANIM traduit (A = passages ; nom après l'appel) : se sert de
 ;   ANIM.INC (a_play, a_fcb, a_sig, a_msg), inclus si le programme anime
@@ -148,18 +148,12 @@ hz_go   lda #<a_fcb
         ldy #>a_fcb
         ldx a_n2
         jsr a_play
-        bcs hz_er
-        cmp #27
-        bne hz_r
-        lda #<a_me
-        ldy #>a_me
-        jmp a_fail
+        bcs hz_er               ; ESC finit l'animation comme une
+        rts                     ;   autre touche
 hz_er   jsr a_msg
         jmp a_fail
-hz_r    rts
 .)
 
-a_me    .asc "Interrompu",0
 a_n2    .byt 0
 
 ; g_stop : message A/Y (0 à la fin), puis fin du programme
@@ -560,7 +554,8 @@ zero    lda #0
 
 ; g_inkey : touche (0 si aucune), sans attendre et sans délai de
 ;   répétition : une touche tapée depuis le dernier INKEY (le tampon est
-;   vidé, ESC arrête), sinon celle qui est encore enfoncée (KB_HELD)
+;   vidé ; ESC est une touche comme une autre : 27), sinon celle qui est
+;   encore enfoncée (KB_HELD)
 g_inkey
 .(
         lda g_pk
@@ -570,11 +565,7 @@ v       sta g_ev
         jsr B_CONST
         beq e
         jsr h_key
-        cmp #27
-        bne v
-        lda #<g_m_esc
-        ldy #>g_m_esc
-        jmp g_stop
+        jmp v
 e       lda KB_HELD
         ldx g_ev
         beq h
@@ -757,7 +748,7 @@ g_paste ldx #0
 g_spc   lda h_x1
         ldx h_y1
         jmp h_lspc
-; g_get : attend une touche -> g_ev (ESC arrête)
+; g_get : attend une touche -> g_ev (ESC : 27)
 g_get   jsr g_wait
         sta g_ev
         lda #0
@@ -785,16 +776,9 @@ g_scrn
         rts
 .)
 
-g_wait
-.(
-        jsr g_getkey
-        cmp #27
-        bne r
-        lda #<g_m_esc
-        ldy #>g_m_esc
-        jmp g_stop
-r       rts
-.)
+; g_wait : attend une touche -> A (ESC compris : le programme traduit
+;   ne s'arrête jamais sur ESC)
+g_wait  jmp g_getkey
 
 ; g_delay : g_ev cinquantièmes de seconde
 g_delay
@@ -1119,7 +1103,6 @@ g_dhi   .byt >10000,>1000,>100,>10
 
 g_timg  .asc "IMG"
 g_thir  .asc "HIR"
-g_m_esc   .asc "Interrompu",0
 g_m_err   .asc "Erreur : ",0
 g_m_nolo  .asc "Erreur : LORES d'abord",0
 g_m_noimg .asc "Erreur : image introuvable",0

@@ -1,0 +1,8 @@
+; ESC : arrete le programme en interprete (Interrompu au GET) ;
+; dans un programme traduit, c'est une touche comme une autre (27)
+GET K
+PRINT K
+K = INKEY
+PRINT K
+WAIT
+PRINT 1

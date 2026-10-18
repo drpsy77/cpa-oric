@@ -28,7 +28,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 10 507 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 10 552 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 566 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -103,7 +103,7 @@ multiple de 2 048) :
   (842), HEX (432), XDO (512) ;
 - GRAPHER (15 555 octets) prend 8 blocs, 829 octets libres dans le dernier (place des
   tuiles) ; piste de place : messages d'erreur par numéro, ~40 octets. GRXASM (14 498) prend
-  8 blocs ; GRX.INC (12 138 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 150 octets avant le 7e. HELP (10 507) prend 6 blocs. Les disquettes se
+  8 blocs ; GRX.INC (11 816 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 472 octets avant le 7e. HELP (10 552) prend 6 blocs. Les disquettes se
   spécialisent plutôt que de gratter des octets ;
 - EDIT fait exactement 8 192 octets : le moindre ajout coûte un bloc. ASM et HEX sont à moins
   de 260 octets du bloc suivant ;
