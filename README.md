@@ -4,6 +4,28 @@
 
 *My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
 
+<p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO draws a tree"> <img src="cpa-menus-oricutron.png" width="320" alt="Pull-down menus at the A> prompt"></p>
+
+- **Your Oric becomes a real workstation**: pull-down menus, command history, completion, a
+  full-screen editor and file manager. No more heroics.
+- **Write a game, draw it, compile it** to fast 6502 code, without ever leaving the machine.
+- **Then share it**: through the LOCI's USB stick today, on a plain cassette for any Oric soon.
+
+**Try it in five minutes.** Download [`cpa.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa.dsk), put it on the USB stick of your LOCI
+(or the SD card of your Cumulus) and boot, or run it in Oricutron (see below). At the `A>`
+prompt:
+
+    DIR               what's on the disk
+    HELP              help topics
+    LOGO DEMO         then type DEMO: the turtle draws a tree
+    GRAPHER CARTE     explore a random 128 x 64 world (arrows, Q to quit)
+    GRXASM SERPENT    translate the snake game into assembly...
+    ASM SERPENT       ...assemble it on the Oric...
+    SERPENT           ...and play the compiled version
+    CMDER             full-screen file manager (ESC to quit)
+
+The FUNCT key opens the menus everywhere.
+
 A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version 0.9.
 
 Two variants are built from the same sources:
