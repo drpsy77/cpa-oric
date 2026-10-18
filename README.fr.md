@@ -7,7 +7,7 @@
 <p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO dessine un arbre"> <img src="cpa-menus-oricutron.png" width="320" alt="Menus déroulants au prompt A>"></p>
 
 - **Votre Oric devient un vrai poste de travail** : menus déroulants, historique, complétion,
-  éditeur et gestionnaire de fichiers plein écran. Fini l'héroïsme.
+  éditeur et gestionnaire de fichiers plein écran.
 - **Écrivez un jeu, dessinez-le, compilez-le** en 6502 rapide, sans jamais quitter la machine.
 - **Puis partagez-le** : par la clé USB du LOCI aujourd'hui, sur une simple cassette pour tout
   Oric bientôt.
