@@ -661,7 +661,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (17,462 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (17,654 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
@@ -673,6 +673,25 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 - **Memory** (translated): the program at `$0500`, then the tables of `hires.inc`. Arrays are
   reserved below `$9D60` as when interpreted: fixed arrays (§ 12) at start, in the order of
   the `DIM`s, then the others at their `DIM`.
+- **Sizes of a translated program** (measured on the eleven examples, `files/*.grx`; the
+  program's part separated from the libraries'):
+
+  | | Per byte of `.GRX` | Per line of `.GRX` | CARTE (96 lines, 2.1 KB) |
+  |---|---:|---:|---:|
+  | `NAME.ASM`, program | 6.4 to 7.0 bytes | ~10 lines, ~140 bytes | 14.2 KB |
+  | `NAME.ASM`, libraries | — | — | 32.0 KB |
+  | `NAME.COM`, program | 1.15 to 1.35 bytes | ~25 bytes | 2.6 KB |
+  | `NAME.COM`, libraries | — | — | 5.8 KB |
+
+  The compiled program is thus roughly the `.GRX` in clear, plus the library routines it
+  uses: 0.8 KB (ARDOISE) to 5.8 KB (CARTE) in the examples. The intermediate `.ASM` is about
+  6.5 times the `.GRX`, plus the text of the copied routines (5 to 32 KB; the six libraries
+  are 69 KB on the disk, no program takes them all). A `.GRX` does not exceed ~17 KB
+  interpreted (text and arrays together) nor ~21 KB for GRXASM (text from `$48AF` to
+  `$9CE0`). Worst case for a 17 KB `.GRX`: a 145 to 175 KB `.ASM` and a ~30 KB `.COM`, both
+  present during assembly, so ~200 KB on the project disk (336 KB); `/C` then leaves only
+  the `.COM`. The limit that matters is memory: the `.COM` and its arrays fit between
+  `$0500` and `$9D60` (~38 KB); 30 KB of code leave only ~8 KB of arrays.
 - **Speed**: 150 to a few hundred lines per second interpreted (a sky of 400 stars,
   `PLOT 1+RND(238) 1+RND(198)`: 5 s; translated: 0.6 s). A sprite of 1 × 2 cells moved with
   `SSHOW`: 2.3 ms in a translated program (about 1.1 ms per cell: removal then display). An
