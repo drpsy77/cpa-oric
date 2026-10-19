@@ -1,40 +1,61 @@
-; CARTE.GRX : un monde de 128 x 64 cases dans T$, vu par une fenetre
-; de 38 x 26 (PASTE) qui suit le joueur ; fleches, Q : fin
+; CARTE.GRX : une ile de 64 x 32 tuiles de 2 x 2 (T$), vue par une
+; fenetre de 38 x 26 (TMAP) centree sur le joueur ; fleches, Q : fin
+; Tuiles dessinees dans le jeu secondaire (TUILES.SPR, TFONT) ; la
+; carte s'ecrit en clair : ~ eau, espace herbe, # mur, ^ arbre,
+; M montagne. Hors de la carte : la tuile 0, l'eau.
 ; INKEY : pas d'attente ; l'ecran n'est redessine (CALC) qu'apres un pas
-DIM T$(64,128)
+DIM T$(32,64) D$(5,4) S$(152)
+BLOAD S$ TUILES.SPR
 ECHO Construction du monde...
+FOR J 0 3
+  D$(0,J) = 34                 ; eau
+  D$(1,J) = 33                 ; herbe (vide)
+  D$(2,J) = 35                 ; mur
+  D$(3,J) = 36+J               ; arbre
+  D$(4,J) = 40+J               ; montagne
+NEXT
+TILESET D$ 2 2 "~ #^M"
 FILL T$ 32
-FOR I 0 127
-  T$(0,I) = 35
-  T$(63,I) = 35
+FOR I 0 63
+  T$(0,I) = 126
+  T$(31,I) = 126
 NEXT
-FOR I 1 62
-  T$(I,0) = 35
-  T$(I,127) = 35
+FOR I 1 30
+  T$(I,0) = 126
+  T$(I,63) = 126
 NEXT
-REPEAT 300
-  T$(1+RND(62),1+RND(126)) = 94
-NEXT
-REPEAT 80
-  Y = 1+RND(62)
-  X = 1+RND(125)
-  T$(Y,X) = 47
-  T$(Y,X+1) = 92
-NEXT
-REPEAT 30
-  Y = 1+RND(59)
-  X = 1+RND(123)
-  FOR I 0 2
-    FOR J 0 3
+REPEAT 12                      ; lacs
+  Y = 1+RND(28)
+  X = 1+RND(59)
+  FOR I 0 1
+    FOR J 0 2
       T$(Y+I,X+J) = 126
     NEXT
   NEXT
 NEXT
-PX = 64
+REPEAT 150
+  T$(1+RND(30),1+RND(62)) = 94
+NEXT
+REPEAT 25                      ; chaines de montagnes
+  Y = 1+RND(30)
+  X = 1+RND(60)
+  T$(Y,X) = 77
+  T$(Y,X+1) = 77
+NEXT
+REPEAT 8                       ; murs
+  Y = 1+RND(30)
+  X = 1+RND(57)
+  FOR J 0 4
+    T$(Y,X+J) = 35
+  NEXT
+NEXT
+PX = 64                        ; joueur : caractere du monde
 PY = 32
-T$(PY,PX) = 32
+T$(16,32) = 32                 ; (tuile du joueur)
 LORES
-FOR L 0 27
+TFONT S$ 33 ALT
+FOR L 1 26
+  CHAR 0 L 9                   ; jeu secondaire : les tuiles
   CHAR 1 L 2
 NEXT
 CHAR 1 0 3
@@ -59,7 +80,7 @@ WHILE 1
     IF K = 11
       NY = PY-1
     ENDIF
-    IF T$(NY,NX) = 32
+    IF TILE(NX,NY) = 1         ; herbe seulement
       PX = NX
       PY = NY
       CALL CALC
@@ -70,24 +91,10 @@ WHILE 1
   ENDIF
 NEXT
 
-; CALC : camera bornee, fenetre, joueur et position
+; CALC : fenetre centree sur le joueur, joueur et position
 SUB CALC
-  CX = PX-19
-  IF CX < 0
-    CX = 0
-  ENDIF
-  IF CX > 90
-    CX = 90
-  ENDIF
-  CY = PY-13
-  IF CY < 0
-    CY = 0
-  ENDIF
-  IF CY > 38
-    CY = 38
-  ENDIF
-  PASTE T$(CY,CX) 2 1 38 26
-  CHAR 2+PX-CX 1+PY-CY 64
+  TMAP T$ PX-19 PY-13 2 1 38 26
+  CHAR 21 14 44
   LOCATE 2 27
   ECHO "X "
   PRINT PX

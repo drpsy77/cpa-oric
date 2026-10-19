@@ -54,6 +54,12 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 
 **GRAPHER, VOIR, animations**
 
+- tuiles : `CARTE.GRX` en interprété (`GRAPHER CARTE`), puis traduit (`GRXASM CARTE`,
+  `ASM CARTE`, `CARTE`) : dessins de l'eau, de l'herbe, des murs, des arbres, des montagnes
+  et du joueur nets (jeu secondaire, attribut 9 en colonne 0) ; redessin d'une fenêtre à
+  chaque pas (environ 55 ms : déchirure visible ?) ; au bord de l'île, la mer continue
+  au-delà de la carte ; on ne traverse ni eau, ni arbre, ni mur, ni montagne ; Q, puis
+  `DIR` et une ligne rappelée par ↑ : police et console normales (historique vidé) ;
 - hasard (xorshift 32 bits) : `CARTE.GRX` (arbres, montagnes, lacs répartis sur toute la
   carte, sans bandes, en interprété puis traduit par `GRXASM CARTE` et `ASM CARTE`) ; deux
   lancements de suite donnent deux mondes différents ; `MOTIFS.GRX` (ciel étoilé) ;

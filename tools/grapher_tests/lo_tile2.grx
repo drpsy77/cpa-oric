@@ -1,0 +1,27 @@
+; tuiles : TFONT (dessins dans la police, jeux standard et secondaire),
+; K$ dans un tableau, tuiles de 1 x 1
+DIM S$(48) D$(3,1) K$(4) T$(2,3)
+BLOAD S$ TUIL.SPR
+LORES
+TFONT S$ 100
+TFONT S$ 40 ALT
+D$(0,0) = 32
+D$(1,0) = 100
+D$(2,0) = 101
+K$(0) = 46
+K$(1) = 35
+K$(2) = 42
+T$(0,0) = 35
+T$(0,1) = 42
+T$(0,2) = 46
+T$(1,0) = 42
+T$(1,1) = 35
+T$(1,2) = 63
+TILESET D$ 1 1 K$
+TMAP T$ 0 0 2 1 5 3
+LOCATE 2 5
+PRINT TILE(0,0)
+SPC 1
+PRINT TILE(1,0)
+SPC 1
+PRINT TILE(2,1)

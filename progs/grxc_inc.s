@@ -841,7 +841,7 @@ x_comma jsr ws
         rts
 x_bad   jmp e_expr
 
-fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,"FOUND ",6,0
+fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,"FOUND ",6,"TILE ",7,0
 
 ; mul16 : ev <- et * ev (16 bits bas)
 mul16
@@ -1707,4 +1707,10 @@ cmds
         .byt "V"|$80,0
         .asc "SPC"
         .byt "V"|$80,0
+        .asc "TILESE"
+        .byt "T"|$80,0
+        .asc "TMA"
+        .byt "P"|$80,0
+        .asc "TFON"
+        .byt "T"|$80,0
         .byt 0

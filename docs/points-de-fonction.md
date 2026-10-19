@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 38 | 5 | 171 | 36 | 72 | **322** | 68 | **390** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
-| GRAPHER + GRXASM | 28 | 22 | 115 | 25 | 15 | **205** | 46 | **251** |
+| GRAPHER + GRXASM | 35 | 22 | 125 | 25 | 18 | **225** | 51 | **276** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 14 | 0 | 21 | 13 | 9 | **57** | 22 | **79** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -24,14 +24,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 14 | 0 | 8 | 0 | 3 | **25** | 5 | **30** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *133* | *42* | *338* | *71* | *93* | ***677*** | *177* | ***854*** |
+| *Applications* | *140* | *42* | *348* | *71* | *96* | ***697*** | *182* | ***879*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 90 | 12 | **149** | 39 | **188** |
-| **Total** | **185** | **72** | **561** | **253** | **183** | **1254** | **300** | **1554** |
+| Outillage PC | 7 | 15 | 25 | 94 | 12 | **153** | 39 | **192** |
+| **Total** | **192** | **72** | **571** | **257** | **186** | **1278** | **305** | **1583** |
 
-Points ajustés (indicatif, § 9) : 1 254 × 1,05 ≈ 1 317.
+Points ajustés (indicatif, § 9) : 1 278 × 1,05 ≈ 1 342.
 
-Nombre de fonctions comptées : 26 ILF, 14 EIF, 180 EI, 62 EO, 61 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 63 EO, 62 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -344,6 +344,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.D06 | Sprites `.SPR` | EIF | 2 | 5 | F | 5 |
 | GRA.D07 | Emplacements de sprites et codes réservés | ILF | 2 | 6 | F | 7 |
 | GRA.D08 | Bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, HIRES) | EIF | 6 | 3 | M | 7 |
+| GRA.D09 | Tuiles : tables par place, carte du dernier TMAP | ILF | 2 | 6 | F | 7 |
 | GRA.T01 | Exécuter un `.GRX` (paramètres `$1`-`$9`, boucles, conditions, sous-programmes, ESC) | EI | 2 | 6 | M | 4 |
 | GRA.T02 | Affectation `V = expr` | EI | 1 | 2 | F | 3 |
 | GRA.T03 | DIM | EI | 1 | 4 | F | 3 |
@@ -393,6 +394,10 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.T47 | Fonctions et opérateurs des expressions (RND, ABS, LEN, comparaisons de chaînes) | EO | 1 | 3 | F | 4 |
 | GRA.T48 | GRXASM : traduire `NOM.GRX` en `NOM.ASM` avec les seules routines utiles | EO | 2 | 6 | M | 5 |
 | GRA.T49 | `GRAPHER NOM /A` (= GRA.T48) | — | — | — | — | 0 |
+| GRA.T50 | TILESET | EI | 2 | 4 | F | 3 |
+| GRA.T51 | TMAP | EI | 2 | 7 | M | 4 |
+| GRA.T52 | TILE(x,y) | EQ | 2 | 3 | F | 3 |
+| GRA.T53 | TFONT | EI | 2 | 3 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -410,6 +415,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A12 | GRXASM : tableaux à adresse fixe (indices constants ou variables, décalages) | `grxasm.s` | 5 |
 | GRA.A13 | GRXASM : routines utiles des bibliothèques (graphe des besoins, fermeture) | `grxasm.s` | 5 |
 | GRA.A14 | `/A` : passage à GRXASM par CHAIN | `grapher.s` | 1 |
+| GRA.A15 | Tuiles : une table par place dans la tuile, carte traduite par morceaux (avant, dans, après la carte), instructions modifiées par ligne, coordonnées sans division | `spr.inc` | 5 |
 
 ### 4.3 LOGO
 
@@ -639,7 +645,7 @@ service qu'ELIZA, mais c'est un autre programme : compté à part.
 | EX.T10 | SCORES.GRX : saisir un nom et un score, garder les cinq meilleurs | EI | 1 | 2 | F | 3 |
 | EX.T11 | SCORES.GRX : tableau des scores | EQ | 1 | 2 | F | 3 |
 | EX.T12 | SPRITES.GRX : bonhomme aux flèches, balle qui rebondit | EI | 1 | 2 | F | 3 |
-| EX.T13 | CARTE.GRX : explorer un monde de 128 × 64 cases | EI | 0 | 2 | F | 3 |
+| EX.T13 | CARTE.GRX : explorer une île de 64 × 32 tuiles | EI | 0 | 2 | F | 3 |
 | EX.T14 | DEFILE.GRX : conduire sur une route qui défile | EI | 0 | 2 | F | 3 |
 | EX.T15 | ANIMS.GRX : jouer les animations | EQ | 1 | 1 | F | 3 |
 | EX.T16 | DEMO.LOG : CARRE, POLY | EO | 0 | 2 | F | 4 |
@@ -655,7 +661,7 @@ service qu'ELIZA, mais c'est un autre programme : compté à part.
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
-| EX.A01 | CARTE : monde tiré au hasard (arbres, montagnes, lacs), fenêtre qui suit le joueur | `carte.grx` | 3 |
+| EX.A01 | CARTE : île de tuiles tirée au hasard (lacs, arbres, montagnes, murs), fenêtre centrée sur le joueur, déplacement sur l'herbe | `carte.grx` | 3 |
 | EX.A02 | SERPENT : corps en anneau dans deux tableaux, collisions | `serpent.grx` | 1 |
 | EX.A03 | SCORES : tri, cinq meilleurs gardés | `scores.grx` | 1 |
 | EX.A04 | SPRITES : rebond, deux images de marche | `sprites.grx` | 1 |
@@ -710,6 +716,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T32 | `build_xa.sh` | EI | 0 | 1 | F | 3 |
 | OUT.T33 | `build_clk_mac.sh` | EI | 0 | 1 | F | 3 |
 | OUT.T34 | `pf_mesure.py` : mesures et totaux de ce document | EO | 3 | 10 | M | 5 |
+| OUT.T35 | `mkspr.py` : `.SPR` (sprites ou tuiles) d'après un dessin en texte | EO | 1 | 4 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -734,9 +741,9 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 36 | 11 053 | 1 102 | 536 | 830 | 9 % | 36 311 | 34 | 113 |
+| Système et commandes | 36 | 11 053 | 1 102 | 536 | 850 | 9 % | 36 629 | 34 | 114 |
 | EDIT | 2 | 3 313 | 174 | 118 | 5 | 5 % | 8 192 | 45 | 111 |
-| GRAPHER + GRXASM | 8 | 11 785 | 833 | 405 | 0 | 7 % | 30 053 | 57 | 147 |
+| GRAPHER + GRXASM | 8 | 12 786 | 913 | 422 | 0 | 7 % | 32 272 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 1 | 5 991 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
 | HEX | 1 | 1 564 | 87 | 59 | 0 | 5 % | 3 840 | 82 | 202 |
@@ -744,34 +751,35 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | USB | 4 | 1 313 | 135 | 74 | 0 | 9 % | 4 479 | 53 | 179 |
 | ASM | 2 | 2 392 | 117 | 76 | 70 | 5 % | 5 949 | 266 | 661 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
-| Exemples | 27 | 888 | 53 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 147 | 5 801 | 570 | 322 | 0 | 9 % | — | 39 | — |
-| **Total** | 236 | 56 642 | 4 207 | 2 239 | 921 | 7 % | 131 458 | 45 | 105 |
+| Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
+| Outillage PC | 158 | 6 006 | 601 | 341 | 0 | 9 % | — | 39 | — |
+| **Total** | 248 | 57 852 | 4 321 | 2 275 | 941 | 7 % | 133 995 | 45 | 105 |
 
-Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 407 octets.
+Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 155 | 76 | 3,6 | 72 |
-| EDIT | 68 | 19 | 0,9 | 7 |
-| GRAPHER + GRXASM | 744 | 64 | 3,6 | 26 |
-| LOGO | 273 | 63 | 1,4 | 19 |
-| CMDER | 169 | 24 | 3,0 | 9 |
-| HEX | 34 | 9 | 1,8 | 2 |
-| VOIR | 78 | — | 4,1 | 8 |
-| USB | 38 | 9 | 1,5 | 5 |
-| ASM | 42 | 10 | 4,7 | 3 |
+| Système et commandes | 1 163 | 76 | 3,6 | 1 |
+| EDIT | 68 | 19 | 0,9 | 1 |
+| GRAPHER + GRXASM | 815 | 68 | 3,6 | 1 |
+| LOGO | 273 | 63 | 1,4 | 1 |
+| CMDER | 169 | 24 | 3,0 | 1 |
+| HEX | 34 | 9 | 1,8 | 1 |
+| VOIR | 78 | — | 4,1 | 1 |
+| USB | 38 | 9 | 1,5 | 1 |
+| ASM | 42 | 10 | 4,7 | 1 |
 | DEBUG | 40 | 12 | 0,5 | 1 |
-| Exemples | 0 | — | 0,0 | 17 |
-| Outillage PC | 291 | — | 2,0 | 85 |
-| Transverse (projet) | 1 486 | — | — | 24 |
-| **Total** | 4 418 | 286 | 3,5 | 131 |
+| Exemples | 0 | — | 0,0 | 1 |
+| Outillage PC | 291 | — | 1,9 | 1 |
+| Transverse (projet) | 1 653 | — | — | 1 |
+| Traduction anglaise (docs/en) | 2 146 | — | — | 1 |
+| **Total** | 6 810 | 290 | 5,3 | 1 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 131 commits du 2026-10-04 au 2026-10-18.
+Historique : 1 commits du 2026-10-18 au 2026-10-18.
 
-Réutilisation : 43 871 lignes de code écrites dans `progs/`, 49 172 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 44 892 lignes de code écrites dans `progs/`, 50 182 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -820,6 +828,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | Date | Commit | Version | PF IFPUG | Algorithmes | Total | Commits | Ce qui a changé |
 |---|---|---|---:|---:|---:|---:|---|
 | 2026-10-18 | `b86817e` | 0.9 | 1 254 | 300 | 1 554 | 131 | comptage de référence |
+| 2026-10-19 | tuiles | 0.9 | 1 278 | 305 | 1 583 | 142 | tuiles de GRAPHER (`TILESET`, `TMAP`, `TILE`, `TFONT`), `mkspr.py`, CARTE en tuiles |
 
 ## 11. Comparaisons
 

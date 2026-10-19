@@ -199,7 +199,7 @@ est celle de la ligne (attributs) : le sprite prend la couleur des lignes où il
 - Le tas correspond au jeu de caractères des lignes où passe le sprite (attribut 8 : standard,
   9 : secondaire). Un personnage à cheval sur deux jeux est découpé en deux sprites. Le jeu
   secondaire n'a pas de dessins à lui (le système y range la ligne en cours d'édition et
-  l'historique) : il servira avec les tuiles (§ 16). Un `INPUT` abîme ses codes 64 à 111 ; à
+  l'historique) : les tuiles le dessinent (`TFONT ... ALT`, § 7.3). Un `INPUT` abîme ses codes 64 à 111 ; à
   la fin d'un programme qui s'en est servi, l'historique des lignes est vidé.
 
 ### 7.2 Rectangles : copie, défilement, rotation
@@ -247,12 +247,76 @@ diagonale, sauts, retour au début : la même ligne).
       ENDIF
     NEXT
 
-Le redessin se fait seulement après un pas (§ 8, « Boucle de jeu ») : `CARTE.GRX` (§ 14).
+Le redessin se fait seulement après un pas (§ 8, « Boucle de jeu »). Pour une carte bien
+plus grande dans la même mémoire, les tuiles (§ 7.3).
 
 **Défiler puis compléter.** Quand le décor n'est pas entier en mémoire (calculé au fur et à
 mesure, tiré au hasard, sans fin), on fait glisser la zone de jeu d'une case et on écrit la
 bande qui entre : une ligne par `LOCATE` et `SPC` ou `PRINT A$`, une colonne par `PRINTV A$`
 ou `SPCV`, ou un `PASTE` d'une ligne ou d'une colonne. Exemple : `DEFILE.GRX` (§ 14).
+
+### 7.3 Tuiles : une grande carte en peu de mémoire
+
+Une **tuile** est un petit dessin de 1 à 4 colonnes sur 1 à 4 lignes de caractères. La carte
+est un tableau `$` à deux dimensions dont chaque octet désigne une tuile : une carte de
+64 × 32 tuiles de 2 × 2 (2 Ko) donne un monde de 128 × 64 caractères (8 Ko avec `PASTE`).
+`TMAP` en dessine une fenêtre ; la caméra avance d'un caractère, pas d'une tuile.
+
+    DIM T$(32,64) D$(5,4) S$(152)
+    BLOAD S$ TUILES.SPR       ; dessins des caracteres (genre 1)
+    FOR J 0 3                 ; codes de chaque tuile, ligne par ligne
+      D$(0,J) = 34            ; eau
+      D$(1,J) = 33            ; herbe
+      ...
+    NEXT
+    TILESET D$ 2 2 "~ #^M"    ; tuiles de 2 x 2 ; caracteres de la carte
+    LOAD T$ NIVEAU1           ; la carte, ecrite en clair dans EDIT
+    LORES
+    TFONT S$ 33 ALT           ; dessins copies dans le jeu secondaire
+    ...
+    TMAP T$ X-19 Y-13 2 1 38 26
+    IF TILE(NX,NY) = 1        ; de l'herbe sous le pas ?
+
+| Élément | Effet |
+|---|---|
+| `TILESET D$ larg haut [K$]` | déclare les tuiles : chaque ligne de `D$` (tableau `$` à deux dimensions) donne les `larg` × `haut` codes d'une tuile, ligne par ligne (1 à 4 de chaque, 256 tuiles au plus) ; `K$` (texte entre guillemets ou chaîne) liste les octets de la carte dans l'ordre des tuiles : `"~ #^M"` fait de `~` la tuile 0, de l'espace la tuile 1... Sans `K$`, l'octet de la carte est le numéro de la tuile |
+| `TMAP T$ X Y col lig larg haut` | dessine à l'écran, coin en (col, lig), la fenêtre de `larg` × `haut` cases de la carte `T$` (tableau `$` à deux dimensions) dont le coin est le caractère (X, Y) du monde ; X et Y peuvent sortir de la carte, même être négatifs |
+| `TFONT S$ code [ALT]` | copie dans la police (jeu standard, ou secondaire avec `ALT`) les dessins d'un fichier `.SPR` de genre 1 chargé dans `S$` (§ 10.1) : toutes les cases de toutes ses tuiles, dans l'ordre du fichier, sur des codes consécutifs à partir de `code` (32 à 127 ; `ALT` : 32 à 111) |
+| `TILE(X,Y)` | fonction : numéro de la tuile sous le caractère (X, Y) du monde, sur la carte du dernier `TMAP` ; 0 hors de la carte, ou avant tout `TMAP` |
+
+- **La tuile 0 comble tout** : un octet de la carte absent de `K$` (ou, sans `K$`, plus
+  grand que le dernier numéro), et tout ce qui est hors de la carte, s'affiche comme la
+  tuile 0. C'est pratique pour une carte écrite dans EDIT (`LOAD` met des 0 au bout des
+  lignes courtes) et pour une île entourée d'eau : la caméra n'a pas besoin d'être bornée.
+  Un octet présent deux fois dans `K$` : le premier l'emporte.
+- **Coordonnées** : le caractère (X, Y) du monde est dans la tuile (X / larg, Y / haut).
+  Ni `TMAP` ni `TILE` ne font de division : quelques soustractions, une fois par commande.
+- **Codes** : les tuiles partagent leurs caractères (l'eau ou un mur : un seul caractère
+  répété). `TFONT` ne fait que copier les dessins ; c'est `D$` qui assemble les codes.
+  Dans un `.SPR` de genre 1, une « tuile » de 1 × 1 est simplement un caractère : le
+  fichier peut ne contenir que des caractères, que `D$` assemble en tuiles plus grandes.
+- **Jeu secondaire** : les lignes de la carte commencent par l'attribut 9
+  (`CHAR 0 L 9`) ; tout le jeu (codes 32 à 111) est alors aux tuiles, et le texte des
+  autres lignes garde le jeu standard. Le jeu secondaire n'a pas de dessins à lui : même
+  le vide (l'herbe) doit en recevoir un. Mêmes réserves que pour les sprites (§ 7.1) :
+  `INPUT` abîme les codes 64 à 111, et l'historique des lignes est vidé à la fin.
+- **Mémoire** : `TILESET` réserve sous les tableaux (larg × haut + 1) × 256 octets (2 × 2 :
+  1 280 ; 4 × 4 : 4 352), alignés sur une page, une fois ; un `TILESET` suivant les reprend,
+  ou réserve de nouveau s'il lui en faut plus. Il prépare une table par place dans la
+  tuile (octet de la carte → code affiché) : environ 50 ms pour des tuiles de 2 × 2.
+- **Vitesse** de `TMAP` (fenêtre de 38 × 26, programme traduit ou interprété : c'est la même
+  routine) : tuiles de 1 × 1, environ 35 ms ; 2 × 2, 55 ms ; 4 × 4, 43 ms (`PASTE` : 22 ms).
+  On ne redessine qu'après un pas (§ 8, « Boucle de jeu »).
+- **Sprites** : comme pour `PASTE` (§ 7.2), retirer les sprites avant `TMAP`, puis les
+  réafficher.
+- `TMAP` et `TFONT` demandent le LORES (`LORES d'abord`). Erreurs (interprété) :
+  `TILESET d'abord` ; `valeur hors limites` (tuile de plus de 4, fenêtre hors de l'écran,
+  codes de `TFONT` hors du jeu) ; `indice hors limites` (ligne de `D$` trop courte, `K$`
+  plus long que la liste des tuiles, carte à une dimension) ; `fichier .SPR ?` (`TFONT`
+  sur un fichier qui n'est pas de genre 1). Traduit : rien n'est vérifié ; `TMAP` sans
+  `TILESET` ne fait rien.
+
+Exemple complet : `CARTE.GRX` (§ 14).
 
 ## 8. Touches et temps
 
@@ -414,7 +478,7 @@ l'éditeur.
 
 **En-tête du fichier (8 octets)** : `SPR` (signature), version 1, nombre de sprites (1 à
 255), genre (0 : sprites, cases de 16 octets ; 1 : tuiles, cases de 8 octets, dessin seul,
-§ 16), puis deux octets à 0 (réservés).
+copiées dans la police par `TFONT`, § 7.3), puis deux octets à 0 (réservés).
 
 **Chaque sprite** : un en-tête de 8 octets (largeur en colonnes 1-4, hauteur en lignes 1-4,
 deux octets à 0 réservés, nom de 4 caractères ASCII complété par des espaces : `HER1`), puis
@@ -604,13 +668,15 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (15 555 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (17 462 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
-  5 octets par emplacement et 192 octets pour les deux tas. La zone libre pour le texte, les
-  tableaux et une animation fait environ 19 Ko (texte à partir de `$522C`).
+  5 octets par emplacement et 192 octets pour les deux tas ; `TILESET`, (larg × haut + 1)
+  pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
+  17 Ko (texte à partir de `$599F`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
@@ -618,7 +684,8 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
   puis affichage). Une zone de 38 × 26 cases (programme traduit, mesure du 6502 simulé,
-  estimée en cycles) : `PASTE` ou `SCROLV`, environ 20 ms (une trame) ; `SCROLH`, `ROTH`,
+  estimée en cycles) : `PASTE` ou `SCROLV`, environ 20 ms (une trame) ; `TMAP`, 35 à 55 ms
+  selon la taille des tuiles (§ 7.3) ; `SCROLH`, `ROTH`,
   environ 40 ms (chaque ligne passe par un tampon) ; `ROTV n` : n passes d'une ligne, dans le
   sens le plus court. Dans l'image, compter 8 000 octets pour tout le HIRES : environ 150 ms.
   Sans contrôles à l'exécution (§ 12), une boucle de 1 000 `RND` et `CHAR` va 2,2 fois plus
@@ -639,7 +706,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `SERPENT.GRX` | LORES : serpent (corps dans deux tableaux en anneau, `SCRN` pour les collisions) |
 | `SCORES.GRX` | meilleurs scores : `INPUT` du nom, tri, titre coloré par un attribut en tête de chaîne ; les cinq meilleurs gardés dans `HOFN.TXT` et `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `SPRITES.GRX` | LORES : un bonhomme mené aux flèches (deux images de marche) et une balle qui rebondit, sur un décor en deux couleurs ; sprites de `HEROS.SPR` |
-| `CARTE.GRX` | LORES : un monde de 128 × 64 cases tiré au hasard dans `T$` (arbres, montagnes, lacs), vu par une fenêtre de 38 × 26 qui suit le joueur (`PASTE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q : fin |
+| `CARTE.GRX` | LORES : une île de 64 × 32 tuiles de 2 × 2 (128 × 64 caractères) tirée au hasard dans `T$` (lacs, arbres, montagnes, murs), écrite en clair (`TILESET` avec `K$`), vue par une fenêtre de 38 × 26 centrée sur le joueur (`TMAP` ; hors de l'île, la tuile 0 : la mer) ; dessins de `TUILES.SPR` dans le jeu secondaire (`TFONT ... ALT`) ; on ne marche que sur l'herbe (`TILE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q : fin |
 | `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 
@@ -654,7 +721,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` ; rectangles de l'écran (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |
-| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
+| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) et tuiles (`t_set`, `t_map`, `t_get`, `t_font` ; `g_tmap` de `GRX.INC` pour le traduit), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
@@ -806,6 +873,41 @@ Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine 
   vérifiés sur une police factice, `NOM.env`), `lo_spr2.grx` (jeu secondaire, historique
   vidé), `e_spr*.grx` (erreurs).
 
+**Tuiles** (`spr.inc`, même page zéro que les sprites) :
+
+- `TILESET` (`t_set`) réserve (larg × haut + 1) pages alignées sous les tableaux (`tz_res`,
+  `t_tb`, `t_np` : de nouveau seulement si un `TILESET` en demande plus). Page 0 : octet de
+  la carte → numéro de la tuile (0 partout, puis les numéros ; avec `K$`, du dernier
+  caractère au premier, pour que le premier l'emporte ; `t_z` : un octet qui donne la
+  tuile 0). Page 1 + p, pour chaque place p = ligne × larg + colonne dans la tuile :
+  octet de la carte → code affiché, rempli octet par octet (adresse de la ligne de `D$`
+  par `rz_mul`, gardée tant que la tuile ne change pas). `TMAP` n'a plus de numéro de
+  tuile à chercher : il traduit, comme une carte de 1 × 1.
+- `tz_div` : X / larg (1 à 4, signé, arrondi vers le bas) par 16 décalages et
+  soustractions, une fois par commande (`tz_cut` : tuile et place pour X et Y).
+- `TMAP` (`t_map`) : nombre de colonnes de tuiles touchées (`t_nt`), et les premières et
+  dernières dans la carte (`t_jl`, `t_jh`), une fois ; puis par ligne de l'écran, trois
+  morceaux : avant la carte, dans la carte, après (hors de la carte : `t_z`). Tuiles
+  d'une colonne : `lda (carte),y` / `tax` / `lda table,x` / `sta (écran),y` (environ
+  35 cycles par case). Plus larges : les octets des tuiles de la ligne vont dans `h_buf`
+  (21 au plus), puis quatre instructions `lda table,x` (une par place, page modifiée à
+  chaque ligne) se suivent ; un compteur dit quand passer à la tuile suivante (environ
+  55 cycles par case en 2 × 2). La ligne de la carte (`t_mp`) avance d'une ligne de
+  tuiles toutes les `haut` lignes ; une ligne hors de la carte n'a que des `t_z`.
+- `TILE` (`t_get`) : `tz_cut`, puis l'octet de la carte et la page 0 ; la carte (adresse,
+  lignes, colonnes) est celle que le dernier `TMAP` a gardée (`t_ma`, `t_mr`, `t_mc`).
+- `TFONT` (`t_font`, `tz_walk`) : un premier passage compte les cases (et vérifie le
+  fichier en interprété : `sz_find0`, genre 1, tailles, place dans le tableau), le second
+  les copie en `$B400` ou `$B800` + 8 × code. `ALT` met `s_hst` à 1 (historique vidé).
+- GRXASM ne recopie que les routines utiles : `tz_in` et `tz_inc` (deux entrées du même
+  test) sont écrites pour que `tz_in` puisse venir sans `tz_inc` (pas de `BIT abs` entre
+  elles).
+- Tests : `lo_tile.grx` (`K$`, caméra à cheval sur les tuiles, hors de la carte, octet
+  inconnu, ligne courte, tuiles de 3 × 1 sans `K$`, `TILE`), `lo_tile2.grx` (`TFONT` dans
+  les deux jeux, `K$` dans un tableau, tuiles de 1 × 1), `e_tile*.grx` (erreurs) ;
+  `TUIL.SPR` fait par `tools/mkspr.py` (source `tuil.txt`), `TUIL.TXT` et `MAPT.TXT` lus
+  par `LOAD`.
+
 Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque cas interprété
 (GRAPHER) puis traduit (GRXASM), dans le 6502
 simulé (`tools/run_com.py`, sans émulateur), et compare au résultat attendu (`.ref`, `.kref`,
@@ -813,35 +915,10 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 
 ## 16. Décidé, pas encore fait
 
-### 16.1 Tuiles (prochaine étape)
-
-Une carte de tuiles : un octet de la carte donne une tuile de 1 à 4 colonnes sur 1 à 4 lignes
-de caractères. C'est un décor plus riche en dessins pour la même carte (une tuile de 1 × 1 qui
-donne son propre code, c'est `PASTE`).
-
-    DIM D$(16,4) T$(32,64)
-    BLOAD D$ TUILES          ; 16 tuiles de 2 x 2 codes, ligne par ligne
-    LOAD T$ NIVEAU1          ; la carte, ecrite dans EDIT
-    TILESET D$ 2 2 " ~/\T#"
-    TMAP T$ X Y 2 1 38 26    ; X, Y : coin de la camera, en caracteres du monde
-
-- `TILESET D$ larg haut [K$]` : chaque ligne de `D$` donne les codes d'une tuile. `K$`
-  (facultatif) liste les caractères de la carte dans l'ordre des tuiles : la carte s'écrit
-  alors en clair dans EDIT (`~` eau, `/` et `\` montagne, `T` arbre, `#` mur). Sans `K$`,
-  l'octet de la carte est le numéro de la tuile. `TILESET` prépare une table de conversion
-  de 256 octets, en mémoire.
-- `TMAP T$ X Y col lig larg haut` : dessine la fenêtre de `larg` × `haut` caractères, coin à
-  l'écran en (col, lig), à partir du caractère (X, Y) du monde ; la caméra avance d'un
-  caractère, pas d'une tuile. Environ 35 cycles par caractère.
-- La vraie limite est le nombre de codes : 96 dans le jeu standard, dont les chiffres, les
-  lettres et le tas des sprites. Les tuiles partagent leurs caractères ; 2 × 2 est la taille
-  conseillée pour commencer.
-
-### 16.2 Plus tard
-
-- Dessins des tuiles copiés dans la police depuis un `.SPR` de genre 1 (§ 10.1).
 - Caractères animés au rythme du 50 Hz (l'eau qui ondule), sans toucher à la carte.
-- **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`.
+- **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`
+  (sprites et tuiles). En attendant, `tools/mkspr.py` fabrique un `.SPR` sur le PC à partir
+  d'un dessin en texte (`tools/spr/tuiles.txt`).
 
 ## 17. Questions ouvertes
 
@@ -854,9 +931,6 @@ donne son propre code, c'est `PASTE`).
   bibliothèques. Restent à choisir : le nom (`RUN` ou `CHAIN`) ; comment une phase déclare
   les tableaux qu'elle reçoit (un `DIM` identique accepté sans effacer, ou `COMMON`).
 
-- **Dessins des tuiles** (fichier `.SPR` de genre 1) : la commande qui copie les dessins dans
-  la police, et comment elle choisit les codes (consécutifs, ou une liste comme pour les
-  tas). Les tuiles donneront aussi ses dessins au jeu secondaire.
 - Si le parcours du fichier par `SSHOW` est trop lent pour les derniers sprites : table des
   positions construite au chargement.
 - Plus tard : sprites qui apportent leur couleur (cases « attribut » dans le fichier, posées

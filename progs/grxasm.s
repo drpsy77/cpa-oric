@@ -945,11 +945,14 @@ kfs1
         ldy #>s_rlen
         jmp dyn
 fink    cmp #6
-        bne fink2
+        bne fink1
         jsr k_fil
         lda #<s_ffnd            ; FOUND
         ldy #>s_ffnd
         jmp dyn
+fink1   cmp #7
+        bne fink2
+        jmp k_ftile
 fink2   lda #<s_inkey
         ldy #>s_inkey
         jmp dyn
@@ -3067,6 +3070,13 @@ h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
 s_sres  .asc "jsr s_res",0
 s_spool .asc "jsr s_pool",0
 s_sshow .asc "jsr s_show",0
+s_tset  .asc "jsr t_set",0
+s_tmap  .asc "jsr g_tmap",0
+s_tfont .asc "jsr t_font",0
+s_tget  .asc "jsr t_get",0
+s_tw    .asc "t_w",0
+s_th    .asc "t_h",0
+s_tc    .asc "t_c",0
 s_shide .asc "jsr s_hide",0
 s_sk    .asc "s_k",0
 s_sn    .asc "s_n",0
@@ -3188,6 +3198,112 @@ k_shide jsr k_byte
         lda #<s_shide
         ldy #>s_shide
         jmp oi
+; ---------------------------------------------------------------------
+; Tuiles traduites (appels à SPR.INC)
+; ---------------------------------------------------------------------
+; TILE(x,y) : comme SCRN (g_et = x, g_ev = y), puis t_get
+k_ftile jsr k_spr
+        jsr x_open
+        jsr k_or
+        jsr k_mat
+        lda #<s_push
+        ldy #>s_push
+        jsr oi
+        jsr x_comma
+        jsr k_or
+        jsr x_close
+        jsr k_mat
+        lda #<s_pop
+        ldy #>s_pop
+        jsr oi
+        lda #<s_tget
+        ldy #>s_tget
+        jmp k_oi
+; TILESET D$ larg haut [K$] : t_w, t_h, chaîne courante, X = 1 si K$
+k_tileset
+.(
+        jsr sprarg
+        jsr k_need1
+        lda #<s_tw
+        ldy #>s_tw
+        jsr k_p
+        lda #<s_th
+        ldy #>s_th
+        jsr k_p
+        jsr skipsp
+        beq no
+        cmp #";"
+        beq no
+        stx ex
+        lda #0
+        sta edep
+        jsr k_str               ; K$ : chaîne courante
+        ldx ex
+        jsr endline
+        lda #1
+        .byt $2C                ; (BIT abs : saute lda #0)
+no      lda #0
+        jsr k_ldxa
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_tset
+        ldy #>s_tset
+        jmp oi
+.)
+; TMAP T$ X Y col lig larg haut : X, Y sur la pile des valeurs, fenêtre
+;   dans h_x1 h_y1 h_x2 h_y2, descripteur dans A/Y, puis g_tmap
+k_tmap
+.(
+        jsr sprarg
+        jsr k_need1
+        jsr k_pexpr
+        jsr k_mat
+        jsr k_push
+        jsr k_pexpr
+        jsr k_mat
+        jsr k_push
+        jsr k_p2
+        lda #<s_hx2
+        ldy #>s_hx2
+        jsr k_p
+        lda #<s_hy2
+        ldy #>s_hy2
+        jsr k_p
+        jsr endline
+        jsr k_spr
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_tmap
+        ldy #>s_tmap
+        jmp oi
+.)
+; TFONT S$ code [ALT]
+k_tfont jsr sprarg
+        jsr k_need1
+        lda #<s_tc
+        ldy #>s_tc
+        jsr k_p
+        jsr altopt
+        jsr k_ldxa
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_tfont
+        ldy #>s_tfont
+        jmp oi
+
+; k_need1 : le tableau $ aal doit être déclaré (X gardé)
+k_need1 txa
+        pha
+        lda aal
+        ldx #1
+        jsr k_need
+        pla
+        tax
+        rts
+
 ; k_ldxa : « ldx #A » (tas) ; NOM.ASM inclura SPR.INC
 k_ldxa  sta osv
         lda #<s_ldxi
@@ -4973,6 +5089,9 @@ cadr
         .word k_printv   ; PRINTV
         .word k_echov    ; ECHOV
         .word k_spcv     ; SPCV
+        .word k_tileset  ; TILESET
+        .word k_tmap     ; TMAP
+        .word k_tfont    ; TFONT
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

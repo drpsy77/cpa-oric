@@ -238,7 +238,7 @@ README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC and SPR.INC 
 **read-only** (R/O) and stay **visible** in DIR, as on a CP/M disk: an `ERA *.*` or a name
 completed with ESC can no longer erase them. To replace a command with a new version:
 `SET COPY.COM RW`, then copy it. The examples (HELLO, GTEST and their `.ASM`, DEMO.LOG, the
-`.GRX` files, HEROS.SPR) stay changeable: `ASM HELLO` rewrites HELLO.COM. No file is hidden
+`.GRX` files, HEROS.SPR, TUILES.SPR) stay changeable: `ASM HELLO` rewrites HELLO.COM. No file is hidden
 (SYS): the attribute stays at the user's disposal.
 
 SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still runs (a file
@@ -252,7 +252,7 @@ visible.
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, DEFILE.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |

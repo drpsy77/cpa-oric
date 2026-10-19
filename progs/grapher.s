@@ -482,7 +482,10 @@ fik     cmp #5
 fik2    cmp #6
         bne fik3
         jmp f_fnd               ; FOUND (fil.inc)
-fik3    jmp f_inkey
+fik3    cmp #7
+        bne fik4
+        jmp f_tile
+fik4    jmp f_inkey
 f_rnd   jsr arg1
         lda ev+1
         bmi zero
@@ -1997,6 +2000,80 @@ c_shide jsr needlo
         pla
         jmp s_hide
 
+; ---------------------------------------------------------------------
+; Tuiles (spr.inc)
+; ---------------------------------------------------------------------
+; TILE(x,y) : numéro de la tuile sous le caractère du monde
+f_tile  jsr x_open
+        jsr e_or
+        jsr pushv
+        jsr x_comma
+        jsr e_or
+        jsr x_close
+        jsr popt
+        jmp t_get               ; (r_i = et, r_j = ev)
+; TILESET D$ larg haut [K$]
+c_tileset
+        jsr sprarg
+        jsr getbyte
+        sta t_w
+        jsr getbyte
+        sta t_h
+        jsr skipsp
+        beq ts_no
+        cmp #";"
+        beq ts_no
+        stx ex
+        lda #0
+        sta edep
+        jsr p_str               ; K$ : chaîne courante
+        ldx ex
+        jsr endline
+        lda #1
+        .byt $2C                ; (BIT abs : saute lda #0)
+ts_no   lda #0
+        sta gd
+        lda aal
+        ldx #1
+        jsr desc_of
+        ldx gd
+        jmp t_set
+; TMAP T$ X Y col lig larg haut
+c_tmap  jsr needlo
+        jsr sprarg
+        jsr pexpr
+        lda ev
+        sta t_x
+        lda ev+1
+        sta t_x+1
+        jsr pexpr
+        lda ev
+        sta t_y
+        lda ev+1
+        sta t_y+1
+        jsr p2
+        jsr getbyte
+        sta h_x2
+        jsr getbyte
+        sta h_y2
+        jsr endline
+        lda aal
+        ldx #1
+        jsr desc_of
+        jmp t_map
+; TFONT S$ code [ALT]
+c_tfont jsr needlo
+        jsr sprarg
+        jsr getbyte
+        sta t_c
+        jsr altopt
+        sta gd
+        lda aal
+        ldx #1
+        jsr desc_of
+        ldx gd
+        jmp t_font
+
 ; affectations ; ANIM
 x_asg   = assign
 x_aasg  = arr_assign
@@ -2074,6 +2151,9 @@ cadr
         .word c_printv   ; PRINTV
         .word c_echov    ; ECHOV
         .word c_spcv     ; SPCV
+        .word c_tileset  ; TILESET
+        .word c_tmap     ; TMAP
+        .word c_tfont    ; TFONT
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)

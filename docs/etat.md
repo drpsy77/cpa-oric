@@ -31,7 +31,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 10 888 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 206 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -43,14 +43,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 15 555, 14 498 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale | `grapher.md` |
+| GRAPHER, GRXASM | 17 462, 14 810 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
 Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 `cpa-anim.dsk` ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 254 points de fonction IFPUG et 300 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 278 points de fonction IFPUG et 305 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
@@ -63,10 +63,11 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
      bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1), rectangles (`PASTE`, `GRAB`,
-     `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2).
-   - Reste : les tuiles, `TILESET` et `TMAP`, décidées (`docs/grapher.md` § 16.1), puis leurs
-     dessins depuis un `.SPR` et les caractères animés (§ 16.2, § 17) ; l'éditeur de
-     caractères et de sprites (`.COM` plein écran) ; un **dessin assisté** (`.COM`, plus
+     `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2), tuiles
+     (`TILESET`, `TMAP`, `TILE`, `TFONT` : § 7.3 ; `tools/mkspr.py` fait les `.SPR` sur le
+     PC en attendant l'éditeur).
+   - Reste : les caractères animés au 50 Hz (§ 16) ; l'éditeur de caractères et de sprites
+     (`.COM` plein écran) ; un **dessin assisté** (`.COM`, plus
      précis que la tortue de LOGO : points, traits, formes, remplissage, couleurs par
      attributs, vers `.HIR` / `.HIZ`), à spécifier.
 2. **GRAPHER, plateforme de développement** : phases d'un jeu (`RUN`, à décider :
@@ -141,15 +142,20 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (15 555 octets) prend 8 blocs, 829 octets libres dans le dernier (place des
-  tuiles) ; piste de place : messages d'erreur par numéro, ~40 octets. GRXASM (14 498) prend
-  8 blocs ; GRX.INC (11 816 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 472 octets avant le 7e. HELP (10 888) prend 6 blocs. Les disquettes se
-  spécialisent plutôt que de gratter des octets ;
+- GRAPHER (17 462 octets) prend 9 blocs, 970 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (14 810) prend 8 blocs ;
+  GRX.INC (12 002 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 286
+  octets avant le 7e. HELP (11 206) prend 6 blocs. Les disquettes se spécialisent plutôt
+  que de gratter des octets ;
 - EDIT fait exactement 8 192 octets : 57 octets de code de plus le feraient passer au bloc
   suivant (tampon de texte aligné sur une page). HEX : 47 octets ; ASM est à moins de 260
   octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
   disquettes illisibles ; en dernier recours.
+
+**Mémoire de GRAPHER interprété** : environ 17 Ko pour le texte, les tableaux et une
+animation (`docs/grapher.md` § 13) ; `CUBE.ANI` et `BALLE.ANI` ne se jouent qu'en traduit.
+Chaque octet de plus dans GRAPHER.COM en retire un.
 
 ## 4. Contraintes à garder en tête
 
