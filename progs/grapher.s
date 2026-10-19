@@ -81,7 +81,7 @@ z2      sta (lp),y
         bne z2
         sta cmode
         jsr get_params
-        lda cmode               ; /A : la traduction est faite par GRXASM
+        lda cmode               ; /A, /C : la traduction est faite par GRXASM
         beq interp
         jmp to_grxasm
 interp  sta ihk
@@ -2085,7 +2085,7 @@ an_val  jsr getbyte             ; ANIM nom n : passages dans gd
 an_none
 o_drop  rts                     ; (pas de fichier de sortie)
 
-m_use   .asc "GRAPHER NOM [/A] [p1..p9]",13,10,"$"
+m_use   .asc "GRAPHER NOM [/A|/C] [p1..p9]",13,10,"$"
 m_chain .asc "Ligne trop longue",13,10,"$"
 t_gxa   .asc "GRXASM"
 

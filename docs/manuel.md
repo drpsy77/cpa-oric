@@ -103,8 +103,9 @@ sur une autre disquette.
 ## Lecteurs A: à D:
 
 Tout nom de fichier peut commencer par un lecteur : `DIR B:`, `TYPE B:LETTRE.TXT`,
-`COPY LETTRE.TXT B:`, `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (le `.COM`,
-le `.SYM` et les `#include` sont sur le lecteur de la source), et dans LOGO `CHARGE "B:JEU`.
+`COPY LETTRE.TXT B:`, `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (le `.COM`
+et le `.SYM` sur le lecteur de la source ; les `#include` y sont cherchés, puis sur A: à D:),
+et dans LOGO `CHARGE "B:JEU`.
 Sans lecteur, c'est le lecteur courant, choisi par `B:` au prompt ou par l'article **Lecteur
 suivant** du menu Systeme (A, B, C, D, puis A). Un programme (`.COM`) ou un script
 (`.BAT`, aussi par `DO`) tapé sans lecteur est cherché sur le lecteur courant, puis sur `A:`,
@@ -269,9 +270,17 @@ y est partout, protégé et visible.
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
-Usage conseillé : la disquette d'usage en `A:`, une disquette de données par projet en
-`B:`. Depuis `B>`, `EDIT`, `LOGO` ou `ASM` sont trouvés sur `A:`, et `DIR` ne montre que
-le travail en cours. `build/cpa.dsk` reste la disquette complète, tout visible.
+**Disquette de projet.** `build/cpa-projet.dsk` est une disquette vierge (sans système, 336 Ko
+pour les fichiers), à mettre en `B:` et à copier pour chaque projet.
+
+Usage conseillé : la disquette système en `A:` (`cpa.dsk`, ou une disquette d'usage), une
+disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`, `LOGO`,
+`ASM`, `GRAPHER` ou `GRXASM` sont trouvés sur `A:`, ainsi que les bibliothèques (`CPA.INC`,
+`HIRES.INC`, `GRX.INC`...) qu'ASM et GRXASM cherchent sur le lecteur du projet puis sur A: à
+D: ; tout ce qui est produit (`.ASM`, `.COM`, `.SYM`, fichiers de données) va sur `B:`, et
+`DIR` ne montre que le travail en cours. `build/cpa.dsk` reste la disquette complète, tout
+visible, et la démonstration ; il y reste environ 78 Ko, peu pour travailler (une traduction
+par GRXASM écrit vite plus de 40 Ko).
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C sur une ligne vide du prompt fait un démarrage à
@@ -725,7 +734,11 @@ leur période est commune aux trois voix.
 C'est un éditeur plein écran : 26 lignes de 38 colonnes, avec une barre de menus et une ligne
 d'état (nom du fichier, `*` si le texte est modifié, paragraphe `L`, position `C` du curseur
 dans le paragraphe, `INS`/`RFP`, `M` si une marque est posée). Le texte peut atteindre
-environ 32 Ko.
+32 000 octets (environ 27 Ko lancé depuis le mode SPLIT). Un fichier plus long s'ouvre
+**tronqué** (`Fichier tronque : trop gros`) ; il ne peut pas être enregistré sous son nom
+(`Texte tronque : Enreg. sous...`), ce qui en perdrait la fin, mais peut l'être sous un autre.
+Un long programme en assembleur s'écrit donc en modules de moins de 32 000 octets, réunis
+par `#include` (voir ASM) ; TYPE et ASM, eux, lisent un fichier de toute taille.
 
 Trois modes d'affichage (menu Options, ou CTRL-W qui passe au suivant) :
 
@@ -868,10 +881,13 @@ CP/M, la taille est un multiple de 128 octets : la fin d'un fichier texte montre
     A>ASM PROG
     A>PROG
 
-`ASM NOM` assemble `NOM.ASM` (ou `NOM.ext` si on donne le type) et écrit `NOM.COM`. On peut ainsi
-écrire, assembler et lancer un programme sans quitter l'Oric. Exemple sur la disquette :
+`ASM NOM [/S] [/E]` assemble `NOM.ASM` (ou `NOM.ext` si on donne le type) et écrit `NOM.COM`.
+On peut ainsi écrire, assembler et lancer un programme sans quitter l'Oric. `/S` écrit aussi
+`NOM.SYM`, la liste des symboles pour DEBUG ; `/E` efface la source si l'assemblage a réussi
+(c'est ce que fait `GRXASM NOM /C`, dont le `.ASM` n'est qu'un intermédiaire). Exemple sur la
+disquette :
 
-    A>ASM HELLO
+    A>ASM HELLO /S
     ASM CP/A 1.0
     Passe 1
     Passe 2
@@ -889,7 +905,7 @@ COPY, GTEST, HEX, EDIT, LOGO et ASM lui-même donnent exactement les mêmes octe
 | Adresse | `*= $0500` (c'est aussi la valeur par défaut) |
 | Données | `.byt` / `.byte` / `.asc` (nombres et chaînes `"..."`), `.word`, `.dsb n[,valeur]` |
 | Blocs | `.(` ... `.)` : les étiquettes définies dedans sont locales au bloc |
-| Inclusion | `#include "CPA.INC"` (un niveau) |
+| Inclusion | `#include "CPA.INC"` (un niveau), cherché sur le lecteur de la source, puis sur les lecteurs déjà lus de A: à D: |
 | Commentaire | `;` jusqu'à la fin de la ligne |
 
 Expressions : nombres décimaux, `$hexa`, `%binaire`, caractères `"A"` ou `'A'`, `*` (adresse de
@@ -900,7 +916,23 @@ bas / haut) devant l'expression. Les mnémoniques s'écrivent en majuscules ou e
 
 Comme avec `xa`, un second `*=` ne laisse pas de trou dans le fichier : le code qui suit est mis
 à la suite, assemblé pour la nouvelle adresse (DEBUG s'en sert pour se recopier en haut de la
-mémoire). En plus de `NOM.COM`, ASM écrit `NOM.SYM`, la liste des symboles pour DEBUG.
+mémoire).
+
+**Un programme en plusieurs fichiers.** EDIT ne tient que 32 000 octets : un long programme
+se découpe en modules, édités séparément et réunis par le fichier principal.
+
+    ; JEU.ASM
+    #include "CPA.INC"
+    *= $0500
+            jsr init
+            ...
+    #include "ECRAN.INC"
+    #include "NIVEAUX.INC"
+
+Un seul niveau d'inclusion : un module n'en inclut pas d'autre (`Un seul niveau
+d'inclusion`). Les étiquettes sont communes à tous les fichiers : préfixer celles de chaque
+module (`ec_`, `nv_`...), comme le font les bibliothèques (`h_`, `r_`, `f_`). Les modules se
+cherchent comme `CPA.INC` : sur le lecteur de `JEU.ASM`, puis sur A: à D:.
 
 Les erreurs sont listées avec le numéro de ligne, le message et le début de la ligne (le nom du
 fichier inclus entre crochets s'il y a lieu). La liste fait une pause à chaque écran plein. S'il y
@@ -919,7 +951,7 @@ plus d'une minute et demie (environ 28 millions d'instructions, plus les accès 
     A>ASM PROG
     A>DEBUG PROG [paramètres]
 
-DEBUG charge `PROG.COM` en `$0500`, là où il tournera, et `PROG.SYM` s'il existe. Les
+DEBUG charge `PROG.COM` en `$0500`, là où il tournera, et `PROG.SYM` s'il existe (`ASM PROG /S`). Les
 paramètres qui suivent le nom sont passés au programme. Le débogueur se place lui-même en
 `$8400-$9FFF`, les symboles juste en dessous, et il abaisse d'autant le haut de la TPA
 (variable `$020C`, plafond `$02A9`) : il reste environ 31 Ko au programme. Les programmes qui

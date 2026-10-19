@@ -24,6 +24,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | `GRAPHER NOM [p1 ... p9]` | charge `NOM.GRX` (lecteur facultatif) en mémoire et l'exécute ; `p1`-`p9` remplacent `$1`-`$9` |
 | `GRXASM NOM [p1 ... p9]` | n'exécute pas : écrit `NOM.ASM`, à assembler par `ASM NOM` (§ 12) |
 | `GRAPHER NOM /A [p1 ... p9]` | la même chose : GRAPHER passe la main à GRXASM (`/A` juste après le nom) |
+| `GRXASM NOM /C [p1 ... p9]`, `GRAPHER NOM /C [...]` | traduit, puis enchaîne `ASM NOM /E` : il ne reste que `NOM.COM` (`NOM.ASM` est effacé si l'assemblage réussit ; une erreur le laisse, pour le lire) |
 
 ## 2. Écriture d'un programme
 
@@ -666,8 +667,10 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   `h_text`, `PRINT`), plus `ARR.INC` si le programme a des tableaux ou des chaînes (un
   `PRINT "..."` suffit), `FIL.INC` s'il
   lit ou écrit des fichiers de données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et
-  `ANIM.INC` s'il anime. Ces fichiers doivent être sur le lecteur du `.GRX` (sinon :
-  `GRX.INC absente (bibliotheque)`) ; ASM n'a ensuite besoin que de `CPA.INC`. Ils sont,
+  `ANIM.INC` s'il anime. Ces fichiers sont cherchés sur le lecteur du `.GRX`, puis sur les
+  lecteurs déjà lus de A: à D: (la disquette système en A:, le projet en B:) ; sinon :
+  `GRX.INC absente (bibliotheque)`. ASM n'a ensuite besoin que de `CPA.INC`, cherché de même.
+  Pour CARTE, `NOM.ASM` fait 46 Ko : `/C` ne laisse que `NOM.COM` (8 Ko). Ils sont,
   avec GRXASM, sur la disquette complète, la disquette Assembleur et la disquette
   Animations (pas sur la disquette Logo, qui n'a pas ASM).
 - Taille d'un `.COM` traduit : 1,4 Ko pour `ARDOISE`, 1,7 Ko pour `DESSIN`, 2,2 Ko pour

@@ -1,12 +1,16 @@
 ;  =====================================================================
 ;  GRXASM.COM — traduit un fichier GRAPHER (.GRX) en assembleur
 ;
-;  GRXASM NOM [p1 ... p9]       (ou GRAPHER NOM /A, qui passe la main ici)
-;    NOM.GRX -> NOM.ASM, à assembler par ASM avec CPA.INC, GRX.INC,
-;    HIRES.INC (ARR.INC, ANIM.INC si besoin). Même analyse que
-;    l'interpréteur (GRAPHER.COM) : les routines communes sont dans
-;    grxc_inc.s. $1 à $9 sont remplacés pendant la traduction ; /A
-;    est ignoré.
+;  GRXASM NOM [/A|/C] [p1 ... p9]   (ou GRAPHER NOM /A ou /C, qui
+;    passe la main ici)
+;    NOM.GRX -> NOM.ASM, à assembler par ASM avec CPA.INC. Les routines
+;    utiles de GRX.INC, HIRES.INC (ARR.INC, FIL.INC, SPR.INC, ANIM.INC
+;    si besoin) y sont recopiées ; ces bibliothèques sont cherchées sur
+;    le lecteur du .GRX, puis sur les lecteurs déjà lus (fonction 24) de
+;    A: à D:. Même analyse que l'interpréteur (GRAPHER.COM) : les
+;    routines communes sont dans grxc_inc.s. $1 à $9 sont remplacés
+;    pendant la traduction ; /A est ignoré ; /C enchaîne « ASM NOM /E »
+;    (CHAIN) : NOM.COM, et NOM.ASM effacé si l'assemblage réussit.
 ;  =====================================================================
 
 #include "cpa.inc"
@@ -34,6 +38,7 @@ z2      sta kvu-1,x             ; variables à deux caractères : aucune
         bne z2
         sta oopen
         sta csp
+        sta cmode               ; /C (get_params) : 2
         jsr open_grx
         jsr load_text
         jsr get_params
@@ -169,7 +174,52 @@ bend    jsr o_vars
         jsr puts
         jsr o_name
         jsr crlf
+        lda cmode               ; /C : ASM NOM /E
+        cmp #2
+        beq to_asm
         jmp quit
+.)
+
+; to_asm : CHAIN « ASM [d:]NOM /E »
+to_asm
+.(
+        ldy #0
+        ldx #0
+c1      lda t_casm,x            ; « ASM »
+        sta rawbuf,y
+        iny
+        inx
+        cpx #4
+        bne c1
+        lda sfcb                ; lecteur du .GRX
+        beq nm
+        clc
+        adc #"A"-1
+        sta rawbuf,y
+        iny
+        lda #":"
+        sta rawbuf,y
+        iny
+nm      ldx #1
+c2      lda sfcb,x
+        cmp #" "
+        beq e
+        sta rawbuf,y
+        iny
+        inx
+        cpx #9
+        bne c2
+e       ldx #0
+c3      lda t_ce,x              ; « /E », 0
+        sta rawbuf,y
+        iny
+        inx
+        cpx #4
+        bne c3
+        lda #<rawbuf
+        ldy #>rawbuf
+        ldx #F_CHAIN
+        jmp BDOS
 .)
 
 ; o_name : nom du fichier source (sans le type) sur la sortie, ou sur la
@@ -4640,6 +4690,50 @@ nx      inc kli
         rts
 .)
 
+; kl_find : ouvre la bibliothèque ifcb sur le lecteur du .GRX, sinon sur
+;   un lecteur déjà lu (fonction 24) de A: à D: (la disquette système).
+;   C=0 : ouverte
+kl_find
+.(
+        lda sfcb
+        sta ifcb
+        jsr kl_open
+        bne y
+        ldx #F_LOGIN
+        jsr BDOS
+        sta kdv
+        lda #1
+        sta ifcb
+l       lsr kdv
+        bcc n
+        jsr kl_open
+        bne y
+n       inc ifcb
+        lda ifcb
+        cmp #5
+        bcc l
+        rts                     ; (C=1)
+y       clc
+        rts
+.)
+; kl_open : ouvre ifcb (octets 12-35 à 0) ; Z=1 si absent
+kl_open
+.(
+        lda #0
+        ldy #12
+c       sta ifcb,y
+        iny
+        cpy #36
+        bne c
+        ldx #F_OPEN
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        cmp #$FF
+        rts
+.)
+kdv     .byt 0                  ; lecteurs lus (fonction 24), décalés
+
 ; kl_file : la bibliothèque kli
 kl_file
 .(
@@ -4660,20 +4754,8 @@ n       lda klnm,x
         iny
         cpy #11
         bne n
-        lda sfcb
-        sta ifcb
-        lda #0
-        ldy #12
-c       sta ifcb,y
-        iny
-        cpy #36
-        bne c
-        ldx #F_OPEN
-        lda #<ifcb
-        ldy #>ifcb
-        jsr BDOS
-        cmp #$FF
-        bne ok
+        jsr kl_find
+        bcc ok
         jsr to_text             ; absente : « GRX.INC absente »
         ldx #1
 p       lda ifcb,x
@@ -5020,8 +5102,11 @@ an_none lda #<s_lda0            ; ANIM nom : 0 (jusqu'à une touche)
         jmp oi
 to_text rts                     ; (la console reste en mode texte)
 
-m_use   .asc "GRXASM NOM [p1..p9] : traduit",13,10
-        .asc "NOM.GRX en NOM.ASM (pour ASM).",13,10,"$"
+m_use   .asc "GRXASM NOM [/C] [p1..p9] : traduit",13,10
+        .asc "NOM.GRX en NOM.ASM (pour ASM) ;",13,10
+        .asc "/C : puis ASM, NOM.COM seul",13,10,"$"
+t_casm  .asc "ASM "
+t_ce    .asc " /E",0
 a_sig   .asc "ANI"
 R_DESC  = PTOP          ; descripteurs des tableaux (= R_DESC de arr.inc)
 

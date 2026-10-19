@@ -32,7 +32,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 206 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 427 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -40,18 +40,19 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
-| ASM | 5 949 | assembleur 6502 (identique à xa sur nos sources) | `manuel.md` |
+| ASM | 6 130 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée ; `#include` cherchés sur A: à D: | `manuel.md` |
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 17 645, 14 810 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
+| GRAPHER, GRXASM | 17 654, 14 988 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
-Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
-`cpa-anim.dsk` ; contenu dans `docs/manuel.md`.
+Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.dsk`,
+`cpa-asm.dsk`, `cpa-anim.dsk`, et `cpa-projet.dsk` (vierge, sans système : le travail en B:,
+la disquette système en A:) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 292 points de fonction IFPUG et 311 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 296 points de fonction IFPUG et 311 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
@@ -142,14 +143,17 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 645 octets) prend 9 blocs, 787 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (14 810) prend 8 blocs ;
+- GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (14 988) prend 8 blocs ;
   GRX.INC (12 150 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 138
-  octets avant le 7e. HELP (11 206) prend 6 blocs. Les disquettes se spécialisent plutôt
+  octets avant le 7e. HELP (11 427) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
-  aligné sur une page). HEX : 47 octets avant le bloc suivant ; ASM est à moins de 260
+  aligné sur une page). HEX : 47 octets avant le bloc suivant ; ASM (6 130) est à 14
   octets du bloc suivant ;
+- usage à deux disquettes : sur `cpa.dsk` il reste ~78 Ko, peu pour travailler (CARTE :
+  `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
+  laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
   disquettes illisibles ; en dernier recours.
 

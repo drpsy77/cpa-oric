@@ -191,18 +191,21 @@ get_params
         ldx #0
         jsr skipw               ; GRAPHER
         jsr skipw               ; NOM
-        jsr sksp                ; /A : traduction
-        lda ORIG_LINE,x
+        jsr sksp                ; /A : traduction (cmode 1) ;
+        lda ORIG_LINE,x         ; /C : traduction et ASM (cmode 2)
         cmp #"/"
         bne par
-        lda ORIG_LINE+1,x
-        and #$DF
-        cmp #"A"
-        bne par
         lda ORIG_LINE+2,x
-        beq opt
+        beq opt0
         cmp #" "
         bne par
+opt0    lda ORIG_LINE+1,x
+        and #$DF
+        cmp #"A"
+        beq opt
+        cmp #"C"
+        bne par
+        inc cmode
 opt     inx
         inx
         inc cmode

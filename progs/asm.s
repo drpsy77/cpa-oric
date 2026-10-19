@@ -1,7 +1,12 @@
 ; =====================================================================
 ;  ASM.COM — assembleur 6502 résident pour CP/A
 ;
-;  ASM NOM            assemble NOM.ASM (ou NOM.ext) et écrit NOM.COM
+;  ASM NOM [/S] [/E]  assemble NOM.ASM (ou NOM.ext) et écrit NOM.COM
+;                     /S : écrit aussi NOM.SYM (symboles, pour DEBUG)
+;                     /E : efface la source si l'assemblage a réussi
+;                     (GRXASM NOM /C : NOM.ASM n'est qu'un intermédiaire)
+;  Un #include est cherché sur le lecteur de la source, puis sur les
+;  lecteurs déjà lus (fonction 24) de A: à D: (disquette système).
 ;
 ;  Syntaxe compatible avec l'assembleur xa de l'OSDK (sous-ensemble) :
 ;    étiquette   en colonne 1 (« : » facultatif), sensible à la casse
@@ -184,7 +189,22 @@ hasext  lda #"C"                ; sortie : NOM.COM
         ldy #>m_usage
         jsr puts
         jmp WBOOT
-okn     lda #<m_banner
+okn     ldx #0                  ; options /S et /E
+op      lda TAIL+1,x
+        beq opd
+        cmp #"/"
+        bne opn
+        lda TAIL+2,x
+        and #$DF
+        cmp #"S"
+        bne op1
+        sta opt_s
+op1     cmp #"E"
+        bne opn
+        sta opt_e
+opn     inx
+        bne op
+opd     lda #<m_banner
         ldy #>m_banner
         jsr puts
         lda #0
@@ -271,6 +291,31 @@ mk_ok   lda #0
 write   jmp write_out
 .)
 
+; inc_alt : fcb_inc introuvable sur le lecteur de la source : essai sur
+;   les lecteurs déjà lus (fonction 24) de A: à D:. C=0 : ouvert
+inc_alt
+.(
+        ldx #F_LOGIN
+        jsr BDOS
+        sta tmpb
+        lda #1
+        sta fcb_inc
+l       lsr tmpb
+        bcc n
+        lda #<fcb_inc
+        ldy #>fcb_inc
+        jsr open_fcb
+        cmp #$FF
+        bne y
+n       inc fcb_inc
+        lda fcb_inc
+        cmp #5
+        bcc l
+        rts                     ; (C=1)
+y       clc
+        rts
+.)
+
 ; open_fcb : A/Y = FCB, octets 12-35 à zéro, F_OPEN -> A
 open_fcb
 .(
@@ -302,8 +347,10 @@ done    ldx #F_CLOSE
         lda #<fcb_out
         ldy #>fcb_out
         jsr BDOS
+        lda opt_s
+        beq nosym
         jsr write_sym
-        ldx #F_SETDMA
+nosym   ldx #F_SETDMA
         lda #<DEF_DMA
         ldy #>DEF_DMA
         jsr BDOS
@@ -357,7 +404,22 @@ la1     dec val
         lda #<m_syms
         ldy #>m_syms
         jsr puts
-        jmp WBOOT
+        lda opt_s
+        beq nsy
+        lda #<m_symf
+        ldy #>m_symf
+        jsr puts
+nsy     jsr crlf
+        lda opt_e               ; /E : source effacée
+        beq fin
+        lda #<fcb_src
+        ldy #>fcb_src
+        jsr open_fcb
+        ldx #F_DELETE
+        lda #<fcb_src
+        ldy #>fcb_src
+        jsr BDOS
+fin     jmp WBOOT
 .)
 
 ; write_sym : NOM.SYM pour DEBUG. Une entrée par symbole :
@@ -1048,6 +1110,8 @@ one     lda #<fcb_inc
         jsr open_fcb
         cmp #$FF
         bne ok
+        jsr inc_alt             ; ailleurs : lecteurs déjà lus, A: à D:
+        bcc ok
         lda #E_INCNF
         jmp error
 ok      lda #1
@@ -2550,7 +2614,9 @@ e_org     .asc "Adresse",0
 e_fwd     .asc "Reference en avant trop complexe",0
 e_big     .asc "Code trop gros",0
 
-m_usage   .asc "Usage : ASM NOM   (NOM.ASM -> NOM.COM)",13,10,0
+m_usage   .asc "Usage : ASM NOM [/S] [/E]",13,10
+          .asc " NOM.ASM -> NOM.COM ; /S : NOM.SYM",13,10
+          .asc " /E : efface NOM.ASM si tout va bien",13,10,0
 m_banner  .asc "ASM CP/A 1.0",13,10,0
 m_nosrc   .asc "Source introuvable",13,10,0
 m_pass    .asc "Passe ",0
@@ -2560,7 +2626,10 @@ m_empty   .asc "Aucun code produit.",13,10,0
 m_com     .asc ".COM ",0
 m_comma   .asc " : ",0
 m_bytes   .asc " octets",13,10,0
-m_syms    .asc " symboles (.SYM)",13,10,0
+m_syms    .asc " symboles",0
+m_symf    .asc " (.SYM)",0
+opt_s     .byt 0            ; /S : NOM.SYM écrit
+opt_e     .byt 0            ; /E : NOM.ASM effacé après succès
 m_dfull   .asc "Disque plein",13,10,0
 m_esc     .asc "Interrompu",13,10,0
 m_colon   .asc " : ",0
