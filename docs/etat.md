@@ -110,9 +110,17 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
      LOGO ou un `.COM`, à trouver.
-7. **Version anglaise** (plus tard, approche à valider)
-   - Programmes : un build par langue (`LANG=en`), messages de chaque programme dans un
-     fichier inclus par langue, aide de HELP en deux listes, exemples traduits.
+7. **Version anglaise** (en cours)
+   - Décidé : une seule disquette anglaise, `cpa-en.dsk` (le contenu de `cpa.dsk`, programmes
+     de `build/progs-en`) ; pas de disquettes par usage en anglais tant que LOGO n'est pas
+     traduit. Les mots-clés de GRAPHER restent ceux d'aujourd'hui dans les deux langues :
+     seuls les messages se traduisent.
+   - Fait : la mécanique (`architecture.md` § 5 : `progs/msg/fr`, `progs/msg/en`, deux
+     assemblages par `build.sh`) et les commandes TYPE, ERA, REN, SET, STAT, COPY, FORMAT,
+     DISKCOPY, XDO, MEM, POKE, GO, VOIR, VSYNC, EXPORT, IMPORT, USBDIR.
+   - Reste, par étapes : EDIT, HEX, ASM, DEBUG ; CMDER ; GRAPHER et GRXASM (avec GRX.INC,
+     FIL.INC... : messages des programmes traduits) ; HELP et README.TXT (aide en deux
+     listes) ; exemples ; tests en anglais (`smoke_test`, références de GRAPHER).
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.

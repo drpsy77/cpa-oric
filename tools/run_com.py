@@ -99,6 +99,7 @@ def main():
                 elif x == 9:
                     while mem[adr] != 0x24: out.append(chr(mem[adr])); adr += 1
                 elif x == 26: dma = adr
+                elif x == 24: m.a = 0     # lecteurs lus : aucun autre
                 elif x == 10:
                     if not lines or (len(lines) == 1 and lines[0] == ''): print('\n[fin des entrées]'); break
                     l = lines.pop(0)[:mem[adr]]

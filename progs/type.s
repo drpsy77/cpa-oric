@@ -76,5 +76,4 @@ l       lda ($10),y
 r       rts
 .)
 
-m_use   .asc "TYPE fic : affiche un texte",13,10,0
-m_nf    .asc "Fichier introuvable",13,10,0
+#include "type.msg"

@@ -131,9 +131,9 @@ close   lda fd
         jmp usb_closedir
 .)
 
-m_dir   .asc "      <REP>",0
-m_cnt   .asc " element(s)",13,10,0
+#include "usbdir.msg"
 
+#include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
 
 path    = lib_free      ; chemin (101)

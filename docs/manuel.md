@@ -270,6 +270,10 @@ y est partout, protégé et visible.
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
+**Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec les messages
+des programmes en anglais (traduction en cours : les commandes d'abord ; la touche « oui »
+y est `Y`).
+
 **Disquette de projet.** `build/cpa-projet.dsk` est une disquette vierge (sans système, 336 Ko
 pour les fichiers), à mettre en `B:` et à copier pour chaque projet.
 

@@ -137,7 +137,7 @@ conf    lda #<m_all             ; « Tout B: sera efface. »
         jsr putc
 noecho  jsr crlf
         pla
-        cmp #"O"
+        cmp #K_YES              ; O (Y en anglais) : progs/msg
         beq go
         lda #<m_abort
         ldy #>m_abort
@@ -744,26 +744,7 @@ r       rts
 
 iltab   .byt 1,10,2,11,3,12,4,13,5,14,6,15,7,16,8,17,9
 
-m_use   .asc "FORMAT X: [/Q] : formate X: (A a D)",13,10
-        .asc "/Q : vide seulement le repertoire",13,10,0
-m_ins   .asc "Inserez en A: la disquette a formater",13,10,0
-m_all   .asc "Tout ",0
-m_all2  .asc " sera efface. Suite (O/N) ? ",0
-m_abort .asc "Abandon",13,10,0
-m_sys   .asc "Remettez la disquette systeme en A:,",13,10
-        .asc "puis une touche",13,10,0
-m_unr   .asc "Disquette illisible : FORMAT sans /Q",13,10,0
-m_werr  .asc "Erreur d'ecriture",13,10,0
-m_qok   .asc "Repertoire vide",13,10,0
-m_ok    .asc 13,10,"Formatage termine",13,10,0
-m_int   .asc 13,10,"Interrompu : disquette a reformater",13,10,0
-m_abs   .asc 13,10,"Lecteur ",0
-m_abs2  .asc " absent ou vide",13,10,0
-m_wp    .asc 13,10,"Disquette protegee en ecriture",13,10,0
-m_inc   .asc 13,10,"Piste ecrite en partie seulement",13,10,0
-m_verr  .asc 13,10,"Relecture : erreur secteur ",0
-m_trk   .asc "Piste ",0
-m_face  .asc " face ",0
+#include "format.msg"
 
 endp
 sbuf    = endp          ; secteur relu (256)

@@ -165,6 +165,14 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   provoque un retour à la ligne automatique en plus). Messages du CCP en anglais court, aide et
   programmes en français.
 - Commentaires et documentation en français.
+- Messages des programmes en deux langues : chaque programme traduit inclut ses messages
+  (`#include "nom.msg"`, nom de 8 caractères au plus pour ASM), pris dans `progs/msg/fr/`
+  ou `progs/msg/en/` (mêmes étiquettes ; la touche « oui » est la constante `K_YES`, `O` ou
+  `Y`). `build.sh` assemble deux fois : `build/progs` (français, `-I msg/fr`) et
+  `build/progs-en` (`-I msg/en -I msg/fr` : un programme pas encore traduit garde ses
+  messages français), puis `cpa-en.dsk`. ASM n'ayant qu'un niveau d'inclusion, une
+  bibliothèque ne contient pas de `#include` : le programme inclut les messages de
+  `loci_inc.s` (`loci.msg`) juste avant elle.
 - Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT : notation et
   renvoi à HELP) et `progs/help_tab.s` (HELP.COM, textes compressés en LZSS, décodés par
   `help.s`) à partir d'une seule liste.

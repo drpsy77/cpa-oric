@@ -150,7 +150,7 @@ nocr    jsr pro                 ; « 2 protege(s), garde(s) »
         jsr putc
 noecho  jsr crlf
         pla
-        cmp #"O"
+        cmp #K_YES              ; O (Y en anglais) : progs/msg
         beq del
         lda #<m_abort
         ldy #>m_abort
@@ -255,15 +255,7 @@ l       lda (sptr),y
 r       rts
 .)
 
-m_use   .asc "ERA afn [/Q] : efface (jokers admis)",13,10
-        .asc "apres confirmation ; /Q sans question",13,10,0
-m_nf    .asc "Fichier introuvable",13,10,0
-m_ro    .asc " protege(s), garde(s)",13,10,0
-m_none  .asc "Rien a effacer",13,10,0
-m_ask1  .asc "Effacer ",0
-m_ask2  .asc " fichier(s) (O/N) ? ",0
-m_abort .asc "Abandon",13,10,0
-m_done  .asc " fichier(s) efface(s)",13,10,0
+#include "era.msg"
 
 fcb     .dsb 36,0
 list                            ; noms (11 octets chacun)

@@ -7,6 +7,7 @@
 #   build/cpa.dsk      disquette amorçable (MFM_DISK, 2 faces, 42 pistes, 17 secteurs)
 #   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk, cpa-anim.dsk  disquettes par usage
 #   build/cpa-projet.dsk  disquette vierge pour les projets (lecteur B:)
+#   build/cpa-en.dsk   comme cpa.dsk, messages des programmes en anglais
 set -e
 cd "$(dirname "$0")"
 # assembleur : $XA, sinon tools/xa s'il existe, sinon xa dans le PATH
@@ -44,9 +45,14 @@ $XA -o ../build/boot.bin -e ../build/boot.err boot.s
 cd ..
 [ "$(wc -c < build/boot.bin)" -eq 768 ] || { echo "boot.bin doit faire 768 octets"; exit 1; }
 
+# programmes : messages en français (progs/msg/fr) dans build/progs ; en
+# anglais dans build/progs-en (progs/msg/en, sinon le français : programmes
+# pas encore traduits)
+mkdir -p build/progs-en
 for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   n=$(basename "$p" .s | tr a-z A-Z)
-  (cd progs && $XA -o ../build/progs/$n.COM -e ../build/progs/$n.err $(basename "$p"))
+  (cd progs && $XA -I msg/fr -o ../build/progs/$n.COM -e ../build/progs/$n.err $(basename "$p"))
+  (cd progs && $XA -I msg/en -I msg/fr -o ../build/progs-en/$n.COM -e ../build/progs-en/$n.err $(basename "$p"))
 done
 
 # sources d'exemple pour ASM.COM
@@ -72,6 +78,11 @@ for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.I
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $PROTEGES --rw $EXEMPLES
+# même disquette, programmes aux messages en anglais (build/progs-en ;
+# ceux qui ne sont pas encore traduits restent en français)
+python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys.bin \
+  --ro $(echo $PROTEGES | sed 's|build/progs/|build/progs-en/|g') \
+  --rw $(echo $EXEMPLES | sed 's|build/progs/|build/progs-en/|g') | tail -1
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et
 # cachées de DIR (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la
@@ -104,4 +115,4 @@ BASE=$BASE_TOUT
 # vides), tout le reste pour les fichiers ; en B: à côté de cpa.dsk
 echo "== build/cpa-projet.dsk"
 python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
-echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm,anim,projet}.dsk"
+echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{en,logo,notes,asm,anim,projet}.dsk"

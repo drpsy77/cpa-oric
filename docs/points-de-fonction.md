@@ -683,7 +683,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.D02 | Sources du projet (`src`, `progs`, `files`) | EIF | 3 | 3 | F | 5 |
 | OUT.D03 | Images et animations d'origine (PNG, GIF) | EIF | 1 | 3 | F | 5 |
 | OUT.D04 | Scénarios et références des tests | EIF | 2 | 3 | F | 5 |
-| OUT.T01 | `build.sh` : ROM et six disquettes (dont la disquette de projet vierge), contrôles de taille, marges | EO | 3 | 8 | M | 5 |
+| OUT.T01 | `build.sh` : ROM et sept disquettes (dont la disquette de projet vierge et la disquette anglaise), deux langues de messages, contrôles de taille, marges | EO | 3 | 8 | M | 5 |
 | OUT.T02 | `mkdisk.py new` : créer une image | EI | 2 | 6 | M | 4 |
 | OUT.T03 | `mkdisk.py ls` | EQ | 1 | 5 | F | 3 |
 | OUT.T04 | `mkdisk.py get` | EQ | 1 | 2 | F | 3 |
@@ -748,27 +748,27 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 36 | 11 065 | 1 107 | 536 | 864 | 9 % | 36 874 | 34 | 115 |
+| Système et commandes | 62 | 11 219 | 1 159 | 537 | 864 | 9 % | 36 880 | 35 | 115 |
 | EDIT | 2 | 3 524 | 188 | 122 | 5 | 5 % | 8 704 | 48 | 118 |
 | GRAPHER + GRXASM | 8 | 12 944 | 933 | 426 | 0 | 7 % | 32 642 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
-| CMDER | 1 | 5 991 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
+| CMDER | 1 | 5 992 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
 | HEX | 1 | 1 564 | 87 | 59 | 0 | 5 % | 3 840 | 82 | 202 |
-| VOIR | 3 | 1 468 | 168 | 64 | 0 | 10 % | 3 353 | 77 | 176 |
-| USB | 4 | 1 313 | 135 | 74 | 0 | 9 % | 4 479 | 53 | 179 |
+| VOIR | 5 | 1 476 | 172 | 64 | 0 | 10 % | 3 353 | 78 | 176 |
+| USB | 12 | 1 350 | 153 | 74 | 0 | 10 % | 4 479 | 54 | 179 |
 | ASM | 2 | 2 453 | 124 | 77 | 70 | 5 % | 6 130 | 273 | 681 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
 | Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 160 | 6 557 | 687 | 398 | 0 | 9 % | — | 39 | — |
-| **Total** | 250 | 58 845 | 4 453 | 2 341 | 955 | 7 % | 135 303 | 45 | 104 |
+| Outillage PC | 160 | 6 566 | 693 | 398 | 0 | 10 % | — | 39 | — |
+| **Total** | 286 | 59 054 | 4 533 | 2 342 | 955 | 7 % | 135 309 | 46 | 104 |
 
 Octets du système : code résident 13 899 (`$C000-$F64B`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 186 | 76 | 3,7 | 28 |
+| Système et commandes | 1 197 | 76 | 3,7 | 28 |
 | EDIT | 92 | 20 | 1,2 | 7 |
-| GRAPHER + GRXASM | 848 | 69 | 3,7 | 26 |
+| GRAPHER + GRXASM | 848 | 69 | 3,7 | 27 |
 | LOGO | 273 | 63 | 1,4 | 3 |
 | CMDER | 169 | 24 | 3,0 | 5 |
 | HEX | 34 | 9 | 1,8 | 2 |
@@ -778,15 +778,15 @@ Octets du système : code résident 13 899 (`$C000-$F64B`), page `$FF00` 232, 
 | DEBUG | 40 | 12 | 0,5 | 1 |
 | Exemples | 0 | — | 0,0 | 8 |
 | Outillage PC | 323 | — | 1,9 | 31 |
-| Transverse (projet) | 1 713 | — | — | 37 |
-| Traduction anglaise (docs/en) | 2 225 | — | — | 7 |
-| **Total** | 7 077 | 292 | 5,5 | 54 |
+| Transverse (projet) | 1 729 | — | — | 38 |
+| Traduction anglaise (docs/en) | 2 227 | — | — | 8 |
+| **Total** | 7 106 | 292 | 5,5 | 55 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 54 commits du 2026-10-13 au 2026-10-19.
+Historique : 55 commits du 2026-10-13 au 2026-10-19.
 
-Réutilisation : 45 336 lignes de code écrites dans `progs/`, 50 625 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 184 lignes de code écrites dans `progs/`, 50 443 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -838,6 +838,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-19 | tuiles | 0.9 | 1 278 | 305 | 1 583 | 142 | tuiles de GRAPHER (`TILESET`, `TMAP`, `TILE`, `TFONT`), `mkspr.py`, CARTE en tuiles |
 | 2026-10-19 | fichiers sûrs | 0.9 | 1 292 | 311 | 1 603 | 150 | `mkdisk.py check`, `diff`, `repare` ; `test_fichiers.py` ; SAVE/BSAVE par `NOM.$$$` ; EDIT Enregistrer sous ; RESET différé pendant un secteur |
 | 2026-10-19 | deux disquettes | 0.9 | 1 296 | 311 | 1 607 | 152 | `cpa-projet.dsk` ; ASM et GRXASM cherchent les `.INC` sur A: à D: ; GRXASM et GRAPHER `/C` ; ASM `/S`, `/E` ; EDIT : texte tronqué jamais enregistré sous son nom |
+| 2026-10-19 | anglais (1) | 0.9 | 1 296 | 311 | 1 607 | 155 | messages en deux langues (`progs/msg`), `cpa-en.dsk`, commandes traduites |
 
 ## 11. Comparaisons
 

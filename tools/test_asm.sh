@@ -8,13 +8,13 @@ cd "$(dirname "$0")/.."
 XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 T=$(mktemp -d)
-cp progs/cpa.inc progs/hires.inc progs/anim.inc progs/arr.inc progs/fil.inc progs/spr.inc progs/*_tab.s progs/*_inc.s "$T/"
+cp progs/cpa.inc progs/hires.inc progs/anim.inc progs/arr.inc progs/fil.inc progs/spr.inc progs/*_tab.s progs/*_inc.s progs/msg/fr/*.msg "$T/"
 (cd progs && $XA -o "$T/ASM.COM" asm.s)
 ok=0; ko=0
 for p in hello copy gtest hex edit logo debug help set poke go mem stat xdo export import usbdir format diskcopy type era ren voir vsync grapher grxasm cmder asm; do
   P=$(echo $p | tr a-z A-Z)
   cp progs/$p.s "$T/$P.ASM"
-  (cd progs && $XA -o "$T/ref.bin" $p.s)
+  (cd progs && $XA -I msg/fr -o "$T/ref.bin" $p.s)
   (cd "$T" && python3 "$OLDPWD/tools/run_com.py" "$T" ASM.COM $p >/dev/null 2>&1) || true
   n=$(wc -c < "$T/ref.bin")
   if [ -f "$T/$P.COM" ] && cmp -s -n $n "$T/ref.bin" "$T/$P.COM"; then
