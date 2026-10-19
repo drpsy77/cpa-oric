@@ -681,7 +681,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (17 462 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (17 654 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
@@ -693,6 +693,26 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
   lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
+- **Tailles d'un programme traduit** (mesure des onze exemples, `files/*.grx` ; part du
+  programme séparée de celle des bibliothèques) :
+
+  | | Par octet de `.GRX` | Par ligne de `.GRX` | CARTE (96 lignes, 2,1 Ko) |
+  |---|---:|---:|---:|
+  | `NOM.ASM`, programme | 6,4 à 7,0 octets | ~10 lignes, ~140 octets | 14,2 Ko |
+  | `NOM.ASM`, bibliothèques | — | — | 32,0 Ko |
+  | `NOM.COM`, programme | 1,15 à 1,35 octet | ~25 octets | 2,6 Ko |
+  | `NOM.COM`, bibliothèques | — | — | 5,8 Ko |
+
+  Le compilé fait donc à peu près le `.GRX` en clair, plus les routines de bibliothèque
+  utilisées : 0,8 Ko (ARDOISE) à 5,8 Ko (CARTE) dans les exemples. Le `.ASM`
+  intermédiaire fait environ 6,5 fois le `.GRX`, plus le texte des routines recopiées (5
+  à 32 Ko ; les six bibliothèques font 69 Ko sur la disquette, aucun programme ne les
+  prend toutes). Un `.GRX` ne dépasse pas ~17 Ko en interprété (texte et tableaux
+  ensemble) ni ~21 Ko pour GRXASM (texte de `$48AF` à `$9CE0`). Pire cas pour un `.GRX`
+  de 17 Ko : `.ASM` de 145 à 175 Ko et `.COM` d'environ 30 Ko, présents ensemble pendant
+  l'assemblage, soit ~200 Ko sur la disquette de projet (336 Ko) ; `/C` n'y laisse ensuite
+  que le `.COM`. La limite qui compte est la mémoire : le `.COM` et ses tableaux tiennent
+  entre `$0500` et `$9D60` (~38 Ko) ; 30 Ko de code ne laissent que ~8 Ko de tableaux.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait

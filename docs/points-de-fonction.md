@@ -766,25 +766,25 @@ Octets du système : code résident 13 899 (`$C000-$F64B`), page `$FF00` 232, 
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 186 | 76 | 3,7 | 27 |
-| EDIT | 92 | 20 | 1,2 | 6 |
-| GRAPHER + GRXASM | 830 | 69 | 3,6 | 25 |
+| Système et commandes | 1 186 | 76 | 3,7 | 28 |
+| EDIT | 92 | 20 | 1,2 | 7 |
+| GRAPHER + GRXASM | 848 | 69 | 3,7 | 26 |
 | LOGO | 273 | 63 | 1,4 | 3 |
 | CMDER | 169 | 24 | 3,0 | 5 |
 | HEX | 34 | 9 | 1,8 | 2 |
 | VOIR | 78 | — | 4,1 | 5 |
 | USB | 38 | 9 | 1,5 | 2 |
-| ASM | 58 | 10 | 6,4 | 1 |
+| ASM | 58 | 10 | 6,4 | 2 |
 | DEBUG | 40 | 12 | 0,5 | 1 |
 | Exemples | 0 | — | 0,0 | 8 |
-| Outillage PC | 323 | — | 1,9 | 30 |
-| Transverse (projet) | 1 712 | — | — | 36 |
-| Traduction anglaise (docs/en) | 2 208 | — | — | 6 |
-| **Total** | 7 041 | 292 | 5,4 | 53 |
+| Outillage PC | 323 | — | 1,9 | 31 |
+| Transverse (projet) | 1 713 | — | — | 37 |
+| Traduction anglaise (docs/en) | 2 225 | — | — | 7 |
+| **Total** | 7 077 | 292 | 5,5 | 54 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 53 commits du 2026-10-13 au 2026-10-19.
+Historique : 54 commits du 2026-10-13 au 2026-10-19.
 
 Réutilisation : 45 336 lignes de code écrites dans `progs/`, 50 625 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
