@@ -62,6 +62,13 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   Microdisc, la tête se lève après ~3 s sans commande et le moteur avec elle, et le premier
   octet arrive ~1 s après. L'attente ne coûte rien quand le contrôleur répond. Déplacements :
   ~3 s, puis Force Interrupt et échec sans nouvel essai.
+- **RESET pendant un transfert** : de `disk_read` / `disk_write` jusqu'à la fin du secteur,
+  `dsk_nmi` vaut `$80`. Le bouton RESET (NMI) y est seulement noté (`$7F`) et l'interruption
+  rendue ; à la fin du secteur, le pilote fait le RESET (`nmi_now`). Un secteur coupé au milieu
+  serait illisible (CRC faux dans Oricutron ; fin du secteur à zéro sur un WD1793), le
+  répertoire compris. L'attente de la NMI peut faire perdre un octet au contrôleur : il le
+  signale (perte de données) et le secteur est réécrit comme pour toute erreur. Un second RESET
+  pendant le même secteur agit tout de suite.
 - **LOCI** : aucune commande pour un lecteur que le LOCI n'a pas monté (sa tâche disque se
   bloque jusqu'au redémarrage du LOCI). `loci_abs` le vérifie avant de changer de lecteur et
   au début de `disk_read`, `disk_write`, `disk_home`. Source : la configuration du menu du

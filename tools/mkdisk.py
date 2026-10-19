@@ -7,10 +7,21 @@
   mkdisk.py put  IMAGE fichier_local [NOM.EXT]
   mkdisk.py era  IMAGE NOM.EXT
   mkdisk.py attr IMAGE NOM.EXT RO|RW|SYS|DIR...
-  mkdisk.py check  IMAGE         secteurs absents ou à CRC faux, répertoire
+  mkdisk.py check  IMAGE         secteurs absents ou à CRC faux, répertoire,
+                                 cohérence de chaque fichier (code 1 : défaut)
+  mkdisk.py diff   AVANT APRES   fichiers ajoutés, effacés, modifiés
+                                 (code 0 : aucune différence)
   mkdisk.py repare IMAGE SORTIE  réécrit une image saine (secteurs relus
                                  même mal synchronisés ; contenu gardé tel
                                  quel, même si son CRC est faux)
+
+« check » sépare les défauts (disquette fausse : secteur illisible, bloc
+partagé ou hors de la disquette, entrée d'un fichier manquante ou en double,
+entrée incomplète avant la dernière, enregistrements sans bloc, bloc alloué
+après la fin) des avertissements (traces d'un travail interrompu, sans
+danger : NOM.$$$ resté, fichier vide, bloc libre qui contient des données
+— fichier jamais fermé, ou effacé : ERA laisse les données en place —,
+secteur illisible dans un bloc libre).
 
 Attributs (comme SET sur l'Oric) : bit 7 de t1 = R/O (protégé), de t2 =
 SYS (caché de DIR). Dans « new », --ro protège les fichiers qui suivent,
@@ -309,9 +320,26 @@ class Disk:
         return files
 
 
+def nom_lisible(nm):
+    """'HELLO   COM' -> 'HELLO.COM'"""
+    return nm[:8].rstrip() + "." + nm[8:].rstrip()
+
+
+def bloc_vierge(d, b):
+    """Vrai si les 8 secteurs du bloc b ne contiennent qu'un même octet
+    (disquette neuve : 0 pour mkdisk, $E5 après FORMAT)."""
+    data = b"".join(d.sec[d.blk_lsn(b) + s] for s in range(BLK_SECT))
+    return data.count(data[0]) == len(data)
+
+
 def check(d):
-    """Contrôle de l'image chargée : secteurs, puis répertoire et blocs."""
+    """Contrôle de l'image chargée : secteurs, entrées du répertoire,
+    blocs, puis cohérence de chaque fichier. Défauts (code de retour 1) :
+    ce qui rend la disquette fausse ; avertissements (code 0) : ce qui
+    reste d'un travail interrompu (NOM.$$$, fichier vide, blocs libres
+    qui contiennent des données)."""
     err = 0
+    avert = 0
     def zone(lsn):
         if lsn < SYS_LSN:
             return "amorce"
@@ -322,11 +350,17 @@ def check(d):
         return "bloc %d" % ((lsn - DIR_LSN) // BLK_SECT)
     if d.mal_sync:
         print("synchronisations à deux $A1 : %d (piste réécrite par Clock Signal ?)" % d.mal_sync)
-    for lsn in d.missing:
-        print("secteur %d absent (%s)" % (lsn, zone(lsn))); err += 1
-    for lsn in d.crcbad:
-        print("secteur %d : CRC faux (%s)" % (lsn, zone(lsn))); err += 1
+    occupes = d.used_blocks()
+    for lsn, quoi in [(l, "absent") for l in d.missing] + [(l, ": CRC faux") for l in d.crcbad]:
+        b = (lsn - DIR_LSN) // BLK_SECT
+        if lsn >= DIR_LSN and b not in occupes:
+            # bloc libre (écriture coupée par RESET, par exemple) : aucun
+            # fichier n'y perd rien, DISKCOPY ne copie que les blocs occupés
+            print("avertissement : secteur %d %s (bloc %d, libre)" % (lsn, quoi, b)); avert += 1
+        else:
+            print("secteur %d %s (%s)" % (lsn, quoi, zone(lsn))); err += 1
     owner = {}
+    fichiers = {}                       # (utilisateur, nom) -> entrées
     for i, e in enumerate(d.dir_entries()):
         if e[0] == 0xE5:
             continue
@@ -334,17 +368,117 @@ def check(d):
         if e[0] > 15 or any(c & 0x7F < 32 for c in e[1:12]):
             print("entrée %d invraisemblable (utilisateur %d, %r)" % (i, e[0], nom)); err += 1
             continue
+        fichiers.setdefault((e[0], nom), []).append(e)
         for b in e[16:32]:
             if not b:
                 continue
             if b < 2 or b >= NBLK:
-                print("%s : bloc %d hors de la disquette" % (nom, b)); err += 1
+                print("%s : bloc %d hors de la disquette" % (nom_lisible(nom), b)); err += 1
             elif b in owner and owner[b] != nom:
-                print("bloc %d partagé : %s et %s" % (b, owner[b], nom)); err += 1
+                print("bloc %d partagé : %s et %s" % (b, nom_lisible(owner[b]),
+                                                     nom_lisible(nom))); err += 1
             owner[b] = nom
-    print("%d fichier(s), %d bloc(s) occupé(s) ; %s" % (len(d.listing()), len(owner),
-          "aucun défaut" if not err else "%d défaut(s)" % err))
+
+    # cohérence de chaque fichier (une entrée = extents 2p et 2p+1)
+    for (u, nom), ents in sorted(fichiers.items()):
+        nl = nom_lisible(nom)
+        if u:
+            nl += " (utilisateur %d)" % u
+        ents.sort(key=lambda e: e[12])
+        vues = {}
+        for e in ents:
+            p = e[12] // 2
+            if p in vues:
+                print("%s : deux entrées pour les extents %d-%d" % (nl, 2 * p, 2 * p + 1)); err += 1
+            vues[p] = e
+        dern = max(vues)
+        for p in range(dern):
+            if p not in vues:
+                print("%s : entrée des extents %d-%d manquante (fichier coupé)"
+                      % (nl, 2 * p, 2 * p + 1)); err += 1
+        for p, e in sorted(vues.items()):
+            rc = e[15]
+            if rc > 128:
+                print("%s : extent %d, RC = %d (128 au plus)" % (nl, e[12], rc)); err += 1
+                continue
+            if p < dern and (e[12] & 1 == 0 or rc != 128):
+                print("%s : entrée %d incomplète (extent %d, RC %d) avant la dernière"
+                      % (nl, p, e[12], rc)); err += 1
+            nrec = (e[12] & 1) * 128 + rc
+            utiles = (nrec + 15) // 16          # blocs de 16 enregistrements
+            for k in range(16):
+                b = e[16 + k]
+                if k < utiles and not b:
+                    print("%s : enregistrements %d-%d sans bloc"
+                          % (nl, p * 256 + k * 16, min(p * 256 + k * 16 + 15,
+                                                       p * 256 + nrec - 1))); err += 1
+                elif k >= utiles and b:
+                    print("%s : bloc %d alloué après la fin (%d enregistrement(s))"
+                          % (nl, b, p * 256 + nrec)); err += 1
+        if len({e[9] & 0x80 for e in ents}) > 1:
+            print("%s : attribut R/O différent d'une entrée à l'autre" % nl); err += 1
+        taille = 256 * dern + (vues[dern][12] & 1) * 128 + vues[dern][15]
+        if nom[8:] == "$$$":
+            print("avertissement : %s reste (enregistrement interrompu ?), %d octets"
+                  % (nl, taille * 128)); avert += 1
+        elif taille == 0:
+            print("avertissement : %s est vide (0 octet)" % nl); avert += 1
+
+    # blocs libres qui contiennent des données (fichier jamais fermé,
+    # ou fichier effacé : ERA laisse les données en place)
+    orph = [b for b in range(2, NBLK) if b not in owner and not bloc_vierge(d, b)]
+    if orph:
+        print("avertissement : %d bloc(s) libre(s) avec des données : %s"
+              % (len(orph), " ".join(map(str, orph[:24])) + (" ..." if len(orph) > 24 else "")))
+        avert += 1
+    print("%d fichier(s), %d bloc(s) occupé(s) ; %s%s" % (
+        len(fichiers), len(owner),
+        "aucun défaut" if not err else "%d défaut(s)" % err,
+        "" if not avert else ", %d avertissement(s)" % avert))
     return 1 if err else 0
+
+
+def contenus(d):
+    """nom -> (octets, R/O, SYS) pour chaque fichier lisible."""
+    res = {}
+    at = d.attrs()
+    for nm in d.listing():
+        try:
+            data = d.read_file(nom_lisible(nm))
+        except SystemExit:
+            data = None
+        res[nm] = (data,) + at.get(nm, (False, False))
+    return res
+
+
+def diff(a, b):
+    """Différences de AVANT (a) à APRES (b). 0 si rien n'a changé."""
+    n = 0
+    ca, cb = contenus(a), contenus(b)
+    def attr(t):
+        return ("R/O" if t[1] else "R/W") + " " + ("SYS" if t[2] else "DIR")
+    for nm in sorted(set(ca) | set(cb)):
+        nl = nom_lisible(nm)
+        if nm not in ca:
+            print("+ %-12s ajouté   %6d octets %s" % (nl, len(cb[nm][0] or b""), attr(cb[nm]))); n += 1
+        elif nm not in cb:
+            print("- %-12s effacé   %6d octets" % (nl, len(ca[nm][0] or b""))); n += 1
+        else:
+            if ca[nm][0] != cb[nm][0]:
+                print("~ %-12s modifié  %6d -> %d octets" % (nl, len(ca[nm][0] or b""),
+                                                           len(cb[nm][0] or b""))); n += 1
+            if ca[nm][1:] != cb[nm][1:]:
+                print("~ %-12s attributs %s -> %s" % (nl, attr(ca[nm]), attr(cb[nm]))); n += 1
+    if a.sec[:DIR_LSN] != b.sec[:DIR_LSN]:
+        k = sum(1 for x, y in zip(a.sec[:DIR_LSN], b.sec[:DIR_LSN]) if x != y)
+        print("! amorce ou système : %d secteur(s) modifié(s)" % k); n += 1
+    libres = [k for k in range(2, NBLK) if k not in b.used_blocks()
+              and any(a.sec[a.blk_lsn(k) + s] != b.sec[b.blk_lsn(k) + s] for s in range(BLK_SECT))]
+    if libres:
+        print("  (blocs écrits restés libres : %s)" % " ".join(map(str, libres)))
+    if not n:
+        print("aucune différence de fichiers")
+    return 1 if n else 0
 
 
 def main(argv):
@@ -353,6 +487,11 @@ def main(argv):
         return 1
     cmd, img = argv[1], argv[2]
     rest = argv[3:]
+    if cmd == "diff":
+        if not rest:
+            print(__doc__)
+            return 1
+        return diff(Disk.load(img), Disk.load(rest[0]))
     if cmd == "new":
         boot = sysb = None
         files = []

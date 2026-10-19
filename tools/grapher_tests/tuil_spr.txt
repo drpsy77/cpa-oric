@@ -1,4 +1,4 @@
-; TUIL.SPR : tuiles de test (tools/mkspr.py tuil.txt TUIL.SPR)
+; TUIL.SPR : tuiles de test (tools/mkspr.py tuil_spr.txt TUIL.SPR)
 GENRE 1
 UN 1 1
 ######

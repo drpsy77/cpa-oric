@@ -1283,6 +1283,39 @@ end     ldy tmpb
         rts
 .)
 
+; st_fname : nom de l'FCB A/Y, « NOM.EXT » sans les espaces, écrit en
+;   stline à partir de X ; X = colonne suivante
+st_fname
+.(
+        sta src
+        sty src+1
+        ldy #1
+nm      lda (src),y
+        cmp #" "
+        beq dot
+        sta stline,x
+        inx
+        iny
+        cpy #9
+        bne nm
+dot     ldy #9
+        lda (src),y
+        cmp #" "
+        beq r
+        lda #"."
+        sta stline,x
+        inx
+ext     lda (src),y
+        cmp #" "
+        beq r
+        sta stline,x
+        inx
+        iny
+        cpy #12
+        bne ext
+r       rts
+.)
+
 ; st_num : nombre t1 écrit en stline à partir de Y
 st_num
         sty stpos
@@ -1315,30 +1348,12 @@ info    ldy #0
         sta src+1
         jsr st_puts
         jmp mod
-named   ldx #1                  ; NOM.EXT sans les espaces
-nm      lda fcb_main,x
-        cmp #" "
-        beq dot
-        sta stline,y
-        iny
-        inx
-        cpx #9
-        bne nm
-dot     lda fcb_main+9
-        cmp #" "
-        beq mod
-        lda #"."
-        sta stline,y
-        iny
-        ldx #9
-ext     lda fcb_main,x
-        cmp #" "
-        beq mod
-        sta stline,y
-        iny
-        inx
-        cpx #12
-        bne ext
+named   lda #<fcb_main
+        ldy #>fcb_main
+        ldx #0
+        jsr st_fname
+        txa
+        tay
 mod     lda modif
         beq pos
         lda #"*"
@@ -1573,7 +1588,7 @@ ask_key
 ; ask_yn : C=1 si la réponse est O (ou Y)
 ask_yn
         jsr ask_key
-        cmp #"O"
+yn_test cmp #"O"
         beq yn_y
         cmp #"Y"
         beq yn_y
@@ -1581,6 +1596,37 @@ ask_yn
         rts
 yn_y    sec
         rts
+
+; ask_repl : « Remplacer NOM.EXT (O/N) ? » (nom de fcb_new). C=1 si O
+ask_repl
+        jsr cur_hide
+        jsr st_clear
+        lda #<q_repl1
+        sta src
+        lda #>q_repl1
+        sta src+1
+        ldy #0
+        jsr st_puts
+        tya
+        tax
+        lda #<fcb_new
+        ldy #>fcb_new
+        jsr st_fname
+        lda #<q_repl2
+        sta src
+        lda #>q_repl2
+        sta src+1
+        txa
+        tay
+        jsr st_puts
+        jsr st_flush
+        jsr B_CONIN
+        jsr upc
+        pha
+        lda #1
+        sta dirty
+        pla
+        jmp yn_test
 
 ; confirm_lose : si le texte est modifié, demande confirmation. C=1 si OK
 confirm_lose
@@ -3065,7 +3111,20 @@ k_saveas
         bcs r
         jsr parse_name
         bcs bad
-        jsr take_name
+        ldx #F_OPEN             ; le fichier existe-t-il ?
+        lda #<fcb_new
+        ldy #>fcb_new
+        jsr BDOS
+        cmp #$FF
+        beq new
+        lda fcb_new+13          ; protégé : refusé, rien ne change
+        bpl exist
+        lda #<m_ro
+        ldy #>m_ro
+        jmp set_msg
+exist   jsr ask_repl
+        bcc r
+new     jsr take_name
         jmp save_file
 bad     lda #<m_badname
         ldy #>m_badname
@@ -3163,6 +3222,8 @@ tn1     lda fcb_new,x
         sta fcb_main,x
         dex
         bpl tn1
+        inx                     ; (X = 0) R/O : celui du nouveau nom,
+        stx fcb_main+13         ; posé par l'ouverture (load_file)
         lda #1
         sta hasname
         sta dirty
@@ -3451,6 +3512,8 @@ closef  ldx #F_CLOSE
         lda #<fcb_tmp
         ldy #>fcb_tmp
         jsr BDOS
+        cmp #$FF
+        beq fail
         ldx #12                 ; remplace l'ancien fichier
 z       lda #0
         sta fcb_main,x
@@ -3461,7 +3524,12 @@ z       lda #0
         lda #<fcb_main
         ldy #>fcb_main
         jsr BDOS
-        ldx #15
+        cmp #$FE                ; protégé : gardé, NOM.$$$ effacé
+        bne del_ok
+        lda #<m_ro
+        ldy #>m_ro
+        bne abort
+del_ok  ldx #15
 rn      lda fcb_tmp,x
         sta fcb_ren,x
         lda fcb_main,x
@@ -3472,16 +3540,26 @@ rn      lda fcb_tmp,x
         lda #<fcb_ren
         ldy #>fcb_ren
         jsr BDOS
+        pha
         ldx #F_SETDMA
         lda #<DEF_DMA
         ldy #>DEF_DMA
         jsr BDOS
-        lda #0
-        sta modif
+        pla
+        beq ren_ok
+        lda #<m_renf            ; (erreur disque : le texte reste dans
+        ldy #>m_renf            ; NOM.$$$, qu'on ne perd pas)
+        jmp set_msg
+ren_ok  sta modif
         lda #<m_saved
         ldy #>m_saved
         jmp set_msg
-fail    ldx #F_CLOSE
+fail    lda #<m_dfull
+        ldy #>m_dfull
+abort   pha                     ; NOM.$$$ fermé puis effacé, message A/Y
+        tya
+        pha
+        ldx #F_CLOSE
         lda #<fcb_tmp
         ldy #>fcb_tmp
         jsr BDOS
@@ -3494,8 +3572,9 @@ fail    ldx #F_CLOSE
         lda #<DEF_DMA
         ldy #>DEF_DMA
         jsr BDOS
-        lda #<m_dfull
-        ldy #>m_dfull
+        pla
+        tay
+        pla
         jmp set_msg
 
 ; put : ajoute A à l'enregistrement, l'écrit quand il est plein. C=1 si erreur
@@ -3669,6 +3748,7 @@ m_saved   .asc "Enregistre",0
 m_ro      .asc "Fichier protege (R/O)",0
 m_dirfull .asc "Repertoire plein",0
 m_dfull   .asc "Disque plein : non enregistre",0
+m_renf    .asc "Erreur disque : texte dans .$$$",0
 m_badname .asc "Nom de fichier incorrect",0
 q_lose    .asc "Abandonner les modifs (O/N) ?",0
 q_quit    .asc "Texte modifie. Quitter (O/N) ?",0
@@ -3679,6 +3759,8 @@ m_pdone   .asc "Texte imprime",0
 m_pstop   .asc "Impression interrompue",0
 m_inserted .asc " car. inseres",0
 q_saveas  .asc "Enregistrer sous : ",0
+q_repl1   .asc "Remplacer ",0
+q_repl2   .asc " (O/N) ?",0
 q_find    .asc "Chercher : ",0
 q_repl    .asc "Remplacer par : ",0
 q_yn      .asc "Remplacer ? O/N/T(ous)/Esc",0

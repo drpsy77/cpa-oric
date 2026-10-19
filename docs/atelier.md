@@ -35,6 +35,10 @@ outils, et suit toujours la même boucle.
    - `ORIC_KEYS_AT` : trame où la frappe commence ;
    - `ORIC_DUMP` / `ORIC_DUMP_AT` : fichier et trame du vidage des 64 Ko de mémoire.
    - `ORIC_PASTE` / `ORIC_PASTE_AT` : texte collé comme par F12, et trame du collage.
+   - `ORIC_WARP` : l'émulateur va aussi vite qu'il peut au lieu de suivre le temps réel (les
+     trames restent les mêmes : un scénario donne le même résultat, 5 à 10 fois plus vite).
+     Un Oricutron compilé avant ce réglage l'ignore ; pour le recompiler :
+     `rm -rf tools/oricutron && ./tools/setup_linux.sh`.
    - `ORIC_LOCI` : un dossier du PC. L'interface que le LOCI offre au 6502 (registres
      `$03A0-$03BF`, celle du Picocomputer 6502) est alors simulée dans `machine.c`, avec ce
      dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
@@ -151,7 +155,9 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py get IMAGE NOM.EXT [local]` | extraire un fichier (ex. un `.ASM` écrit sur l'Oric) |
 | `python3 tools/mkdisk.py put IMAGE local [NOM.EXT]` | ajouter un fichier (texte : fins de ligne mises en CR LF, comme par `new`) |
 | `python3 tools/mkdisk.py era IMAGE NOM.EXT` | effacer un fichier |
-| `python3 tools/mkdisk.py check IMAGE` | secteurs absents ou à CRC faux, entrées invraisemblables, blocs hors disquette ou partagés |
+| `python3 tools/mkdisk.py check IMAGE` | contrôle : secteurs absents ou à CRC faux, entrées invraisemblables, blocs hors disquette ou partagés, puis chaque fichier (entrées des extents qui se suivent sans trou ni doublon, entrées pleines avant la dernière, blocs d'accord avec le nombre d'enregistrements, R/O le même partout). Code 1 s'il y a un **défaut** ; les **avertissements** (code 0) sont les traces d'un travail interrompu, sans danger : `NOM.$$$` resté, fichier vide, bloc libre qui contient des données ou un secteur illisible |
+| `python3 tools/mkdisk.py diff AVANT APRES` | fichiers ajoutés (`+`), effacés (`-`), modifiés (`~` : contenu, attributs), secteurs d'amorce ou du système changés (`!`), blocs écrits restés libres ; code 0 si rien n'a changé |
+| `python3 tools/test_fichiers.py [--vite] [--garde DOSSIER] [mots]` | sûreté des fichiers : enregistrements qui tournent mal pour EDIT et GRAPHER (§ 4.1) |
 | `python3 tools/mkdisk.py repare IMAGE SORTIE` | réécrit une image saine, par exemple après Clock Signal, qui en réécrivant une piste ne garde que deux des trois `$A1` de chaque synchronisation (la disquette paraît alors vide à Oricutron et au LOCI) |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
 | `python3 tools/mkspr.py SOURCE.txt SORTIE.SPR` | fichier `.SPR` (sprites ou tuiles de GRAPHER) d'après un dessin en texte (`#` allumé, `o` caché, `.` transparent ; exemple : `tools/spr/tuiles.txt`) |
@@ -175,6 +181,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   | `\x05` | FUNCT (ouvre la barre de menus) |
   | `\x1c` puis une lettre | CTRL + lettre (`\x1cC` = ^C) |
   | `\x06` | bouton RESET (NMI) |
+  | `\x0f` puis une touche | SHIFT + touche ; une suite de `\x0f` sans touche est une attente d'une trame chacun (RESET à une trame près : `...\n\x0f\x0f\x0f\x06`) |
   | `\x07` | change la disquette du lecteur A: (voir `DSKSWAP`) |
   | `\x0e` | la touche suivante reste enfoncée 1 s (50 trames) au lieu de 4 : répétition, `INKEY` des jeux |
   | `\|` | pause de 3 s dans la frappe |
@@ -196,6 +203,7 @@ Variables utiles :
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
 | `DISK_OPTS=""` (pour `build.sh`) | système sans la complétion des commandes par ESC (option `CPLCMD`, ~120 octets résidents) ; par défaut `-DCPLCMD` |
 | `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR) ; sans elle, ces commandes répondent `LOCI absent` |
+| `ORIC_WARP=1` | émulateur sans attente du temps réel (même résultat, bien plus vite) |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |
 
 Points à connaître :
@@ -207,6 +215,31 @@ Points à connaître :
 - Pour lire une variable :
   `python3 -c "m=open('/tmp/t.mem','rb').read(); print(hex(m[0x280]))"` (ici `vmode`, adresse
   prise dans `build/cpa_sys.sym`).
+
+### 4.1 Sûreté des fichiers : `tools/test_fichiers.py`
+
+Chaque scénario part d'une disquette fabriquée par le script avec `mkdisk.py` (système,
+GRAPHER.COM, EDIT.COM, EDIT.CFG, les programmes d'essai `tools/fichiers_tests/t.grx` et
+`e.grx`, l'ancien fichier, et des fichiers de remplissage pour laisser 0 ou 1 bloc libre, ou
+aucune entrée du répertoire), tape la commande dans Oricutron (`ORIC_WARP=1`), puis regarde la
+disquette (`check`, `diff`, contenu du fichier visé) et l'écran (message attendu).
+
+| Programme | Scénarios |
+|---|---|
+| GRAPHER `SAVE`, `BSAVE` (tableau de 4 800 octets, 3 blocs) | normal (référence du nouveau contenu), disque plein (1 bloc libre) avec ou sans ancien fichier, répertoire plein avec ou sans ancien fichier, fichier R/O, RESET balayé |
+| GRAPHER `BSAVE SCREEN` (1 bloc) | normal, disque plein (aucun bloc libre) avec ou sans ancien fichier, répertoire plein, R/O, RESET balayé |
+| EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (réponse N, réponse O), sous un fichier R/O, RESET balayé |
+
+Attendu : l'ancien fichier intact ou le nouveau complet ; rien de perdu ni d'abîmé ; pas de
+`NOM.$$$` qui reste ; le message juste ; `check` sans défaut. **RESET balayé** : `\x06` N
+trames après la commande, N de 10 en 10 jusqu'à ce que la disquette soit dans son état final,
+puis trame par trame dans la fenêtre où elle change (de 3 en 3 avec `--vite`) ; environ
+100 essais par programme, 10 minutes en tout. Deux traces sont tolérées et comptées à part :
+`NOM.$$$` resté (RESET pendant l'écriture ; effacé par l'enregistrement suivant du même nom)
+et « nouveau en .$$$ » (RESET entre l'effacement de l'ancien et le renommage : le nouveau
+contenu est complet dans `NOM.$$$`). `--garde DOSSIER` garde les disquettes, vidages et
+captures de chaque essai (`rapport.txt` : écran, check, diff). Le tableau final est en
+Markdown. Code de retour 0 si tout est vert.
 
 ### Exemples
 

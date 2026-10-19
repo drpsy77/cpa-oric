@@ -113,6 +113,10 @@ def main():
                     if p: os.remove(p)
                 elif x == 22:
                     files[adr] = [fname(adr), b'', 0, bytearray()]
+                elif x == 23:       # renommage : ancien nom en FCB, nouveau en FCB+16
+                    p = lookup(fname(adr))
+                    if p: os.replace(p, fname(adr + 16))
+                    else: m.a = 0xFF
                 elif x == 20:
                     f = files[adr]; blk = f[1][f[2]:f[2]+128]
                     if not blk: m.a = 1

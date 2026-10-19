@@ -802,7 +802,15 @@ Lancé depuis le mode SPLIT, l'éditeur passe en plein écran texte et garde son
 `$A000` (environ 27 Ko). En sortant, il réaffiche l'image intacte.
 
 Les fichiers sont du texte CP/M : CR LF entre les paragraphes, `^Z` à la fin. Pour ne rien perdre
-si le disque est plein, l'enregistrement écrit d'abord `NOM.$$$`, puis remplace l'ancien fichier.
+si le disque est plein, l'enregistrement écrit d'abord `NOM.$$$`, puis remplace l'ancien fichier :
+il faut donc la place du nouveau fichier en plus de l'ancien. Disque plein (`Disque plein : non
+enregistre`) ou répertoire plein : l'ancien fichier n'a pas changé et `NOM.$$$` est effacé.
+Enreg. sous... un fichier qui existe demande `Remplacer NOM.EXT (O/N) ?` ; un fichier protégé
+est refusé (`Fichier protege (R/O)`) sans rien écrire. Un document ouvert en lecture seule peut
+être enregistré sous un autre nom. Un RESET pendant l'enregistrement laisse l'ancien fichier, ou
+le nouveau ; au pire (RESET entre l'effacement de l'ancien et le renommage, une demi-seconde)
+le nouveau texte est complet dans `NOM.$$$` : `REN NOM.EXT=NOM.$$$` le remet. Un `NOM.$$$`
+resté est effacé par l'enregistrement suivant du même nom.
 
 ## L'éditeur hexadécimal HEX
 

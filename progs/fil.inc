@@ -12,6 +12,7 @@
 ;               le type manquant devient TXT, DAT ou SCR
 ;    f_fmt      r_j (signé) -> f_nbuf en décimal, 0 à la fin
 ;    f_mlo, f_mful  messages « LORES d'abord », « disque plein »
+;    f_mro, f_mdir  messages « fichier protege », « repertoire plein »
 ;    (et ce que demande arr.inc)
 ;
 ;    f_go       X = opération : 0 SAVE, 1 LOAD (texte), 2 BSAVE, 3 BLOAD
@@ -30,6 +31,12 @@
 ;  Binaire : octets tels quels (entiers : octet bas, octet haut), dernier
 ;  enregistrement complété par des 0 ; BLOAD lit la taille du tableau.
 ;  Enregistrements dans le tampon par défaut (DEF_DMA, $0480).
+;  Écriture sûre, comme EDIT : SAVE et BSAVE écrivent NOM.$$$, puis
+;  effacent NOM.EXT et renomment NOM.$$$ en NOM.EXT. Disque plein (ou
+;  code refusé par SAVE) : NOM.$$$ est effacé, NOM.EXT n'a pas changé.
+;  Il faut donc la place du nouveau fichier en plus de l'ancien. Un
+;  NOM.EXT protégé (R/O) est refusé avant d'écrire. Le type d'origine
+;  est gardé dans f_ext pendant l'écriture.
 ;  Page zéro : $D0-$DF.
 ; =====================================================================
 
@@ -149,15 +156,23 @@ qt       lda f_typ,x
         bne qt
 qz       lda #0
         sta f_ug
+        jsr f_zfcb
+        ldx #F_SETDMA
+        lda #<DEF_DMA
+        ldy #>DEF_DMA
+        jsr BDOS
+        jmp f_ay
+.)
+
+; f_zfcb : octets 12-35 du FCB à 0, puis A/Y = f_fcb
+f_zfcb
+.(
+        lda #0
         ldx #12
 qzl      sta f_fcb,x
         inx
         cpx #36
         bne qzl
-        ldx #F_SETDMA
-        lda #<DEF_DMA
-        ldy #>DEF_DMA
-        jsr BDOS
 .)
 f_ay    lda #<f_fcb
         ldy #>f_fcb
@@ -181,21 +196,60 @@ qnf      stx f_found
         rts
 .)
 
-; f_wopen : fichier remplacé par un fichier vide (disque plein : erreur)
+; f_wopen : NOM.EXT protégé : erreur ; sinon NOM.$$$ créé vide (un
+;   ancien NOM.$$$ est effacé ; répertoire plein : erreur)
 f_wopen
+.(
         jsr f_fcbset
+        ldx #F_OPEN
+        jsr BDOS
+        cmp #$FF
+        beq qnew
+        lda f_fcb+13            ; bit 7 de S1 : ouvert en lecture seule
+        bpl qnew
+        lda #<f_mro
+        ldy #>f_mro
+        jmp r_fail
+qnew     ldx #2                  ; type gardé, NOM.$$$
+qt       lda f_fcb+9,x
+        sta f_ext,x
+        lda #"$"
+        sta f_fcb+9,x
+        dex
+        bpl qt
+        jsr f_zfcb
         ldx #F_DELETE
         jsr BDOS
-        jsr f_ay
+        jsr f_zfcb
         ldx #F_MAKE
         jsr BDOS
         cmp #$FF
-        beq f_full
-        lda #0
+        bne qok
+        lda #<f_mdir
+        ldy #>f_mdir
+        jmp r_fail
+qok      lda #0
         sta f_i
         rts
+.)
+
+; f_wabort : écriture abandonnée, erreur A/Y : NOM.$$$ fermé (ses blocs
+;   entrent dans le répertoire) puis effacé (ils sont rendus)
 f_full  lda #<f_mful
         ldy #>f_mful
+f_wabort
+        pha
+        tya
+        pha
+        jsr f_ay
+        ldx #F_CLOSE
+        jsr BDOS
+        jsr f_zfcb
+        ldx #F_DELETE
+        jsr BDOS
+        pla
+        tay
+        pla
         jmp r_fail
 
 ; f_putc : A dans l'enregistrement, écrit quand il est plein (Y gardé)
@@ -230,7 +284,38 @@ f_wclose
         jmp f_wclose
 qc       jsr f_ay
         ldx #F_CLOSE
-        jmp BDOS
+        jsr BDOS
+        cmp #$FF
+        bne qcl
+        jmp f_full
+qcl      ldx #2                  ; NOM.EXT : nouveau nom (FCB+16), et
+qn       lda f_ext,x             ; type remis pour effacer l'ancien
+        sta f_fcb+25,x
+        sta f_fcb+9,x
+        dex
+        bpl qn
+        ldx #7
+qn2      lda f_fcb+1,x
+        sta f_fcb+17,x
+        dex
+        bpl qn2
+        jsr f_ay
+        ldx #F_DELETE
+        jsr BDOS
+        ldx #2                  ; NOM.$$$ -> NOM.EXT
+        lda #"$"
+qd       sta f_fcb+9,x
+        dex
+        bpl qd
+        jsr f_ay
+        ldx #F_RENAME
+        jsr BDOS
+        ldx #2                  ; FCB : de nouveau NOM.EXT
+qe       lda f_ext,x
+        sta f_fcb+9,x
+        dex
+        bpl qe
+        rts
 .)
 
 ; f_getb : octet suivant -> A, C=0 ; C=1 à la fin du fichier
@@ -449,7 +534,7 @@ qdone    lda #$1A
         jmp f_wclose
 qcode    lda #<f_m_code
         ldy #>f_m_code
-        jmp r_fail
+        jmp f_wabort
 .)
 
 f_tload
@@ -614,6 +699,7 @@ ql2      lda f_tl,y
 .)
 
 f_found .byt 0
+f_ext   .asc "   "          ; type de NOM.EXT pendant l'écriture de NOM.$$$
 f_typ   .asc "TXTDATSCR"
 f_tl    .asc " : L "
 f_m_code  .asc "code 0-31 : BSAVE",0

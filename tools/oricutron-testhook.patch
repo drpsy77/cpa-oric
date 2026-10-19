@@ -396,7 +396,7 @@ index 00b7b0e..8cb8314 100644
        return microdisc_read(&oric->md, addr);
  
 diff --git a/main.c b/main.c
-index a47cd0c..b294830 100644
+index a47cd0c..95af81c 100644
 --- a/main.c
 +++ b/main.c
 @@ -513,6 +513,51 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
@@ -460,7 +460,7 @@ index a47cd0c..b294830 100644
      if(read_config_option(&sto->lctmp[i], "machine", &sto->start_machine, machtypes)) continue;
      if(read_config_option(&sto->lctmp[i], "disktype", &sto->start_disktype, disktypes)) continue;
      if(read_config_bool(&sto->lctmp[i], "debug", &sto->start_debug)) continue;
-@@ -1759,9 +1806,172 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1806,173 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -566,6 +566,7 @@ index a47cd0c..b294830 100644
 +  long kat = getenv("ORIC_KEYS_AT") ? atol(getenv("ORIC_KEYS_AT")) : 150;
 +  long dat = getenv("ORIC_DUMP_AT") ? atol(getenv("ORIC_DUMP_AT")) : -1;
 +  fr++;
++  if (fr == 1 && getenv("ORIC_WARP")) warpspeed = SDL_TRUE;   /* ORIC_WARP : sans attendre le temps réel */
 +  if (getenv("ORIC_PASTE") && fr == (getenv("ORIC_PASTE_AT") ? atol(getenv("ORIC_PASTE_AT")) : kat)) cpa_paste(getenv("ORIC_PASTE"));   /* essai du collage */
 +  static long pause_until = 0;
 +  if (keys && fr >= kat && keys[idx] && fr >= pause_until) {
@@ -633,7 +634,7 @@ index a47cd0c..b294830 100644
  
    if(oric->diskautosave)
    {
-@@ -2102,6 +2312,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+@@ -2102,6 +2313,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
    emscripten_fetch_close(fetch); // Also free data on failure.
  }
  
@@ -660,7 +661,7 @@ index a47cd0c..b294830 100644
  void EMSCRIPTEN_KEEPALIVE www_async_dload()
  {
  
-@@ -2192,6 +2422,10 @@ int main(int argc, char* argv[])
+@@ -2192,6 +2423,10 @@ int main(int argc, char* argv[])
  #ifdef WWW
    // save the context to a global
    gCtx = &ctx;
@@ -671,7 +672,7 @@ index a47cd0c..b294830 100644
    // create read-write fs
    EM_ASM(
      FS.mkdir('/readwritefs');
-@@ -2207,6 +2441,7 @@ int main(int argc, char* argv[])
+@@ -2207,6 +2442,7 @@ int main(int argc, char* argv[])
    });
    );
  

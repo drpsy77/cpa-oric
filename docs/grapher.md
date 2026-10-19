@@ -435,7 +435,12 @@ Le nom s'écrit sans guillemets, avec un lecteur facultatif ; `$1`-`$9` sont per
 `.HIZ` et `.ANI`, outils de fabrication : README, « HIRES plein écran ».
 
 **Fichiers de données.** `A` est le nom du tableau (`SAVE N$ HOF`, `BLOAD M NIVEAU1`).
-`SAVE` et `BSAVE` écrasent un fichier existant sans confirmation.
+`SAVE` et `BSAVE` remplacent un fichier existant sans confirmation, sans risque de le perdre :
+ils écrivent `NOM.$$$`, puis effacent l'ancien fichier et renomment (comme EDIT). Il faut donc
+la place du nouveau fichier en plus de l'ancien. `disque plein` (ou `code 0-31 : BSAVE` en
+cours d'écriture) : l'ancien fichier n'a pas changé, `NOM.$$$` est effacé. `repertoire plein`,
+`fichier protege` (R/O) : rien n'est écrit. Un RESET pendant l'écriture laisse l'ancien fichier
+ou le nouveau ; au pire le nouveau est complet dans `NOM.$$$` (`REN NOM.EXT=NOM.$$$`).
 
 - **Fichier absent** au `LOAD` ou au `BLOAD` : pas d'erreur, le tableau (ou l'écran) ne
   change pas, et `FOUND` vaut 0. Les autres erreurs arrêtent le programme.
@@ -586,7 +591,7 @@ de taille calculée. ESC ne l'arrête pas (§ 8).
 | Blocs | `NEXT sans boucle`, `NEXT manquant`, `bloc non ferme`, `fin de bloc en trop`, `trop de blocs imbriques`, `RETURN sans CALL`, `SUB introuvable` |
 | Tableaux | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
 | Sprites | `SPRITES d'abord`, `SPOOL d'abord`, `fichier .SPR ?` (pas un `.SPR` de sprites, ou sprite mal formé), `plus de caracteres pour les sprites` (tas vide) ; `valeur hors limites` : emplacement, rang du sprite, code du tas, sprite hors de l'écran |
-| Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `animation introuvable`, `animation trop grande` ; données (§ 10) : `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
+| Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `repertoire plein`, `fichier protege`, `animation introuvable`, `animation trop grande` ; données (§ 10) : `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
 
 Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute normalement.
 
@@ -725,7 +730,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |
 | `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) et tuiles (`t_set`, `t_map`, `t_get`, `t_font` ; `g_tmap` de `GRX.INC` pour le traduit), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
-| `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et deux messages |
+| `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et quatre messages (`f_mlo`, `f_mful`, `f_mro`, `f_mdir`) ; écriture par `NOM.$$$` (`f_wopen`, `f_wclose`, `f_wabort`), type d'origine gardé dans `f_ext` |
 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
 au lancement : ils ne sont pas dans le fichier.
@@ -910,7 +915,7 @@ Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine 
   les deux jeux, `K$` dans un tableau, tuiles de 1 × 1), `lo_tile3.grx` (sprite sur des
   tuiles, dans les deux jeux : dessins redessinés avec le masque, tuile rendue au
   déplacement), `e_tile*.grx` (erreurs) ;
-  `TUIL.SPR` fait par `tools/mkspr.py` (source `tuil.txt`), `TUIL.TXT` et `MAPT.TXT` lus
+  `TUIL.SPR` fait par `tools/mkspr.py` (source `tuil_spr.txt`), `TUIL.TXT` et `MAPT.TXT` lus
   par `LOAD`.
 
 Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque cas interprété

@@ -792,7 +792,15 @@ Started from SPLIT mode, the editor switches to full-screen text and keeps its t
 `$A000` (about 27 KB). When leaving, it shows the picture again, intact.
 
 Files are CP/M text: CR LF between paragraphs, `^Z` at the end. To lose nothing if the disk is
-full, saving first writes `NAME.$$$`, then replaces the old file.
+full, saving first writes `NAME.$$$`, then replaces the old file: the new file needs room in
+addition to the old one. Disk full (`Disque plein : non enregistre`) or directory full: the old
+file has not changed and `NAME.$$$` is erased. Save as... onto an existing file asks
+`Remplacer NOM.EXT (O/N) ?` (replace?); a protected file is refused (`Fichier protege (R/O)`)
+without writing anything. A document opened read-only can be saved under another name. A RESET
+during saving leaves the old file, or the new one; at worst (RESET between erasing the old file
+and the renaming, half a second) the new text is complete in `NAME.$$$`:
+`REN NAME.EXT=NAME.$$$` puts it back. A leftover `NAME.$$$` is erased by the next save of the
+same name.
 
 ## The hex editor HEX
 

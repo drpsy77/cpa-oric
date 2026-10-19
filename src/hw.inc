@@ -172,7 +172,8 @@ fs_found    = $FD6D
 m_anyex     = $FD6E
 srch_fcb    = $FD6F     ; 2 octets
 fs_idx      = $FD71
-fs_err      = $FD72     ; (inutilisé)
+dsk_nmi     = $FD72     ; bit 7 : transfert de secteur en cours ; $7F : RESET
+                        ;   reçu pendant le transfert, fait à la fin (disk.s)
 buf_dirty   = $FD73
 fs_ro       = $FD74     ; un fichier protégé a été épargné
 dir_all     = $FD75     ; DIRS : montre aussi les fichiers SYS

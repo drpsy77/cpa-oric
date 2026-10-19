@@ -26,12 +26,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *140* | *42* | *348* | *71* | *96* | ***697*** | *182* | ***879*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 94 | 12 | **153** | 39 | **192** |
-| **Total** | **192** | **72** | **571** | **257** | **186** | **1278** | **305** | **1583** |
+| Outillage PC | 7 | 15 | 25 | 102 | 18 | **167** | 45 | **212** |
+| **Total** | **192** | **72** | **571** | **265** | **192** | **1292** | **311** | **1603** |
 
-Points ajustés (indicatif, § 9) : 1 278 × 1,05 ≈ 1 342.
+Points ajustés (indicatif, § 9) : 1 292 × 1,05 ≈ 1 357.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 63 EO, 62 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 65 EO, 64 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -280,7 +280,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A13 | Scripts : lecture ligne à ligne, remplacement de `$1`-`$9` | `script.s` | 1 |
 | SYS.A14 | PUT : sortie en tampon, écrite hors affichage, état du système de fichiers sauvé et rendu | `put.s` | 3 |
 | SYS.A15 | CHAIN : ligne différée exécutée après le démarrage à chaud | `bdos.s` | 1 |
-| SYS.A16 | Reprise après plantage et RESET : vecteurs, écran, police et console remis | `bios.s` | 3 |
+| SYS.A16 | Reprise après plantage et RESET : vecteurs, écran, police et console remis ; RESET différé jusqu'à la fin d'un transfert de secteur | `bios.s`, `disk.s` | 3 |
 | SYS.A17 | Imprimante Centronics : strobe, accusé, VIA partagé avec l'AY | `bios.s` | 1 |
 | SYS.A18 | Police et tables de l'écran (lignes de points du SPLIT calculées) | `bios.s` | 1 |
 | SYS.A19 | Test de la RAM au démarrage | `bios.s` | 1 |
@@ -307,7 +307,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | EDIT.T02 | Ouvrir (réglages d'`EDIT.CFG`) | EQ | 2 | 3 | F | 3 |
 | EDIT.T03 | Insérer un fichier au curseur | EI | 1 | 2 | F | 3 |
 | EDIT.T04 | Enregistrer (`NOM.$$$` puis remplacement) | EI | 2 | 2 | F | 3 |
-| EDIT.T05 | Enregistrer sous (réglages relus) | EI | 2 | 3 | F | 3 |
+| EDIT.T05 | Enregistrer sous (réglages relus ; fichier existant : `Remplacer (O/N)`, protégé : refusé) | EI | 2 | 4 | F | 3 |
 | EDIT.T06 | Imprimer, mis en page | EO | 2 | 3 | F | 4 |
 | EDIT.T07 | Retour vers LOGO (lancé par `EDITE`) | EI | 1 | 2 | F | 3 |
 | EDIT.T08 | Saisir et modifier le texte (insertion ou remplacement, DEL, RETURN) | EI | 1 | 3 | F | 3 |
@@ -409,7 +409,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A06 | Rectangles PASTE, GRAB | `arr.inc` | 3 |
 | GRA.A07 | Défilement et rotation (modulo, tampon de ligne) | `arr.inc` | 3 |
 | GRA.A08 | Sprites en mode texte : codes réservés, caractères redessinés, fond gardé | `spr.inc` | 5 |
-| GRA.A09 | Fichiers de données : texte CR LF, binaire, écran, FOUND | `fil.inc` | 3 |
+| GRA.A09 | Fichiers de données : texte CR LF, binaire, écran, FOUND ; écriture sûre (`NOM.$$$`, remplacement) | `fil.inc` | 3 |
 | GRA.A10 | Écriture verticale | `hires.inc`, `grapher.s` | 1 |
 | GRA.A11 | GRXASM : traduction en assembleur, expressions gardées en registres, sauts courts | `grxasm.s` | 5 |
 | GRA.A12 | GRXASM : tableaux à adresse fixe (indices constants ou variables, décalages) | `grxasm.s` | 5 |
@@ -717,6 +717,10 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T33 | `build_clk_mac.sh` | EI | 0 | 1 | F | 3 |
 | OUT.T34 | `pf_mesure.py` : mesures et totaux de ce document | EO | 3 | 10 | M | 5 |
 | OUT.T35 | `mkspr.py` : `.SPR` (sprites ou tuiles) d'après un dessin en texte | EO | 1 | 4 | F | 4 |
+| OUT.T36 | `mkdisk.py check` : secteurs, répertoire, cohérence des fichiers, défauts et avertissements | EQ | 1 | 6 | F | 3 |
+| OUT.T37 | `mkdisk.py repare` : image réécrite saine | EO | 1 | 3 | F | 4 |
+| OUT.T38 | `mkdisk.py diff` : fichiers ajoutés, effacés, modifiés | EQ | 1 | 4 | F | 3 |
+| OUT.T39 | `test_fichiers.py` : sûreté des enregistrements (EDIT, GRAPHER) | EO | 2 | 4 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -735,15 +739,17 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.A13 | Décimaux comparés au calcul exact, erreur en ulp | `test_fp.py`, `fp_harness.s` | 3 |
 | OUT.A14 | Tests par comparaison aux références (LOGO, GRAPHER, ASM, bibliothèques) | `test_*.sh` | 1 |
 | OUT.A15 | Comptage des lignes, contrôle des matrices IFPUG | `pf_mesure.py` | 1 |
+| OUT.A16 | Lecture tolérante des images, cohérence des fichiers (extents, blocs), blocs libres écrits, comparaison de deux images | `mkdisk.py` | 3 |
+| OUT.A17 | Scénarios d'enregistrement : disquettes remplies, RESET balayé (fenêtre d'écriture, puis trame par trame) | `test_fichiers.py` | 3 |
 
 ## 7. Mesures
 
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 36 | 11 053 | 1 102 | 536 | 856 | 9 % | 36 717 | 34 | 114 |
-| EDIT | 2 | 3 437 | 185 | 120 | 5 | 5 % | 8 704 | 46 | 118 |
-| GRAPHER + GRXASM | 8 | 12 786 | 913 | 422 | 0 | 7 % | 32 272 | 57 | 143 |
+| Système et commandes | 36 | 11 065 | 1 107 | 536 | 856 | 9 % | 36 741 | 34 | 114 |
+| EDIT | 2 | 3 517 | 188 | 122 | 5 | 5 % | 8 704 | 48 | 118 |
+| GRAPHER + GRXASM | 8 | 12 867 | 924 | 424 | 0 | 7 % | 32 455 | 57 | 144 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 1 | 5 991 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
 | HEX | 1 | 1 564 | 87 | 59 | 0 | 5 % | 3 840 | 82 | 202 |
@@ -752,34 +758,34 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 2 | 2 392 | 117 | 76 | 70 | 5 % | 5 949 | 266 | 661 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
 | Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 159 | 6 035 | 603 | 341 | 0 | 9 % | — | 39 | — |
-| **Total** | 249 | 58 005 | 4 334 | 2 277 | 947 | 7 % | 134 595 | 45 | 105 |
+| Outillage PC | 160 | 6 541 | 684 | 398 | 0 | 9 % | — | 39 | — |
+| **Total** | 250 | 58 684 | 4 434 | 2 338 | 947 | 7 % | 134 802 | 45 | 104 |
 
-Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 899 (`$C000-$F64B`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 163 | 76 | 3,6 | 32 |
-| EDIT | 80 | 20 | 1,1 | 3 |
-| GRAPHER + GRXASM | 820 | 68 | 3,6 | 24 |
-| LOGO | 273 | 63 | 1,4 | 4 |
-| CMDER | 169 | 24 | 3,0 | 9 |
+| Système et commandes | 1 172 | 76 | 3,6 | 25 |
+| EDIT | 88 | 20 | 1,2 | 5 |
+| GRAPHER + GRXASM | 825 | 68 | 3,7 | 23 |
+| LOGO | 273 | 63 | 1,4 | 3 |
+| CMDER | 169 | 24 | 3,0 | 5 |
 | HEX | 34 | 9 | 1,8 | 2 |
 | VOIR | 78 | — | 4,1 | 5 |
 | USB | 38 | 9 | 1,5 | 2 |
-| ASM | 42 | 10 | 4,7 | 2 |
+| ASM | 42 | 10 | 4,7 | 1 |
 | DEBUG | 40 | 12 | 0,5 | 1 |
-| Exemples | 0 | — | 0,0 | 10 |
-| Outillage PC | 292 | — | 1,9 | 36 |
-| Transverse (projet) | 1 667 | — | — | 31 |
-| Traduction anglaise (docs/en) | 2 160 | — | — | 3 |
-| **Total** | 6 856 | 291 | 5,4 | 64 |
+| Exemples | 0 | — | 0,0 | 8 |
+| Outillage PC | 323 | — | 1,9 | 29 |
+| Transverse (projet) | 1 696 | — | — | 34 |
+| Traduction anglaise (docs/en) | 2 173 | — | — | 4 |
+| **Total** | 6 951 | 291 | 5,4 | 51 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 64 commits du 2026-10-12 au 2026-10-19.
+Historique : 51 commits du 2026-10-13 au 2026-10-19.
 
-Réutilisation : 45 022 lignes de code écrites dans `progs/`, 50 312 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 183 lignes de code écrites dans `progs/`, 50 469 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -789,23 +795,23 @@ Défauts connus : `docs/etat.md` § 5 ; points à vérifier : `docs/essais-mater
 
 | Composant | Défauts connus | Manques notés | À vérifier sur le matériel |
 |---|---:|---:|---:|
-| Système et commandes | 0 | 0 | 9 |
-| EDIT | 3 | 0 | 1 |
-| GRAPHER + GRXASM | 1 | 1 | 16 |
-| LOGO | 0 | 0 | 7 |
+| Système et commandes | 2 | 0 | 11 |
+| EDIT | 0 | 0 | 2 |
+| GRAPHER + GRXASM | 1 | 1 | 17 |
+| LOGO | 1 | 0 | 7 |
 | CMDER | 0 | 0 | 1 |
 | HEX | 0 | 0 | 2 |
 | VOIR | 0 | 0 | 1 |
-| USB | 0 | 0 | 1 |
-| ASM | 0 | 0 | 1 |
+| USB | 1 | 0 | 1 |
+| ASM | 1 | 0 | 1 |
 | DEBUG | 0 | 0 | 1 |
 | Outillage | 0 | 0 | 1 |
-| **Total** | **4** | **1** | **41** |
+| **Total** | **6** | **1** | **45** |
 
-- EDIT : Enregistrer sous depuis un document R/O (tout nom refusé), fichier existant
-  remplacé sans question, faux succès sur un fichier R/O.
-- GRAPHER : `SAVE`, `BSAVE` effacent l'ancien fichier avant d'écrire (disque plein : contenu
-  perdu) ; manque : savoir si un fichier existe sans le charger.
+Effacent l'ancien fichier avant d'écrire (disque plein ou RESET : ancien perdu) :
+- Système et commandes : `GSAVE` (BDOS 115 op 12), COPY sur un fichier existant ;
+- GRAPHER : `GSAVE` (`h_save`) ; manque : savoir si un fichier existe sans le charger ;
+- LOGO : `SAUVE` ; USB : IMPORT sur un fichier existant ; ASM : `.COM`, `.SYM`.
 
 ## 9. Facteur d'ajustement (indicatif)
 
@@ -829,6 +835,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 |---|---|---|---:|---:|---:|---:|---|
 | 2026-10-18 | `b86817e` | 0.9 | 1 254 | 300 | 1 554 | 131 | comptage de référence |
 | 2026-10-19 | tuiles | 0.9 | 1 278 | 305 | 1 583 | 142 | tuiles de GRAPHER (`TILESET`, `TMAP`, `TILE`, `TFONT`), `mkspr.py`, CARTE en tuiles |
+| 2026-10-19 | fichiers sûrs | 0.9 | 1 292 | 311 | 1 603 | 150 | `mkdisk.py check`, `diff`, `repare` ; `test_fichiers.py` ; SAVE/BSAVE par `NOM.$$$` ; EDIT Enregistrer sous ; RESET différé pendant un secteur |
 
 ## 11. Comparaisons
 

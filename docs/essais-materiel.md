@@ -20,9 +20,24 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - image faite par `mkdisk.py` en entrelacement 2:1 : démarrer, faire un COPY ;
 - HIRES plein écran : bascule du circuit vidéo, les 3 lignes du bas noires ;
 - VSYNC : réglage du top, tenue du réglage après d'autres commandes.
+- **RESET pendant un enregistrement** (sur une **copie** de disquette, jamais sur
+  l'original) : `EDIT` d'un texte de quelques Ko, une modification, CTRL-S puis RESET aussitôt,
+  une dizaine de fois en variant l'instant (pendant que le voyant du lecteur est allumé) ;
+  de même `GRAPHER` avec un `SAVE` d'un gros tableau. Chaque fois : `DIR` doit marcher (pas
+  de `BDOS: disk I/O error` : un secteur du répertoire coupé au milieu ; le RESET doit
+  maintenant attendre la fin du secteur), le fichier doit être l'ancien ou le nouveau, entier
+  (`TYPE`), ou le nouveau dans `NOM.$$$` ; `ERA *.$$$` ensuite. Rapporter la disquette sur le
+  PC : `python3 tools/mkdisk.py check` sans défaut ;
+- RESET hors des accès disque : toujours immédiat (`*RESET* at ...`), comme avant.
 
 **Programmes**
 
+- EDIT : Enreg. sous... un fichier existant (`Remplacer NOM.EXT (O/N) ?`, N puis O), sous un
+  fichier R/O (`Fichier protege (R/O)`, aucun `NOM.$$$` ne reste), depuis README.TXT (R/O)
+  sous un nouveau nom ; disque plein (copie de disquette remplie) : `Disque plein : non
+  enregistre`, l'ancien fichier intact ;
+- GRAPHER : `SAVE`, `BSAVE` d'un fichier R/O (`fichier protege`), disque plein (`disque
+  plein`, ancien intact, pas de `NOM.$$$`) ;
 - EDIT : impression (`^P`) et coupure à la largeur sur une vraie imprimante ; `^I` (insérer
   un fichier) ; `C nnn!`, `^L` (trop long), Statistiques ; nouvelles touches : CTRL-ESPACE,
   CTRL-X/C/V, ESC (marque ôtée : `M` disparaît de la ligne d'état), CTRL-K, CTRL-H, CTRL-O,
