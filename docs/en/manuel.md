@@ -706,8 +706,18 @@ period is shared by the three voices.
 
 It is a full-screen editor: 26 lines of 38 columns, with a menu bar and a status line (file
 name, `*` if the text is modified, paragraph `L`, position `C` of the cursor in the paragraph,
-`INS`/`RFP` for insert/replace, `M` if a mark is set). By default, lines are broken between
-words. The text can reach about 32 KB.
+`INS`/`RFP` for insert/replace, `M` if a mark is set). The text can reach about 32 KB.
+
+Three display modes (Options menu, or CTRL-W which moves to the next one):
+
+- **Coupure mots** [break at words] (default): a paragraph that is too long continues on the
+  following lines, broken between words;
+- **Coupure 38 car**: broken every 38 characters;
+- **Ligne** [whole line]: one paragraph per screen line; the window scrolls sideways (10
+  columns at a time) to follow the cursor, and all lines with it. The status line shows `<`
+  when the window is shifted and `>` when the paragraph goes on to the right. Beyond 240
+  characters, the paragraph continues on the next line. This is the mode for code (`.ASM`,
+  `.GRX`, `.LOG`, `.BAT`) and for GRAPHER maps written in plain text, wider than the screen.
 
 An EDIT paragraph has no length limit, but the programs that read the file do: LOGO reads 126
 characters per line, a `.BAT` script 78. The file **`EDIT.CFG`** gives, for each file, the
@@ -715,11 +725,12 @@ maximum length of a paragraph, the line breaking on screen and the printer width
 
     ; nom    maxi coupure imprimante
     LETTRE.TXT 0   MOTS  96
-    *.LOG    126  CAR   80
-    *.BAT    78   CAR   80
+    *.LOG    126  LIGNE 80
+    *.BAT    78   LIGNE 80
     *.*      0    MOTS  80
 
-(Columns: name, maximum, breaking — `MOTS` between words, `CAR` at the character — and printer
+(Columns: name, maximum, breaking — `MOTS` between words, `CAR` at the character, `LIGNE` one
+line per paragraph: the starting mode, which can be changed while editing — and printer
 width.) The first line whose name matches applies (wildcards `*` and `?`, optional drive:
 `B:*.TXT`); so put the special files first. Missing columns keep their default value (no limit,
 `MOTS`, 80); `;` starts a comment. EDIT looks for `EDIT.CFG` on the document's drive, then on
@@ -750,6 +761,7 @@ number (`max 177 (L4)`).
 | CTRL-I (TAB) | insert a file at the cursor (Fichier, Insérer...) |
 | CTRL-P | print the text (Fichier, Imprimer) |
 | CTRL-L | next paragraph too long (Chercher, Trop long) |
+| CTRL-W | next display mode: break at words, at 38 characters, whole line (Options) |
 | FUNCT | menus |
 
 Menus:
@@ -771,9 +783,10 @@ Menus:
 - **Chercher** [Find]: Chercher..., Suivant [Next], Remplacer... [Replace], Trop long [Too
   long]. For each occurrence, answer O (yes), N (no), T (all) or Esc. The search ignores the
   difference between upper and lower case.
-- **Options**: Coupure mots [break at words] (between words, or at 38 characters; the starting
-  setting comes from `EDIT.CFG`), Ins/Rempl. [insert/replace], Statistiques (characters,
-  words, longest paragraph).
+- **Options**: Coupure mots [break at words], Coupure 38car [break at 38 characters], Ligne
+  [whole line] (the three display modes; `>` in front of the current one; the starting mode
+  comes from `EDIT.CFG`), Ins/Rempl. [insert/replace], Statistiques (characters, words,
+  longest paragraph).
 
 Started from SPLIT mode, the editor switches to full-screen text and keeps its text below
 `$A000` (about 27 KB). When leaving, it shows the picture again, intact.

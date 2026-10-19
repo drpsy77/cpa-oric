@@ -52,6 +52,17 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   `LOGO NOM` ;
 - écran texte : `FLECHES.LOG`, couleurs par `FIXECARECRAN 0 l n`.
 
+**EDIT**
+
+- modes d'affichage : CTRL-W passe de « Coupure entre les mots » à « Coupure a 38
+  caracteres » puis « Ligne entiere (defilement) » (message sur la ligne d'état) ; menu
+  Options : `>` devant le mode en cours, les trois articles y mènent directement ; un
+  `.ASM` ou un `.GRX` s'ouvre en mode ligne (`EDIT.CFG` livré) ; en mode ligne, sur un
+  paragraphe de plus de 38 caractères, SHIFT-→ décale la fenêtre (toutes les lignes avec
+  elle, `<` et `>` sur la ligne d'état), la frappe au bout de la ligne la fait suivre de 10
+  en 10 colonnes, SHIFT-← la ramène à gauche ; vitesse du redessin à droite d'une longue
+  ligne (frappe continue) ;
+
 **GRAPHER, VOIR, animations**
 
 - tuiles : `CARTE.GRX` en interprété (`GRAPHER CARTE`), puis traduit (`GRXASM CARTE`,
