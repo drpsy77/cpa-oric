@@ -93,6 +93,13 @@ fichier binaire dont les derniers octets valent réellement `$1A` paraît un peu
 La colonne `At` donne les attributs : `R` pour un fichier protégé (R/O), `S` pour un fichier
 système (caché de DIR). La dernière ligne compte les fichiers, les protégés et les cachés.
 
+**128 fichiers par disquette.** Le répertoire (la table des fichiers, que liste `DIR` ; ce
+n'est pas un dossier : CP/A n'en a pas) a 128 entrées, une par fichier quelle que soit sa
+taille jusqu'à 32 Ko (au-delà, une entrée de plus par tranche de 32 Ko). Une disquette contient
+donc 128 fichiers au plus, même s'il reste de la place : EDIT, HEX, CMDER et GRAPHER répondent
+alors `Repertoire plein`, et rien n'est écrit. Effacer des fichiers inutiles (`ERA`) ou passer
+sur une autre disquette.
+
 ## Lecteurs A: à D:
 
 Tout nom de fichier peut commencer par un lecteur : `DIR B:`, `TYPE B:LETTRE.TXT`,

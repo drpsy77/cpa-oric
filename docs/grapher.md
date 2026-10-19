@@ -662,7 +662,9 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   programme un peu plus petit.
 - **Bibliothèques.** GRXASM recopie à la fin de `NOM.ASM` les seules routines dont le
   programme a besoin (celles qu'il appelle, et celles qu'elles appellent), prises dans
-  `GRX.INC` et `HIRES.INC`, plus `ARR.INC` si le programme a des tableaux, `FIL.INC` s'il
+  `GRX.INC` et `HIRES.INC` toujours (`HIRES.INC` tient aussi l'écran texte : `h_init`,
+  `h_text`, `PRINT`), plus `ARR.INC` si le programme a des tableaux ou des chaînes (un
+  `PRINT "..."` suffit), `FIL.INC` s'il
   lit ou écrit des fichiers de données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et
   `ANIM.INC` s'il anime. Ces fichiers doivent être sur le lecteur du `.GRX` (sinon :
   `GRX.INC absente (bibliotheque)`) ; ASM n'a ensuite besoin que de `CPA.INC`. Ils sont,
