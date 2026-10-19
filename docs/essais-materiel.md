@@ -62,6 +62,8 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   elle, `<` et `>` sur la ligne d'état), la frappe au bout de la ligne la fait suivre de 10
   en 10 colonnes, SHIFT-← la ramène à gauche ; vitesse du redessin à droite d'une longue
   ligne (frappe continue) ;
+- SHIFT-→ puis ↓ ou ↑ (tous les modes) : le curseur reste en bout de ligne sur une ligne
+  plus courte, à la même colonne sur une plus longue (avant : il revenait au début) ;
 
 **GRAPHER, VOIR, animations**
 
