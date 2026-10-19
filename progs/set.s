@@ -314,9 +314,7 @@ m_ro    .asc "  R/O",0
 m_rw    .asc "  R/W",0
 m_sys   .asc " SYS",0
 m_dir   .asc " DIR",0
-m_usage .asc "Usage : SET afn [RO|RW|SYS|DIR]",13,10,0
-m_badopt .asc "Options : RO RW SYS DIR",13,10,0
-m_none  .asc "No file",13,10,0
+#include "set.msg"
 
 fcb     .dsb 36,0
 list                            ; noms trouvés (11 octets chacun)

@@ -145,13 +145,7 @@ a_fail  jmp v_puts
 t_hir   .asc "HIR"
 t_img   .asc "IMG"
 t_ani   .asc "ANI"
-m_use   .asc "VOIR NOM[.HIR|.HIZ|.IMG] : affiche",13,10
-        .asc "une image, une touche pour revenir.",13,10
-        .asc "VOIR NOM.ANI [n] : joue l'animation",13,10
-        .asc "n fois (0 : jusqu'a une touche).",13,10,"$"
-m_nf    .asc "Fichier introuvable",13,10,"$"
-m_crlf  .asc 13,10,"$"
-m_big   .asc "Image trop grande",0
+#include "voir.msg"
 v_n     .byt 0
 v_d     .byt 0
 v_t     .byt 0

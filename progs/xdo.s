@@ -350,8 +350,6 @@ r       rts
 .)
 
 cmd_do  .asc "DO $$$",0
-msg_use .asc "XDO NOM [p1..p9] : appel d'un script",13,10
-        .asc "par un script (lance par le CCP)",13,10,"$"
 ; open_b : ouvre bfcb, Z=1 si introuvable. Sans lecteur donné, même
 ;   recherche que le CCP : lecteur du script appelant (sans script : le
 ;   lecteur courant), puis A: à D:, sauf ceux qui n'ont pas répondu.
@@ -399,9 +397,7 @@ one     ldx #F_OPEN
 bits    .byt 1,2,4,8
 .)
 
-msg_nofile .asc "Script introuvable",13,10,"$"
-msg_disk .asc "Erreur disque (XDO)",13,10,"$"
-msg_big .asc "Scripts trop longs (XDO)",13,10,"$"
+#include "xdo.msg"
 
 ofcb    .byt 0
         .asc "$$$     BAT"

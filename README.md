@@ -39,7 +39,9 @@ Two variants are built from the same sources:
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
   intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
   `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
-  disk in `A:`.
+  disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` with the programs' messages in English: the
+  commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...) are translated; EDIT, HEX, ASM,
+  DEBUG, CMDER, GRAPHER, HELP and LOGO still speak French, translation in progress.
 - **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
 The programs and their messages are in French for now; an English version is planned.

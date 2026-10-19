@@ -38,15 +38,18 @@ DOC = os.path.join(RACINE, "docs", "points-de-fonction.md")
 # (composant, motifs) ; le premier motif qui correspond l'emporte.
 SYS_COM = "type era ren set stat copy format diskcopy xdo help help_tab mem poke go vsync".split()
 COMPOSANTS = [
-    ("SYS",  ["src/*", "boot/*", "progs/cpa.inc"] + ["progs/%s.s" % n for n in SYS_COM]),
+    ("SYS",  ["src/*", "boot/*", "progs/cpa.inc"] + ["progs/%s.s" % n for n in SYS_COM]
+             + ["progs/msg/*/%s.msg" % n for n in SYS_COM]),
     ("EDIT", ["progs/edit.s", "progs/edit_tab.s"]),
     ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
               "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc"]),
     ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s"]),
     ("CMD",  ["progs/cmder.s"]),
     ("HEX",  ["progs/hex.s"]),
-    ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc"]),
-    ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s"]),
+    ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg"]),
+    ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s",
+              "progs/msg/*/export.msg", "progs/msg/*/import.msg", "progs/msg/*/usbdir.msg",
+              "progs/msg/*/loci.msg"]),
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s"]),
     ("DBG",  ["progs/debug.s"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",

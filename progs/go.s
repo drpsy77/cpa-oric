@@ -120,5 +120,4 @@ no      sec
         rts
 .)
 
-m_usage .asc "GO adr [param...]  (hexa)",13,10
-        .asc "RTS ramene au prompt",13,10,"$"
+#include "go.msg"

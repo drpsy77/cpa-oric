@@ -6431,6 +6431,7 @@ sz      ldy #E_SIZE
 
 ; Clé USB du LOCI : bibliothèque commune (page zéro $30-$3B, tampons
 ; args, iobuf, dirent après elle)
+#include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
 
 ; ---------------------------------------------------------------------

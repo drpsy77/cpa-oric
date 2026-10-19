@@ -266,6 +266,9 @@ visible.
 On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
+**English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the programs'
+messages in English (translation in progress: commands first; the "yes" key is `Y` there).
+
 **Project disk.** `build/cpa-projet.dsk` is a blank disk (no system, 336 KB for files), to
 put in `B:` and copy for each project.
 

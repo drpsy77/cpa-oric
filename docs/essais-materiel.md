@@ -29,6 +29,9 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   (`TYPE`), ou le nouveau dans `NOM.$$$` ; `ERA *.$$$` ensuite. Rapporter la disquette sur le
   PC : `python3 tools/mkdisk.py check` sans défaut ;
 - RESET hors des accès disque : toujours immédiat (`*RESET* at ...`), comme avant.
+- **`cpa-en.dsk`** : démarrer, puis TYPE, ERA (réponse `Y`), COPY, STAT, FORMAT B: (`Y`),
+  DISKCOPY, XDO, MEM, VOIR, VSYNC, EXPORT, IMPORT, USBDIR avec le LOCI : messages en
+  anglais, 37 colonnes au plus, rien de coupé ;
 - **deux disquettes** (`cpa.dsk` en A:, `cpa-projet.dsk` en B:, avec CARTE.GRX et
   TUILES.SPR copiés dessus) : `B:`, puis `GRXASM CARTE /C` ; il ne reste sur B: que
   CARTE.COM, qui se lance (`CARTE`) ; les bibliothèques et CPA.INC ont été lues sur A:.
