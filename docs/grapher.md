@@ -307,7 +307,10 @@ est un tableau `$` à deux dimensions dont chaque octet désigne une tuile : une
 - **Vitesse** de `TMAP` (fenêtre de 38 × 26, programme traduit ou interprété : c'est la même
   routine) : tuiles de 1 × 1, environ 35 ms ; 2 × 2, 55 ms ; 4 × 4, 43 ms (`PASTE` : 22 ms).
   On ne redessine qu'après un pas (§ 8, « Boucle de jeu »).
-- **Sprites** : comme pour `PASTE` (§ 7.2), retirer les sprites avant `TMAP`, puis les
+- **Sprites** : un sprite passe sur les tuiles comme sur tout décor (§ 7.1) : la tuile
+  reste visible autour de sa silhouette. Sur les lignes de la carte en jeu secondaire, son
+  tas est déclaré avec `ALT` (`SPOOL T ALT`, `SSHOW ... ALT`), sur des codes que les tuiles
+  n'utilisent pas. Comme pour `PASTE` (§ 7.2), retirer les sprites avant `TMAP`, puis les
   réafficher.
 - `TMAP` et `TFONT` demandent le LORES (`LORES d'abord`). Erreurs (interprété) :
   `TILESET d'abord` ; `valeur hors limites` (tuile de plus de 4, fenêtre hors de l'écran,
@@ -904,7 +907,9 @@ Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine 
   elles).
 - Tests : `lo_tile.grx` (`K$`, caméra à cheval sur les tuiles, hors de la carte, octet
   inconnu, ligne courte, tuiles de 3 × 1 sans `K$`, `TILE`), `lo_tile2.grx` (`TFONT` dans
-  les deux jeux, `K$` dans un tableau, tuiles de 1 × 1), `e_tile*.grx` (erreurs) ;
+  les deux jeux, `K$` dans un tableau, tuiles de 1 × 1), `lo_tile3.grx` (sprite sur des
+  tuiles, dans les deux jeux : dessins redessinés avec le masque, tuile rendue au
+  déplacement), `e_tile*.grx` (erreurs) ;
   `TUIL.SPR` fait par `tools/mkspr.py` (source `tuil.txt`), `TUIL.TXT` et `MAPT.TXT` lus
   par `LOAD`.
 
