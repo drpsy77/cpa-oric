@@ -1882,6 +1882,8 @@ m_nogfx .asc "HIRES ou SPLIT d'abord",0
 m_noimg .asc "image introuvable",0
 m_lim   .asc "valeur hors limites",0
 m_nolo  .asc "LORES d'abord",0
+m_ro    .asc "fichier protege",0
+m_dirf  .asc "repertoire plein",0
 m_nonext .asc "NEXT manquant",0
 
 ; ---------------------------------------------------------------------
@@ -2166,6 +2168,8 @@ f_fmt   = fmtnum
 f_nbuf  = numbuf
 f_mlo   = m_nolo
 f_mful  = m_full
+f_mro   = m_ro
+f_mdir  = m_dirf
 #include "fil.inc"
 #include "spr.inc"
 #include "hires.inc"

@@ -215,6 +215,8 @@ disk_write
 .(
         php
         sei                     ; aucune interruption pendant le transfert
+        lda #$80                ; et le RESET (NMI) attend la fin du secteur
+        sta dsk_nmi
         jsr lsn_to_chs
         bcs fl
         jsr loci_abs            ; LOCI : lecteur sans image refusé d'emblée
@@ -303,19 +305,22 @@ fin     jsr fdc_wait
         lda FDC_CMD
         and #ST_ERRMASK
         bne error
+        .byt $2C                ; (A = 0) BIT abs : saute LDA #1
+
+fail    lda #1
+        asl dsk_nmi             ; C = 0 : RESET appuyé pendant le transfert
+        bcc late
         plp
-        lda #0
+        ora #0                  ; Z, N d'après A (les appelants s'en servent)
         rts
+late    lsr dsk_nmi             ; (plus de transfert en cours)
+        jmp nmi_now
 
 error   dec dsk_try
         beq fail
         lda #CMD_RESTORE        ; on recalibre puis on recommence
         jsr fdc_issue
         jmp retry
-
-fail    plp
-        lda #1
-        rts
 .)
 
 ; ---------------------------------------------------------------------

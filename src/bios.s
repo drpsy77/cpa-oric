@@ -297,7 +297,18 @@ w2      dey
 ; ---------------------------------------------------------------------
 ; NMI : bouton RESET de l'Atmos -> adresse interrompue, démarrage à chaud
 ; ---------------------------------------------------------------------
+;   Pendant un transfert de secteur (dsk_nmi bit 7, disk.s), le RESET est
+;   noté et fait à la fin du secteur : un secteur coupé au milieu serait
+;   illisible (répertoire compris). Un octet perdu par l'attente est
+;   signalé par le contrôleur, et le secteur réécrit.
 nmi_handler
+#ifdef DISK
+        bit dsk_nmi             ; (A, X, Y intacts)
+        bpl nmi_now
+        dec dsk_nmi             ; $80 -> $7F
+        rti
+#endif
+nmi_now
         sei
         tsx
         lda $0102,x             ; PC empilé par la NMI

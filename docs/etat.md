@@ -7,7 +7,7 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code `$C000-$F633`, **marge 61 octets** jusqu'à `$F670` (184 sans l'option
+**Système** : code `$C000-$F64B`, **marge 37 octets** jusqu'à `$F670` (160 sans l'option
 `CPLCMD`) ; page `$FF00-$FFE7`, marge 18 octets (table des touches de l'édition de ligne). `./build.sh` affiche les deux marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
@@ -23,7 +23,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 - imprimante Centronics (LIST, BDOS 5, CTRL-P) ;
 - graphisme SPLIT (BDOS 115), son AY (BDOS 116) ; HIRES plein écran et écran texte (LORES)
   laissés aux programmes, avec retour assuré par le démarrage à chaud ;
-- reprise après plantage (BRK, RESET).
+- reprise après plantage (BRK, RESET) ; un RESET pendant le transfert d'un secteur attend la
+  fin du secteur (un secteur coupé, du répertoire par exemple, serait illisible).
 
 Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/manuel.md`.
 
@@ -43,14 +44,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 17 462, 14 810 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
+| GRAPHER, GRXASM | 17 645, 14 810 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
 Disquettes : `cpa.dsk` (tout), `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
 `cpa-anim.dsk` ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 278 points de fonction IFPUG et 305 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 292 points de fonction IFPUG et 311 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
@@ -80,19 +81,19 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
    § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
-5. **Défauts constatés** (reproduits dans Oricutron sur `cpa.dsk`)
-   - GRAPHER, `SAVE`, `BSAVE`, `BSAVE SCREEN` (`progs/fil.inc`) : l'ancien fichier est effacé
-     avant l'écriture ; disque plein en cours d'écriture : ancien contenu perdu, fichier de
-     0 octet. À écrire comme EDIT (`NOM.$$$` puis remplacement). Un fichier R/O reste intact
-     (le BDOS le protège) mais le message dit à tort `disque plein`.
-   - EDIT, Enregistrer sous : depuis un document R/O (README.TXT), tout nom est refusé
-     (`Fichier protege (R/O)`, même un nom nouveau) : l'indicateur R/O que l'ouverture met
-     dans le FCB (octet 13) reste après `take_name`, qui ne recopie que le nom.
-   - EDIT, Enregistrer sous un fichier existant : remplacé sans question (HELLO.ASM sous
-     HELLO.COM écrase le programme) ; demander `Remplacer NOM.EXT (O/N) ?`.
-   - EDIT, Enregistrer sous un fichier R/O : `Enregistre` affiché, rien n'est remplacé (le
-     fichier R/O reste intact) et `NOM.$$$` reste sur la disquette ; le résultat du
-     renommage n'est pas regardé.
+5. **Sûreté des fichiers et défauts constatés**
+   - EDIT et GRAPHER (`SAVE`, `BSAVE`, `BSAVE SCREEN`) passent la batterie
+     `tools/test_fichiers.py` (disque plein, répertoire plein, R/O, RESET balayé). Reste
+     une fenêtre d'une demi-seconde, entre l'effacement de l'ancien fichier et le
+     renommage, où un RESET laisse le nouveau contenu seulement dans `NOM.$$$` (rien n'est
+     perdu, `REN` le remet). La fermer : une section protégée contre RESET pendant
+     l'effacement et le renommage (variable publique en page 2, ou fonction BDOS de
+     remplacement) — touche au contrat, à décider.
+   - Écrivent encore en effaçant d'abord l'ancien fichier (disque plein ou RESET : ancien
+     perdu), à passer par `NOM.$$$` et à ajouter à la batterie : `GSAVE` (BDOS 115 op 12,
+     `img_save` de `src/gfx.s`, et `h_save` de `hires.inc`), LOGO (`SAUVE`, et `LOGO.$$$`
+     de l'état), COPY et IMPORT sur un fichier existant, ASM (`.COM`, `.SYM` : refaits par
+     un nouvel assemblage).
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
@@ -124,7 +125,7 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 
 ## 3. Réserves de place
 
-**Système** (marge 61 octets ; page `$FF00` : 18 octets) :
+**Système** (marge 37 octets ; page `$FF00` : 18 octets) :
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
@@ -141,9 +142,9 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 462 octets) prend 9 blocs, 970 octets libres dans le dernier ; piste de
+- GRAPHER (17 645 octets) prend 9 blocs, 787 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (14 810) prend 8 blocs ;
-  GRX.INC (12 002 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 286
+  GRX.INC (12 150 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 138
   octets avant le 7e. HELP (11 206) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte

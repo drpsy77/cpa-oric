@@ -430,7 +430,12 @@ The name is written without quotes, with an optional drive; `$1`-`$9` are allowe
 `.ANI` formats, tools to make them: `manuel.md`, "Full-screen HIRES".
 
 **Data files.** `A` is the name of the array (`SAVE N$ HOF`, `BLOAD M NIVEAU1`). `SAVE` and
-`BSAVE` overwrite an existing file without asking.
+`BSAVE` replace an existing file without asking, with no risk of losing it: they write
+`NAME.$$$`, then erase the old file and rename (like EDIT). The new file therefore needs room in
+addition to the old one. `disque plein` (or `code 0-31 : BSAVE` while writing): the old file
+has not changed, `NAME.$$$` is erased. `repertoire plein` (directory full), `fichier protege`
+(read-only): nothing is written. A RESET while writing leaves the old file or the new one; at
+worst the new one is complete in `NAME.$$$` (`REN NAME.EXT=NAME.$$$`).
 
 - **Missing file** at `LOAD` or `BLOAD`: no error, the array (or the screen) does not change,
   and `FOUND` is 0. Other errors stop the program.
@@ -573,7 +578,7 @@ does not stop it (§ 8).
 | Blocks | `NEXT sans boucle` (NEXT without loop), `NEXT manquant` (missing NEXT), `bloc non ferme` (block not closed), `fin de bloc en trop` (extra end of block), `trop de blocs imbriques` (too many nested blocks), `RETURN sans CALL`, `SUB introuvable` (SUB not found) |
 | Arrays | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
 | Sprites | `SPRITES d'abord`, `SPOOL d'abord`, `fichier .SPR ?` (not a sprite `.SPR`, or malformed sprite), `plus de caracteres pour les sprites` (empty pool); `valeur hors limites`: slot, sprite rank, pool code, sprite off the screen |
-| Files | `Fichier introuvable` (file not found) and `Fichier trop gros` (file too big) for the `.GRX`, `image introuvable`, `disque plein`, `animation introuvable`, `animation trop grande`; data (§ 10): `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
+| Files | `Fichier introuvable` (file not found) and `Fichier trop gros` (file too big) for the `.GRX`, `image introuvable`, `disque plein`, `repertoire plein` (directory full), `fichier protege` (read-only), `animation introuvable`, `animation trop grande`; data (§ 10): `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
 
 An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
@@ -880,7 +885,7 @@ pointers), `$10-$2C` for `GRX.INC`, `$B0-$BF` for `spr.inc`, `$C0-$C7` for `hire
   line, 3 × 1 tiles without `K$`, `TILE`), `lo_tile2.grx` (`TFONT` in both sets, `K$` in an
   array, 1 × 1 tiles), `lo_tile3.grx` (sprite on tiles, in both sets: drawings redrawn
   with the mask, tile restored when it moves), `e_tile*.grx` (errors); `TUIL.SPR` made by `tools/mkspr.py` (source
-  `tuil.txt`), `TUIL.TXT` and `MAPT.TXT` read by `LOAD`.
+  `tuil_spr.txt`), `TUIL.TXT` and `MAPT.TXT` read by `LOAD`.
 
 Tests: `tools/test_grapher.sh` checks the CHAIN of `/A`, then runs each case interpreted
 (GRAPHER) then translated (GRXASM), in the simulated 6502 (`tools/run_com.py`, no emulator),
