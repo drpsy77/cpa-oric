@@ -306,8 +306,10 @@ it; the camera moves by one character, not one tile.
 - **Speed** of `TMAP` (38 × 26 window, translated or interpreted program: it is the same
   routine): 1 × 1 tiles, about 35 ms; 2 × 2, 55 ms; 4 × 4, 43 ms (`PASTE`: 22 ms). Redraw
   only after a step (§ 8, "Game loop").
-- **Sprites**: as for `PASTE` (§ 7.2), remove the sprites before `TMAP`, then show them
-  again.
+- **Sprites**: a sprite crosses tiles as it crosses any scenery (§ 7.1): the tile stays
+  visible around its silhouette. On map lines in the secondary set, its pool is declared
+  with `ALT` (`SPOOL T ALT`, `SSHOW ... ALT`), on codes the tiles do not use. As for `PASTE`
+  (§ 7.2), remove the sprites before `TMAP`, then show them again.
 - `TMAP` and `TFONT` need LORES (`LORES d'abord`). Errors (interpreted): `TILESET d'abord`
   (TILESET first); `valeur hors limites` (tile larger than 4, window off the screen,
   `TFONT` codes outside the set); `indice hors limites` (line of `D$` too short, `K$` longer
@@ -876,7 +878,8 @@ pointers), `$10-$2C` for `GRX.INC`, `$B0-$BF` for `spr.inc`, `$C0-$C7` for `hire
   are written so that `tz_in` can come without `tz_inc` (no `BIT abs` between them).
 - Tests: `lo_tile.grx` (`K$`, camera straddling tiles, outside the map, unknown byte, short
   line, 3 × 1 tiles without `K$`, `TILE`), `lo_tile2.grx` (`TFONT` in both sets, `K$` in an
-  array, 1 × 1 tiles), `e_tile*.grx` (errors); `TUIL.SPR` made by `tools/mkspr.py` (source
+  array, 1 × 1 tiles), `lo_tile3.grx` (sprite on tiles, in both sets: drawings redrawn
+  with the mask, tile restored when it moves), `e_tile*.grx` (errors); `TUIL.SPR` made by `tools/mkspr.py` (source
   `tuil.txt`), `TUIL.TXT` and `MAPT.TXT` read by `LOAD`.
 
 Tests: `tools/test_grapher.sh` checks the CHAIN of `/A`, then runs each case interpreted

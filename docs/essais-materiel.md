@@ -60,6 +60,10 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   chaque pas (environ 55 ms : déchirure visible ?) ; au bord de l'île, la mer continue
   au-delà de la carte ; on ne traverse ni eau, ni arbre, ni mur, ni montagne ; Q, puis
   `DIR` et une ligne rappelée par ↑ : police et console normales (historique vidé) ;
+- sprite sur des tuiles : le test `lo_tile3.grx` (`tools/grapher_tests`, avec `TUIL.SPR`
+  et `HERO.SPR`) copié sur une disquette et lancé : le bonhomme laisse voir le cadre et
+  les traits des tuiles autour de lui, yeux noirs, sur les lignes du jeu secondaire comme
+  sur celles du jeu standard ;
 - hasard (xorshift 32 bits) : `CARTE.GRX` (arbres, montagnes, lacs répartis sur toute la
   carte, sans bandes, en interprété puis traduit par `GRXASM CARTE` et `ASM CARTE`) ; deux
   lancements de suite donnent deux mondes différents ; `MOTIFS.GRX` (ciel étoilé) ;
