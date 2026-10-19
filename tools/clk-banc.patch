@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index e709556..16d6f2b 100644
+index e7095562d..16d6f2b10 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -85,3 +85,9 @@ endif()
@@ -13,19 +13,20 @@ index e709556..16d6f2b 100644
 +add_executable(clkheadless ${CLK_HEADLESS_SOURCES} harness/headless.cpp)
 +target_link_libraries(clkheadless PRIVATE ZLIB::ZLIB OpenGL::GL)
 diff --git a/Machines/Oric/Oric.cpp b/Machines/Oric/Oric.cpp
-index b367a84..6ac22f3 100644
+index b367a84a0..de32b8ef1 100644
 --- a/Machines/Oric/Oric.cpp
 +++ b/Machines/Oric/Oric.cpp
-@@ -83,6 +83,8 @@ private:
+@@ -83,6 +83,9 @@ private:
  
  }
  
 +uint8_t *clk_harness_ram = nullptr;
++uint16_t clk_harness_pc = 0;
 +
  namespace Oric {
  
  using DiskInterface = Analyser::Static::Oric::Target::DiskInterface;
-@@ -305,6 +307,7 @@ public:
+@@ -305,6 +308,7 @@ public:
  		// so I can't have any switch-to-NTSC bytes in the display area. Hence:
  		// disallow all atributes.
  		Memory::Fuzz(ram_);
@@ -33,12 +34,20 @@ index b367a84..6ac22f3 100644
  		for(auto &c: ram_) {
  			c |= 0x40;
  		}
+@@ -481,6 +485,7 @@ public:
+ 
+ 	// to satisfy CPU::MOS6502::BusHandler
+ 	forceinline Cycles perform_bus_operation(CPU::MOS6502::BusOperation operation, uint16_t address, uint8_t *value) {
++		if(operation == CPU::MOS6502::BusOperation::ReadOpcode) clk_harness_pc = address;
+ 		if(address > ram_top_) {
+ 			if(!is_write(operation)) *value = paged_rom_[address - ram_top_ - 1];
+ 
 diff --git a/harness/headless.cpp b/harness/headless.cpp
 new file mode 100644
-index 0000000..c3e4e76
+index 000000000..3c3e0349e
 --- /dev/null
 +++ b/harness/headless.cpp
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,167 @@
 +// Banc d'essai sans écran pour Clock Signal (Oric + Microdisc), pour CP/A
 +// (tools/clk-banc.patch, installé par tools/setup_clk.sh). L'émulation va
 +// aussi vite que possible ; les durées affichées sont en temps émulé.
@@ -53,6 +62,8 @@ index 0000000..c3e4e76
 +//   verbose 1        trace les voyants (tête du Microdisc, moteurs)
 +//   insert F [N]     insère l'image F dans le lecteur N (0 = A:) ; sans N,
 +//                    dans le premier lecteur vide (tools/clk-4lecteurs.patch)
++//   pc               affiche l'adresse de la dernière instruction exécutée
++//   mem ADR          affiche 16 octets de la mémoire à partir de ADR (hexa)
 +#include "Analyser/Static/StaticAnalyser.hpp"
 +#include "Machines/Utility/MachineForTarget.hpp"
 +#include "Machines/DynamicMachine.hpp"
@@ -65,6 +76,7 @@ index 0000000..c3e4e76
 +#include <vector>
 +
 +extern uint8_t *clk_harness_ram;
++extern uint16_t clk_harness_pc;
 +static double now_s = 0.0;
 +
 +struct Obs: public Activity::Observer {
@@ -183,6 +195,8 @@ index 0000000..c3e4e76
 +			while(now_s < limit && !is_prompt(last_line())) run(step);
 +			printf("PROMPT %8.2f s\n", now_s);
 +		}
++		else if(op == "pc") printf("PC %04X\n", clk_harness_pc);
++		else if(op == "mem") { unsigned ad = std::stoul(arg, nullptr, 16); printf("MEM %04X:", ad); for(int i = 0; i < 16; i++) printf(" %02X", clk_harness_ram[(ad + i) & 0xffff]); printf("\n"); }
 +		else if(op == "screen") { for(auto &l: screen_lines()) printf("|%s\n", l.c_str()); }
 +		else if(op == "cmd") {
 +			double t_start = now_s, t0 = -1;
