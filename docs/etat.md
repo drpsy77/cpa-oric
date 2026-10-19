@@ -37,7 +37,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
-| EDIT | 8 192 | éditeur de texte | `manuel.md` |
+| EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
 | ASM | 5 949 | assembleur 6502 (identique à xa sur nos sources) | `manuel.md` |
 | DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
@@ -104,8 +104,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      décider sur mesure ;
    - GRAPHER : exemples de fichiers de données : un
      niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
-   - EDIT : un paragraphe sur une seule ligne avec défilement horizontal ; une édition plein
-     écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
+   - EDIT : une édition plein écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
      LOGO ou un `.COM`, à trouver.
@@ -147,8 +146,8 @@ multiple de 2 048) :
   GRX.INC (12 002 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 286
   octets avant le 7e. HELP (11 206) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
-- EDIT fait exactement 8 192 octets : 57 octets de code de plus le feraient passer au bloc
-  suivant (tampon de texte aligné sur une page). HEX : 47 octets ; ASM est à moins de 260
+- EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
+  aligné sur une page). HEX : 47 octets avant le bloc suivant ; ASM est à moins de 260
   octets du bloc suivant ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
   disquettes illisibles ; en dernier recours.

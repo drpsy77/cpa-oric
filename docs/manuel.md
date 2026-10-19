@@ -717,8 +717,19 @@ leur période est commune aux trois voix.
 
 C'est un éditeur plein écran : 26 lignes de 38 colonnes, avec une barre de menus et une ligne
 d'état (nom du fichier, `*` si le texte est modifié, paragraphe `L`, position `C` du curseur
-dans le paragraphe, `INS`/`RFP`, `M` si une marque est posée). Par défaut, les lignes sont
-coupées entre les mots. Le texte peut atteindre environ 32 Ko.
+dans le paragraphe, `INS`/`RFP`, `M` si une marque est posée). Le texte peut atteindre
+environ 32 Ko.
+
+Trois modes d'affichage (menu Options, ou CTRL-W qui passe au suivant) :
+
+- **Coupure mots** (par défaut) : un paragraphe trop long continue sur les lignes suivantes,
+  coupé entre les mots ;
+- **Coupure 38 car** : coupé tous les 38 caractères ;
+- **Ligne** : un paragraphe par ligne d'écran ; la fenêtre défile en largeur (de 10 en 10
+  colonnes) pour suivre le curseur, et toutes les lignes avec elle. La ligne d'état montre
+  `<` quand la fenêtre est décalée et `>` quand le paragraphe continue à droite. Au-delà de
+  240 caractères, le paragraphe continue sur la ligne suivante. C'est le mode du code (`.ASM`,
+  `.GRX`, `.LOG`, `.BAT`) et des cartes de GRAPHER écrites en clair, plus larges que l'écran.
 
 Un paragraphe d'EDIT n'a pas de limite de longueur, mais les programmes qui lisent le fichier
 en ont une : LOGO lit 126 caractères par ligne, un script `.BAT` 78. Le fichier **`EDIT.CFG`**
@@ -727,12 +738,13 @@ largeur de l'imprimante :
 
     ; nom    maxi coupure imprimante
     LETTRE.TXT 0   MOTS  96
-    *.LOG    126  CAR   80
-    *.BAT    78   CAR   80
+    *.LOG    126  LIGNE 80
+    *.BAT    78   LIGNE 80
     *.*      0    MOTS  80
 
 La première ligne dont le nom correspond s'applique (jokers `*` et `?`, lecteur facultatif :
-`B:*.TXT`) ; on met donc les fichiers particuliers en tête. Les colonnes absentes gardent leur
+`B:*.TXT`) ; on met donc les fichiers particuliers en tête. Coupure : `MOTS`, `CAR` ou `LIGNE`
+(le mode de départ ; on en change pendant l'édition). Les colonnes absentes gardent leur
 valeur par défaut (sans limite, `MOTS`, 80) ; `;` commence un commentaire. EDIT cherche
 `EDIT.CFG` sur le lecteur du document, puis sur `A:`, à chaque ouverture et à chaque
 « Enreg. sous... ». Sans `EDIT.CFG`, il garde 126 pour `*.LOG` et 78 pour `*.BAT`. Les
@@ -762,6 +774,7 @@ et son numéro (`max 177 (L4)`).
 | CTRL-I (TAB) | insérer un fichier au curseur (Fichier, Insérer...) |
 | CTRL-P | imprimer le texte (Fichier, Imprimer) |
 | CTRL-L | paragraphe trop long suivant (Chercher, Trop long) |
+| CTRL-W | mode d'affichage suivant : coupure mots, 38 car, ligne (Options) |
 | FUNCT | menus |
 
 Menus :
@@ -781,8 +794,9 @@ Menus :
   (CTRL-C) ou on coupe (CTRL-X) ; CTRL-V colle au curseur. ESC ôte la marque.
 - **Chercher** : Chercher..., Suivant, Remplacer..., Trop long. Pour chaque occurrence, on répond
   O (oui), N (non), T (tous) ou Esc. La recherche ignore la différence majuscules/minuscules.
-- **Options** : Coupure mots (entre les mots, ou à 38 caractères ; le réglage de départ vient
-  d'`EDIT.CFG`), Ins/Rempl., Statistiques (caractères, mots, plus long paragraphe).
+- **Options** : Coupure mots, Coupure 38car, Ligne (les trois modes d'affichage ; `>` devant
+  celui en cours ; le mode de départ vient d'`EDIT.CFG`), Ins/Rempl., Statistiques (caractères,
+  mots, plus long paragraphe).
 
 Lancé depuis le mode SPLIT, l'éditeur passe en plein écran texte et garde son texte sous
 `$A000` (environ 27 Ko). En sortant, il réaffiche l'image intacte.

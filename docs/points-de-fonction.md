@@ -301,7 +301,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
 | EDIT.D01 | Document texte (paragraphes) | ILF | 1 | 3 | F | 7 |
-| EDIT.D02 | `EDIT.CFG` : longueur maxi, coupure, largeur d'impression par modèle de nom | ILF | 1 | 4 | F | 7 |
+| EDIT.D02 | `EDIT.CFG` : longueur maxi, coupure (mots, caractères, ligne), largeur d'impression par modèle de nom | ILF | 1 | 4 | F | 7 |
 | EDIT.D03 | Presse-papiers (4 Ko) | ILF | 1 | 1 | F | 7 |
 | EDIT.T01 | Nouveau | EI | 1 | 1 | F | 3 |
 | EDIT.T02 | Ouvrir (réglages d'`EDIT.CFG`) | EQ | 2 | 3 | F | 3 |
@@ -319,11 +319,11 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | EDIT.T14 | Remplacer (O/N/T) | EI | 1 | 4 | F | 3 |
 | EDIT.T15 | Trop long : paragraphe suivant qui dépasse le maxi | EQ | 2 | 2 | F | 3 |
 | EDIT.T16 | Statistiques (caractères, mots, plus long paragraphe) | EO | 1 | 4 | F | 4 |
-| EDIT.T17 | Options : coupure aux mots, insertion ou remplacement | EI | 1 | 2 | F | 3 |
+| EDIT.T17 | Options : mode d'affichage (mots, 38 caractères, ligne ; CTRL-W), insertion ou remplacement | EI | 1 | 3 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
-| EDIT.A01 | Affichage des paragraphes coupés entre les mots ou à 38 caractères, ligne d'état | `edit.s` | 3 |
+| EDIT.A01 | Affichage des paragraphes coupés entre les mots ou à 38 caractères, ou en ligne entière avec défilement horizontal, ligne d'état | `edit.s` | 3 |
 | EDIT.A02 | Déplacements dans le texte coupé : lignes, pages, mots, à travers les paragraphes | `edit.s` | 3 |
 | EDIT.A03 | Tampon de 32 Ko : insertion, effacement, bloc, presse-papiers | `edit.s` | 3 |
 | EDIT.A04 | Recherche sans distinction de casse, remplacement interactif | `edit.s` | 1 |
@@ -741,8 +741,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 36 | 11 053 | 1 102 | 536 | 850 | 9 % | 36 629 | 34 | 114 |
-| EDIT | 2 | 3 313 | 174 | 118 | 5 | 5 % | 8 192 | 45 | 111 |
+| Système et commandes | 36 | 11 053 | 1 102 | 536 | 856 | 9 % | 36 717 | 34 | 114 |
+| EDIT | 2 | 3 437 | 185 | 120 | 5 | 5 % | 8 704 | 46 | 118 |
 | GRAPHER + GRXASM | 8 | 12 786 | 913 | 422 | 0 | 7 % | 32 272 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 1 | 5 991 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
@@ -752,34 +752,34 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 2 | 2 392 | 117 | 76 | 70 | 5 % | 5 949 | 266 | 661 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
 | Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 158 | 6 006 | 601 | 341 | 0 | 9 % | — | 39 | — |
-| **Total** | 248 | 57 852 | 4 321 | 2 275 | 941 | 7 % | 133 995 | 45 | 105 |
+| Outillage PC | 159 | 6 035 | 603 | 341 | 0 | 9 % | — | 39 | — |
+| **Total** | 249 | 58 005 | 4 334 | 2 277 | 947 | 7 % | 134 595 | 45 | 105 |
 
 Octets du système : code résident 13 875 (`$C000-$F633`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 163 | 76 | 3,6 | 1 |
-| EDIT | 68 | 19 | 0,9 | 1 |
-| GRAPHER + GRXASM | 815 | 68 | 3,6 | 1 |
-| LOGO | 273 | 63 | 1,4 | 1 |
-| CMDER | 169 | 24 | 3,0 | 1 |
-| HEX | 34 | 9 | 1,8 | 1 |
-| VOIR | 78 | — | 4,1 | 1 |
-| USB | 38 | 9 | 1,5 | 1 |
-| ASM | 42 | 10 | 4,7 | 1 |
+| Système et commandes | 1 163 | 76 | 3,6 | 32 |
+| EDIT | 80 | 20 | 1,1 | 3 |
+| GRAPHER + GRXASM | 820 | 68 | 3,6 | 24 |
+| LOGO | 273 | 63 | 1,4 | 4 |
+| CMDER | 169 | 24 | 3,0 | 9 |
+| HEX | 34 | 9 | 1,8 | 2 |
+| VOIR | 78 | — | 4,1 | 5 |
+| USB | 38 | 9 | 1,5 | 2 |
+| ASM | 42 | 10 | 4,7 | 2 |
 | DEBUG | 40 | 12 | 0,5 | 1 |
-| Exemples | 0 | — | 0,0 | 1 |
-| Outillage PC | 291 | — | 1,9 | 1 |
-| Transverse (projet) | 1 653 | — | — | 1 |
-| Traduction anglaise (docs/en) | 2 146 | — | — | 1 |
-| **Total** | 6 810 | 290 | 5,3 | 1 |
+| Exemples | 0 | — | 0,0 | 10 |
+| Outillage PC | 292 | — | 1,9 | 36 |
+| Transverse (projet) | 1 667 | — | — | 31 |
+| Traduction anglaise (docs/en) | 2 160 | — | — | 3 |
+| **Total** | 6 856 | 291 | 5,4 | 64 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 1 commits du 2026-10-18 au 2026-10-18.
+Historique : 64 commits du 2026-10-12 au 2026-10-19.
 
-Réutilisation : 44 892 lignes de code écrites dans `progs/`, 50 182 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 022 lignes de code écrites dans `progs/`, 50 312 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

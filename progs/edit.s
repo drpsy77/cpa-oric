@@ -7,7 +7,10 @@
 ;  curseur est en [BUF, gs), le texte après en [ge, BEND), le trou
 ;  libre entre les deux. Les paragraphes se terminent par CR ($0D) ;
 ;  sur disque, CR LF et ^Z en fin de fichier (format CP/M).
-;  Affichage : 26 lignes de 38 colonnes, coupure entre les mots.
+;  Affichage : 26 lignes de 38 colonnes ; trois modes (emode) : coupure
+;  entre les mots, à 38 caractères, ou ligne entière (LIGNE : un
+;  paragraphe par ligne d'écran, jusqu'à LMAX caractères, la fenêtre
+;  défilant en largeur de 10 en 10 colonnes, décalage hx).
 ;  Réglages par fichier dans EDIT.CFG (longueur maxi d'un paragraphe,
 ;  coupure à l'écran, largeur de l'imprimante) : voir apply_cfg.
 ;
@@ -19,6 +22,9 @@
 #include "cpa.inc"
 
 WIDTH   = 38            ; colonnes de texte
+LMAX    = 240           ; LIGNE : longueur d'une ligne d'écran (au-delà, le
+                        ;   paragraphe continue sur la suivante ; hx + 37
+                        ;   reste sous 256)
 ROWS    = 26            ; lignes de texte (écran lignes 1 à 26)
 STROW   = 27            ; ligne d'état
 CR      = $0D
@@ -83,6 +89,7 @@ clipa   = $58           ; presse-papiers (2 octets)
 blim    = $5A           ; bend - 128 (2 octets)
 wassplit = $5C          ; 1 = lancé depuis le mode SPLIT
 cptr    = $5D           ; EDIT.CFG : lecture des réglages intégrés (2 octets)
+sc      = $5F           ; render : colonne de l'écran
 
         *= $0500
 
@@ -200,7 +207,7 @@ dispatch
         bcs arr
         cmp #$81
         bcc none
-        cmp #$94
+        cmp #$96
         bcs none
         sec
         sbc #$81
@@ -228,26 +235,27 @@ none    rts
 ;   0 ^ESPACE marquer, ^C copier, ^D eff. sous le curseur, ^E ins./rempl.,
 ;   ^F ^G chercher, suivant, 8-11 flèches, ^L trop long, 13 RETURN,
 ;   ^O ouvrir, ^P imprimer, ^Q quitter, ^S enregistrer, ^V coller,
+;   ^W mode d'affichage suivant (mots, 38 caractères, ligne),
 ;   ^X couper, ESC ôte la marque, 28 ^H remplacer, 29 ^I insérer un
 ;   fichier, 31 ^K eff. paragraphe ; SHIFT <- -> bas haut : début, fin de
 ;   ligne, page suivante, précédente ; CTRL <- -> : mot précédent, suivant ;
-;   CTRL bas haut : fin, début du texte
+;   CTRL bas haut : fin, début du texte ; menus : $81-$95
 cvec_lo .byt <(k_mark-1),<(k_none-1),<(k_none-1),<(k_copy-1),<(k_delr-1),<(k_ins-1),<(k_find-1),<(k_next-1)
         .byt <(k_left-1),<(k_right-1),<(k_down-1),<(k_up-1),<(k_long-1),<(k_cr-1),<(k_none-1),<(k_open-1)
-        .byt <(k_print-1),<(k_quit-1),<(k_none-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_paste-1),<(k_none-1)
+        .byt <(k_print-1),<(k_quit-1),<(k_none-1),<(k_save-1),<(k_none-1),<(k_none-1),<(k_paste-1),<(k_wnext-1)
         .byt <(k_cut-1),<(k_none-1),<(k_none-1),<(k_esc-1),<(k_repl-1),<(k_insert-1),<(k_none-1),<(k_delpara-1)
         .byt <(k_home-1),<(k_end-1),<(k_pgdn-1),<(k_pgup-1),<(k_wleft-1),<(k_wright-1),<(k_bot-1),<(k_top-1)
 cvec_hi .byt >(k_mark-1),>(k_none-1),>(k_none-1),>(k_copy-1),>(k_delr-1),>(k_ins-1),>(k_find-1),>(k_next-1)
         .byt >(k_left-1),>(k_right-1),>(k_down-1),>(k_up-1),>(k_long-1),>(k_cr-1),>(k_none-1),>(k_open-1)
-        .byt >(k_print-1),>(k_quit-1),>(k_none-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_paste-1),>(k_none-1)
+        .byt >(k_print-1),>(k_quit-1),>(k_none-1),>(k_save-1),>(k_none-1),>(k_none-1),>(k_paste-1),>(k_wnext-1)
         .byt >(k_cut-1),>(k_none-1),>(k_none-1),>(k_esc-1),>(k_repl-1),>(k_insert-1),>(k_none-1),>(k_delpara-1)
         .byt >(k_home-1),>(k_end-1),>(k_pgdn-1),>(k_pgup-1),>(k_wleft-1),>(k_wright-1),>(k_bot-1),>(k_top-1)
 mvec_lo .byt <(k_new-1),<(k_open-1),<(k_save-1),<(k_saveas-1),<(k_quit-1),<(k_mark-1),<(k_copy-1),<(k_cut-1)
-        .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wrap-1),<(k_ins-1),<(k_stats-1)
-        .byt <(k_insert-1),<(k_print-1),<(k_long-1)
+        .byt <(k_paste-1),<(k_delpara-1),<(k_find-1),<(k_next-1),<(k_repl-1),<(k_wmots-1),<(k_ins-1),<(k_stats-1)
+        .byt <(k_insert-1),<(k_print-1),<(k_long-1),<(k_wcar-1),<(k_wlig-1)
 mvec_hi .byt >(k_new-1),>(k_open-1),>(k_save-1),>(k_saveas-1),>(k_quit-1),>(k_mark-1),>(k_copy-1),>(k_cut-1)
-        .byt >(k_paste-1),>(k_delpara-1),>(k_find-1),>(k_next-1),>(k_repl-1),>(k_wrap-1),>(k_ins-1),>(k_stats-1)
-        .byt >(k_insert-1),>(k_print-1),>(k_long-1)
+        .byt >(k_paste-1),>(k_delpara-1),>(k_find-1),>(k_next-1),>(k_repl-1),>(k_wmots-1),>(k_ins-1),>(k_stats-1)
+        .byt >(k_insert-1),>(k_print-1),>(k_long-1),>(k_wcar-1),>(k_wlig-1)
 
 k_esc                           ; ESC : ôte la marque
         lda #0
@@ -865,7 +873,7 @@ valid   lda p
         lda #$FF
         sta lsp
 loop    lda li
-        cmp #WIDTH
+        cmp rmax
         beq full
         jsr ip_end
         beq eof
@@ -894,7 +902,7 @@ cr      lda li
         sta rshow
         sec
         bcs addn
-full    lda #WIDTH
+full    lda rmax
         ldx wrap
         beq hard
         ldx lsp
@@ -1043,7 +1051,7 @@ render
 .(
         jsr cur_hide
         jsr calc_curl_len
-        lda top
+again   lda top
         sta p
         lda top+1
         sta p+1
@@ -1062,14 +1070,25 @@ row     ldx rr
         sta scr
         lda txt_hi,x
         sta scr+1
-        lda ip0
-        sta ip
-        lda ip0+1
-        sta ip+1
+        lda hx                  ; premier caractère montré : min(hx, rshow)
+        cmp rshow
+        bcc hk
+        lda rshow
+hk      sta jj
+        clc
+        adc p
+        sta t0
+        lda p+1
+        adc #0
+        sta t0+1
+        jsr addr_of
         lda #0
-        sta jj
+        sta sc
 chars   lda jj
         cmp rshow
+        bcs fill
+        ldy sc
+        cpy #WIDTH
         bcs fill
         ldy #0
         lda (ip),y
@@ -1078,12 +1097,13 @@ chars   lda jj
         cmp #$7F
         bcc ok
 ctl     lda #" "
-ok      ldy jj
+ok      ldy sc
         sta (scr),y
         jsr it_next
         inc jj
+        inc sc
         jmp chars
-fill    ldy jj
+fill    ldy sc
         lda #" "
 fl      cpy #WIDTH
         bcs cchk
@@ -1127,8 +1147,48 @@ end     ldx #ROWS
         sta rs_lo,x
         lda p+1
         sta rs_hi,x
-        jsr draw_status
+        jsr hfix                ; LIGNE : le curseur hors de la fenêtre ?
+        bcc shw
+        jmp again
+shw     jsr draw_status
         jmp cur_show
+.)
+
+; hfix : mode LIGNE, curseur à l'écran : hx (multiple de 10) recadré pour
+;   que hx <= ccol <= hx + 37. C=1 s'il a changé (tout est à redessiner)
+hfix
+.(
+        lda emode
+        cmp #2
+        bne no
+        lda crow
+        cmp #$FF
+        beq no
+        lda hx
+        sta tmpb
+l1      lda ccol
+        cmp hx
+        bcs l2
+        lda hx
+        sbc #9                  ; (C=0 : - 10)
+        sta hx
+        jmp l1
+l2      lda hx
+        clc
+        adc #WIDTH-1
+        cmp ccol
+        bcs l3
+        lda hx
+        adc #10                 ; (C=0)
+        sta hx
+        jmp l2
+l3      lda hx
+        cmp tmpb
+        beq no
+        sec
+        rts
+no      clc
+        rts
 .)
 
 ; --- curseur du système (variables publiques de la console) ---
@@ -1153,6 +1213,8 @@ cur_show
         adc #1
         sta CON_CURY
         lda ccol
+        sec
+        sbc hx
         clc
         adc #2
         sta CON_CURX
@@ -1323,7 +1385,28 @@ inv     lda stline,y
         cpy tmpb
         bne inv
 lim_ok
-        ldy #3
+        lda emode               ; LIGNE : < si la fenêtre est décalée, > si
+        cmp #2                  ;   le paragraphe continue à droite
+        bne hn
+        lda hx
+        beq h1
+        lda #"<"
+        sta stline+30
+h1      lda hx
+        clc
+        adc #WIDTH
+        sta tmpw
+        lda #0
+        adc #0
+        sta tmpw+1
+        lda tmpw
+        cmp plen
+        lda tmpw+1
+        sbc plen+1
+        bcs hn
+        lda #">"
+        sta stline+31
+hn      ldy #3
         lda insm
         bne ins
 mrf     lda m_rfp-1,y
@@ -1525,21 +1608,59 @@ k_ins
         sta dirty
         rts
 
-k_wrap
-.(
-        lda wrap
-        eor #1
-        sta wrap
+; k_wnext (^W) : mode suivant ; k_wmots, k_wcar, k_wlig : menu Options
+k_wnext ldx emode
+        inx
+        txa
+        cmp #3
+        bcc k_wset
+        lda #0
+        beq k_wset
+k_wmots lda #0
+        .byt $2C                ; (BIT abs : saute l'instruction suivante)
+k_wcar  lda #1
+        .byt $2C
+k_wlig  lda #2
+k_wset  jsr set_mode
         jsr relayout
-        lda wrap
-        beq off
-        lda #<m_wron
-        ldy #>m_wron
+        ldx emode
+        lda m_wr_lo,x
+        ldy m_wr_hi,x
         jmp set_msg
-off     lda #<m_wroff
-        ldy #>m_wroff
-        jmp set_msg
-.)
+
+; set_mode : A = 0 coupure entre les mots, 1 à 38 caractères, 2 ligne
+;   entière ; fenêtre à gauche ; « > » devant l'article du menu Options
+set_mode
+        sta emode
+        ldx #0
+        stx hx
+        ldy #1
+        cmp #0
+        beq sm1
+        dey
+sm1     sty wrap
+        ldy #WIDTH
+        cmp #2
+        bne sm2
+        ldy #LMAX
+sm2     sty rmax
+        lda #" "
+        sta it_mots
+        sta it_car
+        sta it_lig
+        ldx emode
+        lda it_lo,x
+        sta tmpw
+        lda it_hi,x
+        sta tmpw+1
+        ldy #0
+        lda #">"
+        sta (tmpw),y
+        rts
+it_lo   .byt <it_mots,<it_car,<it_lig
+it_hi   .byt >it_mots,>it_car,>it_lig
+m_wr_lo .byt <m_wron,<m_wroff,<m_wrlin
+m_wr_hi .byt >m_wron,>m_wroff,>m_wrlin
 
 k_stats
 .(
@@ -2521,7 +2642,7 @@ found   jsr gap_to
 ;   paragraphe, 0 = sans limite), wrap (coupure à l'écran), prw (largeur
 ;   de l'imprimante). EDIT.CFG est cherché sur le lecteur du document,
 ;   puis sur A: ; sans lui, réglages intégrés (cfg_def). Une ligne :
-;     [d:]nom.ext  maxi  [MOTS|CAR]  [largeur]
+;     [d:]nom.ext  maxi  [MOTS|CAR|LIGNE]  [largeur]
 ;   jokers * et ? ; « ; » : commentaire. La première ligne dont le nom
 ;   correspond s'applique ; les colonnes absentes gardent leur défaut.
 apply_cfg
@@ -2529,8 +2650,7 @@ apply_cfg
         lda #0
         sta maxi
         sta maxi+1
-        lda #1
-        sta wrap
+        sta ecfg                ; MOTS
         lda #80
         sta prw
         lda hasname
@@ -2569,7 +2689,9 @@ dma     ldx #F_SETDMA
         lda #<DEF_DMA
         ldy #>DEF_DMA
         jsr BDOS
-end     jmp relayout
+end     lda ecfg
+        jsr set_mode
+        jmp relayout
 
 ; try_open : ouvre EDIT.CFG sur le lecteur A (1 = A:). C=1 si absent
 try_open
@@ -2742,16 +2864,18 @@ nx      dex
         sta maxi
         lda t1+1
         sta maxi+1
-        jsr skipsp              ; coupure : MOTS ou CAR
+        jsr skipsp              ; coupure : MOTS, CAR ou LIGNE
         jsr upc
-        cmp #"C"
-        bne m
-        lda #0
+        ldx #2
+        cmp #"L"
         beq setw
-m       cmp #"M"
+        dex
+        cmp #"C"
+        beq setw
+        dex
+        cmp #"M"
         bne nn
-        lda #1
-setw    sta wrap
+setw    stx ecfg
 sk      iny
         lda cline,y
         cmp #" "+1
@@ -3464,15 +3588,21 @@ mn_chr  .byt 4,14
         .byt MA_TYPE
         .word c_long
 
-mn_opt  .byt 3,14
+mn_opt  .byt 5,14
         .asc "Options",0
-        .asc "Coupure mots",0
+it_mots .asc ">Coupure mots",0
         .byt MA_TYPE
         .word c_wrap
-        .asc "Ins/Rempl. ^E",0
+it_car  .asc " Coupure 38car",0
+        .byt MA_TYPE
+        .word c_wcar
+it_lig  .asc " Ligne      ^W",0
+        .byt MA_TYPE
+        .word c_wlig
+        .asc " Ins/Rempl. ^E",0
         .byt MA_TYPE
         .word c_ins
-        .asc "Statistiques",0
+        .asc " Statistiques",0
         .byt MA_TYPE
         .word c_stats
 
@@ -3502,6 +3632,8 @@ c_stats  .byt $90,0
 c_insert .byt $91,0
 c_print  .byt $92,0
 c_long   .byt $93,0
+c_wcar   .byt $94,0
+c_wlig   .byt $95,0
 
 ; ---------------------------------------------------------------------
 ; Messages
@@ -3527,6 +3659,7 @@ m_nolim   .asc "Pas de longueur maxi (EDIT.CFG)",0
 m_nolong  .asc "Aucun paragraphe trop long",0
 m_long    .asc "Paragraphe trop long : la suite",0
 m_wroff   .asc "Coupure a 38 caracteres",0
+m_wrlin   .asc "Ligne entiere (defilement)",0
 m_newf    .asc "Nouveau fichier",0
 m_toobig  .asc "Fichier tronque : trop gros",0
 m_saved   .asc "Enregistre",0
@@ -3577,6 +3710,10 @@ fcb_ren .dsb 36,0
 recbuf  .dsb 128,0
 ; réglages du document (EDIT.CFG)
 maxi    .word 0         ; longueur maxi d'un paragraphe (0 : sans limite)
+ecfg    .byt 0          ; EDIT.CFG : mode d'affichage (0 MOTS, 1 CAR, 2 LIGNE)
+emode   .byt 0          ; mode d'affichage en cours (set_mode)
+rmax    .byt WIDTH      ; longueur d'une ligne d'écran (LMAX en mode LIGNE)
+hx      .byt 0          ; LIGNE : première colonne montrée
 prw     .byt 80         ; largeur de l'imprimante
 cdrv    .byt 0          ; lecteur du document (1 = A:)
 cfile   .byt 0          ; 1 : réglages lus dans EDIT.CFG
