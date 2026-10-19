@@ -7,6 +7,10 @@
   mkdisk.py put  IMAGE fichier_local [NOM.EXT]
   mkdisk.py era  IMAGE NOM.EXT
   mkdisk.py attr IMAGE NOM.EXT RO|RW|SYS|DIR...
+  mkdisk.py check  IMAGE         secteurs absents ou à CRC faux, répertoire
+  mkdisk.py repare IMAGE SORTIE  réécrit une image saine (secteurs relus
+                                 même mal synchronisés ; contenu gardé tel
+                                 quel, même si son CRC est faux)
 
 Attributs (comme SET sur l'Oric) : bit 7 de t1 = R/O (protégé), de t2 =
 SYS (caché de DIR). Dans « new », --ro protège les fichiers qui suivent,
@@ -29,6 +33,11 @@ Entrelacement : sur chaque piste, les secteurs sont rangés un sur ENTREL
 l'ordre). Un vrai lecteur tourne pendant que le BDOS traite un secteur : dans
 l'ordre, le suivant est déjà passé et il faut attendre un tour. La lecture
 des images ne dépend pas de l'ordre (secteurs retrouvés par leur en-tête).
+Lecture tolérante : un en-tête ou des données précédés de deux $A1 seulement
+sont acceptés. Clock Signal, quand il réécrit une piste dans l'image, ne
+garde que deux des trois $A1 de chaque synchronisation (le premier devient
+des octets sans sens) : Oricutron et le LOCI ne retrouvent plus ces
+secteurs, la disquette paraît vide ; « repare » la remet d'aplomb.
 """
 import os
 import struct
@@ -100,26 +109,50 @@ class Disk:
             raise SystemExit("%s : pas une image MFM_DISK" % path)
         sides, tracks = struct.unpack("<II", raw[8:16])
         found = {}
+        crcbad = set()
+        mal_sync = 0
         for side in range(sides):
             for trk in range(tracks):
                 base = 256 + (side * tracks + trk) * TRACK_LEN
                 t = raw[base:base + TRACK_LEN]
                 p = 0
                 while True:
-                    p = t.find(b"\xa1\xa1\xa1\xfe", p)
+                    p = t.find(b"\xa1\xa1\xfe", p)     # (deux $A1 au moins)
                     if p < 0:
                         break
-                    tr, sd, sc, sz = t[p + 4:p + 8]
-                    d = t.find(b"\xa1\xa1\xa1\xfb", p + 10)
-                    if d < 0:
-                        break
-                    found[(tr, sd, sc)] = t[d + 4:d + 4 + (128 << sz)]
-                    p = d + 4 + (128 << sz)
+                    if t[p - 1] != 0xA1:
+                        mal_sync += 1
+                    tr, sd, sc, sz = t[p + 3:p + 7]
+                    idf = b"\xa1\xa1\xa1\xfe" + t[p + 3:p + 7]
+                    id_ok = crc16(idf) == struct.unpack(">H", t[p + 7:p + 9])[0]
+                    d = t.find(b"\xa1\xa1\xfb", p + 9)
+                    if d < 0 or d - p > 80 or sz > 3:
+                        p += 9
+                        continue
+                    n = 128 << sz
+                    data = t[d + 3:d + 3 + n]
+                    d_ok = crc16(b"\xa1\xa1\xa1\xfb" + data) == \
+                        struct.unpack(">H", t[d + 3 + n:d + 5 + n].ljust(2, b"\0"))[0]
+                    if (tr, sd, sc) not in found or id_ok and d_ok:
+                        found[(tr, sd, sc)] = data
+                        if id_ok and d_ok:
+                            crcbad.discard((tr, sd, sc))
+                        else:
+                            crcbad.add((tr, sd, sc))
+                    p = d + 3 + n
         secs = []
+        missing = []
+        bad = []
         for lsn in range(NSECT):
             c, s, n = lsn_chs(lsn)
+            if (c, s, n) not in found:
+                missing.append(lsn)
+            elif (c, s, n) in crcbad:
+                bad.append(lsn)
             secs.append(found.get((c, s, n), bytes(256)))
-        return cls(secs)
+        d = cls(secs)
+        d.missing, d.crcbad, d.mal_sync = missing, bad, mal_sync
+        return d
 
     def save(self, path):
         out = bytearray(b"MFM_DISK")
@@ -276,6 +309,44 @@ class Disk:
         return files
 
 
+def check(d):
+    """Contrôle de l'image chargée : secteurs, puis répertoire et blocs."""
+    err = 0
+    def zone(lsn):
+        if lsn < SYS_LSN:
+            return "amorce"
+        if lsn < DIR_LSN:
+            return "système"
+        if lsn < DIR_LSN + 2 * BLK_SECT:
+            return "répertoire"
+        return "bloc %d" % ((lsn - DIR_LSN) // BLK_SECT)
+    if d.mal_sync:
+        print("synchronisations à deux $A1 : %d (piste réécrite par Clock Signal ?)" % d.mal_sync)
+    for lsn in d.missing:
+        print("secteur %d absent (%s)" % (lsn, zone(lsn))); err += 1
+    for lsn in d.crcbad:
+        print("secteur %d : CRC faux (%s)" % (lsn, zone(lsn))); err += 1
+    owner = {}
+    for i, e in enumerate(d.dir_entries()):
+        if e[0] == 0xE5:
+            continue
+        nom = bytes(c & 0x7F for c in e[1:12]).decode("ascii", "replace")
+        if e[0] > 15 or any(c & 0x7F < 32 for c in e[1:12]):
+            print("entrée %d invraisemblable (utilisateur %d, %r)" % (i, e[0], nom)); err += 1
+            continue
+        for b in e[16:32]:
+            if not b:
+                continue
+            if b < 2 or b >= NBLK:
+                print("%s : bloc %d hors de la disquette" % (nom, b)); err += 1
+            elif b in owner and owner[b] != nom:
+                print("bloc %d partagé : %s et %s" % (b, owner[b], nom)); err += 1
+            owner[b] = nom
+    print("%d fichier(s), %d bloc(s) occupé(s) ; %s" % (len(d.listing()), len(owner),
+          "aucun défaut" if not err else "%d défaut(s)" % err))
+    return 1 if err else 0
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -324,6 +395,12 @@ def main(argv):
                                               "R/O" if ro else "R/W", "SYS" if sy else "DIR"))
         free = NBLK - len(d.used_blocks())
         print("%d fichier(s), %d Ko libres" % (len(files), free * 2))
+    elif cmd == "check":
+        return check(d)
+    elif cmd == "repare":
+        d.save(rest[0])
+        print("%s écrite : %d secteur(s) absent(s) (mis à 0), %d à CRC faux (gardés)"
+              % (rest[0], len(d.missing), len(d.crcbad)))
     elif cmd == "get":
         data = d.read_file(rest[0])
         out = rest[1] if len(rest) > 1 else rest[0]

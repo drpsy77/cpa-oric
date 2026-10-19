@@ -136,7 +136,11 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - **Vrai Microdisc** : FORMAT, DISKCOPY, attributs et COPY avec jokers ; premier accès après
   une pause de plus de 3 s (TYPE, PUT, FORMAT).
 - **Clock Signal** (simule la rotation et le chargement de tête) : premier accès après plus
-  de 3 s ; n'y utiliser que A: et des commandes qui existent tant que la version à quatre
+  de 3 s. Ses images ne sont pas fiables après écriture : en réécrivant une piste dans le
+  fichier, il ne garde que deux des trois `$A1` de chaque synchronisation (Oricutron et le
+  LOCI n'y trouvent plus rien) et peut fausser le CRC d'un secteur (« disk I/O error » à la
+  relecture) ; `mkdisk.py check` le montre, `mkdisk.py repare` remet l'image d'aplomb. Son
+  Write Track ne marche pas sur un 1793 : FORMAT y reste bloqué sur la piste 0 ; n'y utiliser que A: et des commandes qui existent tant que la version à quatre
   lecteurs n'est pas construite.
 
 ## Vérifié
