@@ -49,6 +49,8 @@ PARALLELE = 2
 
 ANCIEN_TXT = b"ANCIEN CONTENU, A GARDER INTACT\r\n" * 50          # 1 650 octets, 1 bloc
 ANCIEN_BIN = bytes((i * 7) & 0xFF for i in range(1500))
+GROS = b"".join(b"Ligne %04d d'un texte trop long pour EDIT (32 000 octets).\r\n" % i
+                for i in range(680))                                 # 40 Ko : tronqué
 DOC = b"".join(b"Ligne %02d du document d'essai, assez longue pour remplir.\r\n" % i
                for i in range(90))                                   # 5,4 Ko, 3 blocs
 
@@ -245,6 +247,8 @@ def scenarios():
           [("DOC.TXT", DOC, False), ("AUTRE.TXT", autre, True)],
           sous % "AUTRE.TXT", "AUTRE.TXT", "ancien", "fichier protege",
           interdit="enregistre"),
+        S("EDIT document tronque (40 Ko), CTRL-S", "EDIT", [("GROS.TXT", GROS, False)],
+          "EDIT GROS.TXT\n||X\x1cs|", "GROS.TXT", "ancien", "texte tronque"),
         S("EDIT RESET", "EDIT", [("DOC.TXT", DOC, False)], ed, "DOC.TXT", "reset",
           ref="EDIT normal"),
     ]

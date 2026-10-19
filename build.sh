@@ -6,6 +6,7 @@
 #   build/progs/*.COM  programmes d'exemple
 #   build/cpa.dsk      disquette amorçable (MFM_DISK, 2 faces, 42 pistes, 17 secteurs)
 #   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk, cpa-anim.dsk  disquettes par usage
+#   build/cpa-projet.dsk  disquette vierge pour les projets (lecteur B:)
 set -e
 cd "$(dirname "$0")"
 # assembleur : $XA, sinon tools/xa s'il existe, sinon xa dans le PATH
@@ -99,4 +100,8 @@ theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM 
   "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT
-echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm,anim}.dsk"
+# disquette de projet, vierge : sans système (amorce et pistes du système
+# vides), tout le reste pour les fichiers ; en B: à côté de cpa.dsk
+echo "== build/cpa-projet.dsk"
+python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
+echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{logo,notes,asm,anim,projet}.dsk"

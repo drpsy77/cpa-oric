@@ -39,7 +39,8 @@ Deux variantes sont construites à partir des mêmes sources :
   Microdisc, donc aussi pour le Cumulus et le LOCI. Le système se charge dans les 16 Ko de RAM
   overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
   programmes reste intact. Quatre autres disquettes, par usage : `cpa-logo.dsk`,
-  `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk`.
+  `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` ; et une vierge, `cpa-projet.dsk`, pour son
+  travail en `B:` à côté de la disquette système en `A:`.
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
   disque.
 

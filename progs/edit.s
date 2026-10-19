@@ -3223,7 +3223,8 @@ tn1     lda fcb_new,x
         dex
         bpl tn1
         inx                     ; (X = 0) R/O : celui du nouveau nom,
-        stx fcb_main+13         ; posé par l'ouverture (load_file)
+        stx fcb_main+13         ; posé par l'ouverture (load_file) ;
+        stx toobig              ; un autre nom : le texte tronqué y va
         lda #1
         sta hasname
         sta dirty
@@ -3450,7 +3451,12 @@ r       rts
 ; save_file : écrit dans NOM.$$$, puis remplace NOM.EXT
 save_file
 .(
-        lda fcb_main+13         ; ouvert en lecture seule (R/O) ?
+        lda toobig              ; tronqué à l'ouverture : jamais sous son
+        beq ntr                 ;   nom (la fin du fichier serait perdue)
+        lda #<m_trunc
+        ldy #>m_trunc
+        jmp set_msg
+ntr     lda fcb_main+13         ; ouvert en lecture seule (R/O) ?
         bpl rw
         lda #<m_ro
         ldy #>m_ro
@@ -3744,6 +3750,7 @@ m_wroff   .asc "Coupure a 38 caracteres",0
 m_wrlin   .asc "Ligne entiere (defilement)",0
 m_newf    .asc "Nouveau fichier",0
 m_toobig  .asc "Fichier tronque : trop gros",0
+m_trunc   .asc "Texte tronque : Enreg. sous...",0
 m_saved   .asc "Enregistre",0
 m_ro      .asc "Fichier protege (R/O)",0
 m_dirfull .asc "Repertoire plein",0

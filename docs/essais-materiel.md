@@ -29,6 +29,15 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   (`TYPE`), ou le nouveau dans `NOM.$$$` ; `ERA *.$$$` ensuite. Rapporter la disquette sur le
   PC : `python3 tools/mkdisk.py check` sans défaut ;
 - RESET hors des accès disque : toujours immédiat (`*RESET* at ...`), comme avant.
+- **deux disquettes** (`cpa.dsk` en A:, `cpa-projet.dsk` en B:, avec CARTE.GRX et
+  TUILES.SPR copiés dessus) : `B:`, puis `GRXASM CARTE /C` ; il ne reste sur B: que
+  CARTE.COM, qui se lance (`CARTE`) ; les bibliothèques et CPA.INC ont été lues sur A:.
+  Puis `GRXASM CARTE` et `ASM CARTE /S` : CARTE.ASM, CARTE.COM, CARTE.SYM sur B: ;
+  `GRAPHER CARTE /C` donne la même chose. Avec un seul lecteur (disquette système puis de
+  projet dans le même lecteur), on ne peut pas : les bibliothèques doivent être sur la
+  disquette du projet ;
+- EDIT d'un fichier de plus de 32 000 octets (CARTE.ASM) : `Fichier tronque : trop gros`,
+  CTRL-S refusé (`Texte tronque : Enreg. sous...`), Enreg. sous un autre nom accepté ;
 
 **Programmes**
 

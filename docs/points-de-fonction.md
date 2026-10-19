@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 38 | 5 | 171 | 36 | 72 | **322** | 68 | **390** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
-| GRAPHER + GRXASM | 35 | 22 | 125 | 25 | 18 | **225** | 51 | **276** |
+| GRAPHER + GRXASM | 35 | 22 | 125 | 29 | 18 | **229** | 51 | **280** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 14 | 0 | 21 | 13 | 9 | **57** | 22 | **79** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -24,14 +24,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 14 | 0 | 8 | 0 | 3 | **25** | 5 | **30** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *140* | *42* | *348* | *71* | *96* | ***697*** | *182* | ***879*** |
+| *Applications* | *140* | *42* | *348* | *75* | *96* | ***701*** | *182* | ***883*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 102 | 18 | **167** | 45 | **212** |
-| **Total** | **192** | **72** | **571** | **265** | **192** | **1292** | **311** | **1603** |
+| **Total** | **192** | **72** | **571** | **269** | **192** | **1296** | **311** | **1607** |
 
-Points ajustés (indicatif, § 9) : 1 292 × 1,05 ≈ 1 357.
+Points ajustés (indicatif, § 9) : 1 296 × 1,05 ≈ 1 361.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 65 EO, 64 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 66 EO, 64 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -304,7 +304,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | EDIT.D02 | `EDIT.CFG` : longueur maxi, coupure (mots, caractères, ligne), largeur d'impression par modèle de nom | ILF | 1 | 4 | F | 7 |
 | EDIT.D03 | Presse-papiers (4 Ko) | ILF | 1 | 1 | F | 7 |
 | EDIT.T01 | Nouveau | EI | 1 | 1 | F | 3 |
-| EDIT.T02 | Ouvrir (réglages d'`EDIT.CFG`) | EQ | 2 | 3 | F | 3 |
+| EDIT.T02 | Ouvrir (réglages d'`EDIT.CFG` ; fichier trop long : tronqué, pas d'enregistrement sous son nom) | EQ | 2 | 3 | F | 3 |
 | EDIT.T03 | Insérer un fichier au curseur | EI | 1 | 2 | F | 3 |
 | EDIT.T04 | Enregistrer (`NOM.$$$` puis remplacement) | EI | 2 | 2 | F | 3 |
 | EDIT.T05 | Enregistrer sous (réglages relus ; fichier existant : `Remplacer (O/N)`, protégé : refusé) | EI | 2 | 4 | F | 3 |
@@ -398,6 +398,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.T51 | TMAP | EI | 2 | 7 | M | 4 |
 | GRA.T52 | TILE(x,y) | EQ | 2 | 3 | F | 3 |
 | GRA.T53 | TFONT | EI | 2 | 3 | F | 3 |
+| GRA.T54 | `/C` : traduire puis assembler (CHAIN vers `ASM NOM /E`), `NOM.COM` seul | EO | 2 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -414,7 +415,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A11 | GRXASM : traduction en assembleur, expressions gardées en registres, sauts courts | `grxasm.s` | 5 |
 | GRA.A12 | GRXASM : tableaux à adresse fixe (indices constants ou variables, décalages) | `grxasm.s` | 5 |
 | GRA.A13 | GRXASM : routines utiles des bibliothèques (graphe des besoins, fermeture) | `grxasm.s` | 5 |
-| GRA.A14 | `/A` : passage à GRXASM par CHAIN | `grapher.s` | 1 |
+| GRA.A14 | `/A`, `/C` : passage à GRXASM, puis à ASM, par CHAIN ; bibliothèques cherchées sur le lecteur du `.GRX`, puis sur les lecteurs lus | `grapher.s`, `grxasm.s` | 1 |
 | GRA.A15 | Tuiles : une table par place dans la tuile, carte traduite par morceaux (avant, dans, après la carte), instructions modifiées par ligne, coordonnées sans division | `spr.inc` | 5 |
 
 ### 4.3 LOGO
@@ -583,14 +584,14 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
 | ASM.D01 | Source `.ASM` et inclusions | EIF | 1 | 3 | F | 5 |
-| ASM.T01 | Assembler : `NOM.COM`, `NOM.SYM`, liste des erreurs | EO | 1 | 6 | F | 4 |
+| ASM.T01 | Assembler : `NOM.COM`, `NOM.SYM` (`/S`), liste des erreurs ; `/E` : source effacée après succès | EO | 1 | 7 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
 | ASM.A01 | Assembleur 6502 en deux passes : 56 mnémoniques, 12 modes, page zéro automatique, code écrit au fil de la passe 2 | `asm.s`, `asm_tab.s` | 5 |
 | ASM.A02 | Évaluateur d'expressions (priorités, `<` `>`, unaires, `*`) | `asm.s` | 3 |
 | ASM.A03 | Table des symboles, blocs locaux `.(` `.)` | `asm.s` | 3 |
-| ASM.A04 | Directives (`.byt`, `.asc`, `.word`, `.dsb`, second `*=`), inclusion | `asm.s` | 1 |
+| ASM.A04 | Directives (`.byt`, `.asc`, `.word`, `.dsb`, second `*=`), inclusion (lecteur de la source, puis lecteurs lus) | `asm.s` | 1 |
 
 ### 4.9 DEBUG
 
@@ -682,7 +683,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.D02 | Sources du projet (`src`, `progs`, `files`) | EIF | 3 | 3 | F | 5 |
 | OUT.D03 | Images et animations d'origine (PNG, GIF) | EIF | 1 | 3 | F | 5 |
 | OUT.D04 | Scénarios et références des tests | EIF | 2 | 3 | F | 5 |
-| OUT.T01 | `build.sh` : ROM et cinq disquettes, contrôles de taille, marges | EO | 3 | 8 | M | 5 |
+| OUT.T01 | `build.sh` : ROM et six disquettes (dont la disquette de projet vierge), contrôles de taille, marges | EO | 3 | 8 | M | 5 |
 | OUT.T02 | `mkdisk.py new` : créer une image | EI | 2 | 6 | M | 4 |
 | OUT.T03 | `mkdisk.py ls` | EQ | 1 | 5 | F | 3 |
 | OUT.T04 | `mkdisk.py get` | EQ | 1 | 2 | F | 3 |
@@ -747,45 +748,45 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 36 | 11 065 | 1 107 | 536 | 856 | 9 % | 36 741 | 34 | 114 |
-| EDIT | 2 | 3 517 | 188 | 122 | 5 | 5 % | 8 704 | 48 | 118 |
-| GRAPHER + GRXASM | 8 | 12 867 | 924 | 424 | 0 | 7 % | 32 455 | 57 | 144 |
+| Système et commandes | 36 | 11 065 | 1 107 | 536 | 864 | 9 % | 36 874 | 34 | 115 |
+| EDIT | 2 | 3 524 | 188 | 122 | 5 | 5 % | 8 704 | 48 | 118 |
+| GRAPHER + GRXASM | 8 | 12 944 | 933 | 426 | 0 | 7 % | 32 642 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 1 | 5 991 | 294 | 181 | 0 | 5 % | 13 581 | 105 | 238 |
 | HEX | 1 | 1 564 | 87 | 59 | 0 | 5 % | 3 840 | 82 | 202 |
 | VOIR | 3 | 1 468 | 168 | 64 | 0 | 10 % | 3 353 | 77 | 176 |
 | USB | 4 | 1 313 | 135 | 74 | 0 | 9 % | 4 479 | 53 | 179 |
-| ASM | 2 | 2 392 | 117 | 76 | 70 | 5 % | 5 949 | 266 | 661 |
+| ASM | 2 | 2 453 | 124 | 77 | 70 | 5 % | 6 130 | 273 | 681 |
 | DEBUG | 1 | 2 378 | 121 | 87 | 0 | 5 % | 6 496 | 32 | 87 |
 | Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 160 | 6 541 | 684 | 398 | 0 | 9 % | — | 39 | — |
-| **Total** | 250 | 58 684 | 4 434 | 2 338 | 947 | 7 % | 134 802 | 45 | 104 |
+| Outillage PC | 160 | 6 557 | 687 | 398 | 0 | 9 % | — | 39 | — |
+| **Total** | 250 | 58 845 | 4 453 | 2 341 | 955 | 7 % | 135 303 | 45 | 104 |
 
 Octets du système : code résident 13 899 (`$C000-$F64B`), page `$FF00` 232, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 178 | 76 | 3,7 | 26 |
-| EDIT | 88 | 20 | 1,2 | 6 |
-| GRAPHER + GRXASM | 827 | 68 | 3,7 | 24 |
+| Système et commandes | 1 186 | 76 | 3,7 | 27 |
+| EDIT | 92 | 20 | 1,2 | 6 |
+| GRAPHER + GRXASM | 830 | 69 | 3,6 | 25 |
 | LOGO | 273 | 63 | 1,4 | 3 |
 | CMDER | 169 | 24 | 3,0 | 5 |
 | HEX | 34 | 9 | 1,8 | 2 |
 | VOIR | 78 | — | 4,1 | 5 |
 | USB | 38 | 9 | 1,5 | 2 |
-| ASM | 42 | 10 | 4,7 | 1 |
+| ASM | 58 | 10 | 6,4 | 1 |
 | DEBUG | 40 | 12 | 0,5 | 1 |
 | Exemples | 0 | — | 0,0 | 8 |
 | Outillage PC | 323 | — | 1,9 | 30 |
-| Transverse (projet) | 1 696 | — | — | 35 |
-| Traduction anglaise (docs/en) | 2 179 | — | — | 5 |
-| **Total** | 6 965 | 291 | 5,4 | 52 |
+| Transverse (projet) | 1 712 | — | — | 36 |
+| Traduction anglaise (docs/en) | 2 208 | — | — | 6 |
+| **Total** | 7 041 | 292 | 5,4 | 53 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 52 commits du 2026-10-13 au 2026-10-19.
+Historique : 53 commits du 2026-10-13 au 2026-10-19.
 
-Réutilisation : 45 183 lignes de code écrites dans `progs/`, 50 469 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 336 lignes de code écrites dans `progs/`, 50 625 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -836,6 +837,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-18 | `b86817e` | 0.9 | 1 254 | 300 | 1 554 | 131 | comptage de référence |
 | 2026-10-19 | tuiles | 0.9 | 1 278 | 305 | 1 583 | 142 | tuiles de GRAPHER (`TILESET`, `TMAP`, `TILE`, `TFONT`), `mkspr.py`, CARTE en tuiles |
 | 2026-10-19 | fichiers sûrs | 0.9 | 1 292 | 311 | 1 603 | 150 | `mkdisk.py check`, `diff`, `repare` ; `test_fichiers.py` ; SAVE/BSAVE par `NOM.$$$` ; EDIT Enregistrer sous ; RESET différé pendant un secteur |
+| 2026-10-19 | deux disquettes | 0.9 | 1 296 | 311 | 1 607 | 152 | `cpa-projet.dsk` ; ASM et GRXASM cherchent les `.INC` sur A: à D: ; GRXASM et GRAPHER `/C` ; ASM `/S`, `/E` ; EDIT : texte tronqué jamais enregistré sous son nom |
 
 ## 11. Comparaisons
 

@@ -6,6 +6,7 @@ build/*
 !build/cpa-notes.dsk
 !build/cpa-asm.dsk
 !build/cpa-anim.dsk
+!build/cpa-projet.dsk
 progs/*.err
 tools/xa
 tools/pylib/

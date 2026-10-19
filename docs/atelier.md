@@ -144,7 +144,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | Commande | Rôle |
 |---|---|
 | `./build.sh` | construit `build/cpa.rom`, `build/cpa.dsk`, `build/progs/*.COM` et les `.sym` |
-| `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur) |
+| `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
 | `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |
 | `tools/test_logo.sh` | LOGO.COM : scénarios `tools/logo_tests/*.log` comparés aux `.ref` (texte, images) ; `REF=1` réécrit les références |
@@ -228,7 +228,7 @@ disquette (`check`, `diff`, contenu du fichier visé) et l'écran (message atten
 |---|---|
 | GRAPHER `SAVE`, `BSAVE` (tableau de 4 800 octets, 3 blocs) | normal (référence du nouveau contenu), disque plein (1 bloc libre) avec ou sans ancien fichier, répertoire plein avec ou sans ancien fichier, fichier R/O, RESET balayé |
 | GRAPHER `BSAVE SCREEN` (1 bloc) | normal, disque plein (aucun bloc libre) avec ou sans ancien fichier, répertoire plein, R/O, RESET balayé |
-| EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (réponse N, réponse O), sous un fichier R/O, RESET balayé |
+| EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (question, réponse N, réponse O), sous un fichier R/O, document tronqué (40 Ko) puis CTRL-S, RESET balayé |
 
 Attendu : l'ancien fichier intact ou le nouveau complet ; rien de perdu ni d'abîmé ; pas de
 `NOM.$$$` qui reste ; le message juste ; `check` sans défaut. **RESET balayé** : `\x06` N

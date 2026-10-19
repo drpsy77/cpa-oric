@@ -107,8 +107,8 @@ Erase unneeded files (`ERA`) or use another disk.
 ## Drives A: to D:
 
 Any file name can start with a drive: `DIR B:`, `TYPE B:LETTRE.TXT`, `COPY LETTRE.TXT B:`,
-`ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (the `.COM`, the `.SYM` and the
-`#include`s are on the source's drive), and in LOGO `CHARGE "B:JEU`. Without a drive, it is the
+`ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (the `.COM` and the `.SYM` on the
+source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `CHARGE "B:JEU`. Without a drive, it is the
 current drive, chosen with `B:` at the prompt or with the **Lecteur suivant** [next drive] item
 of the Systeme menu (A, B, C, D, then A). A program (`.COM`) or a script (`.BAT`, also through
 `DO`) typed without a drive is searched for on the current drive, then on `A:`, then on those
@@ -266,9 +266,16 @@ visible.
 On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
-Suggested use: the disk for the task in `A:`, one data disk per project in `B:`. From `B>`,
-`EDIT`, `LOGO` or `ASM` are found on `A:`, and `DIR` only shows the work in progress.
-`build/cpa.dsk` remains the complete disk, everything visible.
+**Project disk.** `build/cpa-projet.dsk` is a blank disk (no system, 336 KB for files), to
+put in `B:` and copy for each project.
+
+Suggested use: the system disk in `A:` (`cpa.dsk`, or a disk for the task), a project disk in
+`B:`, and `B:` as the current drive. From `B>`, `EDIT`, `LOGO`, `ASM`, `GRAPHER` or `GRXASM`
+are found on `A:`, and so are the libraries (`CPA.INC`, `HIRES.INC`, `GRX.INC`...) that ASM and
+GRXASM look for on the project's drive, then on A: to D:; everything produced (`.ASM`,
+`.COM`, `.SYM`, data files) goes to `B:`, and `DIR` only shows the work in progress.
+`build/cpa.dsk` remains the complete disk, everything visible, and the demonstration; about
+78 KB are left on it, little for working (a GRXASM translation quickly writes over 40 KB).
 
 Keys: CTRL-T toggles upper case (indicator `A`, or `a` for lower case, at the end of the menu
 bar), CTRL-C on an empty line at the prompt does a warm start. The RESET button returns to the
@@ -712,7 +719,12 @@ period is shared by the three voices.
 
 It is a full-screen editor: 26 lines of 38 columns, with a menu bar and a status line (file
 name, `*` if the text is modified, paragraph `L`, position `C` of the cursor in the paragraph,
-`INS`/`RFP` for insert/replace, `M` if a mark is set). The text can reach about 32 KB.
+`INS`/`RFP` for insert/replace, `M` if a mark is set). The text can reach 32,000 bytes (about
+27 KB when started from SPLIT mode). A longer file opens **truncated** (`Fichier tronque : trop
+gros`); it cannot be saved under its own name (`Texte tronque : Enreg. sous...`), which would
+lose its end, but can be under another one. A long assembler program is therefore written as
+modules under 32,000 bytes, brought together by `#include` (see ASM); TYPE and ASM read a file
+of any size.
 
 Three display modes (Options menu, or CTRL-W which moves to the next one):
 
@@ -857,10 +869,13 @@ padding `^Z`s (`1A`). A read-only (R/O) file can be viewed but not saved.
     A>ASM PROG
     A>PROG
 
-`ASM NAME` assembles `NAME.ASM` (or `NAME.ext` if you give the type) and writes `NAME.COM`. You
-can thus write, assemble and run a program without leaving the Oric. Example on the disk:
+`ASM NAME [/S] [/E]` assembles `NAME.ASM` (or `NAME.ext` if you give the type) and writes
+`NAME.COM`. You can thus write, assemble and run a program without leaving the Oric. `/S` also
+writes `NAME.SYM`, the list of symbols for DEBUG; `/E` erases the source if assembly succeeded
+(this is what `GRXASM NAME /C` does, its `.ASM` being only an intermediate). Example on the
+disk:
 
-    A>ASM HELLO
+    A>ASM HELLO /S
     ASM CP/A 1.0
     Passe 1
     Passe 2
@@ -878,7 +893,7 @@ LOGO and ASM itself give exactly the same bytes as with `xa`.
 | Address | `*= $0500` (also the default value) |
 | Data | `.byt` / `.byte` / `.asc` (numbers and strings `"..."`), `.word`, `.dsb n[,value]` |
 | Blocks | `.(` ... `.)`: labels defined inside are local to the block |
-| Include | `#include "CPA.INC"` (one level) |
+| Include | `#include "CPA.INC"` (one level), looked for on the source's drive, then on the drives already read from A: to D: |
 | Comment | `;` to the end of the line |
 
 Expressions: decimal numbers, `$hex`, `%binary`, characters `"A"` or `'A'`, `*` (address of the
@@ -888,8 +903,23 @@ byte) before the expression. Mnemonics can be written in upper or lower case; `A
 page mode.
 
 As with `xa`, a second `*=` leaves no gap in the file: the code that follows is placed next,
-assembled for the new address (DEBUG uses this to copy itself to the top of memory). Besides
-`NAME.COM`, ASM writes `NAME.SYM`, the list of symbols for DEBUG.
+assembled for the new address (DEBUG uses this to copy itself to the top of memory).
+
+**A program in several files.** EDIT only holds 32,000 bytes: a long program is split into
+modules, edited separately and brought together by the main file.
+
+    ; JEU.ASM
+    #include "CPA.INC"
+    *= $0500
+            jsr init
+            ...
+    #include "ECRAN.INC"
+    #include "NIVEAUX.INC"
+
+One level of inclusion only: a module does not include another (`Un seul niveau
+d'inclusion`). Labels are shared by all the files: prefix those of each module (`ec_`,
+`nv_`...), as the libraries do (`h_`, `r_`, `f_`). Modules are looked for like `CPA.INC`: on
+the drive of `JEU.ASM`, then on A: to D:.
 
 Errors are listed with the line number, the message and the start of the line (the name of the
 included file in brackets where relevant). The list pauses at each full screen. If there is an
@@ -908,7 +938,7 @@ accesses).
     A>ASM PROG
     A>DEBUG PROG [parameters]
 
-DEBUG loads `PROG.COM` at `$0500`, where it will run, and `PROG.SYM` if it exists. The
+DEBUG loads `PROG.COM` at `$0500`, where it will run, and `PROG.SYM` if it exists (`ASM PROG /S`). The
 parameters after the name are passed to the program. The debugger places itself at
 `$8400-$9FFF`, with the symbols just below, and lowers the top of the TPA accordingly (variable
 `$020C`, ceiling `$02A9`): about 31 KB remain for the program. Programs that respect the top of

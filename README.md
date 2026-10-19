@@ -38,7 +38,8 @@ Two variants are built from the same sources:
   therefore also for the Cumulus and the LOCI. The system loads into the 16 KB of overlay RAM
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
   intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
-  `cpa-anim.dsk`.
+  `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
+  disk in `A:`.
 - **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
 The programs and their messages are in French for now; an English version is planned.

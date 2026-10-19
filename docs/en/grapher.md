@@ -27,6 +27,7 @@ README.TXT (on the disk) give a summary (`tools/gen_readme_txt.py`).
 | `GRAPHER NAME [p1 ... p9]` | loads `NAME.GRX` (drive optional) into memory and runs it; `p1`-`p9` replace `$1`-`$9` |
 | `GRXASM NAME [p1 ... p9]` | does not run it: writes `NAME.ASM`, to be assembled with `ASM NAME` (§ 12) |
 | `GRAPHER NAME /A [p1 ... p9]` | the same thing: GRAPHER hands over to GRXASM (`/A` right after the name) |
+| `GRXASM NAME /C [p1 ... p9]`, `GRAPHER NAME /C [...]` | translates, then chains `ASM NAME /E`: only `NAME.COM` is left (`NAME.ASM` is erased if assembly succeeds; an error leaves it, to read it) |
 
 ## 2. Writing a program
 
@@ -647,9 +648,11 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   (those it calls, and those they call), taken from `GRX.INC` and `HIRES.INC` always
   (`HIRES.INC` also holds the text screen: `h_init`, `h_text`, `PRINT`), plus `ARR.INC` if the
   program has arrays or strings (a `PRINT "..."` is enough), `FIL.INC` if it reads or writes data files (`SAVE`... `FOUND`),
-  `SPR.INC` if it has sprites and `ANIM.INC` if it animates. These files must be on the drive
-  of the `.GRX` (otherwise: `GRX.INC absente (bibliotheque)`, library missing); ASM then only
-  needs `CPA.INC`. They are, with GRXASM, on the complete disk, the Assembler disk and the
+  `SPR.INC` if it has sprites and `ANIM.INC` if it animates. These files are looked for on the
+  drive of the `.GRX`, then on the drives already read from A: to D: (system disk in A:,
+  project in B:); otherwise: `GRX.INC absente (bibliotheque)`, library missing. ASM then only
+  needs `CPA.INC`, looked for the same way. For CARTE, `NAME.ASM` is 46 KB: `/C` only leaves
+  `NAME.COM` (8 KB). They are, with GRXASM, on the complete disk, the Assembler disk and the
   Animations disk (not on the Logo disk, which has no ASM).
 - Size of a translated `.COM`: 1.4 KB for `ARDOISE`, 1.7 KB for `DESSIN`, 2.2 KB for `MOTIFS`,
   4.0 KB for `SERPENT`, 6.0 KB for `SPRITES` (removing the checks took 4 to 15% off).
