@@ -1,0 +1,6 @@
+; TFONT : les codes doivent rester dans le jeu (32-127)
+DIM S$(48)
+BLOAD S$ TUIL.SPR
+LORES
+TFONT S$ 126
+PRINT 1

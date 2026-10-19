@@ -1,0 +1,6 @@
+; TFONT : un fichier de sprites (genre 0) n'est pas un fichier de tuiles
+DIM S$(48)
+BLOAD S$ HERO.SPR
+LORES
+TFONT S$ 100
+PRINT 1

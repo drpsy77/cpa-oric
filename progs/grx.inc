@@ -745,6 +745,25 @@ g_paste ldx #0
         sta hs+1
         lda g_gd
         jmp r_blit
+; g_tmap : A/Y = descripteur de la carte ; X puis Y sur la pile des
+;   valeurs ; fenêtre h_x1 h_y1 h_x2 h_y2 (SPR.INC : t_map)
+g_tmap  pha
+        tya
+        pha
+        jsr g_pop               ; Y
+        lda g_et
+        sta t_y
+        lda g_et+1
+        sta t_y+1
+        jsr g_pop               ; X
+        lda g_et
+        sta t_x
+        lda g_et+1
+        sta t_x+1
+        pla
+        tay
+        pla
+        jmp t_map
 g_spc   lda h_x1
         ldx h_y1
         jmp h_lspc

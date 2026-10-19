@@ -18,7 +18,7 @@ prompt:
     DIR               what's on the disk
     HELP              help topics
     LOGO DEMO         then type DEMO: the turtle draws a tree
-    GRAPHER CARTE     explore a random 128 x 64 world (arrows, Q to quit)
+    GRAPHER CARTE     explore a random island of tiles (arrows, Q to quit)
     GRXASM SERPENT    translate the snake game into assembly...
     ASM SERPENT       ...assemble it on the Oric...
     SERPENT           ...and play the compiled version
@@ -55,8 +55,8 @@ The programs and their messages are in French for now; an English version is pla
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step).
 - **LOGO** in French (turtle, decimals, words and lists, sound) and **GRAPHER**, a small
-  language for drawings and games (text-mode sprites, maps larger than the screen,
-  scrolling), interpreted or translated into assembly.
+  language for drawings and games (text-mode sprites, tile maps larger than the
+  screen, scrolling), interpreted or translated into assembly.
 - Compressed HIRES pictures and full-screen animations (VOIR).
 
 ## Documentation

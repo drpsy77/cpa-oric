@@ -1,0 +1,5 @@
+; TMAP avant TILESET
+DIM T$(2,2)
+LORES
+TMAP T$ 0 0 2 1 4 4
+PRINT 1

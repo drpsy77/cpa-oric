@@ -199,7 +199,7 @@ that of the line (attributes): the sprite takes the colour of the lines it cross
 - The pool matches the character set of the lines the sprite crosses (attribute 8: standard,
   9: secondary). A character straddling two sets is split into two sprites. The secondary set
   has no drawings of its own (the system keeps the line being edited and the history there):
-  it will be used with tiles (§ 16). An `INPUT` damages its codes 64 to 111; at the end of a
+  tiles draw it (`TFONT ... ALT`, § 7.3). An `INPUT` damages its codes 64 to 111; at the end of a
   program that used it, the line history is emptied.
 
 ### 7.2 Rectangles: copy, scrolling, rotation
@@ -246,12 +246,75 @@ back to the start: the same line).
       ENDIF
     NEXT
 
-The redraw happens only after a step (§ 8, "Game loop"): `CARTE.GRX` (§ 14).
+The redraw happens only after a step (§ 8, "Game loop"). For a much larger map in the same
+memory, tiles (§ 7.3).
 
 **Scroll, then fill in.** When the scenery is not entirely in memory (computed as you go,
 drawn at random, endless), slide the playing area by one cell and write the strip that comes
 in: a line with `LOCATE` and `SPC` or `PRINT A$`, a column with `PRINTV A$` or `SPCV`, or a
 `PASTE` of one line or one column. Example: `DEFILE.GRX` (§ 14).
+
+### 7.3 Tiles: a large map in little memory
+
+A **tile** is a small drawing of 1 to 4 columns by 1 to 4 lines of characters. The map is a
+two-dimensional `$` array in which each byte names a tile: a map of 64 × 32 tiles of 2 × 2
+(2 KB) gives a world of 128 × 64 characters (8 KB with `PASTE`). `TMAP` draws a window of
+it; the camera moves by one character, not one tile.
+
+    DIM T$(32,64) D$(5,4) S$(152)
+    BLOAD S$ TUILES.SPR       ; dessins des caracteres (genre 1)
+    FOR J 0 3                 ; codes de chaque tuile, ligne par ligne
+      D$(0,J) = 34            ; eau
+      D$(1,J) = 33            ; herbe
+      ...
+    NEXT
+    TILESET D$ 2 2 "~ #^M"    ; tuiles de 2 x 2 ; caracteres de la carte
+    LOAD T$ NIVEAU1           ; la carte, ecrite en clair dans EDIT
+    LORES
+    TFONT S$ 33 ALT           ; dessins copies dans le jeu secondaire
+    ...
+    TMAP T$ X-19 Y-13 2 1 38 26
+    IF TILE(NX,NY) = 1        ; de l'herbe sous le pas ?
+
+| Element | Effect |
+|---|---|
+| `TILESET D$ wid hgt [K$]` | declares the tiles: each line of `D$` (two-dimensional `$` array) gives the `wid` × `hgt` codes of one tile, line by line (1 to 4 of each, 256 tiles at most); `K$` (text in quotes or a string) lists the map bytes in the order of the tiles: `"~ #^M"` makes `~` tile 0, the space tile 1... Without `K$`, the map byte is the tile number |
+| `TMAP T$ X Y col lin wid hgt` | draws on the screen, corner at (col, lin), the window of `wid` × `hgt` cells of the map `T$` (two-dimensional `$` array) whose corner is character (X, Y) of the world; X and Y may leave the map, even be negative |
+| `TFONT S$ code [ALT]` | copies into the font (standard set, or secondary with `ALT`) the drawings of a kind-1 `.SPR` file loaded in `S$` (§ 10.1): all the cells of all its tiles, in file order, onto consecutive codes from `code` (32 to 127; `ALT`: 32 to 111) |
+| `TILE(X,Y)` | function: number of the tile under character (X, Y) of the world, on the map of the last `TMAP`; 0 outside the map, or before any `TMAP` |
+
+- **Tile 0 fills everything**: a map byte missing from `K$` (or, without `K$`, larger than
+  the last number), and everything outside the map, is shown as tile 0. This is handy for a
+  map written in EDIT (`LOAD` puts 0s at the end of short lines) and for an island
+  surrounded by water: the camera need not be kept in bounds. A byte present twice in `K$`:
+  the first one wins.
+- **Coordinates**: character (X, Y) of the world is in tile (X / wid, Y / hgt). Neither
+  `TMAP` nor `TILE` divides: a few subtractions, once per command.
+- **Codes**: tiles share their characters (water or a wall: a single repeated character).
+  `TFONT` only copies the drawings; `D$` assembles the codes. In a kind-1 `.SPR`, a 1 × 1
+  "tile" is simply a character: the file may contain only characters, which `D$` assembles
+  into larger tiles.
+- **Secondary set**: the map lines start with attribute 9 (`CHAR 0 L 9`); the whole set
+  (codes 32 to 111) then belongs to the tiles, and the text of the other lines keeps the
+  standard set. The secondary set has no drawings of its own: even the empty cell (the grass)
+  must be given one. Same reservations as for sprites (§ 7.1): `INPUT` damages codes 64 to
+  111, and the line history is emptied at the end.
+- **Memory**: `TILESET` reserves below the arrays (wid × hgt + 1) × 256 bytes (2 × 2:
+  1,280; 4 × 4: 4,352), aligned on a page, once; a later `TILESET` reuses them, or reserves
+  again if it needs more. It prepares one table per place in the tile (map byte → displayed
+  code): about 50 ms for 2 × 2 tiles.
+- **Speed** of `TMAP` (38 × 26 window, translated or interpreted program: it is the same
+  routine): 1 × 1 tiles, about 35 ms; 2 × 2, 55 ms; 4 × 4, 43 ms (`PASTE`: 22 ms). Redraw
+  only after a step (§ 8, "Game loop").
+- **Sprites**: as for `PASTE` (§ 7.2), remove the sprites before `TMAP`, then show them
+  again.
+- `TMAP` and `TFONT` need LORES (`LORES d'abord`). Errors (interpreted): `TILESET d'abord`
+  (TILESET first); `valeur hors limites` (tile larger than 4, window off the screen,
+  `TFONT` codes outside the set); `indice hors limites` (line of `D$` too short, `K$` longer
+  than the list of tiles, one-dimensional map); `fichier .SPR ?` (`TFONT` on a file that is
+  not of kind 1). Translated: nothing is checked; `TMAP` without `TILESET` does nothing.
+
+Complete example: `CARTE.GRX` (§ 14).
 
 ## 8. Keys and time
 
@@ -405,8 +468,8 @@ lines (drawing, silhouette). Sprites follow each other without gaps, of differen
 name helps to find them in HEX and will be used by the editor.
 
 **File header (8 bytes)**: `SPR` (signature), version 1, number of sprites (1 to 255), kind
-(0: sprites, 16-byte cells; 1: tiles, 8-byte cells, drawing only, § 16), then two bytes at 0
-(reserved).
+(0: sprites, 16-byte cells; 1: tiles, 8-byte cells, drawing only, copied into the font by
+`TFONT`, § 7.3), then two bytes at 0 (reserved).
 
 **Each sprite**: an 8-byte header (width in columns 1-4, height in lines 1-4, two reserved
 bytes at 0, 4-character ASCII name padded with spaces: `HER1`), then its cells, line by line
@@ -587,13 +650,15 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (15,555 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (17,462 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
-  bytes per slot and 192 bytes for the two pools. The free area for the text, the arrays and
-  an animation is about 19 KB (text from `$522C`).
+  bytes per slot and 192 bytes for the two pools; `TILESET`, (wid × hgt + 1) pages (§ 7.3).
+  The free area for the text, the arrays and an animation is about 17 KB (text from
+  `$599F`): `VAISSEAU.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALLE.ANI` (18 and
+  21 KB), which need translation.
 - **Memory** (translated): the program at `$0500`, then the tables of `hires.inc`. Arrays are
   reserved below `$9D60` as when interpreted: fixed arrays (§ 12) at start, in the order of
   the `DIM`s, then the others at their `DIM`.
@@ -601,7 +666,8 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   `PLOT 1+RND(238) 1+RND(198)`: 5 s; translated: 0.6 s). A sprite of 1 × 2 cells moved with
   `SSHOW`: 2.3 ms in a translated program (about 1.1 ms per cell: removal then display). An
   area of 38 × 26 cells (translated program, measured in the simulated 6502, estimated in
-  cycles): `PASTE` or `SCROLV`, about 20 ms (one frame); `SCROLH`, `ROTH`, about 40 ms (each
+  cycles): `PASTE` or `SCROLV`, about 20 ms (one frame); `TMAP`, 35 to 55 ms depending on
+  the tile size (§ 7.3); `SCROLH`, `ROTH`, about 40 ms (each
   line goes through a buffer); `ROTV n`: n passes of one line, in the shorter direction. In
   the picture, count 8,000 bytes for the whole HIRES screen: about 150 ms. Without run-time
   checks (§ 12), a loop of 1,000 `RND` and `CHAR` runs 2.2 times faster than with them, and
@@ -621,7 +687,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 | `SERPENT.GRX` | LORES: snake (body in two ring arrays, `SCRN` for collisions) |
 | `SCORES.GRX` | high scores: `INPUT` of the name, sorting, title coloured by an attribute at the start of the string; the best five kept in `HOFN.TXT` and `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
 | `SPRITES.GRX` | LORES: a little man led with the arrows (two walking frames) and a bouncing ball, on two-colour scenery; sprites from `HEROS.SPR` |
-| `CARTE.GRX` | LORES: a world of 128 × 64 cells drawn at random in `T$` (trees, mountains, lakes), seen through a 38 × 26 window that follows the player (`PASTE`); arrows (`INKEY`, redraw only after a step, subroutine `CALC`), Q: end |
+| `CARTE.GRX` | LORES: an island of 64 × 32 tiles of 2 × 2 (128 × 64 characters) drawn at random in `T$` (lakes, trees, mountains, walls), written in plain text (`TILESET` with `K$`), seen through a 38 × 26 window centred on the player (`TMAP`; outside the island, tile 0: the sea); drawings from `TUILES.SPR` in the secondary set (`TFONT ... ALT`); you walk only on grass (`TILE`); arrows (`INKEY`, redraw only after a step, subroutine `CALC`), Q: end |
 | `DEFILE.GRX` | LORES: a road scrolling downwards (`SCROLV`, then the new line at the top); left and right arrows, `INKEY` |
 | `ANIMS.GRX` | animations (Animations disk) |
 
@@ -636,7 +702,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 | `progs/arr.inc` (`ARR.INC`) | arrays and strings, shared by both (`r_chk`: checks when interpreted); descriptors at `$9D60`; screen rectangles (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | screen: drawing, LORES (`h_lores`, `h_loc`, `h_chr`...), vertical writing (`h_lvon`, `h_lvoff`), pictures; `h_buf`: 40 free bytes after its tables (buffer of `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | `.ANI` animations; the `ANIM` of translated programs (`a_grx`) is in `GRX.INC`, so that it costs nothing to the interpreter or to VOIR |
-| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`), shared by both; uses `arr.inc` (descriptors, room below the arrays) and `hz_tad` (`hires.inc`); asks the program for the byte `s_hst` |
+| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) and tiles (`t_set`, `t_map`, `t_get`, `t_font`; `g_tmap` of `GRX.INC` for translated programs), shared by both; uses `arr.inc` (descriptors, room below the arrays) and `hz_tad` (`hires.inc`); asks the program for the byte `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | data files (`SAVE`... `FOUND`), shared by both; records in `DEF_DMA`; asks the program for its FCB (`f_fcb`), number writing (`f_fmt`, `f_nbuf`) and two messages |
 
 Buffers (file names, parameters, words...) come after the end of the program, set to 0 at
@@ -782,6 +848,37 @@ pointers), `$10-$2C` for `GRX.INC`, `$B0-$BF` for `spr.inc`, `$C0-$C7` for `hire
   on a dummy font, `NAME.env`), `lo_spr2.grx` (secondary set, history emptied), `e_spr*.grx`
   (errors).
 
+**Tiles** (`spr.inc`, same zero page as the sprites):
+
+- `TILESET` (`t_set`) reserves (wid × hgt + 1) aligned pages below the arrays (`tz_res`,
+  `t_tb`, `t_np`: again only if a `TILESET` asks for more). Page 0: map byte → tile number
+  (0 everywhere, then the numbers; with `K$`, from the last character to the first, so that
+  the first one wins; `t_z`: a byte that gives tile 0). Page 1 + p, for each place
+  p = line × wid + column in the tile: map byte → displayed code, filled byte by byte
+  (address of the `D$` line by `rz_mul`, kept while the tile does not change). `TMAP` has no
+  tile number left to look up: it translates, as for a 1 × 1 map.
+- `tz_div`: X / wid (1 to 4, signed, rounded down) by 16 shifts and subtractions, once per
+  command (`tz_cut`: tile and place for X and Y).
+- `TMAP` (`t_map`): number of tile columns touched (`t_nt`), and the first and last ones in
+  the map (`t_jl`, `t_jh`), once; then for each screen line, three pieces: before the map,
+  in the map, after (outside the map: `t_z`). One-column tiles: `lda (map),y` / `tax` /
+  `lda table,x` / `sta (screen),y` (about 35 cycles per cell). Wider: the bytes of the line's
+  tiles go into `h_buf` (21 at most), then four `lda table,x` instructions (one per place,
+  page modified on each line) follow each other; a counter tells when to move to the next
+  tile (about 55 cycles per cell for 2 × 2). The map line (`t_mp`) moves on by one line of
+  tiles every `hgt` lines; a line outside the map has only `t_z`.
+- `TILE` (`t_get`): `tz_cut`, then the map byte and page 0; the map (address, lines,
+  columns) is the one kept by the last `TMAP` (`t_ma`, `t_mr`, `t_mc`).
+- `TFONT` (`t_font`, `tz_walk`): a first pass counts the cells (and checks the file when
+  interpreted: `sz_find0`, kind 1, sizes, room in the array), the second copies them to
+  `$B400` or `$B800` + 8 × code. `ALT` sets `s_hst` to 1 (history emptied).
+- GRXASM copies only the useful routines: `tz_in` and `tz_inc` (two entries of the same test)
+  are written so that `tz_in` can come without `tz_inc` (no `BIT abs` between them).
+- Tests: `lo_tile.grx` (`K$`, camera straddling tiles, outside the map, unknown byte, short
+  line, 3 × 1 tiles without `K$`, `TILE`), `lo_tile2.grx` (`TFONT` in both sets, `K$` in an
+  array, 1 × 1 tiles), `e_tile*.grx` (errors); `TUIL.SPR` made by `tools/mkspr.py` (source
+  `tuil.txt`), `TUIL.TXT` and `MAPT.TXT` read by `LOAD`.
+
 Tests: `tools/test_grapher.sh` checks the CHAIN of `/A`, then runs each case interpreted
 (GRAPHER) then translated (GRXASM), in the simulated 6502 (`tools/run_com.py`, no emulator),
 and compares with the expected result (`.ref`, `.kref`, inputs in `NAME.in`). Then the
@@ -789,33 +886,10 @@ examples are tried in Oricutron.
 
 ## 16. Decided, not done yet
 
-### 16.1 Tiles (next step)
-
-A tile map: one byte of the map gives a tile of 1 to 4 columns by 1 to 4 lines of characters.
-It is richer scenery for the same map (a 1 × 1 tile that gives its own code is `PASTE`).
-
-    DIM D$(16,4) T$(32,64)
-    BLOAD D$ TUILES          ; 16 tuiles de 2 x 2 codes, ligne par ligne
-    LOAD T$ NIVEAU1          ; la carte, ecrite dans EDIT
-    TILESET D$ 2 2 " ~/\T#"
-    TMAP T$ X Y 2 1 38 26    ; X, Y : coin de la camera, en caracteres du monde
-
-- `TILESET D$ wid hgt [K$]`: each line of `D$` gives the codes of a tile. `K$` (optional)
-  lists the characters of the map in the order of the tiles: the map is then written in plain
-  text in EDIT (`~` water, `/` and `\` mountain, `T` tree, `#` wall). Without `K$`, the map
-  byte is the tile number. `TILESET` prepares a 256-byte conversion table in memory.
-- `TMAP T$ X Y col lin wid hgt`: draws the window of `wid` × `hgt` characters, corner on the
-  screen at (col, lin), from character (X, Y) of the world; the camera moves by one
-  character, not one tile. About 35 cycles per character.
-- The real limit is the number of codes: 96 in the standard set, including the digits, the
-  letters and the sprites' pool. Tiles share their characters; 2 × 2 is the advised size to
-  start with.
-
-### 16.2 Later
-
-- Tile drawings copied into the font from a kind-1 `.SPR` (§ 10.1).
 - Characters animated at the 50 Hz rate (rippling water), without touching the map.
-- **Character and sprite editor**: a full-screen `.COM` that writes the `.SPR` files.
+- **Character and sprite editor**: a full-screen `.COM` that writes the `.SPR` files
+  (sprites and tiles). Meanwhile, `tools/mkspr.py` makes a `.SPR` on the PC from a drawing
+  in text (`tools/spr/tuiles.txt`).
 
 ## 17. Open questions
 
@@ -827,9 +901,6 @@ It is richer scenery for the same map (a 1 × 1 tile that gives its own code is 
   without resetting the variables; each phase keeps its libraries. Still to choose: the name
   (`RUN` or `CHAIN`); how a phase declares the arrays it receives (an identical `DIM`
   accepted without clearing, or `COMMON`).
-- **Tile drawings** (kind-1 `.SPR` file): the command that copies the drawings into the font,
-  and how it chooses the codes (consecutive, or a list as for the pools). Tiles will also give
-  the secondary set its drawings.
 - If `SSHOW` walking through the file is too slow for the last sprites: a table of positions
   built at load time.
 - Later: sprites that bring their own colour ("attribute" cells in the file, placed as they

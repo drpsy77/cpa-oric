@@ -1,0 +1,49 @@
+; tuiles : TILESET avec K$, TMAP (camera a cheval, hors carte), TILE
+DIM D$(3,4) T$(3,4) E$(2,3) M$(2,2)
+LOAD D$ TUIL
+LOAD T$ MAPT
+TILESET D$ 2 2 ".A#"
+LORES
+TMAP T$ 0 0 2 1 8 6
+TMAP T$ 1 1 12 1 6 4
+TMAP T$ -3 -1 20 1 12 5
+TMAP T$ 6 4 34 1 4 3
+LOCATE 2 8
+PRINT TILE(0,0)
+SPC 1
+PRINT TILE(2,0)
+SPC 1
+PRINT TILE(5,1)
+SPC 1
+PRINT TILE(4,2)
+SPC 1
+PRINT TILE(7,3)
+SPC 1
+PRINT TILE(2,5)
+SPC 1
+PRINT TILE(-1,0)
+SPC 1
+PRINT TILE(8,0)
+SPC 1
+PRINT TILE(0,6)
+; sans K$, tuiles de 3 x 1 (reste par soustractions)
+E$(0,0) = 97
+E$(0,1) = 98
+E$(0,2) = 99
+E$(1,0) = 120
+E$(1,1) = 121
+E$(1,2) = 122
+M$(0,1) = 1
+M$(1,0) = 1
+M$(1,1) = 7
+TILESET E$ 3 1
+TMAP M$ 2 0 2 10 9 3
+TMAP M$ -4 -1 2 13 11 3
+LOCATE 2 16
+PRINT TILE(3,0)
+SPC 1
+PRINT TILE(5,1)
+SPC 1
+PRINT TILE(-1,1)
+SPC 1
+PRINT TILE(-32767,32767)

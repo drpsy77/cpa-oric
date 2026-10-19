@@ -19,7 +19,7 @@ prompt `A>` :
     DIR               ce qu'il y a sur la disquette
     HELP              les rubriques d'aide
     LOGO DEMO         puis tapez DEMO : la tortue dessine un arbre
-    GRAPHER CARTE     un monde de 128 x 64 cases tiré au hasard (flèches, Q pour finir)
+    GRAPHER CARTE     une île de tuiles tirée au hasard (flèches, Q pour finir)
     GRXASM SERPENT    traduit le jeu du serpent en assembleur...
     ASM SERPENT       ...l'assemble sur l'Oric...
     SERPENT           ...et lance la version compilée
@@ -54,8 +54,8 @@ Deux variantes sont construites à partir des mêmes sources :
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
 - **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
-  langage de dessin et de jeux (sprites en mode texte, cartes plus grandes que l'écran,
-  défilement compris), interprété ou traduit en
+  langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
+  l'écran, défilement compris), interprété ou traduit en
   assembleur.
 - Images HIRES compressées et animations plein écran (VOIR).
 

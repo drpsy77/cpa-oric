@@ -7,7 +7,7 @@
 # et la sortie est comparée au fichier .ref ; puis il est traduit
 # (GRXASM NOM ; GRAPHER NOM /A passe la main à GRXASM par CHAIN,
 # vérifié une fois au début), assemblé avec xa (CPA.INC, GRX.INC, HIRES.INC,
-# ANIM.INC, ARR.INC, FIL.INC, SPR.INC ; CUBE.ANI pour ANIM, *.SPR) et
+# ANIM.INC, ARR.INC, FIL.INC, SPR.INC ; CUBE.ANI et VAISSEAU.ANI pour ANIM, *.SPR) et
 # exécuté : messages de la traduction et sortie comparés au fichier .kref.
 #   tools/test_grapher.sh          compare aux références
 #   REF=1 tools/test_grapher.sh    réécrit les références (après vérification !)
@@ -21,7 +21,7 @@ T=$(mktemp -d)
 cp build/progs/GRAPHER.COM build/progs/GRXASM.COM "$T/"
 cp build/src/*.INC "$T/"   # bibliothèques de la disquette (marquées par mark_inc.py)
 cp $D/*.TXT "$T/"   # fichiers de données lus par LOAD
-cp files/anim/CUBE.ANI "$T/"; cp $D/*.SPR "$T/"   # animation, sprites
+cp files/anim/CUBE.ANI files/anim/VAISSEAU.ANI "$T/"; cp $D/*.SPR "$T/"   # animation, sprites
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"

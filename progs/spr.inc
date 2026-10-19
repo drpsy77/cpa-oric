@@ -34,6 +34,23 @@
 ;  largeur, hauteur.
 ;  r_chk <> 0 (interprété) : tout est vérifié ; 0 (traduit) : rien, sauf
 ;  le tas vide (la case reste alors sans sprite).
+;  Tuiles (carte de tuiles en mode texte, docs/grapher.md « Tuiles ») :
+;    t_set      TILESET : A/Y = descripteur du tableau $ des tuiles (une
+;               ligne par tuile : ses codes, ligne par ligne), t_w, t_h
+;               (1-4), X = 1 si la chaîne courante (r_sa, r_sc) donne
+;               les caractères de la carte dans l'ordre des tuiles ;
+;               réserve sous les tableaux (larg x haut + 1) pages
+;               alignées, une fois (de nouveau si elles ne suffisent plus)
+;    t_map      TMAP : A/Y = descripteur de la carte (tableau $ à deux
+;               dimensions), t_x, t_y (signés) : caractère du monde au
+;               coin ; fenêtre en (h_x1, h_y1), h_x2 x h_y2 cases
+;    t_get      TILE : r_i, r_j = caractère du monde -> r_j = numéro de
+;               la tuile (carte du dernier TMAP ; 0 hors de la carte)
+;    t_font     TFONT : A/Y = descripteur d'un .SPR de genre 1, X = jeu,
+;               t_c = premier code : dessins copiés dans la police
+;  Un octet de la carte absent de la table, ou une case hors de la
+;  carte, donne la tuile 0. Aucune division : t_x / t_w par 16
+;  soustractions, une fois par commande.
 ;  Page zéro : $B0-$BF.
 ; =====================================================================
 
@@ -47,6 +64,17 @@ s_w     = $BC           ; emplacement (2 octets)
 s_fn    = $BE           ; routine appelée pour chaque case (2 octets)
 
 S_HIST  = $BA80         ; historique des lignes du système
+
+; tuiles (TILESET, TMAP, TILE, TFONT) : même page zéro que les sprites
+t_pp    = $B0           ; octet de la carte (2 octets)
+t_ix    = $B2           ; table octet -> tuile (2 octets)
+t_tp    = $B4           ; page en cours (TILESET, TFONT) (2 octets)
+t_sp    = $B6           ; début de la fenêtre à l'écran (2 octets)
+t_mp    = $B8           ; ligne de la carte (2 octets)
+t_v     = $BA           ; ligne de D$ (TILESET) (2 octets)
+t_kc    = $BC           ; TMAP : cases restantes de la tuile
+t_j     = $BD           ;   tuile de la ligne
+t_wd    = $BE           ;   largeur de la fenêtre
 
 ; ---------------------------------------------------------------------
 ; SPRITES n
@@ -586,9 +614,9 @@ sq2     clc
         rts
 .)
 
-; sz_find : sprite s_n du tableau r_dp -> s_p (sa première case), s_l
-;   (largeur), s_hh (hauteur) ; le fichier est vérifié si r_chk
-sz_find
+; sz_find0 : s_p = début du tableau r_dp ; si r_chk : s_e = sa fin, et
+;   l'en-tête (SPR, version 1) est vérifié
+sz_find0
 .(
         ldy #0
         lda (r_dp),y
@@ -621,14 +649,27 @@ sq1     jsr rz_mul
         lda s_p+1
         adc rz_p+1
         sta s_e+1
-        jsr sz_r8               ; en-tête : SPR, version 1, genre 0
+        jsr sz_r8               ; en-tête : SPR, version 1
         ldy #3
 sq2     lda (s_p),y
         cmp sz_sig,y
-        bne sqf
+        bne sz_bad
         dey
         bpl sq2
-        ldy #5
+sq3     rts
+.)
+sz_bad  lda #<sz_m_spr
+        ldy #>sz_m_spr
+        jmp r_fail
+
+; sz_find : sprite s_n du tableau r_dp -> s_p (sa première case), s_l
+;   (largeur), s_hh (hauteur) ; le fichier est vérifié si r_chk
+sz_find
+.(
+        jsr sz_find0
+        lda r_chk
+        beq sq3
+        ldy #5                  ; genre 0 : sprites
         lda (s_p),y
         bne sqf
         ldy #4                  ; rang < nombre de sprites
@@ -636,9 +677,7 @@ sq2     lda (s_p),y
         cmp (s_p),y
         bcc sq3
 sql     jmp rz_lim
-sqf     lda #<sz_m_spr
-        ldy #>sz_m_spr
-        jmp r_fail
+sqf     jmp sz_bad
 sq3     ldx s_n
         clc                     ; premier en-tête de sprite
         lda s_p
@@ -707,6 +746,801 @@ sqb     txa
 sqr     rts
 .)
 
+; ---------------------------------------------------------------------
+; Tuiles : TILESET D$ larg haut [K$]
+;   Mémoire réservée (pages alignées) : page 0 = octet de la carte ->
+;   numéro de la tuile (TILE) ; pages 1 à larg x haut : pour chaque
+;   place (ligne, colonne) dans la tuile, octet de la carte -> code
+;   affiché. TMAP n'a plus qu'à traduire : comme une carte de 1 x 1.
+; ---------------------------------------------------------------------
+t_set
+.(
+        stx t_hk
+        jsr rz_desc
+        lda t_w                 ; t_wh = largeur * hauteur
+        ldx t_h
+        jsr tz_mul8
+        sta t_wh
+        lda r_chk
+        beq tq2
+        lda t_w                 ; 1 à 4 colonnes, 1 à 4 lignes
+        sec
+        sbc #1
+        cmp #4
+        bcs tql
+        lda t_h
+        sec
+        sbc #1
+        cmp #4
+        bcs tql
+        ldy #5                  ; une ligne du tableau : t_wh codes
+        lda (r_dp),y
+        bne tq1
+        dey
+        lda (r_dp),y
+        cmp t_wh
+        bcc tqi
+tq1     lda t_hk                ; K$ : pas plus de caractères que de
+        beq tq2                 ;   tuiles
+        ldy #3
+        lda (r_dp),y
+        bne tq2
+        dey
+        lda (r_dp),y
+        sta t_n
+        jsr rz_len
+        cpy t_n
+        beq tq2
+        bcc tq2
+tqi     jmp rz_idx
+tql     jmp rz_lim
+tq2     ldx t_wh                ; pages : t_wh + 1, réservées une fois
+        inx                     ;   (de nouveau si elles ne suffisent
+        cpx t_np                ;   plus)
+        beq tq3
+        bcc tq3
+        jsr tz_res
+tq3     jsr tz_ptr
+        ldy #3                  ; nombre de tuiles : t_n (0 : 256)
+        lda (r_dp),y
+        beq tq4
+        lda #0
+        beq tq5
+tq4     dey
+        lda (r_dp),y
+tq5     sta t_n
+        lda #0                  ; tout octet inconnu : tuile 0
+        sta t_z
+        tay
+tq7     sta (t_ix),y
+        iny
+        bne tq7
+        lda t_hk
+        bne tq9
+tq8     tya                     ; sans K$ : l'octet est le numéro
+        sta (t_ix),y
+        iny
+        cpy t_n
+        bne tq8
+        beq tqb
+tq9     jsr rz_len              ; K$ : du dernier au premier, pour que
+        tya                     ;   le premier l'emporte
+        beq tqb
+        tax
+tqa     dex
+        txa
+        tay
+        lda (r_sa),y
+        sta t_z                 ; (à la fin : K$(0), octet de la tuile 0)
+        tay
+        txa
+        sta (t_ix),y
+        cpx #0
+        bne tqa
+tqb     ldy #4                  ; pas : octets par ligne de D$
+        lda (r_dp),y
+        sta rz_b
+        iny
+        lda (r_dp),y
+        sta rz_b+1
+        lda #$FF                ; tuile de la ligne t_v (aucune)
+        sta t_k
+        lda #0
+        sta t_b
+; pour chaque octet de la carte : ses codes, une page par place
+tqc     ldy t_b
+        lda (t_ix),y
+        cmp t_k
+        beq tqd
+        sta t_k                 ; t_v = D$ + tuile * pas
+        sta rz_a
+        lda #0
+        sta rz_a+1
+        lda rz_b
+        pha
+        lda rz_b+1
+        pha
+        jsr rz_mul
+        pla
+        sta rz_b+1
+        pla
+        sta rz_b
+        ldy #0
+        clc
+        lda (r_dp),y
+        adc rz_p
+        sta t_v
+        iny
+        lda (r_dp),y
+        adc rz_p+1
+        sta t_v+1
+tqd     lda #0                  ; t_tp : page de la place 0
+        sta t_tp
+        ldx t_tb+1
+        inx
+        stx t_tp+1
+        ldx #0
+tqe     txa
+        tay
+        lda (t_v),y
+        ldy t_b
+        sta (t_tp),y
+        inc t_tp+1
+        inx
+        cpx t_wh
+        bne tqe
+        inc t_b
+        bne tqc
+        lda #1
+        sta t_ok
+        rts
+.)
+
+; tz_mul8 : A <- A * X (petits nombres)
+tz_mul8
+.(
+        sta t_v
+        lda #0
+        cpx #0
+        beq tq2
+tq1     clc
+        adc t_v
+        dex
+        bne tq1
+tq2     rts
+.)
+
+; tz_res : X pages alignées sous les tableaux, au-dessus de h_zbuf ->
+;   t_tb (octet bas 0), t_np
+tz_res
+.(
+        stx t_np
+        lda r_ok
+        bne tq1
+        jsr r_init
+tq1     lda #0
+        sta t_tb
+        sec
+        lda r_top+1
+        sbc t_np
+        sta t_tb+1
+        bcc tqm
+        lda t_tb
+        cmp h_zbuf
+        lda t_tb+1
+        sbc h_zbuf+1
+        bcc tqm
+        lda #0
+        sta r_top
+        sta h_ztop
+        lda t_tb+1
+        sta r_top+1
+        sta h_ztop+1
+        rts
+tqm     lda #0
+        sta t_np
+        sta t_tb+1
+        lda #<rz_m_mem
+        ldy #>rz_m_mem
+        jmp r_fail
+.)
+
+; tz_ptr : t_ix = table octet -> tuile (la page zéro est partagée)
+tz_ptr  lda t_tb
+        sta t_ix
+        lda t_tb+1
+        sta t_ix+1
+        rts
+
+; tz_div : t_dv (signé) / A (1 à 4) -> t_dv (quotient arrondi vers le
+;   bas), t_dr (reste, 0 à A-1) ; 16 soustractions, sans division
+tz_div
+.(
+        sta t_dd
+        lda t_dv+1
+        php
+        bpl tq1
+        jsr tz_not              ; négatif : (-v-1) / d, puis q = -q-1,
+tq1     lda #0                  ;   r = d-1-r
+        sta t_dr
+        ldx #16
+tq2     asl t_dv
+        rol t_dv+1
+        rol t_dr
+        lda t_dr
+        cmp t_dd
+        bcc tq3
+        sbc t_dd
+        sta t_dr
+        inc t_dv
+tq3     dex
+        bne tq2
+        plp
+        bpl tq4
+        jsr tz_not
+        lda t_dd
+        clc
+        sbc t_dr
+        sta t_dr
+tq4     rts
+.)
+tz_not  lda t_dv
+        eor #$FF
+        sta t_dv
+        lda t_dv+1
+        eor #$FF
+        sta t_dv+1
+        rts
+
+; tz_cut : caractère du monde (t_x, t_y) -> tuile (t_cx, t_cy) et place
+;   dans la tuile (t_rx, t_ry)
+tz_cut
+.(
+        lda t_x
+        sta t_dv
+        lda t_x+1
+        sta t_dv+1
+        lda t_w
+        jsr tz_div
+        lda t_dv
+        sta t_cx
+        lda t_dv+1
+        sta t_cx+1
+        lda t_dr
+        sta t_rx
+        lda t_y
+        sta t_dv
+        lda t_y+1
+        sta t_dv+1
+        lda t_h
+        jsr tz_div
+        lda t_dv
+        sta t_cy
+        lda t_dv+1
+        sta t_cy+1
+        lda t_dr
+        sta t_ry
+        rts
+.)
+
+; tz_row : t_mp = ligne t_cy de la carte (0 <= t_cy < lignes)
+tz_row
+.(
+        lda t_cy
+        sta rz_a
+        lda t_cy+1
+        sta rz_a+1
+        lda t_mc
+        sta rz_b
+        lda t_mc+1
+        sta rz_b+1
+        jsr rz_mul
+        clc
+        lda t_ma
+        adc rz_p
+        sta t_mp
+        lda t_ma+1
+        adc rz_p+1
+        sta t_mp+1
+        rts
+.)
+
+; tz_in : C=0 si 0 <= A/X (signé, A bas) < t_mr ; tz_inc : < t_mc
+;   (pas de BIT abs : GRXASM peut recopier tz_in sans tz_inc)
+tz_inc  ldy #2
+        bne tz_cmp
+tz_in   ldy #0
+tz_cmp
+.(
+        sta t_v
+        txa
+        bmi tq1
+        lda t_v
+        cmp t_mr,y
+        txa
+        sbc t_mr+1,y
+        rts
+tq1     sec
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; TMAP T$ X Y col lig larg haut
+;   Par ligne de l'écran : trois morceaux de colonnes de tuiles (avant
+;   la carte, dans la carte, après) ; hors de la carte, l'octet t_z
+;   (tuile 0). Tuiles de 1 colonne : chaque caractère est traduit
+;   directement (lda (carte),y / tax / lda table,x / sta (écran),y).
+;   Plus larges : les octets des tuiles de la ligne sont d'abord
+;   recopiés dans h_buf, puis chaque caractère est pris dans la table
+;   de sa place (4 instructions modifiées à chaque ligne).
+; ---------------------------------------------------------------------
+t_map
+.(
+        jsr rz_desc
+        lda t_ok                ; sans TILESET : erreur, ou rien (traduit)
+        bne tq0
+        lda r_chk
+        beq tqr
+        lda #<tz_m_set
+        ldy #>tz_m_set
+        jmp r_fail
+tqr     rts
+tq0     lda r_chk
+        beq tq1
+        lda h_x2                ; la fenêtre dans l'écran
+        beq tql
+        clc
+        adc h_x1
+        cmp #41
+        bcs tql
+        lda h_y2
+        beq tql
+        clc
+        adc h_y1
+        cmp #29
+        bcs tql
+        ldy #5                  ; deux dimensions
+        lda (r_dp),y
+        dey
+        ora (r_dp),y
+        bne tq1
+        jmp rz_idx
+tql     jmp rz_lim
+tq1     ldy #5                  ; la carte, gardée pour TILE
+tq2     lda (r_dp),y
+        sta t_ma,y
+        dey
+        bpl tq2
+        lda #1
+        sta t_mok
+        jsr tz_cut
+        lda t_rx                ; t_nt : colonnes de tuiles touchées
+        clc
+        adc h_x2
+        ldx #0
+tq3     inx
+        sec
+        sbc t_w
+        beq tq4
+        bcs tq3
+tq4     stx t_nt
+        lda #0                  ; t_jl : première dans la carte
+        ldx t_cx+1
+        bpl tq6
+        sec                     ; t_cx < 0 : -t_cx, au plus t_nt
+        sbc t_cx
+        tay
+        lda #0
+        sbc t_cx+1
+        bne tq5
+        tya
+        cmp t_nt
+        bcc tq6
+tq5     lda t_nt
+tq6     sta t_jl
+        sec                     ; t_jh : après la dernière (t_mc - t_cx,
+        lda t_mc                ;   au plus t_nt, au moins t_jl)
+        sbc t_cx
+        tay
+        lda t_mc+1
+        sbc t_cx+1
+        bmi tq8                 ; (t_cx >= t_mc : aucune)
+        bne tq7
+        tya
+        cmp t_nt
+        bcc tq9
+tq7     lda t_nt
+        .byt $2C                ; (BIT abs : saute lda #0)
+tq8     lda #0
+tq9     cmp t_jl
+        bcs tqa
+        lda t_jl
+tqa     sta t_jh
+        lda t_ry                ; t_pg : page de la place (t_ry, 0)
+        ldx t_w
+        jsr tz_mul8
+        sec                     ; (+ 1 : la page 0 est la table de TILE)
+        adc t_tb+1
+        sta t_pg
+        lda t_cy
+        ldx t_cy+1
+        jsr tz_in
+        bcs tqb
+        jsr tz_row
+tqb     lda h_x2
+        sta t_wd
+        lda h_y1
+        sta t_row
+        lda h_y2
+        sta t_ny
+; une ligne de l'écran
+trow    lda t_row               ; début de la fenêtre à l'écran
+        asl
+        tay
+        clc
+        lda hz_rows,y
+        adc h_x1
+        sta t_sp
+        lda hz_rows+1,y
+        adc #0
+        sta t_sp+1
+        clc                     ; t_pp : octet de la première tuile
+        lda t_mp
+        adc t_cx
+        sta t_pp
+        lda t_mp+1
+        adc t_cx+1
+        sta t_pp+1
+        lda t_jl
+        sta t_l1
+        lda t_jh
+        sta t_l2
+        lda t_cy                ; ligne de tuiles hors de la carte :
+        ldx t_cy+1              ;   rien dedans
+        jsr tz_in
+        bcc trw
+        lda t_nt
+        sta t_l1
+        sta t_l2
+trw     lda t_w
+        cmp #1
+        beq tw1
+        jmp twn
+; tuiles d'une colonne : traduction directe
+tw1     lda t_pg
+        sta tw1b+2
+        sta tw1d+2
+        ldx t_z
+tw1d    lda $FF00,x             ; (page modifiée)
+        sta t_c0
+        ldy #0
+        lda t_c0
+        cpy t_l1
+        beq tw1a
+tw1e    sta (t_sp),y            ; avant la carte
+        iny
+        cpy t_l1
+        bne tw1e
+tw1a    cpy t_l2
+        beq tw1c
+tw1f    lda (t_pp),y            ; dans la carte
+        tax
+tw1b    lda $FF00,x             ; (page modifiée)
+        sta (t_sp),y
+        iny
+        cpy t_l2
+        bne tw1f
+tw1c    cpy t_wd
+        beq tw1h
+        lda t_c0
+tw1g    sta (t_sp),y            ; après
+        iny
+        cpy t_wd
+        bne tw1g
+tw1h    jmp tnl
+; tuiles plus larges : octets dans h_buf, puis une table par place
+twn     ldy #0
+        lda t_z
+        cpy t_l1
+        beq twn2
+twn1    sta h_buf,y
+        iny
+        cpy t_l1
+        bne twn1
+twn2    cpy t_l2
+        beq twn4
+twn3    lda (t_pp),y
+        sta h_buf,y
+        iny
+        cpy t_l2
+        bne twn3
+twn4    cpy t_nt
+        beq twn6
+        lda t_z
+twn5    sta h_buf,y
+        iny
+        cpy t_nt
+        bne twn5
+twn6    ldx t_pg                ; pages des places de la ligne
+        stx ts0+2
+        inx
+        stx ts1+2
+        inx
+        stx ts2+2
+        inx
+        stx ts3+2
+        lda #0
+        sta t_j
+        sec
+        lda t_w
+        sbc t_rx
+        sta t_kc
+        ldy #0
+        ldx h_buf
+        lda t_rx                ; première tuile : à sa place t_rx
+        beq ts0
+        cmp #2
+        bcc ts1
+        beq ts2
+        bcs ts3
+ts0     lda $FF00,x             ; (page modifiée)
+        sta (t_sp),y
+        iny
+        cpy t_wd
+        beq tnl
+        dec t_kc
+        beq tnt
+ts1     lda $FF00,x
+        sta (t_sp),y
+        iny
+        cpy t_wd
+        beq tnl
+        dec t_kc
+        beq tnt
+ts2     lda $FF00,x
+        sta (t_sp),y
+        iny
+        cpy t_wd
+        beq tnl
+        dec t_kc
+        beq tnt
+ts3     lda $FF00,x
+        sta (t_sp),y
+        iny
+        cpy t_wd
+        beq tnl
+tnt     lda t_w                 ; tuile suivante
+        sta t_kc
+        inc t_j
+        ldx t_j
+        lda h_buf,x
+        tax
+        jmp ts0
+; ligne suivante
+tnl     inc t_row
+        dec t_ny
+        beq tend
+        lda t_pg
+        clc
+        adc t_w
+        sta t_pg
+        inc t_ry
+        lda t_ry
+        cmp t_h
+        bne tgo
+        lda #0                  ; ligne de tuiles suivante
+        sta t_ry
+        lda t_tb+1
+        sec
+        adc #0
+        sta t_pg
+        inc t_cy
+        bne tnl1
+        inc t_cy+1
+tnl1    lda t_cy
+        ora t_cy+1
+        bne tnl2
+        lda t_ma                ; entrée dans la carte par le haut
+        sta t_mp
+        lda t_ma+1
+        sta t_mp+1
+        jmp tgo
+tnl2    clc
+        lda t_mp
+        adc t_mc
+        sta t_mp
+        lda t_mp+1
+        adc t_mc+1
+        sta t_mp+1
+tgo     jmp trow
+tend    rts
+.)
+
+; ---------------------------------------------------------------------
+; TILE(X,Y) : r_i, r_j -> r_j = numéro de la tuile
+; ---------------------------------------------------------------------
+t_get
+.(
+        lda r_i
+        sta t_x
+        lda r_i+1
+        sta t_x+1
+        lda r_j
+        sta t_y
+        lda r_j+1
+        sta t_y+1
+        lda #0
+        sta r_j+1
+        lda t_mok
+        beq tq0
+        jsr tz_cut
+        lda t_cy
+        ldx t_cy+1
+        jsr tz_in
+        bcs tq0
+        lda t_cx
+        ldx t_cx+1
+        jsr tz_inc
+        bcs tq0
+        jsr tz_row
+        jsr tz_ptr
+        clc
+        lda t_mp
+        adc t_cx
+        sta t_pp
+        lda t_mp+1
+        adc t_cx+1
+        sta t_pp+1
+        ldy #0
+        lda (t_pp),y
+        tay
+        lda (t_ix),y
+        .byt $2C                ; (BIT abs : saute lda #0)
+tq0     lda #0
+        sta r_j
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; TFONT S$ code [ALT] : dessins d'un .SPR de genre 1 dans la police
+; ---------------------------------------------------------------------
+t_font
+.(
+        stx t_hk
+        jsr rz_desc
+        lda #0                  ; d'abord compter (et vérifier)
+        jsr tz_walk
+        lda r_chk
+        beq tq2
+        lda t_c                 ; codes 32 à 127 (ALT : 111)
+        cmp #32
+        bcc tql
+        clc
+        adc t_n
+        bcs tql
+        ldx t_hk
+        cmp tz_lim,x
+        bcc tq2
+        beq tq2
+tql     jmp rz_lim
+tq2     lda t_c                 ; police : $B400 ou $B800 + 8 * code
+        sta t_tp
+        lda #0
+        ldx #3
+tq3     asl t_tp
+        rol
+        dex
+        bne tq3
+        ldx t_hk
+        ora tz_fnt,x
+        sta t_tp+1
+        lda t_hk
+        beq tq5x
+        lda #1                  ; jeu secondaire : l'historique sera vidé
+        sta s_hst
+tq5x    lda #1                  ; puis copier
+.)
+; tz_walk : A = 0 : t_n <- nombre de cases du fichier (vérifié si
+;   r_chk) ; A = 1 : copie de leurs dessins en (t_tp)
+tz_walk
+.(
+        sta t_cp
+        jsr sz_find0            ; s_p : début, s_e : fin (r_chk)
+        ldy #5                  ; genre 1 : tuiles
+        lda (s_p),y
+        cmp #1
+        beq tw0
+        lda r_chk
+        beq tw0
+        jmp sz_bad
+tw0     ldy #4
+        lda (s_p),y
+        sta t_k                 ; nombre de tuiles
+        lda #0
+        sta t_n
+        clc
+        lda s_p
+        adc #8
+        sta s_p
+        bcc tw1
+        inc s_p+1
+tw1     lda t_k
+        bne tw1b
+        rts
+tw1b
+        lda r_chk
+        beq tw2
+        jsr sz_r8
+tw2     ldy #0                  ; en-tête : largeur, hauteur
+        lda (s_p),y
+        sta s_l
+        iny
+        lda (s_p),y
+        tax
+        lda r_chk
+        beq tw3
+        lda s_l
+        sec
+        sbc #1
+        cmp #4
+        bcs twf
+        txa
+        sec
+        sbc #1
+        cmp #4
+        bcs twf
+tw3     lda s_l
+        jsr tz_mul8             ; cases de cette tuile
+        sta t_v+1
+        clc
+        adc t_n
+        sta t_n
+        bcs twf
+        clc
+        lda s_p
+        adc #8
+        sta s_p
+        bcc tw4
+        inc s_p+1
+tw4     lda t_v+1               ; s_sz = 8 * cases
+        asl
+        asl
+        asl
+        sta s_sz
+        lda #0
+        rol
+        sta s_sz+1
+        lda r_chk
+        beq tw5
+        lda s_sz
+        ldy s_sz+1
+        jsr sz_room
+tw5     lda t_cp
+        beq tw7
+        ldy #0
+tw6     lda (s_p),y
+        sta (t_tp),y
+        iny
+        cpy s_sz
+        bne tw6
+        clc
+        lda t_tp
+        adc s_sz
+        sta t_tp
+        bcc tw7
+        inc t_tp+1
+tw7     clc
+        lda s_p
+        adc s_sz
+        sta s_p
+        lda s_p+1
+        adc s_sz+1
+        sta s_p+1
+        dec t_k
+        jmp tw1
+twf     jmp sz_bad
+.)
+
 ; sz_r8 : 8 octets en s_p dans le tableau ; sz_room : A/Y octets
 sz_r8   lda #8
         ldy #0
@@ -763,3 +1597,43 @@ s_d     .byt 0
 s_r     .byt 0
 s_e     .word 0
 s_sz    .word 0
+; tuiles
+tz_m_set .asc "TILESET d'abord",0
+tz_lim  .byt 128,112    ; TFONT : fin des codes (jeu standard, secondaire)
+tz_fnt  .byt $B4,$B8    ;   police
+t_w     .byt 0          ; TILESET : largeur et hauteur d'une tuile
+t_h     .byt 0
+t_c     .byt 0          ; TFONT : premier code
+t_ok    .byt 0          ; 1 : TILESET fait
+t_tb    .word 0         ; tables (pages ; octet haut 0 : pas réservées)
+t_np    .byt 0          ;   nombre de pages réservées
+t_z     .byt 0          ; octet de la carte qui donne la tuile 0
+t_x     .word 0         ; TMAP, TILE : caractère du monde
+t_y     .word 0
+t_ma    .word 0         ; carte du dernier TMAP : adresse, lignes,
+t_mr    .word 0         ;   colonnes (copie du descripteur)
+t_mc    .word 0
+t_mok   .byt 0          ; 1 : TMAP fait
+t_hk    .byt 0
+t_wh    .byt 0
+t_n     .byt 0
+t_k     .byt 0
+t_cp    .byt 0
+t_b     .byt 0
+t_nt    .byt 0
+t_jl    .byt 0
+t_jh    .byt 0
+t_l1    .byt 0
+t_l2    .byt 0
+t_pg    .byt 0
+t_c0    .byt 0
+t_dv    .word 0
+t_dd    .byt 0
+t_dr    .byt 0
+t_cx    .word 0
+t_cy    .word 0
+t_rx    .byt 0
+t_ry    .byt 0
+t_row   .byt 0
+t_ny    .byt 0
+
