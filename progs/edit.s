@@ -461,7 +461,10 @@ k_end
         jsr refresh
         ldx crow
         jsr row_maxoff
-        jmp goto_off
+        jsr goto_off
+        lda #1                  ; la colonne de fin devient la colonne visée
+        sta setgoal             ;   par les flèches haut et bas
+        rts
 
 k_down
 .(
