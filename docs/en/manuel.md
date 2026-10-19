@@ -98,6 +98,12 @@ looks slightly shorter.
 The `At` column gives the attributes: `R` for a read-only (R/O) file, `S` for a system file
 (hidden from DIR). The last line counts the files, the read-only ones and the hidden ones.
 
+**128 files per disk.** The directory (the table of files that `DIR` lists; not a folder:
+CP/A has none) has 128 entries, one per file whatever its size up to 32 KB (beyond that, one
+more entry per 32 KB). A disk therefore holds 128 files at most, even with room left: EDIT,
+HEX, CMDER and GRAPHER then answer `Repertoire plein` (directory full), and nothing is written.
+Erase unneeded files (`ERA`) or use another disk.
+
 ## Drives A: to D:
 
 Any file name can start with a drive: `DIR B:`, `TYPE B:LETTRE.TXT`, `COPY LETTRE.TXT B:`,

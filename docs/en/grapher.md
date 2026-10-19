@@ -644,8 +644,9 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   8 "monsters" moved 50 times (arrays `X Y D E` of 8 integers, grid `G$(16,16)`): 3.2 times
   fewer instructions than through the descriptors, and a slightly smaller program.
 - **Libraries.** GRXASM copies at the end of `NAME.ASM` only the routines the program needs
-  (those it calls, and those they call), taken from `GRX.INC` and `HIRES.INC`, plus `ARR.INC`
-  if the program has arrays, `FIL.INC` if it reads or writes data files (`SAVE`... `FOUND`),
+  (those it calls, and those they call), taken from `GRX.INC` and `HIRES.INC` always
+  (`HIRES.INC` also holds the text screen: `h_init`, `h_text`, `PRINT`), plus `ARR.INC` if the
+  program has arrays or strings (a `PRINT "..."` is enough), `FIL.INC` if it reads or writes data files (`SAVE`... `FOUND`),
   `SPR.INC` if it has sprites and `ANIM.INC` if it animates. These files must be on the drive
   of the `.GRX` (otherwise: `GRX.INC absente (bibliotheque)`, library missing); ASM then only
   needs `CPA.INC`. They are, with GRXASM, on the complete disk, the Assembler disk and the
