@@ -123,6 +123,52 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      les programmes traduits avec leurs messages anglais.
    - EDIT revient à LOGO par `LOGO NOM /R` : à changer pour `LOGOEN` quand LOGO sera
      traduit (`s_logo` dans `edit.s`).
+   - Prochaine étape : **la barre de menus du système** (`sys_bar`, `src/menu.s`), avec
+     les deux évolutions ci-dessous. Décidé, pas encore fait :
+     - libellés sortis de `menu.s` dans un fichier par langue, comme pour les programmes ;
+       `build.sh` assemble le système deux fois (`cpa_sys.bin` et `cpa_sys_en.bin`, pour
+       `cpa-en.dsk`) ; contrat d'interface inchangé (la barre est interne). Libellés
+       anglais : System (Version, Help, Memory, Printer, Next drive, Restart), Files
+       (Directory, Show..., Copy..., Rename..., Erase...), Screen (SPLIT mode, Text mode,
+       Clear, Ink, Paper, Caps lock, Paging), Keyboard (Fast, Normal, Slow) ; la barre
+       finit colonne 29 (française : 31) ;
+     - raccourcis affichés dans les articles qui en ont un : Imprimante `^P`, Majuscules
+       `^T`, Redemarrer `^C` (seul le démarrage à chaud au prompt ; l'article, lui, marche
+       aussi dans un programme). Aucun autre article n'a de touche : Effacer, Encre,
+       Papier, Pagination, Lecteur suivant, vitesses du clavier passent par le menu ou une
+       commande. Largeurs : Systeme reste à 15 (« Imprimante   ^P »), Ecran passe de 10 à
+       13 (« Majuscules ^T ») ; ROM : Systeme passe de 10 à 13 ;
+     - couleurs des menus déroulants selon le papier : la vidéo inverse donne au menu le
+       papier complémentaire (`7 - papier`) et affiche l'encre complémentaire de
+       l'attribut (aujourd'hui toujours jaune, sélection cyan : jaune sur blanc avec le
+       papier noir par défaut, invisible avec le papier bleu). Encres imposées, choisies
+       sur essais :
+
+       | Papier | Menu | Article | Sélection |
+       |---|---|---|---|
+       | noir | blanc | magenta | bleu |
+       | rouge | cyan | magenta | bleu |
+       | vert | magenta | jaune | cyan |
+       | jaune | bleu | jaune | cyan |
+       | bleu | jaune | bleu | rouge |
+       | magenta | vert | bleu | rouge |
+       | cyan | rouge | jaune | cyan |
+       | blanc | noir | jaune | cyan |
+
+       Attribut écrit = `$80 + 7 - encre voulue`. Table de 8 octets indexée par
+       `cur_paper` (article et sélection, 4 bits chacun), lue par `draw_item` à la place de
+       `MC_ITEM` / `MC_ISEL`. `cur_paper` suffit : les programmes à menus (EDIT, HEX, CMDER,
+       LOGO) gardent le papier du système sous les menus (la ligne d'état bleue d'EDIT et de
+       HEX est en bas, jamais sous un menu). La barre elle-même (ligne 0, papier noir
+       toujours) garde ses titres jaunes, le titre actif cyan.
+     - Coût chiffré (système disque, marge actuelle 37 octets) : raccourcis +13 octets
+       (texte) ; couleurs +10 octets de code, et la table de 8 octets dans la page `$FF00`
+       (18 libres → 10) ; soit **23 octets, marge ramenée à 14**. Table dans le code au
+       lieu de `$FF00` : 31 octets, marge 6. Le système anglais est plus court (libellés :
+       203 octets contre 242 en français, raccourcis compris) : la contrainte est la
+       version française. ROM : +9 octets de texte, +18 en tout, sans souci de place.
+     - Questions ouvertes : la ROM a-t-elle aussi une version anglaise (`cpa-en.rom`), ou
+       reste-t-elle en une seule langue, et laquelle ?
    - Reste, par étapes : CMDER ; GRAPHER et GRXASM (avec GRX.INC,
      FIL.INC... : messages des programmes traduits) ; HELP et README.TXT (aide en deux
      listes) ; exemples ; tests en anglais (`smoke_test`, références de GRAPHER).
