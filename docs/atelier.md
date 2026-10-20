@@ -143,7 +143,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 
 | Commande | Rôle |
 |---|---|
-| `./build.sh` | construit `build/cpa.rom`, `build/cpa.dsk`, `build/progs/*.COM` (messages en français), `build/progs-en/*.COM` et `build/cpa-en.dsk` (en anglais), et les `.sym` |
+| `./build.sh` | construit `build/cpa.rom`, le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes |
 | `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
 | `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |

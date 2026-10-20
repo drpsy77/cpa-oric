@@ -25,20 +25,26 @@ python3 tools/gen_tables.py src/tables.s
 # par les commandes internes et les .COM / .BAT (~120 octets résidents) ;
 # DISK_OPTS="" ./build.sh pour s'en passer.
 DISK_OPTS=${DISK_OPTS--DCPLCMD}
+# Système : textes (barre de menus, messages de la console) pris dans
+# src/msg/fr ou src/msg/en ; disque en deux langues (cpa_sys.bin,
+# cpa_sys_en.bin pour cpa-en.dsk) ; la ROM, projet à part, en français.
 cd src
-$XA -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
-$XA -DDISK $DISK_OPTS -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
+$XA -I msg/fr -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
+$XA -I msg/fr -DDISK $DISK_OPTS -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
+$XA -I msg/en -DDISK $DISK_OPTS -o ../build/cpa_sys_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
 cd ..
-for f in build/cpa.rom build/cpa_sys.bin; do
+for f in build/cpa.rom build/cpa_sys.bin build/cpa_sys_en.bin; do
   SIZE=$(wc -c < $f)
   if [ "$SIZE" -ne 16384 ]; then echo "Taille inattendue pour $f : $SIZE"; exit 1; fi
 done
-# le code du système disque doit s'arrêter avant ses zones de travail ($F670 : DO et PUT, puis $FD00)
-END=$(grep -E " rom_end$" build/cpa_sys.sym | cut -d' ' -f1)
-python3 -c "import sys; e=int('$END',16); print('Fin du code disque : %04X (marge %d octets)' % (e, 0xF670-e)); sys.exit(e>0xF670)"
-# la page $FF00 doit s'arrêter avant les vecteurs du 6502 ($FFFA)
-FFEND=$(grep -E " ff_end$" build/cpa_sys.sym | cut -d' ' -f1)
-python3 -c "import sys; e=int('$FFEND',16); print('Page FF00 : fin %04X (marge %d octets)' % (e, 0xFFFA-e)); sys.exit(e>0xFFFA)"
+for L in "" _en; do
+  # le code du système disque doit s'arrêter avant ses zones de travail ($F670 : DO et PUT, puis $FD00)
+  END=$(grep -E " rom_end$" build/cpa_sys$L.sym | cut -d' ' -f1)
+  python3 -c "import sys; e=int('$END',16); print('Fin du code disque$L : %04X (marge %d octets)' % (e, 0xF670-e)); sys.exit(e>0xF670)"
+  # la page $FF00 doit s'arrêter avant les vecteurs du 6502 ($FFFA)
+  FFEND=$(grep -E " ff_end$" build/cpa_sys$L.sym | cut -d' ' -f1)
+  python3 -c "import sys; e=int('$FFEND',16); print('Page FF00$L : fin %04X (marge %d octets)' % (e, 0xFFFA-e)); sys.exit(e>0xFFFA)"
+done
 
 cd boot
 $XA -o ../build/boot.bin -e ../build/boot.err boot.s
@@ -78,10 +84,10 @@ for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.I
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $PROTEGES --rw $EXEMPLES
-# même disquette, programmes aux messages en anglais (build/progs-en ;
+# même disquette, système et programmes aux messages en anglais (build/progs-en ;
 # ceux qui ne sont pas encore traduits restent en français) ; fichiers
 # traduits pris dans files/en (EDIT.CFG)
-python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys.bin \
+python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys_en.bin \
   --ro $(echo $PROTEGES | sed 's|build/progs/|build/progs-en/|g') \
   --rw $(echo $EXEMPLES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|files/edit.cfg|files/en/edit.cfg|') | tail -1
 

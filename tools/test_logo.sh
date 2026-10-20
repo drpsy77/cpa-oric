@@ -18,6 +18,9 @@ cd "$(dirname "$0")/.."
 D=tools/logo_tests
 T=$(mktemp -d)
 cp build/cpa.dsk "$T/test.dsk"
+# place pour les scénarios (un bloc de 2 Ko chacun) : GRXASM et sa
+# bibliothèque, inutiles ici, sont retirés de la copie
+for f in GRXASM.COM GRX.INC; do python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null; done
 for f in $D/*.log; do
   n=$(basename "$f" .log | tr a-z A-Z)
   python3 tools/mkdisk.py put "$T/test.dsk" "$f" "$n.LOG" >/dev/null

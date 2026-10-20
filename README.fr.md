@@ -41,7 +41,7 @@ Deux variantes sont construites à partir des mêmes sources :
   programmes reste intact. Quatre autres disquettes, par usage : `cpa-logo.dsk`,
   `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` ; et une vierge, `cpa-projet.dsk`, pour son
   travail en `B:` à côté de la disquette système en `A:`. **`cpa-en.dsk`** est `cpa.dsk`
-  avec les messages des programmes en anglais : les commandes (TYPE, ERA, COPY, STAT, FORMAT,
+  en anglais : la barre de menus et les messages du système, les commandes (TYPE, ERA, COPY, STAT, FORMAT,
   DISKCOPY, USB...), les éditeurs EDIT et HEX, l'assembleur ASM et le débogueur DEBUG sont
   traduits ; CMDER, GRAPHER, HELP et LOGO parlent encore français, traduction en cours.
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans

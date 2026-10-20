@@ -221,5 +221,3 @@ skip_sp lda scr_par,y
 ss_r    rts
 .)
 
-msg_scrstop
-        .asc "Script arrete.",13,10,0

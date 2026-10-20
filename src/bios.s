@@ -1052,8 +1052,6 @@ pn_dig  adc #"0"
 msg_banner
         .asc "CP/A 0.9 - Control Program for Atmos",13,10
         .asc "Type HELP for commands.",13,10,0
-msg_more
-        .asc " -- Suite (^C stop) -- ",0
 msg_reset
         .asc "*RESET* at ",0
 msg_brk

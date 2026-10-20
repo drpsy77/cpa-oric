@@ -98,7 +98,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s` jusqu'à `$FFB7`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -162,9 +162,15 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   étiquette globale déjà définie ; pas d'étiquette nommée comme une instruction ; branchements
   limités à ±127 octets (passer par un `JMP`).
 - Textes à l'écran : ASCII sans accents, 37 colonnes au plus pour une ligne complète (la 38e
-  provoque un retour à la ligne automatique en plus). Messages du CCP en anglais court, aide et
-  programmes en français.
+  provoque un retour à la ligne automatique en plus). Messages du CCP en anglais court ; menus,
+  aide et programmes en français sur `cpa.dsk`, en anglais sur `cpa-en.dsk` (ci-dessous).
 - Commentaires et documentation en français.
+- **Deux langues** : tout ce qui est produit pour la version disquette, système compris, existe
+  en français et en anglais (`cpa.dsk`, `cpa-en.dsk`). Système : barre de menus et messages
+  de la console dans `src/msg/fr/sys.msg` ou `src/msg/en/sys.msg` (mêmes étiquettes),
+  `build.sh` assemble `cpa_sys.bin` et `cpa_sys_en.bin` et contrôle la marge des deux (la
+  française, plus longue, est la contrainte) ; les messages courts du CCP sont en anglais
+  dans les deux. La version ROM, projet à part, reste en français pour l'instant.
 - Messages des programmes en deux langues : chaque programme traduit inclut ses messages
   (`#include "nom.msg"`, nom de 8 caractères au plus pour ASM), pris dans `progs/msg/fr/`
   ou `progs/msg/en/` (mêmes étiquettes ; la touche « oui » est la constante `K_YES`, `O` ou
