@@ -39,6 +39,15 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   LIGNE). HEX : menus File, Go to, Mode. `ASM HELLO /S`, puis un source fautif : messages
   d'erreur anglais. `DEBUG HELLO`, `H` : l'aide tient en 37 colonnes ; en français aussi
   (lignes « Indic. » et « Programme termine » raccourcies) ;
+- **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
+  Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
+  entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque
+  papier (`PAPER 0` à `PAPER 7`, avec `INK` contrasté), ouvrir Systeme et descendre d'un
+  article : fond, encre des articles et de la sélection comme le tableau de
+  `src/menu_col.s` (papier noir : menu blanc, articles magenta, sélection bleue) ; même
+  chose dans un menu d'EDIT. Sur `cpa-en.dsk` : `-- More (^C stop) --` en fin d'écran
+  (`HELP EDIT`), `PAUSE` (`Press a key to go on...`), ESC pendant un script
+  (`Script stopped.`) ;
 - **deux disquettes** (`cpa.dsk` en A:, `cpa-projet.dsk` en B:, avec CARTE.GRX et
   TUILES.SPR copiés dessus) : `B:`, puis `GRXASM CARTE /C` ; il ne reste sur B: que
   CARTE.COM, qui se lance (`CARTE`) ; les bibliothèques et CPA.INC ont été lues sur A:.

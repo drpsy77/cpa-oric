@@ -178,4 +178,3 @@ wait    jsr conin_raw
 r       rts
 .)
 
-msg_key .asc "Une touche pour continuer...",13,10,0

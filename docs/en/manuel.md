@@ -267,8 +267,8 @@ visible.
 On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
-**English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the programs'
-messages in English (translation in progress: the commands, EDIT, HEX, ASM and DEBUG; the
+**English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the system (menu
+bar, console messages) and the programs' messages in English (translation in progress: the commands, EDIT, HEX, ASM and DEBUG; the
 "yes" key is `Y` there, and "all" is `A` in EDIT's replacements) and an `EDIT.CFG` commented
 in English.
 
@@ -505,11 +505,16 @@ RAM (disk version) force a full restart.
 ## Pull-down menus
 
 The status line is used as a menu bar: **Systeme** [System] (Version, Aide [Help], Memoire
-[Memory], Imprimante [Printer], Lecteur suivant [Next drive], Redemarrer [Restart]),
-**Fichiers** [Files] (disk version only), **Ecran** [Screen] (Mode SPLIT, Mode texte, Effacer
-[Clear], Encre [Ink], Papier [Paper], Majuscules [Upper case], Pagination) and **Clavier**
-[Keyboard]. Encre and Papier move to the next colour (never the same for both); in scripts,
-`INK n` and `PAPER n` do the same with a chosen colour. At the end of the bar, two indicators:
+[Memory], Imprimante [Printer] `^P`, Lecteur suivant [Next drive], Redemarrer [Reboot] `^C`),
+**Fichiers** [Files] (disk version only), **Ecran** [Screen] (Mode SPLIT [SPLIT mode], Mode
+texte [Text mode], Effacer [Clear], Encre [Ink], Papier [Paper], Majuscules [Caps lock] `^T`,
+Pagination [Paging]) and **Clavier** [Keyboard]. An item that has a keyboard shortcut shows it
+at the end of its label (`^C` reboots only on an empty line of the prompt; the item also works
+inside a program). Encre and Papier move to the next colour (never the same for both); in
+scripts, `INK n` and `PAPER n` do the same with a chosen colour. A pull-down menu takes the
+complementary colour of the paper, and its inks are chosen for each paper (on black paper:
+magenta, blue selection on white; on white paper: yellow, cyan selection...). On
+`cpa-en.dsk`, the bar is in English: System, Files, Screen, Keyboard. At the end of the bar, two indicators:
 `A` (upper case locked) or `a` (lower case), then `P` when copying to the printer is on. The
 engine is rewritten from Pierre Garnier's [Menus](https://github.com/drpsy77/Menus) project,
 whose ergonomics, colours and table format it takes over.

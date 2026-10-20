@@ -95,6 +95,7 @@ rom_end
 page_ff
 #include "tables_ff.s"
 #include "rl_keys.s"
+#include "menu_col.s"
 ff_end
 
 ; ---------------------------------------------------------------------

@@ -39,7 +39,7 @@ Two variants are built from the same sources:
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
   intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
   `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
-  disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` with the programs' messages in English: the
+  disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` in English: the system's menu bar and messages, the
   commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...), the editors EDIT and HEX, the
   assembler ASM and the debugger DEBUG are translated; CMDER, GRAPHER, HELP and LOGO still
   speak French, translation in progress.

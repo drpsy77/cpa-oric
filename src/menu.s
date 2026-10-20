@@ -29,8 +29,7 @@ MA_CALL     = 2
 
 MC_BAR      = 3         ; encre des titres (jaune)
 MC_HI       = 6         ; encre du titre sélectionné (cyan)
-MC_ITEM     = $84       ; attribut d'un article (vidéo inverse)
-MC_ISEL     = $81       ; attribut de l'article sélectionné
+; articles : encre choisie selon le papier (m_colors, src/menu_col.s)
 SAVEBUF     = $B800     ; jeu de caractères alternatif, inutilisé en mode texte
 
 ZP_M1       = $EA       ; menu courant
@@ -283,13 +282,19 @@ draw_item
         adc bar_row
         tax
         jsr row_ptr
-        ldy #0
-        lda #MC_ITEM
+        ldx cur_paper           ; encres selon le papier (m_colors, page $FF00)
+        lda m_colors,x
         ldx m_k
         cpx m_item
         bne attr
-        lda #MC_ISEL
-attr    sta (ZP_M3),y
+        lsr                     ; article sélectionné : bits 4-6
+        lsr
+        lsr
+        lsr
+attr    and #7
+        ora #$80                ; vidéo inverse
+        ldy #0
+        sta (ZP_M3),y
         ldx m_cur
         jsr menu_get
         jsr item_get
@@ -657,88 +662,8 @@ sys_bar
         .word mn_sys, mn_ecr, mn_clv
 #endif
 
-#ifdef DISK
-mn_sys  .byt 6,15
-#else
-mn_sys  .byt 5,10
-#endif
-        .asc "Systeme",0
-        .asc "Version",0
-        .byt MA_TYPE
-        .word ty_ver
-        .asc "Aide",0
-        .byt MA_TYPE
-        .word ty_help
-        .asc "Memoire",0
-        .byt MA_TYPE
-        .word ty_mem
-        .asc "Imprimante",0
-        .byt MA_CALL
-        .word k_prt
-#ifdef DISK
-        .asc "Lecteur suivant",0
-        .byt MA_CALL
-        .word m_drive
-#endif
-        .asc "Redemarrer",0
-        .byt MA_CALL
-        .word m_reboot
-
-#ifdef DISK
-mn_fic  .byt 5,11
-        .asc "Fichiers",0
-        .asc "Catalogue",0
-        .byt MA_TYPE
-        .word ty_dir
-        .asc "Afficher...",0
-        .byt MA_TYPE
-        .word ty_type
-        .asc "Copier...",0
-        .byt MA_TYPE
-        .word ty_copy
-        .asc "Renommer...",0
-        .byt MA_TYPE
-        .word ty_ren
-        .asc "Effacer...",0
-        .byt MA_TYPE
-        .word ty_era
-#endif
-
-mn_ecr  .byt 7,10
-        .asc "Ecran",0
-        .asc "Mode SPLIT",0
-        .byt MA_TYPE
-        .word ty_split
-        .asc "Mode texte",0
-        .byt MA_TYPE
-        .word ty_text
-        .asc "Effacer",0
-        .byt MA_TYPE
-        .word ty_cls
-        .asc "Encre",0
-        .byt MA_CALL
-        .word m_ink
-        .asc "Papier",0
-        .byt MA_CALL
-        .word m_paper
-        .asc "Majuscules",0
-        .byt MA_CALL
-        .word m_caps
-        .asc "Pagination",0
-        .byt MA_CALL
-        .word m_page
-
-mn_clv  .byt 3,6
-        .asc "Clavier",0
-        .asc "Rapide",0
-        .byt MA_CALL
-        .word m_kfast
-        .asc "Normal",0
-        .byt MA_CALL
-        .word m_knorm
-        .asc "Lent",0
-        .byt MA_CALL
-        .word m_kslow
+; menus (libellés, largeurs) : src/msg/fr/sys.msg ou src/msg/en/sys.msg
+#include "sys.msg"
 
 ; Commandes tapées pour l'utilisateur ($18 = CTRL-X efface la ligne en cours ;
 ; sans retour chariot final, il complète lui-même la commande)

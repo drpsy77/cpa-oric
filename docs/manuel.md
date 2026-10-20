@@ -270,8 +270,8 @@ y est partout, protégé et visible.
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
-**Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec les messages
-des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM et DEBUG ; la
+**Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec le système
+(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM et DEBUG ; la
 touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT) et un `EDIT.CFG`
 commenté en anglais.
 
@@ -510,11 +510,17 @@ l'écrasement du système en RAM (version disque) obligent à redémarrer compl�
 
 ## Menus déroulants
 
-La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante,
-Lecteur suivant, Redemarrer), **Fichiers** (version disque seulement),
-**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules, Pagination) et
-**Clavier**. Encre et Papier passent à la couleur suivante (jamais la même pour les deux) ;
-dans les scripts, `INK n` et `PAPER n` font de même avec une couleur choisie. Au bout
+La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante `^P`,
+Lecteur suivant, Redemarrer `^C`), **Fichiers** (version disque seulement),
+**Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules `^T`, Pagination) et
+**Clavier**. Un article qui a un raccourci clavier le montre au bout de son libellé (`^C`
+redémarre seulement sur une ligne vide du prompt ; l'article, lui, marche aussi dans un
+programme). Encre et Papier passent à la couleur suivante (jamais la même pour les deux) ;
+dans les scripts, `INK n` et `PAPER n` font de même avec une couleur choisie. Un menu
+déroulant prend la couleur complémentaire du papier, et ses encres sont choisies pour
+chaque papier (blanc : magenta, sélection bleue sur papier noir ; jaune, sélection cyan sur
+papier blanc...). Sur `cpa-en.dsk`, la barre est en anglais : System, Files, Screen,
+Keyboard. Au bout
 de la barre, deux voyants : `A` (majuscules verrouillées) ou `a` (minuscules), puis `P` quand
 la copie à l'imprimante est active. Le moteur est réécrit d'après le projet
 [Menus](https://github.com/drpsy77/Menus) de Pierre Garnier, dont il reprend l'ergonomie,

@@ -32,6 +32,10 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   libre pendant la complétion ; 39 noms). Pas dans LOGO ni DEBUG.
 - **Majuscules** : verrouillage gardé ; le CCP et LOGO passent leurs lignes en majuscules,
   mais les fonctions 1 et 10 rendent ce qui est tapé (comme CP/M).
+- **Menus déroulants** : en vidéo inverse, donc fond complémentaire du papier ; l'encre
+  d'un article et celle de l'article sélectionné viennent de `m_colors` (8 octets, page
+  `$FF00`, `src/menu_col.s`), indexée par `cur_paper` (`draw_item`). Textes de la barre du
+  système et des messages de la console : `src/msg/fr/sys.msg` ou `src/msg/en/sys.msg`.
 - **Voyants** (barre de menus) : colonne 37 `A`/`a` (majuscules), colonne 38 `P`
   (imprimante) ; colonnes 35-36 libres (réseau plus tard). `draw_flags`.
 - `PAPER`, `INK` (attributs de tête de chaque ligne de la console, `apply_colors`, même
