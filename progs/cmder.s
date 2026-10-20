@@ -1624,9 +1624,7 @@ gext    .asc "COM",1,"BAT",2,"GRX",3,"LOG",4,"ASM",5,"INC",5,"TXT",6
         .asc "DOC",6,"CFG",7,"HIR",8,"IMG",8,"HIZ",8,"ANI",9,"SYM",10
         .asc "$$$",11,"DSK",12
         .byt 0
-gname   .asc "       Prog   Script Grapher"
-        .asc "Logo   Source Texte  Config "
-        .asc "Image  Anim   Symb.  Tempo  Disque "
+; gname (genres, 7 caractÃ¨res chacun) : cmder.msg
 
 ; count_marks : nmark et tot (total des tailles) des fichiers visibles
 count_marks
@@ -2112,8 +2110,7 @@ emp     lda vk
         bne lp
         jmp draw_sb
 .)
-spos2   .byt 0,4,13,15
-        .byt 0,4,4,15           ; (clÃ© USB)
+; spos2 (idem, deux colonnes) : cmder.msg
 
 ; side : A = 0 colonne Ã  gauche (po 0, ascenseur en colonne 20 de
 ; l'Ã©cran, Â« | Â» sans dÃ©filement), 1 Ã  droite (po 19, colonne 39)
@@ -2331,8 +2328,7 @@ up      sta lbuf,y
         ldx #R_COL
         jmp put_line0
 .)
-spos    .byt 29,5,14,22
-        .byt 0,5,5,30           ; (clÃ© USB)
+; spos (colonne du signe du tri, ligne 2) : cmder.msg
 
 ; lignes 3 Ã  24 : la liste
 draw_list
@@ -2893,10 +2889,10 @@ ask_key
         jsr B_CONIN
         jmp upc
 
-; ask_yn : question A/Y, C=1 si O (ou Y)
+; ask_yn : question A/Y, C=1 si K_YES (O ou Y selon la langue) ou Y
 ask_yn
         jsr ask_key
-        cmp #"O"
+        cmp #K_YES              ; O (Y en anglais) : progs/msg
         beq yn_y
         cmp #"Y"
         beq yn_y
@@ -4790,11 +4786,11 @@ rw      lda rall
         jsr ask_key
         cmp #27
         beq esc
-        cmp #"T"
+        cmp #K_ALL              ; T (A en anglais) : tous les suivants
         bne o
-        sta rall                ; T : tous les suivants
+        sta rall
         beq del                 ; (Z=1 depuis cmp)
-o       cmp #"O"
+o       cmp #K_YES
         beq del
         cmp #"Y"
         beq del
@@ -4951,113 +4947,7 @@ kill_dst
 gq_get  .byt G_GETMODE,0,0,0,0,0
 gq_text .byt G_MODE,0,0,0,0,0
 
-bar     .byt 4
-        .word mn_f, mn_m, mn_t, mn_v
-
-mn_f    .byt 12,16
-        .asc "Fichier",0
-        .asc "Voir         RET",0
-        .byt MA_TYPE
-        .word c81
-        .asc "Copier...     ^C",0
-        .byt MA_TYPE
-        .word c82
-        .asc "Copier texte...",0
-        .byt MA_TYPE
-        .word c9e
-        .asc "Deplacer...   ^X",0
-        .byt MA_TYPE
-        .word c83
-        .asc "Renommer...   ^N",0
-        .byt MA_TYPE
-        .word c84
-        .asc "Effacer      DEL",0
-        .byt MA_TYPE
-        .word c85
-        .asc "Attributs...  ^A",0
-        .byt MA_TYPE
-        .word c86
-        .asc "Infos          ?",0
-        .byt MA_TYPE
-        .word c87
-        .asc "Imprimer liste",0
-        .byt MA_TYPE
-        .word c99
-        .asc "Lecteur...    ^L",0
-        .byt MA_TYPE
-        .word c88
-        .asc "Relire        ^R",0
-        .byt MA_TYPE
-        .word c89
-        .asc "Quitter       ^Q",0
-        .byt MA_TYPE
-        .word c8a
-
-mn_m    .byt 6,14
-        .asc "Marque",0
-        .asc "Marquer    ESP",0
-        .byt MA_TYPE
-        .word c8b
-        .asc "Marquer...   +",0
-        .byt MA_TYPE
-        .word c8c
-        .asc "Oter...      -",0
-        .byt MA_TYPE
-        .word c8d
-        .asc "Inverser     *",0
-        .byt MA_TYPE
-        .word c8e
-        .asc "Tout",0
-        .byt MA_TYPE
-        .word c8f
-        .asc "Rien",0
-        .byt MA_TYPE
-        .word c90
-
-mn_t    .byt 4,14
-        .asc "Trier",0
-        .asc "Ordre disque 1",0
-        .byt MA_TYPE
-        .word c91
-        .asc "Nom          2",0
-        .byt MA_TYPE
-        .word c92
-        .asc "Type         3",0
-        .byt MA_TYPE
-        .word c93
-        .asc "Taille       4",0
-        .byt MA_TYPE
-        .word c94
-
-mn_v    .byt 8,16
-        .asc "Vue",0
-        .asc "Filtrer...     /",0
-        .byt MA_TYPE
-        .word c95
-        .asc "Sans filtre",0
-        .byt MA_TYPE
-        .word c96
-it_sys  .asc "Cacher SYS ",0
-        .byt MA_TYPE
-        .word c97
-        .asc "Taille exacte ^E",0
-        .byt MA_TYPE
-        .word c98
-        .asc "Absents autre",0
-        .byt MA_TYPE
-        .word c9a
-        .asc "Zoom          ^Z",0
-        .byt MA_TYPE
-        .word c9b
-        .asc "Echanger      ^W",0
-        .byt MA_TYPE
-        .word c9c
-        .asc "Autre col.   TAB",0
-        .byt MA_TYPE
-        .word c9d
-
-s_hide  .asc "Cacher SYS "
-s_show  .asc "Montrer SYS"
+; barre et menus : cmder.msg
 
 c81     .byt $81,0
 c82     .byt $82,0
@@ -5093,86 +4983,8 @@ c9e     .byt $9E,0
 ; ---------------------------------------------------------------------
 ; Messages (37 colonnes au plus, sans accents)
 ; ---------------------------------------------------------------------
-m_cols  .asc "  NOM      TYP  TAILLE RS   N GENRE",0
-m_help  .asc "FUNCT menus  ESP marque  ESC fin",0
-m_nodrv .asc "lecteur absent ou illisible",0
-m_fic   .asc " fic",0
-m_lib   .asc "K libre",0
-m_marks .asc " marque(s) : ",0
-m_oct   .asc " o",0
-m_sep   .asc " : ",0
-m_enr   .asc " enr., ",0
-m_blk   .asc " bloc(s)",0
-m_none  .asc "Aucun fichier",0
-m_vmore .asc "-- ESP : suite, ESC : retour --",0
-m_vend  .asc "-- Fin du fichier : une touche --",0
-m_rerr  .asc "Fichier illisible",0
-m_era   .asc "Effacer ",0
-m_cop   .asc "Copier ",0
-m_mov   .asc "Deplacer ",0
-m_nfic  .asc " fichiers",0
-m_yn    .asc " (O/N) ?",0
-m_ynt   .asc " (O/N/T) ?",0
-m_to    .asc " vers : ",0
-m_erased .asc " efface(s)",0
-m_copied .asc " copie(s)",0
-m_moved .asc " deplace(s)",0
-m_prot  .asc " protege(s)",0
-m_illis .asc " illisible(s)",0
-m_bad   .asc "Nom incorrect",0
-m_one   .asc "Un nom : un seul fichier",0
-m_one1  .asc "Un seul fichier a la fois",0
-m_nodst .asc "Destination illisible",0
-m_dirf  .asc "Repertoire plein",0
-m_full  .asc "Disque plein : copie effacee",0
-m_repl  .asc "Remplacer ",0
-m_isrc  .asc "SOURCE en ",0
-m_idst  .asc "DESTINATION en ",0
-m_key   .asc ", une touche",0
-m_keyst .asc " (ESC : rester)",0
-m_err   .asc "Erreur, ",0
-m_same  .asc "Comme la source : continuer (O/N) ?",0
-m_ioerr .asc "Erreur disque : verifiez la disquette",0
-m_t2    .asc " NOM      TYP   Ko"
-m_twod  .asc "Deux lecteurs differents",0
-m_twou  .asc "Une seule colonne USB",0
-m_usb   .asc "USB:",0
+#include "cmder.msg"           ; menus, messages, en-tÃªtes (progs/msg/fr, en)
 m_blnk  .byt 0," "
-m_usbro .asc "Cle USB : lecture et copie seulement",0
-m_usberr .asc "Erreur USB (cle absente ou pleine ?)",0
-m_noloci2 .asc "LOCI absent : cle USB inaccessible",0
-m_refus .asc " refuse(s)",0
-m_colsu .asc "  NOM                         TAILLE",0
-m_t2u   .asc " NOM            Ko"
-m_rep   .asc "<REP>",0
-m_ucut  .asc " +",0
-m_one2  .asc "Une seule colonne",0
-m_prt   .asc "Impression... (ESC arrete)",0
-m_prtok .asc "Liste imprimee",0
-m_libre .asc "Libre ",0
-m_req   .asc "K, requis ",0
-m_ynk   .asc "K : O/N ?",0
-m_non   .asc "Non ! ",0
-m_rdir  .asc "Lecture du repertoire...",0
-m_cpy   .asc "Copie : ",0
-m_incpl .asc " incomplet",0
-m_esc   .asc "Interrompu",0
-m_newn  .asc "Nouveau nom : ",0
-m_taken .asc "Nom deja pris",0
-m_ro    .asc "Fichier protege (R/O)",0
-m_roorig .asc "Original protege (R/O)",0
-m_renok .asc "Renomme",0
-m_samedrv .asc "Meme lecteur seulement",0
-m_attq  .asc "Attributs (R S) : ",0
-m_attbad .asc "R et S seulement",0
-m_attok .asc "Attributs changes",0
-m_markq .asc "Marquer : ",0
-m_unmq  .asc "Oter : ",0
-m_filtq .asc "Filtre : ",0
-m_drvq  .asc "Lecteur (A-D) : ",0
-m_drvbad .asc "Lecteur A a D",0
-m_wait  .asc "Tailles exactes... (ESC arrete)",0
-m_exok  .asc "Tailles exactes",0
 
 ; ---------------------------------------------------------------------
 ; ClÃ© USB du LOCI (lot 2c) : une passerelle. Liste du rÃ©pertoire
@@ -5226,7 +5038,7 @@ lp      lda args,x
         iny
         cpy #99
         bne lp
-e       cpy #2                  ; « / » final retiré (sauf « / », « 1:/ »)
+e       cpy #2                  ; Â« / Â» final retirÃ© (sauf Â« / Â», Â« 1:/ Â»)
         bcc ez
         lda upath-1,y
         cmp #"/"
@@ -5662,8 +5474,8 @@ e       sty t2
         rts
 .)
 
-; is_root : C=1 si upath est la racine (vide, « / », « 1: », « 1:/ »)
-; (t0, t1, t2 posés par slashes, comme avant)
+; is_root : C=1 si upath est la racine (vide, Â« / Â», Â« 1: Â», Â« 1:/ Â»)
+; (t0, t1, t2 posÃ©s par slashes, comme avant)
 is_root
 .(
         jsr slashes
@@ -5671,40 +5483,40 @@ is_root
         beq y                   ; chemin vide
         lda upath-1,y
         cmp #":"
-        beq y                   ; « 1: »
+        beq y                   ; Â« 1: Â»
         cmp #"/"
         bne no
         dey
-        beq y                   ; « / »
+        beq y                   ; Â« / Â»
         lda upath-1,y
         cmp #":"
-        beq y                   ; « 1:/ »
+        beq y                   ; Â« 1:/ Â»
 no      clc
         rts
 y       sec
         rts
 .)
 
-; path_up : upath remonte d'un répertoire. « /REP » -> « / »,
-; « 1:/REP » -> « 1:/ », « A/B » -> « A », « 1:REP » -> « 1: »,
-; « REP » (relatif, sans « / » ni « : ») -> « / »
+; path_up : upath remonte d'un rÃ©pertoire. Â« /REP Â» -> Â« / Â»,
+; Â« 1:/REP Â» -> Â« 1:/ Â», Â« A/B Â» -> Â« A Â», Â« 1:REP Â» -> Â« 1: Â»,
+; Â« REP Â» (relatif, sans Â« / Â» ni Â« : Â») -> Â« / Â»
 path_up
 .(
         jsr is_root
         bcs rt
         ldy t1
-        bmi nos                 ; aucun « / »
-        beq kp                  ; « / » en tête : on le garde
+        bmi nos                 ; aucun Â« / Â»
+        beq kp                  ; Â« / Â» en tÃªte : on le garde
         lda upath-1,y
         cmp #":"
         bne z
-kp      iny                     ; « / » de la racine : on le garde
+kp      iny                     ; Â« / Â» de la racine : on le garde
 z       lda #0
         sta upath,y
 rt      rts
-nos     ldy #0                  ; « 1:REP » -> « 1: »
+nos     ldy #0                  ; Â« 1:REP Â» -> Â« 1: Â»
 f       lda upath,y
-        beq sl                  ; ni « / » ni « : » : la racine
+        beq sl                  ; ni Â« / Â» ni Â« : Â» : la racine
         iny
         cmp #":"
         bne f

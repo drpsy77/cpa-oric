@@ -120,7 +120,9 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      assemblages par `build.sh`, menus dans les fichiers de messages, `files/en/`) ; les
      commandes TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, MEM, POKE, GO, VOIR,
      VSYNC, EXPORT, IMPORT, USBDIR ; EDIT (et son `EDIT.CFG` : `WORDS`, `CHAR`, `LINE`
-     acceptés dans les deux langues), HEX, ASM, DEBUG. `tools/test_asm.sh` assemble aussi
+     acceptés dans les deux langues), HEX, ASM, DEBUG ; CMDER (en-têtes, genres et
+     colonne du signe de tri compris : 13 435 octets en anglais, 7 blocs comme en
+     français). `tools/test_asm.sh` assemble aussi
      les programmes traduits avec leurs messages anglais.
    - EDIT revient à LOGO par `LOGO NOM /R` : à changer pour `LOGOEN` quand LOGO sera
      traduit (`s_logo` dans `edit.s`).
@@ -134,7 +136,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      papier (`src/menu_col.s`, page `$FF00` : blanc avec magenta et bleu sur papier noir,
      etc. ; tableau dans le source). Coût : 23 octets de code (marge française 37 → 14),
      8 octets dans `$FF00` (18 → 10). La ROM, projet à part, reste en français.
-   - Reste, par étapes : CMDER ; GRAPHER et GRXASM (avec GRX.INC,
+   - Reste, par étapes : GRAPHER et GRXASM (avec GRX.INC,
      FIL.INC... : messages des programmes traduits) ; HELP et README.TXT (aide en deux
      listes) ; exemples ; tests en anglais (`smoke_test`, références de GRAPHER).
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un

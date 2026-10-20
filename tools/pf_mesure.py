@@ -44,7 +44,7 @@ COMPOSANTS = [
     ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
               "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc"]),
     ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s"]),
-    ("CMD",  ["progs/cmder.s"]),
+    ("CMD",  ["progs/cmder.s", "progs/msg/*/cmder.msg"]),
     ("HEX",  ["progs/hex.s", "progs/msg/*/hex.msg"]),
     ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg"]),
     ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s",

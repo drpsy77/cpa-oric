@@ -268,7 +268,7 @@ On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture,
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
 **English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the system (menu
-bar, console messages) and the programs' messages in English (translation in progress: the commands, EDIT, HEX, ASM and DEBUG; the
+bar, console messages) and the programs' messages in English (translation in progress: the commands, EDIT, HEX, ASM, DEBUG and CMDER; the
 "yes" key is `Y` there, and "all" is `A` in EDIT's replacements) and an `EDIT.CFG` commented
 in English.
 
