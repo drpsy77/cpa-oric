@@ -39,6 +39,13 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   LIGNE). HEX : menus File, Go to, Mode. `ASM HELLO /S`, puis un source fautif : messages
   d'erreur anglais. `DEBUG HELLO`, `H` : l'aide tient en 37 colonnes ; en français aussi
   (lignes « Indic. » et « Programme termine » raccourcies) ;
+- **`cpa-en.dsk`, CMDER** : `CMDER` : barre File, Mark, Sort, View (quatre menus entiers),
+  colonnes `NAME TYP SIZE RS N KIND`, genres anglais (Text, Temp, Disk) ; touches 1 à 4 :
+  signe `+` collé au bon titre ; Vue, Hide SYS devient Show SYS ; DEL sur un fichier :
+  `Erase NOM.EXT (Y/N) ?` ; copie vers B: avec `A` (all) si les fichiers existent ;
+  `CMDER A: B:` (en-têtes `NAME TYP KB`) ; `CMDER USB:` et `CMDER A: USB:` avec le LOCI
+  (`<DIR>`, tri par taille : `+SIZE`) ; sur `cpa.dsk`, `CMDER USB:` puis `4` : `+TAILLE`
+  (le signe écrasait le T) ;
 - **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
   Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
   entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque

@@ -167,6 +167,11 @@ refusés : `Cle USB : lecture et copie seulement`. Pas de copie de répertoire e
 
 - `progs/cmder.s`, avec `progs/loci_inc.s` (clé USB) ; page zéro hors de `$30-$3B` (zone de
   `loci_inc.s`).
+- **Textes** : barre de menus, messages, en-têtes de colonnes, noms des genres et colonne du
+  signe de tri (`spos`, `spos2`) dans `progs/msg/fr/cmder.msg` et `progs/msg/en/cmder.msg`
+  (`cpa-en.dsk` : `File Mark Sort View`, colonnes `NAME TYP SIZE RS N KIND`, réponses `Y`,
+  `N`, `A`). Les lettres des attributs (`R`, `S`), `USB:` et l'option `/T` sont les mêmes
+  dans les deux langues.
 - **Table des fichiers** : 128 × 24 octets, remplie par les fonctions 17/18 avec des `?`
   partout (toutes les entrées, extents compris, dans l'ordre du répertoire) ; entrées d'un
   même fichier regroupées par le nom (enregistrements = le plus grand `EX × 128 + RC`, blocs

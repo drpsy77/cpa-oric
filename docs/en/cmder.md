@@ -1,8 +1,9 @@
 # CMDER — reference
 
-> English translation of `docs/cmder.md`. CP/A's programs currently speak French: menus,
-> questions and messages are quoted as they appear on the screen, with their meaning in
-> brackets where useful.
+> English translation of `docs/cmder.md`. On `cpa.dsk`, CMDER speaks French: menus,
+> questions and messages are quoted as they appear there, with in brackets the English text
+> shown on `cpa-en.dsk` (or their meaning). On `cpa-en.dsk` the screen reads `NAME TYP SIZE
+> RS N KIND`, the answers are `Y` (yes), `N` (no) and `A` (all).
 
 Full-screen file manager: one or two panels, disks A: to D: and the LOCI's USB stick. A list
 you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes, exact sizes;
@@ -112,16 +113,16 @@ all types (`LO*` = `LO*.*`). When keys are equal, files are sorted by name, A to
 The items type codes (`$81-$98`): an item and its shortcut go through the same dispatch; the
 shortcut is written to the right of the label.
 
-- **Fichier** [File]: Voir RET [View], Copier... ^C [Copy], Copier texte... [Copy as text],
-  Deplacer... ^X [Move], Renommer... ^N [Rename], Effacer DEL [Erase], Attributs... ^A, Infos
-  ?, Imprimer liste [Print list], Lecteur... ^L [Drive], Relire ^R [Reread], Quitter ^Q (or
-  ESC).
-- **Marque** [Mark]: Marquer ESP, Marquer... +, Oter... -, Inverser *, Tout [All], Rien
-  [None].
-- **Trier** [Sort]: Ordre disque 1 [disk order], Nom 2, Type 3, Taille 4 [size].
-- **Vue** [View]: Filtrer... /, Sans filtre [no filter], Cacher SYS [hide SYS] (becomes
-  Montrer SYS [show SYS]), Taille exacte ^E, Absents autre [missing from the other], Zoom ^Z,
-  Echanger ^W [swap], Autre col. TAB [other panel].
+- **Fichier** [File]: Voir RET [View], Copier... ^C [Copy...], Copier texte... [Copy as
+  text...], Deplacer... ^X [Move...], Renommer... ^N [Rename...], Effacer DEL [Erase],
+  Attributs... ^A [Attributes...], Infos ? [Info], Imprimer liste [Print list], Lecteur... ^L
+  [Drive...], Relire ^R [Reread], Quitter ^Q [Quit] (or ESC).
+- **Marque** [Mark]: Marquer ESP [Mark SPC], Marquer... + [Mark...], Oter... - [Unmark...],
+  Inverser * [Invert], Tout [All], Rien [None].
+- **Trier** [Sort]: Ordre disque 1 [Disk order], Nom 2 [Name], Type 3, Taille 4 [Size].
+- **Vue** [View]: Filtrer... / [Filter...], Sans filtre [No filter], Cacher SYS [Hide SYS]
+  (becomes Montrer SYS [Show SYS]), Taille exacte ^E [Exact size], Absents autre [Not on
+  other], Zoom ^Z, Echanger ^W [Swap], Autre col. TAB [Other col.].
 
 ## 6. Operations
 
@@ -175,6 +176,11 @@ only). No copy of a whole directory.
 
 - `progs/cmder.s`, with `progs/loci_inc.s` (USB stick); zero page outside `$30-$3B` (the area
   of `loci_inc.s`).
+- **Texts**: menu bar, messages, column titles, kind names and the column of the sort sign
+  (`spos`, `spos2`) are in `progs/msg/fr/cmder.msg` and `progs/msg/en/cmder.msg`
+  (`cpa-en.dsk`: `File Mark Sort View`, columns `NAME TYP SIZE RS N KIND`, answers `Y`, `N`,
+  `A`). The attribute letters (`R`, `S`), `USB:` and the `/T` option are the same in both
+  languages.
 - **File table**: 128 × 24 bytes, filled by functions 17/18 with `?` everywhere (all
   entries, extents included, in directory order); entries of the same file grouped by name
   (records = the largest `EX × 128 + RC`, blocks = sum). Two panels: the state of the active

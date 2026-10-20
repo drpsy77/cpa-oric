@@ -271,7 +271,7 @@ Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée,
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 **Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec le système
-(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM et DEBUG ; la
+(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM, DEBUG et CMDER ; la
 touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT) et un `EDIT.CFG`
 commenté en anglais.
 
