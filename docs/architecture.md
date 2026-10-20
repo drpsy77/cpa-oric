@@ -172,7 +172,11 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `build/progs-en` (`-I msg/en -I msg/fr` : un programme pas encore traduit garde ses
   messages français), puis `cpa-en.dsk`. ASM n'ayant qu'un niveau d'inclusion, une
   bibliothèque ne contient pas de `#include` : le programme inclut les messages de
-  `loci_inc.s` (`loci.msg`) juste avant elle.
+  `loci_inc.s` (`loci.msg`) juste avant elle. Les menus d'un programme (FUNCT) sont dans
+  son fichier de messages, largeur comprise ; les autres touches de réponse ont aussi leur
+  constante (`K_ALL`, « tous » : `T` ou `A`). Les fichiers livrés qui ont une version
+  anglaise sont dans `files/en/` (même nom ; `EDIT.CFG`), mis sur `cpa-en.dsk` à la place
+  de ceux de `files/`.
 - Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT : notation et
   renvoi à HELP) et `progs/help_tab.s` (HELP.COM, textes compressés en LZSS, décodés par
   `help.s`) à partir d'une seule liste.

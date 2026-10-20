@@ -1,8 +1,9 @@
 # CP/A — manual
 
-> English translation of `docs/manuel.md`. CP/A's programs currently speak French: messages,
-> questions and menu items are quoted as they appear on the screen, with their meaning in
-> brackets where useful.
+> English translation of `docs/manuel.md`. CP/A's programs speak French on `cpa.dsk`:
+> messages, questions and menu items are quoted as they appear there, with their meaning in
+> brackets where useful — for the programs already translated, the bracket gives the English
+> text shown on `cpa-en.dsk`.
 
 User guide for the disk version: commands, programs, programming. GRAPHER and LOGO have their
 own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interface contract
@@ -267,7 +268,9 @@ On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture,
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
 **English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the programs'
-messages in English (translation in progress: commands first; the "yes" key is `Y` there).
+messages in English (translation in progress: the commands, EDIT, HEX, ASM and DEBUG; the
+"yes" key is `Y` there, and "all" is `A` in EDIT's replacements) and an `EDIT.CFG` commented
+in English.
 
 **Project disk.** `build/cpa-projet.dsk` is a blank disk (no system, 336 KB for files), to
 put in `B:` and copy for each project.
@@ -722,7 +725,7 @@ period is shared by the three voices.
 
 It is a full-screen editor: 26 lines of 38 columns, with a menu bar and a status line (file
 name, `*` if the text is modified, paragraph `L`, position `C` of the cursor in the paragraph,
-`INS`/`RFP` for insert/replace, `M` if a mark is set). The text can reach 32,000 bytes (about
+`INS`/`RFP` for insert/replace (`OVR` on `cpa-en.dsk`), `M` if a mark is set). The text can reach 32,000 bytes (about
 27 KB when started from SPLIT mode). A longer file opens **truncated** (`Fichier tronque : trop
 gros`); it cannot be saved under its own name (`Texte tronque : Enreg. sous...`), which would
 lose its end, but can be under another one. A long assembler program is therefore written as
@@ -731,10 +734,10 @@ of any size.
 
 Three display modes (Options menu, or CTRL-W which moves to the next one):
 
-- **Coupure mots** [break at words] (default): a paragraph that is too long continues on the
+- **Coupure mots** [Word wrap] (default): a paragraph that is too long continues on the
   following lines, broken between words;
-- **Coupure 38 car**: broken every 38 characters;
-- **Ligne** [whole line]: one paragraph per screen line; the window scrolls sideways (10
+- **Coupure 38 car** [Wrap at 38]: broken every 38 characters;
+- **Ligne** [Line]: one paragraph per screen line; the window scrolls sideways (10
   columns at a time) to follow the cursor, and all lines with it. The status line shows `<`
   when the window is shifted and `>` when the paragraph goes on to the right. Beyond 240
   characters, the paragraph continues on the next line. This is the mode for code (`.ASM`,
@@ -751,8 +754,9 @@ maximum length of a paragraph, the line breaking on screen and the printer width
     *.*      0    MOTS  80
 
 (Columns: name, maximum, breaking — `MOTS` between words, `CAR` at the character, `LIGNE` one
-line per paragraph: the starting mode, which can be changed while editing — and printer
-width.) The first line whose name matches applies (wildcards `*` and `?`, optional drive:
+line per paragraph: the starting mode, which can be changed while editing; only the first
+letter counts, and `WORDS`, `CHAR`, `LINE`, those of the `EDIT.CFG` of `cpa-en.dsk`, are
+accepted too — and printer width.) The first line whose name matches applies (wildcards `*` and `?`, optional drive:
 `B:*.TXT`); so put the special files first. Missing columns keep their default value (no limit,
 `MOTS`, 80); `;` starts a comment. EDIT looks for `EDIT.CFG` on the document's drive, then on
 `A:`, at every open and every "Enreg. sous..." (save as). Without `EDIT.CFG`, it keeps 126 for
@@ -786,8 +790,8 @@ number (`max 177 (L4)`).
 | FUNCT | menus |
 
 Menus:
-- **Fichier** [File]: Nouveau [New], Ouvrir... [Open], Insérer... [Insert], Enregistrer [Save],
-  Enreg. sous... [Save as], Imprimer [Print], Quitter [Quit]. The system asks for confirmation
+- **Fichier** [File]: Nouveau [New], Ouvrir... [Open...], Insérer... [Insert...], Enregistrer
+  [Save], Enreg. sous... [Save as...], Imprimer [Print], Quitter [Quit]. The system asks for confirmation
   before losing changes. Insérer... adds the contents of another text file at the cursor (the
   cursor ends up after the inserted text). Imprimer sends the whole text to the printer
   (Centronics port, BDOS function 5), laid out: each paragraph is broken between words into
@@ -798,15 +802,15 @@ Menus:
   LOGO with `EDITE`, EDIT shows Retour [Back] instead of Quitter: it saves the text if it
   changed and goes back into LOGO (see LOGO).
 - **Edition** [Edit]: Marquer [Mark], Copier [Copy], Couper [Cut], Coller [Paste], Eff. paragr.
-  [Erase paragraph]. The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
+  [Del. para.: erase the paragraph]. The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
   move the cursor to the other end, then copy (CTRL-C) or cut (CTRL-X); CTRL-V pastes at the
   cursor. ESC removes the mark.
-- **Chercher** [Find]: Chercher..., Suivant [Next], Remplacer... [Replace], Trop long [Too
-  long]. For each occurrence, answer O (yes), N (no), T (all) or Esc. The search ignores the
+- **Chercher** [Search]: Chercher... [Find...], Suivant [Next], Remplacer... [Replace...],
+  Trop long [Too long]. For each occurrence, answer O (yes), N (no), T (all) or Esc (Y, N, A
+  on `cpa-en.dsk`). The search ignores the
   difference between upper and lower case.
-- **Options**: Coupure mots [break at words], Coupure 38car [break at 38 characters], Ligne
-  [whole line] (the three display modes; `>` in front of the current one; the starting mode
-  comes from `EDIT.CFG`), Ins/Rempl. [insert/replace], Statistiques (characters, words,
+- **Options**: Coupure mots [Word wrap], Coupure 38car [Wrap at 38], Ligne [Line] (the three display modes; `>` in front of the current one; the starting mode
+  comes from `EDIT.CFG`), Ins/Rempl. [Ins/Ovr: insert/replace], Statistiques [Statistics] (characters, words,
   longest paragraph).
 
 Started from SPLIT mode, the editor switches to full-screen text and keeps its text below
@@ -834,7 +838,7 @@ it:
 
 The status line gives the file name (`*` if it is modified), the cursor position and the file
 size (`$0125/$1700`), the value of the current byte in hex and decimal, and the mode (`HEX`,
-`ASC`, or `LECT` for read-only). The current byte is in reverse video in the area where you
+`ASC`, or `LECT` for read-only, `R/O` on `cpa-en.dsk`). The current byte is in reverse video in the area where you
 type.
 
 | Key | Action |
@@ -849,7 +853,7 @@ type.
 | TAB (CTRL-I) | edit in hex or in ASCII |
 | CTRL-S / CTRL-R | save / reload |
 | ESC or CTRL-Q | quit (confirmation if the file is modified) |
-| FUNCT | menus Fichier (Enregistrer, Recharger, Quitter), Aller [Go to], Mode |
+| FUNCT | menus Fichier [File] (Enregistrer [Save], Recharger [Reload], Quitter [Quit]), Aller [Go to], Mode |
 
 In HEX mode, type two digits per byte (the first replaces the high nibble, the second the low
 one, then the cursor moves on). In ASCII mode, each character typed replaces the byte. The size
@@ -920,7 +924,7 @@ modules, edited separately and brought together by the main file.
     #include "NIVEAUX.INC"
 
 One level of inclusion only: a module does not include another (`Un seul niveau
-d'inclusion`). Labels are shared by all the files: prefix those of each module (`ec_`,
+d'inclusion` [Only one include level]). Labels are shared by all the files: prefix those of each module (`ec_`,
 `nv_`...), as the libraries do (`h_`, `r_`, `f_`). Modules are looked for like `CPA.INC`: on
 the drive of `JEU.ASM`, then on A: to D:.
 

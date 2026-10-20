@@ -64,7 +64,7 @@ def counts(comp, n=8000):
 
 def main():
     t = tempfile.mkdtemp()
-    subprocess.check_call([XA, "-o", os.path.join(t, "VOIR.COM"), "-l", os.path.join(t, "voir.lab"), "voir.s"],
+    subprocess.check_call([XA, "-I", "msg/fr", "-o", os.path.join(t, "VOIR.COM"), "-l", os.path.join(t, "voir.lab"), "voir.s"],
                           cwd=os.path.join(ROOT, "progs"))
     lab = {}
     for l in open(os.path.join(t, "voir.lab")):

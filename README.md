@@ -40,11 +40,13 @@ Two variants are built from the same sources:
   intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
   `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
   disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` with the programs' messages in English: the
-  commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...) are translated; EDIT, HEX, ASM,
-  DEBUG, CMDER, GRAPHER, HELP and LOGO still speak French, translation in progress.
+  commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...), the editors EDIT and HEX, the
+  assembler ASM and the debugger DEBUG are translated; CMDER, GRAPHER, HELP and LOGO still
+  speak French, translation in progress.
 - **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
-The programs and their messages are in French for now; an English version is planned.
+The programs and their messages are in French on `cpa.dsk`; their English translation, on
+`cpa-en.dsk`, is in progress.
 
 ## What's inside
 

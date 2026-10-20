@@ -32,7 +32,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 427 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 449 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -41,7 +41,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
 | ASM | 6 130 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée ; `#include` cherchés sur A: à D: | `manuel.md` |
-| DEBUG | 6 496 | moniteur, désassembleur, pas à pas | `manuel.md` |
+| DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | GRAPHER, GRXASM | 17 654, 14 988 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
@@ -116,9 +116,14 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      traduit. Les mots-clés de GRAPHER restent ceux d'aujourd'hui dans les deux langues :
      seuls les messages se traduisent.
    - Fait : la mécanique (`architecture.md` § 5 : `progs/msg/fr`, `progs/msg/en`, deux
-     assemblages par `build.sh`) et les commandes TYPE, ERA, REN, SET, STAT, COPY, FORMAT,
-     DISKCOPY, XDO, MEM, POKE, GO, VOIR, VSYNC, EXPORT, IMPORT, USBDIR.
-   - Reste, par étapes : EDIT, HEX, ASM, DEBUG ; CMDER ; GRAPHER et GRXASM (avec GRX.INC,
+     assemblages par `build.sh`, menus dans les fichiers de messages, `files/en/`) ; les
+     commandes TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, MEM, POKE, GO, VOIR,
+     VSYNC, EXPORT, IMPORT, USBDIR ; EDIT (et son `EDIT.CFG` : `WORDS`, `CHAR`, `LINE`
+     acceptés dans les deux langues), HEX, ASM, DEBUG. `tools/test_asm.sh` assemble aussi
+     les programmes traduits avec leurs messages anglais.
+   - EDIT revient à LOGO par `LOGO NOM /R` : à changer pour `LOGOEN` quand LOGO sera
+     traduit (`s_logo` dans `edit.s`).
+   - Reste, par étapes : CMDER ; GRAPHER et GRXASM (avec GRX.INC,
      FIL.INC... : messages des programmes traduits) ; HELP et README.TXT (aide en deux
      listes) ; exemples ; tests en anglais (`smoke_test`, références de GRAPHER).
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
@@ -154,11 +159,13 @@ multiple de 2 048) :
 - GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (14 988) prend 8 blocs ;
   GRX.INC (12 150 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 138
-  octets avant le 7e. HELP (11 427) prend 6 blocs. Les disquettes se spécialisent plutôt
+  octets avant le 7e. HELP (11 449) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
-  aligné sur une page). HEX : 47 octets avant le bloc suivant ; ASM (6 130) est à 14
-  octets du bloc suivant ;
+  aligné sur une page ; en anglais, 177 octets de code avant la page suivante, 5 en
+  français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 130) est à 14
+  octets du bloc suivant, 91 en anglais (6 053) : un message français de plus doit être
+  compensé ;
 - usage à deux disquettes : sur `cpa.dsk` il reste ~78 Ko, peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
