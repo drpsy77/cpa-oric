@@ -79,10 +79,11 @@ done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $PROTEGES --rw $EXEMPLES
 # même disquette, programmes aux messages en anglais (build/progs-en ;
-# ceux qui ne sont pas encore traduits restent en français)
+# ceux qui ne sont pas encore traduits restent en français) ; fichiers
+# traduits pris dans files/en (EDIT.CFG)
 python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $(echo $PROTEGES | sed 's|build/progs/|build/progs-en/|g') \
-  --rw $(echo $EXEMPLES | sed 's|build/progs/|build/progs-en/|g') | tail -1
+  --rw $(echo $EXEMPLES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|files/edit.cfg|files/en/edit.cfg|') | tail -1
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et
 # cachées de DIR (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la

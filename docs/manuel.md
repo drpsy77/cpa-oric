@@ -271,8 +271,9 @@ Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée,
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 **Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec les messages
-des programmes en anglais (traduction en cours : les commandes d'abord ; la touche « oui »
-y est `Y`).
+des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM et DEBUG ; la
+touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT) et un `EDIT.CFG`
+commenté en anglais.
 
 **Disquette de projet.** `build/cpa-projet.dsk` est une disquette vierge (sans système, 336 Ko
 pour les fichiers), à mettre en `B:` et à copier pour chaque projet.
@@ -768,7 +769,8 @@ largeur de l'imprimante :
 
 La première ligne dont le nom correspond s'applique (jokers `*` et `?`, lecteur facultatif :
 `B:*.TXT`) ; on met donc les fichiers particuliers en tête. Coupure : `MOTS`, `CAR` ou `LIGNE`
-(le mode de départ ; on en change pendant l'édition). Les colonnes absentes gardent leur
+(le mode de départ ; on en change pendant l'édition) ; seule la première lettre compte, et
+`WORDS`, `CHAR`, `LINE` (ceux de l'`EDIT.CFG` de `cpa-en.dsk`) valent aussi. Les colonnes absentes gardent leur
 valeur par défaut (sans limite, `MOTS`, 80) ; `;` commence un commentaire. EDIT cherche
 `EDIT.CFG` sur le lecteur du document, puis sur `A:`, à chaque ouverture et à chaque
 « Enreg. sous... ». Sans `EDIT.CFG`, il garde 126 pour `*.LOG` et 78 pour `*.BAT`. Les

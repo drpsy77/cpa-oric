@@ -32,6 +32,13 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 - **`cpa-en.dsk`** : démarrer, puis TYPE, ERA (réponse `Y`), COPY, STAT, FORMAT B: (`Y`),
   DISKCOPY, XDO, MEM, VOIR, VSYNC, EXPORT, IMPORT, USBDIR avec le LOCI : messages en
   anglais, 37 colonnes au plus, rien de coupé ;
+- **`cpa-en.dsk`, EDIT, HEX, ASM, DEBUG** : dans EDIT, ouvrir les quatre menus (File, Edit,
+  Search, Options : cadres entiers, rien sous les voyants), CTRL-H avec réponse `A` (tous),
+  Quitter un texte modifié avec `Y` ; `EDIT X.LOG` : Options montre `>` devant Line
+  (`EDIT.CFG` anglais, mot `LINE`) ; sur `cpa.dsk`, `EDIT.CFG` français inchangé (MOTS,
+  LIGNE). HEX : menus File, Go to, Mode. `ASM HELLO /S`, puis un source fautif : messages
+  d'erreur anglais. `DEBUG HELLO`, `H` : l'aide tient en 37 colonnes ; en français aussi
+  (lignes « Indic. » et « Programme termine » raccourcies) ;
 - **deux disquettes** (`cpa.dsk` en A:, `cpa-projet.dsk` en B:, avec CARTE.GRX et
   TUILES.SPR copiés dessus) : `B:`, puis `GRXASM CARTE /C` ; il ne reste sur B: que
   CARTE.COM, qui se lance (`CARTE`) ; les bibliothèques et CPA.INC ont été lues sur A:.

@@ -193,7 +193,7 @@ SECTIONS = [
   ("^L", "paragraphe trop long suivant"),
   ("C 127!", "(ligne d'etat) position dans le paragraphe ; ! : plus long que le maxi"),
   ("^W", "affichage suivant : coupure mots, a 38 car., ligne entiere (defile en largeur ; < > sur la ligne d'etat)"),
-  ("EDIT.CFG", "par fichier : nom maxi [MOTS|CAR|LIGNE] [largeur impr.], ex. *.LOG 126 LIGNE 80"),
+  ("EDIT.CFG", "par fichier : nom maxi [MOTS|CAR|LIGNE] [largeur impr.], ex. *.LOG 126 LIGNE 80 (WORDS, CHAR, LINE aussi)"),
   ("FUNCT", "menus Fichier (dont Inserer, Imprimer), Edition, Chercher, Options"),
   ("Retour", "(lance par EDITE de LOGO) enregistre et revient"),
  ]),
