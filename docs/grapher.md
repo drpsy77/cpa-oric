@@ -742,6 +742,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `CARTE.GRX` | LORES : une île de 64 × 32 tuiles de 2 × 2 (128 × 64 caractères) tirée au hasard dans `T$` (lacs, arbres, montagnes, murs), écrite en clair (`TILESET` avec `K$`), vue par une fenêtre de 38 × 26 centrée sur le joueur (`TMAP` ; hors de l'île, la tuile 0 : la mer) ; dessins de `TUILES.SPR` dans le jeu secondaire (`TFONT ... ALT`) ; on ne marche que sur l'herbe (`TILE`) ; flèches (`INKEY`, redessin seulement après un pas, sous-programme `CALC`), Q : fin |
 | `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
+| `ROTSCROL.GRX` | Démonstration de LOAD, PASTE, SCROLV/H, ROTV/H |
 
 ## 15. Mise en œuvre
 
