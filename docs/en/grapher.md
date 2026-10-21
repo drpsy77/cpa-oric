@@ -721,6 +721,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 | `DEFILE.GRX` | LORES: a road scrolling downwards (`SCROLV`, then the new line at the top); left and right arrows, `INKEY` |
 | `ANIMS.GRX` | animations (Animations disk) |
 | `ROTSCROL.GRX` | LOAD, PASTE, SCROLV/H, ROTV/H demo |
+| `JEU.GRX` | FILL, PASTE, ROTV/H local. Put the colors back to their initial location |
 
 ## 15. Implementation
 

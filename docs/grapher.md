@@ -743,6 +743,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `DEFILE.GRX` | LORES : une route qui défile vers le bas (`SCROLV`, puis la ligne neuve en haut) ; flèches gauche et droite, `INKEY` |
 | `ANIMS.GRX` | animations (disquette Animations) |
 | `ROTSCROL.GRX` | Démonstration de LOAD, PASTE, SCROLV/H, ROTV/H |
+| `JEU.GRX` | FILL, PASTE, ROTV/H local. Remettre les couleurs à leur place |
 
 ## 15. Mise en œuvre
 
