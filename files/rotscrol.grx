@@ -1,0 +1,49 @@
+; BDD.GRX : BASE DE DONNEES            
+; IDEE: LES DONNEES SONT STOCKEES      
+; DANS UN TABLEAU A DEUX DIMENSIONS    
+; CHAQUE LIGNE CONTIENT UNE CHAINE     
+                                       
+DIM E$(50,40)                          
+FILL E$ 32                             
+LOAD E$ BDD.GRX                        
+LORES                                  
+PASTE E$(0,0) 1 1 39 27                
+LOCATE 2 2                             
+PRINTV "BONJOUR, TEXTE VERTICAL"       
+                                       
+WAIT                                   
+PRINT " BONJOUR, TEXTE HORIZONTAL"     
+LOCATE 3 1                             
+WAIT                                   
+PRINT "BONJOUR, TEXTE HORIZONTAL"      
+                                       
+WAIT                                   
+PRINTV " BONJOUR, TEXTE VERTICAL"      
+                                       
+WAIT                                   
+FOR I 0 30                             
+ROTH -1 0 0 39 27                      
+DELAY 1                               
+NEXT                                   
+FOR I 0 50                             
+ROTH  1 0 0 39 27                      
+DELAY 1                               
+NEXT                                   
+FOR I 0 40                             
+ROTV -1 0 0 39 27                      
+DELAY 1                               
+NEXT                                   
+FOR I 0 40                             
+ROTV  1 0 0 39 27                      
+DELAY 1                               
+NEXT                                   
+FOR I 0 60                             
+ROTH -1 0 0 39 27                      
+DELAY 1                               
+NEXT                                   
+FOR I 0 40                             
+SCROLH -1 0 0 39 27 32                
+DELAY 1                                
+NEXT                                   
+                                       
+                                       
