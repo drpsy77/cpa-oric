@@ -720,6 +720,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 | `CARTE.GRX` | LORES: an island of 64 × 32 tiles of 2 × 2 (128 × 64 characters) drawn at random in `T$` (lakes, trees, mountains, walls), written in plain text (`TILESET` with `K$`), seen through a 38 × 26 window centred on the player (`TMAP`; outside the island, tile 0: the sea); drawings from `TUILES.SPR` in the secondary set (`TFONT ... ALT`); you walk only on grass (`TILE`); arrows (`INKEY`, redraw only after a step, subroutine `CALC`), Q: end |
 | `DEFILE.GRX` | LORES: a road scrolling downwards (`SCROLV`, then the new line at the top); left and right arrows, `INKEY` |
 | `ANIMS.GRX` | animations (Animations disk) |
+| `ROTSCROL.GRX` | LOAD, PASTE, SCROLV/H, ROTV/H demo |
 
 ## 15. Implementation
 
