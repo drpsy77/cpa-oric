@@ -3,14 +3,19 @@
 ; DANS UN TABLEAU A DEUX DIMENSIONS    
 ; CHAQUE LIGNE CONTIENT UNE CHAINE     
                                        
-DIM E$(50,40)                          
+DIM E$(60,40)                          
 FILL E$ 32                             
-LOAD E$ BDD.GRX                        
+LOAD E$ ROTSCROL.GRX                   
 LORES                                  
 PASTE E$(0,0) 1 1 39 27                
+WAIT                                   
+LOCATE 1 2                             
+PRINTV "                       "        
+LOCATE 3 2                             
+PRINTV "                       "       
 LOCATE 2 2                             
 PRINTV "BONJOUR, TEXTE VERTICAL"       
-                                       
+                                      
 WAIT                                   
 PRINT " BONJOUR, TEXTE HORIZONTAL"     
 LOCATE 3 1                             
@@ -45,5 +50,3 @@ FOR I 0 40
 SCROLH -1 0 0 39 27 32                
 DELAY 1                                
 NEXT                                   
-                                       
-                                       
