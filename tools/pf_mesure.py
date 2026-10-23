@@ -55,7 +55,7 @@ COMPOSANTS = [
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s", "progs/msg/*/asm.msg"]),
     ("DBG",  ["progs/debug.s", "progs/msg/*/debug.msg"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",
-              "files/*.spr", "files/anim/*"]),
+              "files/*.spr", "files/anim/*", "files/JEU.GRX", "files/en/*.asm"]),
     ("OUT",  ["build.sh", "tools/*.py", "tools/*.sh", "tools/*.patch", "tools/*.s",
               "tools/grapher_tests/*.grx", "tools/logo_tests/*.log"]),
 ]

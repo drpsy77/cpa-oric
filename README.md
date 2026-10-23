@@ -11,43 +11,40 @@
 - **Write a game, draw it, compile it** to fast 6502 code, without ever leaving the machine.
 - **Then share it**: through the LOCI's USB stick today, on a plain cassette for any Oric soon.
 
-**Try it in five minutes.** Download [`cpa.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa.dsk), put it on the USB stick of your LOCI
+**Try it in five minutes.** Download [`cpa-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-en.dsk), put it on the USB stick of your LOCI
 (or the SD card of your Cumulus) and boot, or run it in Oricutron (see below). At the `A>`
 prompt:
 
     DIR               what's on the disk
     HELP              help topics
     LOGO DEMO         then type DEMO: the turtle draws a tree
-    GRAPHER CARTE     explore a random island of tiles (arrows, Q to quit)
-    GRXASM SERPENT    translate the snake game into assembly...
-    ASM SERPENT       ...assemble it on the Oric...
-    SERPENT           ...and play the compiled version
+    GRAPHER MAP       explore a random island of tiles (arrows, Q to quit)
+    GRXASM SNAKE      translate the snake game into assembly...
+    ASM SNAKE         ...assemble it on the Oric...
+    SNAKE             ...and play the compiled version
     CMDER             full-screen file manager (ESC to quit)
 
 The FUNCT key opens the menus everywhere.
 
-**See it run**: GRAPHER and the scrolling road of `DEFILE.GRX` (video).
+**See it run**: GRAPHER and the scrolling road of `ROAD.GRX` (video, French version of the disk).
 
-[![CP/A: GRAPHER demo with DEFILE](https://img.youtube.com/vi/ax6hLICHst0/hqdefault.jpg)](https://www.youtube.com/watch?v=ax6hLICHst0)
+[![CP/A: GRAPHER demo with ROAD](https://img.youtube.com/vi/ax6hLICHst0/hqdefault.jpg)](https://www.youtube.com/watch?v=ax6hLICHst0)
 
 A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version 0.9.
 
 Two variants are built from the same sources:
 
-- **`build/cpa.dsk`**, the main version: a bootable disk for the Microdisc controller, and
+- **`build/cpa-en.dsk`**, the main version: a bootable disk for the Microdisc controller, and
   therefore also for the Cumulus and the LOCI. The system loads into the 16 KB of overlay RAM
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
-  intact. Four more disks, by use: `cpa-logo.dsk`, `cpa-notes.dsk`, `cpa-asm.dsk`,
-  `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
-  disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` in English: the system's menu bar and messages, the
-  commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...), the editors EDIT and HEX, the
-  assembler ASM, the debugger DEBUG, the file manager CMDER, the GRAPHER language (its
-  translator GRXASM and the libraries of translated programs) and HELP are translated; LOGO
-  still speaks French, translation in progress.
+  intact. Four more disks, by use: `cpa-logo-en.dsk`, `cpa-notes-en.dsk`, `cpa-asm-en.dsk`,
+  `cpa-anim-en.dsk`; and a blank one, `cpa-project-en.dsk`, for your work in `B:` next to the
+  system disk in `A:`. Every disk exists in English and in French (`cpa.dsk`, `cpa-logo.dsk`...):
+  the same programs and the same examples, with the messages, menus, help and examples in the
+  language of the disk; the examples have English names on the English disks (`MAP.GRX` is
+  `CARTE.GRX` in French; the list is in `files/en/noms.txt`). LOGO still speaks French on both,
+  translation in progress.
 - **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
-
-The programs and their messages are in French on `cpa.dsk`; their English translation, on
-`cpa-en.dsk`, is in progress.
 
 ## What's inside
 
@@ -105,20 +102,20 @@ once: xa, py65 and a script-driven Oricutron. See `docs/atelier.md`.
 Disk version: the Microdisc EPROM calls the BASIC 1.1 ROM, so keep
 `atmosrom = 'roms/basic11b'` and have `roms/microdis.rom`.
 
-    oricutron -m atmos -k microdisc -d build/cpa.dsk
+    oricutron -m atmos -k microdisc -d build/cpa-en.dsk
 
 ROM version: copy `build/cpa.rom` into `roms/`, then set `atmosrom = 'roms/cpa'` in
 `oricutron.cfg`.
 
-On real hardware, copy `cpa.dsk` to the USB stick of the LOCI (or the SD card of the Cumulus)
+On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI (or the SD card of the Cumulus)
 and boot from it. CP/A is used on a real Oric Atmos with a LOCI; the menu colours, hard to read
 in some emulators, are sharp on a real screen.
 
 **Several drives.** The disk version handles four drives, `A:` to `D:`, like the Microdisc
 controller, the LOCI and Oricutron (one `-d` per drive:
-`oricutron -m atmos -k microdisc -d build/cpa.dsk -d data.dsk`); see `docs/manuel.md`.
+`oricutron -m atmos -k microdisc -d build/cpa-en.dsk -d data.dsk`); see `docs/en/manuel.md`.
 
-**Clock Signal** (macOS, Linux) also boots `cpa.dsk`, and its drive timing is closer to the
+**Clock Signal** (macOS, Linux) also boots `cpa-en.dsk`, and its drive timing is closer to the
 hardware than Oricutron's. The application only puts a disk in `A:`;
 `tools/build_clk_mac.sh` builds a four-drive version on a Mac (with Xcode).
 
@@ -126,5 +123,5 @@ On the Oric, `HELP` gives help on each command (`HELP` alone: the list of topics
 
 ## Licence
 
-CP/A is distributed under the MIT licence (see `LICENSE`). The `build/cpa.dsk` and
-`build/cpa.rom` images are ready to use; `./build.sh` rebuilds them.
+CP/A is distributed under the MIT licence (see `LICENSE`). The disk images (`build/*.dsk`) and
+`build/cpa.rom` are ready to use; `./build.sh` rebuilds them.

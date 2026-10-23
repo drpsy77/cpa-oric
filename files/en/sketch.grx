@@ -1,4 +1,4 @@
-; ARDOISE.GRX: an etch-a-sketch
+; SKETCH.GRX: an etch-a-sketch
 ; arrows: draw; SPACE:
 ; clear; Q: quit
 HIRES

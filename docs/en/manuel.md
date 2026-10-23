@@ -110,7 +110,7 @@ Erase unneeded files (`ERA`) or use another disk.
 
 Any file name can start with a drive: `DIR B:`, `TYPE B:LETTRE.TXT`, `COPY LETTRE.TXT B:`,
 `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (the `.COM` and the `.SYM` on the
-source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `CHARGE "B:JEU`. Without a drive, it is the
+source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `CHARGE "B:GAME`. Without a drive, it is the
 current drive, chosen with `B:` at the prompt or with the **Lecteur suivant** [next drive] item
 of the Systeme menu (A, B, C, D, then A). A program (`.COM`) or a script (`.BAT`, also through
 `DO`) typed without a drive is searched for on the current drive, then on `A:`, then on those
@@ -246,7 +246,7 @@ README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC and SPR.INC 
 **read-only** (R/O) and stay **visible** in DIR, as on a CP/M disk: an `ERA *.*` or a name
 completed with ESC can no longer erase them. To replace a command with a new version:
 `SET COPY.COM RW`, then copy it. The examples (HELLO, GTEST and their `.ASM`, DEMO.LOG, the
-`.GRX` files, HEROS.SPR, TUILES.SPR) stay changeable: `ASM HELLO` rewrites HELLO.COM. No file is hidden
+`.GRX` files, HERO.SPR, TILES.SPR) stay changeable: `ASM HELLO` rewrites HELLO.COM. No file is hidden
 (SYS): the attribute stays at the user's disposal.
 
 SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still runs (a file
@@ -260,31 +260,50 @@ visible.
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX |
-| `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
+| `build/cpa-notes-en.dsk` | EDIT | | |
+| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
-On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
+On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
-**English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the system (menu
-bar, console messages) and the programs' messages in English (translation in progress: the commands, HELP and README.TXT, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER and GRXASM, and the libraries of translated programs; LOGO stays in French; the
-"yes" key is `Y` there, and "all" is `A` in EDIT's replacements), an `EDIT.CFG` commented
-in English and the GRAPHER examples (`DESSIN.GRX`, `SCORES.GRX`...) translated: same names,
-same code, comments and displayed texts in English. The LOGO examples (`.LOG`) stay in
-French.
+**French disks.** Every disk has a French twin: `cpa.dsk`, `cpa-logo.dsk`, `cpa-notes.dsk`,
+`cpa-asm.dsk`, `cpa-anim.dsk`, `cpa-projet.dsk`. Same programs, same files, same attributes,
+with the system, messages, menus, help (HELP, README.TXT), `EDIT.CFG` and the libraries of
+translated programs in French (the "yes" key is `O` there, and "all" is `T` in EDIT's
+replacements). The examples have French names there; the same code, with comments, displayed
+texts and names of subroutines and procedures in French. LOGO speaks French on both: the
+English `.LOG` files use its French primitives (`AV`, `REPETE`...), with English procedure
+names and texts.
 
-**Project disk.** `build/cpa-projet.dsk` is a blank disk (no system, 336 KB for files), to
-put in `B:` and copy for each project.
+| English | French | English | French |
+|---|---|---|---|
+| DRAWING.GRX | DESSIN.GRX | DEMO.LOG | DEMO.LOG |
+| TITLE.GRX | ECRAN.GRX | ELIZA.LOG, ELIZA2.LOG | ELIZA.LOG, ELIZA2.LOG |
+| PATTERNS.GRX | MOTIFS.GRX | PLOTSQR.LOG | TRACARRE.LOG |
+| SKETCH.GRX | ARDOISE.GRX | PLOTSIN.LOG | TRASINUS.LOG |
+| ARROWS.GRX, ARROWS.LOG | FLECHES.GRX, FLECHES.LOG | PLOTSINX.LOG | TRASINXX.LOG |
+| SNAKE.GRX | SERPENT.GRX | HERO.SPR | HEROS.SPR |
+| SCORES.GRX, SPRITES.GRX | SCORES.GRX, SPRITES.GRX | TILES.SPR | TUILES.SPR |
+| MAP.GRX | CARTE.GRX | BALL.ANI | BALLE.ANI |
+| ROAD.GRX | DEFILE.GRX | SHIP.ANI | VAISSEAU.ANI |
+| ROTSCROL.GRX | ROTSCROL.GRX | PUZZLE.GRX | JEU.GRX |
 
-Suggested use: the system disk in `A:` (`cpa.dsk`, or a disk for the task), a project disk in
+The other files keep their names (ANIMS.GRX, DEMO.BAT, CUBE.ANI, LOGO.HIZ, HELLO, GTEST). The
+table used by the build is `files/en/noms.txt`; `build.sh` checks that each English disk has
+the files of the French one.
+
+**Project disk.** `build/cpa-project-en.dsk` (`cpa-projet.dsk`) is a blank disk (no system,
+336 KB for files), to put in `B:` and copy for each project.
+
+Suggested use: the system disk in `A:` (`cpa-en.dsk`, or a disk for the task), a project disk in
 `B:`, and `B:` as the current drive. From `B>`, `EDIT`, `LOGO`, `ASM`, `GRAPHER` or `GRXASM`
 are found on `A:`, and so are the libraries (`CPA.INC`, `HIRES.INC`, `GRX.INC`...) that ASM and
 GRXASM look for on the project's drive, then on A: to D:; everything produced (`.ASM`,
 `.COM`, `.SYM`, data files) goes to `B:`, and `DIR` only shows the work in progress.
-`build/cpa.dsk` remains the complete disk, everything visible, and the demonstration; about
-78 KB are left on it, little for working (a GRXASM translation quickly writes over 40 KB).
+`build/cpa-en.dsk` remains the complete disk, everything visible, and the demonstration; about
+70 KB are left on it, little for working (a GRXASM translation quickly writes over 40 KB).
 
 Keys: CTRL-T toggles upper case (indicator `A`, or `a` for lower case, at the end of the menu
 bar), CTRL-C on an empty line at the prompt does a warm start. The RESET button returns to the
@@ -382,13 +401,13 @@ typed between two lines, or during a `PAUSE`, stops the script. `ECHO text` disp
 `PAUSE [text]` waits for a key. The end-of-screen pause starts again from zero at each line of
 the script. Example:
 
-    ; IMAGES.BAT : montre deux images, puis dessine
-    VOIR TITRE
-    VOIR CARTE
-    GRAPHER DESSIN $1
-    ECHO Fini.
+    ; PICTURES.BAT: shows two pictures, then draws
+    VOIR TITLE
+    VOIR MAP
+    GRAPHER DRAWING $1
+    ECHO Done.
 
-    A>DO IMAGES Bonjour
+    A>DO PICTURES Hello
 
 `ECHO` and DO's parameters keep lower case as typed (the rest of the command line is turned to
 upper case).
@@ -399,13 +418,13 @@ the parameters, without evaluating anything: `($1+4)` becomes `(10+4)`, which th
 not understand. A script that calls itself never stops by itself (there is no condition to get
 out): only ESC stops it. An example that does not work:
 
-    ; SCRIPT.BAT : trait en $1, puis le suivant 4 points plus loin ?
-    GRAPHER TRAIT $1
+    ; SCRIPT.BAT: a line at $1, then the next one 4 points further on?
+    GRAPHER STROKE $1
     SCRIPT ($1+4)
 
-(`TRAIT.GRX` contains `SPLIT` then `LINE $1 100 $1 110`.) The first line does draw the line at
+(`STROKE.GRX` contains `SPLIT` then `LINE $1 100 $1 110`.) The first line does draw the line at
 10, but the second passes `(10+4)` as it is. At the next level, GRAPHER refuses
-`LINE (10+4) 100 (10+4) 110` (`parametres ?`); the script then calls itself endlessly with a
+`LINE (10+4) 100 (10+4) 110` (`parameters?`); the script then calls itself endlessly with a
 longer and longer parameter, until ESC. To calculate, repeat or decide, you need a program:
 LOGO (`REPETE`, variables, `SI`) or a `.COM`.
 
@@ -416,20 +435,20 @@ are not procedures, so a program can start by itself and end with `QUITTE`; and 
 LOGO, the picture stays intact, in SPLIT mode: the script carries on with the same drawing, and
 GRAPHER, started in SPLIT mode, draws over it without clearing it. Example:
 
-    ; PELOUSE.BAT (CERCLE.GRX : SPLIT puis CIRCLE 120 30 20 ;
-    ; MOT.GRX : GTEXT 2 114 $1 $2)
-    GRAPHER CERCLE
-    LOGO HERBE
-    GRAPHER MOT Pelouse finie
+    ; LAWN.BAT (CIRCLE.GRX: SPLIT then CIRCLE 120 30 20;
+    ; WORD.GRX: GTEXT 2 114 $1 $2)
+    GRAPHER CIRCLE
+    LOGO GRASS
+    GRAPHER WORD Lawn done
 
-    POUR HERBE :N
+    POUR GRASS :N
     REPETE :N [AV 10 RE 10 LC DR 90 AV 4 GA 90 BC]
     FIN
     LC FIXEXY -110 -40 BC
-    HERBE 50
+    GRASS 50
     QUITTE
 
-(the second part is `HERBE.LOG`). The circle drawn by GRAPHER, the 50 blades drawn by LOGO and
+(the second part is `GRASS.LOG`). The circle drawn by GRAPHER, the 50 blades drawn by LOGO and
 the text then added by the script stay together on the screen. The script cannot pass a
 parameter to LOGO (`LOGO NAME` only takes the file name): the values are in `NAME.LOG`, which
 you may have written with EDIT.
@@ -448,7 +467,7 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
 | `USBDIR [path]` | lists a folder of the stick (the root by default): name and size, `<REP>` for a folder |
 
     A>EXPORT LETTRE.TXT
-    A>EXPORT B:JEU.LOG 1:/oric/jeu.log
+    A>EXPORT B:GAME.LOG 1:/oric/game.log
     A>export *.log oric
     A>IMPORT notes.txt /T
     A>IMPORT docs/MATH.LOG B:
@@ -576,16 +595,16 @@ An item triggers one of these two actions:
 
 A program can install its own bar with `JSR $C02D`, A/Y = address of the bar:
 
-    barre   .byt 2                      ; nombre de menus (8 au plus)
+    bar     .byt 2                      ; number of menus (8 at most)
             .word menu1, menu2
-    menu1   .byt 2,9                    ; nombre d'articles, largeur du plus long libellé
-            .asc "Fichier",0            ; titre
-            .asc "Ouvrir...",0          ; libellé
-            .byt 1                      ; 1 = taper une chaîne, 2 = appeler une routine
-            .word chaine_ou_routine
-            .asc "Quitter",0
+    menu1   .byt 2,7                    ; number of items, width of the longest label
+            .asc "File",0               ; title
+            .asc "Open...",0            ; label
+            .byt 1                      ; 1 = type a string, 2 = call a routine
+            .word string_or_routine
+            .asc "Quit",0
             .byt 2
-            .word quitter
+            .word quit
 
 (In this table: number of menus, 8 at most; number of items and width of the longest label;
 title; label; 1 = type a string, 2 = call a routine.)
@@ -697,8 +716,8 @@ practice, **about 200 changed bytes per 1/50 s**.
 | Demo (`cpa-anim.dsk`) | Size | Decoding | Rate |
 |---|---|---|---|
 | `CUBE.ANI`: line-drawn cube, 12 frames (a quarter turn loops) | 18.3 KB | about 65,000 cycles | 10 frames/s |
-| `BALLE.ANI`: ball in front of a dithered picture, 30 frames | 21.2 KB | about 21,000 cycles | 25 frames/s |
-| `VAISSEAU.ANI`: animated GIF passed through `mkanim.py`, 24 frames | 12.5 KB | about 21,000 cycles | 12.5 frames/s |
+| `BALL.ANI`: ball in front of a dithered picture, 30 frames | 21.2 KB | about 21,000 cycles | 25 frames/s |
+| `SHIP.ANI`: animated GIF passed through `mkanim.py`, 24 frames | 12.5 KB | about 21,000 cycles | 12.5 frames/s |
 
 - Making one on the Mac: `tools/mkanim.py FILM.ANI anim.gif [--seuil 128] [--delai N]
   [--apercu voir.gif]` (threshold, delay, preview; or a series of PNGs); the summary gives the
@@ -793,18 +812,18 @@ An EDIT paragraph has no length limit, but the programs that read the file do: L
 characters per line, a `.BAT` script 78. The file **`EDIT.CFG`** gives, for each file, the
 maximum length of a paragraph, the line breaking on screen and the printer width:
 
-    ; nom    maxi coupure imprimante
-    LETTRE.TXT 0   MOTS  96
-    *.LOG    126  LIGNE 80
-    *.BAT    78   LIGNE 80
-    *.*      0    MOTS  80
+    ; name   max  breaking printer
+    LETTER.TXT 0   WORDS 96
+    *.LOG    126  LINE  80
+    *.BAT    78   LINE  80
+    *.*      0    WORDS 80
 
-(Columns: name, maximum, breaking — `MOTS` between words, `CAR` at the character, `LIGNE` one
+(Columns: name, maximum, breaking — `WORDS` between words, `CHAR` at the character, `LINE` one
 line per paragraph: the starting mode, which can be changed while editing; only the first
-letter counts, and `WORDS`, `CHAR`, `LINE`, those of the `EDIT.CFG` of `cpa-en.dsk`, are
+letter counts, and `MOTS`, `CAR`, `LIGNE`, those of the `EDIT.CFG` of `cpa.dsk`, are
 accepted too — and printer width.) The first line whose name matches applies (wildcards `*` and `?`, optional drive:
 `B:*.TXT`); so put the special files first. Missing columns keep their default value (no limit,
-`MOTS`, 80); `;` starts a comment. EDIT looks for `EDIT.CFG` on the document's drive, then on
+`WORDS`, 80); `;` starts a comment. EDIT looks for `EDIT.CFG` on the document's drive, then on
 `A:`, at every open and every "Enreg. sous..." (save as). Without `EDIT.CFG`, it keeps 126 for
 `*.LOG` and 78 for `*.BAT`. The disks provided have one, changeable (`EDIT EDIT.CFG`); it is
 hidden (SYS) on the disks by use.
@@ -961,18 +980,18 @@ assembled for the new address (DEBUG uses this to copy itself to the top of memo
 **A program in several files.** EDIT only holds 32,000 bytes: a long program is split into
 modules, edited separately and brought together by the main file.
 
-    ; JEU.ASM
+    ; GAME.ASM
     #include "CPA.INC"
     *= $0500
             jsr init
             ...
-    #include "ECRAN.INC"
-    #include "NIVEAUX.INC"
+    #include "TITLE.INC"
+    #include "LEVELS.INC"
 
 One level of inclusion only: a module does not include another (`Un seul niveau
-d'inclusion` [Only one include level]). Labels are shared by all the files: prefix those of each module (`ec_`,
-`nv_`...), as the libraries do (`h_`, `r_`, `f_`). Modules are looked for like `CPA.INC`: on
-the drive of `JEU.ASM`, then on A: to D:.
+d'inclusion` [Only one include level]). Labels are shared by all the files: prefix those of each module (`ti_`,
+`lv_`...), as the libraries do (`h_`, `r_`, `f_`). Modules are looked for like `CPA.INC`: on
+the drive of `GAME.ASM`, then on A: to D:.
 
 Errors are listed with the line number, the message and the start of the line (the name of the
 included file in brackets where relevant). The list pauses at each full screen. If there is an

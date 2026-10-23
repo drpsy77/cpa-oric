@@ -1,11 +1,11 @@
-; CARTE.GRX: an island of 64 x 32 tiles of 2 x 2 (T$), seen through a
+; MAP.GRX: an island of 64 x 32 tiles of 2 x 2 (T$), seen through a
 ; 38 x 26 window (TMAP) centred on the player; arrows, Q: end
-; Tiles drawn in the secondary set (TUILES.SPR, TFONT); the
+; Tiles drawn in the secondary set (TILES.SPR, TFONT); the
 ; map is written in plain text: ~ water, space grass, # wall, ^ tree,
 ; M mountain. Off the map: tile 0, water.
 ; INKEY: no waiting; the screen is redrawn (CALC) only after a step
 DIM T$(32,64) D$(5,4) S$(152)
-BLOAD S$ TUILES.SPR
+BLOAD S$ TILES.SPR
 ECHO Building the world...
 FOR J 0 3
   D$(0,J) = 34                 ; water
@@ -60,7 +60,7 @@ FOR L 1 26
 NEXT
 CHAR 1 0 3
 LOCATE 2 0
-ECHO "CARTE: arrows, Q: quit"
+ECHO "MAP: arrows, Q: quit"
 CHAR 1 27 6
 CALL CALC
 WHILE 1

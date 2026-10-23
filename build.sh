@@ -7,7 +7,8 @@
 #   build/cpa.dsk      disquette amorçable (MFM_DISK, 2 faces, 42 pistes, 17 secteurs)
 #   build/cpa-logo.dsk, cpa-notes.dsk, cpa-asm.dsk, cpa-anim.dsk  disquettes par usage
 #   build/cpa-projet.dsk  disquette vierge pour les projets (lecteur B:)
-#   build/cpa-en.dsk   comme cpa.dsk, messages des programmes en anglais
+#   build/cpa-en.dsk, cpa-{logo,notes,asm,anim,project}-en.dsk
+#                      les mêmes en anglais (messages, exemples traduits)
 set -e
 cd "$(dirname "$0")"
 # assembleur : $XA, sinon tools/xa s'il existe, sinon xa dans le PATH
@@ -61,10 +62,17 @@ for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   (cd progs && $XA -I msg/en -I msg/fr -o ../build/progs-en/$n.COM -e ../build/progs-en/$n.err $(basename "$p"))
 done
 
-# sources d'exemple pour ASM.COM
+# sources d'exemple pour ASM.COM ; leur version anglaise (files/en/hello.asm,
+# gtest.asm : commentaires et message traduits) donne les .COM de
+# build/progs-en ; HELLO, au message déjà anglais, doit rester identique
 mkdir -p build/src
 cp progs/hello.s build/src/HELLO.ASM
 cp progs/gtest.s build/src/GTEST.ASM
+for n in hello gtest; do
+  N=$(echo $n | tr a-z A-Z)
+  $XA -I progs -o build/progs-en/$N.COM -e build/progs-en/$N.err files/en/$n.asm
+done
+cmp -s build/progs/HELLO.COM build/progs-en/HELLO.COM || { echo "files/en/hello.asm ne donne pas HELLO.COM"; exit 1; }
 # bibliothèques : copies sans commentaires (2 à 4 fois plus petites ; la
 # documentation reste dans progs/*.inc ; tools/test_inc.sh vérifie qu'elles
 # s'assemblent comme les originaux)
@@ -81,28 +89,34 @@ done
 python3 tools/mark_inc.py build/src
 python3 tools/mark_inc.py build/src-en > /dev/null
 
+# Chaque disquette existe en français et en anglais : « disque IMAGE IMAGE_EN
+# arguments de mkdisk » fait les deux. L'anglaise a le système, les programmes
+# et les bibliothèques aux messages anglais (build/progs-en, build/src-en) et
+# les exemples traduits, sous leurs noms anglais (files/en/noms.txt, appliqué
+# par tools/en_files.py, qui refuse un exemple sans traduction).
+python3 tools/en_files.py --verifie > /dev/null || { python3 tools/en_files.py --verifie; exit 1; }
+disque() {   # disque IMAGE IMAGE_EN [--ro|--rw|--sys|--dir|fichiers]...
+  fr=$1; en=$2; shift 2
+  echo "== $fr, $en"
+  python3 tools/mkdisk.py new "$fr" --boot build/boot.bin --system build/cpa_sys.bin "$@" | tail -1
+  python3 tools/mkdisk.py new "$en" --boot build/boot.bin --system build/cpa_sys_en.bin \
+    $(python3 tools/en_files.py "$@") | tail -1
+  python3 tools/en_files.py --jumelles "$fr" "$en" | grep -v '^cpa' || true
+  python3 tools/en_files.py --jumelles "$fr" "$en" > /dev/null || exit 1
+}
+
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
 # pouvoir réécrire HELLO.COM, LOGO réécrire DEMO.LOG)
-EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/edit.cfg files/fleches.grx files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx files/tuiles.spr files/defile.grx"
+GRX_EX="files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx
+  files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx
+  files/tuiles.spr files/defile.grx files/rotscrol.grx files/JEU.GRX"
+EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/edit.cfg $GRX_EX"
 PROTEGES=""
 for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC files/readme.txt; do
-  case " $EXEMPLES " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
+  case " $(echo $EXEMPLES) " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
-python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
-  --ro $PROTEGES --rw $EXEMPLES
-# même disquette, système, programmes et bibliothèques aux messages en anglais
-# (build/progs-en, build/src-en ; les programmes pas encore traduits restent
-# en français) ; un fichier de files/ qui a sa traduction dans files/en (même
-# nom : EDIT.CFG, README.TXT, exemples .GRX) est remplacé par elle
-en_liste() {
-  for f in $(echo "$@" | sed -e 's|build/progs/|build/progs-en/|g' -e 's|build/src/\([A-Z]*\.INC\)|build/src-en/\1|g'); do
-    case "$f" in files/*) [ -f "files/en/${f#files/}" ] && f="files/en/${f#files/}" ;; esac
-    printf '%s ' "$f"
-  done
-}
-python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys_en.bin \
-  --ro $(en_liste $PROTEGES) --rw $(en_liste $EXEMPLES) | tail -1
+disque build/cpa.dsk build/cpa-en.dsk --ro $PROTEGES --rw $EXEMPLES
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et
 # cachées de DIR (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la
@@ -111,14 +125,14 @@ P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM
   $P/VOIR.COM $P/CMDER.COM"
-theme() {   # theme IMAGE "visibles" "système en plus" "exemples"
-  echo "== $1"
-  python3 tools/mkdisk.py new "$1" --boot build/boot.bin --system build/cpa_sys.bin \
-    --ro --sys $BASE $3 --rw files/edit.cfg --ro --dir $P/EDIT.COM $2 --rw $4 | tail -1
+theme() {   # theme NOM NOM_EN "visibles" "système en plus" "exemples"
+  disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg \
+    --ro --dir $P/EDIT.COM $3 --rw $5
 }
-theme build/cpa-logo.dsk "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx files/fleches.log files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx files/tuiles.spr files/defile.grx"
-theme build/cpa-notes.dsk "" "" ""
-theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC" \
+INCS="build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC"
+theme logo logo "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log $GRX_EX"
+theme notes notes "" "" ""
+theme asm asm "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM $INCS" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # Animations : VOIR visible (il sort des commandes de base), GRAPHER, GRXASM et
@@ -127,12 +141,14 @@ theme build/cpa-asm.dsk "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GR
 BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
 BASE_TOUT=$BASE
 BASE=$BASE_SANS_VOIR
-theme build/cpa-anim.dsk "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM" \
-  "build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC" \
+theme anim anim "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM" "$INCS" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT
 # disquette de projet, vierge : sans système (amorce et pistes du système
-# vides), tout le reste pour les fichiers ; en B: à côté de cpa.dsk
-echo "== build/cpa-projet.dsk"
+# vides), tout le reste pour les fichiers ; en B: à côté de cpa.dsk (même
+# contenu sous son nom anglais)
+echo "== build/cpa-projet.dsk, build/cpa-project-en.dsk"
 python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
-echo "OK : build/cpa.rom, build/cpa.dsk, build/cpa-{en,logo,notes,asm,anim,projet}.dsk"
+cp build/cpa-projet.dsk build/cpa-project-en.dsk
+echo "OK : build/cpa.rom ; build/cpa.dsk, cpa-{logo,notes,asm,anim,projet}.dsk ;"
+echo "     build/cpa-en.dsk, cpa-{logo,notes,asm,anim,project}-en.dsk"

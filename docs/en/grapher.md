@@ -13,7 +13,7 @@ assembly by GRXASM and then assembled into a standalone `.COM`, 5 to 20 times fa
 This document is the only reference for GRAPHER. The README only gives an overview. HELP and
 README.TXT (on the disk) give a summary (`tools/gen_readme_txt.py`).
 
-    ; un eventail en plein ecran
+    ; a fan, full screen
     HIRES
     FOR X 0 239 6
       LINE X 0 239-X 199
@@ -161,15 +161,15 @@ The scenery stays visible around the sprite's silhouette, within its own cells. 
 that of the line (attributes): the sprite takes the colour of the lines it crosses.
 
     DIM S$(112) T(16)
-    BLOAD S$ HEROS.SPR
+    BLOAD S$ HERO.SPR
     FOR I 0 15
-      T(I) = 112+I          ; codes 112-127 reserves aux sprites
+      T(I) = 112+I          ; codes 112-127 kept for the sprites
     NEXT
     LORES
-    ...                     ; le decor
+    ...                     ; the scenery
     SPRITES 2
     SPOOL T
-    SSHOW 0 S$ 0 X Y        ; le sprite 0 du fichier, emplacement 0
+    SSHOW 0 S$ 0 X Y        ; sprite 0 of the file, slot 0
 
 | Command | Effect |
 |---|---|
@@ -236,13 +236,13 @@ normal method: the camera position is enough to describe the screen (diagonal mo
 back to the start: the same line).
 
     DIM T$(64,128)
-    BLOAD T$ CARTE
+    BLOAD T$ MAP
     LORES
     ...
     WHILE 1
       K = INKEY
       IF K>7 & K<12
-        ...                     ; pas du joueur, CX, CY : coin de la camera, bornes
+        ...                     ; player's step, CX, CY: camera corner, bounds
         PASTE T$(CY,CX) 2 1 38 26
       ENDIF
     NEXT
@@ -253,7 +253,7 @@ memory, tiles (§ 7.3).
 **Scroll, then fill in.** When the scenery is not entirely in memory (computed as you go,
 drawn at random, endless), slide the playing area by one cell and write the strip that comes
 in: a line with `LOCATE` and `SPC` or `PRINT A$`, a column with `PRINTV A$` or `SPCV`, or a
-`PASTE` of one line or one column. Example: `DEFILE.GRX` (§ 14).
+`PASTE` of one line or one column. Example: `ROAD.GRX` (§ 14).
 
 ### 7.3 Tiles: a large map in little memory
 
@@ -263,19 +263,19 @@ two-dimensional `$` array in which each byte names a tile: a map of 64 × 32 til
 it; the camera moves by one character, not one tile.
 
     DIM T$(32,64) D$(5,4) S$(152)
-    BLOAD S$ TUILES.SPR       ; dessins des caracteres (genre 1)
-    FOR J 0 3                 ; codes de chaque tuile, ligne par ligne
-      D$(0,J) = 34            ; eau
-      D$(1,J) = 33            ; herbe
+    BLOAD S$ TILES.SPR        ; drawings of the characters (kind 1)
+    FOR J 0 3                 ; codes of each tile, line by line
+      D$(0,J) = 34            ; water
+      D$(1,J) = 33            ; grass
       ...
     NEXT
-    TILESET D$ 2 2 "~ #^M"    ; tuiles de 2 x 2 ; caracteres de la carte
-    LOAD T$ NIVEAU1           ; la carte, ecrite en clair dans EDIT
+    TILESET D$ 2 2 "~ #^M"    ; 2 x 2 tiles; characters of the map
+    LOAD T$ LEVEL1            ; the map, written in plain text in EDIT
     LORES
-    TFONT S$ 33 ALT           ; dessins copies dans le jeu secondaire
+    TFONT S$ 33 ALT           ; drawings copied into the secondary set
     ...
     TMAP T$ X-19 Y-13 2 1 38 26
-    IF TILE(NX,NY) = 1        ; de l'herbe sous le pas ?
+    IF TILE(NX,NY) = 1        ; grass under the step?
 
 | Element | Effect |
 |---|---|
@@ -317,7 +317,7 @@ it; the camera moves by one character, not one tile.
   than the list of tiles, one-dimensional map); `.SPR file?` (`TFONT` on a file that is
   not of kind 1). Translated: nothing is checked; `TMAP` without `TILESET` does nothing.
 
-Complete example: `CARTE.GRX` (§ 14).
+Complete example: `MAP.GRX` (§ 14).
 
 ## 8. Keys and time
 
@@ -353,14 +353,14 @@ stopping the loop until the next key, but it suffers the keyboard's repeat delay
 The right shape: read the key, and only compute and redraw if it changed something; the
 drawing goes into a subroutine, called once before the loop.
 
-    CALL DESSIN                 ; premier affichage
+    CALL DRAW                 ; first display
     WHILE 1
       K = INKEY
-      IF K>7 & K<12             ; une fleche : deplacement, puis dessin
-        ...                     ; nouvelle position, verifiee
-        CALL DESSIN
+      IF K>7 & K<12             ; an arrow: move, then draw
+        ...                     ; new position, checked
+        CALL DRAW
       ENDIF
-      IF K = 81 | K = 113       ; Q ou q : fin
+      IF K = 81 | K = 113       ; Q or q: end
         END
       ENDIF
     NEXT
@@ -469,7 +469,7 @@ worst the new one is complete in `NAME.$$$` (`REN NAME.EXT=NAME.$$$`).
 
 ### 10.1 Sprite files (`.SPR`)
 
-A `.SPR` file is loaded as it is into a large enough `$` array (`BLOAD S$ HEROS.SPR`: the type
+A `.SPR` file is loaded as it is into a large enough `$` array (`BLOAD S$ HERO.SPR`: the type
 must be written, `BLOAD` uses `.DAT` by default). Everything is aligned on 8 bytes, the width
 of a HEX line: each block starts at the beginning of a line, each cell of a sprite takes two
 lines (drawing, silhouette). Sprites follow each other without gaps, of different sizes; their
@@ -551,13 +551,13 @@ Example: the text screen as a file readable and editable in EDIT, then read back
     LORES
     FOR Y 0 27
       LOCATE 2 Y
-      SPC 38             ; des espaces, pas l'attribut 16
+      SPC 38             ; spaces, not attribute 16
     NEXT
-    ; ... dessin du texte avec LOCATE, ECHO, CHAR ...
+    ; ... text drawn with LOCATE, ECHO, CHAR ...
     GRAB T$(0,0) 2 0 38 28
-    SAVE T$ ECRAN        ; ECRAN.TXT : 28 lignes de 38 caracteres + CR LF
-    ; plus tard, ou dans un autre programme :
-    LOAD T$ ECRAN
+    SAVE T$ TITLE        ; TITLE.TXT: 28 lines of 38 characters + CR LF
+    ; later, or in another program:
+    LOAD T$ TITLE
     PASTE T$(0,0) 2 0 38 28
 
 Colours (attributes, codes 0-31) do not go through `SAVE`: for a screen in colour, use
@@ -586,10 +586,10 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 12. Translation into assembly (GRXASM)
 
-    A>GRXASM MOTIFS
-    MOTIFS.ASM written: ASM MOTIFS
-    A>ASM MOTIFS
-    A>MOTIFS
+    A>GRXASM PATTERNS
+    PATTERNS.ASM written: ASM PATTERNS
+    A>ASM PATTERNS
+    A>PATTERNS
 
 - Translation is done by `GRXASM.COM`, a separate program (the interpreter does not keep its
   code in memory). `GRAPHER NAME /A` starts it through CHAIN: the line becomes
@@ -652,13 +652,13 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   `SPR.INC` if it has sprites and `ANIM.INC` if it animates. These files are looked for on the
   drive of the `.GRX`, then on the drives already read from A: to D: (system disk in A:,
   project in B:); otherwise: `GRX.INC missing (library)`. ASM then only
-  needs `CPA.INC`, looked for the same way. For CARTE, `NAME.ASM` is 46 KB: `/C` only leaves
+  needs `CPA.INC`, looked for the same way. For MAP, `NAME.ASM` is 46 KB: `/C` only leaves
   `NAME.COM` (8 KB). They are, with GRXASM, on the complete disk, the Assembler disk and the
   Animations disk (not on the Logo disk, which has no ASM).
-- Size of a translated `.COM`: 1.4 KB for `ARDOISE`, 1.7 KB for `DESSIN`, 2.2 KB for `MOTIFS`,
-  4.0 KB for `SERPENT`, 6.0 KB for `SPRITES` (removing the checks took 4 to 15% off).
-  `NAME.ASM` is longer (10 KB for `DESSIN`, 34 KB for `SPRITES`): the room is needed on the
-  disk during translation. ASM takes less than a minute for `MOTIFS`.
+- Size of a translated `.COM`: 1.4 KB for `SKETCH`, 1.7 KB for `DRAWING`, 2.2 KB for `PATTERNS`,
+  4.0 KB for `SNAKE`, 6.0 KB for `SPRITES` (removing the checks took 4 to 15% off).
+  `NAME.ASM` is longer (10 KB for `DRAWING`, 34 KB for `SPRITES`): the room is needed on the
+  disk during translation. ASM takes less than a minute for `PATTERNS`.
 
 ## 13. Memory, speed, limits
 
@@ -669,7 +669,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
   bytes per slot and 192 bytes for the two pools; `TILESET`, (wid × hgt + 1) pages (§ 7.3).
   The free area for the text, the arrays and an animation is about 17 KB (text from
-  `$599F`): `VAISSEAU.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALLE.ANI` (18 and
+  `$599F`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
   21 KB), which need translation.
 - **Memory** (translated): the program at `$0500`, then the tables of `hires.inc`. Arrays are
   reserved below `$9D60` as when interpreted: fixed arrays (§ 12) at start, in the order of
@@ -677,7 +677,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 - **Sizes of a translated program** (measured on the eleven examples, `files/*.grx`; the
   program's part separated from the libraries'):
 
-  | | Per byte of `.GRX` | Per line of `.GRX` | CARTE (96 lines, 2.1 KB) |
+  | | Per byte of `.GRX` | Per line of `.GRX` | MAP (96 lines, 2.1 KB) |
   |---|---:|---:|---:|
   | `NAME.ASM`, program | 6.4 to 7.0 bytes | ~10 lines, ~140 bytes | 14.2 KB |
   | `NAME.ASM`, libraries | — | — | 32.0 KB |
@@ -685,7 +685,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   | `NAME.COM`, libraries | — | — | 5.8 KB |
 
   The compiled program is thus roughly the `.GRX` in clear, plus the library routines it
-  uses: 0.8 KB (ARDOISE) to 5.8 KB (CARTE) in the examples. The intermediate `.ASM` is about
+  uses: 0.8 KB (SKETCH) to 5.8 KB (MAP) in the examples. The intermediate `.ASM` is about
   6.5 times the `.GRX`, plus the text of the copied routines (5 to 32 KB; the six libraries
   are 69 KB on the disk, no program takes them all). A `.GRX` does not exceed ~17 KB
   interpreted (text and arrays together) nor ~21 KB for GRXASM (text from `$48AF` to
@@ -710,19 +710,19 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 | File | Contents |
 |---|---|
-| `DESSIN.GRX` | SPLIT mode, with a parameter |
-| `ECRAN.GRX` | title screen coloured with attributes (HIRES) |
-| `MOTIFS.GRX` | fan, circles, starry sky: loops, random numbers, subroutine |
-| `ARDOISE.GRX` | etch-a-sketch: the arrows draw, SPACE clears, Q ends (`INKEY`) |
-| `FLECHES.GRX` | LORES: an `@` moved with the arrows inside a frame, `SCRN` for the walls |
-| `SERPENT.GRX` | LORES: snake (body in two ring arrays, `SCRN` for collisions) |
+| `DRAWING.GRX` | SPLIT mode, with a parameter |
+| `TITLE.GRX` | title screen coloured with attributes (HIRES) |
+| `PATTERNS.GRX` | fan, circles, starry sky: loops, random numbers, subroutine |
+| `SKETCH.GRX` | etch-a-sketch: the arrows draw, SPACE clears, Q ends (`INKEY`) |
+| `ARROWS.GRX` | LORES: an `@` moved with the arrows inside a frame, `SCRN` for the walls |
+| `SNAKE.GRX` | LORES: snake (body in two ring arrays, `SCRN` for collisions) |
 | `SCORES.GRX` | high scores: `INPUT` of the name, sorting, title coloured by an attribute at the start of the string; the best five kept in `HOFN.TXT` and `HOFS.TXT` (`LOAD`, `SAVE`, `FOUND`) |
-| `SPRITES.GRX` | LORES: a little man led with the arrows (two walking frames) and a bouncing ball, on two-colour scenery; sprites from `HEROS.SPR` |
-| `CARTE.GRX` | LORES: an island of 64 × 32 tiles of 2 × 2 (128 × 64 characters) drawn at random in `T$` (lakes, trees, mountains, walls), written in plain text (`TILESET` with `K$`), seen through a 38 × 26 window centred on the player (`TMAP`; outside the island, tile 0: the sea); drawings from `TUILES.SPR` in the secondary set (`TFONT ... ALT`); you walk only on grass (`TILE`); arrows (`INKEY`, redraw only after a step, subroutine `CALC`), Q: end |
-| `DEFILE.GRX` | LORES: a road scrolling downwards (`SCROLV`, then the new line at the top); left and right arrows, `INKEY` |
+| `SPRITES.GRX` | LORES: a little man led with the arrows (two walking frames) and a bouncing ball, on two-colour scenery; sprites from `HERO.SPR` |
+| `MAP.GRX` | LORES: an island of 64 × 32 tiles of 2 × 2 (128 × 64 characters) drawn at random in `T$` (lakes, trees, mountains, walls), written in plain text (`TILESET` with `K$`), seen through a 38 × 26 window centred on the player (`TMAP`; outside the island, tile 0: the sea); drawings from `TILES.SPR` in the secondary set (`TFONT ... ALT`); you walk only on grass (`TILE`); arrows (`INKEY`, redraw only after a step, subroutine `CALC`), Q: end |
+| `ROAD.GRX` | LORES: a road scrolling downwards (`SCROLV`, then the new line at the top); left and right arrows, `INKEY` |
 | `ANIMS.GRX` | animations (Animations disk) |
 | `ROTSCROL.GRX` | LOAD, PASTE, SCROLV/H, ROTV/H demo |
-| `JEU.GRX` | FILL, PASTE, ROTV/H local. Put the colors back to their initial location |
+| `PUZZLE.GRX` | FILL, PASTE, ROTV/H local. Put the colors back to their initial location |
 
 ## 15. Implementation
 

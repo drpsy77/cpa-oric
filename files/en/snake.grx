@@ -1,4 +1,4 @@
-; SERPENT.GRX: a snake steered with the arrows (LORES, DIM, SCRN, INKEY)
+; SNAKE.GRX: a snake steered with the arrows (LORES, DIM, SCRN, INKEY)
 ; eat the $; neither the walls nor yourself; Q: end
 LORES
 DIM X(256) Y(256)
@@ -18,7 +18,7 @@ FOR L 2 24
   CHAR 39 L 35
 NEXT
 LOCATE 3 0
-ECHO "SERPENT: eat the $, Q: quit"
+ECHO "SNAKE: eat the $, Q: quit"
 LOCATE 3 27
 ECHO "Length:"
 ; the head at (20,13), going right; X() Y(): the body, as a ring
@@ -30,7 +30,7 @@ Y(0) = 13
 CHAR 20 13 79
 A = 1
 B = 0
-CALL MANGE
+CALL FOOD
 WHILE 1
   K = INKEY
   IF K = 81 | K = 113          ; Q or q: end
@@ -68,7 +68,7 @@ WHILE 1
   CHAR U V 79
   IF C = 36
     N = N + 1
-    CALL MANGE
+    CALL FOOD
   ELSE
     CHAR X(T) Y(T) 32
     T = (T + 1) % 256
@@ -77,8 +77,8 @@ WHILE 1
   PRINT N
   DELAY 3
 NEXT
-; MANGE: a $ on a free cell
-SUB MANGE
+; FOOD: a $ on a free cell
+SUB FOOD
   P = 3 + RND(36)
   Q = 2 + RND(23)
   WHILE SCRN(P,Q) <> 32

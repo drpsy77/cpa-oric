@@ -1,5 +1,5 @@
-; MOTIFS.GRX: loops and variables
-; usage: GRAPHER MOTIFS
+; PATTERNS.GRX: loops and variables
+; usage: GRAPHER PATTERNS
 HIRES
 ; a fan
 FOR X 0 239 6
@@ -14,7 +14,7 @@ NEXT
 DELAY 50
 ; a starry sky, in a frame
 GCLS
-CALL CADRE
+CALL FRAME
 REPEAT 400
   PLOT 1+RND(238) 1+RND(198)
 NEXT
@@ -23,7 +23,7 @@ WAIT
 ; a key: end, back to text
 END
 
-SUB CADRE
+SUB FRAME
   BOX 0 0 239 199
   BOX 3 3 236 196
 ENDSUB

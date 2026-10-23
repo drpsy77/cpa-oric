@@ -36,6 +36,20 @@ cp progs/msg/en/*.msg "$T/"
 for p in $(ls progs/msg/en | sed 's/\.msg$//'); do
   [ -f progs/$p.s ] && essai en $p
 done
+# exemples traduits de la disquette anglaise (files/en/*.asm)
+for n in hello gtest; do
+  P=$(echo $n | tr a-z A-Z)
+  cp files/en/$n.asm "$T/$P.ASM"
+  $XA -I progs -o "$T/ref.bin" files/en/$n.asm
+  (cd "$T" && python3 "$OLDPWD/tools/run_com.py" "$T" ASM.COM $n >/dev/null 2>&1) || true
+  m=$(wc -c < "$T/ref.bin")
+  if [ -f "$T/$P.COM" ] && cmp -s -n $m "$T/ref.bin" "$T/$P.COM"; then
+    echo "identique : $P (files/en, $m octets)"; ok=$((ok+1))
+  else
+    echo "DIFFERENT : $P (files/en)"; ko=$((ko+1))
+  fi
+  rm -f "$T/$P.COM"
+done
 rm -rf "$T"
 echo "$ok identiques, $ko différents"
 [ $ko -eq 0 ]

@@ -1,4 +1,4 @@
-; FLECHES.GRX: the text screen (LORES)
+; ARROWS.GRX: the text screen (LORES)
 ; arrows: move the @; Q: quit
 ; INKEY: key pressed, no delay
 LORES

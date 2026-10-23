@@ -57,11 +57,16 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   puis `HELP KEYS`, `HELP PROG`, `HELP MEMO`, `HELP GRAP` (rubrique longue : pause en fin
   d'écran), `HELP XYZ` (`Unknown topic.` puis l'aide par défaut) ; 37 colonnes au plus,
   rien de coupé. Sur `cpa.dsk`, `HELP TOUC` inchangé ;
-- **`cpa-en.dsk`, exemples de GRAPHER** : `GRAPHER FLECHES` (`Arrows, Q: quit      Steps:`,
-  le nombre de pas juste après), `GRAPHER SCORES` (HIGH SCORES en jaune, `Your name:`),
-  `GRAPHER SERPENT` (`Length:`, puis `LOST!`), `GRAPHER DEFILE` (`Lost! Score:`),
-  `GRAPHER CARTE`, `GRAPHER SPRITES`, `GRAPHER MOTIFS` (STARS centré) : textes anglais,
-  rien qui déborde ;
+- **Disquettes anglaises** (`cpa-en.dsk`, `cpa-logo-en.dsk`, `cpa-asm-en.dsk`,
+  `cpa-anim-en.dsk`, `cpa-notes-en.dsk`) : chacune démarre, `DIR` / `DIRS` montrent les noms
+  anglais. Exemples : `GRAPHER ARROWS` (`Arrows, Q: quit      Steps:`), `GRAPHER SCORES`
+  (HIGH SCORES en jaune, `Your name:`), `GRAPHER SNAKE` (`Length:`, puis `LOST!`), `GRAPHER
+  ROAD` (`Lost! Score:`), `GRAPHER MAP` (TILES.SPR), `GRAPHER SPRITES` (HERO.SPR), `GRAPHER
+  PATTERNS` (STARS centré), `GRAPHER PUZZLE`, `GRAPHER ROTSCROL` ; `LOGO DEMO` puis `DEMO`,
+  `LOGO ELIZA2` (une petite conversation en anglais, `GOODBYE`), `LOGO PLOTSQR`, `LOGO
+  ARROWS` ; sur `cpa-anim-en.dsk`, `DEMO` (BALL.ANI, SHIP.ANI, puis `GRAPHER ANIMS`) ; sur
+  `cpa-asm-en.dsk`, `ASM GTEST` puis `GTEST` (`Picture drawn.`). Sur `cpa.dsk` : `GRAPHER
+  ROTSCROL` et `GRAPHER JEU`, nouveaux sur la disquette ;
 - **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
   Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
   entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque

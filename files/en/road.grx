@@ -1,4 +1,4 @@
-; DEFILE.GRX: a road scrolling down (SCROLV, then a new line
+; ROAD.GRX: a road scrolling down (SCROLV, then a new line
 ; at the top); left and right arrows, Q: end
 LORES
 FOR L 0 27
@@ -13,7 +13,7 @@ CHAR 1 0 3
 LOCATE 2 0
 SPC 38
 LOCATE 2 0
-ECHO "DEFILE: arrows, Q: quit"
+ECHO "ROAD: arrows, Q: quit"
 LOCATE 2 27
 SPC 38
 G = 14

@@ -1,7 +1,7 @@
 ; SPRITES.GRX: a little man steered with the arrows and a ball
-; bouncing, over a text-mode scenery (HEROS.SPR)
+; bouncing, over a text-mode scenery (HERO.SPR)
 DIM S$(112) T(16)
-BLOAD S$ HEROS.SPR
+BLOAD S$ HERO.SPR
 FOR I 0 15
   T(I) = 112+I         ; codes 112-127: characters of the sprites
 NEXT
