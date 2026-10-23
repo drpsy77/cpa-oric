@@ -3,10 +3,11 @@
 ;
 ;  HELP          commandes internes et liste des sujets
 ;  HELP sujet    TOUCHES PROGRAMMES EDIT HEX LOGO ASM DEBUG MEMOIRE
-;                USB GRAPHER CMDER
+;                USB GRAPHER CMDER (en anglais : KEYS PROGRAMS EDIT HEX
+;                LOGO ASM DEBUG MEMORY USB GRAPHER CMDER)
 ;                (les premières lettres suffisent)
-;  Les textes viennent de tools/gen_readme_txt.py (help_tab.s), comme
-;  README.TXT. Ils sont compressés (LZSS, format de tools/lzhir.py) :
+;  Les textes viennent de tools/gen_readme_txt.py (helptab.msg, dans
+;  progs/msg/fr et progs/msg/en), comme README.TXT. Ils sont compressés (LZSS, format de tools/lzhir.py) :
 ;  unz les décode dans le tampon buf, qui suit le programme, du début
 ;  jusqu'à la fin de la rubrique demandée.
 ; =====================================================================
@@ -199,8 +200,7 @@ putb
 r       rts
 .)
 
-m_unknown .asc "Sujet inconnu.",13,10,13,10,0
 
-#include "help_tab.s"
+#include "helptab.msg"         ; textes et clés, en français ou en anglais (progs/msg/fr, en)
 
 buf                             ; texte décodé (jusqu'à ~19 Ko, bien sous la TPA)

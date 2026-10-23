@@ -1,0 +1,104 @@
+; CARTE.GRX: an island of 64 x 32 tiles of 2 x 2 (T$), seen through a
+; 38 x 26 window (TMAP) centred on the player; arrows, Q: end
+; Tiles drawn in the secondary set (TUILES.SPR, TFONT); the
+; map is written in plain text: ~ water, space grass, # wall, ^ tree,
+; M mountain. Off the map: tile 0, water.
+; INKEY: no waiting; the screen is redrawn (CALC) only after a step
+DIM T$(32,64) D$(5,4) S$(152)
+BLOAD S$ TUILES.SPR
+ECHO Building the world...
+FOR J 0 3
+  D$(0,J) = 34                 ; water
+  D$(1,J) = 33                 ; grass (empty)
+  D$(2,J) = 35                 ; wall
+  D$(3,J) = 36+J               ; tree
+  D$(4,J) = 40+J               ; mountain
+NEXT
+TILESET D$ 2 2 "~ #^M"
+FILL T$ 32
+FOR I 0 63
+  T$(0,I) = 126
+  T$(31,I) = 126
+NEXT
+FOR I 1 30
+  T$(I,0) = 126
+  T$(I,63) = 126
+NEXT
+REPEAT 12                      ; lakes
+  Y = 1+RND(28)
+  X = 1+RND(59)
+  FOR I 0 1
+    FOR J 0 2
+      T$(Y+I,X+J) = 126
+    NEXT
+  NEXT
+NEXT
+REPEAT 150
+  T$(1+RND(30),1+RND(62)) = 94
+NEXT
+REPEAT 25                      ; mountain ranges
+  Y = 1+RND(30)
+  X = 1+RND(60)
+  T$(Y,X) = 77
+  T$(Y,X+1) = 77
+NEXT
+REPEAT 8                       ; walls
+  Y = 1+RND(30)
+  X = 1+RND(57)
+  FOR J 0 4
+    T$(Y,X+J) = 35
+  NEXT
+NEXT
+PX = 64                        ; player: character of the world
+PY = 32
+T$(16,32) = 32                 ; (the player's tile)
+LORES
+TFONT S$ 33 ALT
+FOR L 1 26
+  CHAR 0 L 9                   ; secondary set: the tiles
+  CHAR 1 L 2
+NEXT
+CHAR 1 0 3
+LOCATE 2 0
+ECHO "CARTE: arrows, Q: quit"
+CHAR 1 27 6
+CALL CALC
+WHILE 1
+  K = INKEY
+  IF K>7 & K<12
+    NX = PX
+    NY = PY
+    IF K = 8
+      NX = PX-1
+    ENDIF
+    IF K = 9
+      NX = PX+1
+    ENDIF
+    IF K = 10
+      NY = PY+1
+    ENDIF
+    IF K = 11
+      NY = PY-1
+    ENDIF
+    IF TILE(NX,NY) = 1         ; grass only
+      PX = NX
+      PY = NY
+      CALL CALC
+    ENDIF
+  ENDIF
+  IF K = 81 | K = 113          ; Q or q: end
+    END
+  ENDIF
+NEXT
+
+; CALC: window centred on the player, player and position
+SUB CALC
+  TMAP T$ PX-19 PY-13 2 1 38 26
+  CHAR 21 14 44
+  LOCATE 2 27
+  ECHO "X "
+  PRINT PX
+  ECHO "  Y "
+  PRINT PY
+  ECHO "  "
+ENDSUB

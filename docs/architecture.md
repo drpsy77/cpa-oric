@@ -183,11 +183,14 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `loci_inc.s` (`loci.msg`) juste avant elle. Les menus d'un programme (FUNCT) sont dans
   son fichier de messages, largeur comprise ; les autres touches de réponse ont aussi leur
   constante (`K_ALL`, « tous » : `T` ou `A`). Les fichiers livrés qui ont une version
-  anglaise sont dans `files/en/` (même nom ; `EDIT.CFG`), mis sur `cpa-en.dsk` à la place
-  de ceux de `files/`.
-- Aide : `tools/gen_readme_txt.py` produit à la fois `files/readme.txt` (README.TXT : notation et
-  renvoi à HELP) et `progs/help_tab.s` (HELP.COM, textes compressés en LZSS, décodés par
-  `help.s`) à partir d'une seule liste.
+  anglaise sont dans `files/en/` (même nom : `EDIT.CFG`, `README.TXT`, exemples `.GRX`), mis
+  sur `cpa-en.dsk` à la place de ceux de `files/` (`en_liste` de `build.sh`). Un exemple
+  traduit garde le code de l'original : seuls les commentaires et les textes affichés
+  changent (même colonne à l'écran) ; un changement de l'un est reporté dans l'autre.
+- Aide : `tools/gen_readme_txt.py` produit à la fois README.TXT (notation et renvoi à HELP :
+  `files/readme.txt`, `files/en/readme.txt`) et les textes de HELP.COM (`helptab.msg` dans
+  `progs/msg/fr` et `progs/msg/en`, compressés en LZSS, décodés par `help.s`), à partir d'une
+  liste par langue (mêmes rubriques, même nombre de lignes : vérifié).
 - Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
   Leurs messages sont dans `progs/msg/fr` et `progs/msg/en` (`arr.msg`...) : dans la

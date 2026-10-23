@@ -41,9 +41,9 @@ Two variants are built from the same sources:
   `cpa-anim.dsk`; and a blank one, `cpa-projet.dsk`, for your work in `B:` next to the system
   disk in `A:`. **`cpa-en.dsk`** is `cpa.dsk` in English: the system's menu bar and messages, the
   commands (TYPE, ERA, COPY, STAT, FORMAT, DISKCOPY, USB...), the editors EDIT and HEX, the
-  assembler ASM, the debugger DEBUG, the file manager CMDER and the GRAPHER language (its
-  translator GRXASM and the libraries of translated programs) are translated; HELP and LOGO
-  still speak French, translation in progress.
+  assembler ASM, the debugger DEBUG, the file manager CMDER, the GRAPHER language (its
+  translator GRXASM and the libraries of translated programs) and HELP are translated; LOGO
+  still speaks French, translation in progress.
 - **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
 The programs and their messages are in French on `cpa.dsk`; their English translation, on

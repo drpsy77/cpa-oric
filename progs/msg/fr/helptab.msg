@@ -1,5 +1,7 @@
+; helptab.msg : textes de HELP.COM en français (en anglais : progs/msg/en/helptab.msg).
 ; Généré par tools/gen_readme_txt.py — ne pas éditer à la main
 ; 24741 octets de texte, 11167 compressés
+m_unknown .asc "Sujet inconnu.",13,10,13,10,0
 help_keys
         .asc "TOUC",0
         .asc "PROG",0

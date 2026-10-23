@@ -1,0 +1,49 @@
+; FLECHES.GRX: the text screen (LORES)
+; arrows: move the @; Q: quit
+; INKEY: key pressed, no delay
+LORES
+; blue background (paper 20), yellow ink (3)
+FOR L 0 27
+  CHAR 0 L 20
+  CHAR 1 L 3
+  LOCATE 2 L
+  SPC 38
+NEXT
+; a frame of # (lines 1 to 25)
+LOCATE 2 1
+SPC 38 35
+LOCATE 2 25
+SPC 38 35
+FOR L 2 24
+  CHAR 2 L 35
+  CHAR 39 L 35
+NEXT
+; a wall in the middle
+FOR L 6 20
+  CHAR 20 L 35
+NEXT
+LOCATE 2 0
+ECHO "      LORES: the text screen"
+LOCATE 2 27
+ECHO "Arrows, Q: quit      Steps:"
+X = 10
+Y = 13
+N = 0
+WHILE 1
+  CHAR X Y 64
+  LOCATE 30 27
+  PRINT N
+  K = INKEY
+  IF K = 81 | K = 113          ; Q or q: end
+    END
+  ENDIF
+  DELAY 3
+  A = X - (K = 8) + (K = 9)
+  B = Y - (K = 11) + (K = 10)
+  IF SCRN(A,B) = 32
+    CHAR X Y 32
+    X = A
+    Y = B
+    N = N + 1
+  ENDIF
+NEXT

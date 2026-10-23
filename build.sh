@@ -93,11 +93,16 @@ python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/c
   --ro $PROTEGES --rw $EXEMPLES
 # même disquette, système, programmes et bibliothèques aux messages en anglais
 # (build/progs-en, build/src-en ; les programmes pas encore traduits restent
-# en français) ; fichiers
-# traduits pris dans files/en (EDIT.CFG)
+# en français) ; un fichier de files/ qui a sa traduction dans files/en (même
+# nom : EDIT.CFG, README.TXT, exemples .GRX) est remplacé par elle
+en_liste() {
+  for f in $(echo "$@" | sed -e 's|build/progs/|build/progs-en/|g' -e 's|build/src/\([A-Z]*\.INC\)|build/src-en/\1|g'); do
+    case "$f" in files/*) [ -f "files/en/${f#files/}" ] && f="files/en/${f#files/}" ;; esac
+    printf '%s ' "$f"
+  done
+}
 python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys_en.bin \
-  --ro $(echo $PROTEGES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|build/src/\([A-Z]*\.INC\)|build/src-en/\1|g') \
-  --rw $(echo $EXEMPLES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|files/edit.cfg|files/en/edit.cfg|') | tail -1
+  --ro $(en_liste $PROTEGES) --rw $(en_liste $EXEMPLES) | tail -1
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et
 # cachées de DIR (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la

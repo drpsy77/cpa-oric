@@ -210,8 +210,17 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      papier (`src/menu_col.s`, page `$FF00` : blanc avec magenta et bleu sur papier noir,
      etc. ; tableau dans le source). Coût : 23 octets de code (marge française 37 → 14),
      8 octets dans `$FF00` (18 → 10). La ROM, projet à part, reste en français.
-   - Reste, par étapes : HELP et README.TXT (aide en deux listes) ; exemples
-     (commentaires des `.GRX`, `.BAT`...) ; `smoke_test` en anglais.
+   - Fait aussi : HELP et README.TXT (`tools/gen_readme_txt.py`, une liste par langue,
+     mêmes rubriques ; `helptab.msg` dans `progs/msg/fr` et `en`, `files/en/readme.txt`).
+     Sujets anglais : KEYS PROGRAMS EDIT HEX LOGO ASM DEBUG MEMORY USB GRAPHER CMDER ; la
+     rubrique LOGO garde les primitives françaises (LOGO pas encore traduit). HELP anglais :
+     11 379 octets, 6 blocs comme le français.
+   - Fait aussi : les exemples de GRAPHER de `cpa-en.dsk` (`files/en/*.grx` : même code,
+     commentaires et textes affichés en anglais ; GRXASM en tire le même `.ASM`, aux
+     chaînes près).
+   - Reste : `smoke_test` en anglais ; `HELLO.ASM` et `GTEST.ASM` (sources de `progs/`,
+     commentaires en français par convention) ; `ANIMS.GRX` et `DEMO.BAT` (seulement sur
+     `cpa-anim.dsk`, française) ; les `.LOG` avec LOGO.
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.

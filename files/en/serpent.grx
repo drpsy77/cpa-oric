@@ -1,0 +1,89 @@
+; SERPENT.GRX: a snake steered with the arrows (LORES, DIM, SCRN, INKEY)
+; eat the $; neither the walls nor yourself; Q: end
+LORES
+DIM X(256) Y(256)
+; black paper, green ink; spaces everywhere (LORES clears to 0)
+FOR L 0 27
+  CHAR 0 L 16
+  CHAR 1 L 2
+  LOCATE 2 L
+  SPC 38
+NEXT
+LOCATE 2 1
+SPC 38 35
+LOCATE 2 25
+SPC 38 35
+FOR L 2 24
+  CHAR 2 L 35
+  CHAR 39 L 35
+NEXT
+LOCATE 3 0
+ECHO "SERPENT: eat the $, Q: quit"
+LOCATE 3 27
+ECHO "Length:"
+; the head at (20,13), going right; X() Y(): the body, as a ring
+H = 0
+T = 0
+N = 1
+X(0) = 20
+Y(0) = 13
+CHAR 20 13 79
+A = 1
+B = 0
+CALL MANGE
+WHILE 1
+  K = INKEY
+  IF K = 81 | K = 113          ; Q or q: end
+    END
+  ENDIF
+  IF K = 8
+    A = -1
+    B = 0
+  ENDIF
+  IF K = 9
+    A = 1
+    B = 0
+  ENDIF
+  IF K = 11
+    A = 0
+    B = -1
+  ENDIF
+  IF K = 10
+    A = 0
+    B = 1
+  ENDIF
+  U = X(H) + A
+  V = Y(H) + B
+  C = SCRN(U,V)
+  IF (C = 35) | (C = 111)
+    LOCATE 15 13
+    ECHO "LOST!"
+    WAIT
+    END
+  ENDIF
+  CHAR X(H) Y(H) 111
+  H = (H + 1) % 256
+  X(H) = U
+  Y(H) = V
+  CHAR U V 79
+  IF C = 36
+    N = N + 1
+    CALL MANGE
+  ELSE
+    CHAR X(T) Y(T) 32
+    T = (T + 1) % 256
+  ENDIF
+  LOCATE 14 27
+  PRINT N
+  DELAY 3
+NEXT
+; MANGE: a $ on a free cell
+SUB MANGE
+  P = 3 + RND(36)
+  Q = 2 + RND(23)
+  WHILE SCRN(P,Q) <> 32
+    P = 3 + RND(36)
+    Q = 2 + RND(23)
+  NEXT
+  CHAR P Q 36
+ENDSUB
