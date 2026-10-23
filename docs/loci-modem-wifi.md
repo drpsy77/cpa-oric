@@ -1,8 +1,9 @@
 # Relier un Raspberry Pi Pico W (modem WiFi) au LOCI
 
 But : donner à un vrai Oric un accès réseau (envoi et réception de fichiers) à travers le
-LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation ;
-rien n'est encore codé côté CP/A.
+LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation.
+Côté CP/A, `TERM.COM` (terminal, `docs/manuel.md` « Terminal série ») existe ; le pilote
+série du BIOS et `XFER.COM` sont à faire.
 
 ## Principe
 
@@ -10,7 +11,8 @@ Le LOCI présente à l'Oric un circuit série 6551 (ACIA) émulé à l'adresse `
 9600 bauds, relié à un modem USB branché sur son port. Le modem PicoWiFiModemUSB est un
 Raspberry Pi Pico W qui se comporte comme un modem Hayes : on lui parle avec des commandes
 AT et, au lieu de composer un numéro, il ouvre une connexion TCP en WiFi
-(`ATD-hôte:port`, le `-` coupant le mode telnet pour avoir des octets bruts).
+(`ATDT-hôte:port`, le `-` coupant le mode telnet pour avoir des octets bruts ; `ATD` seul,
+sans `T`, `P` ou `I`, répond `ERROR`).
 
 ## Matériel
 
@@ -21,8 +23,9 @@ AT et, au lieu de composer un numéro, il ouvre une connexion TCP en WiFi
   les données (ou un adaptateur USB-C OTG et un câble micro-USB classique).
 - **Peut-être un hub USB.** Le LOCI n'a qu'un port USB. Si `cpa.dsk` est sur une clé USB,
   il faut un hub pour la clé et le Pico. La documentation du LOCI conseille un petit hub
-  USB 2.0 alimenté, plutôt ancien et simple : la plupart des hubs récents ne marchent
-  pas avec lui.
+  USB 2.0, plutôt ancien et simple : la plupart des hubs récents ne marchent pas avec lui.
+  Essayé : un hub alimenté Anker refusé ; un hub **non alimenté** reconnaît la clé et le
+  Pico (tout le courant passe alors par l'Oric : voir « Alimentation »).
 - **Pour éviter le hub**, copier `cpa.dsk` dans la mémoire interne du LOCI (15 Mo) ; le
   Pico occupe alors seul le port USB.
 
@@ -33,12 +36,37 @@ AT et, au lieu de composer un numéro, il ouvre une connexion TCP en WiFi
 - Avec un hub alimenté, le LOCI coupe par sécurité l'alimentation qu'il fournit au port
   d'extension : l'Oric doit avoir sa propre alimentation (cas normal).
 
+- Sans hub alimenté, le LOCI, la clé et le Pico tirent leur courant du régulateur 5 V de
+  l'Oric, qui dissipe en chaleur l'écart entre l'entrée et 5 V : un bloc de 12 V le fait
+  nettement plus chauffer qu'un bloc de 9 V. Surveiller la chaleur près de l'entrée
+  d'alimentation de l'Oric.
+
+## Firmware du Pico
+
+- **v0.1.0** (seule release publiée, `wifi_modem_v0.1.0.uf2` sous « Assets », liste
+  repliée) : **ne garde pas les réglages**. `AT&W` gèle le Pico (interruption WiFi pendant
+  l'écriture en flash) ; il faut débrancher, et rien n'est enregistré.
+- Le code du dépôt (juin 2026, commit `c65fcd0`) corrige ce défaut, mais aucun `.uf2` n'est
+  publié : le compiler (ci-dessous). Il ajoute `AT$SCAN` (réseaux WiFi visibles) et un
+  redémarrage en mode BOOTSEL quand l'hôte ouvre le port USB à **1200 bauds**. Or le LOCI
+  transmet au Pico la vitesse que l'Oric écrit dans le registre de contrôle de l'ACIA
+  (`loci-firmware`, `src/mia/oric/acia.c`) : un programme Oric à 1200 bauds (Oricomms)
+  ferait disparaître le modem. Pour le LOCI, compiler sans ce redémarrage : dans
+  `src/usb_cdc.c`, vider `tud_cdc_line_coding_cb`. Le Pico ignore sinon la vitesse : sur
+  l'USB, toutes marchent.
+- Compiler (Linux ou Mac, avec `cmake`, `ninja` et `arm-none-eabi-gcc` et sa newlib) :
+
+      git clone https://github.com/sodiumlb/PicoWiFiModemUSB.git
+      cd PicoWiFiModemUSB && git submodule update --init
+      (cd src/pico-sdk && git submodule update --init)
+      (cd src/pico-extras && git submodule update --init)
+      mkdir src/bld && cd src/bld && cmake -G Ninja .. && ninja    # -> wifi_modem.uf2
+
 ## Préparer le Pico, sur le Mac
 
-1. **Installer le firmware.** Télécharger le `.uf2` de la version v0.1.0 (version de test,
-   « pour tester avec le LOCI et le terminal Oricomms ») sur la page des releases de
-   PicoWiFiModemUSB. Brancher le Pico sur le Mac en maintenant son bouton BOOTSEL : il
-   apparaît comme un disque. Copier le `.uf2` dessus ; le Pico redémarre tout seul.
+1. **Installer le firmware.** Brancher le Pico sur le Mac en maintenant son bouton BOOTSEL :
+   il apparaît comme un disque (RPI-RP2). Copier le `.uf2` dessus ; le Pico redémarre tout
+   seul.
 2. **Configurer le WiFi.** Rebranché normalement, le Pico est un port série :
 
        screen /dev/tty.usbmodem* 9600
@@ -50,11 +78,13 @@ AT et, au lieu de composer un numéro, il ouvre une connexion TCP en WiFi
        ATC1
        AT&W
 
-   Le Pico se connecte alors au WiFi à chaque mise sous tension. `ATI` donne l'adresse IP
-   et l'état de la connexion, `AT?` la liste des commandes. Quitter `screen` : Ctrl-A
-   puis K.
+   Le Pico se connecte alors au WiFi à chaque mise sous tension (WiFi 2,4 GHz seulement).
+   `ATI` donne l'adresse IP et l'état de la connexion, `AT&V1` les réglages enregistrés,
+   `AT?` la liste des commandes. Quitter `screen` : touche control (pas ⌘) et A, puis K,
+   puis Y ; s'il reste bloqué, fermer la fenêtre et `killall screen` (sinon le port reste
+   pris).
 3. **Vérifier.** Sur le Mac, dans un autre terminal : `nc -l 2323`. Dans `screen` :
-   `ATD-IP_DU_MAC:2323`. Ce qui est tapé d'un côté doit apparaître de l'autre. `+++`
+   `ATDT-IP_DU_MAC:2323` (adresse du Mac : `ipconfig getifaddr en0`). Ce qui est tapé d'un côté doit apparaître de l'autre. `+++`
    (une seconde de pause avant et après) revient au mode commande, `ATH` raccroche.
 
 Réglages par défaut du modem : 9600 bauds, 8 bits, sans parité, 1 bit d'arrêt.
@@ -65,25 +95,33 @@ port 23 par défaut. `ATNETn` : 0 sans telnet, 1 vrai, 2 simulé.
 
 - Le Pico configuré se branche sur le port USB du LOCI, directement ou par le hub.
 - Le LOCI reconnaît les modems USB de ce type (CDC) et les présente à l'Oric comme le port
-  série en `$0380`, à 9600 bauds.
-- Aucun réglage n'est documenté dans le menu du LOCI ; cela semble automatique (non
-  vérifié). Vérifier que le modem y apparaît et que le firmware du LOCI est récent.
+  série en `$0380` ; il règle le modem à 9600 bauds au branchement, puis à la vitesse que
+  l'Oric écrit dans le registre de contrôle de l'ACIA.
+- Aucun réglage dans le menu du LOCI : c'est automatique (le LOCI prend le premier appareil
+  USB série qui se déclare modem). Le menu du LOCI voit la clé et le Pico par un hub non
+  alimenté (constaté).
 
-## Tester avant de coder côté CP/A
+## Tester la chaîne
 
-Avec le terminal Oricomms (cité dans la note de version du firmware) côté Oric et
-`nc -l 2323` côté Mac, on vérifie toute la chaîne : Oric, LOCI, Pico, WiFi, Mac. Si les
-caractères passent dans les deux sens, le pilote série et le transfert XMODEM de CP/A
-n'auront plus d'inconnue matérielle.
+Avec `TERM` (ou `TERM /E`) côté Oric et `nc -l 2323` côté Mac, on vérifie toute la chaîne :
+Oric, LOCI, Pico, WiFi, Mac. Si les caractères passent dans les deux sens, le pilote série
+et le transfert XMODEM de CP/A n'auront plus d'inconnue matérielle. Oricomms (terminal
+Prestel des années 80) plante à la première touche sur ce montage : ne pas s'en servir.
 
-## Ce qui est prévu côté CP/A (non commencé)
+L'ACIA du LOCI (`loci-firmware`, `src/mia/oric/acia.c`) : registres toujours présents en
+`$0380-$0383` ; état : bit 3 reçu, bit 4 émetteur libre, bits 5 et 6 (DCD, DSR) à 1 tant
+qu'aucun modem n'est monté ; rien n'est émis tant que DTR (bit 0 de la commande) est à 0 ;
+réception par un tampon de 32 octets, rempli seulement s'il a de la place (le modem attend :
+pas de perte si l'Oric tarde).
 
-1. Pilote série dans le BIOS : entrées CP/M `PUNCH` / `READER` reliées à l'ACIA
-   (adresse dans une variable : `$0380` sur LOCI, `$031C` dans Oricutron).
-2. `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés
+## Côté CP/A
+
+1. `TERM.COM` : fait (`docs/manuel.md`, « Terminal série »).
+2. Pilote série dans le BIOS : entrées CP/M `PUNCH` / `READER` reliées à l'ACIA
+   (adresse dans une variable : `$0380` sur LOCI, `$031C` dans Oricutron). À faire.
+3. `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés
    un par un, ce qui supporte le tampon de 32 octets du LOCI et les accès disque), avec un
-   script `tools/xfer_server.py` côté Mac.
-3. `TERM.COM` : petit terminal pour parler au modem et aux serveurs.
+   script `tools/xfer_server.py` côté Mac. À faire.
 
 Débit : 9600 bauds, environ 1 Ko par seconde.
 

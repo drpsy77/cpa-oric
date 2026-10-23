@@ -57,7 +57,7 @@ The programs and their messages are in French on `cpa.dsk`; their English transl
   arrows, CTRL-X/C/V), printer, graphics and sound.
 - File and disk commands that work with one drive or several (COPY, FORMAT, DISKCOPY...),
   and **CMDER**, a full-screen two-panel file manager.
-- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER).
+- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), and **TERM**, a serial terminal for a WiFi modem on the LOCI (`docs/loci-modem-wifi.md`).
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step).
 - **LOGO** in French (turtle, decimals, words and lists, sound) and **GRAPHER**, a small
@@ -85,7 +85,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
-| `docs/loci-modem-wifi.md` | connecting a WiFi modem to the LOCI (in preparation) |
+| `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM |
 
 ## Building
 

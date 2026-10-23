@@ -21,17 +21,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | CMDER | 14 | 0 | 21 | 13 | 9 | **57** | 22 | **79** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 14 | 0 | 8 | 0 | 3 | **25** | 5 | **30** |
+| USB | 14 | 0 | 11 | 4 | 3 | **32** | 6 | **38** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *140* | *42* | *348* | *75* | *96* | ***701*** | *182* | ***883*** |
+| *Applications* | *140* | *42* | *351* | *79* | *96* | ***708*** | *183* | ***891*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 102 | 18 | **167** | 45 | **212** |
-| **Total** | **192** | **72** | **571** | **269** | **192** | **1296** | **311** | **1607** |
+| **Total** | **192** | **72** | **574** | **273** | **192** | **1303** | **312** | **1615** |
 
-Points ajustés (indicatif, § 9) : 1 296 × 1,05 ≈ 1 361.
+Points ajustés (indicatif, § 9) : 1 303 × 1,05 ≈ 1 368.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 183 EI, 66 EO, 64 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 67 EO, 64 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -563,7 +563,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | VOIR.A03 | HIRES.INC : segment et cercle | `hires.inc` | 3 |
 | VOIR.A04 | HIRES.INC : écran texte au programme (LORES), texte, attributs, chargement et sauvegarde | `hires.inc` | 1 |
 
-### 4.7 USB (EXPORT, IMPORT, USBDIR)
+### 4.7 USB et série (EXPORT, IMPORT, USBDIR, TERM)
 
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
@@ -572,12 +572,15 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés) | EI | 2 | 6 | M | 4 |
 | USB.T03 | USBDIR : liste (tailles, dossiers) | EQ | 1 | 4 | F | 3 |
+| USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`) | EI | 1 | 3 | F | 3 |
+| USB.T05 | TERM : affichage de ce qui arrive du port série | EO | 1 | 2 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
 | USB.A01 | API de la MIA du LOCI : détection, opérations, transferts par 128 octets | `loci_inc.s` | 3 |
 | USB.A02 | Conversions `^Z` et `/T` | `export.s`, `import.s` | 1 |
 | USB.A03 | Noms longs en 8.3 | `import.s` | 1 |
+| USB.A04 | ACIA 6551 scrutée (LOCI ou Oricutron), attente bornée de l'émetteur | `term.s` | 1 |
 
 ### 4.8 ASM
 
@@ -748,45 +751,45 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 63 | 11 142 | 1 181 | 534 | 865 | 10 % | 36 933 | 35 | 115 |
+| Système et commandes | 63 | 11 142 | 1 181 | 534 | 870 | 10 % | 37 008 | 35 | 115 |
 | EDIT | 4 | 3 648 | 198 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 22 | 13 025 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 12 | 1 350 | 153 | 74 | 0 | 10 % | 4 479 | 54 | 179 |
+| USB | 15 | 1 529 | 189 | 84 | 0 | 11 % | 4 479 | 48 | 140 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 29 | 936 | 60 | 34 | 0 | 6 % | 244 | 9 | 2 |
-| Outillage PC | 161 | 6 640 | 731 | 410 | 0 | 10 % | — | 40 | — |
-| **Total** | 315 | 59 639 | 4 720 | 2 382 | 956 | 7 % | 135 372 | 46 | 104 |
+| Outillage PC | 161 | 6 641 | 731 | 410 | 0 | 10 % | — | 40 | — |
+| **Total** | 318 | 59 819 | 4 756 | 2 392 | 961 | 7 % | 135 447 | 46 | 104 |
 
 Octets du système : code résident 13 922 (`$C000-$F662`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 224 | 76 | 3,8 | 85 |
+| Système et commandes | 1 252 | 77 | 3,9 | 86 |
 | EDIT | 93 | 20 | 1,3 | 12 |
-| GRAPHER + GRXASM | 852 | 69 | 3,7 | 34 |
+| GRAPHER + GRXASM | 852 | 69 | 3,7 | 35 |
 | LOGO | 273 | 63 | 1,4 | 19 |
 | CMDER | 174 | 24 | 3,1 | 11 |
 | HEX | 34 | 9 | 1,8 | 3 |
-| VOIR | 78 | — | 4,1 | 9 |
-| USB | 38 | 9 | 1,5 | 6 |
+| VOIR | 78 | — | 4,1 | 10 |
+| USB | 38 | 9 | 1,2 | 6 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 20 |
-| Outillage PC | 324 | — | 1,9 | 100 |
-| Transverse (projet) | 1 973 | — | — | 46 |
-| Traduction anglaise (docs/en) | 2 246 | — | — | 14 |
-| **Total** | 7 407 | 292 | 5,7 | 165 |
+| Outillage PC | 324 | — | 1,9 | 101 |
+| Transverse (projet) | 2 021 | — | — | 47 |
+| Traduction anglaise (docs/en) | 2 274 | — | — | 15 |
+| **Total** | 7 511 | 293 | 5,8 | 166 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 165 commits du 2026-10-04 au 2026-10-23.
+Historique : 166 commits du 2026-10-04 au 2026-10-23.
 
-Réutilisation : 44 697 lignes de code écrites dans `progs/`, 49 939 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 44 871 lignes de code écrites dans `progs/`, 50 200 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -839,6 +842,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-19 | fichiers sûrs | 0.9 | 1 292 | 311 | 1 603 | 150 | `mkdisk.py check`, `diff`, `repare` ; `test_fichiers.py` ; SAVE/BSAVE par `NOM.$$$` ; EDIT Enregistrer sous ; RESET différé pendant un secteur |
 | 2026-10-19 | deux disquettes | 0.9 | 1 296 | 311 | 1 607 | 152 | `cpa-projet.dsk` ; ASM et GRXASM cherchent les `.INC` sur A: à D: ; GRXASM et GRAPHER `/C` ; ASM `/S`, `/E` ; EDIT : texte tronqué jamais enregistré sous son nom |
 | 2026-10-19 | anglais (1) | 0.9 | 1 296 | 311 | 1 607 | 155 | messages en deux langues (`progs/msg`), `cpa-en.dsk`, commandes traduites |
+| 2026-10-23 | TERM | 0.9 | 1 303 | 312 | 1 615 | 167 | `TERM.COM` : terminal série (modem WiFi du LOCI) |
 
 ## 11. Comparaisons
 
@@ -1084,7 +1088,7 @@ qu'on disait indispensables. Place d'après la règle de `docs/architecture.md` 
 | dBASE II | base de données | fichiers de données de GRAPHER | une base simple sur l'accès direct (déjà notée, `docs/etat.md` § 2.6) |
 | MBASIC, CBASIC | BASIC avec décimaux et fichiers | LOGO (décimaux), GRAPHER (fichiers) | pas de BASIC sous CP/A : le pont va dans l'autre sens, vers le BASIC de l'Oric (`docs/oric-basic.md`) |
 | Turbo Pascal, BDS C | langage compilé avec éditeur | GRAPHER : interprété pour la mise au point, traduit en assembleur par GRXASM pour la vitesse ; ASM | peu de chose : les phases d'un jeu, les tuiles (`docs/grapher.md` § 16, § 17) |
-| MODEM7, Kermit, XMODEM | communication | — | prévu : `XFER.COM`, `TERM.COM` (`docs/etat.md` § 2.4) |
+| MODEM7, Kermit, XMODEM | communication | `TERM.COM` (terminal) | prévu : `XFER.COM` (`docs/etat.md` § 2.4) |
 | NSWEEP, SD | gestion des fichiers | CMDER, DIR, STAT | rien |
 | UNERA | récupérer un fichier effacé | — | tout (le répertoire garde les entrées effacées, comme CP/M) |
 | FINDBAD | repérer les secteurs défectueux | relecture de FORMAT et de DISKCOPY `/V` | verrouiller les blocs défectueux |

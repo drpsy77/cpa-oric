@@ -63,6 +63,7 @@ Autres programmes de la disquette :
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits ci-dessus.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
+- `TERM.COM [/E]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
@@ -482,6 +483,39 @@ Ces commandes passent par l'interface que le LOCI offre au 6502, celle du Picoco
 matériel, l'Oricutron de l'atelier simule cette interface sur un dossier du PC :
 `ORIC_LOCI=dossier` (voir « Outils »), ou la ligne `loci = '~/Oric/loci'` dans `oricutron.cfg`
 (le dossier doit exister, avec son sous-dossier `int` pour `0:`).
+
+## Terminal série : TERM
+
+`TERM` parle au port série : ce qu'on tape part vers le modem, ce qui arrive s'affiche. Sur
+un LOCI, le port est le modem WiFi USB (un Raspberry Pi Pico W, voir
+`docs/loci-modem-wifi.md`) que le LOCI présente comme une ACIA 6551 en `$0380` ; sans LOCI,
+c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
+
+| Commande, touche | Effet |
+|---|---|
+| `TERM` | terminal (9600 bauds, 8 bits, sans parité, 1 bit d'arrêt) |
+| `TERM /E` | écho local : affiche aussi ce qu'on tape (pour un correspondant qui ne le renvoie pas, comme `nc` sur le Mac ; le modem, lui, le renvoie en mode commande) |
+| CTRL-Q | quitte ; la liaison reste établie (DTR reste actif) |
+| DEL | envoie BS (8) ; CTRL-H à CTRL-K envoient 8 à 11 |
+| flèches | rien (pas encore d'émulation ANSI) |
+
+    A>TERM
+    TERM : modem du LOCI (ACIA 0380)
+    CTRL-Q : quitter. Essai : AT, ATI
+    AT
+    OK
+    ATDT-192.168.1.20:2323
+
+Commandes du modem : `AT?` (liste), `ATI` (état, adresse IP), `ATDT-hote:port` (connexion
+sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `ATH`
+(raccrocher). Détail : `docs/loci-modem-wifi.md`.
+
+- `Pas de modem (DSR) : brancher le Pico` : le LOCI ne voit pas de modem USB ; TERM reste
+  ouvert, et `Modem muet : caractere perdu` s'affiche si l'on tape.
+- La pause en fin d'écran est coupée pendant TERM (elle bloquerait la réception). Pendant
+  les menus (FUNCT), le LOCI garde ce qui arrive.
+- Dans Oricutron : `serial = 'loopback'` dans `oricutron.cfg` renvoie chaque caractère
+  envoyé ; `serial = 'modem'` relie l'ACIA à un modem simulé (commandes AT réduites).
 
 ## Démarrage et reprise après plantage
 

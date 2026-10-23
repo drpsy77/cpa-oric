@@ -98,6 +98,15 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   réponse) : plus aucune tabulation sur la disquette (EDIT, HEX), fins de ligne CR LF ;
   `GRAPHER NOM` le lance sans erreur ; le même fichier importé sans `/T` (tabulations
   gardées) tourne aussi dans GRAPHER et dans un programme traduit par `GRXASM`.
+- TERM (Pico W en modem USB, firmware sans le redémarrage à 1200 bauds :
+  `docs/loci-modem-wifi.md`) : première ligne `modem du LOCI (ACIA 0380)` ; pas de
+  `Pas de modem (DSR)` avec le Pico branché, le message sans lui ; `AT` -> `OK`, `ATI`,
+  DEL efface (le modem renvoie BS espace BS) ; `ATDT-IP:2323` vers `nc -l 2323` sur le Mac,
+  caractères dans les deux sens (`TERM /E` pour voir ce qu'on tape) ; `+++` puis `ATH` ;
+  une longue réception (`cat` d'un gros texte dans `nc`) : rien de perdu ni de doublé pendant
+  le défilement de l'écran ; FUNCT pendant une réception : la suite arrive à la sortie du
+  menu ; CTRL-Q, puis `TERM` à nouveau : la connexion est toujours là. Que le VIA ne voie pas
+  les écritures en `$0380-$0383` (le clavier et le son marchent toujours après TERM).
 
 **LOGO**
 
