@@ -254,4 +254,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   est reporté dans l'autre. De même pour les documents d'utilisation (`manuel.md`, `logo.md`,
   `grapher.md`, `cmder.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
   signale une traduction en retard (titres, tableaux, exemples).
+- Les documents de `docs/en/` décrivent les disquettes anglaises : écrans, menus, questions,
+  messages et noms d'exemples y sont ceux de `cpa-en.dsk` et de ses jumelles (seul LOGO, pas
+  encore traduit, est cité en français) ; les documents français, ceux de `cpa.dsk`.
 
