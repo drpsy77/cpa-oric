@@ -1,8 +1,8 @@
 # GRAPHER — reference
 
-> English translation of `docs/grapher.md`. GRAPHER's commands are already English words;
-> its error messages are in French for now and are quoted as they appear, with their meaning
-> in brackets.
+> English translation of `docs/grapher.md`. GRAPHER's commands are English words in both
+> languages; the messages quoted here are those of `cpa-en.dsk` (GRAPHER, GRXASM and the
+> libraries of translated programs speak French on `cpa.dsk`).
 
 GRAPHER runs a `.GRX` text file (written with EDIT): one command per line, in English. It is
 a low-level language, close to the screen. It handles integers, variables of one or two
@@ -31,7 +31,7 @@ README.TXT (on the disk) give a summary (`tools/gen_readme_txt.py`).
 
 ## 2. Writing a program
 
-- One command per line, 126 characters at most (`ligne de plus de 126 car.`). Indentation is
+- One command per line, 126 characters at most (`line over 126 chars`). Indentation is
   free. The text stops at the first `^Z`. A tab (TAB, code 9) counts as a space (the Oric has
   none; `IMPORT name /T` already replaces them on arrival).
 - `;` starts a comment, at the start or the end of a line.
@@ -77,7 +77,7 @@ A letter followed by `(` is an array; functions have names of three letters or m
 | Block | Effect |
 |---|---|
 | `REPEAT n` ... `NEXT` | n times (nothing if n ≤ 0) |
-| `FOR V a b [step]` ... `NEXT` | V from a to b, step 1 by default, negative to go down; nothing if a is already past b; zero step: `pas nul` |
+| `FOR V a b [step]` ... `NEXT` | V from a to b, step 1 by default, negative to go down; nothing if a is already past b; zero step: `zero step` |
 | `WHILE expr` ... `NEXT` | as long as the expression is not zero (`WHILE 1`: endless; ESC stops it when interpreted, § 8) |
 | `IF expr` ... [`ELSE` ...] `ENDIF` | if the expression is not zero |
 | `SUB NAME` ... `ENDSUB` | subroutine, called with `CALL NAME`; `RETURN` leaves it before the end; met on the way, it is skipped (it can be placed anywhere) |
@@ -106,7 +106,7 @@ Blocks nest up to 16 levels (loops and calls).
 | Command | Effect |
 |---|---|
 | `GCLS` | clears the picture |
-| `PEN m` | pen: 0 erases, 1 draws, 2 inverts (other value: `parametres ?`) |
+| `PEN m` | pen: 0 erases, 1 draws, 2 inverts (other value: `parameters?`) |
 | `PLOT x y` | point (x 0-239; y 0-199, or 0-127 in SPLIT) |
 | `LINE x1 y1 x2 y2` | line |
 | `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, filled rectangle |
@@ -115,8 +115,8 @@ Blocks nest up to 16 levels (loops and calls).
 | `GNUM col y n` | number in the picture (a score) |
 | `ATTR col y1 y2 v` | attribute in cell `col`, lines `y1` to `y2`: ink 0-7, paper 16-23 |
 
-Drawing parameters go from 0 to 255 (`valeur hors de 0-255`). Outside HIRES and SPLIT:
-`HIRES ou SPLIT d'abord` (HIRES or SPLIT first). Pictures and animations: § 10.
+Drawing parameters go from 0 to 255 (`value not in 0-255`). Outside HIRES and SPLIT:
+`HIRES or SPLIT first`. Pictures and animations: § 10.
 
 ## 7. Text screen (LORES)
 
@@ -141,10 +141,10 @@ as ordinary keys. The program sets the colour attributes itself, wherever it wan
   error; the cursor stays at the end until the next `LOCATE` or lone `ECHO`. Nothing wraps to
   the next line and nothing scrolls the screen. Vertically (`PRINTV`...), nothing is written
   below line 27, in the same way.
-- Column or line off the screen: `valeur hors limites` (value out of range); `n` of `SPC` and
-  `TAB`, `x` and `code`: 0-255 (`valeur hors de 0-255`).
+- Column or line off the screen: `value out of range`; `n` of `SPC` and
+  `TAB`, `x` and `code`: 0-255 (`value not in 0-255`).
 - Outside LORES, `LOCATE`, `CHAR`, `SCRN`, `SPC`, `TAB`, `PRINTV`, `ECHOV` and `SPCV` give
-  `LORES d'abord` (LORES first). In LORES, the drawing commands give `HIRES ou SPLIT d'abord`.
+  `LORES first`. In LORES, the drawing commands give `HIRES or SPLIT first`.
 - `HIRES` or `SPLIT` from LORES: the text screen is lost. `GLOAD` of an `.IMG` picture from
   LORES gives the console back first.
 
@@ -178,19 +178,19 @@ that of the line (attributes): the sprite takes the colour of the lines it cross
 | `SSHOW k S$ n col lin [ALT]` | shows sprite n (rank in the file, from 0) of array `S$` in slot k, top-left corner at (col, lin), with the pool of the given set. On a slot already in use, the old sprite is removed first: this is also how you move it and show the next frame of an animation |
 | `SHIDE k` | removes the sprite of slot k: the scenery comes back, the codes go back to the pool (nothing if the slot is free) |
 
-`SSHOW` and `SHIDE` need LORES (`LORES d'abord`).
+`SSHOW` and `SHIDE` need LORES (`LORES first`).
 
 **Rules for the programmer** (the translated program checks nothing, § 12):
 
 - A pool code never appears in the scenery; keep at least the digits, the capital letters and
   the space (59 codes remain: 33-47, 58-64, 91-127). A sprite on display takes one code per
   covered cell; there must be enough codes for all the sprites shown at the same time
-  (`plus de caracteres pour les sprites`: no more characters for sprites).
+  (`no more characters for sprites`).
 - **Attributes take priority**: a cell holding an attribute (code 0-31) is never covered, the
   sprite is invisible there. Now `CLS` puts attribute 16 everywhere: the area where sprites
   move must be filled with spaces (or scenery), for example `SPC 40` on each line. Colour
   attributes go where sprites do not pass (columns 0-1, edge of the playing area).
-- The sprite must fit on the screen (`valeur hors limites`).
+- The sprite must fit on the screen (`value out of range`).
 - Two overlapping sprites share the common character (the second is drawn over the first).
   Removing one restores the scenery on the common part: show the other again. No code is
   lost, whatever the order of removals.
@@ -208,7 +208,7 @@ that of the line (attributes): the sprite takes the colour of the lines it cross
 These commands work on the text screen (LORES) as well as on the picture (HIRES, SPLIT). In
 LORES, a cell is a character (or an attribute); in the picture, a cell is a byte of 6 points
 in width (columns 0-39) and one point line in height (lines 0-199, or 0-127 in SPLIT). Bytes
-are copied as they are, attributes included. In the console: `LORES d'abord`.
+are copied as they are, attributes included. In the console: `LORES first`.
 
 | Command | Effect |
 |---|---|
@@ -219,11 +219,11 @@ are copied as they are, attributes included. In the console: `LORES d'abord`.
 | `ROTH n [c1 l1 c2 l2]`, `ROTV n [c1 l1 c2 l2]` | rotation: what goes out on one side comes back on the other (n modulo the size) |
 
 - Without a rectangle, it is the whole screen. The rectangle is given by its corners, as for
-  `BOX`: columns c1 to c2, lines l1 to l2. Off the screen, or c2 < c1, or l2 < l1: `valeur
-  hors limites`. n = 0, or a rotation of a whole turn: nothing. A scroll of at least the size
+  `BOX`: columns c1 to c2, lines l1 to l2. Off the screen, or c2 < c1, or l2 < l1: `value
+  out of range`. n = 0, or a rotation of a whole turn: nothing. A scroll of at least the size
   of the rectangle fills it with x.
-- `PASTE` and `GRAB`: the rectangle must fit on the screen (`valeur hors limites`) and in the
-  array (`indice hors limites`, index out of range); `wid` and `hgt` are at least 1. There is
+- `PASTE` and `GRAB`: the rectangle must fit on the screen (`value out of range`) and in the
+  array (`index out of range`); `wid` and `hgt` are at least 1. There is
   no automatic clipping at the edges: the program keeps its own camera in bounds.
 - **Sprites**: do not slide or cover scenery under a sprite on display. Remove the sprites
   (`SHIDE`), then `PASTE` or `SCROL...`, then show them again (§ 7.1).
@@ -311,10 +311,10 @@ it; the camera moves by one character, not one tile.
   visible around its silhouette. On map lines in the secondary set, its pool is declared
   with `ALT` (`SPOOL T ALT`, `SSHOW ... ALT`), on codes the tiles do not use. As for `PASTE`
   (§ 7.2), remove the sprites before `TMAP`, then show them again.
-- `TMAP` and `TFONT` need LORES (`LORES d'abord`). Errors (interpreted): `TILESET d'abord`
-  (TILESET first); `valeur hors limites` (tile larger than 4, window off the screen,
-  `TFONT` codes outside the set); `indice hors limites` (line of `D$` too short, `K$` longer
-  than the list of tiles, one-dimensional map); `fichier .SPR ?` (`TFONT` on a file that is
+- `TMAP` and `TFONT` need LORES (`LORES first`). Errors (interpreted): `TILESET first`;
+  `value out of range` (tile larger than 4, window off the screen,
+  `TFONT` codes outside the set); `index out of range` (line of `D$` too short, `K$` longer
+  than the list of tiles, one-dimensional map); `.SPR file?` (`TFONT` on a file that is
   not of kind 1). Translated: nothing is checked; `TMAP` without `TILESET` does nothing.
 
 Complete example: `CARTE.GRX` (§ 14).
@@ -335,7 +335,7 @@ program runs is kept for `WAIT`, `GET` or `INKEY`.
 **ESC is the interpreter's key, not the program's.**
 
 - **When interpreted**, ESC stops the program at any moment: between two lines, in a loop,
-  during `GET`, `WAIT`, `INPUT` and `ANIM` (message `Interrompu`, interrupted). The program
+  during `GET`, `WAIT`, `INPUT` and `ANIM` (message `Interrupted`). The program
   never sees it: it is the emergency exit while debugging.
 - **In a translated program** (§ 12), ESC no longer stops anything: the program is in charge
   of everything. `INKEY`, `GET` and `WAIT` return it like any other key (27), `INPUT` ignores
@@ -378,8 +378,8 @@ speed.
 
 - One or two dimensions. Several arrays per line. Sizes are expressions, at least 1.
 - Indices from 0 to n-1, as in C: `DIM A(10)` gives `A(0)` to `A(9)`. Elements at 0.
-- An array is declared only once (`deja dimensionne`, already dimensioned) and before use
-  (`tableau non dimensionne`, array not dimensioned). No room: `memoire pleine` (memory full),
+- An array is declared only once (`already dimensioned`) and before use
+  (`array not dimensioned`). No room: `memory full`,
   at the `DIM` itself. Memory is never freed or grown.
 
 **Elements.**
@@ -398,7 +398,7 @@ full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characte
 
 | Element | Effect |
 |---|---|
-| `A$ = "text"`, `A$ = B$`, `M$(I) = A$` | assignment; the rest of the capacity is set to 0; too long: `chaine trop longue` |
+| `A$ = "text"`, `A$ = B$`, `M$(I) = A$` | assignment; the rest of the capacity is set to 0; too long: `string too long` |
 | `=` `<>` `<` `<=` `>` `>=` | comparison of two strings, or of a string and a text (`IF R$ = "O"`), in code order (`"AB" < "ABC"`); 1 or 0 |
 | `LEN(A$)`, `LEN(M$(I))` | length |
 | `PRINT A$` | in LORES: at the cursor, codes 0-31 written as they are (a level line keeps its colours). In the console: codes 0-31 replaced by a space, then a new line. `PRINT A$ = B$` prints the comparison |
@@ -406,13 +406,13 @@ full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characte
 | `INPUT V` | integer from -32768 to 32767: digits and `-`, 6 characters at most; empty or out of range: a beep, and try again |
 | `FILL A v`, `FILL M$ 32` | the whole array set to v |
 
-- A string does not mix with calculations (`chaine dans un calcul`, string in a calculation).
+- A string does not mix with calculations (`string in a calculation`).
   There is no concatenation or conversion: chain `ECHO` and `PRINT`.
 - `ECHO` only writes the program's text (`ECHO A$` writes "A$").
 - Attribute 0 cannot be displayed with `PRINT` (it is the end of a string): write it with
   `CHAR` or `M$(L,C) = 0`.
 - No `INPUT` of an element: `INPUT V` then `A(I) = V`.
-- When interpreted, every access checks the array and its indices (`indice hors limites`). A
+- When interpreted, every access checks the array and its indices (`index out of range`). A
   translated program checks nothing (§ 12).
 
 ## 10. Files: pictures, animations, data
@@ -424,7 +424,7 @@ full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characte
 | `ANIM name [n]` | plays the animation `name.ANI` n times (0 or nothing: until a key); full-screen HIRES only (refused in SPLIT); ESC stops the program when interpreted; in a translated program, ESC ends the animation like any other key |
 | `SAVE A name`, `LOAD A name` | array as **text** (`.TXT` by default), editable with EDIT |
 | `BSAVE A name`, `BLOAD A name` | array as **binary** (`.DAT` by default), bytes as they are, editable with HEX; integers: low byte then high byte |
-| `BSAVE SCREEN name`, `BLOAD SCREEN name` | the whole text screen, 1,120 bytes (`.SCR` by default); LORES only (`LORES d'abord`); the cursor does not move |
+| `BSAVE SCREEN name`, `BLOAD SCREEN name` | the whole text screen, 1,120 bytes (`.SCR` by default); LORES only (`LORES first`); the cursor does not move |
 | `FOUND` | function: 1 if the last `LOAD` or `BLOAD` found its file, 0 otherwise (0 at start) |
 
 The name is written without quotes, with an optional drive; `$1`-`$9` are allowed. `.HIZ` and
@@ -433,8 +433,8 @@ The name is written without quotes, with an optional drive; `$1`-`$9` are allowe
 **Data files.** `A` is the name of the array (`SAVE N$ HOF`, `BLOAD M NIVEAU1`). `SAVE` and
 `BSAVE` replace an existing file without asking, with no risk of losing it: they write
 `NAME.$$$`, then erase the old file and rename (like EDIT). The new file therefore needs room in
-addition to the old one. `disque plein` (or `code 0-31 : BSAVE` while writing): the old file
-has not changed, `NAME.$$$` is erased. `repertoire plein` (directory full), `fichier protege`
+addition to the old one. `disk full` (or `code 0-31: BSAVE` while writing): the old file
+has not changed, `NAME.$$$` is erased. `directory full`, `read-only file`
 (read-only): nothing is written. A RESET while writing leaves the old file or the new one; at
 worst the new one is complete in `NAME.$$$` (`REN NAME.EXT=NAME.$$$`).
 
@@ -454,10 +454,10 @@ worst the new one is complete in `NAME.$$$` (`REN NAME.EXT=NAME.$$$`).
   its numbers, or its whole string).
 - `LOAD` first sets the array to 0: a shorter line leaves the end of its line at 0; missing
   lines leave the rest of the array at 0. Extra empty lines are ignored.
-- `LOAD` errors, with the line of the file: `ligne trop longue : L n` (line too long: too many
-  characters or numbers), `trop de lignes : L n` (too many lines), `nombre ? : L n` (not an
+- `LOAD` errors, with the line of the file: `line too long : L n` (too many
+  characters or numbers), `too many lines : L n`, `number? : L n` (not an
   integer from -32768 to 32767). What was read before stays in the array.
-- `SAVE` of a `$` array that contains a code 1-31: `code 0-31 : BSAVE` (these codes cannot be
+- `SAVE` of a `$` array that contains a code 1-31: `code 0-31: BSAVE` (these codes cannot be
   typed in EDIT: attributes go through `BSAVE`).
 - **Binary**: CP/M files have no byte-exact size (128-byte records). `BSAVE` pads the last
   record with 0s. `BLOAD` sets the array to 0, then reads its size: a shorter file leaves the
@@ -517,7 +517,7 @@ the bytes are stored line after line. What each command does with it:
 |---|---|---|---|
 | Contents | one file line per array line: its bytes up to the first 0, at most `c` | the `l` × `c` bytes, one after another, no separator | the 28 lines of 40 cells of the screen, columns 0-1 (attributes) included: 1,120 bytes |
 | Line ending | CR LF, **added by `SAVE`** | none | none |
-| Bytes allowed | 32-255; a code 1-31 stops the program (`code 0-31 : BSAVE`) | all | all |
+| Bytes allowed | 32-255; a code 1-31 stops the program (`code 0-31: BSAVE`) | all | all |
 | End of file | last record padded with `^Z` | padded with 0s | padded with 0s |
 | For | EDIT, `LOAD` | HEX, `BLOAD` | HEX, `BLOAD SCREEN` |
 
@@ -534,9 +534,9 @@ In practice:
   the file.
 - **Widths**: the screen has 40 columns, the first two of which are attributes; EDIT shows 38.
   A 38-column array taken from columns 2-39 of the screen gives lines that exactly fill an
-  EDIT line. A line longer than the array's columns stops `LOAD` (`ligne trop longue : L n`).
+  EDIT line. A line longer than the array's columns stops `LOAD` (`line too long : L n`).
 - **LORES screen**: after `LORES` or `CLS`, each cell contains attribute 16 (black paper), not
-  a space. `GRAB` of an area never written to, then `SAVE`, gives `code 0-31 : BSAVE`: fill
+  a space. `GRAB` of an area never written to, then `SAVE`, gives `code 0-31: BSAVE`: fill
   the area with spaces first (`SPC`). Columns 0-1 contain attributes: start the `GRAB` at
   column 2. A character in reverse video (code + 128) goes through as it is.
 - **Integer array**: `SAVE` writes the numbers of a line separated by a space (`DIM N(2,3)`
@@ -566,33 +566,34 @@ Colours (attributes, codes 0-31) do not go through `SAVE`: for a screen in colou
 ## 11. Errors
 
 An error stops the program: back to the console, then `L n COMMAND : message`
-(`L 3 LINE : valeur hors de 0-255`). A translated program checks nothing while running (§ 12);
+(`L 3 LINE : value not in 0-255`). A translated program checks nothing while running (§ 12);
 only the errors that are not the program's fault remain, without a line number: files
-(`Erreur : disque plein`, disk full...), `memoire pleine` at a `DIM` of computed size. ESC
-does not stop it (§ 8).
+(`Error: disk full`...), `memory full` at a `DIM` of computed size. ESC
+does not stop it (§ 8). The messages are in English on `cpa-en.dsk`, in French on `cpa.dsk`
+(so are those of GRXASM and of translated programs).
 
 | Topic | Messages |
 |---|---|
-| Reading | `commande inconnue` (unknown command), `parametres ?` (parameters?), `ligne de plus de 126 car.` (line longer than 126 characters), `expression ?`, `variable ? (A, AB ou A1)` |
-| Values | `valeur hors de 0-255` (value outside 0-255), `valeur hors limites` (value out of range), `division par zero`, `pas nul` (zero step) |
-| Modes | `HIRES ou SPLIT d'abord`, `LORES d'abord` (... first) |
-| Blocks | `NEXT sans boucle` (NEXT without loop), `NEXT manquant` (missing NEXT), `bloc non ferme` (block not closed), `fin de bloc en trop` (extra end of block), `trop de blocs imbriques` (too many nested blocks), `RETURN sans CALL`, `SUB introuvable` (SUB not found) |
-| Arrays | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
-| Sprites | `SPRITES d'abord`, `SPOOL d'abord`, `fichier .SPR ?` (not a sprite `.SPR`, or malformed sprite), `plus de caracteres pour les sprites` (empty pool); `valeur hors limites`: slot, sprite rank, pool code, sprite off the screen |
-| Files | `Fichier introuvable` (file not found) and `Fichier trop gros` (file too big) for the `.GRX`, `image introuvable`, `disque plein`, `repertoire plein` (directory full), `fichier protege` (read-only), `animation introuvable`, `animation trop grande`; data (§ 10): `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
+| Reading | `unknown command`, `parameters?`, `line over 126 chars`, `expression?`, `variable? (A, AB or A1)` |
+| Values | `value not in 0-255`, `value out of range`, `division by zero`, `zero step` |
+| Modes | `HIRES or SPLIT first`, `LORES first` |
+| Blocks | `NEXT without loop`, `missing NEXT`, `block not closed`, `extra end of block`, `too many nested blocks`, `RETURN without CALL`, `SUB not found` |
+| Arrays | `already dimensioned`, `array not dimensioned`, `index out of range`, `memory full`, `string too long`, `string in a calculation` |
+| Sprites | `SPRITES first`, `SPOOL first`, `.SPR file?` (not a sprite `.SPR`, or malformed sprite), `no more characters for sprites` (empty pool); `value out of range`: slot, sprite rank, pool code, sprite off the screen |
+| Files | `File not found` and `File too big` for the `.GRX`, `picture not found`, `disk full`, `directory full`, `read-only file`, `animation not found`, `animation too big`; data (§ 10): `line too long : L n`, `too many lines : L n`, `number? : L n`, `code 0-31: BSAVE` |
 
 An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 12. Translation into assembly (GRXASM)
 
     A>GRXASM MOTIFS
-    MOTIFS.ASM ecrit : ASM MOTIFS
+    MOTIFS.ASM written: ASM MOTIFS
     A>ASM MOTIFS
     A>MOTIFS
 
 - Translation is done by `GRXASM.COM`, a separate program (the interpreter does not keep its
   code in memory). `GRAPHER NAME /A` starts it through CHAIN: the line becomes
-  `GRXASM NAME /A ...`, 78 characters at most (`Ligne trop longue`). GRXASM must be on a
+  `GRXASM NAME /A ...`, 78 characters at most (`Line too long`). GRXASM must be on a
   drive where commands are searched for.
 - Translation does the same analysis as the interpreter. Syntax and block errors are reported
   with the line, and `NAME.ASM` is then not written.
@@ -650,7 +651,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   program has arrays or strings (a `PRINT "..."` is enough), `FIL.INC` if it reads or writes data files (`SAVE`... `FOUND`),
   `SPR.INC` if it has sprites and `ANIM.INC` if it animates. These files are looked for on the
   drive of the `.GRX`, then on the drives already read from A: to D: (system disk in A:,
-  project in B:); otherwise: `GRX.INC absente (bibliotheque)`, library missing. ASM then only
+  project in B:); otherwise: `GRX.INC missing (library)`. ASM then only
   needs `CPA.INC`, looked for the same way. For CARTE, `NAME.ASM` is 46 KB: `/C` only leaves
   `NAME.COM` (8 KB). They are, with GRXASM, on the complete disk, the Assembler disk and the
   Animations disk (not on the Logo disk, which has no ASM).
@@ -731,6 +732,7 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 | `progs/grxasm.s` | translator (`GRXASM.COM`) |
 | `progs/grxd_inc.s`, `progs/grxc_inc.s` | shared by both: constants and zero page; reading the `.GRX` and its lines, parameters, table of command names (the frequent ones first), parsing of names, numbers and functions, constant folding, subroutines, errors. Each program has its own `cadr` table of command addresses, in the order of the name table, and its own assignments (`x_asg`, `x_aasg`), `ANIM` (`an_val`, `an_none`), `ndim_s`, `to_text`, `o_drop` and buffers |
 | `progs/grx.inc` (`GRX.INC`) | run-time library of translated programs |
+| `progs/msg/fr/`, `progs/msg/en/` | messages, same labels in both languages: `grapher.msg`, `grxasm.msg` (and the comments of the `.ASM` it writes), `grxc.msg` (shared), one per library (`grx.msg`, `arr.msg`, `fil.msg`, `spr.msg`, `anim.msg`). GRAPHER, GRXASM and VOIR include them separately (ASM has only one level of inclusion); in the library, a `;#msg name.msg` line marks their place, and `tools/strip_inc.py` copies them there in the language of the disk (`build/src`, `build/src-en`). `g_m_el`: length of the error prefix of `GRX.INC`, which `FIL.INC` skips |
 | `progs/arr.inc` (`ARR.INC`) | arrays and strings, shared by both (`r_chk`: checks when interpreted); descriptors at `$9D60`; screen rectangles (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | screen: drawing, LORES (`h_lores`, `h_loc`, `h_chr`...), vertical writing (`h_lvon`, `h_lvoff`), pictures; `h_buf`: 40 free bytes after its tables (buffer of `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | `.ANI` animations; the `ANIM` of translated programs (`a_grx`) is in `GRX.INC`, so that it costs nothing to the interpreter or to VOIR |

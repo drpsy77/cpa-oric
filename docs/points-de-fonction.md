@@ -750,43 +750,43 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 63 | 11 142 | 1 181 | 534 | 865 | 10 % | 36 933 | 35 | 115 |
 | EDIT | 4 | 3 648 | 198 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 8 | 12 944 | 933 | 426 | 0 | 7 % | 32 642 | 57 | 143 |
+| GRAPHER + GRXASM | 22 | 13 025 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
 | LOGO | 4 | 8 696 | 553 | 287 | 16 | 6 % | 18 960 | 45 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
-| VOIR | 5 | 1 476 | 172 | 64 | 0 | 10 % | 3 353 | 78 | 176 |
+| VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 12 | 1 350 | 153 | 74 | 0 | 10 % | 4 479 | 54 | 179 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
-| Exemples | 28 | 892 | 56 | 30 | 0 | 6 % | 244 | 8 | 2 |
-| Outillage PC | 160 | 6 577 | 704 | 398 | 0 | 10 % | — | 39 | — |
-| **Total** | 297 | 59 446 | 4 619 | 2 366 | 956 | 7 % | 135 356 | 46 | 104 |
+| Exemples | 29 | 936 | 60 | 34 | 0 | 6 % | 244 | 9 | 2 |
+| Outillage PC | 161 | 6 640 | 731 | 410 | 0 | 10 % | — | 40 | — |
+| **Total** | 315 | 59 639 | 4 720 | 2 382 | 956 | 7 % | 135 372 | 46 | 104 |
 
 Octets du système : code résident 13 922 (`$C000-$F662`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 218 | 76 | 3,8 | 84 |
+| Système et commandes | 1 224 | 76 | 3,8 | 85 |
 | EDIT | 93 | 20 | 1,3 | 12 |
-| GRAPHER + GRXASM | 848 | 69 | 3,7 | 32 |
+| GRAPHER + GRXASM | 852 | 69 | 3,7 | 34 |
 | LOGO | 273 | 63 | 1,4 | 19 |
-| CMDER | 174 | 24 | 3,1 | 10 |
+| CMDER | 174 | 24 | 3,1 | 11 |
 | HEX | 34 | 9 | 1,8 | 3 |
 | VOIR | 78 | — | 4,1 | 9 |
 | USB | 38 | 9 | 1,5 | 6 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 18 |
-| Outillage PC | 323 | — | 1,9 | 99 |
-| Transverse (projet) | 1 776 | — | — | 42 |
-| Traduction anglaise (docs/en) | 2 242 | — | — | 11 |
-| **Total** | 7 195 | 292 | 5,6 | 157 |
+| Exemples | 0 | — | 0,0 | 20 |
+| Outillage PC | 324 | — | 1,9 | 100 |
+| Transverse (projet) | 1 973 | — | — | 46 |
+| Traduction anglaise (docs/en) | 2 246 | — | — | 14 |
+| **Total** | 7 407 | 292 | 5,7 | 165 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 157 commits du 2026-10-04 au 2026-10-20.
+Historique : 165 commits du 2026-10-04 au 2026-10-23.
 
-Réutilisation : 44 751 lignes de code écrites dans `progs/`, 50 010 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 44 697 lignes de code écrites dans `progs/`, 49 939 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

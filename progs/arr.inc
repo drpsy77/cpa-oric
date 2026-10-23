@@ -1047,13 +1047,7 @@ rz_rng  lda #<rz_m_rng
         ldy #>rz_m_rng
         jmp r_fail
 
-rz_m_dim   .asc "deja dimensionne",0
-rz_m_nodim .asc "tableau non dimensionne",0
-rz_m_idx   .asc "indice hors limites",0
-rz_m_mem   .asc "memoire pleine",0
-rz_m_long  .asc "chaine trop longue",0
-rz_m_lim   .asc "valeur hors limites",0
-rz_m_rng   .asc "valeur hors de 0-255",0
+;#msg arr.msg
 
 rz_snd  .byt S_NOTE,0,61,10,4,0
 r_chk   .byt 0

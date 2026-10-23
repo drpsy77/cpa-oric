@@ -702,7 +702,4 @@ f_found .byt 0
 f_ext   .asc "   "          ; type de NOM.EXT pendant l'écriture de NOM.$$$
 f_typ   .asc "TXTDATSCR"
 f_tl    .asc " : L "
-f_m_code  .asc "code 0-31 : BSAVE",0
-f_m_long  .asc "ligne trop longue",0
-f_m_lines .asc "trop de lignes",0
-f_m_num   .asc "nombre ?",0
+;#msg fil.msg

@@ -161,7 +161,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py repare IMAGE SORTIE` | réécrit une image saine, par exemple après Clock Signal, qui en réécrivant une piste ne garde que deux des trois `$A1` de chaque synchronisation (la disquette paraît alors vide à Oricutron et au LOCI) |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
 | `python3 tools/mkspr.py SOURCE.txt SORTIE.SPR` | fichier `.SPR` (sprites ou tuiles de GRAPHER) d'après un dessin en texte (`#` allumé, `o` caché, `.` transparent ; exemple : `tools/spr/tuiles.txt`) |
-| `tools/test_inc.sh` | les bibliothèques allégées et marquées (`mark_inc.py`) de la disquette s'assemblent comme les originaux ; les programmes traduits, qui en recopient les routines utiles, s'assemblent (xa et ASM.COM) |
+| `tools/test_inc.sh` | les bibliothèques allégées de la disquette s'assemblent comme les originaux ; marquées (`mark_inc.py`) et avec leurs messages, les programmes traduits, qui en recopient les routines utiles, s'assemblent (xa et ASM.COM) |
+| `LANGUE=en tools/test_grapher.sh` | GRAPHER et GRXASM anglais (`build/progs-en`, `build/src-en`) contre les références françaises traduites par les fichiers de messages (`tools/msg_fr_en.py`) |
 | `tools/setup_clk.sh` | installe le banc Clock Signal dans `tools/clk/` (une fois, long) |
 | `tools/build_clk_mac.sh` | sur le Mac, avec Xcode : Clock Signal à quatre lecteurs dans `tools/clk-mac/` |
 | `tools/clk/clkheadless IMAGE tools/clk/roms SCRIPT` | Clock Signal sans écran : frappe, durées en temps émulé d'un vrai Microdisc (`cmd`), écran texte (`screen`) ; syntaxe en tête de `tools/clk-banc.patch` |

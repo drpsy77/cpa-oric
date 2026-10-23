@@ -45,7 +45,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
-| GRAPHER, GRXASM | 17 654, 14 988 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
+| GRAPHER, GRXASM | 17 654, 15 004 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -139,6 +139,11 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
        une fois compilé par GRXASM. Pas forcément un défaut : en faire un exemple du manuel
        qui montre les limites du mode interprété et l'intérêt de compiler, avec la place
        disponible en plus après compilation par rapport à la version interprétée (à mesurer).
+   - **Erreur d'un programme traduit après HIRES** (constaté dans Oricutron, en français
+     comme en anglais, rien codé) : `HIRES` puis `GLOAD` d'une image absente ;
+     l'interprété affiche `L 2 GLOAD : image introuvable`, le traduit
+     (`GRXASM E2 /C`, `E2`) rend un prompt sur un écran vide : le message
+     `Erreur : image introuvable` est effacé au retour (démarrage à chaud après HIRES ?).
 6. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
@@ -183,8 +188,14 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      VSYNC, EXPORT, IMPORT, USBDIR ; EDIT (et son `EDIT.CFG` : `WORDS`, `CHAR`, `LINE`
      acceptés dans les deux langues), HEX, ASM, DEBUG ; CMDER (en-têtes, genres et
      colonne du signe de tri compris : 13 435 octets en anglais, 7 blocs comme en
-     français). `tools/test_asm.sh` assemble aussi
-     les programmes traduits avec leurs messages anglais.
+     français) ; GRAPHER, GRXASM (et les commentaires du `.ASM` produit) et les
+     bibliothèques des programmes traduits : `GRX.INC`, `ARR.INC`, `FIL.INC`, `SPR.INC`,
+     `ANIM.INC` (VOIR compris) en deux langues, `build/src` et `build/src-en`, messages
+     recopiés par `strip_inc.py` (`architecture.md` § 5) ; GRAPHER 17 583 octets en
+     anglais, GRXASM 14 961. `tools/test_asm.sh` assemble aussi
+     les programmes traduits avec leurs messages anglais ; `LANGUE=en
+     tools/test_grapher.sh` compare GRAPHER et GRXASM anglais aux références françaises
+     traduites par les fichiers de messages (`tools/msg_fr_en.py`).
    - EDIT revient à LOGO par `LOGO NOM /R` : à changer pour `LOGOEN` quand LOGO sera
      traduit (`s_logo` dans `edit.s`).
    - Fait aussi : **le système** (principe : tout ce qui est produit l'est dans les deux
@@ -197,9 +208,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      papier (`src/menu_col.s`, page `$FF00` : blanc avec magenta et bleu sur papier noir,
      etc. ; tableau dans le source). Coût : 23 octets de code (marge française 37 → 14),
      8 octets dans `$FF00` (18 → 10). La ROM, projet à part, reste en français.
-   - Reste, par étapes : GRAPHER et GRXASM (avec GRX.INC,
-     FIL.INC... : messages des programmes traduits) ; HELP et README.TXT (aide en deux
-     listes) ; exemples ; tests en anglais (`smoke_test`, références de GRAPHER).
+   - Reste, par étapes : HELP et README.TXT (aide en deux listes) ; exemples
+     (commentaires des `.GRX`, `.BAT`...) ; `smoke_test` en anglais.
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.
@@ -351,9 +361,9 @@ multiple de 2 048) :
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
 - GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (14 988) prend 8 blocs ;
-  GRX.INC (12 150 octets sur la disquette, marques `;@` comprises) prend 6 blocs, 138
-  octets avant le 7e. HELP (11 449) prend 6 blocs. Les disquettes se spécialisent plutôt
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 004) prend 8 blocs ;
+  GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
+  blocs, 1 215 octets avant le 7e. HELP (11 449) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 177 octets de code avant la page suivante, 5 en

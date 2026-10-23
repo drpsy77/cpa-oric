@@ -1563,10 +1563,7 @@ sq2     jmp rz_lim
 .)
 
 sz_sig  .asc "SPR",1
-sz_m_res  .asc "SPRITES d'abord",0
-sz_m_pool .asc "SPOOL d'abord",0
-sz_m_spr  .asc "fichier .SPR ?",0
-sz_m_full .asc "plus de caracteres pour les sprites",0
+;#msg spr.msg
 
 ; paramètres de SSHOW
 s_k     .byt 0
@@ -1598,7 +1595,6 @@ s_r     .byt 0
 s_e     .word 0
 s_sz    .word 0
 ; tuiles
-tz_m_set .asc "TILESET d'abord",0
 tz_lim  .byt 128,112    ; TFONT : fin des codes (jeu standard, secondaire)
 tz_fnt  .byt $B4,$B8    ;   police
 t_w     .byt 0          ; TILESET : largeur et hauteur d'une tuile

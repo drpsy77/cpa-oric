@@ -75,6 +75,9 @@ compile
         lda #<h_head3
         ldy #>h_head3
         jsr os
+        lda #<h_code
+        ldy #>h_code
+        jsr os
         lda #0
         sta kn
         sta kn+1
@@ -3015,8 +3018,7 @@ s_pha   .asc "pha",0
 s_pla   .asc "pla",0
 s_cx    .asc ",x",0
 s_equ   .asc " = ",0
-s_ginit .asc "; tableaux fixes : reserves au lancement",13,10
-        .asc "G_INIT jsr g_init",13,10
+s_gcode .asc "G_INIT jsr g_init",13,10    ; après le commentaire s_ginit
         .asc " inc g_sp",13,10
         .asc " inc g_sp",13,10,0
 s_ginone .asc "G_INIT = g_init",13,10,0
@@ -3107,16 +3109,9 @@ s_rept  .asc "jsr g_rept",0
 s_forok .asc "jsr g_forok",0
 s_fstep .asc "jsr g_forstep",0
 h_head1 .asc "; ",0
-h_head2 .asc ".ASM : traduit de ",0
-h_head2b .asc ".GRX par GRXASM",13,10
-        .asc "; ASM ",0
-h_head3 .asc " donne le .COM (CPA.INC sur le meme",13,10
-        .asc "; lecteur ; les routines utiles des",13,10
-        .asc "; bibliotheques sont recopiees a la fin)",13,10
-        .asc "#include ",34,"CPA.INC",34,13,10
+h_code  .asc "#include ",34,"CPA.INC",34,13,10   ; après le commentaire h_head3
         .asc "*= $0500",13,10
         .asc " jsr G_INIT",13,10,0
-h_tail1 .asc "; boucles : compte, ou arrivee, pas et variable",13,10,0
 s_sres  .asc "jsr s_res",0
 s_spool .asc "jsr s_pool",0
 s_sshow .asc "jsr s_show",0
@@ -3133,8 +3128,6 @@ s_sn    .asc "s_n",0
 s_scol  .asc "s_col",0
 s_slig  .asc "s_lig",0
 t_asm   .asc "ASM"
-m_done  .asc ".ASM ecrit : ASM ",0
-m_nodim .asc "tableau non dimensionne",0
 
 
 ; ndim_s : A = lettre -> A = dimensions de son tableau $ (0 : pas
@@ -3557,6 +3550,9 @@ kf_init
         rts
 go      lda #<s_ginit
         ldy #>s_ginit
+        jsr os
+        lda #<s_gcode
+        ldy #>s_gcode
         jsr os
         lda #<PTOP
         sta kt
@@ -5089,8 +5085,8 @@ klnm    .asc "GRX     INC"
         .asc "ANIM    INC"
         .asc "HIRES   INC"
 klfl    .byt 0,karr,kfil,kspr,kanim,0
-m_noinc .asc " absente (bibliotheque)",0
-m_names .asc "Trop de noms (bibliotheques)",0
+#include "grxasm.msg"          ; messages, en-tête du .ASM (progs/msg/fr, en)
+#include "grxc.msg"            ; messages de grxc_inc.s
 
 ; affectations ; ANIM ; console
 x_asg   = k_assign
@@ -5102,9 +5098,6 @@ an_none lda #<s_lda0            ; ANIM nom : 0 (jusqu'à une touche)
         jmp oi
 to_text rts                     ; (la console reste en mode texte)
 
-m_use   .asc "GRXASM NOM [/C] [p1..p9] : traduit",13,10
-        .asc "NOM.GRX en NOM.ASM (pour ASM) ;",13,10
-        .asc "/C : puis ASM, NOM.COM seul",13,10,"$"
 t_casm  .asc "ASM "
 t_ce    .asc " /E",0
 a_sig   .asc "ANI"

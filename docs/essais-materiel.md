@@ -46,6 +46,13 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   `CMDER A: B:` (en-têtes `NAME TYP KB`) ; `CMDER USB:` et `CMDER A: USB:` avec le LOCI
   (`<DIR>`, tri par taille : `+SIZE`) ; sur `cpa.dsk`, `CMDER USB:` puis `4` : `+TAILLE`
   (le signe écrasait le T) ;
+- **`cpa-en.dsk`, GRAPHER et GRXASM** : `GRAPHER` seul (usage `GRAPHER NAME...`),
+  `GRAPHER ZZ` (`File not found`), un `.GRX` qui fait `LINE` sans `HIRES`
+  (`L n LINE : HIRES or SPLIT first`), ESC pendant `WAIT` (`Interrupted`) ;
+  `GRXASM DESSIN` (`DESSIN.ASM written: ASM DESSIN`), `TYPE DESSIN.ASM` : en-tête en
+  anglais ; `ASM DESSIN` puis `DESSIN` : dessin comme sur `cpa.dsk` ; `VOIR` sur un
+  fichier `.ANI` qui n'en est pas un : `not an animation`. Sur `cpa.dsk` : les mêmes,
+  messages français inchangés ;
 - **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
   Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
   entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque

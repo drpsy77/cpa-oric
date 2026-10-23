@@ -1878,13 +1878,6 @@ getkey  lda pkey
 gk      jmp h_key
 t_img   .asc "IMG"
 t_hir   .asc "HIR"
-m_nogfx .asc "HIRES ou SPLIT d'abord",0
-m_noimg .asc "image introuvable",0
-m_lim   .asc "valeur hors limites",0
-m_nolo  .asc "LORES d'abord",0
-m_ro    .asc "fichier protege",0
-m_dirf  .asc "repertoire plein",0
-m_nonext .asc "NEXT manquant",0
 
 ; ---------------------------------------------------------------------
 ; /A : CHAIN « GRXASM » suivi de la ligne d'origine sans son premier mot
@@ -2085,8 +2078,8 @@ an_val  jsr getbyte             ; ANIM nom n : passages dans gd
 an_none
 o_drop  rts                     ; (pas de fichier de sortie)
 
-m_use   .asc "GRAPHER NOM [/A|/C] [p1..p9]",13,10,"$"
-m_chain .asc "Ligne trop longue",13,10,"$"
+#include "grapher.msg"         ; messages (progs/msg/fr, en)
+#include "grxc.msg"            ; messages de grxc_inc.s
 t_gxa   .asc "GRXASM"
 
 #include "grxc_inc.s"
@@ -2162,7 +2155,9 @@ r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)
 r_i     = et
 r_j     = ev
 #include "anim.inc"
+#include "anim.msg"
 #include "arr.inc"
+#include "arr.msg"
 f_fcb   = ifcb          ; fil.inc : fichier de données, nombres
 f_fmt   = fmtnum
 f_nbuf  = numbuf
@@ -2171,7 +2166,9 @@ f_mful  = m_full
 f_mro   = m_ro
 f_mdir  = m_dirf
 #include "fil.inc"
+#include "fil.msg"
 #include "spr.inc"
+#include "spr.msg"
 #include "hires.inc"
 
 ; tampons après les tables de hires.inc, mis à 0 au lancement (bufs à

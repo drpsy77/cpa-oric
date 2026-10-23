@@ -11,6 +11,9 @@
 # exécuté : messages de la traduction et sortie comparés au fichier .kref.
 #   tools/test_grapher.sh          compare aux références
 #   REF=1 tools/test_grapher.sh    réécrit les références (après vérification !)
+#   LANGUE=en tools/test_grapher.sh   programmes et bibliothèques anglais
+#     (build/progs-en, build/src-en), comparés aux références françaises
+#     traduites par les fichiers de messages (tools/msg_fr_en.py)
 set -e
 cd "$(dirname "$0")/.."
 D=tools/grapher_tests
@@ -18,14 +21,21 @@ XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
-cp build/progs/GRAPHER.COM build/progs/GRXASM.COM "$T/"
-cp build/src/*.INC "$T/"   # bibliothèques de la disquette (marquées par mark_inc.py)
+P=build/progs; S=build/src
+if [ "$LANGUE" = en ]; then
+  [ -z "$REF" ] || { echo "REF=1 : références en français seulement"; exit 1; }
+  P=build/progs-en; S=build/src-en
+fi
+cp $P/GRAPHER.COM $P/GRXASM.COM "$T/"
+cp $S/*.INC "$T/"   # bibliothèques de la disquette (marquées par mark_inc.py)
 cp $D/*.TXT "$T/"   # fichiers de données lus par LOAD
 cp files/anim/CUBE.ANI files/anim/VAISSEAU.ANI "$T/"; cp $D/*.SPR "$T/"   # animation, sprites
 ko=0
 check() {   # check NOM EXT : compare $T/NOM.out à $D/NOM.EXT
+  R="$D/$1.$2"
+  if [ "$LANGUE" = en ]; then python3 tools/msg_fr_en.py "$R" > "$T/$1.$2.en"; R="$T/$1.$2.en"; fi
   if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.$2"; echo "référence écrite : $1.$2"
-  elif diff "$D/$1.$2" "$T/$1.out" > "$T/$1.diff"; then echo "identique : $1.$2"
+  elif diff "$R" "$T/$1.out" > "$T/$1.diff"; then echo "identique : $1.$2"
   else echo "DIFFERENT : $1.$2"; cat "$T/$1.diff"; ko=$((ko+1)); fi
 }
 # GRAPHER NOM /A : CHAIN vers GRXASM avec le reste de la ligne
@@ -54,5 +64,5 @@ for f in $D/*.grx; do
   check "$n" kref
 done
 rm -rf "$T"
-echo "GRAPHER : $ko différence(s)"
+echo "GRAPHER${LANGUE:+ ($LANGUE)} : $ko différence(s)"
 [ $ko -eq 0 ]
