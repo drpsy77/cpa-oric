@@ -495,6 +495,7 @@ c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
 |---|---|
 | `TERM` | terminal (9600 bauds, 8 bits, sans parité, 1 bit d'arrêt) |
 | `TERM /E` | écho local : affiche aussi ce qu'on tape (pour un correspondant qui ne le renvoie pas, comme `nc` sur le Mac ; le modem, lui, le renvoie en mode commande) |
+| `TERM /D` | diagnostic : registres de l'ACIA (état, commande, contrôle) relus avant et après le réglage (après : commande `0B`, contrôle `1E`), puis chaque changement de l'état entre crochets (`[10]` émetteur libre, `[18]` caractère reçu, bit 6 (`$40`) : pas de modem) |
 | CTRL-Q | quitte ; la liaison reste établie (DTR reste actif) |
 | DEL | envoie BS (8) ; CTRL-H à CTRL-K envoient 8 à 11 |
 | flèches | rien (pas encore d'émulation ANSI) |

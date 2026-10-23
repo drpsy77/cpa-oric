@@ -489,6 +489,7 @@ that the LOCI presents as a 6551 ACIA at `$0380`; without a LOCI, it is Oricutro
 |---|---|
 | `TERM` | terminal (9600 baud, 8 bits, no parity, 1 stop bit) |
 | `TERM /E` | local echo: also shows what you type (for a peer that does not send it back, such as `nc` on the Mac; the modem itself echoes it in command mode) |
+| `TERM /D` | diagnostics: ACIA registers (status, command, control) read back before and after set-up (after: command `0B`, control `1E`), then each change of the status in brackets (`[10]` transmitter free, `[18]` character received, bit 6 (`$40`): no modem) |
 | CTRL-Q | quits; the link stays up (DTR stays active) |
 | DEL | sends BS (8); CTRL-H to CTRL-K send 8 to 11 |
 | arrows | nothing (no ANSI emulation yet) |

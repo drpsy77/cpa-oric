@@ -87,7 +87,7 @@ SECTIONS = [
   ("EXPORT fic [nom]", "copie sur la cle USB du LOCI (HELP USB)"),
   ("IMPORT nom [fic]", "copie depuis la cle USB du LOCI"),
   ("USBDIR [chemin]", "fichiers de la cle USB du LOCI"),
-  ("TERM [/E]", "terminal serie (modem WiFi du LOCI) ; /E : echo local ; ^Q quitte"),
+  ("TERM [/E] [/D]", "terminal serie (modem WiFi du LOCI) ; /E : echo local ; /D : diagnostic de l'ACIA ; ^Q quitte"),
   ("MEM", "carte de la memoire"),
   ("POKE adr bb..", "ecrit en memoire (code a lancer : 0600 et +)"),
   ("GO adr [param]", "lance le code (RTS = retour)"),
