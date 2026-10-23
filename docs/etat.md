@@ -223,9 +223,9 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      `HELLO.ASM`, `GTEST.ASM` (`GTEST.COM` anglais). `ROTSCROL.GRX` et `JEU.GRX`
      (`PUZZLE.GRX`), cités au § 14 de `grapher.md`, sont maintenant sur `cpa.dsk` et
      `cpa-logo.dsk` (et leurs jumelles).
-   - Reste : la documentation anglaise montre encore des écrans et messages français
-     (convention des premières étapes) alors que tout sauf LOGO est traduit ; `smoke_test`
-     en anglais.
+   - Fait aussi : `docs/en` décrit les disquettes anglaises (écrans, menus, messages de
+     `cpa-en.dsk` ; `architecture.md` § 7) ; README.md renvoie à `cpa-en.dsk`.
+   - Reste : `smoke_test` en anglais ; LOGO (ci-dessous).
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.

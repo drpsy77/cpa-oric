@@ -1,9 +1,8 @@
 # CP/A — manual
 
-> English translation of `docs/manuel.md`. CP/A's programs speak French on `cpa.dsk`:
-> messages, questions and menu items are quoted as they appear there, with their meaning in
-> brackets where useful — for the programs already translated, the bracket gives the English
-> text shown on `cpa-en.dsk`.
+> English translation of `docs/manuel.md`. Messages, questions, menus and screens are those
+> of the English disks (`cpa-en.dsk`...); on the French disks (`cpa.dsk`...) they are in
+> French (`docs/manuel.md`). LOGO still speaks French on both.
 
 User guide for the disk version: commands, programs, programming. GRAPHER and LOGO have their
 own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interface contract
@@ -17,7 +16,7 @@ own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interfa
 | `DIR [afn]` | lists the files (wildcards `*` and `?`) and the free space; SYS files are hidden |
 | `DIRS [afn]` | like DIR, SYS files included |
 | `TYPE file` | shows a text file (a key interrupts it) — TYPE.COM |
-| `ERA afn [/Q]` | erases: shows the target files and asks `Effacer n fichier(s) (O/N) ?` (erase n files, yes/no; read-only files are kept); `/Q` without asking, for a script — ERA.COM |
+| `ERA afn [/Q]` | erases: shows the target files and asks `Erase n file(s) (Y/N) ?` (read-only files are kept); `/Q` without asking, for a script — ERA.COM |
 | `REN new=old` | renames — REN.COM |
 | `SAVE n file` | saves n pages of 256 bytes from `$0500` |
 | `GSAVE file`, `GLOAD file` | saves / loads the SPLIT mode picture (type `.IMG` by default) |
@@ -93,9 +92,9 @@ the size in bytes is exact for those files. A binary file whose last bytes reall
 looks slightly shorter.
 
     A>STAT *.TXT
-    Fichier       Enreg  Blocs Octets At
+    File          Recs   Blks  Bytes  At
     README  .TXT     79      5  10054 R
-    1 fichier(s), R : 1, S : 0
+    1 file(s), R : 1, S : 0
 
 The `At` column gives the attributes: `R` for a read-only (R/O) file, `S` for a system file
 (hidden from DIR). The last line counts the files, the read-only ones and the hidden ones.
@@ -103,7 +102,7 @@ The `At` column gives the attributes: `R` for a read-only (R/O) file, `S` for a 
 **128 files per disk.** The directory (the table of files that `DIR` lists; not a folder:
 CP/A has none) has 128 entries, one per file whatever its size up to 32 KB (beyond that, one
 more entry per 32 KB). A disk therefore holds 128 files at most, even with room left: EDIT,
-HEX, CMDER and GRAPHER then answer `Repertoire plein` (directory full), and nothing is written.
+HEX, CMDER and GRAPHER then answer `Directory full`, and nothing is written.
 Erase unneeded files (`ERA`) or use another disk.
 
 ## Drives A: to D:
@@ -111,8 +110,8 @@ Erase unneeded files (`ERA`) or use another disk.
 Any file name can start with a drive: `DIR B:`, `TYPE B:LETTRE.TXT`, `COPY LETTRE.TXT B:`,
 `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (the `.COM` and the `.SYM` on the
 source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `CHARGE "B:GAME`. Without a drive, it is the
-current drive, chosen with `B:` at the prompt or with the **Lecteur suivant** [next drive] item
-of the Systeme menu (A, B, C, D, then A). A program (`.COM`) or a script (`.BAT`, also through
+current drive, chosen with `B:` at the prompt or with the **Next drive** item
+of the System menu (A, B, C, D, then A). A program (`.COM`) or a script (`.BAT`, also through
 `DO`) typed without a drive is searched for on the current drive, then on `A:`, then on those
 of drives `B:`, `C:` and `D:` already read since power-on (`DIR B:`, `B:`, a copy...): from
 `B>`, `EDIT`, `LOGO` or `STAT` start from the system disk. With a real Microdisc, an empty or
@@ -139,9 +138,8 @@ or ejected is taken into account at the next start from the LOCI's menu.
 
 **FORMAT.** `FORMAT B:` formats the disk in drive B: in CP/A's format (2 sides, 42 tracks, 17
 sectors of 256 bytes): each track is written in one go (the controller's Write Track
-command), then read back; progress is shown (`Piste 12 face 1`, track 12 side 1), ESC
-interrupts between two tracks. Confirmation is asked (`Tout B: sera efface. Suite (O/N) ?`,
-all of B: will be erased, continue?). `FORMAT A:` works with a single drive: it asks you to
+command), then read back; progress is shown (`Track 12 side 1`), ESC
+interrupts between two tracks. Confirmation is asked (`All of B: will be erased. Go on (Y/N) ?`). `FORMAT A:` works with a single drive: it asks you to
 insert the disk to format, then to put the system disk back (the system stays in memory).
 `FORMAT B: /Q` only empties the directory of a disk already formatted: it is instant, and
 enough for a LOCI or Oricutron image. Sectors are interleaved (1, 10, 2, 11...) so that a real
@@ -170,8 +168,8 @@ The commands are then copied with COPY, as with PIP:
 `COPY *.COM B:` (drive only: same names), `COPY *.TXT *.BAK` (a `?` in the pattern takes the
 source's character), `COPY B:*.LOG` (no destination: the current drive). Each file copied is
 named, then the number of copies. Attributes are not copied (like PIP): the copy of a
-read-only command can be changed. A read-only destination file is left alone (`fichier
-protege`), a file onto itself refused (`meme fichier`, same file); other files with the same
+read-only command can be changed. A read-only destination file is left alone (`: file
+protected`), a file onto itself refused (`: same file`); other files with the same
 name are replaced. ESC stops between two files. COPY respects the top of the TPA (it also
 works in SPLIT mode). With a single drive, to copy from one disk to another: CMDER.
 
@@ -186,43 +184,42 @@ last; a letter: next file starting with it. `SPACE` marks, `+` / `-` mark or unm
 one under the cursor: RETURN shows them (text, page by page), `^C` copies, `^X` moves, `^N`
 renames, DEL erases (after confirmation), `^A` changes the attributes, `?` gives the exact
 size of the file and `^E` that of all (STAT's rule), `^L` changes drive, `^R` reads again
-(disk changed), ESC or `^Q` quits. The same actions are in the menus (FUNCT) Fichier, Marque,
-Trier and Vue. A copy keeps the original's attributes; a file already there is replaced after
-agreement (`O/N/T`, T for all), a read-only destination file is left alone; disk full: the copy
+(disk changed), ESC or `^Q` quits. The same actions are in the menus (FUNCT) File, Mark,
+Sort and View. A copy keeps the original's attributes; a file already there is replaced after
+agreement (`Y/N/A`, A for all), a read-only destination file is left alone; disk full: the copy
 in progress is erased.
 
 The column titles and the two status lines are in colour (cyan, blue); the list and the help
 line keep the colours chosen with PAPER and INK. In column 39, a scroll bar shows the visible
-part of the list. A disk error is shown on line 26 (`Erreur disque : verifiez la disquette`)
+part of the list. A disk error is shown on line 26 (`Disk error : check the disk`)
 instead of the BDOS message in the middle of the screen.
 
 **Two panels**: `CMDER A: B:` (one filter per drive: `CMDER A:*.COM B:`) shows two disks side
 by side (name, type, size in KB); the header of the active panel is in reverse video. TAB goes
 to the other panel, `^W` swaps their places, `^Z` puts the active panel in full screen (and
 back). Copy proposes the drive of the other panel (RETURN is enough) and checks the space first
-(`Libre 14K, requis 18K : O/N ?`, free 14K, needed 18K). Vue menu, "Absents autre": the panel
+(`Free 14K, needed 18K : Y/N ?`). View menu, "Not on other": the panel
 only shows the files missing from the other, or present with another size or other attributes
-(`#` in the header); with "Tout" [all] then `^C`, you copy what is missing. Fichier menu,
-"Imprimer liste": the list of the active panel on the printer.
+(`#` in the header); with "All" then `^C`, you copy what is missing. File menu,
+"Print list": the list of the active panel on the printer.
 
-**The LOCI's USB stick**: `CMDER USB:` (or `CMDER USB:/JEUX`, `CMDER A: USB:`) shows the
-current directory of the stick (`USB:JEUX/`): folders first (`<REP>`), long names (in full up
+**The LOCI's USB stick**: `CMDER USB:` (or `CMDER USB:/GAMES`, `CMDER A: USB:`) shows the
+current directory of the stick (`USB:GAMES/`): folders first (`<DIR>`), long names (in full up
 to 26 characters in full screen). RETURN enters a folder, or goes up on `..`; on a file, it
 shows it. The stick is a gateway: you copy to it (Copy to `USB:`, or to the stick's panel) and
 from it, but you neither erase nor rename anything on it. From the stick, a long name is
-brought down to 8 + 3 (like IMPORT); `/T` at the end of the answer (or the "Copier texte..."
+brought down to 8 + 3 (like IMPORT); `/T` at the end of the answer (or the "Copy as text..."
 menu item) turns a lone LF into CR LF and a tab into a space. Towards the stick, the trailing
 `^Z`s are removed (like EXPORT) and a `.DSK` is refused.
 
 Copying to the list's drive without changing the name (`A:` when the list is that of A:) means
 **a single drive**: CMDER reads as many files as memory holds (about 33 KB), asks
-`DESTINATION en A:, une touche` (destination in A:, press a key), writes, then `SOURCE en A:`
+`DESTINATION in A:, press a key`, writes, then `SOURCE in A:`
 for the rest, and so on. Before writing, it checks a fingerprint of each disk's directory and
-refuses the wrong one (`Non ! DESTINATION en A:...`); a large file is closed before each swap,
+refuses the wrong one (`No ! DESTINATION in A:...`); a large file is closed before each swap,
 then resumed. A disk with the same directory as the source (a copy of the source, an older
-version) is accepted after `Comme la source : continuer (O/N) ?` (same as the source:
-continue?); you must then take care to put back the right one yourself. At the end of a copy,
-`SOURCE en A: (ESC : rester)`: ESC leaves the destination in the drive and the list shows it.
+version) is accepted after `Same as the source : go on (Y/N) ?`; you must then take care to put back the right one yourself. At the end of a copy,
+`SOURCE in A:, press a key (ESC : stay)`: ESC leaves the destination in the drive and the list shows it.
 ESC at any other prompt stops everything. Moving with a single drive erases the originals
 when the source comes back.
 
@@ -237,8 +234,8 @@ keeps reading from its own disk even if it changes drive.
 (read-only: the file can be neither erased, nor renamed, nor written, nor replaced) and SYS
 (system file: `DIR` does not show it, `DIRS` does; it remains usable). `SET HELP.COM RO SYS`
 protects and hides, `SET HELP.COM RW DIR` goes back. ERA keeps read-only files (and counts
-them), REN answers `Fichier protege` (file protected); EDIT and HEX refuse to save a read-only
-file, COPY and IMPORT answer `fichier protege`. Programs go through BDOS function 30 (bit 7 of
+them), REN answers `File protected`; EDIT and HEX refuse to save a read-only
+file, COPY and IMPORT answer `file protected`. Programs go through BDOS function 30 (bit 7 of
 byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of all files.
 
 On the disk provided, the commands and applications (COPY, STAT, HELP, EDIT, LOGO, ASM...),
@@ -365,9 +362,9 @@ remains).
 
 **Pause at the end of the screen.** When a command fills the console (27 lines in text mode, 10
 in SPLIT mode) without the user touching the keyboard, the display stops on
-` -- Suite (^C stop) -- ` (more). A key continues, CTRL-C gives up and returns to the prompt.
+` -- More (^C stop) -- `. A key continues, CTRL-C gives up and returns to the prompt.
 This applies to `HELP`, `TYPE`, `DIR`, `DUMP`… and to programs that display through the BDOS
-or the BIOS. `PAGE OFF` (or the Pagination item of the Ecran menu, which toggles) removes the
+or the BIOS. `PAGE OFF` (or the Paging item of the Screen menu, which toggles) removes the
 pause, `PAGE ON` puts it back; the setting stays until the cold start. A program that does not
 want the pause sets `$02A3` to 0 (public variable, reset to 1 at cold start).
 
@@ -489,9 +486,8 @@ Mac.
   says so (EXPORT).
 - USBDIR shows neither hidden or system files, nor those starting with a dot (the `._NAME`
   files the Mac leaves on FAT sticks). ESC or CTRL-C stops the list.
-- Without a LOCI (Oricutron, Microdisc, Cumulus): `LOCI absent : cle USB inaccessible` (LOCI
-  missing: USB stick out of reach). LOCI errors are shown with their code:
-  `Erreur USB 36 : introuvable` (not found).
+- Without a LOCI (Oricutron, Microdisc, Cumulus): `No LOCI : USB stick out of reach`. LOCI
+  errors are shown with their code: `USB error 36 : not found`.
 
 These commands go through the interface the LOCI offers the 6502, that of the Picocomputer 6502
 (registers at `$03A0-$03BF`, details in `progs/loci_inc.s`). To try them without the hardware,
@@ -564,13 +560,12 @@ RAM (disk version) force a full restart.
 
 ## Pull-down menus
 
-The status line is used as a menu bar: **Systeme** [System] (Version, Aide [Help], Memoire
-[Memory], Imprimante [Printer] `^P`, Lecteur suivant [Next drive], Redemarrer [Reboot] `^C`),
-**Fichiers** [Files] (disk version only), **Ecran** [Screen] (Mode SPLIT [SPLIT mode], Mode
-texte [Text mode], Effacer [Clear], Encre [Ink], Papier [Paper], Majuscules [Caps lock] `^T`,
-Pagination [Paging]) and **Clavier** [Keyboard]. An item that has a keyboard shortcut shows it
+The status line is used as a menu bar: **System** (Version, Help, Memory, Printer `^P`, Next
+drive, Reboot `^C`), **Files** (disk version only: Directory, Show..., Copy..., Rename...,
+Erase...), **Screen** (SPLIT mode, Text mode, Clear, Ink, Paper, Caps lock `^T`, Paging) and
+**Keyboard** (Fast, Normal, Slow). An item that has a keyboard shortcut shows it
 at the end of its label (`^C` reboots only on an empty line of the prompt; the item also works
-inside a program). Encre and Papier move to the next colour (never the same for both); in
+inside a program). Ink and Paper move to the next colour (never the same for both); in
 scripts, `INK n` and `PAPER n` do the same with a chosen colour. A pull-down menu takes the
 complementary colour of the paper, and its inks are chosen for each paper (on black paper:
 magenta, blue selection on white; on white paper: yellow, cyan selection...). On
@@ -790,19 +785,19 @@ period is shared by the three voices.
 
 It is a full-screen editor: 26 lines of 38 columns, with a menu bar and a status line (file
 name, `*` if the text is modified, paragraph `L`, position `C` of the cursor in the paragraph,
-`INS`/`RFP` for insert/replace (`OVR` on `cpa-en.dsk`), `M` if a mark is set). The text can reach 32,000 bytes (about
-27 KB when started from SPLIT mode). A longer file opens **truncated** (`Fichier tronque : trop
-gros`); it cannot be saved under its own name (`Texte tronque : Enreg. sous...`), which would
+`INS`/`OVR` for insert/overwrite, `M` if a mark is set). The text can reach 32,000 bytes (about
+27 KB when started from SPLIT mode). A longer file opens **truncated** (`File truncated: too
+big`); it cannot be saved under its own name (`Text truncated: Save as...`), which would
 lose its end, but can be under another one. A long assembler program is therefore written as
 modules under 32,000 bytes, brought together by `#include` (see ASM); TYPE and ASM read a file
 of any size.
 
 Three display modes (Options menu, or CTRL-W which moves to the next one):
 
-- **Coupure mots** [Word wrap] (default): a paragraph that is too long continues on the
+- **Word wrap** (default): a paragraph that is too long continues on the
   following lines, broken between words;
-- **Coupure 38 car** [Wrap at 38]: broken every 38 characters;
-- **Ligne** [Line]: one paragraph per screen line; the window scrolls sideways (10
+- **Wrap at 38**: broken every 38 characters;
+- **Line**: one paragraph per screen line; the window scrolls sideways (10
   columns at a time) to follow the cursor, and all lines with it. The status line shows `<`
   when the window is shifted and `>` when the paragraph goes on to the right. Beyond 240
   characters, the paragraph continues on the next line. This is the mode for code (`.ASM`,
@@ -824,12 +819,12 @@ letter counts, and `MOTS`, `CAR`, `LIGNE`, those of the `EDIT.CFG` of `cpa.dsk`,
 accepted too — and printer width.) The first line whose name matches applies (wildcards `*` and `?`, optional drive:
 `B:*.TXT`); so put the special files first. Missing columns keep their default value (no limit,
 `WORDS`, 80); `;` starts a comment. EDIT looks for `EDIT.CFG` on the document's drive, then on
-`A:`, at every open and every "Enreg. sous..." (save as). Without `EDIT.CFG`, it keeps 126 for
+`A:`, at every open and every "Save as...". Without `EDIT.CFG`, it keeps 126 for
 `*.LOG` and 78 for `*.BAT`. The disks provided have one, changeable (`EDIT EDIT.CFG`); it is
 hidden (SYS) on the disks by use.
 
 When the paragraph under the cursor is longer than the maximum, the status line shows `C 127!`
-in reverse video. **CTRL-L** (Chercher menu, Trop long) goes to the first extra character of the
+in reverse video. **CTRL-L** (Search menu, Too long) goes to the first extra character of the
 next paragraph that is too long; the Statistics give the length of the longest paragraph and its
 number (`max 177 (L4)`).
 
@@ -842,50 +837,47 @@ number (`max 177 (L4)`).
 | CTRL-↑ / CTRL-↓ | start / end of the text |
 | RETURN | new paragraph |
 | DEL / CTRL-D | erase to the left / under the cursor |
-| CTRL-SPACE | mark one end of the block (Edition, Marquer); ESC removes the mark |
+| CTRL-SPACE | mark one end of the block (Edit, Mark); ESC removes the mark |
 | CTRL-X / CTRL-C / CTRL-V | cut / copy the block (from the mark to the cursor) / paste |
 | CTRL-K | erase the paragraph |
 | CTRL-E | insert / replace |
 | CTRL-F / CTRL-G / CTRL-H | find / next (starts again from the top if needed) / replace |
 | CTRL-O / CTRL-S / CTRL-Q | open / save / quit |
-| CTRL-I (TAB) | insert a file at the cursor (Fichier, Insérer...) |
-| CTRL-P | print the text (Fichier, Imprimer) |
-| CTRL-L | next paragraph too long (Chercher, Trop long) |
+| CTRL-I (TAB) | insert a file at the cursor (File, Insert...) |
+| CTRL-P | print the text (File, Print) |
+| CTRL-L | next paragraph too long (Search, Too long) |
 | CTRL-W | next display mode: break at words, at 38 characters, whole line (Options) |
 | FUNCT | menus |
 
 Menus:
-- **Fichier** [File]: Nouveau [New], Ouvrir... [Open...], Insérer... [Insert...], Enregistrer
-  [Save], Enreg. sous... [Save as...], Imprimer [Print], Quitter [Quit]. The system asks for confirmation
-  before losing changes. Insérer... adds the contents of another text file at the cursor (the
-  cursor ends up after the inserted text). Imprimer sends the whole text to the printer
+- **File**: New, Open..., Insert..., Save, Save as..., Print, Quit. The system asks for
+  confirmation before losing changes. Insert... adds the contents of another text file at the cursor (the
+  cursor ends up after the inserted text). Print sends the whole text to the printer
   (Centronics port, BDOS function 5), laid out: each paragraph is broken between words into
   lines of at most the printer width minus one character (79 for 80, adjustable in
   `EDIT.CFG`), so that a printer that wraps by itself does not add a blank line; a word longer
   than a line is cut. ESC stops between two lines. Without a printer nothing hangs, but each
   character waits 2 ms for the acknowledge (about twenty seconds for 10 KB): ESC. Started from
-  LOGO with `EDITE`, EDIT shows Retour [Back] instead of Quitter: it saves the text if it
+  LOGO with `EDITE`, EDIT shows Back instead of Quit: it saves the text if it
   changed and goes back into LOGO (see LOGO).
-- **Edition** [Edit]: Marquer [Mark], Copier [Copy], Couper [Cut], Coller [Paste], Eff. paragr.
-  [Del. para.: erase the paragraph]. The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
+- **Edit**: Mark, Copy, Cut, Paste, Del. para. (erase the paragraph). The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
   move the cursor to the other end, then copy (CTRL-C) or cut (CTRL-X); CTRL-V pastes at the
   cursor. ESC removes the mark.
-- **Chercher** [Search]: Chercher... [Find...], Suivant [Next], Remplacer... [Replace...],
-  Trop long [Too long]. For each occurrence, answer O (yes), N (no), T (all) or Esc (Y, N, A
-  on `cpa-en.dsk`). The search ignores the
+- **Search**: Find..., Next, Replace..., Too long. For each occurrence, answer Y (yes), N
+  (no), A (all) or Esc. The search ignores the
   difference between upper and lower case.
-- **Options**: Coupure mots [Word wrap], Coupure 38car [Wrap at 38], Ligne [Line] (the three display modes; `>` in front of the current one; the starting mode
-  comes from `EDIT.CFG`), Ins/Rempl. [Ins/Ovr: insert/replace], Statistiques [Statistics] (characters, words,
-  longest paragraph).
+- **Options**: Word wrap, Wrap at 38, Line (the three display modes; `>` in front of the
+  current one; the starting mode comes from `EDIT.CFG`), Ins/Ovr (insert/overwrite),
+  Statistics (characters, words, longest paragraph).
 
 Started from SPLIT mode, the editor switches to full-screen text and keeps its text below
 `$A000` (about 27 KB). When leaving, it shows the picture again, intact.
 
 Files are CP/M text: CR LF between paragraphs, `^Z` at the end. To lose nothing if the disk is
 full, saving first writes `NAME.$$$`, then replaces the old file: the new file needs room in
-addition to the old one. Disk full (`Disque plein : non enregistre`) or directory full: the old
+addition to the old one. Disk full (`Disk full: not saved`) or directory full: the old
 file has not changed and `NAME.$$$` is erased. Save as... onto an existing file asks
-`Remplacer NOM.EXT (O/N) ?` (replace?); a protected file is refused (`Fichier protege (R/O)`)
+`Replace NAME.EXT (Y/N) ?`; a protected file is refused (`File protected (R/O)`)
 without writing anything. A document opened read-only can be saved under another name. A RESET
 during saving leaves the old file, or the new one; at worst (RESET between erasing the old file
 and the renaming, half a second) the new text is complete in `NAME.$$$`:
@@ -903,7 +895,7 @@ it:
 
 The status line gives the file name (`*` if it is modified), the cursor position and the file
 size (`$0125/$1700`), the value of the current byte in hex and decimal, and the mode (`HEX`,
-`ASC`, or `LECT` for read-only, `R/O` on `cpa-en.dsk`). The current byte is in reverse video in the area where you
+`ASC`, or `R/O` for read-only). The current byte is in reverse video in the area where you
 type.
 
 | Key | Action |
@@ -918,7 +910,7 @@ type.
 | TAB (CTRL-I) | edit in hex or in ASCII |
 | CTRL-S / CTRL-R | save / reload |
 | ESC or CTRL-Q | quit (confirmation if the file is modified) |
-| FUNCT | menus Fichier [File] (Enregistrer [Save], Recharger [Reload], Quitter [Quit]), Aller [Go to], Mode |
+| FUNCT | menus File (Save, Reload, Quit), Go to (Top, End, Address..., Find..., Next), Mode (Hex/ASCII) |
 
 In HEX mode, type two digits per byte (the first replaces the high nibble, the second the low
 one, then the cursor moves on). In ASCII mode, each character typed replaces the byte. The size
@@ -949,10 +941,10 @@ disk:
 
     A>ASM HELLO /S
     ASM CP/A 1.0
-    Passe 1
-    Passe 2
-    HELLO.COM $0500-$0557 : 88 octets
-    8 symboles (.SYM)
+    Pass 1
+    Pass 2
+    HELLO.COM $0500-$0557 : 88 bytes
+    8 symbols (.SYM)
 
 The syntax is that of the OSDK's `xa` assembler, for the part CP/A programs need: the same
 sources assemble on the Oric and on the PC. Assembled on the Oric, HELLO, COPY, GTEST, HEX, EDIT,
@@ -988,8 +980,8 @@ modules, edited separately and brought together by the main file.
     #include "TITLE.INC"
     #include "LEVELS.INC"
 
-One level of inclusion only: a module does not include another (`Un seul niveau
-d'inclusion` [Only one include level]). Labels are shared by all the files: prefix those of each module (`ti_`,
+One level of inclusion only: a module does not include another (`Only one include
+level`). Labels are shared by all the files: prefix those of each module (`ti_`,
 `lv_`...), as the libraries do (`h_`, `r_`, `f_`). Modules are looked for like `CPA.INC`: on
 the drive of `GAME.ASM`, then on A: to D:.
 
@@ -1019,7 +1011,7 @@ the TPA (EDIT, HEX, ASM, LOGO) therefore work under the debugger.
     PC=0504 A=00 X=03 Y=00 S=F9
     P=20  N V - B D I Z C
           0 0 1 0 0 0 0 0
-    boucle:
+    loop:
     0504 20 0C 05  JSR double
 
 | Command | Effect |
@@ -1105,7 +1097,7 @@ A: ... 4 = D:). A missing or unreadable drive makes the function fail (`$FF`).
 
 **Printer.** CP/A prints on the Oric's Centronics port (BIOS entry LIST, BDOS function 5: A =
 character). CTRL-P, typed while entering a line (at the prompt, in LOGO, DEBUG...), or the
-Imprimante item of the Systeme menu, switches on or off the copy to the printer of everything
+Printer item of the System menu, switches on or off the copy to the printer of everything
 displayed, as under CP/M (indicator `P` at the end of the bar): CTRL-P then `TYPE README.TXT`
 prints the file. While a line is being edited, only the final line is printed (not the
 corrections). Without a printer plugged in, nothing hangs: the wait for the acknowledge is
@@ -1168,7 +1160,7 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
 
 - **COPY** (like PIP): names collected first (first extent, 128 at most), then copied one by
   one; buffer up to the top of the TPA (`$020C`); attributes not copied; read-only destination
-  left alone (`fichier protege`); partial copy erased if the disk is full.
+  left alone (`: file protected`); partial copy erased if the disk is full.
 - **ERA**: collects and shows the target files, counts the read-only ones (kept: function 19
   spares them), always asks for confirmation (`/Q` for scripts).
 - **REN**: CP/M 2.2 syntax `new=old`; refused if the new one exists, if the old one is
@@ -1183,7 +1175,7 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   6,078 bytes then `$4E`. 2:1 interleave. Each track is read back as soon as it is written
   (verification; on the LOCI, it also resets its wait counter). Positioning with side 1
   selected (otherwise Oricutron reads side 0 again from its old cache). `/Q` goes through the
-  BIOS. Same LOCI test as the BIOS (`Lecteur B: absent ou vide`, drive B: missing or empty).
+  BIOS. Same LOCI test as the BIOS (`Drive B: missing or empty`).
 - **DISKCOPY** goes through SELDSK, SETSEC, SETDMA, READ, WRITE of the BIOS, in slices as large
   as the TPA. Without `/T`: LSN 0-67 then the blocks named by the directory. `/S`: LSN 0-67 only
   (SYSGEN). Single drive: source and destination asked for at each slice, BDOS buffer flushed
