@@ -107,6 +107,8 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   le défilement de l'écran ; FUNCT pendant une réception : la suite arrive à la sortie du
   menu ; CTRL-Q, puis `TERM` à nouveau : la connexion est toujours là. Que le VIA ne voie pas
   les écritures en `$0380-$0383` (le clavier et le son marchent toujours après TERM).
+  `TERM /D` : après le réglage, commande `0B` et contrôle `1E` relus (sinon les écritures
+  n'arrivent pas au LOCI, cf. ticket 17 de loci-firmware) ; bit 6 de l'état à 0 avec le Pico.
 
 **LOGO**
 
