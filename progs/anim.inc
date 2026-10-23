@@ -261,10 +261,7 @@ hz_m4   lda #<a_m4
 .)
 
 a_sig   .asc "ANI",1
-a_m1    .asc "animation introuvable",0
-a_m3    .asc "animation trop grande",0
-a_m4    .asc "pas une animation",0
-a_mh    .asc "HIRES d'abord",0
+;#msg anim.msg
 a_n     .byt 0
 a_nf    .word 0
 a_k     .word 0

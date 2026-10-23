@@ -1,12 +1,14 @@
 #!/bin/sh
 # Non-régression des bibliothèques allégées de la disquette
 # (tools/strip_inc.py : CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC sans
-# commentaires, puis marques ;@ de tools/mark_inc.py) :
+# commentaires, avec leurs messages, puis marques ;@ de tools/mark_inc.py) :
 #   1. chaque programme de progs/ donne le même binaire avec la copie
-#      allégée et marquée qu'avec l'original (xa) ;
+#      allégée qu'avec l'original (xa ; copies sans les messages « ;#msg »,
+#      que ces programmes incluent à part) ;
 #   2. les programmes traduits par GRXASM NOM (tools/grapher_tests), qui
-#      recopient les routines utiles des copies marquées, s'assemblent par
-#      xa (une routine oubliée : étiquette non définie) ;
+#      recopient les routines utiles des copies marquées (messages compris,
+#      comme sur la disquette), s'assemblent par xa (une routine oubliée :
+#      étiquette non définie) ;
 #   3. VOIR et un programme traduit, assemblés par ASM.COM (6502 simulé,
 #      tools/run_com.py), donnent le même binaire que xa.
 #   XA=chemin/vers/xa tools/test_inc.sh
@@ -16,23 +18,18 @@ XA=${XA:-tools/xa}
 case "$XA" in */*) XA="$(cd "$(dirname "$XA")" && pwd)/$(basename "$XA")";; esac
 RUN="$(pwd)/tools/run_com.py"
 T=$(mktemp -d)
-mkdir "$T/o" "$T/s"
-# o : originaux ; s : copies allégées (sous les deux noms, comme xa les cherche)
+mkdir "$T/o" "$T/s" "$T/m"
+# o : originaux ; s : copies allégées sans messages (sous les deux noms, comme
+# xa les cherche) ; m : copies de la disquette (messages en français, marques)
 for i in cpa hires grx anim arr fil spr; do
   I=$(echo $i | tr a-z A-Z)
   cp progs/$i.inc "$T/o/$i.inc"; cp progs/$i.inc "$T/o/$I.INC"
-  python3 tools/strip_inc.py progs/$i.inc "$T/s/$i.inc" > /dev/null
+  python3 tools/strip_inc.py progs/$i.inc "$T/s/$i.inc" - > /dev/null
+  cp "$T/s/$i.inc" "$T/s/$I.INC"
+  python3 tools/strip_inc.py progs/$i.inc "$T/m/$I.INC" > /dev/null
 done
-for i in grx arr fil spr anim hires; do   # marques, comme build.sh
-  I=$(echo $i | tr a-z A-Z); mv "$T/s/$i.inc" "$T/s/$I.INC"
-done
-python3 tools/mark_inc.py "$T/s" > /dev/null
-for i in cpa hires grx anim arr fil spr; do
-  I=$(echo $i | tr a-z A-Z)
-  [ -f "$T/s/$I.INC" ] || mv "$T/s/$i.inc" "$T/s/$I.INC"
-  cp "$T/s/$I.INC" "$T/s/$i.inc"
-done
-cp progs/*_tab.s progs/*_inc.s "$T/o/"; cp progs/*_tab.s progs/*_inc.s "$T/s/"
+python3 tools/mark_inc.py "$T/m" > /dev/null
+cp progs/*_tab.s progs/*_inc.s progs/msg/fr/*.msg "$T/o/"; cp progs/*_tab.s progs/*_inc.s progs/msg/fr/*.msg "$T/s/"
 ok=0; ko=0
 same() {   # same NOM fichier1 fichier2
   if cmp -s "$2" "$3"; then ok=$((ok+1)); else echo "DIFFERENT : $1"; ko=$((ko+1)); fi
@@ -46,30 +43,31 @@ for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   same "$n (xa)" "$T/o/$n.bin" "$T/s/$n.bin"
 done
 # 2. programmes traduits par GRXASM (bibliothèques marquées à côté du .GRX)
-cp build/progs/GRXASM.COM "$T/"; cp build/progs/ASM.COM "$T/s/"; cp files/anim/CUBE.ANI "$T/"
-cp "$T/s/"*.INC "$T/"
+cp build/progs/GRXASM.COM "$T/"; cp build/progs/ASM.COM "$T/s/"; cp build/progs/ASM.COM "$T/m/"
+cp files/anim/CUBE.ANI "$T/"
+cp "$T/m/"*.INC "$T/"
 last=""
 for f in tools/grapher_tests/*.grx; do
   N=$(basename "$f" .grx | tr a-z A-Z)
   tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/$N.GRX"
   (cd "$T" && python3 "$RUN" "$T" GRXASM.COM "$N" > /dev/null 2>&1) || true
   [ -f "$T/$N.ASM" ] || continue
-  tr -d '\032' < "$T/$N.ASM" > "$T/s/$N.s"; cp "$T/s/$N.s" "$T/o/$N.s"
-  if (cd "$T/s" && $XA -o $N.bin $N.s > $N.err 2>&1); then ok=$((ok+1)); cp "$T/s/$N.bin" "$T/o/$N.bin"
-  else echo "DIFFERENT : $N (GRXASM, xa)"; head -3 "$T/s/$N.err"; ko=$((ko+1)); fi
+  tr -d '\032' < "$T/$N.ASM" > "$T/m/$N.s"
+  if (cd "$T/m" && $XA -o $N.bin $N.s > $N.err 2>&1); then ok=$((ok+1))
+  else echo "DIFFERENT : $N (GRXASM, xa)"; head -3 "$T/m/$N.err"; ko=$((ko+1)); fi
   last=$N
 done
-# 3. ASM.COM avec les copies allégées
-for n in voir $(echo $last | tr A-Z a-z); do
-  N=$(echo $n | tr a-z A-Z)
-  [ -f "$T/o/$n.bin" ] || [ -f "$T/o/$N.bin" ] || continue
-  ref="$T/o/$n.bin"; [ -f "$ref" ] || ref="$T/o/$N.bin"
-  src="$T/s/$n.s"; [ -f "$src" ] || src="$T/s/$N.s"
-  cp "$src" "$T/s/$N.ASM"
-  (cd "$T/s" && python3 "$RUN" "$T/s" ASM.COM $n > /dev/null 2>&1) || true
-  if [ -f "$T/s/$N.COM" ] && cmp -s -n $(wc -c < "$ref") "$ref" "$T/s/$N.COM"; then ok=$((ok+1))
+# 3. ASM.COM avec les copies allégées : VOIR (s), un programme traduit (m)
+asmcom() {   # asmcom DOSSIER nom référence
+  N=$(echo $2 | tr a-z A-Z)
+  [ -f "$3" ] || return 0
+  cp "$1/$2.s" "$1/$N.ASM"
+  (cd "$1" && python3 "$RUN" "$1" ASM.COM $2 > /dev/null 2>&1) || true
+  if [ -f "$1/$N.COM" ] && cmp -s -n $(wc -c < "$3") "$3" "$1/$N.COM"; then ok=$((ok+1))
   else echo "DIFFERENT : $N (ASM.COM)"; ko=$((ko+1)); fi
-done
+}
+asmcom "$T/s" voir "$T/o/voir.bin"
+[ -n "$last" ] && asmcom "$T/m" $last "$T/m/$last.bin"
 rm -rf "$T"
 echo "bibliothèques allégées : $ok identiques, $ko différents"
 [ $ko -eq 0 ]

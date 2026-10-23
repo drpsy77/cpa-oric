@@ -110,6 +110,8 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM : calculs, boucles, erreurs (sans émulateur)
+    LANGUE=en tools/test_grapher.sh  # les mêmes en anglais, contre les références traduites
+    tools/test_inc.sh                # bibliothèques allégées de la disquette == originaux
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
     python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
     python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
@@ -132,7 +134,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | Système (BIOS, BDOS, CCP, menus) | en plus : essai Oricutron ciblé sur ce qui change, `tools/smoke_test.sh` |
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
-| GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc` | en plus : `tools/test_grapher.sh`, essai Oricutron des exemples `.GRX` (dessin) |
+| GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | EDIT (enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
@@ -188,6 +190,10 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `help.s`) à partir d'une seule liste.
 - Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
+  Leurs messages sont dans `progs/msg/fr` et `progs/msg/en` (`arr.msg`...) : dans la
+  bibliothèque, une ligne `;#msg nom.msg` marque leur place, `strip_inc.py` les y recopie
+  dans la langue de la disquette (`build/src`, `build/src-en` pour `cpa-en.dsk`), et un
+  programme de `progs/` qui inclut la bibliothèque inclut aussi ses messages, juste après.
   Les six bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, HIRES) sont en
   plus marquées par `tools/mark_inc.py` (lignes de commentaire `;@`) : GRXASM n'en recopie
   que les routines utiles (`docs/grapher.md` § 12, § 15).

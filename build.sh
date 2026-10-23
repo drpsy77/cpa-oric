@@ -68,11 +68,18 @@ cp progs/gtest.s build/src/GTEST.ASM
 # bibliothèques : copies sans commentaires (2 à 4 fois plus petites ; la
 # documentation reste dans progs/*.inc ; tools/test_inc.sh vérifie qu'elles
 # s'assemblent comme les originaux)
+# Les messages des bibliothèques (« ;#msg » : progs/msg/fr, en) y sont
+# recopiés : build/src pour les disquettes françaises, build/src-en pour
+# cpa-en.dsk.
+mkdir -p build/src-en
 for i in cpa hires grx anim arr fil spr; do
-  python3 tools/strip_inc.py progs/$i.inc build/src/$(echo $i | tr a-z A-Z).INC > /dev/null
+  I=$(echo $i | tr a-z A-Z)
+  python3 tools/strip_inc.py progs/$i.inc build/src/$I.INC > /dev/null
+  python3 tools/strip_inc.py progs/$i.inc build/src-en/$I.INC progs/msg/en > /dev/null
 done
 # marques ;@ des routines : GRXASM n'en recopie que les utiles (tools/mark_inc.py)
 python3 tools/mark_inc.py build/src
+python3 tools/mark_inc.py build/src-en > /dev/null
 
 # commandes, applications et documentation protégées (R/O, visibles dans
 # DIR comme sur une disquette CP/M) ; exemples modifiables (ASM HELLO doit
@@ -84,11 +91,12 @@ for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.I
 done
 python3 tools/mkdisk.py new build/cpa.dsk --boot build/boot.bin --system build/cpa_sys.bin \
   --ro $PROTEGES --rw $EXEMPLES
-# même disquette, système et programmes aux messages en anglais (build/progs-en ;
-# ceux qui ne sont pas encore traduits restent en français) ; fichiers
+# même disquette, système, programmes et bibliothèques aux messages en anglais
+# (build/progs-en, build/src-en ; les programmes pas encore traduits restent
+# en français) ; fichiers
 # traduits pris dans files/en (EDIT.CFG)
 python3 tools/mkdisk.py new build/cpa-en.dsk --boot build/boot.bin --system build/cpa_sys_en.bin \
-  --ro $(echo $PROTEGES | sed 's|build/progs/|build/progs-en/|g') \
+  --ro $(echo $PROTEGES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|build/src/\([A-Z]*\.INC\)|build/src-en/\1|g') \
   --rw $(echo $EXEMPLES | sed -e 's|build/progs/|build/progs-en/|g' -e 's|files/edit.cfg|files/en/edit.cfg|') | tail -1
 
 # Disquettes par usage. Sur chacune : les commandes de base protégées et

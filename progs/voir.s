@@ -152,4 +152,5 @@ v_t     .byt 0
 fcb     .dsb 36,0
 
 #include "anim.inc"
+#include "anim.msg"            ; messages de anim.inc (progs/msg/fr, en)
 #include "hires.inc"

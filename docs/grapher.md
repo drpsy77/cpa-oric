@@ -582,7 +582,8 @@ Une erreur arrête le programme : retour à la console, puis `L n COMMANDE : mes
 (`L 3 LINE : valeur hors de 0-255`). Un programme traduit ne vérifie rien pendant
 l'exécution (§ 12) ; il ne lui reste que les erreurs qui ne sont pas des fautes du programme,
 sans numéro de ligne : fichiers (`Erreur : disque plein`...), `memoire pleine` à un `DIM`
-de taille calculée. ESC ne l'arrête pas (§ 8).
+de taille calculée. ESC ne l'arrête pas (§ 8). Les messages sont en français sur `cpa.dsk`,
+en anglais sur `cpa-en.dsk` (ceux de GRXASM et des programmes traduits aussi).
 
 | Sujet | Messages |
 |---|---|
@@ -753,6 +754,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/grxasm.s` | traducteur (`GRXASM.COM`) |
 | `progs/grxd_inc.s`, `progs/grxc_inc.s` | communs aux deux : constantes et page zéro ; lecture du `.GRX` et des lignes, paramètres, table des noms de commandes (les fréquentes en tête), analyse des noms, nombres et fonctions, calcul des constantes, sous-programmes, erreurs. Chaque programme a sa table `cadr` d'adresses des commandes, dans l'ordre de la table des noms, et ses propres affectations (`x_asg`, `x_aasg`), `ANIM` (`an_val`, `an_none`), `ndim_s`, `to_text`, `o_drop` et tampons |
 | `progs/grx.inc` (`GRX.INC`) | bibliothèque d'exécution des programmes traduits |
+| `progs/msg/fr/`, `progs/msg/en/` | messages, mêmes étiquettes dans les deux langues : `grapher.msg`, `grxasm.msg` (et les commentaires du `.ASM` produit), `grxc.msg` (communs), un par bibliothèque (`grx.msg`, `arr.msg`, `fil.msg`, `spr.msg`, `anim.msg`). GRAPHER, GRXASM et VOIR les incluent à part (ASM n'a qu'un niveau d'inclusion) ; dans la bibliothèque, une ligne `;#msg nom.msg` marque leur place, et `tools/strip_inc.py` les y recopie dans la langue de la disquette (`build/src`, `build/src-en`). `g_m_el` : longueur du préfixe d'erreur de `GRX.INC`, que `FIL.INC` saute |
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` ; rectangles de l'écran (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |

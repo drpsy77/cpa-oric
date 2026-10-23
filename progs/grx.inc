@@ -828,10 +828,10 @@ g_fnm   jsr g_nm
 f_fcb   = g_fcbuf
 f_fmt   = g_fmt
 f_nbuf  = g_num
-f_mlo   = g_m_nolo+9       ; (sans « Erreur : »)
-f_mful  = g_m_full+9
-f_mro   = g_m_ro+9
-f_mdir  = g_m_dir+9
+f_mlo   = g_m_nolo+g_m_el       ; (sans « Erreur : » : g_m_el caractères)
+f_mful  = g_m_full+g_m_el
+f_mro   = g_m_ro+g_m_el
+f_mdir  = g_m_dir+g_m_el
 
 g_gload
 .(
@@ -1124,12 +1124,7 @@ g_dhi   .byt >10000,>1000,>100,>10
 
 g_timg  .asc "IMG"
 g_thir  .asc "HIR"
-g_m_err   .asc "Erreur : ",0
-g_m_nolo  .asc "Erreur : LORES d'abord",0
-g_m_noimg .asc "Erreur : image introuvable",0
-g_m_full  .asc "Erreur : disque plein",0
-g_m_ro    .asc "Erreur : fichier protege",0
-g_m_dir   .asc "Erreur : repertoire plein",0
+;#msg grx.msg
 
 g_num   .dsb 8,0
 g_fcbuf .dsb 36,0

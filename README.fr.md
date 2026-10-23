@@ -43,7 +43,8 @@ Deux variantes sont construites à partir des mêmes sources :
   travail en `B:` à côté de la disquette système en `A:`. **`cpa-en.dsk`** est `cpa.dsk`
   en anglais : la barre de menus et les messages du système, les commandes (TYPE, ERA, COPY, STAT, FORMAT,
   DISKCOPY, USB...), les éditeurs EDIT et HEX, l'assembleur ASM, le débogueur DEBUG et le
-  gestionnaire de fichiers CMDER sont traduits ; GRAPHER, HELP et LOGO parlent encore
+  gestionnaire de fichiers CMDER et le langage GRAPHER (son traducteur GRXASM et les
+  bibliothèques des programmes traduits) sont traduits ; HELP et LOGO parlent encore
   français, traduction en cours.
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
   disque.
