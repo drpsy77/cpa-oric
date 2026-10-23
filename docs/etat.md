@@ -79,6 +79,31 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM`, `tools/mktap.py` et
    `CASSETTE.COM` (décidés), puis une boîte à outils appelée par `!` depuis le BASIC, ou
    GRXASM vers un programme autonome (`.TAP`) ; ordre à choisir.
+   - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
+     - **`USBMOUNT`** (nom choisi) : une seule commande pour monter un fichier de la clé du
+       LOCI depuis CP/A, sans repasser par son menu ; le type du fichier dit quoi faire.
+       - `USBMOUNT B: JEU.DSK` : monte un `.dsk` en B:, C: ou D: (relire le répertoire comme
+         après un changement de disquette). **A: interdit** (décidé par Pierre) : les `.COM`
+         et le fichier de banques du système y sont lus. Une disquette Sedoric seulement
+         pour booter dessus.
+       - `USBMOUNT JEU.TAP` : monte le `.TAP` dans le lecteur cassette du LOCI ; avec `/B`
+         (option à confirmer), rend la main à la ROM BASIC et lance le chargement (on quitte
+         CP/A). Ferme la boucle développer, publier, essayer.
+       - Ne remplace pas le menu du LOCI au premier démarrage.
+       - Complétion des noms de la clé USB (demandée) : la complétion du prompt (BDOS 10,
+         `rline.s`) ne lit que les disquettes CP/A ; l'étendre à la clé coûterait de la place
+         résidente et l'API du LOCI dans le système. Décidé : c'est `USBMOUNT` qui la fait.
+         Sans nom, ou avec un début de nom (`USBMOUNT JE`), il montre la liste des `.DSK` /
+         `.TAP` de la clé qui conviennent (navigable aux flèches, RETURN monte, ESC sort) ;
+         un seul possible : monté directement. Noms longs de la clé : coupés à 37 colonnes.
+     - Préalable : vérifier dans les sources du LOCI (firmware et ROM du menu) que
+       le montage `.TAP` / `.dsk` est appelable depuis un programme 6502 (USBDIR utilise déjà
+       l'API du LOCI). Des `.COM`, rien dans le contrat.
+     - L'équivalent de `CSAVE` est `CASSETTE.COM` (déjà décidé, `docs/oric-basic.md` § 2).
+       Sous CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette
+       (timing à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
+     - Ordre proposé : `USBMOUNT` sur `.TAP` avec boot, puis sur `.dsk` en B:, puis
+       `CASSETTE.COM`.
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
    série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
    Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
@@ -99,6 +124,21 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
+   - Notés par Pierre le 22/10/2026 (à corriger, rien codé) :
+     - **HIRES** : au passage en HIRES, les 3 lignes de texte du bas affichent ce qu'il y a
+       en mémoire à leur adresse (caractères curieux) ; les effacer au passage.
+     - **TAB -> `^I`** : « TAB » n'est pas naturel ; écrire `^I` dans les menus et les
+       messages, en particulier CMDER (« Autre col. TAB ») et HEX (« Hex/ASCII TAB »), en
+       français et en anglais. Attention : dans EDIT, `^I` veut dire insérer.
+     - **Tableaux de GRAPHER en notation Oric** : abandonner l'ordre du C (Lig, Col), qui
+       déroute alors que toutes les commandes et fonctions de l'Oric sont en (Col, Lig).
+       `T$(Col, Lig)` = Lig chaînes de longueur maximale Col ; en mémoire, toujours Lig zones
+       consécutives de Col caractères.
+       Touche GRAPHER, GRXASM, `arr.inc`, exemples, références de test et `docs/grapher.md`.
+     - **`ANIMS.GRX`** : ne passe plus dans GRAPHER (« animation trop grande ») mais passe
+       une fois compilé par GRXASM. Pas forcément un défaut : en faire un exemple du manuel
+       qui montre les limites du mode interprété et l'intérêt de compiler, avec la place
+       disponible en plus après compilation par rapport à la version interprétée (à mesurer).
 6. **Petites améliorations notées**
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
@@ -108,6 +148,27 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - GRAPHER : exemples de fichiers de données : un
      niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
    - EDIT : une édition plein écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
+   - EDIT, demandé par Pierre le 23/10/2026 (rien codé) : un **sélecteur de fichiers**
+     pour Ouvrir... et Insérer... (liste aux flèches, début de nom pour filtrer, RETURN
+     choisit, ESC sort ; même esprit que `USBMOUNT`, § 2 point 3). À écrire une fois, en
+     bibliothèque (`.inc`) réutilisable par les autres programmes (GRAPHER `LOAD`, CMDER...).
+     Et **Insérer une partie d'un fichier** : le fichier choisi s'affiche en lecture seule,
+     on s'y déplace et on y cherche (même recherche que dans EDIT), on marque début et fin,
+     RETURN insère le bloc au curseur. But : une bibliothèque de bouts de code dans quelques
+     gros fichiers, sans les charger en entier ni multiplier les petits fichiers. Lecture du
+     fichier par morceaux, sans le copier dans le tampon de texte : bon usage des fichiers à
+     accès direct (fonctions 33 à 36, point ci-dessous). Place à mesurer (EDIT : 1 536
+     octets libres dans son dernier bloc, § 3).
+     Gardé aussi : des **bouts nommés**. Une ligne `;##NOM` (commentaire en ASM et en
+     GRAPHER ; distinct du `;@#` de GRXASM) commence un bout, qui va jusqu'au `;##` suivant
+     ou la fin du fichier. Articulation proposée : Insérer... -> sélecteur de fichiers ; si
+     le fichier a des `;##`, liste de leurs noms (RETURN insère le bout), plus une entrée
+     « parcourir » vers la vue en lecture seule (où `;##` sert aussi de saut d'un bout à
+     l'autre) ; sans `;##`, directement la vue. Index : construit à l'ouverture, en une
+     lecture séquentielle, gardé en mémoire tant qu'EDIT tourne (nom, n° d'enregistrement
+     de 128 octets, position 0-127 dans l'enregistrement : ~20 octets par bout) ; insertion
+     par lecture directe (fonction 33) à cet enregistrement puis lecture suivie jusqu'au
+     bout suivant. Pas de fichier d'index sur disque (rien pour savoir s'il est périmé).
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
      LOGO ou un `.COM`, à trouver.
@@ -146,6 +207,38 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      d'utilisation dans `docs/en/` (mêmes noms, `tools/check_en.py`), documents internes en
      français seulement.
 
+8. **Construire CP/A sur l'Oric** (demandé par Pierre le 23/10/2026, rien codé) : une
+   disquette de construction pour produire sur l'Oric un système configuré selon les besoins
+   (sans menus, sans USB du LOCI...) et l'installer sur B:, et faire les versions ROM.
+   - Installer sur B: : existe déjà, `DISKCOPY A: B: /S` (comme SYSGEN) ; il faudra la même
+     chose depuis un fichier système produit par ASM.
+   - Sources : 198 Ko dans `src/`, 130 Ko sans commentaires ni lignes vides : `build.sh`
+     produirait une version sans commentaires pour la disquette de construction (les
+     sources de référence restent celles du dépôt). Tient sur une disquette, à mesurer.
+   - ASM (syntaxe de xa, octets identiques) : manquent `#ifdef`, `#ifndef`, `#else`,
+     `#endif` (les seules directives du système : 64 blocs, imbrication sur 2 niveaux dans
+     `ccp.s` et `rline.s` ; pas de `#if` ni de `#define`). Les options (`DISK`, `CPLCMD`...)
+     seraient des constantes d'un fichier de configuration inclus en premier (`DISK = 1`),
+     sans option nouvelle sur la ligne de commande. Coût estimé : ~150 à 200 octets (mots
+     des directives, état de saut avec une petite pile, lignes sautées, deux messages
+     d'erreur). L'inclusion sur deux niveaux est évitée sans coût : `#include "sys.msg"`
+     passe de `menu.s` à `cpa.s`. ASM (6 130 octets) est à 14 octets d'un bloc : il passe
+     de 3 à 4 blocs sur la disquette (2 Ko). Symboles du système : 1 262, ~19 Ko, la
+     mémoire libre d'ASM (~37 Ko) suffit. Temps : LOGO (136 Ko de source) s'assemble en
+     ~1 min 30 ; le système (130 Ko sans commentaires) devrait être du même ordre, à
+     mesurer sur un vrai Microdisc.
+   - Refaire sur l'Oric les contrôles de `build.sh` (marges, fin du code, page `$FF00`).
+   - Options touchant une fonction du BDOS (menus, USB, son...) : le numéro doit rester et
+     répondre « absent » avec un code connu, et les programmes savoir s'en passer. Règle à
+     écrire dans `architecture.md` (précise le contrat sans le casser) avant de rendre
+     quoi que ce soit optionnel.
+   - ROM : même assemblage avec l'option ROM (16 Ko), `EXPORT` vers la clé ; vérifier que
+     le LOCI démarre sur une ROM lue sur sa clé.
+   - Ordre proposé : règle des fonctions optionnelles ; `#ifdef` dans ASM, `sys.msg` inclus
+     par `cpa.s` ;
+     essai d'assemblage du système par ASM (octets identiques à xa) ; disquette de
+     construction ; installation depuis un fichier ; ROM.
+
 Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
 suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT.
@@ -163,6 +256,52 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 | Option `CPLCMD` retirée (complétion des commandes) | 123 | perte de la fonction |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
+
+**Décidé par Pierre le 23/10/2026 (rien codé) : PUT descend en banque**, avant de toucher
+aux menus (fonction phare, gardés résidents). PUT sert très peu ; le pilote série (~300
+octets, § 2 point 4) est plus utile.
+- Le tampon de PUT (`$F7C0-$FCFF`, 1 280 octets) devient une **fenêtre partagée**. Le code
+  de PUT (`src/put.s`, 525 octets de `put_char` à `cmd_do`) va dans un fichier de banques
+  sur A: (type SYS, chargé par les routines de fichiers résidentes) ; seuls restent les
+  crochets du BIOS, du BDOS et du CCP (`put_on`, `put_end`, `put_flush`...) et un chargeur
+  de banque. PUT chargé : son code et un tampon plus petit (~750 octets) dans la fenêtre.
+  Variables de PUT en page 2 : internes (`$02AA-$02AE`), pas de contrat touché.
+- Dans la même fenêtre, des fonctions rares qui ne servent jamais pendant un PUT :
+  - le **code du démarrage à froid** (`ram_test`, `ram_report`, et ce qui ne sert qu'à la
+    mise en route dans `hw_init` / `font_init`, à vérifier) : chargé avec le système dans
+    la fenêtre, exécuté une fois, puis écrasé ; ni banque ni accès disque ; ~200 à 300
+    octets ;
+  - **pas** la complétion des commandes : sur un vrai Microdisc, un chargement de banque
+    à chaque ESC ajouterait du retard à une complétion déjà lente. Elle reste résidente.
+  - **GSAVE / GLOAD** (BDOS 115 op 12 et 13, `g_gsave` à `img_load`, et les commandes du
+    CCP `cmd_gsave`, `cmd_gload`, `img_msg` : ~300 octets) et **`SAVE n fichier`**
+    (`cmd_save`, ~130 octets) : rares, et déjà des accès disque (5 Ko pour une image), le
+    chargement de la banque se voit peu. Bonus : GSAVE doit de toute façon passer par
+    `NOM.$$$` (§ 2 point 5), écrit dans la banque sans coût résident.
+  - **Prêt de la fenêtre pendant un PUT** : GLOAD / GSAVE sont appelés par GRAPHER, LOGO
+    et les programmes traduits, donc possibles sous `PUT`. À l'entrée de tout appel BDOS,
+    PUT a déjà vidé son tampon (`put_flush`) ; le code de PUT ne garde pas d'état hors de la page 2 (à vérifier : `pc_st` est modifié par le code, mais recalculé à chaque caractère).
+    Donc : copie de la console suspendue (`put_on` à 0), banque IMG chargée, opération,
+    banque PUT rechargée, `put_on` rendu. Coût : une relecture de ~525 octets, rare.
+- **Pas les fonctions graphiques** (BDOS 115, `gfx.s`) : ~1,7 Ko, plus que la fenêtre ;
+  appelées sans cesse par GRAPHER, LOGO et les programmes traduits (`GRX.INC`,
+  `HIRES.INC`) ; et un PUT d'un programme qui dessine (`PUT LOG.TXT GRAPHER DEMO`, en
+  SPLIT ou en HIRES) aurait besoin des deux à la fois dans la fenêtre. Aujourd'hui ce cas
+  marche (texte copié, dessin à l'écran, tampon de PUT dans l'overlay hors de l'image) ;
+  il doit continuer de marcher.
+- Gain résident estimé : ~525 (PUT) + ~250 (démarrage) + ~430 (GSAVE, GLOAD, SAVE), moins
+  le chargeur et le prêt (~120) : ~1,1 Ko ; le pilote série (~300) y tient avec de la marge.
+- **Les banques sont une option, pas du dur** (pour la construction sur l'Oric, § 2 point
+  8) : chaque module qui peut descendre (PUT, IMG = GSAVE / GLOAD / SAVE) a une option à
+  trois valeurs dans le fichier de configuration : résident, en banque, absent. Résident :
+  assemblé avec le reste, appels directs (le relais devient un simple `JSR`) ; en banque :
+  assemblé dans le fichier de banques, appelé par le relais ; absent : le numéro répond
+  « absent ». Chargeur et prêt de fenêtre assemblés seulement si au moins un module est en
+  banque. Le code du démarrage à froid va toujours dans la zone du tampon de PUT (gain sans
+  banque). Le contrôle de la fin du code (`rom_end`) dit à l'assemblage s'il faut en
+  descendre un. La ROM n'a que résident ou absent.
+- À vérifier : que le chargeur du système remplit bien `$F7C0-$FCFF` depuis la disquette ;
+  la vitesse de chargement de la banque de PUT sur un vrai Microdisc et sur le LOCI.
 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :
