@@ -239,6 +239,37 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      essai d'assemblage du système par ASM (octets identiques à xa) ; disquette de
      construction ; installation depuis un fichier ; ROM.
 
+9. **Orientation LOCI du stockage** (réflexion avec Pierre le 23/10/2026, rien décidé ni
+   codé). Si peu d'utilisateurs ont un vrai Microdisc (ceux de Sedoric gardent leur
+   système), CP/A pourrait s'orienter vers le LOCI.
+   - **`.dsk` de 1 Mo** : possible mais cher. Cartes d'allocation actuelles : 22 octets par
+     lecteur (`$FD00-$FD57`), ~176 blocs de 2 Ko, ~350 Ko. 1 Mo = 512 blocs : cartes de 64
+     octets par lecteur (~170 octets résidents de plus) et numéros de bloc sur 2 octets
+     dans le répertoire (comme CP/M 2.2 au-delà de 255 blocs) : nouveau format, anciennes
+     disquettes illisibles. Et le LOCI doit accepter la géométrie (2 faces x 128 pistes ?)
+     : à vérifier dans son firmware.
+   - **Lecteur « fichiers USB » (U:)**, plus intéressant : les fonctions fichiers du BDOS
+     passent par l'interface fichiers du LOCI (ouvrir, lire, écrire, se positionner,
+     fermer ; USBDIR s'en sert déjà pour lister). Gains : taille de la clé, vitesse (pas
+     d'émulation de secteurs), fichiers lisibles et modifiables sur le Mac (éditeur, git ;
+     plus besoin d'`EXPORT` / `IMPORT`), accès direct presque gratuit (positionnement ;
+     utile à la bibliothèque de bouts d'EDIT, § 2 point 6), taille exacte des fichiers.
+     Difficultés : noms longs ramenés en 8.3 ; attributs R/O et SYS ; espace libre pour DIR
+     et STAT ; les programmes qui lisent des secteurs par le BIOS (DISKCOPY, FORMAT...) ne
+     marchent pas sur U:. **Touche le contrat** (un type de lecteur sans accès secteur) :
+     à décider avant tout code.
+   - **Construction hybride proposée** : A: reste un `.dsk` (démarrage ; compatible vrai
+     Microdisc et Cumulus ; un utilisateur de Sedoric essaie CP/A sans rien changer), U:
+     lecteur de travail pour qui a un LOCI (option de la construction, point 8). À terme,
+     une variante « tout LOCI » où A: est un dossier de la clé : plus de code de secteurs
+     sauf l'amorçage, système plus petit.
+   - Préalable : lire l'interface fichiers du LOCI (`loci-rom`, firmware) : ce qu'elle
+     permet, longueur des noms, espace libre, vitesse.
+   - Piste de Pierre : proposer à l'auteur du LOCI (sodiumlb) une version du firmware qui
+     fasse du LOCI une vraie interface de stockage, support alternatif au Microdisc.
+     Précédents dans cet esprit : Orix (système de la carte Twilighte, fichiers FAT sur
+     clé USB / SD directement) et Erebus (à regarder).
+
 Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
 suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT.
