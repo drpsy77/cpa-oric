@@ -1,0 +1,14 @@
+LOGO CP/A - type HELP
+?  LOAD "X1
+ABC13 5
+65
+66
+1
+UN DEUXTROIS
+Z1 27
+Value out of range : SETCURSOR
+?  LOAD "X2
+3 20
+66
+Value out of range : SETCURSOR
+?  QUIT

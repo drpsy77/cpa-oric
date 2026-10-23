@@ -1,0 +1,20 @@
+LOGO CP/A - type HELP
+?  LOAD "E1
+No value for INCONNU
+?  LOAD "E2
+Division by zero
+?  LOAD "E3
+I don't know how to TRUC
+?  LOAD "E4
+Not enough inputs to
+?  LOAD "E5
+Not enough inputs to
+?  LOAD "E6
+A list [ ] is needed after REPEAT
+?  LOAD "E7
+K defined.
+Too many levels K
+?  LOAD "E8
+0
+What to do with this ?
+?  QUIT

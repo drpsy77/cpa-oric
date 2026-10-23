@@ -1,0 +1,7 @@
+LOGO CP/A - type HELP
+?  LOAD "E29
+UN
+Line over 126 chars : L 2
+?  PRINT "APRES
+APRES
+?  QUIT

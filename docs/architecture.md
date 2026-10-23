@@ -195,7 +195,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   commentaires, les textes affichés et les noms (sous-programmes, procédures, fichiers cités)
   changent, aux mêmes colonnes de l'écran ; `tools/test_exemples_en.sh` le vérifie pour les
   `.GRX` (même `.ASM` par GRXASM). Un changement de l'un est reporté dans l'autre. Les `.LOG`
-  anglais gardent les primitives françaises tant que LOGO n'est pas traduit. `HELLO.ASM` et
+  anglais sont passés aux primitives anglaises par LOGOTR (`logo.md`). `HELLO.ASM` et
   `GTEST.ASM` anglais (`files/en/*.asm`) donnent les `.COM` de `build/progs-en`
   (`tools/test_asm.sh` les assemble aussi par ASM.COM).
 - Aide : `tools/gen_readme_txt.py` produit à la fois README.TXT (notation et renvoi à HELP :
@@ -255,6 +255,6 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   `grapher.md`, `cmder.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
   signale une traduction en retard (titres, tableaux, exemples).
 - Les documents de `docs/en/` décrivent les disquettes anglaises : écrans, menus, questions,
-  messages et noms d'exemples y sont ceux de `cpa-en.dsk` et de ses jumelles (seul LOGO, pas
-  encore traduit, est cité en français) ; les documents français, ceux de `cpa.dsk`.
+  messages et noms d'exemples y sont ceux de `cpa-en.dsk` et de ses jumelles ; les documents
+  français, ceux de `cpa.dsk`.
 

@@ -1,28 +1,28 @@
-POUR PLOTTER :X0 :X1 :Y0 :Y1 :STEP
-  VE
-  LC
-  SI ( :X1 < :X0 ) [STOP]
-  SI ( :Y1 < :Y0 ) [STOP]
-  DONNE "IX ((:X1 - :X0 ) / 238 )
-  DONNE "IY ((:Y1 - :Y0 ) / 126 )
-  DONNE "YO ( -62 - (:Y0 / :IY ))
-  DONNE "X :X0
-  DONNE "Y (F :X )
-  TRAIT -119 :YO 119 :YO
-  TRAIT (-119 - (:X0 / :IX )) 64 (-119 - (:X0 / :IX )) -62
-  REPETE ( 238 / :STEP ) [ PLOTSTEP :STEP ]
-FIN
+TO PLOTTER :X0 :X1 :Y0 :Y1 :STEP
+  CS
+  PU
+  IF ( :X1 < :X0 ) [STOP]
+  IF ( :Y1 < :Y0 ) [STOP]
+  MAKE "IX ((:X1 - :X0 ) / 238 )
+  MAKE "IY ((:Y1 - :Y0 ) / 126 )
+  MAKE "YO ( -62 - (:Y0 / :IY ))
+  MAKE "X :X0
+  MAKE "Y (F :X )
+  LINE -119 :YO 119 :YO
+  LINE (-119 - (:X0 / :IX )) 64 (-119 - (:X0 / :IX )) -62
+  REPEAT ( 238 / :STEP ) [ PLOTSTEP :STEP ]
+END
 
-POUR PLOTSTEP :P
-  DONNE "XA (:X + (:IX * :P ))
-  DONNE "YA (F :XA )
-  TRAIT (:X / :IX ) ((:Y / :IY ) + :YO ) (:XA / :IX ) ((:YA / :IY ) + :YO )
-  DONNE "X :XA
-  DONNE "Y :YA
-FIN
+TO PLOTSTEP :P
+  MAKE "XA (:X + (:IX * :P ))
+  MAKE "YA (F :XA )
+  LINE (:X / :IX ) ((:Y / :IY ) + :YO ) (:XA / :IX ) ((:YA / :IY ) + :YO )
+  MAKE "X :XA
+  MAKE "Y :YA
+END
 
-POUR F :X
-  RENDS (SIN :X ) * :X / 180
-FIN
+TO F :X
+  OUTPUT (SIN :X ) * :X / 180
+END
 
 PLOTTER -1440 1440 -10 10 2

@@ -2,7 +2,9 @@
 
 A>LOGO
 
-C'est un Logo en français. La tortue dessine dans l'image du mode SPLIT (LOGO y passe tout seul),
+Sur les disquettes françaises, ce Logo parle français (`AVANCE`, `POUR ... FIN`) ; sur les
+disquettes anglaises, anglais (`FORWARD`, `TO ... END`, `docs/en/logo.md`) ; `LOGOTR` traduit
+un fichier `.LOG` de l'une à l'autre (voir « Traduire un programme »). La tortue dessine dans l'image du mode SPLIT (LOGO y passe tout seul),
 et on tape les commandes sous l'image, après le prompt `?`. Les nombres sont des entiers ou des
 décimaux (voir plus bas).
 
@@ -254,11 +256,55 @@ de type et 5 octets de contenu : un entier, ou un décimal (bibliothèque `progs
 réutilisable par d'autres programmes). Les mots et les listes sont des textes rangés dans un tas (voir « Mise en
 œuvre »).
 
+## Traduire un programme (LOGOTR)
+
+    A>LOGOTR JEU           JEU.LOG en français, l'original gardé en JEU.BAK
+    A>LOGOTR JEU GAME /EN  JEU.LOG en anglais, dans GAME.LOG
+
+`LOGOTR NOM [DEST] [/EN|/FR]` traduit les primitives de `NOM.LOG` : vers l'anglais avec `/EN`
+(par défaut sur les disquettes anglaises), vers le français avec `/FR` (par défaut sur les
+françaises). Sans `DEST`, le fichier est remplacé et l'original gardé en `NOM.BAK` ; la
+traduction est d'abord écrite dans `NOM.$$$` : rien n'est perdu si le disque est plein. Il
+donne le nombre de mots traduits et les avertissements, avec leur numéro de ligne.
+
+Seules les primitives sont traduites : les noms de l'utilisateur (procédures, variables, mots
+entre guillemets) restent tels quels, comme tout ce qui est une donnée. En Logo, le code et les
+données se ressemblent (`[AV 10]` peut être exécuté ou affiché) : LOGOTR traduit les listes
+qui sont des listes d'instructions de `REPETE`, `SI`, `EXECUTE` et `ENSEMBLE`, et recopie les
+autres telles quelles. Deux avertissements :
+
+- `liste de donnees ? AV` : une liste de données qui commence par un nom de primitive ; elle
+  est peut-être exécutée plus tard (`DONNE "L [AV 10]` puis `EXECUTE :L`) : à vérifier, et à
+  traduire à la main s'il le faut. Une phrase affichée par le programme peut aussi le
+  provoquer (`ECRIS [POUR SORTIR...]`) : rien à faire.
+- `nom de primitive : STEP` : un nom de l'utilisateur qui est une primitive dans la langue
+  d'arrivée ; renommer la procédure, sinon LOGO la prendrait pour la primitive.
+
+Sans avertissement : un mot entre guillemets dont le programme fait du code (`EXEC LISTE
+"ECRIS 9`) reste tel quel ; à traduire à la main.
+
+Une abréviation devient l'abréviation de l'autre langue quand elle existe (`AV` / `FD`), sinon
+le nom long (`EXEC` donne `RUN`, qui revient en `EXECUTE`). `LISTE` est en français à la fois
+une instruction (montrer une procédure) et une fonction (faire une liste) : elle devient
+`PRINTOUT` en début d'instruction devant un mot entre guillemets, `LIST` sinon. Traduits
+aller et retour, les exemples et les scénarios de test reviennent à l'identique (à ces
+abréviations près).
+
 ## Mise en œuvre
 
 Source : `progs/logo.s`, avec `progs/fp_inc.s` (décimaux et fonctions) et
 `progs/ltxt_inc.s` (mots et listes). Tests : `tools/test_logo.sh` (scénarios
-`tools/logo_tests/*.log` comparés aux `.ref`, ~20 min) et `python3 tools/test_fp.py`.
+`tools/logo_tests/*.log` comparés aux `.ref`, ~20 min ; `LANGUE=en` : LOGO anglais, scénarios
+traduits par LOGOTR, références dans `tools/logo_tests/en`) et `python3 tools/test_fp.py`.
+
+**Vocabulaire.** `tools/gen_logo_voc.py` tient la seule table des primitives : chacune a un
+numéro (son rang : le token d'une future tokenisation en mémoire), sa routine et ses noms en
+français et en anglais (le nom long d'abord, puis les abréviations). Il écrit les tables
+`prims` et `funcs` de chaque langue (`progs/msg/fr/logovoc.msg`, `progs/msg/en/logovoc.msg`),
+les mots `POUR` / `FIN`, les commandes tapées par les menus et la table numérotée de LOGOTR
+(`progs/lgtr_tab.s`). Les messages, les menus et le texte d'`AIDE` sont dans `logo.msg`.
+`FIN` a trois lettres dans les deux langues (`END`) : une procédure rangée finit par ce mot
+(`w_fin`).
 
 **Valeurs.** 6 octets : un type (entier 16 bits, décimal, texte) et 5 octets. Les décimaux
 sont au format du BASIC de l'Oric (exposant et mantisse de 32 bits, ~9 chiffres), routines

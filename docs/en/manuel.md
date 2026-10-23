@@ -2,7 +2,7 @@
 
 > English translation of `docs/manuel.md`. Messages, questions, menus and screens are those
 > of the English disks (`cpa-en.dsk`...); on the French disks (`cpa.dsk`...) they are in
-> French (`docs/manuel.md`). LOGO still speaks French on both.
+> French (`docs/manuel.md`).
 
 User guide for the disk version: commands, programs, programming. GRAPHER and LOGO have their
 own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interface contract
@@ -57,7 +57,7 @@ Other programs on the disk:
 - `COPY.COM src [dst]` copies files (wildcards allowed), in large blocks, through the BDOS.
 - `EDIT.COM [file]`, the text editor (below).
 - `GTEST.COM`, the test of SPLIT mode and the graphics primitives.
-- `LOGO.COM`, with `DEMO.LOG`.
+- `LOGO.COM`, with `DEMO.LOG`; `LOGOTR.COM`, the `.LOG` translator (`logo.md`).
 - `HEX.COM file`, the hex editor described below.
 - `GRAPHER.COM NAME`, the small drawing language of `.GRX` files (run), and `GRXASM.COM NAME`
   (or `GRAPHER NAME /A`), which translates it into assembly (copying the useful routines of
@@ -109,7 +109,7 @@ Erase unneeded files (`ERA`) or use another disk.
 
 Any file name can start with a drive: `DIR B:`, `TYPE B:LETTRE.TXT`, `COPY LETTRE.TXT B:`,
 `ERA B:*.BAK`, `STAT B:`, `EDIT B:NOTES.TXT`, `ASM B:PROG` (the `.COM` and the `.SYM` on the
-source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `CHARGE "B:GAME`. Without a drive, it is the
+source's drive; the `#include`s are looked for there, then on A: to D:), and in LOGO `LOAD "B:GAME`. Without a drive, it is the
 current drive, chosen with `B:` at the prompt or with the **Next drive** item
 of the System menu (A, B, C, D, then A). A program (`.COM`) or a script (`.BAT`, also through
 `DO`) typed without a drive is searched for on the current drive, then on `A:`, then on those
@@ -270,9 +270,8 @@ animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 with the system, messages, menus, help (HELP, README.TXT), `EDIT.CFG` and the libraries of
 translated programs in French (the "yes" key is `O` there, and "all" is `T` in EDIT's
 replacements). The examples have French names there; the same code, with comments, displayed
-texts and names of subroutines and procedures in French. LOGO speaks French on both: the
-English `.LOG` files use its French primitives (`AV`, `REPETE`...), with English procedure
-names and texts.
+texts and names of subroutines and procedures in French. LOGO speaks French there (`AVANCE`,
+`POUR ... FIN`); `LOGOTR` translates a program from one language to the other (`logo.md`).
 
 | English | French | English | French |
 |---|---|---|---|
@@ -368,7 +367,7 @@ or the BIOS. `PAGE OFF` (or the Paging item of the Screen menu, which toggles) r
 pause, `PAGE ON` puts it back; the setting stays until the cold start. A program that does not
 want the pause sets `$02A3` to 0 (public variable, reset to 1 at cold start).
 
-**Redirecting the output: PUT.** `PUT LISTE.TXT DIR`, `PUT AIDE.TXT HELP` or
+**Redirecting the output: PUT.** `PUT LIST.TXT DIR`, `PUT HELP.TXT HELP` or
 `PUT RAPPORT.TXT ASM PROG` run the command (built-in or `.COM` program) normally, and everything
 it displays is also written into the file, in CP/M text format (`^Z` at the end). You can then
 read it again with `TYPE` or change it with `EDIT`. During a PUT, the end-of-screen pause is
@@ -423,12 +422,12 @@ out): only ESC stops it. An example that does not work:
 10, but the second passes `(10+4)` as it is. At the next level, GRAPHER refuses
 `LINE (10+4) 100 (10+4) 110` (`parameters?`); the script then calls itself endlessly with a
 longer and longer parameter, until ESC. To calculate, repeat or decide, you need a program:
-LOGO (`REPETE`, variables, `SI`) or a `.COM`.
+LOGO (`REPEAT`, variables, `IF`) or a `.COM`.
 
 **The alternative: hand the calculation to LOGO, from the script.** The script keeps what it
 does well (chaining commands and programs) and LOGO does the rest. Two properties make this
-possible: `LOGO NAME` loads `NAME.LOG` at start-up and `CHARGE` runs the lines of the file that
-are not procedures, so a program can start by itself and end with `QUITTE`; and when leaving
+possible: `LOGO NAME` loads `NAME.LOG` at start-up and `LOAD` runs the lines of the file that
+are not procedures, so a program can start by itself and end with `BYE`; and when leaving
 LOGO, the picture stays intact, in SPLIT mode: the script carries on with the same drawing, and
 GRAPHER, started in SPLIT mode, draws over it without clearing it. Example:
 
@@ -438,12 +437,12 @@ GRAPHER, started in SPLIT mode, draws over it without clearing it. Example:
     LOGO GRASS
     GRAPHER WORD Lawn done
 
-    POUR GRASS :N
-    REPETE :N [AV 10 RE 10 LC DR 90 AV 4 GA 90 BC]
-    FIN
-    LC FIXEXY -110 -40 BC
+    TO GRASS :N
+    REPEAT :N [FD 10 BK 10 PU RT 90 FD 4 LT 90 PD]
+    END
+    PU SETXY -110 -40 PD
     GRASS 50
-    QUITTE
+    BYE
 
 (the second part is `GRASS.LOG`). The circle drawn by GRAPHER, the 50 blades drawn by LOGO and
 the text then added by the script stay together on the screen. The script cannot pass a
@@ -764,8 +763,8 @@ it.
 The duration is in fiftieths of a second (0: the note holds until the next one). It is counted
 down by the 50 Hz interrupt: the program goes on while the note plays, and `WAIT` or `STATUS`
 are used to synchronise. Since the keyboard also goes through the AY, writes to the chip are
-made with interrupts masked. In LOGO: `SON`, `SONF`, `BRUITV`, `ENVELOPPE`, `MELANGE`,
-`ENSEMBLE`, `ATTENDSSON`, `JOUE?` and `SILENCE` (see `logo.md`).
+made with interrupts masked. In LOGO: `NOTE`, `TONE`, `NOISE`, `ENVELOPE`, `MIX`,
+`TOGETHER`, `WAITSOUND`, `PLAYING?` and `SILENCE` (see `logo.md`).
 
 **Simultaneous start (SYNC).** After `SYNC 0`, NOTE, NOISE and TONE set the voice's period and
 mixer at once, but mute it and hold back its volume and duration; ENV sets the envelope period
@@ -858,7 +857,7 @@ Menus:
   `EDIT.CFG`), so that a printer that wraps by itself does not add a blank line; a word longer
   than a line is cut. ESC stops between two lines. Without a printer nothing hangs, but each
   character waits 2 ms for the acknowledge (about twenty seconds for 10 KB): ESC. Started from
-  LOGO with `EDITE`, EDIT shows Back instead of Quit: it saves the text if it
+  LOGO with `EDIT`, EDIT shows Back instead of Quit: it saves the text if it
   changed and goes back into LOGO (see LOGO).
 - **Edit**: Mark, Copy, Cut, Paste, Del. para. (erase the paragraph). The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
   move the cursor to the other end, then copy (CTRL-C) or cut (CTRL-X); CTRL-V pastes at the

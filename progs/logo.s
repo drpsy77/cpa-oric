@@ -3743,12 +3743,13 @@ args
         lda FCB1+1
         cmp #" "
         beq r
-        ldx #0                  ; fbuf = CHARGE "NOM (pour le prompt)
-cl      lda s_charge,x
+        ldx #0                  ; fbuf = CHARGE "NOM (pour le prompt ; le
+cl      lda s_charge,x          ;   mot de la langue, terminé par 0)
+        beq cle
         sta fbuf,x
         inx
-        cpx #8
         bne cl
+cle
         ldy #11                 ; nom de FCB1 dans fcb
 nm      lda FCB1,y
         sta fcb,y
@@ -4753,14 +4754,15 @@ ok      pla
 r       rts
 .)
 
-; def_end : FIN reçu
+; def_end : FIN reçu (le mot de fin de la langue, w_fin, 3 lettres : le corps
+;   va de bodyst à hend - 3)
 def_end
 .(
-        lda #"F"
+        lda w_fin
         jsr wbyte
-        lda #"I"
+        lda w_fin+1
         jsr wbyte
-        lda #"N"
+        lda w_fin+2
         jsr wbyte
         sec                     ; longueur du texte
         lda wp
@@ -6015,407 +6017,18 @@ dec_hi  .byt >10000,>1000,>100,>10
 ;   première lettre : ix_build en tire au démarrage l'index pix (début du
 ;   groupe de chaque lettre), et lookup ne compare que les noms de la
 ;   lettre du mot. Une primitive ajoutée va dans le groupe de sa lettre.
-prims
-        .asc "AVANCE",0
-        .word p_av
-        .asc "AV",0
-        .word p_av
-        .asc "ATTENDS",0
-        .word p_attends
-        .asc "ATTENDSSON",0
-        .word p_attson
-        .asc "AIDE",0
-        .word p_aide
-        .asc "AUREVOIR",0
-        .word p_quitte
-        .asc "BAISSECRAYON",0
-        .word p_bc
-        .asc "BC",0
-        .word p_bc
-        .asc "BRUITV",0
-        .word p_bruitv
-        .asc "CACHETORTUE",0
-        .word p_ct
-        .asc "CT",0
-        .word p_ct
-        .asc "CERCLE",0
-        .word p_cercle
-        .asc "CHARGE",0
-        .word p_charge
-        .asc "CHARGEIMAGE",0
-        .word p_cimage
-        .asc "DROITE",0
-        .word p_dr
-        .asc "DR",0
-        .word p_dr
-        .asc "DONNE",0
-        .word p_donne
-        .asc "EXECUTE",0
-        .word p_exec
-        .asc "EXEC",0
-        .word p_exec
-        .asc "ECRANTEXTE",0
-        .word p_etexte
-        .asc "EDITE",0
-        .word p_edite
-        .asc "ECRANMIXTE",0
-        .word p_emixte
-        .asc "ETIQUETTE",0
-        .word p_etiq
-        .asc "ECRIS",0
-        .word p_ecris
-        .asc "EC",0
-        .word p_ecris
-        .asc "ENVELOPPE",0
-        .word p_env
-        .asc "ENSEMBLE",0
-        .word p_ensemble
-        .asc "FIXECAP",0
-        .word p_fcap
-        .asc "FIXEXY",0
-        .word p_fxy
-        .asc "FIXECOULEUR",0
-        .word p_fcoul
-        .asc "FIXECURSEUR",0
-        .word p_fixecur
-        .asc "FIXECARECRAN",0
-        .word p_fixecar
-        .asc "GAUCHE",0
-        .word p_ga
-        .asc "GA",0
-        .word p_ga
-        .asc "GOMME",0
-        .word p_gomme
-        .asc "INVERSE",0
-        .word p_inv
-        .asc "LEVECRAYON",0
-        .word p_lc
-        .asc "LC",0
-        .word p_lc
-        .asc "LISTE",0
-        .word p_liste
-        .asc "MONTRETORTUE",0
-        .word p_mt
-        .asc "MT",0
-        .word p_mt
-        .asc "MELANGE",0
-        .word p_melange
-        .asc "NETTOIE",0
-        .word p_net
-        .asc "ORIGINE",0
-        .word p_orig
-        .asc "OUBLIE",0
-        .word p_oublie
-        .asc "OUBLIETOUT",0
-        .word p_oubtout
-        .asc "POINT",0
-        .word p_point
-        .asc "PAVE",0
-        .word p_pave
-        .asc "POUR",0
-        .word p_pour
-        .asc "QUITTE",0
-        .word p_quitte
-        .asc "RENDS",0
-        .word p_rends
-        .asc "RECULE",0
-        .word p_re
-        .asc "RE",0
-        .word p_re
-        .asc "RECTANGLE",0
-        .word p_rect
-        .asc "REPETE",0
-        .word p_repete
-        .asc "SI",0
-        .word p_si
-        .asc "STOP",0
-        .word p_stop
-        .asc "SONF",0
-        .word p_sonf
-        .asc "SON",0
-        .word p_son
-        .asc "SILENCE",0
-        .word p_silence
-        .asc "SAUVE",0
-        .word p_sauve
-        .asc "SAUVEIMAGE",0
-        .word p_simage
-        .asc "TRAIT",0
-        .word p_trait
-        .asc "TAPE",0
-        .word p_tape
-        .asc "TITRES",0
-        .word p_titres
-        .asc "VIDEECRAN",0
-        .word p_ve
-        .asc "VE",0
-        .word p_ve
-        .asc "VIDETEXTE",0
-        .word p_vt
-        .asc "VT",0
-        .word p_vt
-        .byt 0
-
-w_pour   .asc "POUR",0
-w_fin    .asc "FIN",0
-funcs
-        .asc "ALLUME?",0
-        .word f_allume
-        .asc "ARCTAN",0
-        .word f_atn
-        .asc "ASCII",0
-        .word f_ascii
-        .asc "ARRONDI",0
-        .word f_arrondi
-        .asc "ABS",0
-        .word f_abs
-        .asc "CAP",0
-        .word f_cap
-        .asc "COS",0
-        .word f_cos
-        .asc "CAR",0
-        .word f_car
-        .asc "COMPTE",0
-        .word f_compte
-        .asc "CURSEUR",0
-        .word f_curseur
-        .asc "CARECRAN",0
-        .word f_carecr
-        .asc "DERNIER",0
-        .word f_dernier
-        .asc "DER",0
-        .word f_dernier
-        .asc "EXP",0
-        .word f_exp
-        .asc "ENT",0
-        .word f_ent
-        .asc "HASARD",0
-        .word f_hasard
-        .asc "ITEM",0
-        .word f_item
-        .asc "JOUE?",0
-        .word f_joue
-        .asc "LN",0
-        .word f_ln
-        .asc "LISLISTE",0
-        .word f_lisliste
-        .asc "LL",0
-        .word f_lisliste
-        .asc "LISMOT",0
-        .word f_lismot
-        .asc "LISCAR",0
-        .word f_liscar
-        .asc "LISTE",0
-        .word f_liste
-        .asc "LISTE?",0
-        .word f_listep
-        .asc "MOT",0
-        .word f_mot
-        .asc "MOT?",0
-        .word f_motp
-        .asc "MEMBRE?",0
-        .word f_membrep
-        .asc "NOMBRE?",0
-        .word f_nombrep
-        .asc "PHRASE",0
-        .word f_phrase
-        .asc "PH",0
-        .word f_phrase
-        .asc "PREMIER",0
-        .word f_premier
-        .asc "PR",0
-        .word f_premier
-        .asc "QUOTIENT",0
-        .word f_quotient
-        .asc "RACINE",0
-        .word f_racine
-        .asc "RESTE",0
-        .word f_reste
-        .asc "SIN",0
-        .word f_sin
-        .asc "SAUFPREMIER",0
-        .word f_sp
-        .asc "SP",0
-        .word f_sp
-        .asc "SAUFDERNIER",0
-        .word f_sd
-        .asc "SD",0
-        .word f_sd
-        .asc "TOUCHE?",0
-        .word f_touche
-        .asc "TOUCHE",0
-        .word f_tkey
-        .asc "VIDE?",0
-        .word f_videp
-        .asc "XCOR",0
-        .word f_xcor
-        .asc "YCOR",0
-        .word f_ycor
-        .byt 0
+#include "logovoc.msg"         ; primitives, POUR / FIN, commandes des menus (tools/gen_logo_voc.py)
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_split .byt G_MODE,1,0,0,0,0
 gq_text  .byt G_MODE,0,0,0,0,0
 s_edit   .asc "EDIT "
 s_retl   .asc " /L",0
-s_charge .asc "CHARGE ",$22
 s_state  .asc "LOGO    $$$"
 s_magic  .asc "LGS1"
 gq_keep  .byt G_MODE,2,0,0,0,0
 
-; barre de menus : les articles tapent des commandes
-lg_bar  .byt 3
-        .word mn_fic, mn_tor, mn_aid
-mn_fic  .byt 8,12
-        .asc "Fichier",0
-        .asc "Charger...",0
-        .byt MA_TYPE
-        .word ty_charge
-        .asc "Sauver...",0
-        .byt MA_TYPE
-        .word ty_sauve
-        .asc "Editer...",0
-        .byt MA_TYPE
-        .word ty_edite
-        .asc "Charger img.",0
-        .byt MA_TYPE
-        .word ty_cimg
-        .asc "Sauver img.",0
-        .byt MA_TYPE
-        .word ty_simg
-        .asc "Titres",0
-        .byt MA_TYPE
-        .word ty_titres
-        .asc "Tout oubli",0
-        .byt MA_TYPE
-        .word ty_oubtout
-        .asc "Quitter",0
-        .byt MA_TYPE
-        .word ty_quitte
-mn_tor  .byt 7,12
-        .asc "Tortue",0
-        .asc "Efface ecran",0
-        .byt MA_TYPE
-        .word ty_ve
-        .asc "Origine",0
-        .byt MA_TYPE
-        .word ty_orig
-        .asc "Cache",0
-        .byt MA_TYPE
-        .word ty_ct
-        .asc "Montre",0
-        .byt MA_TYPE
-        .word ty_mt
-        .asc "Leve crayon",0
-        .byt MA_TYPE
-        .word ty_lc
-        .asc "Ecran texte",0
-        .byt MA_TYPE
-        .word ty_etxt
-        .asc "Ecran mixte",0
-        .byt MA_TYPE
-        .word ty_emix
-mn_aid  .byt 1,10
-        .asc "Aide",0
-        .asc "Primitives",0
-        .byt MA_TYPE
-        .word ty_aide
-
-ty_charge .byt $18
-          .asc "CHARGE ",$22,0
-ty_sauve  .byt $18
-          .asc "SAUVE ",$22,0
-ty_edite  .byt $18
-          .asc "EDITE ",$22,0
-ty_cimg   .byt $18
-          .asc "CHARGEIMAGE ",$22,0
-ty_simg   .byt $18
-          .asc "SAUVEIMAGE ",$22,0
-ty_titres .byt $18
-          .asc "TITRES",13,0
-ty_oubtout .byt $18
-          .asc "OUBLIETOUT",13,0
-ty_quitte .byt $18
-          .asc "QUITTE",13,0
-ty_ve     .byt $18
-          .asc "VE",13,0
-ty_orig   .byt $18
-          .asc "ORIGINE",13,0
-ty_ct     .byt $18
-          .asc "CT",13,0
-ty_mt     .byt $18
-          .asc "MT",13,0
-ty_etxt   .byt $18
-          .asc "ECRANTEXTE",13,0
-ty_emix   .byt $18
-          .asc "ECRANMIXTE",13,0
-ty_lc     .byt $18
-          .asc "LC",13,0
-ty_aide   .byt $18
-          .asc "AIDE",13,0
-
-m_banner  .asc "LOGO CP/A - tapez AIDE",13,10,0
-m_prompt  .asc "? ",0
-m_prompt2 .asc "> ",0
-m_defined .asc " defini.",13,10,0
-m_saved   .asc "Sauve.",13,10,0
-m_loaded  .asc "Charge.",13,10,0
-m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
-          .asc "CT MT VE NETTOIE ORIGINE",13,10
-          .asc "ECRANTEXTE ECRANMIXTE  VT  TAPE x",13,10
-          .asc "FIXECURSEUR c l CURSEUR CARECRAN c l",13,10
-          .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
-          .asc "POINT x y  TRAIT RECTANGLE PAVE x y x y",13,10
-          .asc "CERCLE r  ETIQUETTE x  FIXECOULEUR v",13,10
-          .asc "SON v n vol d (37 = do)  SILENCE",13,10
-          .asc "SONF v p vol d  BRUITV v p vol d",13,10
-          .asc "ENVELOPPE f p  MELANGE v son bruit",13,10
-          .asc "ENSEMBLE [..]  ATTENDSSON v  JOUE? v",13,10
-          .asc "REPETE n [..]  SI c [..] [..]  STOP",13,10
-          .asc "POUR NOM :A ... FIN  DONNE ",$22,"X n",13,10
-          .asc "ECRIS n/",$22,"mot/[..]  HASARD CAP",13,10
-          .asc "XCOR YCOR  + - * / ( ) = < >",13,10
-          .asc "LISLISTE LISMOT LISCAR TOUCHE? TOUCHE",13,10
-          .asc "ASCII x  CAR n  FIXECARECRAN c l n",13,10
-          .asc "ENT ARRONDI ABS  QUOTIENT RESTE",13,10
-          .asc "Decimaux : 3.14  1.5E-7  7 / 2",13,10
-          .asc "RACINE SIN COS ARCTAN LN EXP",13,10
-          .asc "MOT PHRASE LISTE PREMIER DERNIER",13,10
-          .asc "SAUFPREMIER SAUFDERNIER ITEM",13,10
-          .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
-          .asc "MEMBRE?  EXECUTE [..]  RENDS x",13,10
-          .asc "SAUVE/CHARGE/EDITE ",$22,"NOM  TITRES",13,10
-          .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
-          .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
-          .asc "ESC interrompt  QUITTE",13,10,0
-e_what    .asc "Que faire de cela ?",0
-e_unknown .asc "Je ne connais pas",0
-e_value   .asc "Il manque une valeur",0
-e_novar   .asc "Pas de valeur pour",0
-e_div     .asc "Division par zero",0
-e_notnum  .asc "Il faut un nombre",0
-e_big     .asc "Nombre trop grand",0
-e_dom     .asc "Calcul impossible",0
-e_empty   .asc "Mot ou liste vide",0
-e_word    .asc "Il faut un mot",0
-e_list    .asc "Il faut une liste [ ] apres",0
-e_bracket .asc "Il manque un ] apres",0
-e_deep    .asc "Trop de niveaux",0
-e_mem     .asc "Memoire pleine",0
-e_esc     .asc "Interrompu",0
-e_quote   .asc "Il faut un nom avec ",$22," apres",0
-e_inload  .asc "Interdit pendant CHARGE :",0
-e_pour    .asc "POUR seulement au debut d'une ligne",0
-e_name    .asc "Il faut un nom apres POUR",0
-e_disk    .asc "Erreur disque",0
-e_nofile  .asc "Fichier introuvable",0
-e_long    .asc "Ligne de plus de 126 car. : L ",0
-e_noret   .asc "Rien n'a ete rendu par",0
-e_unused  .asc "Que faire de ce que rend",0
-e_rtop    .asc "RENDS seulement dans une procedure",0
-e_text    .asc "Impossible en ecran texte :",0
-e_range   .asc "Valeur hors limites :",0
-m_lost    .asc "Etat de LOGO.$$$ perdu",13,10,0
+#include "logo.msg"            ; menus, aide (AIDE), messages (progs/msg/fr, en)
 
 #include "logo_tab.s"
 

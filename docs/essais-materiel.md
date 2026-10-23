@@ -67,6 +67,14 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   ARROWS` ; sur `cpa-anim-en.dsk`, `DEMO` (BALL.ANI, SHIP.ANI, puis `GRAPHER ANIMS`) ; sur
   `cpa-asm-en.dsk`, `ASM GTEST` puis `GTEST` (`Picture drawn.`). Sur `cpa.dsk` : `GRAPHER
   ROTSCROL` et `GRAPHER JEU`, nouveaux sur la disquette ;
+- **LOGO en anglais** (`cpa-logo-en.dsk`) : `LOGO` (barre File, Turtle, Help ; `HELP`),
+  `REPEAT 4 [FD 40 RT 90]`, `TO SQ :S` ... `END`, `PO "SQ` (finit par `END`), une erreur
+  (`I don't know how to ...`), `LOGO DEMO` puis `DEMO`, `LOGO ELIZA2` (conversation,
+  `GOODBYE`), `LOGO ARROWS`, `EDIT "TEST` puis Back (retour dans LOGO). `LOGOTR` : sur
+  `cpa-logo.dsk`, `LOGOTR DEMO TEST /EN` puis `TYPE TEST.LOG` ; sur `cpa-logo-en.dsk`,
+  `LOGOTR DEMO FR /FR` puis `TYPE FR.LOG` ; `LOGOTR DEMO` (vers l'anglais, sur place) :
+  `DEMO.BAK` gardé ; un fichier protégé (`File protected`, texte dans `DEMO.$$$`). Sur `cpa-logo.dsk`, LOGO français inchangé,
+  `LOGO DEMO` (le `CHARGE "DEMO` tapé au démarrage, réécrit) ;
 - **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
   Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
   entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque

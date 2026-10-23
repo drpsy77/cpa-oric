@@ -1,0 +1,32 @@
+LOGO CP/A - type HELP
+?  LOAD "T11
+1.41421356
+4
+2
+0.5
+0.5
+1
+0
+-0.5
+-1
+45
+-45
+89.9999999
+1
+2.30258509
+2.71828183
+5
+8
+2.06115362E-9
+-6.90775528
+PUIS defined.
+1024
+3.375
+Loaded.
+?  LOAD "E19
+Impossible calculation
+?  LOAD "E20
+Impossible calculation
+?  LOAD "E21
+Number too big
+?  QUIT

@@ -21,6 +21,7 @@ esac
 mkdir -p build/progs
 python3 tools/gen_font.py src/font.s
 python3 tools/gen_tables.py src/tables.s
+python3 tools/gen_logo_voc.py > /dev/null   # vocabulaire de LOGO (fr, en) et table de LOGOTR
 
 # Options du système disque. CPLCMD : ESC complète aussi le premier mot
 # par les commandes internes et les .COM / .BAT (~120 octets résidents) ;
@@ -130,7 +131,7 @@ theme() {   # theme NOM NOM_EN "visibles" "système en plus" "exemples"
     --ro --dir $P/EDIT.COM $3 --rw $5
 }
 INCS="build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC"
-theme logo logo "$P/LOGO.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log $GRX_EX"
+theme logo logo "$P/LOGO.COM $P/LOGOTR.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log $GRX_EX"
 theme notes notes "" "" ""
 theme asm asm "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM $INCS" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \

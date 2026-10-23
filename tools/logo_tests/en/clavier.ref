@@ -1,0 +1,16 @@
+LOGO CP/A - type HELP
+?  LOAD "T3
+0
+A
+ATT defined.
+Z
+6
+7
+Loaded.
+?  LOAD "T4
+Q
+5
+7
+0
+Loaded.
+?  QUIT
