@@ -52,7 +52,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.dsk`,
 `cpa-asm.dsk`, `cpa-anim.dsk`, et `cpa-projet.dsk` (vierge, sans système : le travail en B:,
-la disquette système en A:) ; contenu dans `docs/manuel.md`.
+la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
+`cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
 **Mesure** : 1 303 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
@@ -215,12 +216,16 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      Sujets anglais : KEYS PROGRAMS EDIT HEX LOGO ASM DEBUG MEMORY USB GRAPHER CMDER ; la
      rubrique LOGO garde les primitives françaises (LOGO pas encore traduit). HELP anglais :
      11 379 octets, 6 blocs comme le français.
-   - Fait aussi : les exemples de GRAPHER de `cpa-en.dsk` (`files/en/*.grx` : même code,
-     commentaires et textes affichés en anglais ; GRXASM en tire le même `.ASM`, aux
-     chaînes près).
-   - Reste : `smoke_test` en anglais ; `HELLO.ASM` et `GTEST.ASM` (sources de `progs/`,
-     commentaires en français par convention) ; `ANIMS.GRX` et `DEMO.BAT` (seulement sur
-     `cpa-anim.dsk`, française) ; les `.LOG` avec LOGO.
+   - Fait aussi : toutes les disquettes en deux langues (jumelles `-en`, `architecture.md`
+     § 5 ; `cpa-project-en.dsk` pour la vierge) et tous les exemples traduits sous des noms
+     anglais (`files/en/noms.txt`) : `.GRX`, `.LOG` (ELIZA réécrit pour l'anglais :
+     table de reflet, mots-clés, réponses ; primitives LOGO françaises), `DEMO.BAT`,
+     `HELLO.ASM`, `GTEST.ASM` (`GTEST.COM` anglais). `ROTSCROL.GRX` et `JEU.GRX`
+     (`PUZZLE.GRX`), cités au § 14 de `grapher.md`, sont maintenant sur `cpa.dsk` et
+     `cpa-logo.dsk` (et leurs jumelles).
+   - Reste : la documentation anglaise montre encore des écrans et messages français
+     (convention des premières étapes) alors que tout sauf LOGO est traduit ; `smoke_test`
+     en anglais.
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
      traduit que les primitives, pas les procédures de l'utilisateur.
@@ -381,7 +386,7 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 130) est à 14
   octets du bloc suivant, 91 en anglais (6 053) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste ~78 Ko, peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste ~70 Ko, peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

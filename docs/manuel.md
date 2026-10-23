@@ -263,7 +263,7 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
 | `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
@@ -271,15 +271,35 @@ y est partout, protégé et visible.
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
-**Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec le système
-(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, HELP et README.TXT, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER et GRXASM, et les bibliothèques des programmes traduits ; LOGO reste en français ; la
-touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT), un `EDIT.CFG`
-commenté en anglais et les exemples de GRAPHER (`DESSIN.GRX`, `SCORES.GRX`...) traduits : mêmes
-noms, même code, commentaires et textes affichés en anglais. Les exemples de LOGO (`.LOG`)
-restent en français.
+**Disquettes anglaises.** Chaque disquette a sa jumelle anglaise : `cpa-en.dsk`,
+`cpa-logo-en.dsk`, `cpa-notes-en.dsk`, `cpa-asm-en.dsk`, `cpa-anim-en.dsk`, `cpa-project-en.dsk`.
+Mêmes programmes, mêmes fichiers, mêmes attributs, avec le système, les messages, les menus,
+l'aide (HELP, README.TXT), `EDIT.CFG` et les bibliothèques des programmes traduits en anglais
+(la touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT). Les exemples y
+sont traduits et portent des noms anglais : même code, commentaires, textes affichés et noms
+des sous-programmes et procédures en anglais. LOGO parle encore français : les `.LOG` anglais
+gardent ses primitives (`AV`, `REPETE`...).
 
-**Disquette de projet.** `build/cpa-projet.dsk` est une disquette vierge (sans système, 336 Ko
-pour les fichiers), à mettre en `B:` et à copier pour chaque projet.
+| Français | Anglais | Français | Anglais |
+|---|---|---|---|
+| DESSIN.GRX | DRAWING.GRX | DEMO.LOG | DEMO.LOG |
+| ECRAN.GRX | TITLE.GRX | ELIZA.LOG, ELIZA2.LOG | ELIZA.LOG, ELIZA2.LOG |
+| MOTIFS.GRX | PATTERNS.GRX | TRACARRE.LOG | PLOTSQR.LOG |
+| ARDOISE.GRX | SKETCH.GRX | TRASINUS.LOG | PLOTSIN.LOG |
+| FLECHES.GRX, FLECHES.LOG | ARROWS.GRX, ARROWS.LOG | TRASINXX.LOG | PLOTSINX.LOG |
+| SERPENT.GRX | SNAKE.GRX | HEROS.SPR | HERO.SPR |
+| SCORES.GRX, SPRITES.GRX | SCORES.GRX, SPRITES.GRX | TUILES.SPR | TILES.SPR |
+| CARTE.GRX | MAP.GRX | BALLE.ANI | BALL.ANI |
+| DEFILE.GRX | ROAD.GRX | VAISSEAU.ANI | SHIP.ANI |
+| ROTSCROL.GRX | ROTSCROL.GRX | JEU.GRX | PUZZLE.GRX |
+
+Les autres fichiers gardent leur nom (ANIMS.GRX, DEMO.BAT, CUBE.ANI, LOGO.HIZ, HELLO, GTEST).
+La table qui sert à la construction est `files/en/noms.txt` ; `build.sh` vérifie que chaque
+disquette anglaise a bien les fichiers de la française.
+
+**Disquette de projet.** `build/cpa-projet.dsk` (`cpa-project-en.dsk`) est une disquette
+vierge (sans système, 336 Ko pour les fichiers), à mettre en `B:` et à copier pour chaque
+projet.
 
 Usage conseillé : la disquette système en `A:` (`cpa.dsk`, ou une disquette d'usage), une
 disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`, `LOGO`,
@@ -287,7 +307,7 @@ disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`,
 `HIRES.INC`, `GRX.INC`...) qu'ASM et GRXASM cherchent sur le lecteur du projet puis sur A: à
 D: ; tout ce qui est produit (`.ASM`, `.COM`, `.SYM`, fichiers de données) va sur `B:`, et
 `DIR` ne montre que le travail en cours. `build/cpa.dsk` reste la disquette complète, tout
-visible, et la démonstration ; il y reste environ 78 Ko, peu pour travailler (une traduction
+visible, et la démonstration ; il y reste environ 70 Ko, peu pour travailler (une traduction
 par GRXASM écrit vite plus de 40 Ko).
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de

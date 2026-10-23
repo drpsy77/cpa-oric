@@ -1,0 +1,28 @@
+POUR PLOTTER :X0 :X1 :Y0 :Y1 :STEP
+  VE
+  LC
+  SI ( :X1 < :X0 ) [STOP]
+  SI ( :Y1 < :Y0 ) [STOP]
+  DONNE "IX ((:X1 - :X0 ) / 238 )
+  DONNE "IY ((:Y1 - :Y0 ) / 126 )
+  DONNE "YO ( -62 - (:Y0 / :IY ))
+  DONNE "X :X0
+  DONNE "Y (F :X )
+  TRAIT -119 :YO 119 :YO
+  TRAIT (-119 - (:X0 / :IX )) 64 (-119 - (:X0 / :IX )) -62
+  REPETE ( 238 / :STEP ) [ PLOTSTEP :STEP ]
+FIN
+
+POUR PLOTSTEP :P
+  DONNE "XA (:X + (:IX * :P ))
+  DONNE "YA (F :XA )
+  TRAIT (:X / :IX ) ((:Y / :IY ) + :YO ) (:XA / :IX ) ((:YA / :IY ) + :YO )
+  DONNE "X :XA
+  DONNE "Y :YA
+FIN
+
+POUR F :X
+  RENDS SIN :X
+FIN
+
+PLOTTER -180 180 -1 1 5

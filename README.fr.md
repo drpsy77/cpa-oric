@@ -40,12 +40,12 @@ Deux variantes sont construites à partir des mêmes sources :
   overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
   programmes reste intact. Quatre autres disquettes, par usage : `cpa-logo.dsk`,
   `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` ; et une vierge, `cpa-projet.dsk`, pour son
-  travail en `B:` à côté de la disquette système en `A:`. **`cpa-en.dsk`** est `cpa.dsk`
-  en anglais : la barre de menus et les messages du système, les commandes (TYPE, ERA, COPY, STAT, FORMAT,
-  DISKCOPY, USB...), les éditeurs EDIT et HEX, l'assembleur ASM, le débogueur DEBUG, le
-  gestionnaire de fichiers CMDER, le langage GRAPHER (son traducteur GRXASM et les
-  bibliothèques des programmes traduits) et HELP sont traduits ; LOGO parle encore
-  français, traduction en cours.
+  travail en `B:` à côté de la disquette système en `A:`. Chaque disquette existe en français
+  et en anglais (`cpa-en.dsk`, `cpa-logo-en.dsk`... `cpa-project-en.dsk`) : mêmes programmes,
+  mêmes exemples, avec les messages, les menus, l'aide et les exemples dans la langue de la
+  disquette ; sur les anglaises, les exemples ont des noms anglais (`CARTE.GRX` y est
+  `MAP.GRX` ; correspondance dans `files/en/noms.txt`). LOGO parle encore français sur les
+  deux, traduction en cours.
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
   disque.
 

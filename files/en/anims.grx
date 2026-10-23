@@ -1,0 +1,19 @@
+; ANIMS.GRX: animations in GRAPHER
+; ANIM name [n] plays name.ANI n times (0 or
+; nothing: until a key; ESC stops when interpreted)
+; during an animation, left and right
+; arrows: move the tearing line
+; (timing against the screen)
+; usage: GRAPHER ANIMS (or /A then ASM)
+HIRES
+ANIM CUBE 3
+GTEXT 2 188 12 frames, a quarter turn
+DELAY 100
+ANIM BALL 2
+GTEXT 2 188 Only the ball changes
+DELAY 100
+FOR I 1 3
+ANIM SHIP 1
+NEXT
+GTEXT 2 188 End: a key
+WAIT

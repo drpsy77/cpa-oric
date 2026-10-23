@@ -60,8 +60,8 @@ the colour, which drawing does not erase. `ALLUME? x y` returns 1 if the point i
 otherwise. All of them refuse the text screen (`ECRANTEXTE`).
 
     VE CERCLE 40 RECTANGLE -40 -40 40 40 TRAIT -40 -40 40 40
-    ETIQUETTE [BONJOUR] FIXECOULEUR 3
-    SI ALLUME? 0 0 [ECRIS "ALLUME]
+    ETIQUETTE [HELLO] FIXECOULEUR 3
+    SI ALLUME? 0 0 [ECRIS "LIT]
 
 In expressions: `+ - * / ( ) = < >`, as well as `HASARD n` (random), `CAP` (heading), `XCOR`,
 `YCOR`, `ALLUME? x y`, `LISCAR`, `TOUCHE?`, `TOUCHE`, `CURSEUR`, `CARECRAN c l`, `JOUE? v`,
@@ -83,7 +83,7 @@ waiting and without the repeat delay: an arrow held down moves at every call as 
 pressed, and nothing more once released (`LISCAR` and `TOUCHE?` follow the keyboard repeat).
 The arrows return `CAR 8` (left), `CAR 9` (right), `CAR 10` (down), `CAR 11` (up); with SHIFT,
 `CAR 240` to `CAR 243`, with CTRL `CAR 244` to `CAR 247` (same order). Example on
-`cpa-logo.dsk`: `LOGO FLECHES.LOG` (an `@` moved inside a frame, the walls read with
+`cpa-logo-en.dsk`: `LOGO ARROWS.LOG` (an `@` moved inside a frame, the walls read with
 `CARECRAN`).
 
     DONNE "K TOUCHE
@@ -159,7 +159,7 @@ of texts no longer in use.
     3628800
 
 It can return a number, a word or a list, call itself and be an argument of another one
-(`ECRIS SOMME CARRE 3 CARRE 4`). A function that reaches `FIN` (or `STOP`) without `RENDS`
+(`ECRIS SOMME SQUARE 3 SQUARE 4`). A function that reaches `FIN` (or `STOP`) without `RENDS`
 gives `Rien n'a ete rendu par NAME` (nothing was returned); a procedure called as a command
 must not use `RENDS` (`Que faire de ce que rend NAME`: what to do with what NAME returns).
 Self-calling functions go down to about forty levels (`Trop de niveaux`, too many levels,
@@ -199,15 +199,15 @@ Procedures are saved as text (`POUR` ... `FIN`), which can be changed with `EDIT
 `CHARGE` also runs the other lines of the file. A file line is at most 126 characters, as on
 the keyboard: beyond that, `CHARGE` stops on `Ligne de plus de 126 car. : L 12` (the number is
 that of EDIT's status line, which flags these lines: see `EDIT.CFG`); a long list is built
-over several lines (`DONNE "L PH :L [...]`). The disk contains `DEMO.LOG`, with CARRE, POLY,
-ETOILE, FLEUR, SPIRALE, ARBRE (recursive) and DEMO:
+over several lines (`DONNE "L PH :L [...]`). The disk contains `DEMO.LOG`, with SQUARE, POLY,
+STAR, FLOWER, SPIRAL, TREE (recursive) and DEMO:
 
     ? CHARGE "DEMO
     ? DEMO
 
-The LOGO disk (`cpa-logo.dsk`) adds examples by Pierre, which start by themselves with `LOGO
-NAME`: `ELIZA` (the "doctor", a conversation in French; `AUREVOIR` to leave), and three curve
-plotters on axes: `TRACARRE` (x²), `TRASINUS` (sine), `TRASINXX` (x sin x). `ELIZA2` gives the
+The LOGO disk (`cpa-logo-en.dsk`) adds examples by Pierre, which start by themselves with `LOGO
+NAME`: `ELIZA` (the "doctor", a conversation in English; `GOODBYE` to leave), and three curve
+plotters on axes: `PLOTSQR` (x²), `PLOTSIN` (sine), `PLOTSINX` (x sin x). `ELIZA2` gives the
 same answers, but its searches are recursive functions (`RENDS`) that stop as soon as they
 find, and a word missing from the table is ruled out with a single `MEMBRE?` instead of an
 80-turn loop that copies the table: an answer takes 1 to 2 s instead of 15 to 30. Comparing
@@ -224,21 +224,21 @@ active parameters and 32 global variables.
 procedure's space. A program too large for memory (an adventure game, for instance) is
 therefore split into stages: a kernel loaded once, then, at each stage, the file of that
 stage, forgotten when it is left. Global variables carry over from one stage to the next.
-Example (tried): `NOYAU.LOG` contains
+Example (tried): `KERNEL.LOG` contains
 
-    POUR JEU
+    POUR GAME
     DONNE "N 1
-    REPETE 3 [ETAPE]
-    ECRIS "FIN
+    REPETE 3 [STAGE]
+    ECRIS "END
     FIN
-    POUR ETAPE
+    POUR STAGE
     CHARGE MOT "S :N
-    SALLE
-    OUBLIE "SALLE
+    ROOM
+    OUBLIE "ROOM
     FIN
 
-and `S1.LOG`, `S2.LOG`, `S3.LOG` each define a procedure `SALLE`, which plays the stage and
-chooses the next one (`DONNE "N 2`). Start `LOGO NOYAU`, then `JEU`. The name given to
+and `S1.LOG`, `S2.LOG`, `S3.LOG` each define a procedure `ROOM`, which plays the stage and
+chooses the next one (`DONNE "N 2`). Start `LOGO KERNEL`, then `GAME`. The name given to
 `CHARGE` (as to `SAUVE`, `SAUVEIMAGE`, `CHARGEIMAGE` and `EDITE`) can be computed: `"S1`, `:F`,
 `MOT "S :N`... A stage file can load its picture (`CHARGEIMAGE "SALLE1`). Two rules:
 

@@ -26,7 +26,9 @@ secteur illisible dans un bloc libre).
 Attributs (comme SET sur l'Oric) : bit 7 de t1 = R/O (protégé), de t2 =
 SYS (caché de DIR). Dans « new », --ro protège les fichiers qui suivent,
 --rw revient aux fichiers non protégés ; de même --sys cache les fichiers qui
-suivent, --dir les laisse visibles. « ls » montre R/O et SYS.
+suivent, --dir les laisse visibles. « ls » montre R/O et SYS. Un fichier
+de « new » peut s'écrire SOURCE=NOM.EXT : SOURCE copié sous le nom NOM.EXT
+(exemples traduits de la disquette anglaise, files/en/noms.txt).
 
 Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
 Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
@@ -519,9 +521,11 @@ def main(argv):
                 d.sec[SYS_LSN + k] = sysb[k * 256:(k + 1) * 256]
         d.format_dir()
         for f, f_ro, f_sys in files:
-            d.write_file(f, open(f, "rb").read())
+            src, _, nom = f.partition("=")
+            nom = nom or src
+            d.write_file(nom, open(src, "rb").read())
             if f_ro or f_sys:
-                d.set_attr(f, ro=f_ro, sys_=f_sys)
+                d.set_attr(nom, ro=f_ro, sys_=f_sys)
         d.save(img)
         cmd = "ls"
     d = Disk.load(img)

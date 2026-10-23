@@ -1,0 +1,39 @@
+# Correspondance des exemples : fichier de la version française -> nom sur
+# les disquettes anglaises. La traduction est dans files/en sous le nom anglais
+# en minuscules (drawing.grx) ; sans traduction (images, sprites,
+# animations : rien à traduire dedans), le fichier français est copié sous
+# le nom anglais. Lu par tools/en_files.py (build.sh) ; un fichier de files/
+# mis sur une disquette doit figurer ici.
+#
+# français                  anglais
+files/dessin.grx            DRAWING.GRX
+files/ecran.grx             TITLE.GRX
+files/motifs.grx            PATTERNS.GRX
+files/ardoise.grx           SKETCH.GRX
+files/fleches.grx           ARROWS.GRX
+files/serpent.grx           SNAKE.GRX
+files/scores.grx            SCORES.GRX
+files/sprites.grx           SPRITES.GRX
+files/carte.grx             MAP.GRX
+files/defile.grx            ROAD.GRX
+files/anims.grx             ANIMS.GRX
+files/rotscrol.grx          ROTSCROL.GRX
+files/JEU.GRX               PUZZLE.GRX
+files/heros.spr             HERO.SPR
+files/tuiles.spr            TILES.SPR
+files/demo.log              DEMO.LOG
+files/eliza.log             ELIZA.LOG
+files/eliza2.log            ELIZA2.LOG
+files/tracarre.log          PLOTSQR.LOG
+files/trasinus.log          PLOTSIN.LOG
+files/trasinxx.log          PLOTSINX.LOG
+files/fleches.log           ARROWS.LOG
+files/demo.bat              DEMO.BAT
+files/anim/CUBE.ANI         CUBE.ANI
+files/anim/BALLE.ANI        BALL.ANI
+files/anim/VAISSEAU.ANI     SHIP.ANI
+files/anim/LOGO.HIZ         LOGO.HIZ
+files/edit.cfg              EDIT.CFG
+files/readme.txt            README.TXT
+build/src/HELLO.ASM         HELLO.ASM
+build/src/GTEST.ASM         GTEST.ASM

@@ -112,6 +112,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM : calculs, boucles, erreurs (sans émulateur)
     LANGUE=en tools/test_grapher.sh  # les mêmes en anglais, contre les références traduites
     tools/test_inc.sh                # bibliothèques allégées de la disquette == originaux
+    tools/test_exemples_en.sh        # exemples .GRX traduits : même code que les originaux
     python3 tools/test_fp.py         # décimaux (progs/fp_inc.s) contre un calcul exact
     python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
     python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
@@ -183,10 +184,20 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `loci_inc.s` (`loci.msg`) juste avant elle. Les menus d'un programme (FUNCT) sont dans
   son fichier de messages, largeur comprise ; les autres touches de réponse ont aussi leur
   constante (`K_ALL`, « tous » : `T` ou `A`). Les fichiers livrés qui ont une version
-  anglaise sont dans `files/en/` (même nom : `EDIT.CFG`, `README.TXT`, exemples `.GRX`), mis
-  sur `cpa-en.dsk` à la place de ceux de `files/` (`en_liste` de `build.sh`). Un exemple
-  traduit garde le code de l'original : seuls les commentaires et les textes affichés
-  changent (même colonne à l'écran) ; un changement de l'un est reporté dans l'autre.
+  anglaise sont dans `files/en/`, sous leur nom anglais en minuscules.
+- **Disquettes jumelles** : chaque disquette française a sa jumelle anglaise (`cpa-en.dsk`,
+  `cpa-logo-en.dsk`... `cpa-project-en.dsk`), faite par la même ligne de `build.sh`
+  (`disque`). `files/en/noms.txt` donne pour chaque fichier livré son nom anglais ;
+  `tools/en_files.py` en tire les fichiers de l'anglaise (programmes de `build/progs-en`,
+  bibliothèques de `build/src-en`, exemples traduits) et refuse un exemple sans traduction ;
+  `--jumelles` vérifie, à chaque construction, que l'anglaise a les fichiers de la française
+  (noms traduits, mêmes attributs). Un exemple traduit garde le code de l'original : seuls les
+  commentaires, les textes affichés et les noms (sous-programmes, procédures, fichiers cités)
+  changent, aux mêmes colonnes de l'écran ; `tools/test_exemples_en.sh` le vérifie pour les
+  `.GRX` (même `.ASM` par GRXASM). Un changement de l'un est reporté dans l'autre. Les `.LOG`
+  anglais gardent les primitives françaises tant que LOGO n'est pas traduit. `HELLO.ASM` et
+  `GTEST.ASM` anglais (`files/en/*.asm`) donnent les `.COM` de `build/progs-en`
+  (`tools/test_asm.sh` les assemble aussi par ASM.COM).
 - Aide : `tools/gen_readme_txt.py` produit à la fois README.TXT (notation et renvoi à HELP :
   `files/readme.txt`, `files/en/readme.txt`) et les textes de HELP.COM (`helptab.msg` dans
   `progs/msg/fr` et `progs/msg/en`, compressés en LZSS, décodés par `help.s`), à partir d'une

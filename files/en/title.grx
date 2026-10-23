@@ -1,6 +1,6 @@
-; ECRAN.GRX: a title screen in
+; TITLE.GRX: a title screen in
 ; full-screen HIRES (240 x 200)
-; usage: GRAPHER ECRAN
+; usage: GRAPHER TITLE
 HIRES
 BOX 6 0 239 199
 BOX 9 3 236 196
@@ -16,6 +16,6 @@ GTEXT 14 90 CP/A
 GTEXT 13 102 GRAPHER
 ATTR 0 0 199 3
 ATTR 1 0 199 20
-; GSAVE ECRAN would keep ECRAN.HIR
+; GSAVE TITLE would keep TITLE.HIR
 WAIT
 ; a key: end, back to text

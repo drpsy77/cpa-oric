@@ -17,3 +17,8 @@ __pycache__/
 .DS_Store
 tools/clk/
 tools/clk-mac/
+!build/cpa-logo-en.dsk
+!build/cpa-notes-en.dsk
+!build/cpa-asm-en.dsk
+!build/cpa-anim-en.dsk
+!build/cpa-project-en.dsk
