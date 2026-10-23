@@ -496,6 +496,7 @@ c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
 | `TERM` | terminal (9600 bauds, 8 bits, sans parité, 1 bit d'arrêt) |
 | `TERM /E` | écho local : affiche aussi ce qu'on tape (pour un correspondant qui ne le renvoie pas, comme `nc` sur le Mac ; le modem, lui, le renvoie en mode commande) |
 | `TERM /D` | diagnostic : registres de l'ACIA (état, commande, contrôle) relus avant et après le réglage (après : commande `0B`, contrôle `1E`), puis chaque changement de l'état entre crochets (`[10]` émetteur libre, `[18]` caractère reçu, bit 6 (`$40`) : pas de modem) |
+| `TERM /B` | envoi « en aveugle » : chaque caractère part sans attendre que l'ACIA dise l'émetteur libre (pause fixe d'environ 3 ms) ; sert à vérifier les écritures quand les lectures de l'ACIA sont fausses (`TERM /B /E`, `ATDT-` vers `nc` sur le Mac) |
 | CTRL-Q | quitte ; la liaison reste établie (DTR reste actif) |
 | DEL | envoie BS (8) ; CTRL-H à CTRL-K envoient 8 à 11 |
 | flèches | rien (pas encore d'émulation ANSI) |
@@ -513,6 +514,9 @@ sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `
 
 - `Pas de modem (DSR) : brancher le Pico` : le LOCI ne voit pas de modem USB ; TERM reste
   ouvert, et `Modem muet : caractere perdu` s'affiche si l'on tape.
+- TERM n'accède aux registres de l'ACIA que par `LDA` / `STA` absolus : une écriture indexée
+  (`STA (zp),Y`, et `POKE` en BASIC) lit l'adresse avant de l'écrire, et une lecture de
+  l'ACIA a des effets (le registre de données consomme l'octet reçu).
 - La pause en fin d'écran est coupée pendant TERM (elle bloquerait la réception). Pendant
   les menus (FUNCT), le LOCI garde ce qui arrive.
 - Dans Oricutron : `serial = 'loopback'` dans `oricutron.cfg` renvoie chaque caractère

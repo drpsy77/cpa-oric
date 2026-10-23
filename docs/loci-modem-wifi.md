@@ -113,6 +113,13 @@ L'ACIA du LOCI (`loci-firmware`, `src/mia/oric/acia.c`) : registres toujours pr�
 qu'aucun modem n'est monté ; rien n'est émis tant que DTR (bit 0 de la commande) est à 0 ;
 réception par un tampon de 32 octets, rempli seulement s'il a de la place (le modem attend :
 pas de perte si l'Oric tarde).
+Accès : `LDA` / `STA` absolus seulement. Une écriture indexée (`STA (zp),Y`, `STA abs,X`,
+`POKE` en BASIC) lit l'adresse visée avant de l'écrire : sur le registre de données, c'est un
+octet reçu consommé (avertissement de l'auteur du LOCI, forum defence-force, sujet 2926).
+Même sujet : sodiumlb affirme que les binaires publiés (0.3.1) marchent en `$0380` ; un autre
+utilisateur y lit pourtant `$36`/`$76` (bus non piloté), cause non trouvée. Sur l'Oric de
+Pierre (0.3.1, Pico vu « CDC modem mounted ») : `TERM /D` lit `A7 4C D0` (état, commande,
+contrôle) avant et après le réglage, au lieu de `70 02 00` puis `10 0B 1E`.
 
 ## Côté CP/A
 

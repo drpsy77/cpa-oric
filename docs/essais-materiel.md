@@ -109,6 +109,9 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   les écritures en `$0380-$0383` (le clavier et le son marchent toujours après TERM).
   `TERM /D` : après le réglage, commande `0B` et contrôle `1E` relus (sinon les écritures
   n'arrivent pas au LOCI, cf. ticket 17 de loci-firmware) ; bit 6 de l'état à 0 avec le Pico.
+  Après une mise hors tension de l'Oric et du LOCI (état neuf) : `TERM /D` relit-il `70 02 00`
+  au premier affichage ? `TERM /B /E` puis `ATDT-IP:2323` vers `nc -l 2323` : le texte tapé
+  arrive-t-il sur le Mac (écritures bonnes, lectures fausses) ?
 
 **LOGO**
 

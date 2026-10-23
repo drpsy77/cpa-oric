@@ -33,12 +33,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 553 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 577 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
-| TERM | 619 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| TERM | 700 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -365,7 +365,7 @@ multiple de 2 048) :
 - GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (15 004) prend 8 blocs ;
   GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
-  blocs, 1 215 octets avant le 7e. HELP (11 553) prend 6 blocs. Les disquettes se spécialisent plutôt
+  blocs, 1 215 octets avant le 7e. HELP (11 577) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 177 octets de code avant la page suivante, 5 en
