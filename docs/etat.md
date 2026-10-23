@@ -33,11 +33,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 449 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 524 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
+| TERM | 484 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -53,7 +54,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 `cpa-asm.dsk`, `cpa-anim.dsk`, et `cpa-projet.dsk` (vierge, sans système : le travail en B:,
 la disquette système en A:) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 296 points de fonction IFPUG et 311 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 303 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
@@ -104,10 +105,11 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
        (timing à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
      - Ordre proposé : `USBMOUNT` sur `.TAP` avec boot, puis sur `.dsk` en B:, puis
        `CASSETTE.COM`.
-4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`, pas encore acheté) : pilote
-   série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le LOCI, `$031C` dans
-   Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord libérer de la place,
-   § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; `TERM.COM` (commandes AT).
+4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md` ; Pico W préparé, firmware
+   recompilé, liaison Mac vérifiée) : `TERM.COM` fait (scrute l'ACIA lui-même, sans le
+   BIOS). Reste : pilote série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le
+   LOCI, `$031C` dans Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord
+   libérer de la place, § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py`.
 5. **Sûreté des fichiers et défauts constatés**
    - EDIT et GRAPHER (`SAVE`, `BSAVE`, `BSAVE SCREEN`) passent la batterie
      `tools/test_fichiers.py` (disque plein, répertoire plein, R/O, RESET balayé). Reste
@@ -363,7 +365,7 @@ multiple de 2 048) :
 - GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (15 004) prend 8 blocs ;
   GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
-  blocs, 1 215 octets avant le 7e. HELP (11 449) prend 6 blocs. Les disquettes se spécialisent plutôt
+  blocs, 1 215 octets avant le 7e. HELP (11 524) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 177 octets de code avant la page suivante, 5 en

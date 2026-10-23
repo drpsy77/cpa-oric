@@ -51,7 +51,7 @@ COMPOSANTS = [
               "progs/msg/*/anim.msg"]),
     ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s",
               "progs/msg/*/export.msg", "progs/msg/*/import.msg", "progs/msg/*/usbdir.msg",
-              "progs/msg/*/loci.msg"]),
+              "progs/msg/*/loci.msg", "progs/term.s", "progs/msg/*/term.msg"]),
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s", "progs/msg/*/asm.msg"]),
     ("DBG",  ["progs/debug.s", "progs/msg/*/debug.msg"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",

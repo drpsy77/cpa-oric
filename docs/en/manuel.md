@@ -69,6 +69,7 @@ Other programs on the disk:
 - `DEBUG.COM NAME`, the monitor, disassembler and single-stepper.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, described above.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM`: file exchange with the LOCI's USB stick.
+- `TERM.COM [/E]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]`: copies a disk, or its system.
 
@@ -476,6 +477,39 @@ These commands go through the interface the LOCI offers the 6502, that of the Pi
 the workshop's Oricutron simulates this interface on a folder of the PC: `ORIC_LOCI=folder`
 (see "Tools"), or the line `loci = '~/Oric/loci'` in `oricutron.cfg` (the folder must exist,
 with its subfolder `int` for `0:`).
+
+## Serial terminal: TERM
+
+`TERM` talks to the serial port: what you type goes to the modem, what arrives is shown. On a
+LOCI, the port is the USB WiFi modem (a Raspberry Pi Pico W, see `docs/loci-modem-wifi.md`)
+that the LOCI presents as a 6551 ACIA at `$0380`; without a LOCI, it is Oricutron's ACIA at
+`$031C`. The first line says which one is used.
+
+| Command, key | Effect |
+|---|---|
+| `TERM` | terminal (9600 baud, 8 bits, no parity, 1 stop bit) |
+| `TERM /E` | local echo: also shows what you type (for a peer that does not send it back, such as `nc` on the Mac; the modem itself echoes it in command mode) |
+| CTRL-Q | quits; the link stays up (DTR stays active) |
+| DEL | sends BS (8); CTRL-H to CTRL-K send 8 to 11 |
+| arrows | nothing (no ANSI emulation yet) |
+
+    A>TERM
+    TERM : LOCI modem (ACIA 0380)
+    CTRL-Q : quit. Try : AT, ATI
+    AT
+    OK
+    ATDT-192.168.1.20:2323
+
+Modem commands: `AT?` (list), `ATI` (status, IP address), `ATDT-host:port` (connection
+without telnet), `+++` with a one-second pause before and after (back to command mode), `ATH`
+(hang up). Details: `docs/loci-modem-wifi.md`.
+
+- `No modem (DSR) : plug the Pico in`: the LOCI sees no USB modem; TERM stays open, and
+  `Modem silent : character lost` is shown if you type.
+- The end-of-screen pause is off during TERM (it would block reception). While the menus
+  (FUNCT) are open, the LOCI keeps what arrives.
+- In Oricutron: `serial = 'loopback'` in `oricutron.cfg` sends back each character sent;
+  `serial = 'modem'` links the ACIA to a simulated modem (reduced AT command set).
 
 ## Start-up and recovery after a crash
 

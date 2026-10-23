@@ -56,7 +56,7 @@ Deux variantes sont construites à partir des mêmes sources :
   édition de ligne avec historique et complétion par TAB ou ESC, mêmes touches dans tous les programmes (SHIFT et CTRL avec les flèches, CTRL-X/C/V), imprimante, graphisme et son.
 - Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
-- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER).
+- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
 - **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
@@ -84,7 +84,7 @@ Deux variantes sont construites à partir des mêmes sources :
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
-| `docs/loci-modem-wifi.md` | relier un modem WiFi au LOCI (en préparation) |
+| `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM |
 
 ## Construire
 
