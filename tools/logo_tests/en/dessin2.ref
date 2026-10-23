@@ -1,0 +1,13 @@
+LOGO CP/A - type HELP
+?  LOAD "T14
+DESSIN defined.
+1
+0
+0
+1
+Loaded.
+?  CIRCLE 200
+Value out of range : CIRCLE
+?  SETCOLOR 10
+Value out of range : SETCOLOR
+?  QUIT

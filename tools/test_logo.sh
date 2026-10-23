@@ -8,6 +8,10 @@
 #
 #   tools/test_logo.sh          compare aux références
 #   REF=1 tools/test_logo.sh    réécrit les références (après vérification !)
+#   LANGUE=en tools/test_logo.sh   LOGO anglais (cpa-en.dsk) : scénarios
+#     traduits par LOGOTR.COM (6502 simulé), commandes tapées par
+#     tools/logo_en.py ; références dans tools/logo_tests/en (les mêmes
+#     empreintes d'images)
 #
 # Remarques : après une dizaine de lignes, la console SPLIT attend une
 # touche (pagination) : les scénarios tapent un espace avant chaque
@@ -17,26 +21,50 @@ set -e
 cd "$(dirname "$0")/.."
 D=tools/logo_tests
 T=$(mktemp -d)
-cp build/cpa.dsk "$T/test.dsk"
+R=$D
+if [ "$LANGUE" = en ]; then
+  R=$D/en; mkdir -p $R
+  cp build/cpa-en.dsk "$T/test.dsk"
+else
+  cp build/cpa.dsk "$T/test.dsk"
+fi
 # place pour les scénarios (un bloc de 2 Ko chacun) : GRXASM et sa
 # bibliothèque, inutiles ici, sont retirés de la copie
-for f in GRXASM.COM GRX.INC; do python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null; done
-for f in $D/*.log; do
+# (et d'autres, sous leurs noms des deux langues : la place manque pour l'état
+# de LOGO.$$$ pendant EDITE)
+for f in GRXASM.COM GRX.INC CMDER.COM GRAPHER.COM ROTSCROL.GRX JEU.GRX PUZZLE.GRX; do
+  python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null 2>&1 || true
+done
+mkdir "$T/tr"
+# en anglais, DEMO.LOG est celui de cpa.dsk traduit par LOGOTR (les scénarios
+# appellent ses procédures : ETOILE...), et les scénarios aussi ; corrections
+# à la main de ce que LOGOTR signale : en/corrige.sed
+for f in $D/*.log files/demo.log; do
   n=$(basename "$f" .log | tr a-z A-Z)
+  [ "$LANGUE" != en ] && [ "$n" = DEMO ] && continue
+  if [ "$LANGUE" = en ]; then   # traduit par LOGOTR (/EN)
+    cp build/progs-en/LOGOTR.COM "$T/tr/"
+    tr -d '\r' < "$f" | sed 's/$/\r/' > "$T/tr/$n.LOG"
+    (cd "$T/tr" && python3 "$OLDPWD/tools/run_com.py" "$T/tr" LOGOTR.COM $n /EN >/dev/null 2>&1)
+    sed -i -f $D/en/corrige.sed "$T/tr/$n.LOG"
+    f="$T/tr/$n.LOG"
+  fi
   python3 tools/mkdisk.py put "$T/test.dsk" "$f" "$n.LOG" >/dev/null
 done
 ko=0
 
 # run NOM TOUCHES TRAMES : lance, garde OUT.TXT dans $T/NOM.out et la mémoire
 run() {
-  DSK="$T/test.dsk" ORIC_KEYS_AT=400 tools/run_test.sh "$2" "$3" "$T/$1" >/dev/null
+  K="$2"   # (anglais : x en plus pour garder le retour à la ligne final)
+  if [ "$LANGUE" = en ]; then K=$(python3 tools/logo_en.py "$2"; echo x); K=${K%x}; fi
+  DSK="$T/test.dsk" ORIC_KEYS_AT=400 tools/run_test.sh "$K" "$3" "$T/$1" >/dev/null
   python3 tools/mkdisk.py get "$T/$1.dsk" OUT.TXT "$T/$1.raw" >/dev/null 2>&1 || : > "$T/$1.raw"
   tr -d '\r\032' < "$T/$1.raw" > "$T/$1.out"
 }
 # check NOM : compare la sortie texte à $D/NOM.ref
 check() {
-  if [ -n "$REF" ]; then cp "$T/$1.out" "$D/$1.ref"; echo "référence écrite : $1"
-  elif diff "$D/$1.ref" "$T/$1.out" >"$T/$1.diff"; then echo "identique : $1"
+  if [ -n "$REF" ]; then cp "$T/$1.out" "$R/$1.ref"; echo "référence écrite : $1"
+  elif diff "$R/$1.ref" "$T/$1.out" >"$T/$1.diff"; then echo "identique : $1"
   else echo "DIFFERENT : $1"; cat "$T/$1.diff"; ko=$((ko+1)); fi
 }
 # image NOM : empreinte de l'image du mode SPLIT
@@ -236,10 +264,10 @@ run texte 'PUT OUT.TXT LOGO
 ' 2600
 check texte
 grep -v '^carre' "$T/images" > "$T/images2"
-if [ -n "$REF" ]; then cp "$T/images2" "$D/images.ref"; echo "référence écrite : images"
+if [ -n "$REF" ] && [ "$LANGUE" != en ]; then cp "$T/images2" "$D/images.ref"; echo "référence écrite : images"
 elif diff "$D/images.ref" "$T/images2"; then echo "identiques : images (DEMO, T2, T14)"
 else echo "DIFFERENT : images"; ko=$((ko+1)); fi
 
 rm -rf "$T"
-[ $ko -eq 0 ] && echo "LOGO : aucune différence" || echo "LOGO : $ko différence(s)"
+[ $ko -eq 0 ] && echo "LOGO${LANGUE:+ ($LANGUE)} : aucune différence" || echo "LOGO${LANGUE:+ ($LANGUE)} : $ko différence(s)"
 [ $ko -eq 0 ]

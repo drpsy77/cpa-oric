@@ -1,0 +1,10 @@
+LOGO CP/A - type HELP
+?  LOAD "E15
+Empty word or list
+?  LOAD "E16
+A number is needed
+?  LOAD "E17
+A word is needed
+?  LOAD "E18
+Empty word or list
+?  QUIT

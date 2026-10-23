@@ -1,0 +1,14 @@
+LOGO CP/A - type HELP
+?  LOAD "E9
+Number too big
+?  LOAD "E10
+Number too big
+?  LOAD "E11
+Division by zero
+?  LOAD "E12
+Division by zero
+?  LOAD "E13
+Number too big
+?  LOAD "E14
+Number too big
+?  QUIT

@@ -53,7 +53,7 @@ Autres programmes de la disquette :
 - `COPY.COM src [dst]` copie des fichiers (jokers admis), par gros blocs, à travers le BDOS.
 - `EDIT.COM [fichier]`, l'éditeur de texte (plus bas).
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
-- `LOGO.COM`, avec `DEMO.LOG`.
+- `LOGO.COM`, avec `DEMO.LOG` ; `LOGOTR.COM`, le traducteur de `.LOG` (`logo.md`).
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
 - `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX` (exécuté), et
   `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (en recopiant les routines utiles de `GRX.INC`, `HIRES.INC`...), avec ses exemples (`docs/grapher.md` § 14), et
@@ -277,8 +277,8 @@ Mêmes programmes, mêmes fichiers, mêmes attributs, avec le système, les mess
 l'aide (HELP, README.TXT), `EDIT.CFG` et les bibliothèques des programmes traduits en anglais
 (la touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT). Les exemples y
 sont traduits et portent des noms anglais : même code, commentaires, textes affichés et noms
-des sous-programmes et procédures en anglais. LOGO parle encore français : les `.LOG` anglais
-gardent ses primitives (`AV`, `REPETE`...).
+des sous-programmes et procédures en anglais. LOGO y parle anglais (`FORWARD`, `TO ... END`) ;
+`LOGOTR` traduit un programme d'une langue à l'autre (`logo.md`).
 
 | Français | Anglais | Français | Anglais |
 |---|---|---|---|

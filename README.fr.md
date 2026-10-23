@@ -44,8 +44,9 @@ Deux variantes sont construites à partir des mêmes sources :
   et en anglais (`cpa-en.dsk`, `cpa-logo-en.dsk`... `cpa-project-en.dsk`) : mêmes programmes,
   mêmes exemples, avec les messages, les menus, l'aide et les exemples dans la langue de la
   disquette ; sur les anglaises, les exemples ont des noms anglais (`CARTE.GRX` y est
-  `MAP.GRX` ; correspondance dans `files/en/noms.txt`). LOGO parle encore français sur les
-  deux, traduction en cours.
+  `MAP.GRX` ; correspondance dans `files/en/noms.txt`). LOGO parle lui aussi la langue de la
+  disquette (`AVANCE`, `POUR ... FIN` en français), et `LOGOTR` traduit un programme de
+  l'une à l'autre.
 - **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
   disque.
 
@@ -59,7 +60,8 @@ Deux variantes sont construites à partir des mêmes sources :
 - L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
-- **LOGO** en français (tortue, décimaux, mots et listes, son) et **GRAPHER**, un petit
+- **LOGO** en français et en anglais (tortue, décimaux, mots et listes, son ; `LOGOTR`
+  traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
   l'écran, défilement compris), interprété ou traduit en
   assembleur.

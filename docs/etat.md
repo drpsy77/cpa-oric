@@ -45,7 +45,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | ASM | 6 130 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée ; `#include` cherchés sur A: à D: | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
-| LOGO | 18 960 | Logo en français : tortue, décimaux, listes, son, écran texte | `logo.md` |
+| LOGO | 18 963 | Logo (français, ou anglais sur les disquettes anglaises : 18 758) : tortue, décimaux, listes, son, écran texte | `logo.md` |
+| LOGOTR | 4 402 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
 | GRAPHER, GRXASM | 17 654, 15 004 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
@@ -201,8 +202,6 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      les programmes traduits avec leurs messages anglais ; `LANGUE=en
      tools/test_grapher.sh` compare GRAPHER et GRXASM anglais aux références françaises
      traduites par les fichiers de messages (`tools/msg_fr_en.py`).
-   - EDIT revient à LOGO par `LOGO NOM /R` : à changer pour `LOGOEN` quand LOGO sera
-     traduit (`s_logo` dans `edit.s`).
    - Fait aussi : **le système** (principe : tout ce qui est produit l'est dans les deux
      langues, `architecture.md` § 5). Barre de menus FUNCT du prompt et messages de la
      console dans `src/msg/fr/sys.msg` et `src/msg/en/sys.msg` ; `build.sh` assemble
@@ -216,27 +215,30 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - Fait aussi : HELP et README.TXT (`tools/gen_readme_txt.py`, une liste par langue,
      mêmes rubriques ; `helptab.msg` dans `progs/msg/fr` et `en`, `files/en/readme.txt`).
      Sujets anglais : KEYS PROGRAMS EDIT HEX LOGO ASM DEBUG MEMORY USB GRAPHER CMDER ; la
-     rubrique LOGO garde les primitives françaises (LOGO pas encore traduit). HELP anglais :
-     11 379 octets, 6 blocs comme le français.
+     rubrique LOGO donne les primitives anglaises. HELP anglais : 6 blocs comme le
+     français.
    - Fait aussi : toutes les disquettes en deux langues (jumelles `-en`, `architecture.md`
      § 5 ; `cpa-project-en.dsk` pour la vierge) et tous les exemples traduits sous des noms
      anglais (`files/en/noms.txt`) : `.GRX`, `.LOG` (ELIZA réécrit pour l'anglais :
-     table de reflet, mots-clés, réponses ; primitives LOGO françaises), `DEMO.BAT`,
+     table de reflet, mots-clés, réponses), `DEMO.BAT`,
      `HELLO.ASM`, `GTEST.ASM` (`GTEST.COM` anglais). `ROTSCROL.GRX` et `JEU.GRX`
      (`PUZZLE.GRX`), cités au § 14 de `grapher.md`, sont maintenant sur `cpa.dsk` et
      `cpa-logo.dsk` (et leurs jumelles).
    - Fait aussi : `docs/en` décrit les disquettes anglaises (écrans, menus, messages de
      `cpa-en.dsk` ; `architecture.md` § 7) ; README.md renvoie à `cpa-en.dsk`.
-   - Reste : `smoke_test` en anglais ; LOGO (ci-dessous).
-   - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
-     traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
-     traduit que les primitives, pas les procédures de l'utilisateur. Décidé avec Pierre
-     (23/10/2026) : une seule table de primitives, chacune avec un numéro et ses noms dans
-     les deux langues (ce numéro sera le token d'une tokenisation future) ; un fichier
-     `.LOG` a une langue (collisions : `PR` est PREMIER en français, PRINT en anglais) ; le
-     traducteur ne traduit que les mots en position de code (instructions, listes de
-     `REPETE`, `SI`, `EXEC`, `ENSEMBLE`...), laisse les listes de données et signale les cas
-     douteux (`DONNE "L [AV 10]` puis `EXEC :L`).
+   - Fait aussi : **LOGO** (`logo.md`). Une seule table de primitives
+     (`tools/gen_logo_voc.py`) : chacune a un numéro (le token d'une tokenisation future)
+     et ses noms dans les deux langues ; `LOGO.COM` dans la langue de la disquette, comme les
+     autres programmes (vocabulaire `logovoc.msg`, messages, menus et AIDE `logo.msg`), donc
+     pas de `LOGOFR` / `LOGOEN` et rien à changer au retour d'EDIT. Anglais classique
+     (FORWARD FD, TO ... END, MAKE, PRINT PR, REPEAT, IF, OUTPUT OP, BUTFIRST BF...).
+     `LOGOTR.COM` traduit un `.LOG` : primitives seulement, en position de code (listes
+     d'instructions de `REPETE`, `SI`, `EXECUTE`, `ENSEMBLE`), listes de données recopiées,
+     avertissements (liste de données qui commence par une primitive, nom de l'utilisateur
+     qui est une primitive d'arrivée) ; aller-retour identique sur les exemples et les
+     scénarios de test. Exemples `.LOG` anglais passés aux primitives anglaises par LOGOTR.
+     `LANGUE=en tools/test_logo.sh` (références `tools/logo_tests/en`).
+   - Reste : `smoke_test` en anglais.
    - Documentation : faite. `README.md` en anglais (français : `README.fr.md`), documents
      d'utilisation dans `docs/en/` (mêmes noms, `tools/check_en.py`), documents internes en
      français seulement.

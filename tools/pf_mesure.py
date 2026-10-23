@@ -44,7 +44,9 @@ COMPOSANTS = [
     ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
               "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc"]
              + ["progs/msg/*/%s.msg" % n for n in "grapher grxasm grxc grx arr fil spr".split()]),
-    ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s"]),
+    ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s",
+              "progs/logotr.s", "progs/lgtr_tab.s"]
+             + ["progs/msg/*/%s.msg" % n for n in ("logo", "logovoc", "logotr")]),
     ("CMD",  ["progs/cmder.s", "progs/msg/*/cmder.msg"]),
     ("HEX",  ["progs/hex.s", "progs/msg/*/hex.msg"]),
     ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg",

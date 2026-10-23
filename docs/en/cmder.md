@@ -197,4 +197,4 @@ Rename, Attributes refused: `USB key : read and copy only`. No copy of a whole d
 
 - A file comparison program, separate.
 - Open a file in EDIT or HEX, then come back to CMDER (CHAIN and a script, like LOGO's
-  `EDITE`).
+  `EDIT`).

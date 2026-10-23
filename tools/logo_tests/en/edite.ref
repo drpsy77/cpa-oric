@@ -1,0 +1,12 @@
+ 1|..? LOAD "ESSAI.LOG                     |
+ 2|..NEUF defined.                         |
+ 3|..CARRE defined.                        |
+ 4|..Loaded.                               |
+ 5|..?  PRINT :L                           |
+ 6|..A B C                                 |
+ 7|..?  NEUF                               |
+ 8|..99                                    |
+ 9|..?  PRINT HEADING                      |
+10|..45                                    |
+11|..?  FD 10                              |
+12|..Not on the text screen : FD           |
