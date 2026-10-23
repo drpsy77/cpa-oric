@@ -1,11 +1,15 @@
 ; =====================================================================
 ;  TERM.COM — petit terminal série : parler au modem WiFi et aux serveurs
 ;
-;  TERM [/E]
+;  TERM [/E] [/D]
 ;    Ce qu'on tape part vers le port série ; ce qui arrive s'affiche.
 ;    CTRL-Q : quitter (la liaison reste ouverte : DTR reste actif).
 ;    /E     : écho local (pour un serveur qui ne renvoie pas les
 ;             caractères ; le modem, lui, les renvoie en mode commande).
+;    /D     : diagnostic : registres état, commande et contrôle relus
+;             avant et après le réglage, puis chaque changement de l'état
+;             affiché entre crochets ([10] : émetteur libre, [18] : un
+;             caractère reçu, bit 6 : pas de modem).
 ;
 ;  Port : l'ACIA 6551 émulée par le LOCI en $0380 (modem USB, un Pico W
 ;  avec PicoWiFiModemUSB : docs/loci-modem-wifi.md) ; sans LOCI, celle
@@ -31,6 +35,8 @@ ap      = $10           ; adresse de l'ACIA (2 octets) : données, état, comman
 echo    = $12           ; 1 = écho local
 savpg   = $13           ; PAGE_ON à rendre
 cnt     = $14           ; compteur d'attente (2 octets)
+diag    = $16           ; 1 = diagnostic (/D)
+last    = $17           ; dernier état affiché (/D)
 
 A_DATA  = 0             ; registres de l'ACIA, par (ap),y
 A_STAT  = 1             ; bit 3 : reçu, bit 4 : émetteur libre, bit 6 : pas de DSR
@@ -45,17 +51,21 @@ start
         lda #0
         sta PAGE_ON
         sta echo
-        ldx #0                  ; option /E
+        sta diag
+        ldx #0                  ; options /E, /D
 op      lda TAIL+1,x
         beq opd
         cmp #"/"
         bne opn
         lda TAIL+2,x
         and #$DF                ; e -> E
+        ldy #1
         cmp #"E"
+        bne op2
+        sty echo
+op2     cmp #"D"
         bne opn
-        lda #1
-        sta echo
+        sty diag
 opn     inx
         bne op
 opd     lda #3
@@ -77,6 +87,7 @@ hello   ldx #F_PRINT
         ldy #>m_keys
         ldx #F_PRINT
         jsr BDOS
+        jsr dregs               ; /D : registres avant le réglage
         ldy #A_STAT             ; remise à zéro programmée
         sta (ap),y
         ldy #A_CTRL
@@ -91,6 +102,7 @@ w1      dey
         bne w1
         dex
         bne w1
+        jsr dregs               ; /D : et après
         ldy #A_STAT
         lda (ap),y
         and #$40                ; DSR absent : pas de modem branché
@@ -102,7 +114,21 @@ w1      dey
 
 loop    ldy #A_STAT             ; reçu ?
         lda (ap),y
-        and #$08
+        ldx diag
+        beq nod
+        cmp last                ; /D : chaque changement de l'état
+        beq nod
+        sta last
+        pha
+        lda #"["
+        jsr B_CONOUT
+        pla
+        pha
+        jsr phex
+        lda #"]"
+        jsr B_CONOUT
+        pla
+nod     and #$08
         beq key
         ldy #A_DATA
         lda (ap),y
@@ -150,6 +176,53 @@ quit    lda savpg
         lda #13
         jsr B_CONOUT
         lda #10
+        jmp B_CONOUT
+.)
+
+; dregs : (/D) affiche « ACIA ee cc kk » : état, commande, contrôle
+dregs
+.(
+        lda diag
+        beq r
+        lda #<m_regs
+        ldy #>m_regs
+        ldx #F_PRINT
+        jsr BDOS
+        ldy #A_STAT
+l       sty cnt
+        lda #" "
+        jsr B_CONOUT
+        ldy cnt
+        lda (ap),y
+        jsr phex
+        ldy cnt
+        iny
+        cpy #4
+        bne l
+        lda #$FF                ; le premier état sera affiché
+        sta last
+        lda #13
+        jsr B_CONOUT
+        lda #10
+        jmp B_CONOUT
+r       rts
+.)
+
+; phex : affiche A en deux chiffres hexadécimaux
+phex
+.(
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        jsr dig
+        pla
+        and #$0F
+dig     cmp #10
+        bcc n
+        adc #6                  ; (C=1) 10 -> "A"
+n       adc #"0"
         jmp B_CONOUT
 .)
 
