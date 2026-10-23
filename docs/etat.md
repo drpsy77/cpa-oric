@@ -151,8 +151,10 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
-     paramètres d'un script à `LOGO NOM` ; tokenisation des procédures (vitesse, place), à
-     décider sur mesure ;
+     paramètres d'un script à `LOGO NOM` ; tokenisation des procédures **en mémoire**
+     seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE`, `EDITE`), après la
+     traduction et sur mesure (vitesse d'ELIZA et des traceurs, place) ; le contenu des
+     listes reste du texte (code ou données : décidé à l'exécution) ;
    - GRAPHER : exemples de fichiers de données : un
      niveau écrit dans EDIT (`LOAD`), un écran titre (`BLOAD SCREEN`) ;
    - EDIT : une édition plein écran (colonnes 0-1 comprises) pour dessiner un écran texte ;
@@ -228,7 +230,13 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - Reste : `smoke_test` en anglais ; LOGO (ci-dessous).
    - LOGO : deux programmes, `LOGOFR.COM` et `LOGOEN.COM` (FORWARD, TO... END), et un
      traducteur de `.LOG` d'une langue à l'autre (un programme, ou un par sens) qui ne
-     traduit que les primitives, pas les procédures de l'utilisateur.
+     traduit que les primitives, pas les procédures de l'utilisateur. Décidé avec Pierre
+     (23/10/2026) : une seule table de primitives, chacune avec un numéro et ses noms dans
+     les deux langues (ce numéro sera le token d'une tokenisation future) ; un fichier
+     `.LOG` a une langue (collisions : `PR` est PREMIER en français, PRINT en anglais) ; le
+     traducteur ne traduit que les mots en position de code (instructions, listes de
+     `REPETE`, `SI`, `EXEC`, `ENSEMBLE`...), laisse les listes de données et signale les cas
+     douteux (`DONNE "L [AV 10]` puis `EXEC :L`).
    - Documentation : faite. `README.md` en anglais (français : `README.fr.md`), documents
      d'utilisation dans `docs/en/` (mêmes noms, `tools/check_en.py`), documents internes en
      français seulement.
@@ -265,9 +273,14 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      essai d'assemblage du système par ASM (octets identiques à xa) ; disquette de
      construction ; installation depuis un fichier ; ROM.
 
-9. **Orientation LOCI du stockage** (réflexion avec Pierre le 23/10/2026, rien décidé ni
-   codé). Si peu d'utilisateurs ont un vrai Microdisc (ceux de Sedoric gardent leur
-   système), CP/A pourrait s'orienter vers le LOCI.
+9. **Orientation LOCI du stockage**. Décidé par Pierre (23/10/2026), rien codé : CP/A vise
+   à moderniser l'environnement, pas à rentabiliser des disquettes 3 pouces devenues rares
+   et chères ; le LOCI est simple, répandu et peu cher, et la synchronisation d'un vrai
+   Microdisc est délicate. Les fichiers restent du **texte sur disque** (EDIT, TYPE, git, le
+   Mac) : pas de tokenisation ni de compactage sur disque (ceux du BASIC et de SEDORIC sont
+   de leur époque) ; la place viendra du **lecteur « fichiers USB »** ci-dessous, la
+   direction à suivre pour le stockage. Le `.dsk` reste pour démarrer et pour les vrais
+   Microdisc et Cumulus.
    - **`.dsk` de 1 Mo** : possible mais cher. Cartes d'allocation actuelles : 22 octets par
      lecteur (`$FD00-$FD57`), ~176 blocs de 2 Ko, ~350 Ko. 1 Mo = 512 blocs : cartes de 64
      octets par lecteur (~170 octets résidents de plus) et numéros de bloc sur 2 octets
