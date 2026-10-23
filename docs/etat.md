@@ -265,6 +265,17 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      sauf l'amorçage, système plus petit.
    - Préalable : lire l'interface fichiers du LOCI (`loci-rom`, firmware) : ce qu'elle
      permet, longueur des noms, espace libre, vitesse.
+   - Fichier catalogue par répertoire de la clé (question de Pierre) : écarté. Il doublerait
+     la vérité du disque et serait périmé dès qu'on modifie les fichiers sur le Mac (le but
+     même de U:) ; écritures en plus à chaque modification (fenêtre RESET) ; fichier parasite
+     sur la clé. Gain faible : ouvrir un fichier par son nom va droit au LOCI ; seuls DIR,
+     les jokers et la complétion parcourent un répertoire, et lire un catalogue passe par la
+     même interface qu'un `readdir`. À la place : (1) FAT garde déjà un nom court 8.3 pour
+     chaque nom long : si l'interface du LOCI le renvoie, la correspondance des noms est
+     faite et stable ; (2) un cache en mémoire du répertoire courant, tenu par CP/A,
+     invalidé par ses propres écritures et au démarrage à chaud ; (3) le tri par joker fait
+     par le firmware (piste à proposer à sodiumlb). D'abord mesurer la vitesse d'un
+     `readdir` sur un répertoire de quelques centaines de fichiers.
    - Piste de Pierre : proposer à l'auteur du LOCI (sodiumlb) une version du firmware qui
      fasse du LOCI une vraie interface de stockage, support alternatif au Microdisc.
      Précédents dans cet esprit : Orix (système de la carte Twilighte, fichiers FAT sur
