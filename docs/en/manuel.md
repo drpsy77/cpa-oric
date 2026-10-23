@@ -490,6 +490,7 @@ that the LOCI presents as a 6551 ACIA at `$0380`; without a LOCI, it is Oricutro
 | `TERM` | terminal (9600 baud, 8 bits, no parity, 1 stop bit) |
 | `TERM /E` | local echo: also shows what you type (for a peer that does not send it back, such as `nc` on the Mac; the modem itself echoes it in command mode) |
 | `TERM /D` | diagnostics: ACIA registers (status, command, control) read back before and after set-up (after: command `0B`, control `1E`), then each change of the status in brackets (`[10]` transmitter free, `[18]` character received, bit 6 (`$40`): no modem) |
+| `TERM /B` | "blind" sending: each character goes out without waiting for the ACIA to report the transmitter free (fixed pause of about 3 ms); used to check writes when ACIA reads are wrong (`TERM /B /E`, `ATDT-` to `nc` on the Mac) |
 | CTRL-Q | quits; the link stays up (DTR stays active) |
 | DEL | sends BS (8); CTRL-H to CTRL-K send 8 to 11 |
 | arrows | nothing (no ANSI emulation yet) |
@@ -507,6 +508,9 @@ without telnet), `+++` with a one-second pause before and after (back to command
 
 - `No modem (DSR) : plug the Pico in`: the LOCI sees no USB modem; TERM stays open, and
   `Modem silent : character lost` is shown if you type.
+- TERM only accesses the ACIA registers with absolute `LDA` / `STA`: an indexed write
+  (`STA (zp),Y`, and `POKE` in BASIC) reads the address before writing it, and an ACIA read
+  has side effects (the data register consumes the received byte).
 - The end-of-screen pause is off during TERM (it would block reception). While the menus
   (FUNCT) are open, the LOCI keeps what arrives.
 - In Oricutron: `serial = 'loopback'` in `oricutron.cfg` sends back each character sent;
