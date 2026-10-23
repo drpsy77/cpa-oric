@@ -1,0 +1,60 @@
+; SPRITES.GRX: a little man steered with the arrows and a ball
+; bouncing, over a text-mode scenery (HEROS.SPR)
+DIM S$(112) T(16)
+BLOAD S$ HEROS.SPR
+FOR I 0 15
+  T(I) = 112+I         ; codes 112-127: characters of the sprites
+NEXT
+LORES
+CHAR 0 0 6             ; title in light blue
+LOCATE 2 0
+ECHO "ARROWS: LITTLE MAN   Q: QUIT"
+FOR L 1 27
+  CHAR 0 L 2+(L%2)     ; green and yellow, every other line
+  LOCATE 2 L
+  IF L%3 = 0
+    ECHO ":. . . . :. . . . :. . . . :. . . . :"
+  ELSE
+    ECHO "   .   .    .   .    .   .    .   .   "
+  ENDIF
+NEXT
+SPRITES 2
+SPOOL T
+X = 10
+Y = 12
+B = 30
+C = 4
+D = 1
+E = 1
+WHILE 1
+  K = INKEY
+  IF K = 81 | K = 113          ; Q or q: end
+    END
+  ENDIF
+  IF K = 8 & X > 2
+    X = X - 1
+  ENDIF
+  IF K = 9 & X < 39
+    X = X + 1
+  ENDIF
+  IF K = 10 & Y < 26
+    Y = Y + 1
+  ENDIF
+  IF K = 11 & Y > 1
+    Y = Y - 1
+  ENDIF
+  IF K > 0
+    F = 1 - F          ; he walks
+  ENDIF
+  SSHOW 0 S$ F X Y
+  B = B + D
+  IF B = 2 | B = 39
+    D = -D
+  ENDIF
+  C = C + E
+  IF C = 1 | C = 27
+    E = -E
+  ENDIF
+  SSHOW 1 S$ 2 B C
+  DELAY 2
+NEXT

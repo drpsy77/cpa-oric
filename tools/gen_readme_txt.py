@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Génère l'aide de CP/A à partir d'une seule liste :
-  files/readme.txt   README.TXT de la disquette : notation et renvoi à HELP
+"""Génère l'aide de CP/A, en français et en anglais, à partir d'une liste
+par langue (SECTIONS, SECTIONS_EN : mêmes rubriques, même nombre de lignes) :
+  files/readme.txt, files/en/readme.txt
+                     README.TXT de la disquette : notation et renvoi à HELP
                      (l'aide-mémoire complet est dans HELP.COM, pour ne pas
                      occuper 10 blocs de 2 Ko une seconde fois)
-  progs/help_tab.s   textes de HELP.COM, par rubrique (HELP, HELP EDIT...),
+  progs/msg/fr/helptab.msg, progs/msg/en/helptab.msg
+                     textes de HELP.COM, par rubrique (HELP, HELP EDIT...),
                      compressés en LZSS (tools/lzhir.py, format de
-                     archives/lzss-osdk) ; décodés par help.s
+                     archives/lzss-osdk) ; décodés par help.s, qui les
+                     inclut comme ses messages (build.sh : -I msg/fr ou en)
 Lisible sur l'écran de l'Oric (37 colonnes au plus, sans accents).
 Deux colonnes : commande et paramètres | libellé court. Ce qui dépasse
 passe à la ligne suivante, décalé."""
@@ -341,6 +345,330 @@ SECTIONS = [
  ]),
 ]
 
+# (titre, lignes) en anglais : mêmes rubriques et même nombre de lignes que
+# SECTIONS ; la clé HELP est le premier mot du titre
+SECTIONS_EN = [
+ ("CP/A 0.9 - QUICK REFERENCE", [
+  ("afn", "name, wildcards * ?"),
+  ("file", "file name, drive optional (B:NAME.TXT)"),
+  ("adr bb", "hex: 0500 A9"),
+  ("[...]", "optional"),
+ ]),
+ ("KEYS", [
+  ("FUNCT", "pull-down menus"),
+  ("CTRL-T", "capitals on/off (A or a indicator at the end of the bar)"),
+  ("<- ->", "move in the line (typing inserts)"),
+  ("up down", "lines already typed (history)"),
+  ("TAB ESC", "completes a file name (at the start of the line: a command); twice: the possible names"),
+  ("DEL ^D", "erase left / under"),
+  ("^A ^E", "start / end of line (also SHIFT-<- SHIFT->)"),
+  ("^U", "erases the line"),
+  ("CTRL-P", "printer on/off (everything displayed; P indicator; also System menu)"),
+  ("CTRL-C", "(empty prompt line) warm restart"),
+  ("TAB", "is CTRL-I (the Oric has no TAB key)"),
+  ("RESET", "back to the prompt"),
+ ]),
+ ("COMMANDS", [
+  ("HELP [topic]", "help (HELP.COM)"),
+  ("VER", "version"),
+  ("CLS", "clears the screen"),
+  ("PAPER n / INK n", "background / ink colour, 0-7 (0 black 1 red 2 green 3 yellow 4 blue 5 magenta 6 cyan 7 white)"),
+  ("PAGE ON/OFF", "pause at the end of a screen, or not (also Screen menu, Paging)"),
+  ("B:", "current drive (A: to D:); also System menu, Next drive; a .COM or .BAT typed without a drive is looked for on the current drive (in a script: the script's), then A:, then B:, C:, D: already read since power-on (DIR B:...); LOCI: all those with an image"),
+  ("DIR [afn]", "list of files"),
+  ("DIRS [afn]", "same, SYS files included"),
+  ("TYPE file", "shows a text"),
+  ("ERA afn [/Q]", "erases, after confirmation (/Q: no question)"),
+  ("REN new=old", "renames"),
+  ("SAVE n file", "saves n pages from 0500"),
+  ("PUT file cmd [param]", "runs cmd, copies its output to file"),
+  ("DO file [p1..p9]", "runs FILE.BAT ($1..$9 = parameters, ESC stops)"),
+  ("ECHO text", "shows the text"),
+  ("PAUSE [text]", "waits for a key"),
+  ("SPLIT", "picture + 10 lines"),
+  ("TEXT", "text only"),
+  ("GCLS", "clears the picture"),
+  ("GSAVE file", "saves the picture (.IMG)"),
+  ("GLOAD file", "loads the picture"),
+  ("NAME [param]", "runs NAME.COM, else NAME.BAT"),
+  ("(drawing)", "PLOT, LINE...: in GRAPHER (HELP GRAPHER)"),
+ ]),
+ ("PROGRAMS", [
+  ("DIRS *.COM", "all of them, hidden (SYS) included"),
+  ("EDIT [file]", "text editor"),
+  ("HEX file", "hex editor"),
+  ("GRAPHER name [p]", "runs NAME.GRX: drawing, HIRES 240x200 (HELP GRAPHER)"),
+  ("GRXASM name [/C] [p]", "translates NAME.GRX into assembly; /C: then ASM, NAME.COM only (HELP GRAPHER)"),
+  ("VOIR name", "shows NAME.HIR (full screen), .HIZ (compressed) or .IMG, a key"),
+  ("VOIR name.ANI [n]", "animation played n times (0: until a key); arrows L R: tearing line"),
+  ("VSYNC", "sets the 50 Hz tick on the screen (middle text whole), until stopped"),
+  ("CMDER [d:][afn]", "full-screen file manager: sort, filter, mark, view, copy... (HELP CMDER)"),
+  ("SET afn [opt]", "attributes: RO RW SYS DIR (no opt: shows them)"),
+  ("LOGO [file]", "Logo (in French) and its turtle (loads file.LOG)"),
+  ("ASM name [/S] [/E]", "NAME.ASM -> NAME.COM; /S: and NAME.SYM; /E: erases NAME.ASM if all goes well"),
+  ("DEBUG name [param]", "debugger"),
+  ("COPY src [dst]", "copy, wildcards allowed: COPY *.COM B:, COPY *.TXT *.BAK, COPY B:*.LOG"),
+  ("FORMAT X: [/Q]", "formats X: (A:: a single drive); /Q: empties the directory"),
+  ("DISKCOPY s: d: [opt]", "copies disk s: to d: (A: A:: a single drive); /T all, /V read back, /S system only (SYSGEN)"),
+  ("STAT [d:][afn]", "size: records, 2 KB blocks, bytes; At: R read-only, S system; alone: free space"),
+  ("XDO name [param]", "script called by a script (run by the CCP)"),
+  ("EXPORT file [name]", "copies to the LOCI's USB stick (HELP USB)"),
+  ("IMPORT name [file]", "copies from the LOCI's USB stick"),
+  ("USBDIR [path]", "files of the LOCI's USB stick"),
+  ("TERM [/E] [/D] [/B]", "serial terminal (LOCI's WiFi modem); /E: local echo; /D: ACIA diagnostic; /B: send without waiting for the ACIA; ^Q quits"),
+  ("MEM", "memory map"),
+  ("POKE adr bb..", "writes to memory (code to run: 0600 and up)"),
+  ("GO adr [param]", "runs the code (RTS = return)"),
+  ("GTEST", "graphics demo"),
+  ("HELLO [param]", "example .COM"),
+ ]),
+ ("USB: THE LOCI'S STICK", [
+  ("EXPORT file [name]", "file -> stick (name: file by default, lower case kept)"),
+  ("EXPORT afn [dir]", "wildcards: each file under its name, in folder dir"),
+  ("IMPORT name [file]", "stick -> file (default: name cut to 8.3; B: alone: on B:)"),
+  ("/T", "(IMPORT) text: LF alone -> CR LF, TAB -> space"),
+  ("USBDIR [path]", "list (size, <REP>: folder)"),
+  ("1:/DOCS/X.TXT", "path on the stick; without 1:: the first stick"),
+  ("0:X.TXT", "the LOCI's internal memory"),
+  ("^Z", "removed by EXPORT, added by IMPORT"),
+  ("X.DSK", "EXPORT refuses (disk image)"),
+ ]),
+ ("GRAPHER: .GRX FILES", [
+  ("GRAPHER name [p]", "runs NAME.GRX ($1..$9 = p, ESC stops at any time)"),
+  ("numbers", "integers -32768..32767"),
+  ("variables", "A to Z, or two chars: PX N1 (except IF)"),
+  ("parameter", "expression without spaces: X+8 RND(240) (X * 2)"),
+  ("operators", "- ; * / % ; + - ; = <> < <= > >= ; & |"),
+  ("functions", "RND(n) ABS(n) POINT(x,y) INKEY SCRN(col,lin) LEN(A$) FOUND TILE(x,y)"),
+  ("V = expr", "assignment (LET V = expr)"),
+  ("REPEAT n", "... NEXT"),
+  ("FOR V a b [s]", "... NEXT"),
+  ("WHILE expr", "... NEXT"),
+  ("IF expr", "... [ELSE ...] ENDIF"),
+  ("SUB NAME", "... ENDSUB ; CALL NAME ; RETURN"),
+  ("PRINT expr", "shows a number (not in HIRES; LORES: at the cursor)"),
+  ("DIM A(n) M$(l,c)", "arrays of integers, of bytes ($); one-letter name; indices 0 to n-1; constant sizes, outside any block: fast access once translated"),
+  ("A(i) A(i,j)", "element; M$(l,c): a code 0-255"),
+  ("A$ M$(l)", "string (up to the first 0): = < > LEN PRINT"),
+  ("A$ = \"text\"", "assignment; IF A$ = B$: comparison"),
+  ("INPUT A$ / V", "input of a string / an integer"),
+  ("FILL A v", "the whole array to v"),
+  ("GNUM col y n", "number in the picture"),
+  ("SAVE A file", "array as text (.TXT), one line per array line; CR LF added, codes 1-31 refused (BSAVE)"),
+  ("LOAD A file", "reads it back; missing: nothing changes, FOUND = 0"),
+  ("BSAVE A file", "array in binary (.DAT), bytes one after another, no line ends; BLOAD: reads it back"),
+  ("BSAVE SCREEN file", "LORES: the text screen (.SCR); BLOAD SCREEN"),
+  ("SPRITES n", "LORES: n sprite slots (0 to n-1)"),
+  ("SPOOL T [ALT]", "free codes for the sprites (integer array T, 32-127; ALT: secondary set, 32-111)"),
+  ("SSHOW k S$ n c l", "sprite n of the .SPR (BLOAD S$ NAME.SPR) at col c, lin l, slot k; moves; [ALT]"),
+  ("SHIDE k", "removes the sprite of slot k"),
+  ("TILESET D$ w h [K$]", "tiles of w x h codes (1-4), one per line of D$; K$: map characters in tile order (else byte = number)"),
+  ("TMAP T$ x y c l w h", "LORES: map T$, character (x,y) of the world at (c,l), w x h cells; unknown or off the map: tile 0"),
+  ("TILE(x,y)", "number of the tile under character (x,y) (map of the last TMAP)"),
+  ("TFONT S$ code [ALT]", "LORES: drawings of a kind 1 .SPR into the font, consecutive codes"),
+  ("GRXASM name [p]", "translates NAME.GRX into NAME.ASM, with only the useful routines of GRX.INC HIRES.INC ARR.INC FIL.INC SPR.INC ANIM.INC (drive of the .GRX, then A: to D:); then ASM NAME -> NAME.COM (with CPA.INC)"),
+  ("GRXASM name /C [p]", "translates then assembles: NAME.COM, NAME.ASM erased"),
+  ("GRAPHER name /A", "the same: hands over to GRXASM (/C: and to ASM)"),
+  ("translated", "no checks while running; ESC stops nothing: INKEY GET WAIT return it (27); exit: another key (Q), else RESET"),
+  ("HIRES", "full screen 240 x 200, cleared"),
+  ("SPLIT", "240 x 128, console below"),
+  ("TEXT", "back to text (console)"),
+  ("LORES", "40 x 28 text screen for the program, no console or menus"),
+  ("CLS", "LORES: attribute 16 everywhere; else the console"),
+  ("LOCATE col lin", "cursor (col 0-39, lin 0-27)"),
+  ("CHAR col lin c", "byte c in the cell (character or attribute)"),
+  ("SPC n [x]", "n times byte x (space by default)"),
+  ("TAB n", "moves n columns on without writing"),
+  ("PRINTV ECHOV SPCV", "like PRINT ECHO SPC, downwards (LORES)"),
+  ("PASTE T$(l,c) c l w h", "copies w x h cells of T$ (from l,c) to the screen at (c,l)"),
+  ("GRAB T$(l,c) c l w h", "the reverse: from the screen to T$"),
+  ("SCROLH n [rect [x]]", "slides by n cells (n > 0: right); rect = c1 l1 c2 l2; x: freed cells"),
+  ("SCROLV n [rect [x]]", "same in height (n > 0: down)"),
+  ("ROTH n [rect]", "rotation: what goes out comes back on the other side; ROTV: in height"),
+  ("ECHO \"text\"", "LORES: at the cursor, as is; ECHO alone: next line; nothing past column 39"),
+  ("GCLS", "clears the picture"),
+  ("PEN m", "0 erases 1 draws 2 inverts"),
+  ("PLOT x y", "point (x 0-239, y 0-199)"),
+  ("LINE x1 y1 x2 y2", "line"),
+  ("BOX x1 y1 x2 y2", "rectangle (FBOX: filled)"),
+  ("CIRCLE x y r", "circle"),
+  ("GTEXT col y text", "text in the picture (col 0-39)"),
+  ("ATTR col y1 y2 v", "attribute: ink 0-7, paper 16-23"),
+  ("GLOAD file", ".HIR or .HIZ (HIRES), .IMG (SPLIT)"),
+  ("ANIM file [n]", ".ANI animation in HIRES, n times (0: until a key)"),
+  ("GSAVE file", "same, according to the mode"),
+  ("WAIT", "waits for a key"),
+  ("GET V", "waits for a key, its code in V"),
+  ("DELAY n", "waits n/50 s"),
+  ("ECHO text", "shows (not in HIRES)"),
+  ("END", "end; HIRES and LORES: back to the console (WAIT before it to wait)"),
+  ("; text", "comment"),
+ ]),
+ ("EDIT", [
+  ("arrows", "move"),
+  ("SHIFT <- ->", "start / end of line"),
+  ("CTRL <- ->", "previous / next word"),
+  ("SHIFT up down", "prev. / next page"),
+  ("CTRL up down", "start / end of the text"),
+  ("DEL ^D", "erase before / under"),
+  ("^SPACE", "marks one end of the block (ESC removes the mark)"),
+  ("^X ^C ^V", "cut / copy the block (mark..cursor) / paste"),
+  ("^K", "erases the paragraph"),
+  ("^E", "insert / overwrite"),
+  ("^F ^G ^H", "find / next / replace"),
+  ("^O ^S ^Q", "open / save / quit"),
+  ("^I (TAB)", "inserts a file at the cursor"),
+  ("^P", "prints the text, laid out (ESC stops)"),
+  ("^L", "next paragraph that is too long"),
+  ("C 127!", "(status line) position in the paragraph; !: longer than the maximum"),
+  ("^W", "next display: word wrap, at 38 chars, whole line (scrolls sideways; < > on the status line)"),
+  ("EDIT.CFG", "per file: name max [WORDS|CHAR|LINE] [print width], e.g. *.LOG 126 LINE 80 (MOTS, CAR, LIGNE too)"),
+  ("FUNCT", "menus File (with Insert, Print), Edit, Search, Options"),
+  ("Back", "(run by LOGO's EDITE) saves and goes back"),
+ ]),
+ ("CMDER: FULL-SCREEN FILES", [
+  ("CMDER [d:][afn]", "files of d:, filter afn (CMDER B:*.COM)"),
+  ("CMDER A: B:", "two panels (A: A: refused)"),
+  ("TAB ^W ^Z", "other panel / swap / full screen"),
+  ("CMDER USB:[path]", "the LOCI's USB stick (A: USB:: two panels); RETURN: enters a folder, .. goes up; copy only"),
+  ("/T", "(copy from the stick) LF alone -> CR LF, TAB -> space; menu Copy as text"),
+  ("up down", "previous / next file"),
+  ("<- ->", "previous / next page (also SHIFT up / down)"),
+  ("< >", "first / last file (also CTRL up / down)"),
+  ("A to Z", "next file starting with the letter"),
+  ("SPACE", "marks / unmarks"),
+  ("+ -", "marks / unmarks by a pattern (*.COM)"),
+  ("*", "inverts the marks"),
+  ("1 2 3 4", "sort: disk, name, type, size; twice: reverse order"),
+  ("/", "filter (B:*.TXT: other drive)"),
+  ("RETURN", "view the text"),
+  ("^C ^X", "copy / move to B: or NAME.EXT; A: (drive of the list): a single drive, disks swapped"),
+  ("^N", "rename"),
+  ("DEL", "erase (confirmation)"),
+  ("^A", "attributes R (read-only) S (system)"),
+  ("? ^E", "exact size: of the file / of all"),
+  ("^L ^R", "other drive / read again (disk changed)"),
+  ("FUNCT", "menus File (Print list), Mark, Sort, View (Not on other: files missing from the other panel or different)"),
+  ("ESC ^Q", "quit"),
+  ("targets", "the marked files, else the one at the cursor"),
+ ]),
+ ("HEX", [
+  ("arrows RET", "move"),
+  ("SHIFT <- ->", "start / end of line"),
+  ("SHIFT up down", "prev. / next page"),
+  ("CTRL up down", "start / end of the file"),
+  ("^L", "go to the address"),
+  ("^F ^G", "find text or #hex / next"),
+  ("TAB", "HEX / ASCII mode"),
+  ("^S ^R", "save / reload"),
+  ("ESC ^Q", "quit"),
+ ]),
+ ("LOGO (IN FRENCH)", [
+  ("AV n  RE n", "forward / back (decimal n allowed)"),
+  ("DR n  GA n", "right / left (degrees, 0.5 allowed)"),
+  ("LC  BC", "pen up / down"),
+  ("CT  MT", "hide / show turtle"),
+  ("VE  ORIGINE", "clear screen / centre"),
+  ("POINT x y", "a point (turtle coordinates; it does not move)"),
+  ("TRAIT x y x y", "a line; RECTANGLE, PAVE (filled): opposite corners"),
+  ("CERCLE r", "around the turtle (r 0-127)"),
+  ("ETIQUETTE x", "writes x in the picture at the turtle"),
+  ("FIXECOULEUR v", "ink 0-7 or paper 16-23 of the picture"),
+  ("ALLUME? x y", "1 if the point is lit"),
+  ("ECRANTEXTE", "all text"),
+  ("ECRANMIXTE", "back to the picture"),
+  ("VT", "clears the text (VIDETEXTE)"),
+  ("TAPE x", "writes, without a new line"),
+  ("FIXECURSEUR c l", "cursor column 0-39, line 0-27 (whole screen)"),
+  ("FIXECARECRAN c l n", "code n in the cell (attributes 0-31)"),
+  ("REPETE n [..]", "repeats the list"),
+  ("SI c [..] [..]", "condition"),
+  ("POUR NOM :A ... FIN", "defines a procedure"),
+  ("RENDS x", "the procedure returns x"),
+  ("EC x", "prints"),
+  ("SAUVE \"N", "procedures -> N.LOG"),
+  ("CHARGE \"N", "loads N.LOG"),
+  ("EDITE \"N", "N.LOG in EDIT, then Back"),
+  ("SAUVEIMAGE \"N", "drawing -> N.IMG"),
+  ("CHARGEIMAGE \"N", "loads N.IMG"),
+  ("3.14  2E-7", "decimals (9 digits); 7 / 2 = 3.5"),
+  ("ENT x  ARRONDI x", "integer part / nearest integer"),
+  ("RACINE x", "square root"),
+  ("SIN COS ARCTAN", "in degrees (SIN 30 = 0.5)"),
+  ("LN x  EXP x", "logarithm / exponential"),
+  ("ABS x", "absolute value"),
+  ("QUOTIENT a b", "integer division; RESTE a b: remainder"),
+  ("\"MOT  [A B]", "word, list (DONNE \"L [A B])"),
+  ("PR SP x", "first / all but first"),
+  ("DER SD x", "last / all but last"),
+  ("ITEM n x", "n-th element"),
+  ("COMPTE x", "number of elements"),
+  ("MOT a b", "joins two words"),
+  ("PH a b  LISTE a b", "sentence / list of two"),
+  ("VIDE? MOT? LISTE?", "1 or 0; also NOMBRE? MEMBRE? a b"),
+  ("EXEC [..]", "runs a list"),
+  ("LISLISTE", "reads a line -> list (LL)"),
+  ("LISMOT", "reads a line -> word"),
+  ("LISCAR", "waits for a key -> character"),
+  ("ASCII x  CAR n", "code of a character / character"),
+  ("TOUCHE?", "1 if a key is waiting, 0 otherwise"),
+  ("TOUCHE", "key pressed, no delay (games); empty word if none"),
+  ("ESC ^C", "interrupts the program (stays in LOGO)"),
+  ("CURSEUR", "[column line] of the cursor"),
+  ("CARECRAN c l", "code of the cell"),
+  ("SON v n vol d", "note n (37 = C, 0 = none) on voice v (0-2), volume 0-15 (16 = envelope), d/50 s (0: endless)"),
+  ("SONF v p vol d", "sound of period p (0-4095)"),
+  ("BRUITV v p vol d", "noise of period p (0-31)"),
+  ("ENVELOPPE f p", "shape 0-15, period 0-65535"),
+  ("MELANGE v s b", "sound and noise of the voice (1 / 0)"),
+  ("ENSEMBLE [..]", "the voices of the list start together"),
+  ("ATTENDSSON v", "waits for the end (255: all)"),
+  ("JOUE? v", "1 if the voice is still playing"),
+  ("SILENCE", "stops the sound"),
+  ("AIDE", "full list"),
+  ("QUITTE", "back to CP/A"),
+ ]),
+ ("ASM: SYNTAX", [
+  ("label", "in column 1"),
+  ("NAME = expr", "constant"),
+  ("*= adr", "address (0500)"),
+  (".byt .asc", "bytes, \"strings\""),
+  (".word", "16-bit words"),
+  (".dsb n[,v]", "n bytes"),
+  (".(  .)", "block, local labels"),
+  ("#include \"f\"", "inclusion (one level; drive of the source, then A: to D:)"),
+  ("$ % \"c\" *", "hex, binary, char, here"),
+  ("< >", "low / high byte"),
+ ]),
+ ("MEMORY", [
+  ("0000-00DF", "free zero page"),
+  ("0200 / 0203", "WBOOT / BDOS"),
+  ("020C", "top of the TPA (word)"),
+  ("0400-04FF", "base page, DMA 0480"),
+  ("0500-B3FF", "programs (TPA)"),
+  ("A000-B3FF", "picture in SPLIT mode (TPA up to 9FFF)"),
+  ("B400-BB7F", "character sets"),
+  ("BB80-BFDF", "text screen"),
+  ("C000-FFFF", "CP/A (overlay RAM)"),
+  ("DEBUG", "sits at 8400-9FFF"),
+  ("MEM", "this map, according to the mode"),
+ ]),
+ ("DEBUG", [
+  ("R [reg=v]", "registers (A X Y S PC P, N V D I Z C)"),
+  ("L [adr]", "disassembles"),
+  ("D [adr]", "memory"),
+  ("M adr bb..", "changes memory"),
+  ("G [adr]", "runs"),
+  ("T [n]", "single step"),
+  ("P [n]", "single step, JSR in one go"),
+  ("B [adr]", "sets / lists breakpoints"),
+  ("B- [adr]", "removes (all)"),
+  ("? expr", "value and symbol"),
+  ("H  Q", "help / quit"),
+  ("adr", "hex, #decimal, name+n"),
+ ]),
+]
+
 def wrap(text, first, rest):
     out, cur, width = [], "", first
     for w in text.split():
@@ -351,86 +679,101 @@ def wrap(text, first, rest):
     out.append(cur)
     return out
 
-lines = []
-for title, rows in SECTIONS:
-    if lines:
-        lines.append("")
-    lines.append(title)
-    lines.append("-" * len(title))
-    for left, right in rows:
-        rparts = wrap(right, RW, RW - 2)
-        if len(left) > LW - 1:                      # commande trop longue : seule
-            lines.append(left)
-            first = " " * LW + "| " + rparts[0]
-        else:
-            first = left.ljust(LW) + "| " + rparts[0]
-        lines.append(first)
-        for p in rparts[1:]:                    # suite du libellé, décalée
-            lines.append(" " * LW + "|   " + p)
-
 def render(title, rows):
     out = [title, "-" * len(title)]
     for left, right in rows:
         rparts = wrap(right, RW, RW - 2)
-        if len(left) > LW - 1:
+        if len(left) > LW - 1:                  # commande trop longue : seule
             out.append(left)
             out.append(" " * LW + "| " + rparts[0])
         else:
             out.append(left.ljust(LW) + "| " + rparts[0])
-        for q in rparts[1:]:
+        for q in rparts[1:]:                    # suite du libellé, décalée
             out.append(" " * LW + "|   " + q)
     for l in out:
         assert len(l) <= W, l
     return out
 
-for l in lines:
-    assert len(l) <= W, l
 
-byname = {t.split()[0].replace(":", ""): (t, r) for t, r in SECTIONS}
-topics = ["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG", "MEMOIRE", "USB", "GRAPHER", "CMDER"]
-sujets = ["  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]), "  " + " ".join(topics[8:]),
-          "  (4 lettres suffisent)"]
-
-# --- README.TXT : notation et renvoi à HELP ---------------------------
-readme = render(*SECTIONS[0]) + ["", "Aide : HELP (commandes internes)", "et HELP suivi d'un sujet :"] + sujets
-for l in readme:
-    assert len(l) <= W, l
-dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "files", "readme.txt")
-open(dest, "wb").write(("\r\n".join(readme) + "\r\n").encode("ascii"))
-print(len(readme), "lignes dans README.TXT")
-
-# --- HELP.COM : une chaîne par rubrique, le tout compressé -------------
-# Les rubriques sont mises bout à bout (chacune : lignes + CR LF, puis 0)
-# et compressées d'un seul tenant : une rubrique profite des mots des
-# précédentes. help.s décode depuis le début jusqu'à la fin de la rubrique
-# demandée (help_ends) dans le tampon qui suit le programme.
 def text(lines):
     return "".join(l + "\r\n" for l in lines).encode("ascii") + b"\0"
 
-default = render(*byname["COMMANDES"]) + ["", "Autres sujets : HELP suivi de"] + sujets
-parts = [text(default)] + [text(render(*byname[t])) for t in topics]
-data = b"".join(parts)
-comp = lzhir.compress(data)
-ends, pos = [], 0
-for p in parts:
-    pos += len(p)
-    ends.append(pos)
 
-out = ["; Généré par tools/gen_readme_txt.py — ne pas éditer à la main",
-       "; %d octets de texte, %d compressés" % (len(data), len(comp)),
-       "help_keys"]
-for t in topics:
-    out.append('        .asc "%s",0' % t[:4])     # 4 premières lettres suffisent
-out.append("        .byt 0")
-out.append("; début de chaque rubrique dans le texte décodé (h_default, puis les sujets)")
-out.append("help_offs")
-out.append("        .word " + ",".join(str(e) for e in [0] + ends[:-1]))
-out.append("; fin de chaque rubrique (0 final compris) : où le décodage peut s'arrêter")
-out.append("help_ends")
-out.append("        .word " + ",".join(str(e) for e in ends))
-out.append("hz_data")
-for i in range(0, len(comp), 16):
-    out.append("        .byt " + ",".join("$%02X" % b for b in comp[i:i + 16]))
-dest2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "progs", "help_tab.s")
-open(dest2, "w").write("\n".join(out) + "\n")
-print("HELP : %d octets de texte -> %d compressés" % (len(data), len(comp)))
+# par langue : liste, rubrique par défaut, sujets (dans l'ordre des clés de
+# help.s), textes, fichiers produits
+LANGUES = {
+    "fr": dict(sections=SECTIONS, defaut="COMMANDES",
+               sujets=["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG",
+                       "MEMOIRE", "USB", "GRAPHER", "CMDER"],
+               aide=["Aide : HELP (commandes internes)", "et HELP suivi d'un sujet :"],
+               autres="Autres sujets : HELP suivi de", lettres="  (4 lettres suffisent)",
+               inconnu="Sujet inconnu.",
+               readme="files/readme.txt", tab="progs/msg/fr/helptab.msg",
+               langue="français", autre="en"),
+    "en": dict(sections=SECTIONS_EN, defaut="COMMANDS",
+               sujets=["KEYS", "PROGRAMS", "EDIT", "HEX", "LOGO", "ASM", "DEBUG",
+                       "MEMORY", "USB", "GRAPHER", "CMDER"],
+               aide=["Help: HELP (built-in commands)", "and HELP followed by a topic:"],
+               autres="Other topics: HELP followed by", lettres="  (4 letters are enough)",
+               inconnu="Unknown topic.",
+               readme="files/en/readme.txt", tab="progs/msg/en/helptab.msg",
+               langue="anglais", autre="fr"),
+}
+RACINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+
+assert len(SECTIONS) == len(SECTIONS_EN)
+for (tf, rf), (te, re_) in zip(SECTIONS, SECTIONS_EN):
+    assert len(rf) == len(re_), (tf, te, len(rf), len(re_))
+
+
+def genere(code, L):
+    byname = {t.split()[0].replace(":", ""): (t, r) for t, r in L["sections"]}
+    topics = L["sujets"]
+    for t in topics:
+        assert t in byname, t
+    sujets = ["  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]),
+              "  " + " ".join(topics[8:]), L["lettres"]]
+
+    # --- README.TXT : notation et renvoi à HELP ---
+    readme = render(*L["sections"][0]) + [""] + L["aide"] + sujets
+    for l in readme:
+        assert len(l) <= W, l
+    open(os.path.join(RACINE, L["readme"]), "wb").write(("\r\n".join(readme) + "\r\n").encode("ascii"))
+    print("%s : %d lignes dans README.TXT" % (code, len(readme)))
+
+    # --- HELP.COM : une chaîne par rubrique, le tout compressé ---
+    # Les rubriques sont mises bout à bout (chacune : lignes + CR LF, puis 0)
+    # et compressées d'un seul tenant : une rubrique profite des mots des
+    # précédentes. help.s décode depuis le début jusqu'à la fin de la rubrique
+    # demandée (help_ends) dans le tampon qui suit le programme.
+    default = render(*byname[L["defaut"]]) + ["", L["autres"]] + sujets
+    parts = [text(default)] + [text(render(*byname[t])) for t in topics]
+    data = b"".join(parts)
+    comp = lzhir.compress(data)
+    ends, pos = [], 0
+    for p in parts:
+        pos += len(p)
+        ends.append(pos)
+    out = ["; helptab.msg : textes de HELP.COM en %s (en %s : progs/msg/%s/helptab.msg)." % (L["langue"], "anglais" if code == "fr" else "français", L["autre"]),
+           "; Généré par tools/gen_readme_txt.py — ne pas éditer à la main",
+           "; %d octets de texte, %d compressés" % (len(data), len(comp)),
+           'm_unknown .asc "%s",13,10,13,10,0' % L["inconnu"],
+           "help_keys"]
+    for t in topics:
+        out.append('        .asc "%s",0' % t[:4])     # 4 premières lettres suffisent
+    out.append("        .byt 0")
+    out.append("; début de chaque rubrique dans le texte décodé (h_default, puis les sujets)")
+    out.append("help_offs")
+    out.append("        .word " + ",".join(str(e) for e in [0] + ends[:-1]))
+    out.append("; fin de chaque rubrique (0 final compris) : où le décodage peut s'arrêter")
+    out.append("help_ends")
+    out.append("        .word " + ",".join(str(e) for e in ends))
+    out.append("hz_data")
+    for i in range(0, len(comp), 16):
+        out.append("        .byt " + ",".join("$%02X" % b for b in comp[i:i + 16]))
+    open(os.path.join(RACINE, L["tab"]), "w", encoding="utf-8").write("\n".join(out) + "\n")
+    print("%s : HELP, %d octets de texte -> %d compressés" % (code, len(data), len(comp)))
+
+
+for code, L in LANGUES.items():
+    genere(code, L)

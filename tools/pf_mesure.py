@@ -36,7 +36,7 @@ DOC = os.path.join(RACINE, "docs", "points-de-fonction.md")
 
 # --- répartition des fichiers ------------------------------------------------
 # (composant, motifs) ; le premier motif qui correspond l'emporte.
-SYS_COM = "type era ren set stat copy format diskcopy xdo help help_tab mem poke go vsync".split()
+SYS_COM = "type era ren set stat copy format diskcopy xdo help helptab mem poke go vsync".split()
 COMPOSANTS = [
     ("SYS",  ["src/*", "boot/*", "progs/cpa.inc"] + ["progs/%s.s" % n for n in SYS_COM]
              + ["progs/msg/*/%s.msg" % n for n in SYS_COM]),
@@ -76,7 +76,7 @@ GROUPES = [("Système", ["SYS"]),
 ORDRE = [c for _, l in GROUPES for c in l]
 
 # programmes .COM de chaque composant (octets)
-COMS = {"SYS": [n.upper() for n in SYS_COM if n != "help_tab"], "EDIT": ["EDIT"],
+COMS = {"SYS": [n.upper() for n in SYS_COM if n != "helptab"], "EDIT": ["EDIT"],
         "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"],
         "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR"], "ASM": ["ASM"],
         "DBG": ["DEBUG"], "EX": ["HELLO", "GTEST"]}

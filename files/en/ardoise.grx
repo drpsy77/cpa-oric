@@ -1,0 +1,28 @@
+; ARDOISE.GRX: an etch-a-sketch
+; arrows: draw; SPACE:
+; clear; Q: quit
+HIRES
+X = 120
+Y = 100
+WHILE 1
+  PLOT X Y
+  K = INKEY
+  IF K = 81 | K = 113          ; Q or q: end
+    END
+  ENDIF
+  IF K = 8
+    X = X - (X > 0)
+  ENDIF
+  IF K = 9
+    X = X + (X < 239)
+  ENDIF
+  IF K = 11
+    Y = Y - (Y > 0)
+  ENDIF
+  IF K = 10
+    Y = Y + (Y < 199)
+  ENDIF
+  IF K = 32
+    GCLS
+  ENDIF
+NEXT

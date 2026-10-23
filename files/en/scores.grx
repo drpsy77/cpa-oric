@@ -1,0 +1,59 @@
+; SCORES.GRX: high scores (DIM, strings, INPUT, LOAD, SAVE)
+; a name and a score typed in, the table sorted, shown in LORES; the
+; five best are kept in HOFN.TXT and HOFS.TXT (EDIT reads them)
+LORES
+DIM N$(6,10) S(6) T$(10) K$(20)
+LOAD N$ HOFN
+LOAD S HOFS
+IF FOUND = 0
+  N$(0) = "PIERRE"
+  S(0) = 120
+  N$(1) = "ORIC"
+  S(1) = 80
+  N$(2) = "ATMOS"
+  S(2) = 45
+ENDIF
+C = 0
+WHILE C < 5 & LEN(N$(C)) > 0
+  C = C + 1
+NEXT
+; the title in yellow: an attribute (ink 3) at the start of the string
+K$ = " HIGH SCORES"
+K$(0) = 3
+LOCATE 4 2
+PRINT K$
+LOCATE 4 5
+ECHO "Your name: "
+INPUT N$(C)
+LOCATE 4 6
+ECHO "Your score: "
+INPUT V
+S(C) = V
+C = C + 1
+; exchange sort, highest first
+FOR I 0 C-2
+  FOR J I+1 C-1
+    IF S(J) > S(I)
+      V = S(I)
+      S(I) = S(J)
+      S(J) = V
+      T$ = N$(I)
+      N$(I) = N$(J)
+      N$(J) = T$
+    ENDIF
+  NEXT
+NEXT
+FOR I 0 C-1
+  LOCATE 6 9+I
+  PRINT N$(I)
+  LOCATE 20 9+I
+  PRINT S(I)
+NEXT
+; the first five are kept
+N$(5) = ""
+S(5) = 0
+SAVE N$ HOFN
+SAVE S HOFS
+LOCATE 4 20
+ECHO "A key: end"
+WAIT

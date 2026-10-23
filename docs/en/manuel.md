@@ -41,7 +41,7 @@ Transient commands (`.COM` files on the disk) that complete the CCP:
 
 | Command | Effect |
 |---|---|
-| `HELP [topic]` | help in French: built-in commands, then `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (memory map), `HELP TOUCHES` (keys), `HELP PROG`, `HELP CMDER` |
+| `HELP [topic]` | help: built-in commands, then `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEMORY` (memory map), `HELP KEYS`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`; on `cpa.dsk`, in French (`HELP TOUCHES`, `HELP MEMOIRE`...) |
 | `CMDER [d:][afn]` | full-screen file manager: list you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes; copying with a single drive (`cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | file attributes (no option: shows them) |
 | `STAT [d:][afn]` | size of each file: 128-byte records, 2 KB blocks, bytes, attributes (`R` read-only, `S` system); no parameter: free space on the disk |
@@ -269,9 +269,11 @@ On `cpa-anim.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture,
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
 **English disk.** `build/cpa-en.dsk` has the contents of `cpa.dsk`, with the system (menu
-bar, console messages) and the programs' messages in English (translation in progress: the commands, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER and GRXASM, and the libraries of translated programs; the
-"yes" key is `Y` there, and "all" is `A` in EDIT's replacements) and an `EDIT.CFG` commented
-in English.
+bar, console messages) and the programs' messages in English (translation in progress: the commands, HELP and README.TXT, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER and GRXASM, and the libraries of translated programs; LOGO stays in French; the
+"yes" key is `Y` there, and "all" is `A` in EDIT's replacements), an `EDIT.CFG` commented
+in English and the GRAPHER examples (`DESSIN.GRX`, `SCORES.GRX`...) translated: same names,
+same code, comments and displayed texts in English. The LOGO examples (`.LOG`) stay in
+French.
 
 **Project disk.** `build/cpa-projet.dsk` is a blank disk (no system, 336 KB for files), to
 put in `B:` and copy for each project.
@@ -1184,8 +1186,8 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
 - **POKE, GO** fit in `$0500-$05FF`; POKE decodes everything before writing, from the zero page
   (`$D0-$DD`).
 - **STAT** computes the free space from the directory (no function 27).
-- **HELP** and README.TXT are produced by `tools/gen_readme_txt.py` (HELP texts compressed with
-  LZSS).
+- **HELP** and README.TXT are produced by `tools/gen_readme_txt.py`, one list per language
+  (HELP texts compressed with LZSS).
 
 ## Known limits
 

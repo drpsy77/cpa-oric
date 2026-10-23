@@ -53,6 +53,15 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
   anglais ; `ASM DESSIN` puis `DESSIN` : dessin comme sur `cpa.dsk` ; `VOIR` sur un
   fichier `.ANI` qui n'en est pas un : `not an animation`. Sur `cpa.dsk` : les mêmes,
   messages français inchangés ;
+- **`cpa-en.dsk`, HELP et README.TXT** : `TYPE README.TXT` (QUICK REFERENCE) ; `HELP` seul,
+  puis `HELP KEYS`, `HELP PROG`, `HELP MEMO`, `HELP GRAP` (rubrique longue : pause en fin
+  d'écran), `HELP XYZ` (`Unknown topic.` puis l'aide par défaut) ; 37 colonnes au plus,
+  rien de coupé. Sur `cpa.dsk`, `HELP TOUC` inchangé ;
+- **`cpa-en.dsk`, exemples de GRAPHER** : `GRAPHER FLECHES` (`Arrows, Q: quit      Steps:`,
+  le nombre de pas juste après), `GRAPHER SCORES` (HIGH SCORES en jaune, `Your name:`),
+  `GRAPHER SERPENT` (`Length:`, puis `LOST!`), `GRAPHER DEFILE` (`Lost! Score:`),
+  `GRAPHER CARTE`, `GRAPHER SPRITES`, `GRAPHER MOTIFS` (STARS centré) : textes anglais,
+  rien qui déborde ;
 - **barre de menus du système** : sur `cpa.dsk` puis `cpa-en.dsk` (System, Files, Screen,
   Keyboard), ouvrir chaque menu : raccourcis `^P`, `^T`, `^C` alignés à droite, cadres
   entiers ; Ecran / Screen plus large (13 / 12). **Couleurs sur le vrai écran** : pour chaque

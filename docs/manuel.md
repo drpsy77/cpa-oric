@@ -36,7 +36,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 
 | Commande | Effet |
 |---|---|
-| `HELP [sujet]` | aide en français : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER` |
+| `HELP [sujet]` | aide : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER` ; sur `cpa-en.dsk`, en anglais (`HELP KEYS`, `HELP MEMORY`...) |
 | `CMDER [d:][afn]` | gestionnaire de fichiers plein écran : liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs ; copie avec un seul lecteur (`docs/cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
 | `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets, attributs (`R` protégé, `S` système) ; sans paramètre : place libre sur le disque |
@@ -272,9 +272,11 @@ Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée,
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 **Disquette anglaise.** `build/cpa-en.dsk` a le contenu de `cpa.dsk`, avec le système
-(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER et GRXASM, et les bibliothèques des programmes traduits ; la
-touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT) et un `EDIT.CFG`
-commenté en anglais.
+(barre de menus, messages de la console) et les messages des programmes en anglais (traduction en cours : les commandes, HELP et README.TXT, EDIT, HEX, ASM, DEBUG, CMDER, GRAPHER et GRXASM, et les bibliothèques des programmes traduits ; LOGO reste en français ; la
+touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT), un `EDIT.CFG`
+commenté en anglais et les exemples de GRAPHER (`DESSIN.GRX`, `SCORES.GRX`...) traduits : mêmes
+noms, même code, commentaires et textes affichés en anglais. Les exemples de LOGO (`.LOG`)
+restent en français.
 
 **Disquette de projet.** `build/cpa-projet.dsk` est une disquette vierge (sans système, 336 Ko
 pour les fichiers), à mettre en `B:` et à copier pour chaque projet.
@@ -1200,8 +1202,8 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
 - **POKE, GO** tiennent en `$0500-$05FF` ; POKE décode tout avant d'écrire, depuis la page
   zéro (`$D0-$DD`).
 - **STAT** calcule la place libre d'après le répertoire (pas de fonction 27).
-- **HELP** et README.TXT sont produits par `tools/gen_readme_txt.py` (textes de HELP
-  compressés en LZSS).
+- **HELP** et README.TXT sont produits par `tools/gen_readme_txt.py`, une liste par langue
+  (textes de HELP compressés en LZSS).
 
 ## Limites connues
 
