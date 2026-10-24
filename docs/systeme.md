@@ -64,8 +64,13 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   secteur modifié est toujours réécrit sur son lecteur.
 - **Attentes** : premier octet d'un secteur ~2,9 s au plus (`dsk_to2`) : sur un vrai
   Microdisc, la tête se lève après ~3 s sans commande et le moteur avec elle, et le premier
-  octet arrive ~1 s après. L'attente ne coûte rien quand le contrôleur répond. Déplacements :
-  ~3 s, puis Force Interrupt et échec sans nouvel essai.
+  octet arrive ~1 s après. L'attente ne coûte rien quand le contrôleur répond. Déplacements,
+  et fin de la commande après le transfert : ~3 s, puis Force Interrupt et échec sans nouvel
+  essai. Après un Force Interrupt, l'état du contrôleur n'a plus de bit d'erreur : c'est le
+  délai dépassé (`fdc_wait` rend `$FF`) qui fait l'échec, jamais l'état relu ; un contrôleur
+  qui ne répond plus donne `BDOS: disk I/O error` (en ~6 s), jamais un accès déclaré bon avec
+  un tampon resté tel quel ou un secteur pas écrit. `tools/test_fdc.py` le vérifie dans un
+  6502 simulé.
 - **RESET pendant un transfert** : de `disk_read` / `disk_write` jusqu'à la fin du secteur,
   `dsk_nmi` vaut `$80`. Le bouton RESET (NMI) y est seulement noté (`$7F`) et l'interruption
   rendue ; à la fin du secteur, le pilote fait le RESET (`nmi_now`). Un secteur coupé au milieu

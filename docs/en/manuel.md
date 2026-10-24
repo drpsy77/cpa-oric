@@ -785,9 +785,11 @@ period is shared by the three voices.
 It is a full-screen editor: 26 lines of 38 columns, with a menu bar and a status line (file
 name, `*` if the text is modified, paragraph `L`, position `C` of the cursor in the paragraph,
 `INS`/`OVR` for insert/overwrite, `M` if a mark is set). The text can reach 32,000 bytes (about
-27 KB when started from SPLIT mode). A longer file opens **truncated** (`File truncated: too
-big`); it cannot be saved under its own name (`Text truncated: Save as...`), which would
-lose its end, but can be under another one. A long assembler program is therefore written as
+27 KB when started from SPLIT mode). In memory a line end is one byte, two on the disk
+(CR LF): a file can therefore exceed 32,000 bytes by as many bytes as it has lines and still
+open whole, and any text saved by EDIT opens again. A longer file opens **truncated** (`File
+truncated: too big`); it cannot be saved under its own name (`Text truncated: Save as...`),
+which would lose its end, but can be under another one. A long assembler program is therefore written as
 modules under 32,000 bytes, brought together by `#include` (see ASM); TYPE and ASM read a file
 of any size.
 

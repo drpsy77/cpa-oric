@@ -158,6 +158,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/mkdisk.py check IMAGE` | contrôle : secteurs absents ou à CRC faux, entrées invraisemblables, blocs hors disquette ou partagés, puis chaque fichier (entrées des extents qui se suivent sans trou ni doublon, entrées pleines avant la dernière, blocs d'accord avec le nombre d'enregistrements, R/O le même partout). Code 1 s'il y a un **défaut** ; les **avertissements** (code 0) sont les traces d'un travail interrompu, sans danger : `NOM.$$$` resté, fichier vide, bloc libre qui contient des données ou un secteur illisible |
 | `python3 tools/mkdisk.py diff AVANT APRES` | fichiers ajoutés (`+`), effacés (`-`), modifiés (`~` : contenu, attributs), secteurs d'amorce ou du système changés (`!`), blocs écrits restés libres ; code 0 si rien n'a changé |
 | `python3 tools/test_fichiers.py [--vite] [--garde DOSSIER] [mots]` | sûreté des fichiers : enregistrements qui tournent mal pour EDIT et GRAPHER (§ 4.1) |
+| `python3 tools/test_fdc.py` | pilote disque face à un contrôleur qui ne répond plus (6502 simulé, ~15 s) : `disk_read` et `disk_write` doivent échouer, jamais déclarer l'accès bon |
 | `python3 tools/mkdisk.py repare IMAGE SORTIE` | réécrit une image saine, par exemple après Clock Signal, qui en réécrivant une piste ne garde que deux des trois `$A1` de chaque synchronisation (la disquette paraît alors vide à Oricutron et au LOCI) |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
 | `python3 tools/mkspr.py SOURCE.txt SORTIE.SPR` | fichier `.SPR` (sprites ou tuiles de GRAPHER) d'après un dessin en texte (`#` allumé, `o` caché, `.` transparent ; exemple : `tools/spr/tuiles.txt`) |
@@ -229,7 +230,7 @@ disquette (`check`, `diff`, contenu du fichier visé) et l'écran (message atten
 |---|---|
 | GRAPHER `SAVE`, `BSAVE` (tableau de 4 800 octets, 3 blocs) | normal (référence du nouveau contenu), disque plein (1 bloc libre) avec ou sans ancien fichier, répertoire plein avec ou sans ancien fichier, fichier R/O, RESET balayé |
 | GRAPHER `BSAVE SCREEN` (1 bloc) | normal, disque plein (aucun bloc libre) avec ou sans ancien fichier, répertoire plein, R/O, RESET balayé |
-| EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (question, réponse N, réponse O), sous un fichier R/O, document tronqué (40 Ko) puis CTRL-S, RESET balayé |
+| EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (question, réponse N, réponse O), sous un fichier R/O, document tronqué (40 Ko) puis CTRL-S, document de 32 760 octets sur le disque mais 31 980 en mémoire (rouvert en entier, CTRL-S), RESET balayé |
 
 Attendu : l'ancien fichier intact ou le nouveau complet ; rien de perdu ni d'abîmé ; pas de
 `NOM.$$$` qui reste ; le message juste ; `check` sans défaut. **RESET balayé** : `\x06` N

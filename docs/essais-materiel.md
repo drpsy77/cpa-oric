@@ -9,23 +9,28 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
-**Après la correction du pilote** (accès déclaré bon sans réponse du contrôleur,
-`docs/etat.md` § 2 point 5), sur une **copie** de disquette :
+**Après la correction du pilote** (un contrôleur qui ne répond plus donne une erreur disque,
+plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en anglais, sur une
+**copie** de disquette :
 
 - RESET pendant `DISKCOPY A: D:` (D: une disquette vierge), plusieurs fois : noter l'adresse
-  de `*RESET* at`, puis `DIR`, `DIR D:` : on doit voir `BDOS: disk I/O error` au lieu de
-  `No file`, et `DIR` sur A: doit remarcher (au besoin après CTRL-C) ; sinon, dire si le
-  voyant du LOCI reste allumé. Un seul appui bref, puis un appui long : la différence dit
-  si le bouton rebondit ;
+  de `*RESET* at`, puis `DIR`, `DIR D:` : on doit voir `BDOS: disk I/O error` (au bout de
+  ~6 s par accès) au lieu de `No file`. Dire ensuite si `DIR` sur A: remarche (au besoin
+  après CTRL-C) ou seulement après le redémarrage du LOCI, et si le voyant du LOCI reste
+  allumé. Un seul appui bref, puis un appui long : la différence dit si le bouton rebondit
+  (cause supposée : une seconde NMI pendant le démarrage à chaud, `docs/etat.md` § 2
+  point 5) ;
 - RESET pendant un enregistrement : `EDIT` d'un texte de quelques Ko, une modification,
   CTRL-S puis RESET aussitôt, une dizaine de fois en variant l'instant ; de même `GRAPHER`
   avec un `SAVE` d'un gros tableau. Chaque fois : `DIR` marche, le fichier est l'ancien ou le
   nouveau, entier (`TYPE`), ou le nouveau dans `NOM.$$$` ; `ERA *.$$$` ensuite. Rapporter la
   disquette sur le PC : `python3 tools/mkdisk.py check` sans défaut.
 
-**Après la correction d'EDIT** (relecture des gros fichiers) : le même `ESSAI.INC` (CPA.INC
-et ARR.INC insérés, ~32 Ko) se rouvre sans `Fichier tronque` ; un fichier encore plus gros
-donne toujours le message.
+**Après la correction d'EDIT** (le fichier est converti en le lisant : une fin de ligne
+compte un octet en mémoire, deux sur le disque) : le même `ESSAI.INC` (CPA.INC et ARR.INC
+insérés, enregistré à 32 761 octets) se rouvre sans `Fichier tronque`, en entier (fin du
+texte à sa place) ; un fichier encore plus gros donne toujours le message ; un texte court
+s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
 
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
@@ -100,7 +105,7 @@ Cas limites et disquette française, 24 octobre 2026 :
 
 - EDIT : Enreg. sous un fichier existant, sous un fichier R/O, disque plein ; au-delà de
   32 000 octets, `Fichier tronque : trop gros` à l'ouverture, mais un texte enregistré à
-  32 761 octets ne se rouvre pas (défaut, `docs/etat.md` § 2 point 5) ; tous les cas de
+  32 761 octets ne se rouvrait pas (corrigé, à revérifier ci-dessus) ; tous les cas de
   défilement (modes coupure et ligne) ;
 - LOGOTR sur un fichier protégé : texte dans `NOM.$$$`, original intact ;
 - deux lecteurs : GRXASM vers un autre lecteur, complétion par ESC d'un programme présent
@@ -114,7 +119,7 @@ Cas limites et disquette française, 24 octobre 2026 :
 - disquette française : tous les menus, `EDIT.CFG`, `CMDER USB:` puis `4` (`+TAILLE`),
   `HELP TOUC`, `LOGO DEMO`, `GRAPHER JEU` (score) ;
 - **RESET pendant `DISKCOPY A: D:`** : `*RESET* at C6C6`, puis `No file` partout jusqu'au
-  redémarrage, disquettes intactes (défaut, `docs/etat.md` § 2 point 5).
+  redémarrage, disquettes intactes (pilote corrigé, à revérifier ci-dessus).
 - DEBUG : `G` après un arrêt sur un point d'arrêt ; `H` en français et en anglais selon la
   disquette ; `T` sur `JSR BDOS` l'exécute d'un coup, comme prévu ;
 - HEX : écriture d'octets ; EDIT : CTRL-W (trois modes), d'usage courant ;

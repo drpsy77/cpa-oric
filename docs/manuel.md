@@ -806,9 +806,12 @@ leur période est commune aux trois voix.
 C'est un éditeur plein écran : 26 lignes de 38 colonnes, avec une barre de menus et une ligne
 d'état (nom du fichier, `*` si le texte est modifié, paragraphe `L`, position `C` du curseur
 dans le paragraphe, `INS`/`RFP`, `M` si une marque est posée). Le texte peut atteindre
-32 000 octets (environ 27 Ko lancé depuis le mode SPLIT). Un fichier plus long s'ouvre
-**tronqué** (`Fichier tronque : trop gros`) ; il ne peut pas être enregistré sous son nom
-(`Texte tronque : Enreg. sous...`), ce qui en perdrait la fin, mais peut l'être sous un autre.
+32 000 octets (environ 27 Ko lancé depuis le mode SPLIT). En mémoire, une fin de ligne est un
+seul octet, deux sur le disque (CR LF) : un fichier peut donc dépasser 32 000 octets d'autant
+de lignes qu'il en a et s'ouvrir en entier, et tout texte enregistré par EDIT se rouvre. Un
+fichier plus long s'ouvre **tronqué** (`Fichier tronque : trop gros`) ; il ne peut pas être
+enregistré sous son nom (`Texte tronque : Enreg. sous...`), ce qui en perdrait la fin, mais
+peut l'être sous un autre.
 Un long programme en assembleur s'écrit donc en modules de moins de 32 000 octets, réunis
 par `#include` (voir ASM) ; TYPE et ASM, eux, lisent un fichier de toute taille.
 
