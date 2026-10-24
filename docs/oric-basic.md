@@ -2,8 +2,9 @@
 
 But : que ce qui est fait sous CP/A serve aussi sur un Oric ordinaire, sans disquette CP/A :
 des programmes en langage machine chargés par `CLOAD`, et, au bout du chemin, un jeu écrit en
-GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Deux étages : la sortie
-`.TAP` (faite), puis GRXASM vers un Oric seul (à faire).
+GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Trois étages : la sortie
+`.TAP` (faite), GRXASM vers un Oric seul (à faire), puis une boîte à outils pour le BASIC
+(plus tard).
 
 ## 1. Ce qui est établi (Oricutron, ROM BASIC 1.1)
 
@@ -117,18 +118,44 @@ bibliothèques : un jeu sans son ni `INPUT` n'en embarque que la moitié.
 | `FIL.INC` | données incluses à la traduction |
 | `GRX.INC` | oui, sur `ORIC.INC` |
 
-## 5. Écarté
+## 5. Plus tard : boîte à outils pour le BASIC
 
-- **Boîte à outils pour le BASIC par `!`** (routines de GRAPHER, `PASTE`, `SCROLH`, `UNZ`...,
-  appelées depuis un programme BASIC) : paramètres à lire par les routines de la ROM, page
-  zéro partagée avec le BASIC ; complexe pour un usage marginal à côté du programme autonome.
+À faire après `GRXASM /O`, qui aura déjà le socle `ORIC.INC` et le tri des routines. Un module
+en code machine (`OUTILS.TAP`, par exemple), chargé en haut de la mémoire sous `HIMEM`, donne
+au BASIC les opérations rapides de GRAPHER par la commande `!` :
+
+    10 HIMEM #8BFF : CLOAD"OUTILS"
+    20 !PASTE #4000,128, CX,CY, 2,1, 38,26
+    30 !SCROLH -1, 2,1,39,26
+
+- **Commandes candidates** : `PASTE` / `GRAB` (rectangle d'une carte en mémoire vers l'écran,
+  et l'inverse : la carte est une zone d'octets chargée par `CLOAD`, avec sa largeur),
+  `SCROLH` / `SCROLV` / `ROTH` / `ROTV`, `PRINTV` (texte vertical), `UNZ` (image `.HIZ`),
+  `ANIM` (animation `.ANI`), plus tard les sprites en mode texte et les tuiles. Le BASIC a
+  déjà `DRAW`, `CIRCLE`, `FILL` : pas de doublon.
+- **Paramètres** : `!` suivi d'un mot et d'expressions BASIC séparées par des virgules, lues
+  par les routines de la ROM (caractère suivant, évaluation d'une expression, conversion en
+  entier) ; leurs adresses sont à relever dans la ROM 1.1 (et 1.0 : elles diffèrent) et à
+  essayer dans Oricutron. Repli sans la ROM : paramètres posés par `DOKE` dans un bloc, puis
+  `!` ou `CALL`.
+- **Page zéro** : partagée avec le BASIC ; le module sauve les octets qu'il utilise en entrant
+  et les rend en sortant (quelques centaines de cycles, peu devant un `PASTE` plein écran).
+- **Source** : les mêmes routines que `ARR.INC`, `SPR.INC`, `HIRES.INC`, `ANIM.INC`, sur le
+  socle `ORIC.INC` dans une variante « sous BASIC » (modes par `HIRES` et `TEXT` du BASIC,
+  compteur de trames, pas de clavier ni de fichiers).
+
+## 6. Écarté
+
 - **GRAPHER traduit en BASIC** : tokeniseur, décimaux du BASIC au lieu des entiers de
   GRAPHER, pas de blocs `IF` ; et la vitesse, raison d'être de GRAPHER traduit, serait perdue.
 
-## 6. Questions ouvertes
+## 7. Questions ouvertes
 
 - Données de `LOAD` / `BLOAD` dans le `.TAP` : recopiées dans le programme (`.byt` dans le
   `.ASM`, simple mais long à assembler pour une image), ou blocs à part. Blocs à part : le
   code est en `$0500`, là où se charge le chargeur BASIC de MKTAP. À essayer : le dernier
   `CLOAD""` du chargeur charge le code en `$0500` avec la marque de démarrage automatique,
   que la ROM lance tout de suite, avant de relire la ligne écrasée.
+- Boîte à outils (§ 5) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
+  module ou plusieurs selon la place ; adresse du module (sous `HIMEM`, ou `$9800-$9FFF`
+  quand le programme reste en mode texte).
