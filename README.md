@@ -59,7 +59,8 @@ Two variants are built from the same sources:
   and **CMDER**, a full-screen two-panel file manager.
 - File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), and **TERM**, a serial terminal for a WiFi modem on the LOCI (`docs/loci-modem-wifi.md`).
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
-  **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step).
+  **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step), and **MKTAP**,
+  which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""`.
 - **LOGO** in English and in French (turtle, decimals, words and lists, sound; `LOGOTR`
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the
@@ -107,7 +108,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/etat.md` | project status, what comes next, space reserves |
 | `docs/projet-rom.md` | the ROM version |
-| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output, routines for BASIC, standalone GRAPHER games (specification) |
+| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |

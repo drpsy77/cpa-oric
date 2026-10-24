@@ -61,7 +61,8 @@ Deux variantes sont construites à partir des mêmes sources :
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
 - L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
-  **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas).
+  **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas), et **MKTAP**,
+  qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""`.
 - **LOGO** en français et en anglais (tortue, décimaux, mots et listes, son ; `LOGOTR`
   traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
@@ -108,7 +109,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
-| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
+| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP` (MKTAP), jeux GRAPHER autonomes (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |

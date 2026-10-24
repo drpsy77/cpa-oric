@@ -1,21 +1,28 @@
 # CP/A pour l'Oric sous BASIC — spécification de travail
 
-But : que ce qui est fait sous CP/A serve aussi sur un Oric Atmos ordinaire, sans disquette
-CP/A : des programmes en assembleur chargés par `CLOAD`, des routines rapides appelées depuis
-un programme BASIC, et, au bout du chemin, un jeu écrit en GRAPHER qui tourne sur n'importe
-quel Atmos (cassette ou LOCI). Quatre niveaux, chacun utile seul ; ils sont décrits dans
-l'ordre où il faut les faire.
+But : que ce qui est fait sous CP/A serve aussi sur un Oric ordinaire, sans disquette CP/A :
+des programmes en langage machine chargés par `CLOAD`, et, au bout du chemin, un jeu écrit en
+GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Deux étages : la sortie
+`.TAP` (faite), puis GRXASM vers un Oric seul (à faire).
 
 ## 1. Ce qui est établi (Oricutron, ROM BASIC 1.1)
 
-- **Format `.TAP`** (lu par `tape.c` d'Oricutron, essayé) : quelques octets `$16` (3 au moins),
-  `$24`, puis l'en-tête : `$00 $00`, type (`$80` code machine, `$00` programme BASIC),
-  démarrage automatique (`$00` non ; `$80` ou `$C7` : le code est lancé à la fin du chargement,
-  essayé), adresse de **fin incluse** (octet fort, puis faible), adresse de début (fort,
-  faible), `$00`, le nom (16 caractères au plus), `$00`, puis les octets. Plusieurs fichiers
-  se suivent dans un même `.TAP`.
-- **Chargement** : une routine de 11 octets en `$9000`, mise dans un `.TAP`, arrive intacte
-  par `CLOAD""` ; `CALL #9000` l'exécute et le BASIC reprend (`Ready`).
+- **Format `.TAP`** (lu par `tape.c` d'Oricutron, essayé) : quelques octets `$16` (3 au moins ;
+  MKTAP en met 4, comme `CSAVE`), `$24`, puis l'en-tête : `$00 $00`, type (`$80` code machine,
+  `$00` programme BASIC), démarrage automatique (`$00` non ; `$80` ou `$C7` : le code est
+  lancé, ou le programme BASIC exécuté, à la fin du chargement), adresse de **fin incluse**
+  (octet fort, puis faible), adresse de début (fort, faible), `$00`, le nom (16 caractères au
+  plus), `$00`, puis les octets. Plusieurs fichiers se suivent dans un même `.TAP` ; chaque
+  `CLOAD""` charge le suivant.
+- **Programme BASIC** : chargé en `$0501`, lignes tokenisées (lien vers la ligne suivante,
+  numéro, mots-clés en un octet, `$00`), puis `$00 $00`. La ROM prend l'adresse de fin du bloc
+  pour le **début des variables** : le bloc a donc un octet de plus que le programme (comme
+  avec `CSAVE`) ; sinon le programme se charge et se liste, mais l'entrée d'une nouvelle ligne
+  bloque le BASIC (essayé). Mots-clés de la ROM 1.1 (table de la ROM, à partir de `$80`) :
+  `CLOAD` = `$B6`, `CALL` = `$BF`, `!` = `$C0`.
+- **Chargement** : une routine en `$9000`, mise dans un `.TAP`, arrive intacte par `CLOAD""` ;
+  `CALL #9000` l'exécute et le BASIC reprend (`Ready`). Un `CLOAD""` dans un programme BASIC
+  charge un bloc de code machine et le programme continue (chargeur de MKTAP, essayé).
 - **Commande `!`** : la ROM fait `JMP ($02F5)` (`$CD13`). `DOKE #2F5,#9000` puis `!` lance la
   routine ; elle finit par `RTS` et la suite de la ligne est exécutée (`!:PRINT 12` affiche
   12).
@@ -26,109 +33,102 @@ l'ordre où il faut les faire.
   En mode texte, la police est en `$B400` et l'écran en `$BB80`, comme sous CP/A ; `$9800-$B3FF`
   (image HIRES et police du mode HIRES) n'est utilisé qu'en HIRES.
 - **Ce qui n'existe plus sous BASIC** : le BDOS (`$0203`), la table BIOS (`$C000`), les menus,
-  les fichiers. La ROM de l'Atmos, elle, est là et peut être appelée. La page 2 et une grande
-  partie de la page zéro appartiennent au BASIC.
+  les fichiers. La ROM de l'Atmos, elle, est là. La page 2 et une grande partie de la page
+  zéro appartiennent au BASIC.
 
-## 2. Niveau 1 : sortie `.TAP` (décidé, pas encore fait)
+## 2. Sortie `.TAP` : MKTAP (fait)
 
-**`MKTAP.COM`** (sur l'Oric) et **`tools/mktap.py`** (sur le PC, pour `build.sh` et les essais)
-font la même chose :
+**`MKTAP.COM`** (sur l'Oric) et **`tools/mktap.py`** (sur le PC) font le même fichier :
 
-    MKTAP JEU PROG.COM 9000 /R CARTE.DAT 8000 IMAGE.HIR A000
+    MKTAP JEU JEU.COM 8000 /R CARTE.DAT 9800 IMAGE.HIR A000
 
-- Écrit `JEU.TAP` : un bloc par fichier, à l'adresse donnée (hexa), nom = nom du fichier sans
-  type ; `/R` après un fichier : démarrage automatique de ce bloc (`$80`).
-- Un programme est d'abord assemblé à son adresse sous BASIC (`*= $9000`) : ASM le permet
-  déjà, le `.COM` n'a pas d'en-tête.
-- Pourquoi un programme à part plutôt qu'une option d'ASM : ASM est à moins de 260 octets du
-  bloc suivant ; MKTAP sert aussi aux images (`.HIR` en `$A000`), aux cartes, aux polices,
-  aux sons, et à plusieurs fichiers dans une seule cassette.
-- Transport : `EXPORT JEU.TAP` vers la clé USB du LOCI, cassette montée par le LOCI,
-  `CLOAD""`. Dans Oricutron : `-t JEU.TAP` (il tape lui-même `CLOAD""`).
-- Taille estimée : moins de 1 Ko. Essais : `tools/run_test.sh` sur la ROM BASIC avec `-t`
-  (le crochet de test tape maintenant `!`).
-- **`CASSETTE.COM`** : écrit un `.TAP` sur le port cassette (vrai magnétophone) et lit une
-  cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`, rien dans le système de
-  la version disquette ; dans la version ROM, ce sera une fonction du système
-  (`docs/projet-rom.md`).
+- Un bloc par fichier (8 au plus), à l'adresse donnée (hexadécimal), nommé d'après le fichier
+  sans son type ; `,lg` après l'adresse donne la longueur. Sans elle, la taille du fichier
+  moins les `^Z` de remplissage de son dernier enregistrement (règle de STAT et d'EXPORT) ;
+  elle peut aller jusqu'à la taille brute, pour des données qui finissent vraiment par `$1A`.
+- `/R` après un fichier (une seule fois) : ce bloc est lancé après le chargement. Seul bloc :
+  marque de démarrage automatique. Plusieurs blocs : un chargeur BASIC est mis en tête, nommé
+  comme le `.TAP`, à démarrage automatique : `10 CLOAD"":...:CLOAD"":CALL#adr` (un `CLOAD""`
+  par bloc) ; l'utilisateur ne tape qu'un `CLOAD""`. Sans `/R` : un `CLOAD""` par bloc.
+- Refusé avant d'écrire : un bloc hors de `$0500-$BFFF`, deux blocs qui se chevauchent
+  (chargeur compris, `$0501-$05xx`), une longueur nulle ou plus grande que le fichier.
+- Le `.TAP` écrit par MKTAP.COM a son dernier enregistrement complété par des `^Z`, que
+  `EXPORT` retire (un octet 0 est ajouté avant eux si le dernier octet utile vaut `$1A`).
+  Transport : `EXPORT JEU.TAP`, cassette montée par le menu du LOCI, `CLOAD""` ; dans
+  Oricutron : `-t JEU.TAP`.
+- Un programme est d'abord assemblé à son adresse sous BASIC (`*= $8000`) : le `.COM` n'a pas
+  d'en-tête. Le code lancé tourne sous la ROM (ni BDOS ni BIOS de CP/A).
+- Pourquoi un programme à part plutôt qu'une option d'ASM : ASM est à quelques octets du bloc
+  suivant ; MKTAP sert aussi aux images (`.HIR` en `$A000`), aux cartes, aux polices, aux
+  écrans texte (`$BB80`), et à plusieurs fichiers dans une seule cassette.
+- Mode d'emploi : `docs/manuel.md`, « Publier pour l'Oric sous BASIC ». Essais :
+  `tools/test_mktap.sh` (MKTAP.COM contre `mktap.py` dans le 6502 simulé, puis chargement
+  sous BASIC 1.1 dans Oricutron : chargeur, code, données, BASIC encore modifiable).
 
-## 3. Niveau 2 : boîte à outils pour le BASIC, par `!` (proposé)
+**Décidé, pas encore fait** : **`CASSETTE.COM`** écrit un `.TAP` sur le port cassette (vrai
+magnétophone) et lit une cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`,
+rien dans le système de la version disquette ; dans la version ROM, ce sera une fonction du
+système (`docs/projet-rom.md`).
 
-Un module en code machine (`OUTILS.TAP`, par exemple) chargé en haut de la mémoire après
-`HIMEM`, qui donne au BASIC les opérations rapides de GRAPHER :
+## 3. GRXASM pour un Oric seul (décidé, pas encore fait)
 
-    10 HIMEM #8BFF : CLOAD"OUTILS"
-    20 !PASTE #4000,128, CX,CY, 2,1, 38,26
-    30 !SCROLH -1, 2,1,39,26
-
-- **Commandes candidates** : `PASTE` / `GRAB` (rectangle d'une carte en mémoire vers l'écran,
-  et l'inverse : la carte est une zone d'octets chargée par `CLOAD`, avec sa largeur),
-  `SCROLH` / `SCROLV` / `ROTH` / `ROTV`, `PRINTV` (texte vertical), `UNZ` (image `.HIZ`
-  compressée, 8 000 octets décompressés depuis 2 à 4 Ko), `ANIM` (animation `.ANI`), plus
-  tard les sprites en mode texte et les tuiles. Le BASIC a déjà `DRAW`, `CIRCLE`, `FILL` : pas
-  de doublon.
-- **Paramètres** : `!` suivi d'un mot et d'expressions BASIC séparées par des virgules. Le
-  module lit la ligne avec les routines de la ROM (lecture du caractère suivant, évaluation
-  d'une expression, conversion en entier) : leurs adresses sont à relever dans la ROM et à
-  essayer dans Oricutron, comme pour `$02F5`. Repli sans la ROM : paramètres posés par `DOKE`
-  dans un bloc, puis `!` ou `CALL`.
-- **Page zéro** : les routines de GRAPHER se servent de `$00-$DF`, que le BASIC occupe. Le
-  module sauve les octets de page zéro qu'il utilise en entrant et les rend en sortant (le
-  coût, quelques centaines de cycles, est faible devant un `PASTE` plein écran).
-- **Source** : les mêmes routines que `ARR.INC`, `SPR.INC`, `HIRES.INC`, `ANIM.INC`, avec un
-  socle `ORIC.INC` à la place de `CPA.INC` (§ 5).
-
-## 4. Niveau 3 : GRXASM pour un Oric seul (proposé)
-
-`GRXASM JEU /O` traduirait un programme GRAPHER en un programme autonome dans `JEU.TAP`
+`GRXASM JEU /O` traduit un programme GRAPHER en un programme autonome, mis dans `JEU.TAP`
 (démarrage automatique), qui prend toute la machine : ni CP/A, ni BASIC pendant le jeu.
 
-- Clavier : la lecture de la matrice du BIOS de CP/A (`kb_scan`), recopiée (le matériel est
-  le même) ; compteur 50 Hz par l'interruption du VIA, en remplaçant le saut de `$0244`.
-- Écran : LORES, HIRES, sprites, rectangles, images et animations : déjà des écritures
-  directes en mémoire ; seuls les changements de mode (fonction 115) sont à refaire.
-- Son : les routines AY de `src/snd.s`, incluses.
-- Fichiers : `LOAD` / `BLOAD` d'un nom constant deviennent des données mises dans le `.TAP` au
-  moment de la traduction ; `SAVE` et les noms calculés sont refusés à la traduction.
-- Mémoire : `$0500-$B3FF` (environ 44 Ko) et la page zéro presque entière, puisque le BASIC
-  ne tourne pas. `END` : retour au BASIC (page zéro et vecteurs rendus) ou redémarrage.
-- Exemples à livrer : `CARTE.GRX`, `SERPENT.GRX`, `DEFILE.GRX` en `.TAP`.
+- **Même code qu'aujourd'hui** : un programme traduit fait déjà ses dessins lui-même
+  (`HIRES.INC`, `ARR.INC`, `SPR.INC`, `ANIM.INC` écrivent en mémoire ; GRXASM n'en recopie que
+  les routines utiles). Seul change le socle : `ORIC.INC` au lieu de `CPA.INC` (§ 4).
+- **Pas d'appel à la ROM** : les routines du socle sont celles de CP/A, recopiées (le matériel
+  est le même : VIA, AY, ULA). La ROM n'offre pas l'état de la matrice du clavier dont les jeux
+  ont besoin, ses adresses diffèrent entre 1.0 et 1.1, elle occupe la page zéro de nos
+  routines. Sans elle, un seul comportement à essayer, et le `.TAP` vaut aussi pour un Oric-1.
+- **Mémoire** : chargé en `$0500` comme un `.COM`. Au départ, le programme prend la page zéro
+  et la pile, détourne l'IRQ par `$0244` ; il a `$0500-$B3FF` (environ 44 Ko).
+- **Fin** : `END` et le bouton RESET (NMI par `$0247`) redémarrent la ROM (`JMP ($FFFC)`) ;
+  pas de retour au BASIC (il faudrait lui rendre page zéro, page 2 et vecteurs).
+- **Fichiers** : `LOAD` / `BLOAD` d'un nom constant deviennent des données mises dans le
+  `.TAP` au moment de la traduction ; `SAVE` et les noms calculés sont refusés à la traduction.
+- **Modes** : LORES et HIRES d'abord ; SPLIT (console sous l'image) refusé à la traduction
+  dans une première version, ajouté ensuite.
+- Exemples à livrer : `CARTE.GRX`, `SERPENT.GRX`, `DEFILE.GRX` en `.TAP` (et leurs jumeaux
+  anglais).
 
-## 5. Le socle `ORIC.INC`
+## 4. Le socle `ORIC.INC`
 
-Remplace `CPA.INC` pour les niveaux 2 et 3. Il fournit ce que les bibliothèques demandent au
-système : passage en HIRES et retour au texte (attribut et police, sans la fonction 115), un
-compteur de trames, une lecture du clavier (niveau 3), l'écriture d'un caractère à l'écran, et
-rien pour les fichiers. Les bibliothèques reçoivent quelques `#ifdef` (ASM.COM devra les
-comprendre, ou bien `tools/strip_inc.py` produira les deux versions).
+Remplace `CPA.INC` pour `GRXASM /O`. Il fournit ce que les bibliothèques demandent
+aujourd'hui au système (relevé dans `GRX.INC`, `HIRES.INC`, `ARR.INC`, `ANIM.INC`) :
 
-| Bibliothèque | Sous BASIC (niveau 2) | Oric seul (niveau 3) |
-|---|---|---|
-| `HIRES.INC` | dessins, `h_unz`, LORES : oui ; modes : par le BASIC (`HIRES`, `TEXT`) | oui, modes par `ORIC.INC` |
-| `ARR.INC` | tableaux, chaînes, rectangles : oui ; affichage et saisie : non | oui, saisie au clavier de `ORIC.INC` |
-| `SPR.INC` | oui (après `ARR.INC` et `HIRES.INC`) | oui |
-| `ANIM.INC` | oui, avec le compteur de `ORIC.INC` | oui |
-| `FIL.INC` | non | données incluses à la traduction |
-| `GRX.INC` | non | oui, sur `ORIC.INC` |
+| Service de CP/A | Utilisé par | Dans `ORIC.INC` | Taille estimée |
+|---|---|---|---:|
+| Changement de mode (fonction 115 op 10-11 : texte, SPLIT, police remise) | `h_gfx`, `grx.inc` | `g_mode` et la partie utile de `font_init` | ~300 |
+| Compteur 50 Hz `SYS_TICKS`, touche tenue `KB_HELD`, `CONST`, `CONIN` | `grx.inc`, `anim.inc`, `h_key` | interruption du VIA, `kb_scan` et ses tables | ~700 |
+| Son (fonction 116) | `arr.inc`, GRAPHER | `snd.s` | ~600 |
+| `PRINT` hors LORES (`CONOUT`), `INPUT` (fonction 10) | `grx.inc`, `arr.inc` | mini-console : caractère, retour, défilement ; saisie simple | ~500 |
+| Fichiers (`FIL.INC`, `BLOAD`, `GSAVE` / `GLOAD`) | selon le programme | rien : données dans le `.TAP` | — |
 
-## 6. Niveau 4 : GRAPHER traduit en BASIC (possible, en dernier)
+Total ~2 à 2,5 Ko, à prévoir à 3 Ko. `ORIC.INC` est marqué `;@` comme les autres
+bibliothèques : un jeu sans son ni `INPUT` n'en embarque que la moitié.
 
-Un `.GRX` deviendrait un programme BASIC lisible et modifiable, dont les commandes lentes
-(rectangles, sprites, images) sont des `!` du niveau 2.
+| Bibliothèque | Oric seul |
+|---|---|
+| `HIRES.INC` | oui, modes par `ORIC.INC` |
+| `ARR.INC` | oui, saisie au clavier de `ORIC.INC` |
+| `SPR.INC`, `ANIM.INC` | oui |
+| `FIL.INC` | données incluses à la traduction |
+| `GRX.INC` | oui, sur `ORIC.INC` |
 
-- Correspondances simples : variables (le BASIC de l'Oric distingue aussi deux caractères),
-  `FOR`, `REPEAT n` (`FOR`), `WHILE` et les blocs `IF ... ENDIF` (`IF NOT ... GOTO`),
-  sous-programmes (`GOSUB`), `LOCATE` / `PRINT` (`PLOT`, `PRINT`), `INKEY` (`KEY$`).
-- Le `.TAP` d'un programme BASIC contient les lignes **tokenisées** : la table des mots-clés
-  se lit dans la ROM elle-même. Un tokeniseur sur le PC d'abord, puis dans GRXASM.
-- Intérêt : montrer aux habitués du BASIC ce que CP/A apporte ; la vitesse reste celle du
-  BASIC hors des `!`. Le niveau 3 est plus rapide et plus simple à obtenir.
+## 5. Écarté
 
-## 7. Questions ouvertes
+- **Boîte à outils pour le BASIC par `!`** (routines de GRAPHER, `PASTE`, `SCROLH`, `UNZ`...,
+  appelées depuis un programme BASIC) : paramètres à lire par les routines de la ROM, page
+  zéro partagée avec le BASIC ; complexe pour un usage marginal à côté du programme autonome.
+- **GRAPHER traduit en BASIC** : tokeniseur, décimaux du BASIC au lieu des entiers de
+  GRAPHER, pas de blocs `IF` ; et la vitesse, raison d'être de GRAPHER traduit, serait perdue.
 
-- Nom et syntaxe des commandes du niveau 2 (`!PASTE ...` ou `!P ...`, un seul module ou
-  plusieurs selon la place).
-- Adresse du module sous BASIC (sous `HIMEM`, ou `$9800-$9FFF` quand le programme reste en
-  mode texte).
-- Ordre de travail après le niveau 1 : le niveau 3 (un jeu GRAPHER sur tout Atmos) ou le
-  niveau 2 (des routines rapides pour le BASIC).
+## 6. Questions ouvertes
+
+- Données de `LOAD` / `BLOAD` dans le `.TAP` : recopiées dans le programme (`.byt` dans le
+  `.ASM`, simple mais long à assembler pour une image), ou blocs à part. Blocs à part : le
+  code est en `$0500`, là où se charge le chargeur BASIC de MKTAP. À essayer : le dernier
+  `CLOAD""` du chargeur charge le code en `$0500` avec la marque de démarrage automatique,
+  que la ROM lance tout de suite, avant de relire la ligne écrasée.
