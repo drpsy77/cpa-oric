@@ -1072,8 +1072,9 @@ no      sec
         rts
 .)
 
-; str_only : la chaîne en ex va-t-elle jusqu'au bout de la ligne ? (PRINT
-;   A$ affiche la chaîne, PRINT A$ = B$ la comparaison) -> C=0 si oui
+; str_only : la chaîne en ex est-elle un élément de PRINT à elle seule
+;   (pas suivie d'une comparaison) ? PRINT A$ "X" affiche les chaînes,
+;   PRINT A$ = B$ la comparaison -> C=0 si oui
 str_only
 .(
         ldy ex
@@ -1105,17 +1106,20 @@ p1      cmp #")"
         dex
         bpl p
         iny
-e       lda lbuf,y              ; ensuite : rien (ou un commentaire)
-        beq yes
-        cmp #";"
-        beq yes
+e       lda lbuf,y              ; ensuite : pas de = < > (espaces sautés)
         cmp #" "
-        bne no
+        bne e1
         iny
         bne e
-no      sec
+e1      cmp #"="
+        beq no
+        cmp #"<"
+        beq no
+        cmp #">"
+        beq no
+        clc
         rts
-yes     clc
+no      sec
         rts
 .)
 

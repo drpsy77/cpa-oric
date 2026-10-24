@@ -1,0 +1,17 @@
+; PRINT a plusieurs elements, ; final, ECHO entre guillemets (console)
+V = 42
+DIM A$(5)
+A$ = "abc"
+PRINT "V= " V
+PRINT "V= " V ;
+PRINT " suite"
+PRINT A$ " / " V+1 " " A$ = "abc"
+PRINT ;; rien
+PRINT
+PRINT V ; commentaire
+PRINT A$
+PRINT A$ = "abd"
+PRINT -V*2 V
+ECHO "  avec espaces  " fin
+ECHO sans guillemets
+PRINT "fin"

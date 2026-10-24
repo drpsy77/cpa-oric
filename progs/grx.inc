@@ -591,10 +591,22 @@ g_cls   lda h_lines             ; rien hors du mode HIRES ou SPLIT
         jmp h_cls
 gc_r    rts
 
-g_print
-        lda h_lo
+; PRINT : g_print = g_pnum puis g_pend (un seul nombre) ; plusieurs
+;   éléments : g_pnum (nombre g_ev), r_pstr (chaîne courante, ARR.INC),
+;   puis g_pend, sauf avec « ; » final
+g_print jsr g_pnum
+; g_pend : fin d'un PRINT : passage à la ligne dans la console (rien en
+;   LORES ni en HIRES plein écran)
+g_pend  lda h_lo
+        bne gp_r
+        lda h_lines
+        cmp #200
+        beq gp_r
+        jmp g_crlf
+; g_pnum : affiche le nombre g_ev au curseur, sans passer à la ligne
+g_pnum  lda h_lo
         beq gp_c
-        jsr g_fmt               ; LORES : au curseur, sans passer à la ligne
+        jsr g_fmt               ; LORES : au curseur
         lda #<g_num
         ldy #>g_num
         jmp h_lstr
@@ -604,8 +616,7 @@ gp_c    lda h_lines
         jsr g_fmt
         lda #<g_num
         ldy #>g_num
-        jsr g_puts
-        jmp g_crlf
+        jmp g_puts
 gp_r    rts
 
 g_gnum  jsr g_fmt
@@ -667,10 +678,23 @@ g_echo  jsr g_str
         lda h_lines
         cmp #200
         beq ge_r
-        lda g_t
-        ldy g_t+1
-        jsr g_puts
-        jmp g_crlf
+        ldy #0                  ; console : entre guillemets, le texte
+        sty g_ln                ;   seul (comme en LORES)
+        lda (g_t),y
+        cmp #34
+        bne ge_l
+        sta g_ln
+        iny
+ge_l    lda (g_t),y
+        beq ge_e
+        cmp g_ln                ; (g_ln = 0 : jamais égal)
+        beq ge_e
+        sty g_gd
+        jsr g_putc
+        ldy g_gd
+        iny
+        bne ge_l
+ge_e    jmp g_crlf
 ge_r    rts
 
 ; g_eclo : ECHO en LORES : au curseur, sans déborder ; vide : ligne

@@ -49,6 +49,11 @@ larges que hauts, chaînes de montagnes horizontales, joueur au centre), `ROTSCR
 qui a des tableaux à deux dimensions est à passer par `tools/grx_colig.py` (EXPORT, puis
 sur le Mac, puis IMPORT).
 
+**`PRINT` à plusieurs éléments** (interprété puis traduit, console et LORES) :
+`PRINT "V= " V`, `PRINT A$ " / " V+1`, `PRINT "Total : " ;` puis `PRINT T` sur la même
+ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
+console : sans les guillemets, espaces gardés.
+
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
 (attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans
