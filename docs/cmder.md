@@ -94,8 +94,8 @@ exacte, et les blocs qu'il occuperait sur une disquette.
 | `^E` | Tailles exactes |
 | `^L` | Lecteur... (colonne active) |
 | `^R` | Relire le répertoire (après un changement de disquette) |
-| TAB (`^I`) | autre colonne |
-| `^Z` | zoom : colonne active en plein écran, et retour (TAB y montre l'autre) |
+| `^I` (CTRL-I) | autre colonne |
+| `^Z` | zoom : colonne active en plein écran, et retour (`^I` y montre l'autre) |
 | `^W` | échange les deux colonnes de place |
 | FUNCT | menus |
 | ESC, `^Q` | quitter ; dans une question, ESC annule |
@@ -116,7 +116,7 @@ aiguillage ; le raccourci est écrit à droite du libellé.
 - **Marque** : Marquer ESP, Marquer... +, Oter... -, Inverser *, Tout, Rien.
 - **Trier** : Ordre disque 1, Nom 2, Type 3, Taille 4.
 - **Vue** : Filtrer... /, Sans filtre, Cacher SYS (devient Montrer SYS), Taille exacte ^E,
-  Absents autre, Zoom ^Z, Echanger ^W, Autre col. TAB.
+  Absents autre, Zoom ^Z, Echanger ^W, Autre col. ^I.
 
 ## 6. Opérations
 

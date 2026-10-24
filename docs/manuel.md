@@ -13,7 +13,7 @@ Sur l'Oric, `HELP` donne un résumé de chaque commande.
 | `DIRS [afn]` | comme DIR, fichiers SYS compris |
 | `TYPE fichier` | affiche un fichier texte (une touche l'interrompt) — TYPE.COM |
 | `ERA afn [/Q]` | efface : montre les fichiers visés et demande `Effacer n fichier(s) (O/N) ?` (les protégés sont gardés) ; `/Q` sans question, pour un script — ERA.COM |
-| `REN nouveau=ancien` | renomme — REN.COM |
+| `REN ancien nouveau` | renomme — REN.COM ; aussi `REN nouveau=ancien`, l'ordre de CP/M |
 | `SAVE n fichier` | enregistre n pages de 256 octets à partir de `$0500` |
 | `GSAVE fichier`, `GLOAD fichier` | enregistre / charge l'image du mode SPLIT (type `.IMG` par défaut) |
 | `PUT fichier commande [paramètres]` | exécute la commande en copiant tout ce qu'elle affiche dans le fichier |
@@ -63,7 +63,7 @@ Autres programmes de la disquette :
 - `DEBUG.COM NOM`, le moniteur, désassembleur et pas à pas.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, décrits ci-dessus.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
-- `TERM.COM [/E]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série »).
+- `TERM.COM [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
@@ -200,7 +200,7 @@ ascenseur montre la partie visible de la liste. Une erreur disque s'affiche en l
 
 **Deux colonnes** : `CMDER A: B:` (un filtre par lecteur : `CMDER A:*.COM B:`) montre deux
 disquettes côte à côte (nom, type, taille en Ko) ; l'en-tête de la colonne active est en vidéo
-inverse. TAB passe à l'autre colonne, `^W` échange leurs places, `^Z` met la colonne active
+inverse. `^I` passe à l'autre colonne, `^W` échange leurs places, `^Z` met la colonne active
 en plein écran (et revient). Copier propose le lecteur de l'autre colonne (RETURN suffit) et
 vérifie d'abord la place (`Libre 14K, requis 18K : O/N ?`). Menu Vue, « Absents autre » : la
 colonne ne montre que les fichiers absents de l'autre, ou présents avec une autre taille ou
@@ -324,7 +324,7 @@ comprennent de la même façon.
 | SHIFT-↑ / SHIFT-↓ | page précédente / suivante |
 | CTRL-↑ / CTRL-↓ | début / fin du texte (du fichier, de la liste) |
 | CTRL-← / CTRL-→ | mot précédent / suivant (EDIT) |
-| CTRL-I | TAB : compléter un nom, changer de zone ou de colonne (EDIT : insérer un fichier) |
+| CTRL-I (`^I`) | tabulation : compléter un nom, changer de zone ou de colonne (EDIT : insérer un fichier) |
 | CTRL-ESPACE | marquer un bout du bloc (EDIT) ; ESC ôte la marque |
 | CTRL-X / CTRL-C / CTRL-V | couper / copier / coller (CMDER : déplacer / copier) |
 | CTRL-F / CTRL-G | chercher / suivant |
@@ -340,7 +340,7 @@ lisent une ligne par le BDOS (fonction 10 : LOGO, DEBUG…) :
 |---|---|
 | ← / → | déplacer le curseur dans la ligne ; ce qu'on tape s'insère |
 | ↑ / ↓ | lignes déjà validées (historique), de la plus récente à la plus ancienne |
-| TAB (CTRL-I) ou ESC | compléter le nom de fichier qui se termine au curseur ; en début de ligne, la commande |
+| `^I` (CTRL-I) ou ESC | compléter le nom de fichier qui se termine au curseur ; en début de ligne, la commande |
 | DEL / CTRL-D | effacer à gauche / sous le curseur |
 | SHIFT-← / SHIFT-→, CTRL-A / CTRL-E | début / fin de la ligne |
 | CTRL-U | effacer toute la ligne |
@@ -351,7 +351,7 @@ L'historique garde les dernières lignes (256 octets, une vingtaine de commandes
 survit au démarrage à chaud, et une ligne identique à la précédente n'y entre pas deux fois.
 
 La complétion s'inspire du `filec` du C-shell, qui complétait déjà par ESC — touche placée sur
-l'Oric à l'endroit de la touche TAB d'un clavier de PC ; TAB (CTRL-I) fait de même, comme
+l'Oric à l'endroit de la touche TAB d'un clavier de PC ; `^I` (CTRL-I) fait de même, comme
 dans les shells d'aujourd'hui. `TYPE REA` + ESC donne
 `TYPE README.TXT ` (avec l'espace, prêt pour la suite). Si plusieurs fichiers conviennent, ESC
 ajoute la partie commune (`DIR HELL` → `DIR HELLO.`) ; si rien ne peut être ajouté, ESC
@@ -517,6 +517,7 @@ c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
 |---|---|
 | `TERM` | terminal (9600 bauds, 8 bits, sans parité, 1 bit d'arrêt) |
 | `TERM /E` | écho local : affiche aussi ce qu'on tape (pour un correspondant qui ne le renvoie pas, comme `nc` sur le Mac ; le modem, lui, le renvoie en mode commande) |
+| `TERM /L` | RETURN envoie CR LF au lieu de CR seul (pour un correspondant qui attend LF, comme `nc` : `TERM /E /L`) |
 | `TERM /D` | diagnostic : registres de l'ACIA (état, commande, contrôle) relus avant et après le réglage (après : commande `0B`, contrôle `1E`), puis chaque changement de l'état entre crochets (`[10]` émetteur libre, `[18]` caractère reçu, bit 6 (`$40`) : pas de modem) |
 | `TERM /B` | envoi « en aveugle » : chaque caractère part sans attendre que l'ACIA dise l'émetteur libre (pause fixe d'environ 3 ms) ; sert à vérifier les écritures quand les lectures de l'ACIA sont fausses (`TERM /B /E`, `ATDT-` vers `nc` sur le Mac) |
 | CTRL-Q | quitte ; la liaison reste établie (DTR reste actif) |
@@ -536,6 +537,9 @@ sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `
 
 - `Pas de modem (DSR) : brancher le Pico` : le LOCI ne voit pas de modem USB ; TERM reste
   ouvert, et `Modem muet : caractere perdu` s'affiche si l'on tape.
+- Ce qui arrive : un CR s'affiche comme CR LF (un correspondant qui ne renvoie que CR, et
+  l'écho local de RETURN, passent bien à la ligne) ; un LF qui suit aussitôt un CR est sauté
+  (pas de ligne vide avec ceux qui envoient CR LF).
 - TERM n'accède aux registres de l'ACIA que par `LDA` / `STA` absolus : une écriture indexée
   (`STA (zp),Y`, et `POKE` en BASIC) lit l'adresse avant de l'écrire, et une lecture de
   l'ACIA a des effets (le registre de données consomme l'octet reçu).
@@ -931,7 +935,7 @@ dans la zone où l'on tape.
 | CTRL-↑ / CTRL-↓ | début / fin du fichier |
 | CTRL-L | aller à une adresse (en hexa) |
 | CTRL-F / CTRL-G | chercher / suivant |
-| TAB (CTRL-I) | modifier en hexa ou en ASCII |
+| `^I` (CTRL-I) | modifier en hexa ou en ASCII |
 | CTRL-S / CTRL-R | enregistrer / recharger |
 | ESC ou CTRL-Q | quitter (confirmation si le fichier est modifié) |
 | FUNCT | menus Fichier (Enregistrer, Recharger, Quitter), Aller, Mode |
@@ -1191,8 +1195,8 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
   protégée laissée (`fichier protege`) ; copie partielle effacée si le disque est plein.
 - **ERA** : relève et montre les fichiers visés, compte les protégés (gardés : la fonction 19
   les épargne), demande toujours confirmation (`/Q` pour les scripts).
-- **REN** : syntaxe `nouveau=ancien` de CP/M 2.2 ; refus si le nouveau existe, si l'ancien est
-  protégé ou introuvable.
+- **REN** : sans `=`, l'ordre de COPY (`REN ancien nouveau`) ; avec `=`, celui de CP/M 2.2
+  (`REN nouveau=ancien`) ; refus si le nouveau existe, si l'ancien est protégé ou introuvable.
 - **SET** prend le lecteur du nom (`SET B:NOM RO`).
 - **Attributs** : R/O protège, SYS cache de DIR ; c'est tout. Les commandes de la disquette
   livrée sont R/O et visibles ; les exemples sans attribut. Posés par `mkdisk.py` (listes dans

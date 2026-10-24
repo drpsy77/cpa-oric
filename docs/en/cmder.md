@@ -96,8 +96,8 @@ On the stick: exact size, and the blocks the file would take on a disk.
 | `^E` | Exact sizes |
 | `^L` | Drive... (active panel) |
 | `^R` | Read the directory again (after changing disks) |
-| TAB (`^I`) | other panel |
-| `^Z` | zoom: active panel in full screen, and back (TAB shows the other one there) |
+| `^I` (CTRL-I) | other panel |
+| `^Z` | zoom: active panel in full screen, and back (`^I` shows the other one there) |
 | `^W` | swap the two panels |
 | FUNCT | menus |
 | ESC, `^Q` | quit; in a question, ESC cancels |
@@ -117,7 +117,7 @@ shortcut is written to the right of the label.
 - **Mark**: Mark SPC, Mark... +, Unmark... -, Invert *, All, None.
 - **Sort**: Disk order 1, Name 2, Type 3, Size 4.
 - **View**: Filter... /, No filter, Hide SYS (becomes Show SYS), Exact size ^E, Not on
-  other, Zoom ^Z, Swap ^W, Other col. TAB.
+  other, Zoom ^Z, Swap ^W, Other col. ^I.
 
 ## 6. Operations
 

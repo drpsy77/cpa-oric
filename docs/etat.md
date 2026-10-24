@@ -35,12 +35,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 577 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 710 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
-| TERM | 700 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| TERM | 762 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -156,12 +156,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
-   - Notés par Pierre le 22/10/2026 (à corriger, rien codé) :
-     - **HIRES** : au passage en HIRES, les 3 lignes de texte du bas affichent ce qu'il y a
-       en mémoire à leur adresse (caractères curieux) ; les effacer au passage.
-     - **TAB -> `^I`** : « TAB » n'est pas naturel ; écrire `^I` dans les menus et les
-       messages, en particulier CMDER (« Autre col. TAB ») et HEX (« Hex/ASCII TAB »), en
-       français et en anglais. Attention : dans EDIT, `^I` veut dire insérer.
+   - Notés par Pierre le 22/10/2026 (rien codé) :
      - **Tableaux de GRAPHER en notation Oric** : abandonner l'ordre du C (Lig, Col), qui
        déroute alors que toutes les commandes et fonctions de l'Oric sont en (Col, Lig).
        `T$(Col, Lig)` = Lig chaînes de longueur maximale Col ; en mémoire, toujours Lig zones
@@ -171,19 +166,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
        une fois compilé par GRXASM. Pas forcément un défaut : en faire un exemple du manuel
        qui montre les limites du mode interprété et l'intérêt de compiler, avec la place
        disponible en plus après compilation par rapport à la version interprétée (à mesurer).
-   - **Erreur d'un programme traduit après HIRES** (constaté dans Oricutron, en français
-     comme en anglais, rien codé) : `HIRES` puis `GLOAD` d'une image absente ;
-     l'interprété affiche `L 2 GLOAD : image introuvable`, le traduit
-     (`GRXASM E2 /C`, `E2`) rend un prompt sur un écran vide : le message
-     `Erreur : image introuvable` est effacé au retour (démarrage à chaud après HIRES ?).
 6. **Petites améliorations notées**
-   - **REN dans l'ordre de COPY** (demandé par Pierre le 24/10/2026, rien codé) :
-     `REN ancien nouveau`, comme `COPY source destination`, moins déroutant que l'ordre de
-     CP/M. Les deux syntaxes acceptées : avec un `=`, c'est l'ordre de CP/M
-     (`REN nouveau=ancien`), sans `=`, celui de COPY. Toujours refusé si le nouveau nom
-     existe (`Le nouveau nom existe deja`) ou si le fichier est protégé. Touche `ren.s`,
-     `ren.msg` (usage dans les deux langues), le manuel, HELP et README.TXT, et la ligne
-     `REN NOM.EXT=NOM.$$$` des documents (les deux formes y restent justes).
    - **Imprimante dans un fichier** (demandé par Pierre le 24/10/2026, sans imprimante ;
      Oricutron écrit déjà `printer.out`). Décidé : par PUT, plutôt que par un pilote LOCI
      dans le BIOS (marge de 12 octets, API du LOCI résidente) : `PUT /P NOM commande`
@@ -198,12 +181,6 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      surcouche écrite en LOGO (fichier `.LOG` chargé par `CHARGE` : notes par leur nom,
      accord, durées), sans toucher à LOGO.COM, puis seulement les primitives qui
      manqueraient. À écrire avec Pierre (ce qu'il attend d'un accord).
-   - **TERM et la touche RETURN** (constaté par Pierre) : RETURN ne passe pas à la ligne.
-     TERM envoie CR seul (ce qu'attend le modem) et affiche ce qui revient tel quel ; un CR
-     sans LF (écho local `/E`, serveur qui ne renvoie que CR) ramène au début de la même
-     ligne. Décidé : à l'affichage, CR donne CR LF, et un LF qui suit aussitôt est sauté (pas
-     de ligne vide avec les serveurs qui envoient CR LF) ; option `/L` pour envoyer CR LF
-     (serveurs comme `nc`). Essai sur le LOCI quand le Pico y marchera.
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures **en mémoire**
      seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE`, `EDITE`), après la
@@ -448,7 +425,7 @@ multiple de 2 048) :
 - GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (15 004) prend 8 blocs ;
   GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
-  blocs, 1 215 octets avant le 7e. HELP (11 577) prend 6 blocs. Les disquettes se spécialisent plutôt
+  blocs, 1 215 octets avant le 7e. HELP (11 710) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 243 octets de code avant la page suivante, 71 en

@@ -181,11 +181,11 @@ hz_txt     lda #0                  ; plus de curseur
 ;   bascule en haute résolution pour la trame suivante
 h_bottom
 .(
-        ldx #H_ATTR-H_BOT-1
-        lda #$10
-hz_l       sta H_BOT,x
+        ldx #H_ATTR-H_BOT       ; 159 cases ($BF40-$BFDE) : plus de 128,
+        lda #$10                ;   d'où BNE et non BPL
+hz_l       sta H_BOT-1,x
         dex
-        bpl hz_l
+        bne hz_l
         lda #$1E
         sta H_ATTR
         rts

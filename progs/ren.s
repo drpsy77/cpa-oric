@@ -1,7 +1,8 @@
 ; =====================================================================
-;  REN.COM — renomme un fichier : REN nouveau=ancien
+;  REN.COM — renomme un fichier : REN ancien nouveau, ou REN nouveau=ancien
 ;
-;  Comme sous CP/M 2.2 (REN B:LETTRE.BAK=LETTRE.TXT). Un lecteur donné
+;  Sans « = », l'ordre de COPY (source puis destination) ; avec « = »,
+;  celui de CP/M 2.2 (REN B:LETTRE.BAK=LETTRE.TXT). Un lecteur donné
 ;  d'un seul côté vaut pour les deux. Refusé si le nouveau nom existe,
 ;  ou si le fichier est protégé (R/O). Autrefois commande interne du
 ;  CCP, passée en .COM pour libérer de la place dans le système.
@@ -13,11 +14,14 @@ pp      = $10           ; 2 octets : nom à analyser
 fp      = $12           ; 2 octets : FCB à remplir
 t0      = $14
 sptr    = $15           ; 2 octets
+eqf     = $17           ; 1 : forme « nouveau=ancien » (CP/M)
 
         *= $0500
 start
 .(
         ldx #31                 ; FCB : ancien nom en +0, nouveau en +16
+                                ; (premier nom lu dans newf, échangés
+                                ;   ensuite si c'était l'ancien)
         lda #0
 z       sta fcb,x
         dex
@@ -32,11 +36,15 @@ z       sta fcb,x
         sta fp+1
         jsr pname
         bcs usage
-        lda (pp),y              ; puis « = »
+        lda (pp),y              ; puis « = », ou le second nom
+        beq usage
+        ldx #0
         cmp #"="
-        bne usage
+        bne two
         iny
-        tya                     ; ancien nom, après le =
+        inx
+two     stx eqf
+        tya                     ; second nom
         clc
         adc pp
         sta pp
@@ -49,7 +57,18 @@ a1      lda #<fcb
         jsr pname
         bcs usage
         lda (pp),y              ; rien d'autre après
-        beq lone
+        bne usage
+        lda eqf
+        bne lone
+        ldx #15                 ; ordre de COPY : le premier nom lu était
+sw      lda fcb,x               ;   l'ancien
+        ldy newf,x
+        sta newf,x
+        tya
+        sta fcb,x
+        dex
+        bpl sw
+        bmi lone
 usage   lda #<m_use
         ldy #>m_use
         jmp puts

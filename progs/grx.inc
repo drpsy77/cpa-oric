@@ -855,6 +855,9 @@ ld      lda #<g_fcbuf
         jsr h_load
         cmp #0
         beq r
+        lda h_lines             ; HIRES plein (pour le BDOS, mode texte) :
+        cmp #200                ;   g_stop le quittera avant le message
+        beq nf
         lda #G_GETMODE          ; SPLIT sans image : on est resté en texte
         jsr h_gfx
         cmp #0

@@ -156,7 +156,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.T01 | DIR, DIRS : liste des fichiers (modèle, lecteur, fichiers SYS) | EQ | 1 | 6 | F | 3 |
 | SYS.T02 | TYPE : afficher un texte | EQ | 1 | 3 | F | 3 |
 | SYS.T03 | ERA : effacer (liste, confirmation, `/Q`, bilan des protégés) | EI | 1 | 5 | F | 3 |
-| SYS.T04 | REN : renommer | EI | 1 | 3 | F | 3 |
+| SYS.T04 | REN : renommer (ordre de COPY, ou `nouveau=ancien` de CP/M) | EI | 1 | 3 | F | 3 |
 | SYS.T05 | SET : poser les attributs | EI | 1 | 4 | F | 3 |
 | SYS.T06 | SET sans option : afficher les attributs | EQ | 1 | 4 | F | 3 |
 | SYS.T07 | STAT : tailles, place libre calculée d'après le répertoire | EO | 1 | 8 | F | 4 |
@@ -572,8 +572,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés) | EI | 2 | 6 | M | 4 |
 | USB.T03 | USBDIR : liste (tailles, dossiers) | EQ | 1 | 4 | F | 3 |
-| USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`) | EI | 1 | 3 | F | 3 |
-| USB.T05 | TERM : affichage de ce qui arrive du port série | EO | 1 | 2 | F | 4 |
+| USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`, `/L` : CR LF) | EI | 1 | 3 | F | 3 |
+| USB.T05 | TERM : affichage de ce qui arrive du port série (CR -> CR LF) | EO | 1 | 2 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -752,26 +752,26 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 142 | 1 182 | 534 | 1 594 | 10 % | 37 143 | 35 | 115 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 600 | 10 % | 37 264 | 35 | 116 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 22 | 13 025 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
+| GRAPHER + GRXASM | 22 | 13 028 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 15 | 1 628 | 211 | 87 | 0 | 11 % | 4 479 | 51 | 140 |
+| USB | 15 | 1 665 | 217 | 87 | 0 | 12 % | 4 479 | 52 | 140 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
 | Outillage PC | 166 | 7 414 | 835 | 465 | 0 | 10 % | — | 43 | — |
-| **Total** | 335 | 61 609 | 4 964 | 2 502 | 2 510 | 7 % | 135 586 | 47 | 104 |
+| **Total** | 335 | 61 667 | 4 973 | 2 502 | 2 516 | 7 % | 135 707 | 47 | 104 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 300 | 78 | 4,0 | 70 |
-| EDIT | 96 | 20 | 1,3 | 12 |
+| Système et commandes | 1 304 | 78 | 4,0 | 71 |
+| EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 852 | 69 | 3,7 | 35 |
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 11 |
@@ -781,16 +781,16 @@ Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, 
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 23 |
-| Outillage PC | 325 | — | 1,9 | 108 |
-| Transverse (projet) | 2 058 | — | — | 58 |
-| Traduction anglaise (docs/en) | 2 313 | — | — | 22 |
-| **Total** | 7 677 | 294 | 5,9 | 179 |
+| Outillage PC | 325 | — | 1,9 | 109 |
+| Transverse (projet) | 2 047 | — | — | 59 |
+| Traduction anglaise (docs/en) | 2 317 | — | — | 23 |
+| **Total** | 7 674 | 294 | 5,9 | 180 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 179 commits du 2026-10-04 au 2026-10-24.
+Historique : 180 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 44 994 lignes de code écrites dans `progs/`, 50 410 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 050 lignes de code écrites dans `progs/`, 50 463 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -845,6 +845,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-19 | anglais (1) | 0.9 | 1 296 | 311 | 1 607 | 155 | messages en deux langues (`progs/msg`), `cpa-en.dsk`, commandes traduites |
 | 2026-10-23 | TERM | 0.9 | 1 303 | 312 | 1 615 | 167 | `TERM.COM` : terminal série (modem WiFi du LOCI) |
 | 2026-10-24 | sûreté disque | 0.9 | 1 307 | 312 | 1 619 | 180 | pilote : contrôleur muet -> erreur disque ; EDIT relit tout fichier qu'il a écrit ; `test_fdc.py` |
+| 2026-10-24 | petites corrections | 0.9 | 1 307 | 312 | 1 619 | 181 | REN dans l'ordre de COPY ; TERM : CR affiché en CR LF, `/L` ; HIRES : 3 lignes du bas noires ; erreur d'un traduit après HIRES ; `^I` dans les menus |
 
 ## 11. Comparaisons
 

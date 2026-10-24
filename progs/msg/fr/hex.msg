@@ -34,7 +34,7 @@ mn_all  .byt 5,13
 
 mn_mod  .byt 1,13
         .asc "Mode",0
-        .asc "Hex/ASCII TAB",0
+        .asc "Hex/ASCII  ^I",0
         .byt MA_TYPE
         .word c_mode
 

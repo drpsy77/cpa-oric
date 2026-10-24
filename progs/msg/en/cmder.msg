@@ -108,7 +108,7 @@ it_sys  .asc "Hide SYS   ",0
         .asc "Swap          ^W",0
         .byt MA_TYPE
         .word c9c
-        .asc "Other col.   TAB",0
+        .asc "Other col.    ^I",0
         .byt MA_TYPE
         .word c9d
 

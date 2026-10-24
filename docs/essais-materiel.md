@@ -32,6 +32,16 @@ insérés, enregistré à 32 761 octets) se rouvre sans `Fichier tronque`, en en
 texte à sa place) ; un fichier encore plus gros donne toujours le message ; un texte court
 s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
 
+**Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
+
+- HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli
+  l'écran) : les 3 lignes du bas restent noires, sans caractères ;
+- un `.GRX` avec `HIRES` puis `GLOAD ABSENT`, traduit (`GRXASM E2 /C`, puis `E2`) :
+  `Erreur : image introuvable` reste affiché au-dessus du prompt ;
+- `REN A.TXT B.TXT` (ordre de COPY) et `REN A.TXT=B.TXT` (ordre de CP/M) ; `REN` seul
+  montre les deux formes ;
+- menus : CMDER, Vue, « Autre col. ^I » ; HEX, Mode, « Hex/ASCII ^I » ; `HELP TOUCHES`.
+
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
 (attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans
@@ -50,7 +60,8 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 
 - TERM : le Pico W ne marche pas encore avec le LOCI (firmware du LOCI à venir) ; les essais
   de TERM sont dans `docs/loci-modem-wifi.md` ;
-- TERM, touche RETURN : passage à la ligne après la correction (`docs/etat.md` § 2 point 6) ;
+- TERM, touche RETURN : un CR reçu s'affiche maintenant en CR LF (`TERM /E` : l'écho de
+  RETURN passe à la ligne) ; `/L` envoie CR LF ; essayé seulement dans Oricutron (boucle) ;
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
@@ -98,8 +109,9 @@ plantage ni redémarrage.
 - un score ajouté à `PUZZLE.GRX` (`JEU.GRX` en français) dans EDIT, sur l'Oric ;
 - **clé USB débranchée à chaud** : `DIR` donne une erreur BDOS, sans plantage ; clé remise
   (avec une nouvelle version du `.dsk`), `DIR` montre les fichiers de la nouvelle version ;
-- HIRES plein écran : bascule du circuit vidéo ; les 3 lignes du bas montrent ce qu'il y a en
-  mémoire (défaut noté dans `docs/etat.md`, § 2 point 5).
+- HIRES plein écran : bascule du circuit vidéo ; les 3 lignes du bas montraient ce qu'il y a
+  en mémoire (corrigé : une boucle de `h_bottom` s'arrêtait au premier octet, à revérifier
+  ci-dessus).
 
 Cas limites et disquette française, 24 octobre 2026 :
 
@@ -125,6 +137,6 @@ Cas limites et disquette française, 24 octobre 2026 :
 - HEX : écriture d'octets ; EDIT : CTRL-W (trois modes), d'usage courant ;
 - GRAPHER traduit, boucle sans lecture du clavier : arrêtée par RESET, système rendu ;
 - LOGO : son (essayé plus tôt ; maniement jugé lourd, `docs/etat.md` § 2 point 6) ;
-- TERM : RETURN ne passe pas à la ligne (défaut, `docs/etat.md` § 2 point 6).
+- TERM : RETURN ne passait pas à la ligne (corrigé, en attente du Pico ci-dessus).
 
 Pour la version ROM : voir `docs/projet-rom.md`.
