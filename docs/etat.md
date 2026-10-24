@@ -35,7 +35,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 861 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 288 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -44,6 +44,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
+| EDSPRITE | 8 540 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) | `edsprite.md` |
 | ASM | 6 130 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée ; `#include` cherchés sur A: à D: | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
@@ -77,10 +78,9 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
      bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1), rectangles (`PASTE`, `GRAB`,
      `SCROLH`, `SCROLV`, `ROTH`, `ROTV`, `PRINTV`, `ECHOV`, `SPCV` : § 7.2), tuiles
-     (`TILESET`, `TMAP`, `TILE`, `TFONT` : § 7.3 ; `tools/mkspr.py` fait les `.SPR` sur le
-     PC en attendant l'éditeur).
-   - Reste : les caractères animés au 50 Hz (§ 16) ; l'éditeur de caractères et de sprites
-     (`.COM` plein écran, maquette dans `docs/editeur-sprites.md`, en cours) ; un **dessin assisté** (`.COM`, plus
+     (`TILESET`, `TMAP`, `TILE`, `TFONT` : § 7.3). EDSPRITE (24/10/2026) : l'éditeur des
+     `.SPR` sur l'Oric (`docs/edsprite.md`) ; `tools/mkspr.py` les fait aussi sur le PC.
+   - Reste : les caractères animés au 50 Hz (§ 16) ; un **dessin assisté** (`.COM`, plus
      précis que la tortue de LOGO : points, traits, formes, remplissage, couleurs par
      attributs, vers `.HIR` / `.HIZ`), à spécifier.
 2. **GRAPHER, plateforme de développement** : phases d'un jeu (`RUN`, à décider :
@@ -420,14 +420,16 @@ multiple de 2 048) :
 - GRAPHER (17 756 octets) prend 9 blocs, 676 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (15 175) prend 8 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (11 861) prend 6 blocs. Les disquettes se spécialisent plutôt
+  blocs, 1 844 octets libres dans le dernier. HELP (12 288) prend 6 blocs, **plein** : une rubrique de plus coûte un bloc ou des
+  textes raccourcis (la rubrique EDSPRITE a été taillée pour y tenir). EDSPRITE (8 540) prend
+  5 blocs, 1 700 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 243 octets de code avant la page suivante, 71 en
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 130) est à 14
   octets du bloc suivant, 91 en anglais (6 053) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste ~70 Ko, peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste ~50 Ko, peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

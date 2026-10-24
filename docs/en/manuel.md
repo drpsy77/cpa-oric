@@ -5,7 +5,8 @@
 > French (`docs/manuel.md`).
 
 User guide for the disk version: commands, programs, programming. GRAPHER and LOGO have their
-own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interface contract
+own reference (`grapher.md`, `logo.md`), and so do CMDER and EDSPRITE (`cmder.md`,
+`edsprite.md`). Interface contract
 (BIOS table, BDOS functions, memory map): `docs/architecture.md` (in French). On the Oric,
 `HELP` gives a summary of each command.
 
@@ -40,7 +41,7 @@ Transient commands (`.COM` files on the disk) that complete the CCP:
 
 | Command | Effect |
 |---|---|
-| `HELP [topic]` | help: built-in commands, then `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEMORY` (memory map), `HELP KEYS`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`; on `cpa.dsk`, in French (`HELP TOUCHES`, `HELP MEMOIRE`...) |
+| `HELP [topic]` | help: built-in commands, then `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEMORY` (memory map), `HELP KEYS`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`, `HELP EDSPRITE`; on `cpa.dsk`, in French (`HELP TOUCHES`, `HELP MEMOIRE`...) |
 | `CMDER [d:][afn]` | full-screen file manager: list you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes; copying with a single drive (`cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | file attributes (no option: shows them) |
 | `STAT [d:][afn]` | size of each file: 128-byte records, 2 KB blocks, bytes, attributes (`R` read-only, `S` system); no parameter: free space on the disk |
@@ -59,6 +60,8 @@ Other programs on the disk:
 - `GTEST.COM`, the test of SPLIT mode and the graphics primitives.
 - `LOGO.COM`, with `DEMO.LOG`; `LOGOTR.COM`, the `.LOG` translator (`logo.md`).
 - `HEX.COM file`, the hex editor described below.
+- `EDSPRITE.COM [NAME]`, the full-screen editor for GRAPHER's `.SPR` sprites and characters
+  (`edsprite.md`).
 - `GRAPHER.COM NAME`, the small drawing language of `.GRX` files (run), and `GRXASM.COM NAME`
   (or `GRAPHER NAME /A`), which translates it into assembly (copying the useful routines of
   `GRX.INC`, `HIRES.INC`...), with its examples (`grapher.md` § 14), and `VOIR.COM NAME`,
@@ -102,7 +105,7 @@ The `At` column gives the attributes: `R` for a read-only (R/O) file, `S` for a 
 **128 files per disk.** The directory (the table of files that `DIR` lists; not a folder:
 CP/A has none) has 128 entries, one per file whatever its size up to 32 KB (beyond that, one
 more entry per 32 KB). A disk therefore holds 128 files at most, even with room left: EDIT,
-HEX, CMDER and GRAPHER then answer `Directory full`, and nothing is written.
+HEX, CMDER, EDSPRITE and GRAPHER then answer `Directory full`, and nothing is written.
 Erase unneeded files (`ERA`) or use another disk.
 
 ## Drives A: to D:
@@ -257,10 +260,10 @@ visible.
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
+| `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
 | `build/cpa-notes-en.dsk` | EDIT | | |
-| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
@@ -1198,6 +1201,8 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   symbols. The file is erased if there are errors. `tools/test_asm.sh`: each program of
   `progs/` assembled by ASM.COM must be identical to xa's output.
 - **HEX** writes in place (random access); leaving a modified window writes it.
+- **EDSPRITE** keeps the whole file in memory and saves it as EDIT does (`NAME.$$$`);
+  details in `edsprite.md` § 6.
 - **DEBUG** places itself at `$8400-$9FFF` and lowers the top of the TPA (ceiling `$02A9`).
 - **POKE, GO** fit in `$0500-$05FF`; POKE decodes everything before writing, from the zero page
   (`$D0-$DD`).

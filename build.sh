@@ -131,9 +131,9 @@ theme() {   # theme NOM NOM_EN "visibles" "système en plus" "exemples"
     --ro --dir $P/EDIT.COM $3 --rw $5
 }
 INCS="build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC"
-theme logo logo "$P/LOGO.COM $P/LOGOTR.COM $P/GRAPHER.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log $GRX_EX"
+theme logo logo "$P/LOGO.COM $P/LOGOTR.COM $P/GRAPHER.COM $P/EDSPRITE.COM" "" "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log $GRX_EX"
 theme notes notes "" "" ""
-theme asm asm "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM $INCS" \
+theme asm asm "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $INCS" \
   "$P/MEM.COM $P/POKE.COM $P/GO.COM" \
   "$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # Animations : VOIR visible (il sort des commandes de base), GRAPHER, GRXASM et
@@ -142,7 +142,7 @@ theme asm asm "$P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/GRAPHER.COM $P/GRXASM.COM $
 BASE_SANS_VOIR=$(echo $BASE | sed "s|$P/VOIR.COM||")
 BASE_TOUT=$BASE
 BASE=$BASE_SANS_VOIR
-theme anim anim "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM" "$INCS" \
+theme anim anim "$P/VOIR.COM $P/VSYNC.COM $P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM" "$INCS" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 BASE=$BASE_TOUT
 # disquette de projet, vierge : sans système (amorce et pistes du système

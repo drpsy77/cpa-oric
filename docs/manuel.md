@@ -1,7 +1,8 @@
 # CP/A — manuel
 
 Mode d'emploi de la version disquette : commandes, programmes, programmation. GRAPHER et LOGO
-ont leur propre référence (`docs/grapher.md`, `docs/logo.md`), CMDER aussi (`docs/cmder.md`).
+ont leur propre référence (`docs/grapher.md`, `docs/logo.md`), CMDER et EDSPRITE aussi
+(`docs/cmder.md`, `docs/edsprite.md`).
 Contrat d'interface (table BIOS, fonctions du BDOS, carte mémoire) : `docs/architecture.md`.
 Sur l'Oric, `HELP` donne un résumé de chaque commande.
 
@@ -36,7 +37,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 
 | Commande | Effet |
 |---|---|
-| `HELP [sujet]` | aide : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER` ; sur `cpa-en.dsk`, en anglais (`HELP KEYS`, `HELP MEMORY`...) |
+| `HELP [sujet]` | aide : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`, `HELP EDSPRITE` ; sur `cpa-en.dsk`, en anglais (`HELP KEYS`, `HELP MEMORY`...) |
 | `CMDER [d:][afn]` | gestionnaire de fichiers plein écran : liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs ; copie avec un seul lecteur (`docs/cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
 | `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets, attributs (`R` protégé, `S` système) ; sans paramètre : place libre sur le disque |
@@ -55,6 +56,8 @@ Autres programmes de la disquette :
 - `GTEST.COM`, le test du mode SPLIT et des primitives graphiques.
 - `LOGO.COM`, avec `DEMO.LOG` ; `LOGOTR.COM`, le traducteur de `.LOG` (`logo.md`).
 - `HEX.COM fichier`, l'éditeur hexadécimal décrit plus bas.
+- `EDSPRITE.COM [NOM]`, l'éditeur plein écran des sprites et caractères `.SPR` de GRAPHER
+  (`docs/edsprite.md`).
 - `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX` (exécuté), et
   `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (en recopiant les routines utiles de `GRX.INC`, `HIRES.INC`...), avec ses exemples (`docs/grapher.md` § 14), et
   `VOIR.COM NOM`, qui affiche une image (`docs/grapher.md`, « HIRES plein écran »).
@@ -97,7 +100,7 @@ système (caché de DIR). La dernière ligne compte les fichiers, les protégés
 **128 fichiers par disquette.** Le répertoire (la table des fichiers, que liste `DIR` ; ce
 n'est pas un dossier : CP/A n'en a pas) a 128 entrées, une par fichier quelle que soit sa
 taille jusqu'à 32 Ko (au-delà, une entrée de plus par tranche de 32 Ko). Une disquette contient
-donc 128 fichiers au plus, même s'il reste de la place : EDIT, HEX, CMDER et GRAPHER répondent
+donc 128 fichiers au plus, même s'il reste de la place : EDIT, HEX, CMDER, EDSPRITE et GRAPHER répondent
 alors `Repertoire plein`, et rien n'est écrit. Effacer des fichiers inutiles (`ERA`) ou passer
 sur une autre disquette.
 
@@ -263,10 +266,10 @@ y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX |
+| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX |
 | `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
@@ -1225,6 +1228,8 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
   sert qu'aux symboles. Le fichier est effacé s'il y a des erreurs. `tools/test_asm.sh` :
   chaque programme de `progs/` assemblé par ASM.COM doit être identique à xa.
 - **HEX** écrit sur place (accès direct) ; quitter une fenêtre modifiée l'écrit.
+- **EDSPRITE** garde tout le fichier en mémoire et l'enregistre comme EDIT (`NOM.$$$`) ;
+  détails dans `docs/edsprite.md` § 6.
 - **DEBUG** se place en `$8400-$9FFF` et abaisse le haut de la TPA (plafond `$02A9`).
 - **POKE, GO** tiennent en `$0500-$05FF` ; POKE décode tout avant d'écrire, depuis la page
   zéro (`$D0-$DD`).

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Sûreté des fichiers : scénarios d'enregistrement qui tournent mal, joués
-dans Oricutron (tools/run_test.sh), pour EDIT et GRAPHER (SAVE, BSAVE,
-BSAVE SCREEN).
+dans Oricutron (tools/run_test.sh), pour EDIT, EDSPRITE et GRAPHER (SAVE,
+BSAVE, BSAVE SCREEN).
 
   python3 tools/test_fichiers.py [--vite] [--garde DOSSIER] [filtre...]
 
 Chaque scénario part d'une disquette préparée ici (tools/mkdisk.py : système,
-GRAPHER.COM, EDIT.COM, EDIT.CFG, les programmes d'essai de
+GRAPHER.COM, EDIT.COM, EDSPRITE.COM, EDIT.CFG, les programmes d'essai de
 tools/fichiers_tests/, l'ancien fichier, et ce qu'il faut pour remplir le
 disque ou le répertoire), tape une commande, puis regarde la disquette
 (mkdisk check et diff, contenu du fichier visé) et l'écran (message).
@@ -69,7 +69,7 @@ def disque(fichiers, libres=None, entrees_libres=None):
     for k in range(64):
         d.sec[M.SYS_LSN + k] = syst[k * 256:(k + 1) * 256]
     d.format_dir()
-    for f in ("progs/GRAPHER.COM", "progs/EDIT.COM"):
+    for f in ("progs/GRAPHER.COM", "progs/EDIT.COM", "progs/EDSPRITE.COM"):
         d.write_file(os.path.basename(f), open(os.path.join(BUILD, f), "rb").read())
         d.set_attr(os.path.basename(f), ro=True)
     d.write_file("EDIT.CFG", open(os.path.join(RACINE, "files/edit.cfg"), "rb").read())
@@ -256,6 +256,37 @@ def scenarios():
           "nouveau", "enregistre", interdit="tronque", nouveau=b"x" + PLEIN),
         S("EDIT RESET", "EDIT", [("DOC.TXT", DOC, False)], ed, "DOC.TXT", "reset",
           ref="EDIT normal"),
+    ]
+    # EDSPRITE : un point posé (ESPACE) au coin du premier sprite, puis
+    # CTRL-S ; « Enreg. sous » par le menu Fichier (FUNCT, 4 fois bas)
+    spr = open(os.path.join(RACINE, "files/heros.spr"), "rb").read()
+    autre_spr = spr[:-16] + bytes(16)
+    es = "EDSPRITE HEROS\n| \x1cs|"
+    esous = "EDSPRITE HEROS\n|\x05\x04\x04\x04\x04\n%s\n|"
+    L += [
+        S("EDSPRITE normal", "EDSPRITE", [("HEROS.SPR", spr, False)], es, "HEROS.SPR",
+          "nouveau", "enregistre", ref="EDSPRITE normal"),
+        S("EDSPRITE disque plein", "EDSPRITE", [("HEROS.SPR", spr, False)], es,
+          "HEROS.SPR", "ancien", "disque plein", libres=0),
+        S("EDSPRITE repertoire plein", "EDSPRITE", [("HEROS.SPR", spr, False)], es,
+          "HEROS.SPR", "ancien", "repertoire plein", entrees=0),
+        S("EDSPRITE fichier R/O", "EDSPRITE", [("HEROS.SPR", spr, True)], es,
+          "HEROS.SPR", "ancien", "fichier protege"),
+        S("EDSPRITE sous un nom nouveau", "EDSPRITE", [("HEROS.SPR", spr, False)],
+          esous % "COPIE", "COPIE.SPR", "nouveau", "enregistre",
+          nouveau=spr + bytes(-len(spr) % 128)),          # (complété par des 0)
+        S("EDSPRITE sous un fichier existant, question", "EDSPRITE",
+          [("HEROS.SPR", spr, False), ("AUTRE.SPR", autre_spr, False)],
+          esous % "AUTRE", "AUTRE.SPR", "ancien", "remplacer ce fichier (o/n) ?"),
+        S("EDSPRITE sous un fichier existant, N", "EDSPRITE",
+          [("HEROS.SPR", spr, False), ("AUTRE.SPR", autre_spr, False)],
+          esous % "AUTRE" + "N|", "AUTRE.SPR", "ancien", interdit="enregistre"),
+        S("EDSPRITE sous un fichier existant, O", "EDSPRITE",
+          [("HEROS.SPR", spr, False), ("AUTRE.SPR", autre_spr, False)],
+          esous % "AUTRE" + "O|", "AUTRE.SPR", "nouveau", "enregistre",
+          nouveau=spr + bytes(-len(spr) % 128)),
+        S("EDSPRITE RESET", "EDSPRITE", [("HEROS.SPR", spr, False)], es, "HEROS.SPR",
+          "reset", ref="EDSPRITE normal"),
     ]
     return L
 
