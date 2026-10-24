@@ -3,7 +3,7 @@
 Éditeur plein écran des fichiers `.SPR` de GRAPHER (format : `grapher.md` § 10.1) : sprites
 (genre 0 : dessin et silhouette) et tuiles ou caractères (genre 1 : dessin seul, copiés dans
 la police par `TFONT`). Il remplace HEX et `tools/mkspr.py` pour fabriquer ces fichiers sur
-l'Oric. Un `.COM` (8 950 octets ; 8 785 en anglais), rien de résident. Sur les disquettes qui
+l'Oric. Un `.COM` (8 967 octets ; 8 802 en anglais), rien de résident. Sur les disquettes qui
 ont GRAPHER : `cpa.dsk`, `cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` et leurs jumelles
 anglaises.
 
@@ -143,7 +143,11 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
   police secondaire n'y est pas possible. L'aperçu prend les codes 64-79 (sprite) et 80
   (décor) du jeu secondaire (attribut 9 en colonne 27, 8 en colonne 34), plus bas que tout
   menu déroulant. Les dessins d'origine des 12 codes sont gardés (pour « Prendre police ») ;
-  en sortant, le démarrage à chaud rend la police.
+  en sortant, le démarrage à chaud rend la police. Le jeu secondaire est tout pris par le
+  système (`docs/systeme.md`) : les codes 64-79 recouvrent la ligne en cours d'édition
+  (`$BA00`), libre pendant EDSPRITE ; le code 80 recouvre les 8 premiers octets de
+  l'historique (`$BA80`), gardés au lancement et remis en sortant. Après un RESET dans
+  EDSPRITE, l'historique peut garder des lignes abîmées (sans danger : longueurs bornées).
 - La grille est redessinée case par case (une lecture du sprite par caractère et par ligne
   de points, puis ses 6 points).
 

@@ -7,7 +7,7 @@
 Full-screen editor for GRAPHER's `.SPR` files (format: `grapher.md` § 10.1): sprites (kind
 0: drawing and mask) and tiles or characters (kind 1: drawing only, copied into the font by
 `TFONT`). It replaces HEX and `tools/mkspr.py` for making these files on the Oric. One `.COM`
-(8,785 bytes; 8,950 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
+(8,802 bytes; 8,967 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
 `cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` and their English twins.
 
 ## 1. Calling it
@@ -141,7 +141,10 @@ one to the other (or the Sprite menu, Select / Draw).
   there. The preview takes codes 64-79 (sprite) and 80 (backdrop) of the alternate set
   (attribute 9 in column 27, 8 in column 34), below any drop-down menu. The original
   drawings of the 12 codes are kept (for "From the font"); on leaving, the warm boot gives
-  the font back.
+  the font back. The alternate set is all taken by the system (`docs/systeme.md`): codes
+  64-79 cover the line being edited (`$BA00`), free while EDSPRITE runs; code 80 covers the
+  first 8 bytes of the line history (`$BA80`), saved at start and put back on leaving. After
+  a RESET in EDSPRITE, the history may keep damaged lines (harmless: lengths are bounded).
 - The grid is redrawn cell by cell (one read of the sprite per character and per dot row,
   then its 6 dots).
 
