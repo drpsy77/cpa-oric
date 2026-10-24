@@ -26,12 +26,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *140* | *42* | *351* | *79* | *96* | ***708*** | *183* | ***891*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 102 | 18 | **167** | 45 | **212** |
-| **Total** | **192** | **72** | **574** | **273** | **192** | **1303** | **312** | **1615** |
+| Outillage PC | 7 | 15 | 25 | 106 | 18 | **171** | 45 | **216** |
+| **Total** | **192** | **72** | **574** | **277** | **192** | **1307** | **312** | **1619** |
 
-Points ajustés (indicatif, § 9) : 1 303 × 1,05 ≈ 1 368.
+Points ajustés (indicatif, § 9) : 1 307 × 1,05 ≈ 1 372.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 67 EO, 64 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 68 EO, 64 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -725,6 +725,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T37 | `mkdisk.py repare` : image réécrite saine | EO | 1 | 3 | F | 4 |
 | OUT.T38 | `mkdisk.py diff` : fichiers ajoutés, effacés, modifiés | EQ | 1 | 4 | F | 3 |
 | OUT.T39 | `test_fichiers.py` : sûreté des enregistrements (EDIT, GRAPHER) | EO | 2 | 4 | F | 4 |
+| OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -751,8 +752,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 141 | 1 182 | 534 | 1 594 | 10 % | 37 141 | 35 | 115 |
-| EDIT | 4 | 3 648 | 198 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
+| Système et commandes | 64 | 11 142 | 1 182 | 534 | 1 594 | 10 % | 37 143 | 35 | 115 |
+| EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 22 | 13 025 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
@@ -761,35 +762,35 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | USB | 15 | 1 628 | 211 | 87 | 0 | 11 % | 4 479 | 51 | 140 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
-| Exemples | 32 | 1 050 | 65 | 53 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 165 | 7 348 | 818 | 455 | 0 | 10 % | — | 44 | — |
-| **Total** | 334 | 61 531 | 4 940 | 2 490 | 2 510 | 7 % | 135 584 | 47 | 104 |
+| Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
+| Outillage PC | 166 | 7 414 | 835 | 465 | 0 | 10 % | — | 43 | — |
+| **Total** | 335 | 61 609 | 4 964 | 2 502 | 2 510 | 7 % | 135 586 | 47 | 104 |
 
-Octets du système : code résident 13 922 (`$C000-$F662`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 294 | 78 | 4,0 | 69 |
-| EDIT | 93 | 20 | 1,3 | 12 |
+| Système et commandes | 1 300 | 78 | 4,0 | 70 |
+| EDIT | 96 | 20 | 1,3 | 12 |
 | GRAPHER + GRXASM | 852 | 69 | 3,7 | 35 |
-| LOGO | 311 | 63 | 1,6 | 19 |
+| LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 11 |
 | HEX | 34 | 9 | 1,8 | 3 |
 | VOIR | 78 | — | 4,1 | 10 |
 | USB | 38 | 9 | 1,2 | 9 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 22 |
-| Outillage PC | 324 | — | 1,9 | 106 |
-| Transverse (projet) | 2 086 | — | — | 55 |
-| Traduction anglaise (docs/en) | 2 311 | — | — | 21 |
-| **Total** | 7 693 | 294 | 5,9 | 174 |
+| Exemples | 0 | — | 0,0 | 23 |
+| Outillage PC | 325 | — | 1,9 | 108 |
+| Transverse (projet) | 2 058 | — | — | 58 |
+| Traduction anglaise (docs/en) | 2 313 | — | — | 22 |
+| **Total** | 7 677 | 294 | 5,9 | 179 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 174 commits du 2026-10-04 au 2026-10-23.
+Historique : 179 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 45 027 lignes de code écrites dans `progs/`, 50 443 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 44 994 lignes de code écrites dans `progs/`, 50 410 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -843,6 +844,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-19 | deux disquettes | 0.9 | 1 296 | 311 | 1 607 | 152 | `cpa-projet.dsk` ; ASM et GRXASM cherchent les `.INC` sur A: à D: ; GRXASM et GRAPHER `/C` ; ASM `/S`, `/E` ; EDIT : texte tronqué jamais enregistré sous son nom |
 | 2026-10-19 | anglais (1) | 0.9 | 1 296 | 311 | 1 607 | 155 | messages en deux langues (`progs/msg`), `cpa-en.dsk`, commandes traduites |
 | 2026-10-23 | TERM | 0.9 | 1 303 | 312 | 1 615 | 167 | `TERM.COM` : terminal série (modem WiFi du LOCI) |
+| 2026-10-24 | sûreté disque | 0.9 | 1 307 | 312 | 1 619 | 180 | pilote : contrôleur muet -> erreur disque ; EDIT relit tout fichier qu'il a écrit ; `test_fdc.py` |
 
 ## 11. Comparaisons
 

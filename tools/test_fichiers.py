@@ -51,6 +51,8 @@ ANCIEN_TXT = b"ANCIEN CONTENU, A GARDER INTACT\r\n" * 50          # 1 650 octets
 ANCIEN_BIN = bytes((i * 7) & 0xFF for i in range(1500))
 GROS = b"".join(b"Ligne %04d d'un texte trop long pour EDIT (32 000 octets).\r\n" % i
                 for i in range(680))                                 # 40 Ko : tronqué
+PLEIN = b"".join(b"Ligne %03d : 41 octets en memoire, 42 ici\r\n" % i
+                 for i in range(780))      # 32 760 octets, 31 980 en memoire (zone : 32 000)
 DOC = b"".join(b"Ligne %02d du document d'essai, assez longue pour remplir.\r\n" % i
                for i in range(90))                                   # 5,4 Ko, 3 blocs
 
@@ -169,10 +171,10 @@ def etat(d, cible, ancien, nouveau):
 # attendu à l'écran (minuscules, None : pas de contrôle), message interdit.
 
 def S(nom, prog, fichiers, touches, cible, attendu, message=None, interdit=None,
-      libres=None, entrees=None, ref=None, autres=()):
+      libres=None, entrees=None, ref=None, autres=(), nouveau=None):
     return dict(nom=nom, prog=prog, fichiers=fichiers, touches=touches, cible=cible,
                 attendu=attendu, message=message, interdit=interdit, libres=libres,
-                entrees=entrees, ref=ref, autres=autres)
+                entrees=entrees, ref=ref, autres=autres, nouveau=nouveau)
 
 
 def scenarios():
@@ -249,6 +251,9 @@ def scenarios():
           interdit="enregistre"),
         S("EDIT document tronque (40 Ko), CTRL-S", "EDIT", [("GROS.TXT", GROS, False)],
           "EDIT GROS.TXT\n||X\x1cs|", "GROS.TXT", "ancien", "texte tronque"),
+        S("EDIT relit un fichier plus gros que sa zone (CR LF)", "EDIT",
+          [("PLEIN.TXT", PLEIN, False)], "EDIT PLEIN.TXT\n||X\x1cs|", "PLEIN.TXT",
+          "nouveau", "enregistre", interdit="tronque", nouveau=b"x" + PLEIN),
         S("EDIT RESET", "EDIT", [("DOC.TXT", DOC, False)], ed, "DOC.TXT", "reset",
           ref="EDIT normal"),
     ]
@@ -261,6 +266,8 @@ def juger(sc, avant, apres, ecran, refs):
     """Rend (obtenu, liste des échecs)."""
     ancien = dict((n.upper(), c) for n, c, _ in sc["fichiers"]).get(sc["cible"])
     nouveau = refs.get(sc["ref"]) if sc["ref"] else None
+    if sc["nouveau"] is not None:           # contenu attendu connu d'avance
+        nouveau = sc["nouveau"] + b"\x1a" * (-len(sc["nouveau"]) % 128)
     ech = []
     st = etat(apres, sc["cible"], ancien, nouveau)
     if st == "perdu" and ancien is None:

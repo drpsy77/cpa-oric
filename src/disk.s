@@ -301,7 +301,8 @@ wr1     lda (ZP_DSK),y
 wchk    lda MD_CTRL
         bmi wr
 
-fin     jsr fdc_wait
+fin     jsr fdc_wait            ; délai dépassé (A = $FF, N = 1) : le
+        bmi error               ;   contrôleur ne répond plus, échec
         lda FDC_CMD
         and #ST_ERRMASK
         bne error

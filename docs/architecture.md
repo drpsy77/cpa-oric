@@ -117,6 +117,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/test_anim.py       # images .HIZ et animations .ANI (h_unz, VOIR)
     python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
     python3 tools/test_fichiers.py   # EDIT, GRAPHER : disque plein, R/O, RESET pendant l'écriture
+    python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
   vecteurs (`$FFFA`) et une ROM qui ne fait pas 16 Ko ; il affiche les deux marges.
@@ -136,7 +137,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, essai Oricutron des exemples `.GRX` (dessin) |
-| EDIT (enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) |
+| EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
 

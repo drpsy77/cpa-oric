@@ -86,7 +86,6 @@ inword  = $53
 rp      = $54
 bend    = $56           ; fin de la zone de texte (2 octets)
 clipa   = $58           ; presse-papiers (2 octets)
-blim    = $5A           ; bend - 128 (2 octets)
 wassplit = $5C          ; 1 = lancé depuis le mode SPLIT
 cptr    = $5D           ; EDIT.CFG : lecture des réglages intégrés (2 octets)
 sc      = $5F           ; render : colonne de l'écran
@@ -117,13 +116,9 @@ memset  pla
         tax
         stx clipa+1
         stx bend+1
-        dex
-        stx blim+1
         lda #0
         sta clipa
         sta bend
-        lda #$80
-        sta blim
         jsr text_clear
         lda #1
         sta insm
@@ -3324,81 +3319,52 @@ load_file
         lda #<m_newf
         ldy #>m_newf
         jmp set_msg
-opened  lda #<BUF               ; lecture brute dans la zone de texte
-        sta dst
+opened  ldx #F_SETDMA             ; lecture dans le DMA par défaut, un
+        lda #<DEF_DMA           ;   enregistrement à la fois, convertie au
+        ldy #>DEF_DMA           ;   vol dans la zone de texte :
+        jsr BDOS                ;   CR LF -> CR, LF seul -> CR, arrêt sur ^Z
+        lda #<BUF               ; (tout fichier écrit par EDIT se relit :
+        sta dst                 ;   en mémoire une fin de ligne est un CR)
         lda #>BUF
         sta dst+1
-rd      lda dst+1               ; place pour 128 octets ?
-        cmp blim+1
-        bcc ok
-        bne big
-        lda dst
-        cmp blim
-        bcc ok
-        beq ok
-big     lda #1
-        sta toobig
-        jmp eof
-ok      ldx #F_SETDMA
-        lda dst
-        ldy dst+1
-        jsr BDOS
-        ldx #F_READ
+        lda #0
+        sta prevc
+rd      ldx #F_READ
         lda #<fcb_main
         ldy #>fcb_main
         jsr BDOS
         cmp #0
-        bne eof
-        clc
-        lda dst
-        adc #128
-        sta dst
-        bcc rd
-        inc dst+1
-        jmp rd
-eof     ldx #F_SETDMA
-        lda #<DEF_DMA
-        ldy #>DEF_DMA
-        jsr BDOS
-        ; conversion : CR LF -> CR, LF seul -> CR, arrêt sur ^Z
-        lda dst                 ; fin des données brutes
-        sta t1
-        lda dst+1
-        sta t1+1
-        lda #<BUF
-        sta src
-        sta dst
-        lda #>BUF
-        sta src+1
-        sta dst+1
-        lda #0
-        sta prevc
-        ldy #0
-cv      lda src
-        cmp t1
-        bne cv1
-        lda src+1
-        cmp t1+1
-        beq cvd
-cv1     lda (src),y
+        bne cvd
+        tax                     ; X : position dans l'enregistrement
+cv      lda DEF_DMA,x
         cmp #EOFC
         beq cvd
         cmp #LF
         bne store
-        ldx prevc
-        cpx #CR
+        ldy prevc
+        cpy #CR
         beq skip
         lda #CR
-store   sta (dst),y
+store   ldy dst+1               ; encore de la place (dst < bend) ?
+        cpy bend+1
+        bcc room
+        bne big
+        ldy dst
+        cpy bend
+        bcc room
+big     lda #1                  ; plein : le reste du fichier est perdu
+        sta toobig
+        bne cvd
+room    ldy #0
+        sta (dst),y
         inc dst
         bne skip
         inc dst+1
-skip    lda (src),y
+skip    lda DEF_DMA,x
         sta prevc
-        inc src
-        bne cv
-        inc src+1
-        jmp cv
+        inx
+        bpl cv
+        bmi rd                  ; (X = 128) enregistrement suivant
 cvd     ; le texte [BUF, dst) passe à droite du trou : [BEND-n, BEND)
         sec
         lda dst
