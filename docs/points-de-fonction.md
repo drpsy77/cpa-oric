@@ -797,14 +797,14 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
-| EDSPRITE | 3 | 4 284 | 202 | 123 | 0 | 5 % | 8 950 | 63 | 132 |
+| EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 15 | 1 665 | 217 | 87 | 0 | 12 % | 4 479 | 52 | 140 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
 | Outillage PC | 169 | 7 604 | 860 | 481 | 0 | 10 % | — | 43 | — |
-| **Total** | 341 | 66 280 | 5 230 | 2 643 | 2 589 | 7 % | 145 508 | 48 | 106 |
+| **Total** | 341 | 66 289 | 5 231 | 2 643 | 2 589 | 7 % | 145 525 | 48 | 106 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
@@ -816,22 +816,22 @@ Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, 
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 12 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 136 | 13 | 2,0 | 1 |
+| EDSPRITE | 140 | 13 | 2,1 | 2 |
 | VOIR | 78 | — | 4,1 | 11 |
 | USB | 38 | 9 | 1,2 | 10 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 24 |
 | Outillage PC | 326 | — | 1,9 | 113 |
-| Transverse (projet) | 2 111 | — | — | 64 |
-| Traduction anglaise (docs/en) | 2 475 | — | — | 27 |
-| **Total** | 8 058 | 308 | 5,8 | 188 |
+| Transverse (projet) | 2 113 | — | — | 65 |
+| Traduction anglaise (docs/en) | 2 478 | — | — | 28 |
+| **Total** | 8 067 | 308 | 5,8 | 189 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 188 commits du 2026-10-04 au 2026-10-24.
+Historique : 189 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 49 141 lignes de code écrites dans `progs/`, 54 626 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 49 150 lignes de code écrites dans `progs/`, 54 635 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

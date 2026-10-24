@@ -62,7 +62,8 @@ console : sans les guillemets, espaces gardés.
   le damier de « Reel » restent lisibles ;
 - la ligne d'aide (ligne 26) change avec la zone ;
 - Dessin, Detourer sur un héros : un contour de masque, coins compris ; `^Z` l'annule ;
-- `EDSPRITE TUILES`, ARBR ou MUR : « Reel » rempli par le motif de la tuile.
+- `EDSPRITE TUILES`, ARBR ou MUR : « Reel » rempli par le motif de la tuile ;
+- l'historique des lignes (flèche haut) est intact après EDSPRITE.
 
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko

@@ -40,7 +40,8 @@ STDF    = $B400         ; police standard (code * 8)
 ALTF    = $B800         ; jeu secondaire
 PC0     = 64            ; aperçu : codes 64-79 (cases), 80 (décor)
 PCD     = 80
-HIST    = $BA80         ; historique des lignes du système (vidé en sortant)
+HIST    = $BA80         ; historique des lignes du système : ses 8 premiers
+                        ;   octets (code PCD de l'aperçu) gardés en hsave
 MAXSPR  = 264           ; un sprite de 4 x 4 : 8 + 16 x 16
 
 ; --- page zéro ---
@@ -195,6 +196,11 @@ tl1     inx
         sta SCREEN+STROW*40
         lda #$07
         sta SCREEN+STROW*40+1
+        ldx #7                  ; début de l'historique, recouvert par
+hs      lda HIST,x              ;   le décor de l'aperçu (code PCD)
+        sta hsave,x
+        dex
+        bpl hs
         jsr glyphs
         lda #0
         jsr sel
@@ -4149,8 +4155,11 @@ k_quit
         ldy #>q_quit
         jsr ask_yn
         bcc r
-go      lda #0                  ; historique recouvert par l'aperçu
-        sta HIST
+go      ldx #7                  ; historique rendu
+hr      lda hsave,x
+        sta HIST,x
+        dex
+        bpl hr
         lda wassplit
         beq cls
         ldx #F_GFX              ; retour au mode SPLIT, image intacte
@@ -4255,4 +4264,5 @@ mflag   = alist_hi+256  ; 257 octets
 undobuf = mflag+257
 clipbuf = undobuf+MAXSPR
 tmpspr  = clipbuf+MAXSPR
-BUF     = (tmpspr+MAXSPR+255)/256*256   ; le fichier : BUF à BUF+fsize
+hsave   = tmpspr+MAXSPR ; 8 octets
+BUF     = (hsave+8+255)/256*256   ; le fichier : BUF à BUF+fsize
