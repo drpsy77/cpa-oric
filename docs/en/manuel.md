@@ -532,6 +532,8 @@ a disk (BASIC ROM 1.1). The program is first assembled for its address under BAS
 - The code that is run lives under the Oric's ROM: no CP/A BDOS or BIOS (`JSR $0203`, `$C000`),
   no files; an `RTS` returns to BASIC. Under BASIC, a BASIC program uses `$0501-$97FF`, and
   page 2 and the zero page belong to the ROM (`docs/oric-basic.md` § 1).
+- A block run by `/R` must not start at `$0500`: before running it, the ROM puts `$00` at
+  `$0500-$0502`. Without `/R`, a block at `$0500` arrives intact.
 - A `.COM` written by ASM ends with zeros (the fill of its last record): they are loaded too,
   with no effect; `,len` removes them.
 - Transport: `EXPORT GAME.TAP` to the LOCI's USB stick, tape mounted from the LOCI menu, then

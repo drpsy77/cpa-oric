@@ -546,6 +546,8 @@ sous BASIC (`*= $8000`, par exemple), puis :
 - Le code lancé tourne sous la ROM de l'Oric : ni BDOS ni BIOS de CP/A (`JSR $0203`, `$C000`),
   ni fichiers ; un `RTS` rend la main au BASIC. Sous BASIC, un programme BASIC occupe
   `$0501-$97FF`, la page 2 et la page zéro appartiennent à la ROM (`docs/oric-basic.md` § 1).
+- Un bloc lancé par `/R` ne doit pas commencer en `$0500` : avant de le lancer, la ROM met
+  `$00` en `$0500-$0502`. Sans `/R`, un bloc en `$0500` arrive intact.
 - Un `.COM` écrit par ASM finit par des zéros (complément de son dernier enregistrement) : ils
   sont chargés aussi, sans effet ; `,lg` les retire.
 - Transport : `EXPORT JEU.TAP` sur la clé USB du LOCI, cassette montée par le menu du LOCI,
