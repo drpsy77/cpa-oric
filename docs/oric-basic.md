@@ -24,6 +24,9 @@ GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Trois étages : 
 - **Chargement** : une routine en `$9000`, mise dans un `.TAP`, arrive intacte par `CLOAD""` ;
   `CALL #9000` l'exécute et le BASIC reprend (`Ready`). Un `CLOAD""` dans un programme BASIC
   charge un bloc de code machine et le programme continue (chargeur de MKTAP, essayé).
+- **Démarrage automatique en `$0500`** : la ROM met `$00` en `$0500-$0502` (programme BASIC
+  vide) avant de lancer le bloc ; le code y trouve un `BRK`. Sans démarrage automatique, le
+  même bloc arrive intact (`CALL#500` ensuite). Essayé avec PUZZLE traduit (`JEU.GRX`).
 - **Commande `!`** : la ROM fait `JMP ($02F5)` (`$CD13`). `DOKE #2F5,#9000` puis `!` lance la
   routine ; elle finit par `RTS` et la suite de la ligne est exécutée (`!:PRINT 12` affiche
   12).
@@ -83,7 +86,9 @@ système (`docs/projet-rom.md`).
   est le même : VIA, AY, ULA). La ROM n'offre pas l'état de la matrice du clavier dont les jeux
   ont besoin, ses adresses diffèrent entre 1.0 et 1.1, elle occupe la page zéro de nos
   routines. Sans elle, un seul comportement à essayer, et le `.TAP` vaut aussi pour un Oric-1.
-- **Mémoire** : chargé en `$0500` comme un `.COM`. Au départ, le programme prend la page zéro
+- **Mémoire** : chargé en `$0500` comme un `.COM`, mais le point d'entrée du démarrage
+  automatique ne peut pas être en `$0500-$0502` (§ 1) : `$0503` au plus tôt (les trois
+  premiers octets du programme ne servent pas, ou le bloc commence en `$0503`). Au départ, le programme prend la page zéro
   et la pile, détourne l'IRQ par `$0244` ; il a `$0500-$B3FF` (environ 44 Ko).
 - **Fin** : `END` et le bouton RESET (NMI par `$0247`) redémarrent la ROM (`JMP ($FFFC)`) ;
   pas de retour au BASIC (il faudrait lui rendre page zéro, page 2 et vecteurs).
