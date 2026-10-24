@@ -103,12 +103,13 @@ aujourd'hui au système (relevé dans `GRX.INC`, `HIRES.INC`, `ARR.INC`, `ANIM.I
 |---|---|---|---:|
 | Changement de mode (fonction 115 op 10-11 : texte, SPLIT, police remise) | `h_gfx`, `grx.inc` | `g_mode` et la partie utile de `font_init` | ~300 |
 | Compteur 50 Hz `SYS_TICKS`, touche tenue `KB_HELD`, `CONST`, `CONIN` | `grx.inc`, `anim.inc`, `h_key` | interruption du VIA, `kb_scan` et ses tables | ~700 |
-| Son (fonction 116) | `arr.inc`, GRAPHER | `snd.s` | ~600 |
+| Son (fonction 116) : GRAPHER n'a pas de commande de son ; seul le bip d'un `INPUT` refusé (`rz_bip`) | `arr.inc` | bip par écriture directe dans l'AY | ~40 |
 | `PRINT` hors LORES (`CONOUT`), `INPUT` (fonction 10) | `grx.inc`, `arr.inc` | mini-console : caractère, retour, défilement ; saisie simple | ~500 |
 | Fichiers (`FIL.INC`, `BLOAD`, `GSAVE` / `GLOAD`) | selon le programme | rien : données dans le `.TAP` | — |
 
-Total ~2 à 2,5 Ko, à prévoir à 3 Ko. `ORIC.INC` est marqué `;@` comme les autres
-bibliothèques : un jeu sans son ni `INPUT` n'en embarque que la moitié.
+Total ~1,5 à 2 Ko, à prévoir à 2,5 Ko. `ORIC.INC` est marqué `;@` comme les autres
+bibliothèques : un jeu sans `INPUT` ni `PRINT` dans la console en embarque moins. Si GRAPHER
+reçoit un jour des commandes de son, `snd.s` (~600 octets) rejoindra le socle.
 
 | Bibliothèque | Oric seul |
 |---|---|
