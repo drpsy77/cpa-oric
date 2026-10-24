@@ -20,18 +20,19 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 14 | 0 | 21 | 13 | 9 | **57** | 22 | **79** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
+| EDSPRITE | 7 | 5 | 39 | 8 | 6 | **65** | 16 | **81** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
 | USB | 14 | 0 | 11 | 4 | 3 | **32** | 6 | **38** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *140* | *42* | *351* | *79* | *96* | ***708*** | *183* | ***891*** |
+| *Applications* | *147* | *47* | *390* | *87* | *102* | ***773*** | *199* | ***972*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 110 | 18 | **175** | 45 | **220** |
-| **Total** | **192** | **72** | **574** | **281** | **192** | **1311** | **312** | **1623** |
+| **Total** | **199** | **77** | **613** | **289** | **198** | **1376** | **328** | **1704** |
 
-Points ajustés (indicatif, § 9) : 1 311 × 1,05 ≈ 1 377.
+Points ajustés (indicatif, § 9) : 1 376 × 1,05 ≈ 1 445.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 69 EO, 64 EQ.
+Nombre de fonctions comptées : 28 ILF, 15 EIF, 197 EI, 71 EO, 66 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -128,7 +129,7 @@ partagée l'est dans son composant : `hires.inc` dans VOIR, `asm_tab.s` dans ASM
 3. `./build.sh`, puis `python3 tools/pf_mesure.py --ecrire` (refuse une ligne mal comptée) ;
 4. une ligne dans l'historique (§ 10), la qualité (§ 8) si elle a changé.
 
-Identifiants : composant (`SYS`, `EDIT`, `GRA`, `LOGO`, `CMD`, `HEX`, `VOIR`, `USB`, `ASM`,
+Identifiants : composant (`SYS`, `EDIT`, `GRA`, `LOGO`, `CMD`, `HEX`, `EDS`, `VOIR`, `USB`, `ASM`,
 `DBG`, `EX`, `OUT`), puis `D` (données), `T` (transactions) ou `A` (algorithmes) et un
 numéro.
 
@@ -627,6 +628,41 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | DBG.A04 | Placement en `$8400`, haut de la TPA abaissé | `debug.s` | 1 |
 | DBG.A05 | Adresses : hexa, `#décimal`, `nom+n`, symbole le plus proche | `debug.s` | 1 |
 
+### 4.10 EDSPRITE
+
+| Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
+|---|---|---|---:|---:|---|---:|
+| EDS.D01 | Fichier `.SPR` (en-tête ; sprites : nom, taille, dessin, silhouette) | ILF | 2 | 8 | F | 7 |
+| EDS.D02 | Police standard (dessins des caractères) | EIF | 1 | 2 | F | 5 |
+| EDS.T01 | Ouvrir et afficher (grille à trois états, liste, contrôle du format) | EQ | 1 | 8 | F | 3 |
+| EDS.T02 | Nouveau fichier (sprites ou tuiles) | EI | 1 | 2 | F | 3 |
+| EDS.T03 | Poser des points (plein, masque, transparent ; crayon) | EI | 1 | 4 | F | 3 |
+| EDS.T04 | Codes hexadécimaux du dessin ou de la silhouette | EQ | 1 | 3 | F | 3 |
+| EDS.T05 | Aperçu réel sur un décor | EO | 1 | 5 | F | 4 |
+| EDS.T06 | Nouveau sprite (taille, nom) | EI | 1 | 4 | F | 3 |
+| EDS.T07 | Dupliquer (nom suivant) | EI | 1 | 2 | F | 3 |
+| EDS.T08 | Supprimer (confirmation) | EI | 1 | 1 | F | 3 |
+| EDS.T09 | Renommer | EI | 1 | 2 | F | 3 |
+| EDS.T10 | Changer la taille | EI | 1 | 3 | F | 3 |
+| EDS.T11 | Avancer, reculer dans le fichier | EI | 1 | 1 | F | 3 |
+| EDS.T12 | Couper, copier, coller, effacer (sprite ou caractère) | EI | 1 | 3 | F | 3 |
+| EDS.T13 | Transformations (inverser, miroirs, quart de tour, décalages, silhouette = dessin) | EI | 1 | 3 | F | 3 |
+| EDS.T14 | Prendre dans la police | EI | 2 | 2 | F | 3 |
+| EDS.T15 | Annuler | EI | 1 | 2 | F | 3 |
+| EDS.T16 | Animer (sprites de même préfixe) | EO | 1 | 3 | F | 4 |
+| EDS.T17 | Enregistrer, enregistrer sous (remplacer) | EI | 1 | 8 | F | 3 |
+
+| Id | Algorithme | Où | Points |
+|---|---|---|---:|
+| EDS.A01 | Grille : 12 caractères redéfinis (états × traits des limites), redessin case par case | `edsprite.s` | 3 |
+| EDS.A02 | Fichier en mémoire : insertion et retrait de sprites de tailles variables | `edsprite.s` | 3 |
+| EDS.A03 | Taille changée : cases refaites, dessin gardé au coin haut-gauche | `edsprite.s` | 1 |
+| EDS.A04 | Transformations par point source (miroirs, quart de tour, décalages circulaires) | `edsprite.s` | 3 |
+| EDS.A05 | Aperçu : caractères du jeu secondaire composés du décor, de la silhouette et du dessin | `edsprite.s` | 3 |
+| EDS.A06 | Animation : sprites de même préfixe et de même taille, au 50 Hz | `edsprite.s` | 1 |
+| EDS.A07 | Annulation par échange avec une copie du sprite | `edsprite.s` | 1 |
+| EDS.A08 | Enregistrement sûr (`NOM.$$$`, effacer, renommer) | `edsprite.s` | 1 |
+
 ## 5. Exemples
 
 Chaque exemple est un petit programme, compté pour ce qu'il fait. ELIZA2 rend le même
@@ -753,45 +789,47 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 619 | 10 % | 37 415 | 35 | 116 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 673 | 10 % | 37 842 | 35 | 118 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 22 | 13 167 | 1 024 | 428 | 0 | 7 % | 32 931 | 57 | 144 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
+| EDSPRITE | 3 | 4 133 | 196 | 120 | 0 | 5 % | 8 540 | 64 | 131 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 15 | 1 665 | 217 | 87 | 0 | 12 % | 4 479 | 52 | 140 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 169 | 7 542 | 858 | 481 | 0 | 10 % | — | 43 | — |
-| **Total** | 338 | 61 934 | 5 026 | 2 520 | 2 535 | 8 % | 136 131 | 47 | 104 |
+| Outillage PC | 169 | 7 604 | 860 | 481 | 0 | 10 % | — | 43 | — |
+| **Total** | 341 | 66 129 | 5 224 | 2 640 | 2 589 | 7 % | 145 098 | 48 | 105 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 304 | 78 | 4,0 | 73 |
+| Système et commandes | 1 309 | 79 | 4,1 | 74 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 874 | 69 | 3,8 | 37 |
+| GRAPHER + GRXASM | 872 | 69 | 3,8 | 38 |
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 12 |
 | HEX | 34 | 9 | 1,8 | 4 |
+| EDSPRITE | 131 | 13 | 2,0 | 0 |
 | VOIR | 78 | — | 4,1 | 11 |
 | USB | 38 | 9 | 1,2 | 10 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 24 |
-| Outillage PC | 326 | — | 1,9 | 111 |
-| Transverse (projet) | 2 054 | — | — | 61 |
-| Traduction anglaise (docs/en) | 2 339 | — | — | 25 |
-| **Total** | 7 726 | 294 | 5,9 | 182 |
+| Outillage PC | 326 | — | 1,9 | 112 |
+| Transverse (projet) | 2 110 | — | — | 63 |
+| Traduction anglaise (docs/en) | 2 470 | — | — | 26 |
+| **Total** | 8 047 | 308 | 5,8 | 187 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 182 commits du 2026-10-04 au 2026-10-24.
+Historique : 187 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 45 189 lignes de code écrites dans `progs/`, 50 587 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 49 004 lignes de code écrites dans `progs/`, 54 489 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -849,6 +887,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-24 | petites corrections | 0.9 | 1 307 | 312 | 1 619 | 181 | REN dans l'ordre de COPY ; TERM : CR affiché en CR LF, `/L` ; HIRES : 3 lignes du bas noires ; erreur d'un traduit après HIRES ; `^I` dans les menus |
 | 2026-10-24 | tableaux (col, lig) | 0.9 | 1 311 | 312 | 1 623 | 182 | GRAPHER : tableaux à deux dimensions en (colonne, ligne) ; `grx_colig.py` |
 | 2026-10-24 | PRINT | 0.9 | 1 311 | 312 | 1 623 | 183 | GRAPHER : `PRINT` à plusieurs éléments, `;` final ; `ECHO "..."` dans la console |
+| 2026-10-24 | EDSPRITE | 0.9 | 1 376 | 328 | 1 704 | 188 | `EDSPRITE.COM` : éditeur plein écran des sprites et caractères `.SPR` |
 
 ## 11. Comparaisons
 

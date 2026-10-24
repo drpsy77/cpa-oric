@@ -10,7 +10,7 @@ import re
 import sys
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOCS = ["manuel.md", "logo.md", "grapher.md", "cmder.md"]
+DOCS = ["manuel.md", "logo.md", "grapher.md", "cmder.md", "edsprite.md"]
 
 
 def forme(p):

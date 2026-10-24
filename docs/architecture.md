@@ -238,7 +238,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 | contrat, conventions, construction | ce document |
 | état, suite prévue, réserves de place | `docs/etat.md` (court : relu à chaque conversation) |
 | fonctionnement interne du système | `docs/systeme.md` |
-| mode d'emploi d'un programme | `docs/manuel.md`, ou sa référence (`logo.md`, `grapher.md`, `cmder.md`) |
+| mode d'emploi d'un programme | `docs/manuel.md`, ou sa référence (`logo.md`, `grapher.md`, `cmder.md`, `edsprite.md`) |
 | choix de mise en œuvre d'un programme | section « Mise en œuvre » de sa référence |
 | essais sur le vrai matériel | `docs/essais-materiel.md` (lu seulement au besoin) |
 | aide sur l'Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
@@ -253,7 +253,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
 - `README.md` (anglais) et `README.fr.md` (français) vont ensemble : un changement de l'un
   est reporté dans l'autre. De même pour les documents d'utilisation (`manuel.md`, `logo.md`,
-  `grapher.md`, `cmder.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
+  `grapher.md`, `cmder.md`, `edsprite.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
   signale une traduction en retard (titres, tableaux, exemples).
 - Les documents de `docs/en/` décrivent les disquettes anglaises : écrans, menus, questions,
   messages et noms d'exemples y sont ceux de `cpa-en.dsk` et de ses jumelles ; les documents

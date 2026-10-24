@@ -520,8 +520,9 @@ Example: a little man of 1 column by 2 lines, alone in his file (48 bytes, in HE
     0028  12 12 33 00 00 00 00 00   ..3.....   cell (0,1): silhouette
 
 The silhouette follows the convention "1 = the character" (the opposite of Oricium's mask,
-`tile AND mask OR sprite`). Until the sprite editor exists, a `.SPR` is made in HEX or by a
-small program that fills a `$` array and does `BSAVE`.
+`tile AND mask OR sprite`). A `.SPR` is drawn in EDSPRITE (`edsprite.md`); it can also be
+made in HEX, by a small program that fills a `$` array and does `BSAVE`, or on the PC by
+`tools/mkspr.py` (from a drawing in text).
 
 ### 10.2 From array or screen to file: what you get
 
@@ -945,9 +946,6 @@ examples are tried in Oricutron.
 ## 16. Decided, not done yet
 
 - Characters animated at the 50 Hz rate (rippling water), without touching the map.
-- **Character and sprite editor**: a full-screen `.COM` that writes the `.SPR` files
-  (sprites and tiles). Meanwhile, `tools/mkspr.py` makes a `.SPR` on the PC from a drawing
-  in text (`tools/spr/tuiles.txt`).
 
 ## 17. Open questions
 

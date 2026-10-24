@@ -49,6 +49,7 @@ COMPOSANTS = [
              + ["progs/msg/*/%s.msg" % n for n in ("logo", "logovoc", "logotr")]),
     ("CMD",  ["progs/cmder.s", "progs/msg/*/cmder.msg"]),
     ("HEX",  ["progs/hex.s", "progs/msg/*/hex.msg"]),
+    ("EDS",  ["progs/edsprite.s", "progs/msg/*/edsprite.msg"]),
     ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg",
               "progs/msg/*/anim.msg"]),
     ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s",
@@ -62,7 +63,7 @@ COMPOSANTS = [
               "tools/grapher_tests/*.grx", "tools/logo_tests/*.log"]),
 ]
 NOMS = {"SYS": "Système et commandes", "EDIT": "EDIT", "GRA": "GRAPHER + GRXASM",
-        "LOGO": "LOGO", "CMD": "CMDER", "HEX": "HEX", "VOIR": "VOIR", "USB": "USB",
+        "LOGO": "LOGO", "CMD": "CMDER", "HEX": "HEX", "EDS": "EDSPRITE", "VOIR": "VOIR", "USB": "USB",
         "ASM": "ASM", "DBG": "DEBUG", "EX": "Exemples", "OUT": "Outillage PC",
         "TRA": "Transverse (projet)", "EN": "Traduction anglaise (docs/en)",
         "CPM": "CP/M 2.2 : système et utilitaires", "CPMED": "CP/M 2.2 : ED",
@@ -73,28 +74,28 @@ COMPARAISON = [("Système, commandes, utilitaires de fichiers", ["SYS"], ["CPM"]
                ("Assembleur (ASM / ASM et LOAD)", ["ASM"], ["CPMASM"]),
                ("Débogueur (DEBUG / DDT)", ["DBG"], ["CPMDDT"])]
 GROUPES = [("Système", ["SYS"]),
-           ("Applications", ["EDIT", "GRA", "LOGO", "CMD", "HEX", "VOIR", "USB", "ASM", "DBG"]),
+           ("Applications", ["EDIT", "GRA", "LOGO", "CMD", "HEX", "EDS", "VOIR", "USB", "ASM", "DBG"]),
            ("Exemples", ["EX"]), ("Outillage", ["OUT"])]
 ORDRE = [c for _, l in GROUPES for c in l]
 
 # programmes .COM de chaque composant (octets)
 COMS = {"SYS": [n.upper() for n in SYS_COM if n != "helptab"], "EDIT": ["EDIT"],
-        "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"],
+        "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"], "EDS": ["EDSPRITE"],
         "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR"], "ASM": ["ASM"],
         "DBG": ["DEBUG"], "EX": ["HELLO", "GTEST"]}
 
 # documentation : fichier -> composant ; manuel.md est découpé par section (## ...)
 DOCS = {"architecture.md": "SYS", "systeme.md": "SYS", "memoire-pages-2-3.md": "SYS",
-        "projet-rom.md": "SYS", "logo.md": "LOGO", "grapher.md": "GRA", "cmder.md": "CMD",
+        "projet-rom.md": "SYS", "logo.md": "LOGO", "grapher.md": "GRA", "cmder.md": "CMD", "edsprite.md": "EDS",
         "atelier.md": "OUT", "etat.md": "TRA", "essais-materiel.md": "TRA",
         "oric-basic.md": "TRA", "loci-modem-wifi.md": "TRA", "points-de-fonction.md": "TRA",
         "../README.md": "TRA", "../README.fr.md": "TRA",
-        "en/manuel.md": "EN", "en/logo.md": "EN", "en/grapher.md": "EN", "en/cmder.md": "EN", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
+        "en/manuel.md": "EN", "en/logo.md": "EN", "en/grapher.md": "EN", "en/cmder.md": "EN", "en/edsprite.md": "EN", "../CLAUDE.md": "TRA", "../tools/LISEZMOI-mac.txt": "OUT"}
 MANUEL = [("Échange de fichiers", "USB"), ("HIRES plein", "VOIR"), ("L'éditeur de texte", "EDIT"),
           ("L'éditeur hexa", "HEX"), ("L'assembleur", "ASM"), ("Le débogueur", "DBG"),
           ("Outils", "OUT")]          # les autres sections : SYS
 AIDE = {"CP/A": "SYS", "TOUCHES": "SYS", "COMMANDES": "SYS", "PROGRAMMES": "SYS",
-        "MEMOIRE": "SYS", "USB": "USB", "GRAPHER": "GRA", "EDIT": "EDIT", "CMDER": "CMD",
+        "MEMOIRE": "SYS", "USB": "USB", "GRAPHER": "GRA", "EDIT": "EDIT", "CMDER": "CMD", "EDSPRITE": "EDS",
         "HEX": "HEX", "LOGO": "LOGO", "ASM": "ASM", "DEBUG": "DBG"}
 
 POIDS = {"ILF": (7, 10, 15), "EIF": (5, 7, 10), "EI": (3, 4, 6), "EO": (4, 5, 7), "EQ": (3, 4, 6)}

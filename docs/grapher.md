@@ -531,8 +531,9 @@ Exemple : un bonhomme de 1 colonne sur 2 lignes, seul dans son fichier (48 octet
     0028  12 12 33 00 00 00 00 00   ..3.....   case (0,1) : silhouette
 
 La silhouette suit la convention « 1 = le personnage » (le contraire du masque d'Oricium,
-`tuile AND masque OR sprite`). En attendant l'éditeur de sprites, un `.SPR` se fabrique dans
-HEX ou par un petit programme qui remplit un tableau `$` et fait `BSAVE`.
+`tuile AND masque OR sprite`). Un `.SPR` se dessine dans EDSPRITE (`docs/edsprite.md`) ; on
+peut aussi le fabriquer dans HEX, par un petit programme qui remplit un tableau `$` et fait
+`BSAVE`, ou sur le PC par `tools/mkspr.py` (d'après un dessin en texte).
 
 ### 10.2 Du tableau ou de l'écran au fichier : ce qu'on obtient
 
@@ -978,9 +979,6 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 ## 16. Décidé, pas encore fait
 
 - Caractères animés au rythme du 50 Hz (l'eau qui ondule), sans toucher à la carte.
-- **Éditeur de caractères et de sprites** : un `.COM` plein écran qui écrit les `.SPR`
-  (sprites et tuiles). En attendant, `tools/mkspr.py` fabrique un `.SPR` sur le PC à partir
-  d'un dessin en texte (`tools/spr/tuiles.txt`).
 
 ## 17. Questions ouvertes
 

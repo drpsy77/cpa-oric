@@ -11,5 +11,5 @@ Aide : HELP (commandes internes)
 et HELP suivi d'un sujet :
   TOUCHES PROGRAMMES EDIT HEX
   LOGO ASM DEBUG MEMOIRE
-  USB GRAPHER CMDER
+  USB GRAPHER CMDER EDSPRITE
   (4 lettres suffisent)

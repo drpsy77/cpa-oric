@@ -54,6 +54,22 @@ sur le Mac, puis IMPORT).
 ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
 console : sans les guillemets, espaces gardés.
 
+**EDSPRITE** (nouveau ; `docs/edsprite.md`), sur `cpa.dsk` puis `cpa-en.dsk` :
+
+- `EDSPRITE HEROS` : la grille se lit bien sur le vrai écran (plein, masque vide, transparent
+  grisé, traits des limites de caractère au 6e point et à la 8e ligne, lisibles sur les trois
+  états), le curseur clignote, « Reel » montre le héros sur le damier ; dire si le grisé ou
+  les traits sont trop fins ou baveux sur le moniteur ;
+- ESPACE, `M`, DEL, `P` (crayon) puis flèches, SHIFT et CTRL + flèches ; `^I`, `S` / `M`
+  dans la liste, RETURN ; `^H` (codes) ; tous les menus (FUNCT), surtout Sprite (Nouveau,
+  Taille), Dessin (miroirs, quart de tour sur un 4x3, décalages), Vue (Decor, Animer : HER1
+  et HER2 alternent, une touche arrête) ; les menus déroulants passent par-dessus la grille
+  et la liste sans laisser de traces ;
+- `^S`, `^Q`, puis `GRAPHER SPRITES` : le héros modifié s'affiche ; sur une disquette
+  pleine ou en R/O, message et ancien fichier intact ; RESET pendant `^S` comme pour EDIT ;
+- après `^Q` (et après un RESET dans EDSPRITE), la police est normale (`@ # [ ] _ { | } ~`
+  dans un `TYPE`) ; lancé depuis SPLIT, l'image revient en sortant.
+
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
 (attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans

@@ -66,7 +66,7 @@ Deux variantes sont construites à partir des mêmes sources :
   traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
   l'écran, défilement compris), interprété ou traduit en
-  assembleur.
+  assembleur, avec **EDSPRITE**, un éditeur plein écran de ses sprites et caractères.
 - Images HIRES compressées et animations plein écran (VOIR).
 
 ## Stabilité
@@ -100,6 +100,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/logo.md` | LOGO |
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
+| `docs/edsprite.md` | EDSPRITE, l'éditeur de sprites et de caractères |
 | `docs/en/` | les quatre documents ci-dessus en anglais |
 | `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
@@ -107,7 +108,6 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
-| `docs/editeur-sprites.md` | éditeur de sprites et de caractères (spécification) |
 | `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |

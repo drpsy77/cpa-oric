@@ -63,7 +63,8 @@ Two variants are built from the same sources:
 - **LOGO** in English and in French (turtle, decimals, words and lists, sound; `LOGOTR`
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the
-  screen, scrolling), interpreted or translated into assembly.
+  screen, scrolling), interpreted or translated into assembly, with **EDSPRITE**, a
+  full-screen editor for its sprites and characters.
 - Compressed HIRES pictures and full-screen animations (VOIR).
 
 ## Stability
@@ -99,13 +100,13 @@ The user documents are in English in `docs/en/`; the others are in French.
 | [`docs/en/logo.md`](docs/en/logo.md) | LOGO |
 | [`docs/en/grapher.md`](docs/en/grapher.md) | GRAPHER |
 | [`docs/en/cmder.md`](docs/en/cmder.md) | CMDER |
+| [`docs/en/edsprite.md`](docs/en/edsprite.md) | EDSPRITE, the sprite and character editor |
 | `docs/vision.md` | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
 | `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
 | `docs/systeme.md` | how the system works inside |
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/etat.md` | project status, what comes next, space reserves |
 | `docs/projet-rom.md` | the ROM version |
-| `docs/editeur-sprites.md` | sprite and character editor (specification) |
 | `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output, routines for BASIC, standalone GRAPHER games (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |

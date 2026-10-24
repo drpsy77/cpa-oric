@@ -11,5 +11,5 @@ Help: HELP (built-in commands)
 and HELP followed by a topic:
   KEYS PROGRAMS EDIT HEX
   LOGO ASM DEBUG MEMORY
-  USB GRAPHER CMDER
+  USB GRAPHER CMDER EDSPRITE
   (4 letters are enough)

@@ -27,7 +27,7 @@ essai() {
   fi
   [ "$P" = ASM ] || rm -f "$T/$P.COM"
 }
-for p in hello copy gtest hex edit logo logotr debug help set poke go mem stat xdo export import usbdir format diskcopy type era ren voir vsync grapher grxasm cmder asm term; do
+for p in hello copy gtest hex edit logo logotr debug help set poke go mem stat xdo export import usbdir format diskcopy type era ren voir vsync grapher grxasm cmder asm term edsprite; do
   essai fr $p
 done
 # en anglais : les programmes qui ont des messages dans progs/msg/en (et
