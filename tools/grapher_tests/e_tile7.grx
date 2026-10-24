@@ -1,4 +1,4 @@
 ; TILESET : une ligne du tableau contient les codes d'une tuile
-DIM D$(4,3)
+DIM D$(3,4)
 TILESET D$ 2 2
 PRINT 1

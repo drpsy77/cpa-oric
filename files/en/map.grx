@@ -4,54 +4,54 @@
 ; map is written in plain text: ~ water, space grass, # wall, ^ tree,
 ; M mountain. Off the map: tile 0, water.
 ; INKEY: no waiting; the screen is redrawn (CALC) only after a step
-DIM T$(32,64) D$(5,4) S$(152)
+DIM T$(64,32) D$(4,5) S$(152)
 BLOAD S$ TILES.SPR
 ECHO Building the world...
 FOR J 0 3
-  D$(0,J) = 34                 ; water
-  D$(1,J) = 33                 ; grass (empty)
-  D$(2,J) = 35                 ; wall
-  D$(3,J) = 36+J               ; tree
-  D$(4,J) = 40+J               ; mountain
+  D$(J,0) = 34                 ; water
+  D$(J,1) = 33                 ; grass (empty)
+  D$(J,2) = 35                 ; wall
+  D$(J,3) = 36+J               ; tree
+  D$(J,4) = 40+J               ; mountain
 NEXT
 TILESET D$ 2 2 "~ #^M"
 FILL T$ 32
 FOR I 0 63
-  T$(0,I) = 126
-  T$(31,I) = 126
+  T$(I,0) = 126
+  T$(I,31) = 126
 NEXT
 FOR I 1 30
-  T$(I,0) = 126
-  T$(I,63) = 126
+  T$(0,I) = 126
+  T$(63,I) = 126
 NEXT
 REPEAT 12                      ; lakes
   Y = 1+RND(28)
   X = 1+RND(59)
   FOR I 0 1
     FOR J 0 2
-      T$(Y+I,X+J) = 126
+      T$(X+J,Y+I) = 126
     NEXT
   NEXT
 NEXT
 REPEAT 150
-  T$(1+RND(30),1+RND(62)) = 94
+  T$(1+RND(62),1+RND(30)) = 94
 NEXT
 REPEAT 25                      ; mountain ranges
   Y = 1+RND(30)
   X = 1+RND(60)
-  T$(Y,X) = 77
-  T$(Y,X+1) = 77
+  T$(X,Y) = 77
+  T$(X+1,Y) = 77
 NEXT
 REPEAT 8                       ; walls
   Y = 1+RND(30)
   X = 1+RND(57)
   FOR J 0 4
-    T$(Y,X+J) = 35
+    T$(X+J,Y) = 35
   NEXT
 NEXT
 PX = 64                        ; player: character of the world
 PY = 32
-T$(16,32) = 32                 ; (the player's tile)
+T$(32,16) = 32                 ; (the player's tile)
 LORES
 TFONT S$ 33 ALT
 FOR L 1 26

@@ -1,5 +1,5 @@
 ; INPUT : chaines et entiers (saisie de la console)
-DIM N$(5) M$(2,4)
+DIM N$(5) M$(4,2)
 INPUT N$
 PRINT N$
 PRINT LEN(N$)

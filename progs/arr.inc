@@ -17,13 +17,21 @@
 ;  pour que les images .HIZ et les animations ne les recouvrent pas.
 ;  Indices à partir de 0. Une chaîne : le contenu d'un tableau $ jusqu'au
 ;  premier 0 (ou à sa capacité, 255 au plus).
+;  Deux dimensions : le programme écrit (colonne, ligne), comme l'écran de
+;  l'Oric : DIM T$(c,l) = l lignes de c octets, T$(x,y) = colonne x de la
+;  ligne y. En mémoire et dans le descripteur, rien ne change : l lignes
+;  consécutives de c éléments, taille 1 = lignes, taille 2 = colonnes ;
+;  r_dim2 et r_ea2 (donc r_get2) échangent r_i et r_j en entrant. Les
+;  routines internes (rz_ea2...) gardent l'ordre (ligne, colonne).
 ;  r_chk <> 0 : indices et tableaux vérifiés (interprété) ; 0 : rien
 ;  (programmes traduits : la vitesse d'abord).
 ;
 ;    r_dim1     A/Y = descripteur, X = 1 ou 2 octets, r_j = taille
-;    r_dim2     idem, r_i = taille 1, r_j = taille 2
-;    r_get1     A/Y : élément r_j -> r_j ; r_get2 : élément r_i, r_j
-;    r_ea1      A/Y : adresse de l'élément r_j -> r_sa ; r_ea2 : r_i, r_j
+;    r_dim2     idem, r_i = colonnes, r_j = lignes (échangés en entrant)
+;    r_get1     A/Y : élément r_j -> r_j ; r_get2 : élément (r_i, r_j) =
+;               (colonne, ligne)
+;    r_ea1      A/Y : adresse de l'élément r_j -> r_sa ; r_ea2 : (r_i, r_j)
+;               = (colonne, ligne) ; r_i et r_j sont échangés
 ;    r_atoj     r_j <- r_sa (adresse à garder pendant le calcul de la valeur)
 ;    r_stw      r_j -> mot à l'adresse r_i ; r_stb : octet (0-255)
 ;    r_whole    A/Y : tout le tableau $ (une dimension) -> chaîne
@@ -87,6 +95,8 @@ qrz2     dey
 ; ---------------------------------------------------------------------
 ; DIM
 ; ---------------------------------------------------------------------
+r_dim2  jsr rz_sw                ; (colonnes, lignes) -> (lignes, colonnes)
+        jmp rz_dim
 r_dim1  pha
         lda r_j
         sta r_i
@@ -96,7 +106,7 @@ r_dim1  pha
         sta r_j
         sta r_j+1
         pla
-r_dim2
+rz_dim
 .(
         sta r_dp
         sty r_dp+1
@@ -258,6 +268,26 @@ rz_desc
 qr       rts
 .)
 
+; rz_sw : échange r_i et r_j (A, X, Y gardés)
+rz_sw
+.(
+        pha
+        lda r_i
+        pha
+        lda r_j
+        sta r_i
+        pla
+        sta r_j
+        lda r_i+1
+        pha
+        lda r_j+1
+        sta r_i+1
+        pla
+        sta r_j+1
+        pla
+        rts
+.)
+
 ; rz_fld : A = octet Y du descripteur
 rz_fld  lda (r_dp),y
         rts
@@ -301,9 +331,10 @@ qok      lda rz_ix
 qbad     jmp rz_idx
 .)
 
-; r_ea2 : élément r_i, r_j
-r_ea2   jsr rz_desc
-rz_ea2                          ; (r_dp déjà choisi)
+; r_ea2 : élément (r_i, r_j) = (colonne, ligne)
+r_ea2   jsr rz_sw
+        jsr rz_desc
+rz_ea2                          ; (r_dp déjà choisi ; r_i ligne, r_j colonne)
 .(
         lda r_chk
         beq qcalc

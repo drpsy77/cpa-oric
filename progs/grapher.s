@@ -18,8 +18,9 @@
 ;  Fonctions : RND(n) (0 à n-1), ABS(n), POINT(x,y) (1 si allumé),
 ;  INKEY (touche, 0 si aucune ; n'attend pas, sans délai de répétition),
 ;  LEN(A$).
-;  Tableaux   DIM A(n) A(n,m) A$(n) A$(n,m) : entiers, octets ($), indices
-;             0 à n-1 ; A(i) A(i,j) M$(l,c) éléments ; A$, M$(l) chaînes
+;  Tableaux   DIM A(n) A(c,l) A$(n) A$(c,l) : entiers, octets ($), indices
+;             0 à n-1, deux dimensions en (colonne, ligne) : l lignes de c ;
+;             A(i) A(c,l) M$(c,l) éléments ; A$, M$(l) chaînes
 ;             (jusqu'au premier 0) : =, comparaisons, LEN, PRINT, INPUT ;
 ;             FILL A v ; INPUT V (entier). Routines : arr.inc.
 ;
@@ -1025,7 +1026,7 @@ e       jsr endline
 lim     jmp e_lim
 .)
 
-; PASTE T$(l,c) col lig larg haut : rectangle du tableau vers l'écran ;
+; PASTE T$(c,l) col lig larg haut : rectangle du tableau vers l'écran ;
 ;   GRAB : de l'écran vers le tableau
 c_paste lda #0
         .byt $2C
@@ -1049,7 +1050,7 @@ go      jsr skipsp
         lda #0
         sta vsp
         sta edep
-        jsr x_open              ; indices -> flim, fstep
+        jsr x_open              ; colonne -> flim, ligne -> fstep
         jsr e_or
         lda ev
         sta flim
@@ -1087,7 +1088,7 @@ go      jsr skipsp
         jsr r_rows
         cmp gd
         bcc lim
-        ldx h_y2                ; coin opposé dans le tableau : vérifié
+        ldx h_x2                ; coin opposé dans le tableau : vérifié
         dex                     ;   par r_ea2
         txa
         clc
@@ -1096,7 +1097,7 @@ go      jsr skipsp
         lda flim+1
         adc #0
         sta et+1
-        ldx h_x2
+        ldx h_y2
         dex
         txa
         clc
@@ -1382,7 +1383,7 @@ two     inc ex
         jmp r_get2
 .)
 
-; arr_assign : A(i[,j]) = expr, M$(l,c) = expr, A$ = chaîne,
+; arr_assign : A(i[,j]) = expr, M$(c,l) = expr, A$ = chaîne,
 ;   M$(l) = chaîne (X sur le « ( » ou le « $ »)
 arr_assign
 .(

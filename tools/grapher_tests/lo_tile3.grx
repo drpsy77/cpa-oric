@@ -1,21 +1,21 @@
 ; sprite sur des tuiles (masque) : jeu secondaire, puis standard ;
 ; SHIDE rend la tuile
-DIM S$(48) H$(48) D$(2,1) T$(2,4) T(2) U(2)
+DIM S$(48) H$(48) D$(1,2) T$(4,2) T(2) U(2)
 BLOAD S$ TUIL.SPR
 BLOAD H$ HERO.SPR
 LORES
 TFONT S$ 40 ALT          ; UN : 40, DEUX : 41-42 (jeu secondaire)
 TFONT S$ 70              ; UN : 70, DEUX : 71-72 (jeu standard)
-T$(0,1) = 1
-T$(1,2) = 1
+T$(1,0) = 1
+T$(2,1) = 1
 CHAR 0 1 9
 CHAR 0 2 9
 D$(0,0) = 40
-D$(1,0) = 41
+D$(0,1) = 41
 TILESET D$ 1 1
 TMAP T$ 0 0 2 1 4 2
 D$(0,0) = 70
-D$(1,0) = 71
+D$(0,1) = 71
 TILESET D$ 1 1
 TMAP T$ 0 0 2 4 4 2
 T(0) = 100

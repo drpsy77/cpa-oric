@@ -1,7 +1,7 @@
 ; fichiers de donnees : BSAVE / BLOAD (binaire)
-DIM A(3,2) B$(5) C(10)
+DIM A(2,3) B$(5) C(10)
 A(0,0) = 1000
-A(2,1) = -2
+A(1,2) = -2
 B$ = "XY"
 B$(4) = 26
 BSAVE A TA
@@ -12,7 +12,7 @@ BLOAD A TA
 BLOAD B$ TB.DAT
 PRINT FOUND
 PRINT A(0,0)
-PRINT A(2,1)
+PRINT A(1,2)
 PRINT A(1,1)
 PRINT B$(4)
 PRINT B$

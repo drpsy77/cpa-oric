@@ -1,8 +1,8 @@
 ; T.GRX : essai de SAVE ou BSAVE ($1) d un tableau de 4 800 octets
-DIM T$(120,40)
+DIM T$(40,120)
 FOR I 0 119
   T$(I) = "NOUVEAU CONTENU, LIGNE DE L ESSAI 0123"
-  T$(I,0) = 65 + I / 5
+  T$(0,I) = 65 + I / 5
 NEXT
 $1 T$ CIBLE
 PRINT "FINI"

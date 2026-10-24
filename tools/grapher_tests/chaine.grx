@@ -1,5 +1,5 @@
 ; Palier B : chaines
-DIM A$(8) N$(3,8) C(2)
+DIM A$(8) N$(8,3) C(2)
 A$ = "BONJOUR"
 PRINT A$
 PRINT LEN(A$)
@@ -22,8 +22,8 @@ WHILE N$(I) <> ""
   I = I + 1
 NEXT
 ; une case d'une ligne : un code
-PRINT N$(0,1)
-N$(0,1) = 65
+PRINT N$(1,0)
+N$(1,0) = 65
 PRINT N$(0)
 ; echange de deux lignes
 A$ = N$(0)

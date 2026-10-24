@@ -714,7 +714,7 @@ c       lda h_lines             ; hors du LORES : la console (pas en HIRES)
         jmp g_putc
 r       rts
 .)
-; g_paste, g_grab : A/Y = descripteur du tableau $ ; ligne puis colonne
+; g_paste, g_grab : A/Y = descripteur du tableau $ ; colonne puis ligne
 ;   sur la pile des valeurs ; coin h_x1 h_y1, largeur h_x2, hauteur h_y2
 g_grab  ldx #1
         .byt $2C                ; (BIT abs : saute ldx #0)
@@ -723,12 +723,12 @@ g_paste ldx #0
         pha
         tya
         pha
-        jsr g_pop               ; colonne -> g_ev
+        jsr g_pop               ; ligne -> g_ev
         lda g_et
         sta g_ev
         lda g_et+1
         sta g_ev+1
-        jsr g_pop               ; ligne -> g_et
+        jsr g_pop               ; colonne -> g_et (r_ea2 les échange)
         pla
         tay
         pla

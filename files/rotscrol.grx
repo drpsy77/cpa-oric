@@ -3,7 +3,7 @@
 ; DANS UN TABLEAU A DEUX DIMENSIONS    
 ; CHAQUE LIGNE CONTIENT UNE CHAINE     
                                        
-DIM E$(60,40)                          
+DIM E$(40,60)                          
 FILL E$ 32                             
 LOAD E$ ROTSCROL.GRX                   
 LORES                                  
