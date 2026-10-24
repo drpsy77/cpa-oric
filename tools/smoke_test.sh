@@ -27,6 +27,15 @@ ORIC_WARP=1 DSK=build/cpa.dsk DSKB="$T/p.dsk" ORIC_KEYS_AT=400 \
 python3 tools/mkdisk.py ls "$T/c.b.dsk" | head -3
 python3 tools/mkdisk.py ls "$T/c.b.dsk" | grep -q "^CARTE   .COM" && \
   ! python3 tools/mkdisk.py ls "$T/c.b.dsk" | grep -q "^CARTE   .ASM" || { echo "ECHEC : GRXASM /C"; exit 1; }
+echo "== Deux disquettes anglaises : B:, GRXASM MAP /C (cpa-en.dsk sur A:)"
+cp build/cpa-project-en.dsk "$T/pe.dsk"
+python3 tools/mkdisk.py put "$T/pe.dsk" files/en/map.grx MAP.GRX >/dev/null
+python3 tools/mkdisk.py put "$T/pe.dsk" files/tuiles.spr TILES.SPR >/dev/null
+ORIC_WARP=1 DSK=build/cpa-en.dsk DSKB="$T/pe.dsk" ORIC_KEYS_AT=400 \
+  tools/run_test.sh "B:${NL}GRXASM MAP /C$NL" 12000 "$T/e"
+python3 tools/mkdisk.py ls "$T/e.b.dsk" | head -3
+python3 tools/mkdisk.py ls "$T/e.b.dsk" | grep -q "^MAP     .COM" && \
+  ! python3 tools/mkdisk.py ls "$T/e.b.dsk" | grep -q "^MAP     .ASM" || { echo "ECHEC : GRXASM /C (anglais)"; exit 1; }
 echo "== ROM : VER"
 ORIC_ROM=cpa tools/run_test.sh "VER$NL" 300 "$T/r"
 python3 tools/screen.py "$T/r.mem" > "$T/r.txt"
