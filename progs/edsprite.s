@@ -125,6 +125,7 @@ z2      sta mflag,x
         bne z2
         lda #1
         sta decor               ; décor : damier
+        jsr blk_now
         lda TPA_TOP+1           ; mémoire jusqu'au haut de la TPA, moins
         sec                     ;   une page (le dernier enregistrement
         sbc #1                  ;   est complété au-delà de fsize)
@@ -261,7 +262,7 @@ arr     and #$07                ; SHIFT ou CTRL + flèche ($F0-$F7)
         lda av_hi,x
         sta t0+1
         jmp (t0)
-menu    cmp #$A1
+menu    cmp #$A2
         bcs none
         sec
         sbc #$81
@@ -320,17 +321,17 @@ cv_hi   .byt >k_none,>k_none,>k_none,>k_copy,>k_none,>k_none,>k_none,>k_none
 ; SHIFT + gauche droite bas haut, CTRL + gauche droite bas haut
 av_lo   .byt <k_sleft,<k_sright,<k_sdown,<k_sup,<k_prev,<k_next,<k_last,<k_first
 av_hi   .byt >k_sleft,>k_sright,>k_sdown,>k_sup,>k_prev,>k_next,>k_last,>k_first
-; menus ($81-$A0), dans l'ordre des articles
+; menus ($81-$A1), dans l'ordre des articles (Détourer, $A1, ajouté à la fin)
 mv_lo   .byt <k_newf,<k_open,<k_save,<k_saveas,<k_quit
         .byt <k_undo,<k_cut,<k_copy,<k_paste,<k_erase
         .byt <k_snew,<k_sdup,<k_sdel,<k_sren,<k_ssize,<k_sfwd,<k_sback,<k_zsel,<k_zedit
         .byt <k_inv,<k_mirh,<k_mirv,<k_rot,<k_shl,<k_shr,<k_shu,<k_shd,<k_sil,<k_font
-        .byt <k_hex,<k_decor,<k_anim
+        .byt <k_hex,<k_decor,<k_anim,<k_detour
 mv_hi   .byt >k_newf,>k_open,>k_save,>k_saveas,>k_quit
         .byt >k_undo,>k_cut,>k_copy,>k_paste,>k_erase
         .byt >k_snew,>k_sdup,>k_sdel,>k_sren,>k_ssize,>k_sfwd,>k_sback,>k_zsel,>k_zedit
         .byt >k_inv,>k_mirh,>k_mirv,>k_rot,>k_shl,>k_shr,>k_shu,>k_shd,>k_sil,>k_font
-        .byt >k_hex,>k_decor,>k_anim
+        .byt >k_hex,>k_decor,>k_anim,>k_detour
 
 ; ---------------------------------------------------------------------
 ; Sprite courant
@@ -2191,6 +2192,84 @@ stop    jsr B_CONIN             ; la touche est prise
         rts
 .)
 
+; k_detour : chaque point transparent qui touche un point plein (8
+;   voisins) devient masque : le sprite gagne un contour noir (genre 0)
+k_detour
+.(
+        lda genre
+        beq g
+        lda #<m_nomask
+        ldy #>m_nomask
+        jmp set_msg
+g       jsr save_undo
+        lda #0
+        sta py2
+ly      lda #0
+        sta px2
+lx      lda #<undobuf           ; lu dans la copie, écrit dans le sprite
+        sta base
+        lda #>undobuf
+        sta base+1
+        lda px2
+        sta gx
+        lda py2
+        sta gy
+        jsr pix_get
+        lda dd
+        ora ss
+        bne nx                  ; pas transparent
+        lda #$FF                ; voisins : dy, dx de -1 à 1
+        sta aa
+vy      lda #$FF
+        sta bb
+vx      clc
+        lda px2
+        adc bb
+        sta gx
+        cmp ww                  ; -1 donne $FF : hors du sprite
+        bcs vn
+        clc
+        lda py2
+        adc aa
+        sta gy
+        cmp hh
+        bcs vn
+        jsr pix_get
+        lda dd
+        bne hit
+vn      inc bb
+        lda bb
+        cmp #2
+        bne vx
+        inc aa
+        lda aa
+        cmp #2
+        bne vy
+        jmp nx
+hit     lda px2
+        sta gx
+        lda py2
+        sta gy
+        lda #0
+        sta dd
+        lda #1
+        sta ss
+        jsr pix_set
+nx      inc px2
+        lda px2
+        cmp ww
+        bcs ny
+        jmp lx
+ny      inc py2
+        lda py2
+        cmp hh
+        bcs fin
+        jmp ly
+fin     lda #1
+        sta modif
+        rts
+.)
+
 ; endp : fin du fichier (BUF + fsize), pour k_anim
 set_endp
         clc
@@ -2721,7 +2800,29 @@ lr      lda rr
         sta (scr),y
         lda #0
         sta cx
-lc      lda rr                  ; dans le sprite ?
+lc      lda genre               ; tuiles : le motif répété partout,
+        beq lsp                 ;   case (cx mod nw, rr mod nh)
+        lda rr
+m1      cmp nh
+        bcc m2
+        sbc nh
+        jmp m1
+m2      tax
+        lda cx
+m3      cmp nw
+        bcc m4
+        sbc nw
+        jmp m3
+m4      cpx #0
+        beq m6
+m5      clc
+        adc nw
+        dex
+        bne m5
+m6      clc
+        adc #PC0
+        jmp pt
+lsp     lda rr                  ; dans le sprite ?
         sec
         sbc bb
         bcc dc0
@@ -2739,7 +2840,7 @@ lc      lda rr                  ; dans le sprite ?
         inc kk
         .byt $2C
 dc0     lda #PCD
-        pha
+pt      pha
         lda cx
         clc
         adc #PCOL
@@ -2762,8 +2863,9 @@ e       iny
 n       inc rr
         lda rr
         cmp #6
-        bne lr
-        rts
+        beq x
+        jmp lr
+x       rts
 .)
 
 ; draw_hex : en face de chaque ligne de points, ses octets (dessin en S,
@@ -2926,10 +3028,22 @@ cur_off
         sta (scr),y
         lda #0
         sta curon
-        sta blk                 ; réapparaît aussitôt après la touche
-        sta blk+1
+        jmp blk_now             ; réapparaît aussitôt après la touche
 r       rts
 .)
+
+; blk_now : prochain clignotement tout de suite (échéance = l'heure
+;   courante ; 0 ne va pas : SYS_TICKS passé $8000, la différence
+;   serait négative pendant 11 minutes)
+blk_now
+        php
+        sei
+        lda SYS_TICKS
+        sta blk
+        lda SYS_TICKS+1
+        sta blk+1
+        plp
+        rts
 
 cur_hide
 .(
@@ -2993,8 +3107,8 @@ r       ldx aa
         lda #0
         cpx #1
         beq p
-        tya                     ; grisé : damier
-        and #1
+        tya                     ; grisé : damier clair
+        and #3
         tax
         lda gris,x
 p       sta tmpb
@@ -3029,7 +3143,7 @@ nr      lda tmpb
         bne l
         rts
 .)
-gris    .byt $2A,$15
+gris    .byt $2A,$00,$15,$00
 
 ; gaddr : A = code -> dst = STDF + code * 8
 gaddr   sta dst
@@ -3050,6 +3164,36 @@ gaddr   sta dst
 ; ---------------------------------------------------------------------
 ; Ligne d'état
 ; ---------------------------------------------------------------------
+; draw_hint : ligne au-dessus de l'état, les touches de la zone
+draw_hint
+.(
+        ldx #0                  ; sélection
+        lda zone
+        bne s
+        ldx #2                  ; saisie, sprites
+        lda genre
+        beq s
+        ldx #4                  ;   tuiles
+s       lda hints,x
+        sta src
+        lda hints+1,x
+        sta src+1
+        ldy #0
+c       lda (src),y
+        beq f
+        sta SCREEN+(STROW-1)*40+2,y
+        iny
+        cpy #WIDTH
+        bcc c
+        rts
+f       lda #" "
+        sta SCREEN+(STROW-1)*40+2,y
+        iny
+        cpy #WIDTH
+        bcc f
+        rts
+.)
+
 st_clear
         ldy #WIDTH-1
         lda #" "
@@ -3115,6 +3259,7 @@ set_msg
 ; draw_status : message, ou position, case, état, crayon, zone, *
 draw_status
 .(
+        jsr draw_hint
         jsr st_clear
         lda msgp+1
         beq info
@@ -4060,6 +4205,7 @@ c_9d    .byt $9D,0
 c_9e    .byt $9E,0
 c_9f    .byt $9F,0
 c_a0    .byt $A0,0
+c_a1    .byt $A1,0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_text  .byt G_MODE,0,0,0,0,0
@@ -4075,7 +4221,7 @@ ghead   .asc "  1  :  2  :  3  :  4  :"
 gcodes  .byt 64,93,123,126, 91,95,124,127, 92,96,125,35
 ; décors de l'aperçu : vide, damier, briques, herbe
 dpat    .byt 0,0,0,0,0,0,0,0
-        .byt $2A,$15,$2A,$15,$2A,$15,$2A,$15
+        .byt $2A,$00,$15,$00,$2A,$00,$15,$00
         .byt $3F,$04,$04,$04,$3F,$20,$20,$20
         .byt $00,$08,$2A,$1C,$00,$01,$15,$0E
 ; colonne de caractère (x / 6), point dans le caractère (x mod 6), dernier

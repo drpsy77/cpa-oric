@@ -68,7 +68,7 @@ mn_spr  .byt 9,12
         .byt MA_TYPE
         .word c_93
 
-mn_des  .byt 10,17
+mn_des  .byt 11,17
         .asc "Dessin",0
         .asc "Inverser",0
         .byt MA_TYPE
@@ -97,6 +97,9 @@ mn_des  .byt 10,17
         .asc "Silhouette=dessin",0
         .byt MA_TYPE
         .word c_9c
+        .asc "Detourer",0
+        .byt MA_TYPE
+        .word c_a1
         .asc "Prendre police..",0
         .byt MA_TYPE
         .word c_9d
@@ -123,7 +126,7 @@ m_new     .asc "Nouveau fichier",0
 m_noname  .asc "(sans nom)",0
 m_real    .asc "Reel",0
 m_codes   .asc "Codes",0
-m_zsel    .asc "Select : RETURN saisie, S/M",0
+m_zsel    .asc "Liste : fleches, ^I ou RETURN",0
 m_car     .asc "car ",0
 m_pen     .asc "crayon",0
 m_nomask  .asc "Pas de masque (tuiles)",0
@@ -163,6 +166,10 @@ d_brique  .asc "Decor : briques",0
 d_herbe   .asc "Decor : herbe",0
 g_spr     .asc "sprites",0
 g_til     .asc "tuiles",0
+h_sel     .asc "S:sprite  M:masque  RETURN:dessiner",0
+h_ed      .asc "ESP:plein M:masque P:crayon ^I:liste",0
+h_ed1     .asc "ESP:plein/vide  P:crayon  ^I:liste",0
+hints     .word h_sel, h_ed, h_ed1
 snames    .word s_plein, s_masque, s_transp
 snames1   .word s_plein, s_vide, s_vide
 dnames    .word d_vide, d_damier, d_brique, d_herbe

@@ -54,21 +54,15 @@ sur le Mac, puis IMPORT).
 ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
 console : sans les guillemets, espaces gardés.
 
-**EDSPRITE** (nouveau ; `docs/edsprite.md`), sur `cpa.dsk` puis `cpa-en.dsk` :
+**EDSPRITE, deuxième version** (curseur, grisé, aide, Détourer, tuiles), sur `cpa.dsk` :
 
-- `EDSPRITE HEROS` : la grille se lit bien sur le vrai écran (plein, masque vide, transparent
-  grisé, traits des limites de caractère au 6e point et à la 8e ligne, lisibles sur les trois
-  états), le curseur clignote, « Reel » montre le héros sur le damier ; dire si le grisé ou
-  les traits sont trop fins ou baveux sur le moniteur ;
-- ESPACE, `M`, DEL, `P` (crayon) puis flèches, SHIFT et CTRL + flèches ; `^I`, `S` / `M`
-  dans la liste, RETURN ; `^H` (codes) ; tous les menus (FUNCT), surtout Sprite (Nouveau,
-  Taille), Dessin (miroirs, quart de tour sur un 4x3, décalages), Vue (Decor, Animer : HER1
-  et HER2 alternent, une touche arrête) ; les menus déroulants passent par-dessus la grille
-  et la liste sans laisser de traces ;
-- `^S`, `^Q`, puis `GRAPHER SPRITES` : le héros modifié s'affiche ; sur une disquette
-  pleine ou en R/O, message et ancien fichier intact ; RESET pendant `^S` comme pour EDIT ;
-- après `^Q` (et après un RESET dans EDSPRITE), la police est normale (`@ # [ ] _ { | } ~`
-  dans un `TYPE`) ; lancé depuis SPLIT, l'image revient en sortant.
+- le curseur clignote toujours, même après une longue séance, un nouveau sprite, une
+  relance (le défaut venait de l'horloge passée `$8000`, ~11 minutes après le démarrage) ;
+- le transparent plus sombre (un point sur quatre) : le curseur se voit dessus, la grille et
+  le damier de « Reel » restent lisibles ;
+- la ligne d'aide (ligne 26) change avec la zone ;
+- Dessin, Detourer sur un héros : un contour de masque, coins compris ; `^Z` l'annule ;
+- `EDSPRITE TUILES`, ARBR ou MUR : « Reel » rempli par le motif de la tuile.
 
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
@@ -166,5 +160,11 @@ Cas limites et disquette française, 24 octobre 2026 :
 - GRAPHER traduit, boucle sans lecture du clavier : arrêtée par RESET, système rendu ;
 - LOGO : son (essayé plus tôt ; maniement jugé lourd, `docs/etat.md` § 2 point 6) ;
 - TERM : RETURN ne passait pas à la ligne (corrigé, en attente du Pico ci-dessus).
+
+EDSPRITE, première version, 24 octobre 2026 (`cpa.dsk`) : grille lisible (grisé jugé trop
+clair pour le curseur : assombri), tous les menus sans traces, héros modifié vu dans
+`GRAPHER SPRITES`, police normale en sortant. Défaut trouvé : le curseur ne clignotait plus
+(corrigé ci-dessus). RESET pendant `^S` pas essayé (peu utile sous CP/A ; essayé dans
+Oricutron par `tools/test_fichiers.py`).
 
 Pour la version ROM : voir `docs/projet-rom.md`.
