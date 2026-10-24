@@ -42,6 +42,13 @@ s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
   montre les deux formes ;
 - menus : CMDER, Vue, « Autre col. ^I » ; HEX, Mode, « Hex/ASCII ^I » ; `HELP TOUCHES`.
 
+**Tableaux de GRAPHER en (colonne, ligne)** (`DIM T$(c,l)`, `T$(x,y)`, `PASTE T$(x,y)`) :
+interprété puis traduit (`GRXASM NOM /C`), sur `cpa.dsk` et `cpa-en.dsk` : `CARTE` (lacs plus
+larges que hauts, chaînes de montagnes horizontales, joueur au centre), `ROTSCROL`,
+`SCORES` (noms et scores relus), `JEU` (les pièces de 5 × 3 cases). Un `.GRX` à soi
+qui a des tableaux à deux dimensions est à passer par `tools/grx_colig.py` (EXPORT, puis
+sur le Mac, puis IMPORT).
+
 **Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
 protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
 (attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans

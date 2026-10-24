@@ -213,8 +213,8 @@ SPLIT). Les octets sont copiés tels quels, attributs compris. Dans la console :
 
 | Commande | Effet |
 |---|---|
-| `PASTE T$(l,c) col lig larg haut` | colle à l'écran, coin haut-gauche en (col, lig), le rectangle de `larg` × `haut` cases du tableau `$` à deux dimensions qui commence à `T$(l,c)` (ligne l, colonne c du tableau) |
-| `GRAB T$(l,c) col lig larg haut` | l'inverse : copie le rectangle de l'écran dans le tableau |
+| `PASTE T$(c,l) col lig larg haut` | colle à l'écran, coin haut-gauche en (col, lig), le rectangle de `larg` × `haut` cases du tableau `$` à deux dimensions qui commence à `T$(c,l)` (colonne c, ligne l du tableau) |
+| `GRAB T$(c,l) col lig larg haut` | l'inverse : copie le rectangle de l'écran dans le tableau |
 | `SCROLH n [c1 l1 c2 l2 [x]]` | fait glisser le rectangle de n cases : n > 0 vers la droite, n < 0 vers la gauche. Les cases libérées reçoivent l'octet x : un espace par défaut en LORES, l'octet vide (64) dans l'image |
 | `SCROLV n [c1 l1 c2 l2 [x]]` | la même chose en hauteur : n > 0 vers le bas, n < 0 vers le haut |
 | `ROTH n [c1 l1 c2 l2]`, `ROTV n [c1 l1 c2 l2]` | rotation : ce qui sort d'un côté rentre de l'autre (n modulo la taille) |
@@ -236,7 +236,7 @@ attributs permis) ; après chaque pas, `PASTE` redessine la fenêtre depuis le c
 C'est la méthode normale : la position de la caméra suffit à décrire l'écran (déplacements en
 diagonale, sauts, retour au début : la même ligne).
 
-    DIM T$(64,128)
+    DIM T$(128,64)
     BLOAD T$ CARTE
     LORES
     ...
@@ -244,7 +244,7 @@ diagonale, sauts, retour au début : la même ligne).
       K = INKEY
       IF K>7 & K<12
         ...                     ; pas du joueur, CX, CY : coin de la camera, bornes
-        PASTE T$(CY,CX) 2 1 38 26
+        PASTE T$(CX,CY) 2 1 38 26
       ENDIF
     NEXT
 
@@ -263,11 +263,11 @@ est un tableau `$` à deux dimensions dont chaque octet désigne une tuile : une
 64 × 32 tuiles de 2 × 2 (2 Ko) donne un monde de 128 × 64 caractères (8 Ko avec `PASTE`).
 `TMAP` en dessine une fenêtre ; la caméra avance d'un caractère, pas d'une tuile.
 
-    DIM T$(32,64) D$(5,4) S$(152)
+    DIM T$(64,32) D$(4,5) S$(152)
     BLOAD S$ TUILES.SPR       ; dessins des caracteres (genre 1)
     FOR J 0 3                 ; codes de chaque tuile, ligne par ligne
-      D$(0,J) = 34            ; eau
-      D$(1,J) = 33            ; herbe
+      D$(J,0) = 34            ; eau
+      D$(J,1) = 33            ; herbe
       ...
     NEXT
     TILESET D$ 2 2 "~ #^M"    ; tuiles de 2 x 2 ; caracteres de la carte
@@ -378,9 +378,13 @@ règle la vitesse du jeu.
 **Noms.** Chaque lettre sert à trois choses indépendantes : `A` (entier), `A(...)` (tableau
 d'entiers de 16 bits), `A$` (tableau d'octets 0-255 : chaîne ou grille de caractères).
 
-**DIM.** `DIM S(10) N$(10,12) M$(25,38)`
+**DIM.** `DIM S(10) N$(12,10) M$(38,25)`
 
-- Une ou deux dimensions. Plusieurs tableaux par ligne. Les tailles sont des expressions, au
+- Une ou deux dimensions. Deux dimensions s'écrivent dans l'ordre de l'écran de l'Oric
+  (`LOCATE col lig`, `SCRN(col,lig)`) : colonnes, puis lignes. `DIM M$(38,25)` donne 25
+  lignes de 38 cases, et `M$(X,Y)` est la case de la colonne X dans la ligne Y. En mémoire,
+  les lignes se suivent, chacune de ses 38 cases. Un `.GRX` écrit dans l'ordre (ligne,
+  colonne) des versions précédentes se convertit sur le PC par `tools/grx_colig.py`. Plusieurs tableaux par ligne. Les tailles sont des expressions, au
   moins 1.
 - Indices de 0 à n-1, comme en C : `DIM A(10)` donne `A(0)` à `A(9)`. Éléments à 0.
 - Un tableau se déclare une seule fois (`deja dimensionne`) et avant usage (`tableau non
@@ -389,17 +393,17 @@ d'entiers de 16 bits), `A$` (tableau d'octets 0-255 : chaîne ou grille de carac
 
 **Éléments.**
 
-- `A(i)`, `A(i,j)` : dans un calcul, ou à gauche de `=` (`A(I,J) = A(I,J) + 1`).
+- `A(i)`, `A(c,l)` : dans un calcul, ou à gauche de `=` (`A(I,J) = A(I,J) + 1`).
 - `A(k)` sur un tableau à deux dimensions : l'élément k du tableau mis à plat, ligne après
-  ligne, comme en C (`G(7)` est `G(1,3)` sur `DIM G(3,4)`).
-- `A$(i)` (une dimension) et `M$(l,c)` : le code d'une case, en lecture et en écriture
-  (`M$(L,C) = 35`).
+  ligne (`G(7)` est `G(3,1)` sur `DIM G(4,3)`).
+- `A$(i)` (une dimension) et `M$(c,l)` : le code d'une case, en lecture et en écriture
+  (`M$(X,Y) = 35`).
 
 **Chaînes.** `A$` (tableau `$` à une dimension) et `M$(l)` (ligne l d'un tableau `$` à deux
 dimensions) sont des chaînes. Une chaîne s'arrête au premier 0, ou à la fin de sa capacité si
 elle est pleine : `DIM N$(12)` contient 12 caractères au plus. Une chaîne fait au plus 255
 caractères ; un tableau `$` plus grand se lit case par case. Un tableau de chaînes est un
-tableau `$` à deux dimensions (`N$(10,12)` : 10 noms).
+tableau `$` à deux dimensions (`N$(12,10)` : 10 noms de 12 caractères au plus).
 
 | Élément | Effet |
 |---|---|
@@ -415,7 +419,7 @@ tableau `$` à deux dimensions (`N$(10,12)` : 10 noms).
   concaténation ni conversion : on enchaîne `ECHO` et `PRINT`.
 - `ECHO` n'écrit que le texte du programme (`ECHO A$` écrit « A$ »).
 - Un attribut 0 ne peut pas être affiché par `PRINT` (c'est la fin de chaîne) : on l'écrit par
-  `CHAR` ou `M$(L,C) = 0`.
+  `CHAR` ou `M$(X,Y) = 0`.
 - Pas d'`INPUT` d'un élément : `INPUT V` puis `A(I) = V`.
 - En interprété, chaque accès vérifie le tableau et ses indices (`indice hors limites`). Un
   programme traduit ne vérifie rien (§ 12).
@@ -521,7 +525,7 @@ HEX ou par un petit programme qui remplit un tableau `$` et fait `BSAVE`.
 
 ### 10.2 Du tableau ou de l'écran au fichier : ce qu'on obtient
 
-Un tableau `$` déclaré `DIM T$(l,c)` a `l` lignes (0 à l-1) de `c` octets (colonnes 0 à
+Un tableau `$` déclaré `DIM T$(c,l)` a `l` lignes (0 à l-1) de `c` octets (colonnes 0 à
 c-1) ; les octets sont rangés ligne après ligne. Ce que chaque commande en fait :
 
 | | `SAVE T$ nom` (texte) | `BSAVE T$ nom` (binaire) | `BSAVE SCREEN nom` |
@@ -553,14 +557,14 @@ Conséquences pratiques :
   attributs : commencer le `GRAB` à la colonne 2. Un caractère en vidéo inverse (code + 128)
   passe tel quel.
 - **Tableau d'entiers** : `SAVE` écrit les nombres d'une ligne séparés par un espace
-  (`DIM N(2,3)` donne deux lignes `0 0 0`) ; `BSAVE` écrit chaque entier sur deux octets, bas
+  (`DIM N(3,2)` donne deux lignes `0 0 0`) ; `BSAVE` écrit chaque entier sur deux octets, bas
   puis haut (-5 : `FB FF`).
 - **Taille sur la disquette** : toujours un multiple de 128 octets (`BSAVE SCREEN` : 1 152).
   `BLOAD` lit seulement la taille du tableau ; le reste est ignoré.
 
 Exemple : l'écran texte en fichier lisible et modifiable dans EDIT, puis relu.
 
-    DIM T$(28,38)
+    DIM T$(38,28)
     LORES
     FOR Y 0 27
       LOCATE 2 Y
@@ -682,14 +686,14 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (17 654 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (17 686 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas ; `TILESET`, (larg × haut + 1)
   pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
-  17 Ko (texte à partir de `$599F`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  17 Ko (texte à partir de `$59BF`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
   ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
@@ -806,6 +810,14 @@ octets) ; `kl_clos` parcourt les arêtes jusqu'à ce que rien ne change ; la sec
 du `.GRX`, qui ne sert plus. `tools/test_inc.sh` vérifie que les copies marquées s'assemblent
 comme les originaux et que chaque programme traduit s'assemble (une routine oubliée donne
 une étiquette non définie) ; `test_grapher.sh` traduit avec elles.
+
+**Deux dimensions** : le programme écrit (colonne, ligne) ; `ARR.INC` garde en mémoire et dans
+le descripteur l'ordre (lignes, colonnes) : `r_dim2` et `r_ea2` (donc `r_get2`) échangent
+`r_i` et `r_j` en entrant, et les traducteurs passent les indices dans l'ordre du texte. Seul
+GRXASM s'en occupe pour les tableaux fixes : la table des lignes `TR_S` est indexée par le
+second indice, et le premier s'y ajoute (`kf_ix`) ; quand les deux sont calculés, la
+colonne attend sur la pile du 6502, puis dans `g_et`. `tools/grx_colig.py` passe un `.GRX`
+écrit dans l'ancien ordre (ligne, colonne) au nouveau.
 
 **Tableaux fixes** (GRXASM) : `kf_new` décide, au `DIM`, qu'un tableau est fixe et calcule
 son adresse comme `r_dim` le fera (`kftop` suit `r_top`, à partir de `$9D60`) ; rien n'est

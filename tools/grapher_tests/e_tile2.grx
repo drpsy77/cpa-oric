@@ -1,4 +1,4 @@
 ; TILESET : tuiles de 1 a 4 cases
-DIM D$(2,8)
+DIM D$(8,2)
 TILESET D$ 5 1
 PRINT 1

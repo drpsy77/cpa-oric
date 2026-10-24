@@ -1,4 +1,4 @@
 ; TILESET : K$ plus long que la liste des tuiles
-DIM D$(2,4)
+DIM D$(4,2)
 TILESET D$ 2 2 "abc"
 PRINT 1

@@ -212,8 +212,8 @@ are copied as they are, attributes included. In the console: `LORES first`.
 
 | Command | Effect |
 |---|---|
-| `PASTE T$(l,c) col lin wid hgt` | pastes on the screen, top-left corner at (col, lin), the rectangle of `wid` × `hgt` cells of the two-dimensional `$` array starting at `T$(l,c)` (line l, column c of the array) |
-| `GRAB T$(l,c) col lin wid hgt` | the reverse: copies the rectangle of the screen into the array |
+| `PASTE T$(c,l) col lin wid hgt` | pastes on the screen, top-left corner at (col, lin), the rectangle of `wid` × `hgt` cells of the two-dimensional `$` array starting at `T$(c,l)` (column c, line l of the array) |
+| `GRAB T$(c,l) col lin wid hgt` | the reverse: copies the rectangle of the screen into the array |
 | `SCROLH n [c1 l1 c2 l2 [x]]` | slides the rectangle by n cells: n > 0 to the right, n < 0 to the left. The freed cells receive byte x: a space by default in LORES, the empty byte (64) in the picture |
 | `SCROLV n [c1 l1 c2 l2 [x]]` | the same in height: n > 0 downwards, n < 0 upwards |
 | `ROTH n [c1 l1 c2 l2]`, `ROTV n [c1 l1 c2 l2]` | rotation: what goes out on one side comes back on the other (n modulo the size) |
@@ -235,7 +235,7 @@ allowed); after each step, `PASTE` redraws the window from the camera's corner. 
 normal method: the camera position is enough to describe the screen (diagonal moves, jumps,
 back to the start: the same line).
 
-    DIM T$(64,128)
+    DIM T$(128,64)
     BLOAD T$ MAP
     LORES
     ...
@@ -243,7 +243,7 @@ back to the start: the same line).
       K = INKEY
       IF K>7 & K<12
         ...                     ; player's step, CX, CY: camera corner, bounds
-        PASTE T$(CY,CX) 2 1 38 26
+        PASTE T$(CX,CY) 2 1 38 26
       ENDIF
     NEXT
 
@@ -262,11 +262,11 @@ two-dimensional `$` array in which each byte names a tile: a map of 64 × 32 til
 (2 KB) gives a world of 128 × 64 characters (8 KB with `PASTE`). `TMAP` draws a window of
 it; the camera moves by one character, not one tile.
 
-    DIM T$(32,64) D$(5,4) S$(152)
+    DIM T$(64,32) D$(4,5) S$(152)
     BLOAD S$ TILES.SPR        ; drawings of the characters (kind 1)
     FOR J 0 3                 ; codes of each tile, line by line
-      D$(0,J) = 34            ; water
-      D$(1,J) = 33            ; grass
+      D$(J,0) = 34            ; water
+      D$(J,1) = 33            ; grass
       ...
     NEXT
     TILESET D$ 2 2 "~ #^M"    ; 2 x 2 tiles; characters of the map
@@ -374,9 +374,13 @@ speed.
 **Names.** Each letter serves three independent purposes: `A` (integer), `A(...)` (array of
 16-bit integers), `A$` (array of bytes 0-255: a string or a grid of characters).
 
-**DIM.** `DIM S(10) N$(10,12) M$(25,38)`
+**DIM.** `DIM S(10) N$(12,10) M$(38,25)`
 
-- One or two dimensions. Several arrays per line. Sizes are expressions, at least 1.
+- One or two dimensions. Two dimensions are written in the order of the Oric's screen
+  (`LOCATE col lin`, `SCRN(col,lin)`): columns, then lines. `DIM M$(38,25)` gives 25 lines
+  of 38 cells, and `M$(X,Y)` is the cell of column X in line Y. In memory, the lines follow
+  each other, each with its 38 cells. A `.GRX` written in the (line, column) order of
+  earlier versions is converted on the PC by `tools/grx_colig.py`. Several arrays per line. Sizes are expressions, at least 1.
 - Indices from 0 to n-1, as in C: `DIM A(10)` gives `A(0)` to `A(9)`. Elements at 0.
 - An array is declared only once (`already dimensioned`) and before use
   (`array not dimensioned`). No room: `memory full`,
@@ -384,17 +388,17 @@ speed.
 
 **Elements.**
 
-- `A(i)`, `A(i,j)`: in a calculation, or on the left of `=` (`A(I,J) = A(I,J) + 1`).
-- `A(k)` on a two-dimensional array: element k of the flattened array, line after line, as
-  in C (`G(7)` is `G(1,3)` with `DIM G(3,4)`).
-- `A$(i)` (one dimension) and `M$(l,c)`: the code of a cell, for reading and writing
-  (`M$(L,C) = 35`).
+- `A(i)`, `A(c,l)`: in a calculation, or on the left of `=` (`A(I,J) = A(I,J) + 1`).
+- `A(k)` on a two-dimensional array: element k of the flattened array, line after line
+  (`G(7)` is `G(3,1)` with `DIM G(4,3)`).
+- `A$(i)` (one dimension) and `M$(c,l)`: the code of a cell, for reading and writing
+  (`M$(X,Y) = 35`).
 
 **Strings.** `A$` (one-dimensional `$` array) and `M$(l)` (line l of a two-dimensional `$`
 array) are strings. A string stops at the first 0, or at the end of its capacity if it is
 full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characters; a larger
 `$` array is read cell by cell. An array of strings is a two-dimensional `$` array
-(`N$(10,12)`: 10 names).
+(`N$(12,10)`: 10 names of 12 characters at most).
 
 | Element | Effect |
 |---|---|
@@ -410,7 +414,7 @@ full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characte
   There is no concatenation or conversion: chain `ECHO` and `PRINT`.
 - `ECHO` only writes the program's text (`ECHO A$` writes "A$").
 - Attribute 0 cannot be displayed with `PRINT` (it is the end of a string): write it with
-  `CHAR` or `M$(L,C) = 0`.
+  `CHAR` or `M$(X,Y) = 0`.
 - No `INPUT` of an element: `INPUT V` then `A(I) = V`.
 - When interpreted, every access checks the array and its indices (`index out of range`). A
   translated program checks nothing (§ 12).
@@ -510,7 +514,7 @@ small program that fills a `$` array and does `BSAVE`.
 
 ### 10.2 From array or screen to file: what you get
 
-A `$` array declared `DIM T$(l,c)` has `l` lines (0 to l-1) of `c` bytes (columns 0 to c-1);
+A `$` array declared `DIM T$(c,l)` has `l` lines (0 to l-1) of `c` bytes (columns 0 to c-1);
 the bytes are stored line after line. What each command does with it:
 
 | | `SAVE T$ name` (text) | `BSAVE T$ name` (binary) | `BSAVE SCREEN name` |
@@ -539,7 +543,7 @@ In practice:
   a space. `GRAB` of an area never written to, then `SAVE`, gives `code 0-31: BSAVE`: fill
   the area with spaces first (`SPC`). Columns 0-1 contain attributes: start the `GRAB` at
   column 2. A character in reverse video (code + 128) goes through as it is.
-- **Integer array**: `SAVE` writes the numbers of a line separated by a space (`DIM N(2,3)`
+- **Integer array**: `SAVE` writes the numbers of a line separated by a space (`DIM N(3,2)`
   gives two lines `0 0 0`); `BSAVE` writes each integer as two bytes, low then high (-5:
   `FB FF`).
 - **Size on the disk**: always a multiple of 128 bytes (`BSAVE SCREEN`: 1,152). `BLOAD` only
@@ -547,7 +551,7 @@ In practice:
 
 Example: the text screen as a file readable and editable in EDIT, then read back.
 
-    DIM T$(28,38)
+    DIM T$(38,28)
     LORES
     FOR Y 0 27
       LOCATE 2 Y
@@ -662,14 +666,14 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (17,654 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (17,686 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
   bytes per slot and 192 bytes for the two pools; `TILESET`, (wid × hgt + 1) pages (§ 7.3).
   The free area for the text, the arrays and an animation is about 17 KB (text from
-  `$599F`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
+  `$59BF`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
   21 KB), which need translation.
 - **Memory** (translated): the program at `$0500`, then the tables of `hires.inc`. Arrays are
   reserved below `$9D60` as when interpreted: fixed arrays (§ 12) at start, in the order of
@@ -781,6 +785,14 @@ nothing changes; the second read (`kl_run` 1) copies the lines of the kept routi
 tables take the place of the `.GRX` text, no longer needed. `tools/test_inc.sh` checks that the
 marked copies assemble like the originals and that each translated program assembles (a
 forgotten routine gives an undefined label); `test_grapher.sh` translates with them.
+
+**Two dimensions**: the program writes (column, line); `ARR.INC` keeps in memory and in the
+descriptor the order (lines, columns): `r_dim2` and `r_ea2` (hence `r_get2`) swap `r_i` and
+`r_j` on entry, and the translators pass the indices in the order of the text. Only GRXASM
+deals with it, for fixed arrays: the table of lines `TR_S` is indexed by the second index,
+and the first one is added to it (`kf_ix`); when both are calculated, the column waits on the
+6502 stack, then in `g_et`. `tools/grx_colig.py` moves a `.GRX` written in the old order
+(line, column) to the new one.
 
 **Fixed arrays** (GRXASM): `kf_new` decides, at the `DIM`, that an array is fixed and computes
 its address as `r_dim` will (`kftop` follows `r_top`, from `$9D60`); nothing is written at the

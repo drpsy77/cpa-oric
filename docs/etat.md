@@ -49,7 +49,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 963 | Logo (français, ou anglais sur les disquettes anglaises : 18 758) : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | LOGOTR | 4 402 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
-| GRAPHER, GRXASM | 17 654, 15 004 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) | `grapher.md` |
+| GRAPHER, GRXASM | 17 686, 15 041 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -58,7 +58,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 307 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 311 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -157,11 +157,6 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
    - Notés par Pierre le 22/10/2026 (rien codé) :
-     - **Tableaux de GRAPHER en notation Oric** : abandonner l'ordre du C (Lig, Col), qui
-       déroute alors que toutes les commandes et fonctions de l'Oric sont en (Col, Lig).
-       `T$(Col, Lig)` = Lig chaînes de longueur maximale Col ; en mémoire, toujours Lig zones
-       consécutives de Col caractères.
-       Touche GRAPHER, GRXASM, `arr.inc`, exemples, références de test et `docs/grapher.md`.
      - **`ANIMS.GRX`** : ne passe plus dans GRAPHER (« animation trop grande ») mais passe
        une fois compilé par GRXASM. Pas forcément un défaut : en faire un exemple du manuel
        qui montre les limites du mode interprété et l'intérêt de compiler, avec la place
@@ -227,8 +222,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      français) ; GRAPHER, GRXASM (et les commentaires du `.ASM` produit) et les
      bibliothèques des programmes traduits : `GRX.INC`, `ARR.INC`, `FIL.INC`, `SPR.INC`,
      `ANIM.INC` (VOIR compris) en deux langues, `build/src` et `build/src-en`, messages
-     recopiés par `strip_inc.py` (`architecture.md` § 5) ; GRAPHER 17 583 octets en
-     anglais, GRXASM 14 961. `tools/test_asm.sh` assemble aussi
+     recopiés par `strip_inc.py` (`architecture.md` § 5) ; GRAPHER 17 615 octets en
+     anglais, GRXASM 14 998. `tools/test_asm.sh` assemble aussi
      les programmes traduits avec leurs messages anglais ; `LANGUE=en
      tools/test_grapher.sh` compare GRAPHER et GRXASM anglais aux références françaises
      traduites par les fichiers de messages (`tools/msg_fr_en.py`).
@@ -422,8 +417,8 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 654 octets) prend 9 blocs, 778 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 004) prend 8 blocs ;
+- GRAPHER (17 686 octets) prend 9 blocs, 746 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 041) prend 8 blocs ;
   GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
   blocs, 1 215 octets avant le 7e. HELP (11 710) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;

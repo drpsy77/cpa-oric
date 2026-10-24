@@ -2,7 +2,7 @@
 ; un nom et un score saisis, le tableau trie, affiche en LORES ; les
 ; cinq meilleurs sont gardes dans HOFN.TXT et HOFS.TXT (EDIT les lit)
 LORES
-DIM N$(6,10) S(6) T$(10) K$(20)
+DIM N$(10,6) S(6) T$(10) K$(20)
 LOAD N$ HOFN
 LOAD S HOFS
 IF FOUND = 0

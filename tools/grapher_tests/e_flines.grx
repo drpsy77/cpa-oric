@@ -1,4 +1,4 @@
-DIM A$(3,4) B$(2,4)
+DIM A$(4,3) B$(4,2)
 A$(2) = "X"
 SAVE A$ T2
 LOAD B$ T2

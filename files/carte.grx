@@ -4,54 +4,54 @@
 ; carte s'ecrit en clair : ~ eau, espace herbe, # mur, ^ arbre,
 ; M montagne. Hors de la carte : la tuile 0, l'eau.
 ; INKEY : pas d'attente ; l'ecran n'est redessine (CALC) qu'apres un pas
-DIM T$(32,64) D$(5,4) S$(152)
+DIM T$(64,32) D$(4,5) S$(152)
 BLOAD S$ TUILES.SPR
 ECHO Construction du monde...
 FOR J 0 3
-  D$(0,J) = 34                 ; eau
-  D$(1,J) = 33                 ; herbe (vide)
-  D$(2,J) = 35                 ; mur
-  D$(3,J) = 36+J               ; arbre
-  D$(4,J) = 40+J               ; montagne
+  D$(J,0) = 34                 ; eau
+  D$(J,1) = 33                 ; herbe (vide)
+  D$(J,2) = 35                 ; mur
+  D$(J,3) = 36+J               ; arbre
+  D$(J,4) = 40+J               ; montagne
 NEXT
 TILESET D$ 2 2 "~ #^M"
 FILL T$ 32
 FOR I 0 63
-  T$(0,I) = 126
-  T$(31,I) = 126
+  T$(I,0) = 126
+  T$(I,31) = 126
 NEXT
 FOR I 1 30
-  T$(I,0) = 126
-  T$(I,63) = 126
+  T$(0,I) = 126
+  T$(63,I) = 126
 NEXT
 REPEAT 12                      ; lacs
   Y = 1+RND(28)
   X = 1+RND(59)
   FOR I 0 1
     FOR J 0 2
-      T$(Y+I,X+J) = 126
+      T$(X+J,Y+I) = 126
     NEXT
   NEXT
 NEXT
 REPEAT 150
-  T$(1+RND(30),1+RND(62)) = 94
+  T$(1+RND(62),1+RND(30)) = 94
 NEXT
 REPEAT 25                      ; chaines de montagnes
   Y = 1+RND(30)
   X = 1+RND(60)
-  T$(Y,X) = 77
-  T$(Y,X+1) = 77
+  T$(X,Y) = 77
+  T$(X+1,Y) = 77
 NEXT
 REPEAT 8                       ; murs
   Y = 1+RND(30)
   X = 1+RND(57)
   FOR J 0 4
-    T$(Y,X+J) = 35
+    T$(X+J,Y) = 35
   NEXT
 NEXT
 PX = 64                        ; joueur : caractere du monde
 PY = 32
-T$(16,32) = 32                 ; (tuile du joueur)
+T$(32,16) = 32                 ; (tuile du joueur)
 LORES
 TFONT S$ 33 ALT
 FOR L 1 26

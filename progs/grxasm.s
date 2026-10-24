@@ -1816,7 +1816,7 @@ e       jsr endline
         jmp oi
 .)
 
-; PASTE T$(l,c) col lig larg haut, GRAB : indices sur la pile des
+; PASTE T$(c,l) col lig larg haut, GRAB : indices sur la pile des
 ;   valeurs, coin et taille dans h_x1 h_y1 h_x2 h_y2, descripteur dans
 ;   A/Y, puis g_paste ou g_grab
 k_paste lda #0
@@ -3693,14 +3693,14 @@ kf_rows
         lda #" "
         jsr oc
         ldy kfy
-        lda kf_2l,y             ; octets par ligne
+        lda kf_1l,y             ; octets par ligne (taille 1 : colonnes)
         cpy #26
         bcs r1
         asl
 r1      sta kfrs
-        lda kf_1l,y             ; nombre de lignes
+        lda kf_2l,y             ; nombre de lignes (taille 2)
         sta kt
-        lda kf_1h,y
+        lda kf_2h,y
         sta kt+1
         lda #0
         sta kfv0
@@ -3985,18 +3985,19 @@ kf_row
         rts
 .)
 
-; kf_r1 : kfr1 <- début constant de la ligne kil (octet bas)
+; kf_r1 : kfr1 <- début constant de la ligne kil+1 (second indice ; octet
+;   bas)
 kf_r1
 .(
         ldy kfy
-        lda kf_2l,y
+        lda kf_1l,y             ; colonnes
         ldx kfe
         cpx #2
         bne r0
         asl
 r0      sta kt
         lda #0
-        ldx kil
+        ldx kil+1
         beq r2
 r1      clc
         adc kt
@@ -4026,29 +4027,30 @@ no      sec
         rts
 .)
 
-; kf_st2 : indices constants kil, kil+1 -> kfo ; C=1 s'il ne convient pas
+; kf_st2 : indices constants kil (colonne), kil+1 (ligne) -> kfo ; C=1
+;   s'il ne convient pas
 kf_st2
 .(
         lda kih
         ora kih+1
         bmi no
-        lda kil
+        lda kil+1               ; ligne * colonnes + colonne
         sta km_a
-        lda kih
+        lda kih+1
         sta km_a+1
         ldy kfy
-        lda kf_2l,y
+        lda kf_1l,y
         sta km_b
-        lda kf_2h,y
+        lda kf_1h,y
         sta km_b+1
         jsr kmul
         bcs no
         clc
         lda km_p
-        adc kil+1
+        adc kil
         sta kfo
         lda km_p+1
-        adc kih+1
+        adc kih
         sta kfo+1
         bmi no
         lda kfe
@@ -4146,83 +4148,96 @@ desc    sta kfn
         lda #2
         sta kfm
         rts
-s0      lda kcl                 ; petit tableau
-        bne s1
-        lda #0                  ; premier calculé : sa ligne dans A, gardée
-        sta kfvm                ;   sur la pile si le second est calculé
+s0      lda #0                  ; petit tableau : début de la ligne (second
+        sta kfr                 ;   indice, table TR_S) + colonne (premier)
+        lda kcl                 ; colonne calculée (dans g_ev) et ligne
+        bne s1                  ;   calculée aussi : la colonne (* 2) va
+        sta kfvm                ;   sur la pile (kfr = 2)
         jsr kf_look
-        pha
+        bne s1
         ldx #0
         jsr kq_fr
-        jsr kf_row
-        pla
-        beq s0p
-        lda #1
-        bne s0r
+        jsr kf_lda
+        lda kfe
+        cmp #2
+        bne s0p
+        jsr o_asl
 s0p     lda #<s_pha
         ldy #>s_pha
         jsr oi
         lda #2
-s0r     sta kfr
-s1      ldx #1
+        sta kfr
+s1      ldx #1                  ; la ligne
         jsr kf_one
         jsr x_close
-        lda kcl
+        lda kcl+1
         cmp #2
-        bne cv
-        lda kcl+1               ; premier constant
+        bne rv
+        lda kcl                 ; ---- ligne constante
         cmp #2
-        bne c1
-        jsr kf_st2
-        bcs c0
+        bne rc
+        jsr kf_st2              ; colonne constante aussi : adresse fixe
+        bcs rc0
         jmp stat
-c0      ldx #1
+rc0     ldx #0                  ; ne convient pas : la colonne dans g_ev
         jsr kf_mat
-c1      jsr kf_r1               ; second (* 2) + début constant de la ligne
-        ldx #1
+rc      jsr kf_r1               ; colonne (* 2) + début constant de la ligne
+        ldx #0
         jsr kq_fr
         lda kfe
         cmp #2
-        beq c2
+        beq rc2
         lda kfr1
-        bne c3
-        lda #3
+        bne rc3
+        lda #3                  ; décalage = la colonne
         sta kfm
         rts
-c3      jsr kf_lda
-        jmp c4
-c2      jsr kf_lda
+rc3     jsr kf_lda
+        jmp rc4
+rc2     jsr kf_lda
         jsr o_asl
         lda kfr1
-        beq m1
-c4      jsr o_clc
+        bne rc4
+        jmp m1
+rc4     jsr o_clc
         lda kfr1
         sta osv
         lda #<s_adci
         ldy #>s_adci
         jsr oimm
         jmp m1
-cv      cmp #1                  ; premier variable : sa ligne maintenant
-        bne ce
-        ldx #0
-        jsr kq_fr
-        jsr kf_row
-        jmp ca
-ce      lda kfr                 ; premier calculé : ligne sur la pile ?
+rv      lda kfr                 ; ---- ligne variable ou calculée
         cmp #2
-        bne ca
-        lda #<s_pla
+        bne rv1
+        lda #<s_pla             ; colonne gardée -> g_et
         ldy #>s_pla
         jsr oi
-ca      lda kcl+1               ; + second (* 2)
+        lda #<s_stet
+        ldy #>s_stet
+        jsr oi
+rv1     ldx #1
+        jsr kq_fr
+        jsr kf_row              ; A = début de la ligne
+        lda kfr
         cmp #2
-        bne ca1
-        lda kil+1
+        bne rv2
+        jsr o_clc               ; + colonne gardée
+        lda #<s_etn
+        ldy #>s_etn
+        jsr dest_fix
+        lda #<s_adc
+        ldy #>s_adc
+        jsr o_ins_sym
+        jmp m1
+rv2     lda kcl                 ; colonne constante
+        cmp #2
+        bne rv3
+        lda kil
         ldx kfe
         cpx #2
-        bne ca0
+        bne rv4
         asl
-ca0     cmp #0
+rv4     cmp #0
         beq m1
         sta osv
         jsr o_clc
@@ -4230,7 +4245,7 @@ ca0     cmp #0
         ldy #>s_adci
         jsr oimm
         jmp m1
-ca1     ldx #1
+rv3     ldx #0                  ; colonne variable, ou dans g_ev
         jsr kq_fr
         jsr o_clc
         jsr kf_adc

@@ -26,12 +26,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *140* | *42* | *351* | *79* | *96* | ***708*** | *183* | ***891*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 106 | 18 | **171** | 45 | **216** |
-| **Total** | **192** | **72** | **574** | **277** | **192** | **1307** | **312** | **1619** |
+| Outillage PC | 7 | 15 | 25 | 110 | 18 | **175** | 45 | **220** |
+| **Total** | **192** | **72** | **574** | **281** | **192** | **1311** | **312** | **1623** |
 
-Points ajustés (indicatif, § 9) : 1 307 × 1,05 ≈ 1 372.
+Points ajustés (indicatif, § 9) : 1 311 × 1,05 ≈ 1 377.
 
-Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 68 EO, 64 EQ.
+Nombre de fonctions comptées : 27 ILF, 14 EIF, 184 EI, 69 EO, 64 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -347,7 +347,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.D09 | Tuiles : tables par place, carte du dernier TMAP | ILF | 2 | 6 | F | 7 |
 | GRA.T01 | Exécuter un `.GRX` (paramètres `$1`-`$9`, boucles, conditions, sous-programmes, ESC) | EI | 2 | 6 | M | 4 |
 | GRA.T02 | Affectation `V = expr` | EI | 1 | 2 | F | 3 |
-| GRA.T03 | DIM | EI | 1 | 4 | F | 3 |
+| GRA.T03 | DIM (deux dimensions en colonne, ligne) | EI | 1 | 4 | F | 3 |
 | GRA.T04 | FILL | EI | 1 | 2 | F | 3 |
 | GRA.T05 | INPUT (chaîne ou entier) | EI | 1 | 2 | F | 3 |
 | GRA.T06 | PRINT | EO | 1 | 1 | F | 4 |
@@ -405,7 +405,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A01 | Interpréteur ligne à ligne : FOR, REPEAT, WHILE, IF/ELSE, SUB, pile de contrôle, erreurs | `grapher.s` | 5 |
 | GRA.A02 | Analyse des expressions entières (priorités, fonctions, chaînes) et des noms | `grxc_inc.s` | 3 |
 | GRA.A03 | Variables de deux caractères à adresse calculée | `grapher.s` | 1 |
-| GRA.A04 | Tableaux et chaînes : descripteurs, contrôles en interprété | `arr.inc` | 3 |
+| GRA.A04 | Tableaux et chaînes : descripteurs, contrôles en interprété, indices (colonne, ligne) échangés à l'entrée | `arr.inc` | 3 |
 | GRA.A05 | Hasard xorshift 32 bits par octets, RND(n) | `grapher.s`, `grx.inc` | 3 |
 | GRA.A06 | Rectangles PASTE, GRAB | `arr.inc` | 3 |
 | GRA.A07 | Défilement et rotation (modulo, tampon de ligne) | `arr.inc` | 3 |
@@ -726,6 +726,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T38 | `mkdisk.py diff` : fichiers ajoutés, effacés, modifiés | EQ | 1 | 4 | F | 3 |
 | OUT.T39 | `test_fichiers.py` : sûreté des enregistrements (EDIT, GRAPHER) | EO | 2 | 4 | F | 4 |
 | OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
+| OUT.T41 | `grx_colig.py` : `.GRX` passé de (ligne, colonne) à (colonne, ligne) | EO | 1 | 2 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -752,9 +753,9 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 600 | 10 % | 37 264 | 35 | 116 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 605 | 10 % | 37 307 | 35 | 116 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 22 | 13 028 | 994 | 426 | 0 | 7 % | 32 658 | 57 | 143 |
+| GRAPHER + GRXASM | 22 | 13 062 | 1 006 | 427 | 0 | 7 % | 32 727 | 57 | 143 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
@@ -763,34 +764,34 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 166 | 7 414 | 835 | 465 | 0 | 10 % | — | 43 | — |
-| **Total** | 335 | 61 667 | 4 973 | 2 502 | 2 516 | 7 % | 135 707 | 47 | 104 |
+| Outillage PC | 167 | 7 512 | 856 | 481 | 0 | 10 % | — | 43 | — |
+| **Total** | 336 | 61 799 | 5 006 | 2 519 | 2 521 | 7 % | 135 819 | 47 | 104 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 304 | 78 | 4,0 | 71 |
+| Système et commandes | 1 304 | 78 | 4,0 | 72 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 852 | 69 | 3,7 | 35 |
+| GRAPHER + GRXASM | 863 | 69 | 3,8 | 36 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 174 | 24 | 3,1 | 11 |
-| HEX | 34 | 9 | 1,8 | 3 |
-| VOIR | 78 | — | 4,1 | 10 |
-| USB | 38 | 9 | 1,2 | 9 |
+| CMDER | 174 | 24 | 3,1 | 12 |
+| HEX | 34 | 9 | 1,8 | 4 |
+| VOIR | 78 | — | 4,1 | 11 |
+| USB | 38 | 9 | 1,2 | 10 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 23 |
-| Outillage PC | 325 | — | 1,9 | 109 |
-| Transverse (projet) | 2 047 | — | — | 59 |
-| Traduction anglaise (docs/en) | 2 317 | — | — | 23 |
-| **Total** | 7 674 | 294 | 5,9 | 180 |
+| Outillage PC | 326 | — | 1,9 | 110 |
+| Transverse (projet) | 2 049 | — | — | 60 |
+| Traduction anglaise (docs/en) | 2 328 | — | — | 24 |
+| **Total** | 7 699 | 294 | 5,9 | 181 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 180 commits du 2026-10-04 au 2026-10-24.
+Historique : 181 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 45 050 lignes de code écrites dans `progs/`, 50 463 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 084 lignes de code écrites dans `progs/`, 50 497 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -846,6 +847,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-23 | TERM | 0.9 | 1 303 | 312 | 1 615 | 167 | `TERM.COM` : terminal série (modem WiFi du LOCI) |
 | 2026-10-24 | sûreté disque | 0.9 | 1 307 | 312 | 1 619 | 180 | pilote : contrôleur muet -> erreur disque ; EDIT relit tout fichier qu'il a écrit ; `test_fdc.py` |
 | 2026-10-24 | petites corrections | 0.9 | 1 307 | 312 | 1 619 | 181 | REN dans l'ordre de COPY ; TERM : CR affiché en CR LF, `/L` ; HIRES : 3 lignes du bas noires ; erreur d'un traduit après HIRES ; `^I` dans les menus |
+| 2026-10-24 | tableaux (col, lig) | 0.9 | 1 311 | 312 | 1 623 | 182 | GRAPHER : tableaux à deux dimensions en (colonne, ligne) ; `grx_colig.py` |
 
 ## 11. Comparaisons
 

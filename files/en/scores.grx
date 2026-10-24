@@ -2,7 +2,7 @@
 ; a name and a score typed in, the table sorted, shown in LORES; the
 ; five best are kept in HOFN.TXT and HOFS.TXT (EDIT reads them)
 LORES
-DIM N$(6,10) S(6) T$(10) K$(20)
+DIM N$(10,6) S(6) T$(10) K$(20)
 LOAD N$ HOFN
 LOAD S HOFS
 IF FOUND = 0

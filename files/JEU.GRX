@@ -1,7 +1,7 @@
 ;;;; UN JEU DE TAQUIN ;;;;;
 
 
-DIM T(5,5) A$(3,5) B$(41)
+DIM T(5,5) A$(5,3) B$(41)
 
 SC=0
 

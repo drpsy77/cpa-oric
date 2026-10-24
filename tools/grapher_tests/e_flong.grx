@@ -1,4 +1,4 @@
-DIM A$(2,10) B$(2,3)
+DIM A$(10,2) B$(3,2)
 A$(0) = "AB"
 A$(1) = "ABCDEF"
 SAVE A$ T1
