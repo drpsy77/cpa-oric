@@ -67,7 +67,7 @@ mn_spr  .byt 9,12
         .byt MA_TYPE
         .word c_93
 
-mn_des  .byt 10,17
+mn_des  .byt 11,17
         .asc "Draw",0
         .asc "Invert",0
         .byt MA_TYPE
@@ -96,6 +96,9 @@ mn_des  .byt 10,17
         .asc "Mask = drawing",0
         .byt MA_TYPE
         .word c_9c
+        .asc "Outline",0
+        .byt MA_TYPE
+        .word c_a1
         .asc "From the font...",0
         .byt MA_TYPE
         .word c_9d
@@ -122,7 +125,7 @@ m_new     .asc "New file",0
 m_noname  .asc "(no name)",0
 m_real    .asc "Real",0
 m_codes   .asc "Codes",0
-m_zsel    .asc "Select: RETURN to draw, S/M",0
+m_zsel    .asc "List: arrows, ^I or RETURN",0
 m_car     .asc "char ",0
 m_pen     .asc "pen",0
 m_nomask  .asc "No mask (tiles)",0
@@ -162,6 +165,10 @@ d_brique  .asc "Backdrop: bricks",0
 d_herbe   .asc "Backdrop: grass",0
 g_spr     .asc "sprites",0
 g_til     .asc "tiles",0
+h_sel     .asc "S:sprite  M:mask  RETURN:draw",0
+h_ed      .asc "SPC:solid  M:mask  P:pen  ^I:list",0
+h_ed1     .asc "SPC:solid/empty  P:pen  ^I:list",0
+hints     .word h_sel, h_ed, h_ed1
 snames    .word s_plein, s_masque, s_transp
 snames1   .word s_plein, s_vide, s_vide
 dnames    .word d_vide, d_damier, d_brique, d_herbe

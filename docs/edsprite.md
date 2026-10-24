@@ -3,7 +3,7 @@
 Éditeur plein écran des fichiers `.SPR` de GRAPHER (format : `grapher.md` § 10.1) : sprites
 (genre 0 : dessin et silhouette) et tuiles ou caractères (genre 1 : dessin seul, copiés dans
 la police par `TFONT`). Il remplace HEX et `tools/mkspr.py` pour fabriquer ces fichiers sur
-l'Oric. Un `.COM` (8 540 octets ; 8 391 en anglais), rien de résident. Sur les disquettes qui
+l'Oric. Un `.COM` (8 950 octets ; 8 785 en anglais), rien de résident. Sur les disquettes qui
 ont GRAPHER : `cpa.dsk`, `cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` et leurs jumelles
 anglaises.
 
@@ -45,7 +45,7 @@ EDSPRITE passe en texte et y revient en sortant, l'image intacte.
     23|   .....:.....:.....:.....:::::@@::
     24|   .....:.....:.....:.....:::::::::
     25|   _____+_____+_____+_____+::::::::
-    26|
+    26|  ESP:plein M:masque P:crayon ^I:liste
     27|  x7 y12 car 2,2 plein  crayon      *
 
 - **Grille** (colonnes 3-26, lignes 2-25) : un point du sprite par case de l'écran, 4 × 3
@@ -54,7 +54,8 @@ EDSPRITE passe en texte et y revient en sortant, l'image intacte.
   ligne 1 : numéros des colonnes de caractères. Le curseur clignote.
 - **Trois états**, dessinés par des caractères redéfinis : point plein (case entièrement
   allumée, `#` ci-dessus), masque (point éteint qui cache le décor : case vide), transparent
-  (case grisée en damier, `.`). Genre 1 : deux états, plein et vide.
+  (case grisée d'un point sur quatre, sombre pour que le curseur ressorte, `.`). Genre 1 :
+  deux états, plein et vide.
 - **Limites des caractères** : sur la 6e colonne de points d'un caractère, un trait à droite
   de la case ; sur la 8e ligne, un trait en bas ; au coin, les deux (`:`, `_`, `+` ci-dessus).
   Le trait se superpose à l'état : allumé sur une case vide ou grisée, éteint sur une pleine.
@@ -68,10 +69,12 @@ EDSPRITE passe en texte et y revient en sortant, l'image intacte.
   genre.
 - **Réel** (lignes 20-25, colonnes 28-33) : le sprite en taille réelle au milieu d'un décor
   (vide, damier, briques, herbe), avec les vrais caractères redessinés ; il suit chaque point
-  posé.
+  posé. Genre 1 : la tuile répétée sur toute la zone, pour voir le motif qu'elle fait.
 - **Codes** (`^H` ou menu Vue) : à la place de la liste et de « Réel », en face de chaque ligne
   de points de la grille, ses octets en hexadécimal (deux chiffres par caractère de largeur) :
   ceux du dessin en mode `S`, de la silhouette en mode `M`. `^H` de nouveau : la liste.
+- **Aide** (ligne 26) : les touches de la zone (`ESP:plein M:masque P:crayon ^I:liste` dans
+  la grille, `S:sprite  M:masque  RETURN:dessiner` dans la liste).
 - **Ligne d'état** (27) : position du curseur (point), caractère, état du point, `crayon`
   s'il est baissé, `*` si le fichier a changé ; les questions et messages s'y affichent aussi.
 
@@ -113,7 +116,9 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
   Saisie.
 - **Dessin** : Inverser (plein ↔ masque, le transparent reste ; genre 1 : plein ↔ vide),
   Miroir horizontal, Miroir vertical, Quart de tour (sprite carré en points : 4 × 3 caractères seulement), Décaler d'un
-  point dans les 4 sens (ce qui sort rentre de l'autre côté), Silhouette = dessin. Genre 1 :
+  point dans les 4 sens (ce qui sort rentre de l'autre côté), Silhouette = dessin, Détourer
+  (chaque point transparent qui touche un point plein, coins compris, devient masque : le
+  sprite gagne un contour noir qui le détache du décor ; genre 0). Genre 1 :
   Prendre police.. copie le dessin des caractères du jeu standard à partir d'un code (32 à
   127) comme point de départ. Chaque transformation s'annule par `^Z`.
 - **Vue** : Codes hexa `^H`, Décor (vide, damier, briques, herbe, à tour de rôle), Animer :

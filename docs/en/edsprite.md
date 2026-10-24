@@ -7,7 +7,7 @@
 Full-screen editor for GRAPHER's `.SPR` files (format: `grapher.md` § 10.1): sprites (kind
 0: drawing and mask) and tiles or characters (kind 1: drawing only, copied into the font by
 `TFONT`). It replaces HEX and `tools/mkspr.py` for making these files on the Oric. One `.COM`
-(8,391 bytes; 8,540 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
+(8,785 bytes; 8,950 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
 `cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` and their English twins.
 
 ## 1. Calling it
@@ -48,7 +48,7 @@ goes back to SPLIT when it ends, picture intact.
     23|   .....:.....:.....:.....:::::@@::
     24|   .....:.....:.....:.....:::::::::
     25|   _____+_____+_____+_____+::::::::
-    26|
+    26|  SPC:solid  M:mask  P:pen  ^I:list
     27|  x7 y12 char 2,2 solid  pen         *
 
 - **Grid** (columns 3-26, rows 2-25): one sprite dot per screen cell, 4 × 3 characters
@@ -56,8 +56,8 @@ goes back to SPLIT when it ends, picture intact.
   cursor leaves the grid. Column 2: character row number; row 1: character column numbers.
   The cursor blinks.
 - **Three states**, drawn with redefined characters: solid dot (cell fully lit, `#` above),
-  mask (an unlit dot that hides the backdrop: empty cell), clear (grey checkered cell, `.`).
-  Kind 1: two states, solid and empty.
+  mask (an unlit dot that hides the backdrop: empty cell), clear (grey cell, one dot in four,
+  dark so that the cursor stands out, `.`). Kind 1: two states, solid and empty.
 - **Character limits**: on the 6th dot column of a character, a line on the right of the
   cell; on the 8th row, a line at the bottom; at the corner, both (`:`, `_`, `+` above). The
   line is drawn over the state: lit on an empty or grey cell, unlit on a solid one.
@@ -68,10 +68,13 @@ goes back to SPLIT when it ends, picture intact.
 - **List** (row 1: the file; rows 2-13: one sprite per row, name, size, `S` or `M`,
   scrolling beyond 12); `>` marks the current sprite. Rows 15-16: rank, count, kind.
 - **Real** (rows 20-25, columns 28-33): the sprite at real size over a backdrop (none,
-  checks, bricks, grass), with the real redefined characters; it follows every dot set.
+  checks, bricks, grass), with the real redefined characters; it follows every dot set. Kind
+  1: the tile repeated over the whole area, to see the pattern it makes.
 - **Codes** (`^H` or View menu): instead of the list and "Real", next to each dot row of the
   grid, its bytes in hexadecimal (two digits per character of width): those of the drawing
   in `S` mode, of the mask in `M` mode. `^H` again: the list.
+- **Help** (row 26): the keys of the zone (`SPC:solid  M:mask  P:pen  ^I:list` in the
+  grid, `S:sprite  M:mask  RETURN:draw` in the list).
 - **Status line** (27): cursor position (dot), character, dot state, `pen` when it is down,
   `*` if the file has changed; questions and messages show there too.
 
@@ -111,7 +114,9 @@ one to the other (or the Sprite menu, Select / Draw).
   keeps its top-left corner), Move down / Move up by one rank in the file, Select, Draw.
 - **Draw**: Invert (solid ↔ mask, clear stays; kind 1: solid ↔ empty), Flip horizontal,
   Flip vertical, Quarter turn (a sprite square in dots: 4 × 3 characters only), Shift by one
-  dot in the 4 directions (what goes out comes back on the other side), Mask = drawing. Kind
+  dot in the 4 directions (what goes out comes back on the other side), Mask = drawing,
+  Outline (each clear dot touching a solid dot, corners included, becomes mask: the sprite
+  gets a black outline that sets it off from the backdrop; kind 0). Kind
   1: From the font... copies the drawing of standard-set characters from a code (32 to 127)
   as a starting point. Each transformation can be undone with `^Z`.
 - **View**: Hex codes `^H`, Backdrop (none, checks, bricks, grass, in turn), Animate: plays
