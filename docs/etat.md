@@ -59,8 +59,11 @@ la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa
 **Mesure** : 1 303 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
-**Sur le vrai matériel** : ce qui a été vérifié et ce qui reste à vérifier est dans
-`docs/essais-materiel.md`, à lire seulement quand on en a besoin.
+**Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
+Atmos + LOCI (ASM compris, deux lecteurs, clé USB débranchée à chaud), sans un plantage ni
+un redémarrage ; la stabilité est un argument du README. Deux défauts trouvés dans les cas
+limites (§ 2 point 5 : RESET pendant DISKCOPY, EDIT au-delà de 32 000 octets). Ce qui reste
+à vérifier est dans `docs/essais-materiel.md`, à lire seulement quand on en a besoin.
 
 ## 2. Suite prévue (par priorité)
 
@@ -79,6 +82,14 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 2. **GRAPHER, plateforme de développement** : phases d'un jeu (`RUN`, à décider :
    `docs/grapher.md` § 17). Les programmes traduits sont petits (seules routines utiles des
    bibliothèques : 1,5 à 6,4 Ko pour les exemples) et rapides (tableaux à adresse fixe).
+   - Gros programme envisagé par Pierre (24/10/2026, rien codé) : un **rogue-like** (sprites,
+     niveaux tirés au hasard, une dizaine de monstres, armes, butin). Estimation : 500 à
+     550 lignes, 12 à 15 Ko de `.GRX` ; tables des monstres et des objets dans des fichiers
+     de données (`LOAD`), ~3 Ko de tableaux. Trop juste en interprété (~17 Ko pour texte et
+     tableaux), à l'aise traduit : `.COM` de 20 à 23 Ko, ~15 Ko de tableaux libres,
+     `.ASM` de ~130 Ko pendant l'assemblage. Bon cas d'essai pour la limite de 20 Ko et pour
+     `RUN` : la génération d'un niveau, programme à part, écrit le niveau dans des fichiers
+     de données que le jeu relit.
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM`, `tools/mktap.py` et
    `CASSETTE.COM` (décidés), puis une boîte à outils appelée par `!` depuis le BASIC, ou
    GRXASM vers un programme autonome (`.TAP`) ; ordre à choisir.
@@ -108,11 +119,41 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      - Ordre proposé : `USBMOUNT` sur `.TAP` avec boot, puis sur `.dsk` en B:, puis
        `CASSETTE.COM`.
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md` ; Pico W préparé, firmware
-   recompilé, liaison Mac vérifiée) : `TERM.COM` fait (scrute l'ACIA lui-même, sans le
+   recompilé, liaison Mac vérifiée ; **le Pico W ne marche pas encore avec le LOCI** : en
+   attente d'un firmware du LOCI qui le prenne en charge, TERM reste à essayer) : `TERM.COM` fait (scrute l'ACIA lui-même, sans le
    BIOS). Reste : pilote série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le
    LOCI, `$031C` dans Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord
    libérer de la place, § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py`.
 5. **Sûreté des fichiers et défauts constatés**
+   - **À corriger d'abord : accès disque déclaré bon quand le contrôleur ne répond plus**
+     (constaté par Pierre le 24/10/2026 sur le LOCI). Un RESET pendant `DISKCOPY A: D:`
+     (D: vide) affiche `*RESET* at C6C6`, le prompt tarde, puis `DIR`, `DIR D:` et `DIR`
+     sur D: répondent `No file` jusqu'au redémarrage ; CTRL-C n'y change rien ; les
+     disquettes sont intactes (D: vide, A: entière). Ce que dit le code : quand le contrôleur
+     ne répond plus, `fdc_wait` abandonne au bout de ~3 s par un Force Interrupt, mais
+     `disk_read` / `disk_write` (étiquette `fin`, `src/disk.s`) relisent ensuite l'état du
+     contrôleur, sans bit d'erreur après un Force Interrupt : l'accès est déclaré bon, le
+     tampon garde son ancien contenu (lecture) ou rien n'est écrit (écriture). D'où
+     `No file` au lieu de `BDOS: disk I/O error`, et la lenteur (attentes de 3 s). Risque
+     réel : un secteur du répertoire « lu » ainsi puis réécrit abîmerait la disquette.
+     Décidé : `fdc_wait` rendu à `$FF` (délai dépassé) -> erreur, à `fin` (~4 octets, marge
+     14 -> 10). Reste à comprendre pourquoi le contrôleur du LOCI ne répond plus : `C6C6`
+     n'est pas une adresse de DISKCOPY mais du traitement du RESET lui-même (`hires_on` sur
+     `cpa-en.dsk`, `print_hex8` sur `cpa.dsk`), donc une seconde NMI pendant le démarrage à
+     chaud (rebond du bouton ?) ; la seconde NMI agit tout de suite, même au milieu d'un
+     secteur (`bios.s`, `nmi_handler`). Le firmware du LOCI termine une écriture abandonnée
+     au bout d'un délai (`dsk_rw_countdown`, `dsk.c`) : pas de blocage évident de ce côté.
+     À reproduire dans Oricutron (RESET pendant DISKCOPY), puis sur le LOCI après la
+     correction : on doit voir `BDOS: disk I/O error`, et pouvoir reprendre.
+   - **EDIT ne rouvre pas un fichier qu'il vient d'écrire** (constaté le 24/10/2026 : un
+     texte enregistré à 32 761 octets sans erreur donne `Fichier tronque : trop gros` à la
+     réouverture). Cause : `load_file` lit le fichier brut (CR LF) dans la zone de texte et
+     ne retire les LF qu'ensuite ; en mémoire, une fin de ligne est un seul CR, et
+     l'enregistrement remet CR LF : un texte qui tient en mémoire peut donner un fichier
+     plus gros que la zone (un octet de plus par ligne). Décidé : convertir à la lecture,
+     enregistrement par enregistrement (lecture dans le DMA `$0480`, recopie convertie) ;
+     tout fichier écrit par EDIT se relit, et la limite d'ouverture monte d'autant (place :
+     1 536 octets libres dans le dernier bloc d'EDIT).
    - EDIT et GRAPHER (`SAVE`, `BSAVE`, `BSAVE SCREEN`) passent la batterie
      `tools/test_fichiers.py` (disque plein, répertoire plein, R/O, RESET balayé). Reste
      une fenêtre d'une demi-seconde, entre l'effacement de l'ancien fichier et le
@@ -149,8 +190,33 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      (`GRXASM E2 /C`, `E2`) rend un prompt sur un écran vide : le message
      `Erreur : image introuvable` est effacé au retour (démarrage à chaud après HIRES ?).
 6. **Petites améliorations notées**
+   - **REN dans l'ordre de COPY** (demandé par Pierre le 24/10/2026, rien codé) :
+     `REN ancien nouveau`, comme `COPY source destination`, moins déroutant que l'ordre de
+     CP/M. Les deux syntaxes acceptées : avec un `=`, c'est l'ordre de CP/M
+     (`REN nouveau=ancien`), sans `=`, celui de COPY. Toujours refusé si le nouveau nom
+     existe (`Le nouveau nom existe deja`) ou si le fichier est protégé. Touche `ren.s`,
+     `ren.msg` (usage dans les deux langues), le manuel, HELP et README.TXT, et la ligne
+     `REN NOM.EXT=NOM.$$$` des documents (les deux formes y restent justes).
+   - **Imprimante dans un fichier** (demandé par Pierre le 24/10/2026, sans imprimante ;
+     Oricutron écrit déjà `printer.out`). Décidé : par PUT, plutôt que par un pilote LOCI
+     dans le BIOS (marge de 14 octets, API du LOCI résidente) : `PUT /P NOM commande`
+     recopie dans le fichier ce qui part à l'imprimante (LIST, BDOS 5, CTRL-P, `^P` d'EDIT)
+     au lieu de l'écran ; `EXPORT` le passe sur la clé, puis directement avec le lecteur
+     U: (§ 2 point 9 : `PUT /P U:PRINT.TXT ...`). Coût résident : un test dans LIST vers
+     `put_char` (~10 octets), à faire avec la descente de PUT en banque (§ 3).
    - `AUTO.BAT` exécuté au démarrage ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
+   - **Son de LOGO plus simple** (remarque de Pierre le 24/10/2026) : `SON v n vol d` et
+     `ENSEMBLE` sont lourds pour un accord et n'ont pas de raccourci. Piste retenue : une
+     surcouche écrite en LOGO (fichier `.LOG` chargé par `CHARGE` : notes par leur nom,
+     accord, durées), sans toucher à LOGO.COM, puis seulement les primitives qui
+     manqueraient. À écrire avec Pierre (ce qu'il attend d'un accord).
+   - **TERM et la touche RETURN** (constaté par Pierre) : RETURN ne passe pas à la ligne.
+     TERM envoie CR seul (ce qu'attend le modem) et affiche ce qui revient tel quel ; un CR
+     sans LF (écho local `/E`, serveur qui ne renvoie que CR) ramène au début de la même
+     ligne. Décidé : à l'affichage, CR donne CR LF, et un LF qui suit aussitôt est sauté (pas
+     de ligne vide avec les serveurs qui envoient CR LF) ; option `/L` pour envoyer CR LF
+     (serveurs comme `nc`). Essai sur le LOCI quand le Pico y marchera.
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures **en mémoire**
      seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE`, `EDITE`), après la
@@ -183,7 +249,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
      LOGO ou un `.COM`, à trouver.
-7. **Version anglaise** (faite le 24/10/2026 ; tout nouveau texte affiché ou document d'utilisation se fait dans les deux langues)
+7. **Version anglaise** (faite et essayée sur le vrai Oric le 24/10/2026 ; tout nouveau texte affiché ou document d'utilisation se fait dans les deux langues)
    - Décidé : une seule disquette anglaise, `cpa-en.dsk` (le contenu de `cpa.dsk`, programmes
      de `build/progs-en`) ; pas de disquettes par usage en anglais tant que LOGO n'est pas
      traduit. Les mots-clés de GRAPHER restent ceux d'aujourd'hui dans les deux langues :

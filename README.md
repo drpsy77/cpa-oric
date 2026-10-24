@@ -10,6 +10,8 @@
   full-screen editor and file manager.
 - **Write a game, draw it, compile it** to fast 6502 code, without ever leaving the machine.
 - **Then share it**: through the LOCI's USB stick today, on a plain cassette for any Oric soon.
+- **Rock solid**: on a real Atmos with a LOCI, whole working sessions without a single
+  crash or reboot.
 
 **Try it in five minutes.** Download [`cpa-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-en.dsk), put it on the USB stick of your LOCI
 (or the SD card of your Cumulus) and boot, or run it in Oricutron (see below). At the `A>`
@@ -63,6 +65,29 @@ Two variants are built from the same sources:
   language for drawings and games (text-mode sprites, tile maps larger than the
   screen, scrolling), interpreted or translated into assembly.
 - Compressed HIRES pictures and full-screen animations (VOIR).
+
+## Stability
+
+On a real Oric Atmos with a LOCI, whole sessions go by without a single crash or reboot:
+importing sources from the USB stick with CMDER, editing them, assembling a program on the
+Oric itself (`LOGOTR.COM`), adding a score to a GRAPHER game, playing the animations, opening
+every menu of every program, even pulling the USB stick out in the middle of the work. On
+the Oric, where a reboot after a program has trampled the memory is a familiar ritual, this
+is the first thing you notice. It comes from the design:
+
+- **a memory contract**: the system lives in the overlay RAM, outside the program space;
+  every program is loaded at `$0500` and talks to the system through the BDOS and the
+  documented page 2 variables (`docs/architecture.md`);
+- **a warm start after every program**: text screen and console are put back, even after a
+  full-screen HIRES picture or a game in text mode;
+- **recovery**: free memory is left filled with `$00` (`BRK`), so a program that runs astray
+  stops on `*BRK* at xxxx`; the RESET button gives the prompt back (`*RESET* at xxxx`) and,
+  during a disk access, waits for the end of the sector, so the directory is never left
+  half-written;
+- **errors are reported, not fatal**: an empty LOCI drive, or the USB stick pulled out, gives
+  a BDOS error and the prompt; put the stick back and `DIR` reads the disk again;
+- **safe saving**: EDIT and GRAPHER write through `NAME.$$$`, so a full disk or a RESET
+  leaves the old file or the new one, whole (at worst under `NAME.$$$`).
 
 ## Documentation
 
