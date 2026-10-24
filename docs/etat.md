@@ -80,7 +80,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      (`TILESET`, `TMAP`, `TILE`, `TFONT` : § 7.3 ; `tools/mkspr.py` fait les `.SPR` sur le
      PC en attendant l'éditeur).
    - Reste : les caractères animés au 50 Hz (§ 16) ; l'éditeur de caractères et de sprites
-     (`.COM` plein écran) ; un **dessin assisté** (`.COM`, plus
+     (`.COM` plein écran, maquette dans `docs/editeur-sprites.md`, en cours) ; un **dessin assisté** (`.COM`, plus
      précis que la tortue de LOGO : points, traits, formes, remplissage, couleurs par
      attributs, vers `.HIR` / `.HIZ`), à spécifier.
 2. **GRAPHER, plateforme de développement** : phases d'un jeu (`RUN`, à décider :
