@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 14 | 0 | 11 | 4 | 3 | **32** | 6 | **38** |
+| USB | 14 | 0 | 11 | 9 | 3 | **37** | 7 | **44** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *147* | *47* | *393* | *87* | *102* | ***776*** | *200* | ***976*** |
+| *Applications* | *147* | *47* | *393* | *92* | *102* | ***781*** | *201* | ***982*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 110 | 18 | **175** | 45 | **220** |
-| **Total** | **199** | **77** | **616** | **289** | **198** | **1379** | **329** | **1708** |
+| **Total** | **199** | **77** | **616** | **294** | **198** | **1384** | **330** | **1714** |
 
-Points ajustés (indicatif, § 9) : 1 379 × 1,05 ≈ 1 448.
+Points ajustés (indicatif, § 9) : 1 384 × 1,05 ≈ 1 453.
 
-Nombre de fonctions comptées : 28 ILF, 15 EIF, 198 EI, 71 EO, 66 EQ.
+Nombre de fonctions comptées : 28 ILF, 15 EIF, 198 EI, 72 EO, 66 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -564,7 +564,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | VOIR.A03 | HIRES.INC : segment et cercle | `hires.inc` | 3 |
 | VOIR.A04 | HIRES.INC : écran texte au programme (LORES), texte, attributs, chargement et sauvegarde | `hires.inc` | 1 |
 
-### 4.7 USB et série (EXPORT, IMPORT, USBDIR, TERM)
+### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, MKTAP)
 
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
@@ -575,6 +575,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T03 | USBDIR : liste (tailles, dossiers) | EQ | 1 | 4 | F | 3 |
 | USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`, `/L` : CR LF) | EI | 1 | 3 | F | 3 |
 | USB.T05 | TERM : affichage de ce qui arrive du port série (CR -> CR LF) | EO | 1 | 2 | F | 4 |
+| USB.T06 | MKTAP : `.TAP` pour l'Oric sous BASIC (blocs, longueurs, `/R`, chargeur BASIC, contrôles des plages) | EO | 2 | 7 | M | 5 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -582,6 +583,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.A02 | Conversions `^Z` et `/T` | `export.s`, `import.s` | 1 |
 | USB.A03 | Noms longs en 8.3 | `import.s` | 1 |
 | USB.A04 | ACIA 6551 scrutée (LOCI ou Oricutron), attente bornée de l'émetteur | `term.s` | 1 |
+| USB.A05 | Format `.TAP`, chargeur BASIC tokenisé (fin du bloc = début des variables), taille sans les `^Z`, chevauchements | `mktap.s` | 1 |
 
 ### 4.8 ASM
 
@@ -791,7 +793,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 673 | 10 % | 37 842 | 35 | 118 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 673 | 10 % | 37 833 | 35 | 117 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 22 | 13 167 | 1 024 | 428 | 0 | 7 % | 32 931 | 57 | 144 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -799,39 +801,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 15 | 1 665 | 217 | 87 | 0 | 12 % | 4 479 | 52 | 140 |
+| USB | 18 | 2 679 | 276 | 117 | 0 | 9 % | 6 780 | 72 | 183 |
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 169 | 7 604 | 860 | 481 | 0 | 10 % | — | 43 | — |
-| **Total** | 341 | 66 289 | 5 231 | 2 643 | 2 589 | 7 % | 145 525 | 48 | 106 |
+| Outillage PC | 171 | 7 811 | 907 | 506 | 0 | 10 % | — | 45 | — |
+| **Total** | 346 | 67 510 | 5 337 | 2 698 | 2 589 | 7 % | 147 817 | 49 | 107 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 309 | 79 | 4,1 | 75 |
+| Système et commandes | 1 357 | 80 | 4,2 | 75 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 872 | 69 | 3,8 | 39 |
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 12 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 140 | 13 | 2,1 | 2 |
+| EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 38 | 9 | 1,2 | 10 |
+| USB | 38 | 9 | 1,0 | 10 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 24 |
-| Outillage PC | 326 | — | 1,9 | 113 |
-| Transverse (projet) | 2 113 | — | — | 65 |
-| Traduction anglaise (docs/en) | 2 478 | — | — | 28 |
-| **Total** | 8 067 | 308 | 5,8 | 189 |
+| Outillage PC | 328 | — | 1,9 | 113 |
+| Transverse (projet) | 2 136 | — | — | 66 |
+| Traduction anglaise (docs/en) | 2 524 | — | — | 29 |
+| **Total** | 8 186 | 309 | 5,9 | 190 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 189 commits du 2026-10-04 au 2026-10-24.
+Historique : 190 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 49 150 lignes de code écrites dans `progs/`, 54 635 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 50 122 lignes de code écrites dans `progs/`, 55 694 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -891,6 +893,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-24 | PRINT | 0.9 | 1 311 | 312 | 1 623 | 183 | GRAPHER : `PRINT` à plusieurs éléments, `;` final ; `ECHO "..."` dans la console |
 | 2026-10-24 | EDSPRITE | 0.9 | 1 376 | 328 | 1 704 | 188 | `EDSPRITE.COM` : éditeur plein écran des sprites et caractères `.SPR` |
 | 2026-10-24 | EDSPRITE 2 | 0.9 | 1 379 | 329 | 1 708 | 189 | EDSPRITE : curseur toujours clignotant, grisé sombre, ligne d'aide, Détourer, tuiles en motif |
+| 2026-10-24 | MKTAP | 0.9 | 1 384 | 330 | 1 714 | 191 | `MKTAP.COM` et `tools/mktap.py` : `.TAP` pour l'Oric sous BASIC (blocs, démarrage automatique, chargeur BASIC) ; `test_mktap.sh` |
 
 ## 11. Comparaisons
 

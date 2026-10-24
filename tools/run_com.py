@@ -126,6 +126,14 @@ def main():
                         mem[dma:dma+128] = blk; f[2] += 128
                 elif x == 21:
                     files[adr][3] += mem[dma:dma+128]
+                elif x == 35:       # taille en enregistrements -> R0-R2
+                    n = (len(files[adr][1]) + 127) // 128
+                    mem[adr+33] = n & 255; mem[adr+34] = n >> 8; mem[adr+35] = 0
+                elif x == 33:       # lecture directe de l'enregistrement R0-R1
+                    f = files[adr]; r = mem[adr+33] | mem[adr+34] << 8
+                    blk = f[1][r*128:r*128+128]
+                    if not blk: m.a = 6
+                    else: mem[dma:dma+128] = blk + b'\x1a' * (128 - len(blk))
                 elif x == 16:
                     f = files.get(adr)
                     if f and f[3] is not None: open(f[0], 'wb').write(f[3])

@@ -71,6 +71,8 @@ Other programs on the disk:
 - `DEBUG.COM NAME`, the monitor, disassembler and single-stepper.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, described above.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM`: file exchange with the LOCI's USB stick.
+- `MKTAP.COM NAME file adr [/R]...`: `.TAP` file for the Oric under BASIC (see "Publishing for
+  the Oric under BASIC").
 - `TERM.COM [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]`: copies a disk, or its system.
@@ -262,8 +264,8 @@ visible.
 |---|---|---|---|
 | `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
 | `build/cpa-notes-en.dsk` | EDIT | | |
-| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, MKTAP, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
@@ -496,6 +498,46 @@ These commands go through the interface the LOCI offers the 6502, that of the Pi
 the workshop's Oricutron simulates this interface on a folder of the PC: `ORIC_LOCI=folder`
 (see "Tools"), or the line `loci = '~/Oric/loci'` in `oricutron.cfg` (the folder must exist,
 with its subfolder `int` for `0:`).
+
+## Publishing for the Oric under BASIC: MKTAP
+
+`MKTAP` makes a `.TAP` file: a tape that any Oric Atmos loads with `CLOAD""`, without CP/A or
+a disk (BASIC ROM 1.1). The program is first assembled for its address under BASIC
+(`*= $8000`, for instance), then:
+
+    A>MKTAP GAME GAME.COM 8000 /R
+    GAME     8000-84D1 /R
+    GAME.TAP written
+    A>MKTAP GAME GAME.COM 8000 /R MAP.DAT 9800
+    GAME     0501-0516 BASIC
+    GAME     8000-84D1 /R
+    MAP      9800-9BFF
+    GAME.TAP written
+
+| Item | Role |
+|---|---|
+| `NAME` | the file written, `NAME.TAP` (type `.TAP` by default, drive allowed) |
+| `file adr` | one block per file, loaded at `adr` (hexadecimal, `$` allowed), named after the file without its type; 8 files at most |
+| `,len` | length of the block (hexadecimal); without it, the size of the file minus the `^Z` that fill its last record (the STAT and EXPORT rule); it may go up to the raw size (whole records), for data that really ends with `$1A` |
+| `/R` | this block is run after loading (once only) |
+
+- A single block with `/R`: it carries the auto-run mark; `CLOAD""` loads and runs it.
+- Several blocks with `/R`: MKTAP puts a small BASIC program first, named like the `.TAP` and
+  run by itself: `10 CLOAD"":CLOAD"":CALL#8000` (one `CLOAD""` per block, then the call of the
+  `/R` block). A single `CLOAD""` is therefore enough; the BASIC program stays in memory
+  (`LIST`, editable).
+- Without `/R`: each block is loaded by its own `CLOAD""`, then `CALL#adr`.
+- Checks, before anything is written: each block within `$0500-$BFFF` (the BASIC RAM, text
+  screen included), no overlap (the BASIC loader included, at `$0501`), a non-zero length.
+- The code that is run lives under the Oric's ROM: no CP/A BDOS or BIOS (`JSR $0203`, `$C000`),
+  no files; an `RTS` returns to BASIC. Under BASIC, a BASIC program uses `$0501-$97FF`, and
+  page 2 and the zero page belong to the ROM (`docs/oric-basic.md` § 1).
+- A `.COM` written by ASM ends with zeros (the fill of its last record): they are loaded too,
+  with no effect; `,len` removes them.
+- Transport: `EXPORT GAME.TAP` to the LOCI's USB stick, tape mounted from the LOCI menu, then
+  `CLOAD""`. EXPORT removes the `^Z` that fill the `.TAP` (MKTAP first adds a 0 byte if the
+  last useful byte is `$1A`). In Oricutron: `-t GAME.TAP`.
+- On the PC, `tools/mktap.py` does the same with files of the PC (same arguments).
 
 ## Serial terminal: TERM
 
@@ -1158,6 +1200,9 @@ Text files (`.ASM`, `.INC`, `.LOG`, `.GRX`, `.TXT`, `.BAT`, `.CFG`, `.DOC`, `.SU
 file written on the Mac, with LF only, would otherwise show as a staircase in EDIT and TYPE.
 Other types are copied as they are.
 
+`tools/mktap.py` makes a `.TAP` on the PC, like MKTAP on the Oric ("Publishing for the Oric
+under BASIC").
+
 Pictures and animations made on the PC: `tools/png2hir.py` (PNG or JPEG -> `.HIR`, `.IMG` with
 `--split`, `.HIZ` with `--hiz`), `tools/mkanim.py` (GIF -> `.ANI`); see "Full-screen HIRES". The
 other tools (building, tests, emulators) are described in `docs/atelier.md` (in French).
@@ -1195,6 +1240,13 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   IMPORT; `/T` changes a lone LF into CR LF and TAB into a space. A `.DSK` is refused on EXPORT
   (it would overwrite the image in use). Transfers in 128-byte records. MIA API
   (`$03A0-$03B9`): `loci-rom/src/asminc/loci.inc`.
+- **MKTAP** checks every block (size by function 35, last record read by function 33 to
+  remove its `^Z`, ranges, overlaps) before creating the `.TAP`, then copies each file byte by
+  byte, record by record. Disk full: the started `.TAP` is erased. The BASIC loader is
+  tokenised (`CLOAD` = `$B6`, `CALL` = `$BF`, table of ROM 1.1); its block is one byte longer
+  than the program, because the ROM takes the end of the block as the start of the variables.
+  `tools/test_mktap.sh`: MKTAP.COM against `mktap.py`, then loading under BASIC 1.1 in
+  Oricutron.
 - **EDIT**: exactly 8,192 bytes (any addition costs a 2 KB block; 842 bytes of buffers could
   leave the file). `/L`: the Quitter item becomes Retour (back to LOGO).
 - **ASM** writes the code during pass 2, record by record (`wput`): memory is only used for the

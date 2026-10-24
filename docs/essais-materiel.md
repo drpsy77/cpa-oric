@@ -88,6 +88,19 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
+**MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
+
+- Sur `cpa-asm.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire
+  un petit `TAPTEST.ASM` (`*= $9000`, quelques `STA $BB80+...` pour afficher un texte, puis
+  `RTS`), `ASM TAPTEST`, puis `MKTAP TAPTEST TAPTEST.COM 9000 /R` et `EXPORT TAPTEST.TAP`.
+  Redémarrer l'Oric en BASIC, monter `taptest.tap` comme cassette dans le menu du LOCI,
+  `CLOAD""` : le texte doit s'afficher tout seul, puis `Ready`.
+- Chargeur BASIC : `MKTAP TAP2 TAPTEST.COM 9000 /R TAPTEST.ASM 8000` (deux blocs), même
+  chemin, un seul `CLOAD""` : les deux blocs se chargent, le texte s'affiche ; puis `LIST`
+  montre `10 CLOAD"":CLOAD"":CALL#9000`, et une ligne tapée (`20 A=1`) s'ajoute normalement.
+- Si quelqu'un a un **Oric-1** (ROM 1.0) : le même `.TAP` (format et mots-clés supposés
+  identiques, jamais vérifié).
+
 ## À vérifier ailleurs
 
 - **Vrai Microdisc** (chez un ami de Pierre, qui n'en a pas) : FORMAT, DISKCOPY, attributs et COPY avec jokers ; premier accès après

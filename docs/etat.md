@@ -35,11 +35,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 288 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 279 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
+| MKTAP | 2 301 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique ou chargeur BASIC | `manuel.md`, `oric-basic.md` |
 | TERM | 762 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
@@ -59,7 +60,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 311 points de fonction IFPUG et 312 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 384 points de fonction IFPUG et 330 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -94,9 +95,14 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      `.ASM` de ~130 Ko pendant l'assemblage. Bon cas d'essai pour la limite de 20 Ko et pour
      `RUN` : la génération d'un niveau, programme à part, écrit le niveau dans des fichiers
      de données que le jeu relit.
-3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM`, `tools/mktap.py` et
-   `CASSETTE.COM` (décidés), puis une boîte à outils appelée par `!` depuis le BASIC, ou
-   GRXASM vers un programme autonome (`.TAP`) ; ordre à choisir.
+3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
+   faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
+   a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
+   - Suite : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP` autonome pour un
+     Oric seul, sur un socle `ORIC.INC` qui remplace `CPA.INC` (routines de CP/A recopiées,
+     aucun appel à la ROM ; `docs/oric-basic.md` § 3 et 4) ; puis `CASSETTE.COM` (décidé).
+   - Écartés : la boîte à outils appelée par `!` depuis le BASIC et la traduction de
+     GRAPHER en BASIC (`docs/oric-basic.md` § 5).
    - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
      - **`USBMOUNT`** (nom choisi) : une seule commande pour monter un fichier de la clé du
        LOCI depuis CP/A, sans repasser par son menu ; le type du fichier dit quoi faire.
@@ -420,8 +426,8 @@ multiple de 2 048) :
 - GRAPHER (17 756 octets) prend 9 blocs, 676 octets libres dans le dernier ; piste de
   place : messages d'erreur par numéro, ~40 octets. GRXASM (15 175) prend 8 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 288) prend 6 blocs, **plein** : une rubrique de plus coûte un bloc ou des
-  textes raccourcis (la rubrique EDSPRITE a été taillée pour y tenir). EDSPRITE (8 967) prend
+  blocs, 1 844 octets libres dans le dernier. HELP (12 279) prend 6 blocs, **plein** à 9 octets près : une rubrique de plus coûte un bloc ou des
+  textes raccourcis (la rubrique EDSPRITE et la ligne de TERM ont été taillées pour y tenir). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
