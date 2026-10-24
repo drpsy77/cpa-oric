@@ -1,11 +1,13 @@
 ; =====================================================================
 ;  TERM.COM — petit terminal série : parler au modem WiFi et aux serveurs
 ;
-;  TERM [/E] [/D] [/B]
+;  TERM [/E] [/L] [/D] [/B]
 ;    Ce qu'on tape part vers le port série ; ce qui arrive s'affiche.
 ;    CTRL-Q : quitter (la liaison reste ouverte : DTR reste actif).
 ;    /E     : écho local (pour un serveur qui ne renvoie pas les
 ;             caractères ; le modem, lui, les renvoie en mode commande).
+;    /L     : RETURN envoie CR LF au lieu de CR seul (serveurs qui
+;             attendent LF, comme nc).
 ;    /D     : diagnostic : registres état, commande et contrôle relus
 ;             avant et après le réglage, puis chaque changement de l'état
 ;             affiché entre crochets ([10] : émetteur libre, [18] : un
@@ -35,7 +37,10 @@
 ;  ce temps le LOCI garde ce qui arrive (il ne lit le modem que s'il a
 ;  de la place : rien n'est perdu).
 ;  Reçu : affiché par CONOUT (CR, LF, BS, FF, TAB compris ; autres codes
-;  de contrôle et octets >= 128 ignorés). La pause en fin d'écran est
+;  de contrôle et octets >= 128 ignorés). Un CR est affiché en CR LF (un
+;  serveur qui ne renvoie que CR, ou l'écho local de RETURN, passe bien à
+;  la ligne) ; un LF qui suit aussitôt un CR est sauté (pas de ligne vide
+;  avec ceux qui envoient CR LF). La pause en fin d'écran est
 ;  coupée pendant TERM (elle bloquerait la réception) puis rendue.
 ; =====================================================================
 
@@ -48,6 +53,8 @@ savpg   = $13           ; PAGE_ON à rendre
 cnt     = $14           ; compteur d'attente (2 octets)
 diag    = $16           ; 1 = diagnostic (/D)
 last    = $17           ; dernier état affiché (/D)
+wascr   = $18           ; 1 = le dernier caractère affiché était un CR
+crlf    = $19           ; 1 = RETURN envoie CR LF (/L)
 
 ; registres de l'ACIA (base + 0 à 3) : données, état (bit 3 : reçu,
 ; bit 4 : émetteur libre, bit 6 : pas de DSR), commande, contrôle
@@ -62,7 +69,9 @@ start
         sta echo
         sta diag
         sta blind
-        ldx #0                  ; options /E, /D, /B
+        sta wascr
+        sta crlf
+        ldx #0                  ; options /E, /L, /D, /B
 op      lda TAIL+1,x
         beq opd
         cmp #"/"
@@ -77,8 +86,11 @@ op2     cmp #"D"
         bne op3
         sty diag
 op3     cmp #"B"
-        bne opn
+        bne op4
         sty blind
+op4     cmp #"L"
+        bne opn
+        sty crlf
 opn     inx
         bne op
 opd     jsr loci_chk
@@ -179,8 +191,17 @@ send    pha
         jsr txwait
         pla
         bcs lost
+        jsr w_data              ; (A gardé)
+        cmp #13                 ; /L : LF après CR
+        bne s9
+        ldx crlf
+        beq s9
+        jsr txwait
+        bcs lost
+        lda #10
         jsr w_data
-        ldx echo
+        lda #13
+s9      ldx echo
         beq loop
         jsr show
         jmp loop
@@ -192,10 +213,13 @@ lost    lda #<m_lost
 
 quit    lda savpg
         sta PAGE_ON
+        lda wascr               ; déjà en début de ligne : rien
+        bne qr
         lda #13
         jsr B_CONOUT
         lda #10
         jmp B_CONOUT
+qr      rts
 .)
 
 ; dregs : (/D) affiche « ACIA ee cc kk » : état, commande, contrôle
@@ -246,10 +270,29 @@ n       adc #"0"
         jmp B_CONOUT
 .)
 
-; show : affiche le caractère reçu A (CONOUT ignore les codes inutiles)
+; show : affiche le caractère reçu A (CONOUT ignore les codes inutiles) ;
+;   CR -> CR LF, LF qui suit aussitôt un CR sauté
 show
+.(
         and #$7F
+        ldx #0
+        cmp #10
+        bne s1
+        ldy wascr
+        stx wascr
+        beq out                 ; LF seul : affiché
+        rts                     ; LF après CR : déjà fait
+s1      cmp #13
+        bne s2
+        inx
+s2      stx wascr
+        cpx #1
+        beq cr
+out     jmp B_CONOUT
+cr      jsr B_CONOUT
+        lda #10
         jmp B_CONOUT
+.)
 
 ; txwait : attend que l'émetteur soit libre ; C=1 s'il ne l'est pas après
 ;   ~0,3 s (modem débranché : le LOCI ne vide plus le registre).

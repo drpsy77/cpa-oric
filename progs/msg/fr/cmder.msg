@@ -108,7 +108,7 @@ it_sys  .asc "Cacher SYS ",0
         .asc "Echanger      ^W",0
         .byt MA_TYPE
         .word c9c
-        .asc "Autre col.   TAB",0
+        .asc "Autre col.    ^I",0
         .byt MA_TYPE
         .word c9d
 

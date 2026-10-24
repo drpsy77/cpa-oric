@@ -17,7 +17,7 @@ own reference (`grapher.md`, `logo.md`), and so does CMDER (`cmder.md`). Interfa
 | `DIRS [afn]` | like DIR, SYS files included |
 | `TYPE file` | shows a text file (a key interrupts it) — TYPE.COM |
 | `ERA afn [/Q]` | erases: shows the target files and asks `Erase n file(s) (Y/N) ?` (read-only files are kept); `/Q` without asking, for a script — ERA.COM |
-| `REN new=old` | renames — REN.COM |
+| `REN old new` | renames — REN.COM; also `REN new=old`, the CP/M order |
 | `SAVE n file` | saves n pages of 256 bytes from `$0500` |
 | `GSAVE file`, `GLOAD file` | saves / loads the SPLIT mode picture (type `.IMG` by default) |
 | `PUT file command [parameters]` | runs the command, copying everything it displays into the file |
@@ -68,7 +68,7 @@ Other programs on the disk:
 - `DEBUG.COM NAME`, the monitor, disassembler and single-stepper.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, described above.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM`: file exchange with the LOCI's USB stick.
-- `TERM.COM [/E]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
+- `TERM.COM [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]`: copies a disk, or its system.
 
@@ -195,7 +195,7 @@ part of the list. A disk error is shown on line 26 (`Disk error : check the disk
 instead of the BDOS message in the middle of the screen.
 
 **Two panels**: `CMDER A: B:` (one filter per drive: `CMDER A:*.COM B:`) shows two disks side
-by side (name, type, size in KB); the header of the active panel is in reverse video. TAB goes
+by side (name, type, size in KB); the header of the active panel is in reverse video. `^I` goes
 to the other panel, `^W` swaps their places, `^Z` puts the active panel in full screen (and
 back). Copy proposes the drive of the other panel (RETURN is enough) and checks the space first
 (`Free 14K, needed 18K : Y/N ?`). View menu, "Not on other": the panel
@@ -315,7 +315,7 @@ way.
 | SHIFT-↑ / SHIFT-↓ | previous / next page |
 | CTRL-↑ / CTRL-↓ | start / end of the text (of the file, of the list) |
 | CTRL-← / CTRL-→ | previous / next word (EDIT) |
-| CTRL-I | TAB: complete a name, change zone or panel (EDIT: insert a file) |
+| CTRL-I (`^I`) | tab: complete a name, change zone or panel (EDIT: insert a file) |
 | CTRL-SPACE | mark one end of the block (EDIT); ESC removes the mark |
 | CTRL-X / CTRL-C / CTRL-V | cut / copy / paste (CMDER: move / copy) |
 | CTRL-F / CTRL-G | find / next |
@@ -331,7 +331,7 @@ through the BDOS (function 10: LOGO, DEBUG…):
 |---|---|
 | ← / → | move the cursor in the line; what you type is inserted |
 | ↑ / ↓ | lines already entered (history), from the most recent to the oldest |
-| TAB (CTRL-I) or ESC | complete the file name that ends at the cursor; at the start of the line, the command |
+| `^I` (CTRL-I) or ESC | complete the file name that ends at the cursor; at the start of the line, the command |
 | DEL / CTRL-D | erase to the left / under the cursor |
 | SHIFT-← / SHIFT-→, CTRL-A / CTRL-E | start / end of the line |
 | CTRL-U | erase the whole line |
@@ -342,7 +342,7 @@ The history keeps the last lines (256 bytes, about twenty short commands); it su
 start, and a line identical to the previous one does not go in twice.
 
 Completion is inspired by the C shell's `filec`, which already completed with ESC — a key
-placed on the Oric where a PC keyboard has its TAB key; TAB (CTRL-I) does the same, as in
+placed on the Oric where a PC keyboard has its TAB key; `^I` (CTRL-I) does the same, as in
 today's shells. `TYPE REA` + ESC gives `TYPE README.TXT ` (with the space, ready for what comes
 next). If several files match, ESC adds the common part (`DIR HELL` → `DIR HELLO.`); if
 nothing can be added, ESC displays the possible names and rewrites the line below. Without
@@ -505,6 +505,7 @@ that the LOCI presents as a 6551 ACIA at `$0380`; without a LOCI, it is Oricutro
 |---|---|
 | `TERM` | terminal (9600 baud, 8 bits, no parity, 1 stop bit) |
 | `TERM /E` | local echo: also shows what you type (for a peer that does not send it back, such as `nc` on the Mac; the modem itself echoes it in command mode) |
+| `TERM /L` | RETURN sends CR LF instead of CR alone (for a peer that expects LF, such as `nc`: `TERM /E /L`) |
 | `TERM /D` | diagnostics: ACIA registers (status, command, control) read back before and after set-up (after: command `0B`, control `1E`), then each change of the status in brackets (`[10]` transmitter free, `[18]` character received, bit 6 (`$40`): no modem) |
 | `TERM /B` | "blind" sending: each character goes out without waiting for the ACIA to report the transmitter free (fixed pause of about 3 ms); used to check writes when ACIA reads are wrong (`TERM /B /E`, `ATDT-` to `nc` on the Mac) |
 | CTRL-Q | quits; the link stays up (DTR stays active) |
@@ -524,6 +525,9 @@ without telnet), `+++` with a one-second pause before and after (back to command
 
 - `No modem (DSR) : plug the Pico in`: the LOCI sees no USB modem; TERM stays open, and
   `Modem silent : character lost` is shown if you type.
+- What arrives: a CR is shown as CR LF (a peer that sends back only CR, and the local echo
+  of RETURN, do go to the next line); a LF right after a CR is skipped (no blank line with
+  those that send CR LF).
 - TERM only accesses the ACIA registers with absolute `LDA` / `STA`: an indexed write
   (`STA (zp),Y`, and `POKE` in BASIC) reads the address before writing it, and an ACIA read
   has side effects (the data register consumes the received byte).
@@ -908,7 +912,7 @@ type.
 | CTRL-↑ / CTRL-↓ | start / end of the file |
 | CTRL-L | go to an address (in hex) |
 | CTRL-F / CTRL-G | find / next |
-| TAB (CTRL-I) | edit in hex or in ASCII |
+| `^I` (CTRL-I) | edit in hex or in ASCII |
 | CTRL-S / CTRL-R | save / reload |
 | ESC or CTRL-Q | quit (confirmation if the file is modified) |
 | FUNCT | menus File (Save, Reload, Quit), Go to (Top, End, Address..., Find..., Next), Mode (Hex/ASCII) |
@@ -1164,8 +1168,8 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   left alone (`: file protected`); partial copy erased if the disk is full.
 - **ERA**: collects and shows the target files, counts the read-only ones (kept: function 19
   spares them), always asks for confirmation (`/Q` for scripts).
-- **REN**: CP/M 2.2 syntax `new=old`; refused if the new one exists, if the old one is
-  read-only or not found.
+- **REN**: without `=`, the order of COPY (`REN old new`); with `=`, that of CP/M 2.2
+  (`REN new=old`); refused if the new one exists, if the old one is read-only or not found.
 - **SET** takes the drive from the name (`SET B:NAME RO`).
 - **Attributes**: R/O protects, SYS hides from DIR; that is all. The commands on the disk
   provided are R/O and visible; the examples have no attribute. Set by `mkdisk.py` (lists in
