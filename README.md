@@ -108,7 +108,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/etat.md` | project status, what comes next, space reserves |
 | `docs/projet-rom.md` | the ROM version |
-| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (specification) |
+| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games, routines for BASIC later (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |

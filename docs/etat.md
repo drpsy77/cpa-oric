@@ -101,8 +101,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - Suite : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP` autonome pour un
      Oric seul, sur un socle `ORIC.INC` qui remplace `CPA.INC` (routines de CP/A recopiées,
      aucun appel à la ROM ; `docs/oric-basic.md` § 3 et 4) ; puis `CASSETTE.COM` (décidé).
-   - Écartés : la boîte à outils appelée par `!` depuis le BASIC et la traduction de
-     GRAPHER en BASIC (`docs/oric-basic.md` § 5).
+   - Plus tard : la boîte à outils appelée par `!` depuis le BASIC (`docs/oric-basic.md`
+     § 5). Écartée : la traduction de GRAPHER en BASIC (§ 6).
    - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
      - **`USBMOUNT`** (nom choisi) : une seule commande pour monter un fichier de la clé du
        LOCI depuis CP/A, sans repasser par son menu ; le type du fichier dit quoi faire.
