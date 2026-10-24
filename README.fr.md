@@ -107,6 +107,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
+| `docs/editeur-sprites.md` | éditeur de sprites et de caractères (spécification) |
 | `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP`, routines pour le BASIC, jeux GRAPHER autonomes (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
