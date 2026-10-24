@@ -37,7 +37,17 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 - **Règle des espaces** : l'espace sépare les paramètres ; une expression parmi plusieurs
   paramètres ne contient donc pas d'espace, sauf entre parenthèses
   (`LINE X 0 (239 - X) 199`). Une expression seule en fin de ligne (`X = ...`, `IF`,
-  `WHILE`, `PRINT`) peut en contenir.
+  `WHILE`) peut en contenir, comme les éléments de `PRINT`.
+- **Afficher** : `PRINT e1 e2 ...` écrit à la suite des nombres (calculs), des chaînes
+  (`A$`, `M$(l)`) et des textes entre guillemets, sans rien entre eux : `PRINT "V= " V`,
+  `PRINT A " " B`. Les éléments se séparent par des espaces ; un calcul s'arrête là où il ne
+  peut plus continuer (`PRINT A - B " points"`). Dans la console (`TEXT`, `SPLIT`), `PRINT`
+  passe à la ligne à la fin, sauf avec un `;` final (`PRINT "Total : " ;`, puis
+  `PRINT T`) ; pour un commentaire après, `;;` (`PRINT X ;; reste sur la ligne`). En LORES,
+  il ne passe jamais à la ligne (§ 7) ; en HIRES plein écran, il n'affiche rien. `PRINT`
+  seul passe à la ligne. Une chaîne suivie de `=`, `<` ou `>` est une comparaison
+  (`PRINT A$ = B$` affiche 1 ou 0). `ECHO texte` écrit le texte de la ligne, puis passe à la
+  ligne dans la console ; entre guillemets, le texte seul, espaces compris.
 
 ## 3. Nombres, variables, expressions
 
@@ -130,7 +140,7 @@ où il veut.
 | `SCRN(col,lig)` | fonction : l'octet de la case |
 | `ECHO texte` | écrit le texte au curseur, qui avance. Sans guillemets, les espaces du début sont sautés ; entre guillemets, le texte est pris tel quel (`ECHO "  Score : "`) |
 | `ECHO` (seul) | colonne 0 de la ligne suivante ; après la ligne 27 : ligne 0 ; rien n'est effacé |
-| `PRINT expr`, `PRINT A$` | écrit le nombre ou la chaîne au curseur, sans passer à la ligne |
+| `PRINT e1 e2 ...` | écrit au curseur, à la suite, nombres, chaînes et textes entre guillemets (`PRINT "Score : " S`), sans passer à la ligne |
 | `SPC n [x]` | écrit n fois l'octet x (32 par défaut) : effacer, remettre l'attribut 16, tracer un trait |
 | `TAB n` | avance le curseur de n colonnes sans rien écrire (relatif : `LOCATE` donne la colonne absolue) |
 | `PRINTV`, `ECHOV`, `SPCV` | comme `PRINT`, `ECHO` et `SPC`, mais le curseur **descend** : un caractère par ligne, dans la même colonne (une colonne de chiffres, un mot vertical, un mur : `SPCV 20 35`). `ECHOV` seul : ligne 0 de la colonne suivante |
@@ -410,13 +420,14 @@ tableau `$` à deux dimensions (`N$(12,10)` : 10 noms de 12 caractères au plus)
 | `A$ = "texte"`, `A$ = B$`, `M$(I) = A$` | affectation ; le reste de la capacité est mis à 0 ; trop long : `chaine trop longue` |
 | `=` `<>` `<` `<=` `>` `>=` | comparaison de deux chaînes ou d'une chaîne et d'un texte (`IF R$ = "O"`), dans l'ordre des codes (`"AB" < "ABC"`) ; 1 ou 0 |
 | `LEN(A$)`, `LEN(M$(I))` | longueur |
-| `PRINT A$` | en LORES : au curseur, codes 0-31 écrits tels quels (une ligne de niveau garde ses couleurs). Dans la console : codes 0-31 remplacés par un espace, puis passage à la ligne. `PRINT A$ = B$` affiche la comparaison |
+| `PRINT A$` | en LORES : au curseur, codes 0-31 écrits tels quels (une ligne de niveau garde ses couleurs). Dans la console : codes 0-31 remplacés par un espace. Avec d'autres éléments : `PRINT "Nom : " A$` (§ 2). `PRINT A$ = B$` affiche la comparaison |
 | `INPUT A$`, `INPUT M$(I)` | saisie. En LORES : au curseur (case en vidéo inverse), caractères 32-126, DEL efface, RETURN valide, arrêt à la capacité ou au bord droit. Ailleurs : saisie de ligne de la console, coupée à la capacité |
 | `INPUT V` | entier de -32768 à 32767 : chiffres et `-`, 6 caractères au plus ; vide ou hors limites : un son, et on recommence |
 | `FILL A v`, `FILL M$ 32` | tout le tableau à v |
 
 - Une chaîne ne se mélange pas aux calculs (`chaine dans un calcul`). Il n'y a ni
-  concaténation ni conversion : on enchaîne `ECHO` et `PRINT`.
+  concaténation ni conversion en mémoire ; à l'affichage, `PRINT` met bout à bout textes,
+  nombres et chaînes (§ 2).
 - `ECHO` n'écrit que le texte du programme (`ECHO A$` écrit « A$ »).
 - Un attribut 0 ne peut pas être affiché par `PRINT` (c'est la fin de chaîne) : on l'écrit par
   `CHAR` ou `M$(X,Y) = 0`.
@@ -686,14 +697,14 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (17 686 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (17 756 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas ; `TILESET`, (larg × haut + 1)
   pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
-  17 Ko (texte à partir de `$59BF`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  17 Ko (texte à partir de `$5A05`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
   ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
 - **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
   tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au

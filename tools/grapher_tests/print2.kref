@@ -1,0 +1,12 @@
+PRINT2.ASM ecrit : ASM PRINT2
+V= 42
+V= 42 suite
+abc / 43 1
+
+42
+abc
+0
+-8442
+  avec espaces  
+sans guillemets
+fin

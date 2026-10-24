@@ -350,7 +350,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.T03 | DIM (deux dimensions en colonne, ligne) | EI | 1 | 4 | F | 3 |
 | GRA.T04 | FILL | EI | 1 | 2 | F | 3 |
 | GRA.T05 | INPUT (chaîne ou entier) | EI | 1 | 2 | F | 3 |
-| GRA.T06 | PRINT | EO | 1 | 1 | F | 4 |
+| GRA.T06 | PRINT : plusieurs éléments (nombres, chaînes, textes), « ; » final | EO | 1 | 3 | F | 4 |
 | GRA.T07 | GNUM : nombre dans l'image | EO | 2 | 3 | F | 4 |
 | GRA.T08 | ECHO | EO | 0 | 1 | F | 4 |
 | GRA.T09 | Mode d'écran : HIRES, SPLIT, TEXT, LORES | EI | 1 | 1 | F | 3 |
@@ -753,9 +753,9 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 605 | 10 % | 37 307 | 35 | 116 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 619 | 10 % | 37 415 | 35 | 116 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 22 | 13 062 | 1 006 | 427 | 0 | 7 % | 32 727 | 57 | 143 |
+| GRAPHER + GRXASM | 22 | 13 167 | 1 024 | 428 | 0 | 7 % | 32 931 | 57 | 144 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
@@ -764,16 +764,16 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 167 | 7 512 | 856 | 481 | 0 | 10 % | — | 43 | — |
-| **Total** | 336 | 61 799 | 5 006 | 2 519 | 2 521 | 7 % | 135 819 | 47 | 104 |
+| Outillage PC | 169 | 7 542 | 858 | 481 | 0 | 10 % | — | 43 | — |
+| **Total** | 338 | 61 934 | 5 026 | 2 520 | 2 535 | 8 % | 136 131 | 47 | 104 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 304 | 78 | 4,0 | 72 |
+| Système et commandes | 1 304 | 78 | 4,0 | 73 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 863 | 69 | 3,8 | 36 |
+| GRAPHER + GRXASM | 874 | 69 | 3,8 | 37 |
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 12 |
 | HEX | 34 | 9 | 1,8 | 4 |
@@ -781,17 +781,17 @@ Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, 
 | USB | 38 | 9 | 1,2 | 10 |
 | ASM | 58 | 10 | 6,4 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 23 |
-| Outillage PC | 326 | — | 1,9 | 110 |
-| Transverse (projet) | 2 049 | — | — | 60 |
-| Traduction anglaise (docs/en) | 2 328 | — | — | 24 |
-| **Total** | 7 699 | 294 | 5,9 | 181 |
+| Exemples | 0 | — | 0,0 | 24 |
+| Outillage PC | 326 | — | 1,9 | 111 |
+| Transverse (projet) | 2 054 | — | — | 61 |
+| Traduction anglaise (docs/en) | 2 339 | — | — | 25 |
+| **Total** | 7 726 | 294 | 5,9 | 182 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 181 commits du 2026-10-04 au 2026-10-24.
+Historique : 182 commits du 2026-10-04 au 2026-10-24.
 
-Réutilisation : 45 084 lignes de code écrites dans `progs/`, 50 497 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 45 189 lignes de code écrites dans `progs/`, 50 587 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,12 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -848,6 +848,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-24 | sûreté disque | 0.9 | 1 307 | 312 | 1 619 | 180 | pilote : contrôleur muet -> erreur disque ; EDIT relit tout fichier qu'il a écrit ; `test_fdc.py` |
 | 2026-10-24 | petites corrections | 0.9 | 1 307 | 312 | 1 619 | 181 | REN dans l'ordre de COPY ; TERM : CR affiché en CR LF, `/L` ; HIRES : 3 lignes du bas noires ; erreur d'un traduit après HIRES ; `^I` dans les menus |
 | 2026-10-24 | tableaux (col, lig) | 0.9 | 1 311 | 312 | 1 623 | 182 | GRAPHER : tableaux à deux dimensions en (colonne, ligne) ; `grx_colig.py` |
+| 2026-10-24 | PRINT | 0.9 | 1 311 | 312 | 1 623 | 183 | GRAPHER : `PRINT` à plusieurs éléments, `;` final ; `ECHO "..."` dans la console |
 
 ## 11. Comparaisons
 

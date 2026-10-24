@@ -35,7 +35,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 11 710 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 11 861 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
@@ -49,7 +49,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 963 | Logo (français, ou anglais sur les disquettes anglaises : 18 758) : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | LOGOTR | 4 402 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
-| GRAPHER, GRXASM | 17 686, 15 041 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran | `grapher.md` |
+| GRAPHER, GRXASM | 17 756, 15 175 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -222,8 +222,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      français) ; GRAPHER, GRXASM (et les commentaires du `.ASM` produit) et les
      bibliothèques des programmes traduits : `GRX.INC`, `ARR.INC`, `FIL.INC`, `SPR.INC`,
      `ANIM.INC` (VOIR compris) en deux langues, `build/src` et `build/src-en`, messages
-     recopiés par `strip_inc.py` (`architecture.md` § 5) ; GRAPHER 17 615 octets en
-     anglais, GRXASM 14 998. `tools/test_asm.sh` assemble aussi
+     recopiés par `strip_inc.py` (`architecture.md` § 5) ; GRAPHER 17 685 octets en
+     anglais, GRXASM 15 132. `tools/test_asm.sh` assemble aussi
      les programmes traduits avec leurs messages anglais ; `LANGUE=en
      tools/test_grapher.sh` compare GRAPHER et GRXASM anglais aux références françaises
      traduites par les fichiers de messages (`tools/msg_fr_en.py`).
@@ -417,10 +417,10 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 686 octets) prend 9 blocs, 746 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 041) prend 8 blocs ;
-  GRX.INC (11 073 octets sur la disquette, marques `;@` et messages compris) prend 6
-  blocs, 1 215 octets avant le 7e. HELP (11 710) prend 6 blocs. Les disquettes se spécialisent plutôt
+- GRAPHER (17 756 octets) prend 9 blocs, 676 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 175) prend 8 blocs ;
+  GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
+  blocs, 1 844 octets libres dans le dernier. HELP (11 861) prend 6 blocs. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 243 octets de code avant la page suivante, 71 en

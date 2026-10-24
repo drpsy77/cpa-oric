@@ -809,7 +809,15 @@ c_echo
         cmp #200
         beq r
         jsr skipsp
+        ldy #0                  ; entre guillemets : le texte seul, comme
+        cmp #34                 ;   en LORES
+        bne q0
+        tay
+        inx
+q0      sty gd
 loop    lda lbuf,x
+        beq end
+        cmp gd                  ; (gd = 0 : jamais égal)
         beq end
         stx lx
         ldx #F_CONOUT
@@ -839,36 +847,58 @@ lo3     lda lbuf,x
         bne lo3
         rts
 .)
-c_print stx ex                  ; une chaîne ?
-        lda #1
-        sta edep
-        lda #0
+; PRINT e1 e2 ... [;] : nombres, chaînes, textes entre guillemets, à la
+;   suite ; dans la console, passage à la ligne à la fin, sauf avec un « ; »
+;   final (seul, ou suivi d'un autre « ; » : « PRINT V ;; commentaire »)
+c_print
+.(
+        stx ex
+item    ldx ex
+        jsr skipsp
+        beq nl
+        cmp #";"
+        beq semi
+        stx ex
+        lda #1                  ; espaces permis dans un calcul (A - B) ;
+        sta edep                ;   un calcul finit où il ne peut plus
+        lda #0                  ;   continuer
         sta vsp
-        jsr is_str
-        bcs cpn
+        jsr is_str              ; une chaîne seule (pas une comparaison) ?
+        bcs num
         jsr str_only
-        bcs cpn
+        bcs num
         jsr p_str
-        ldx ex
-        jsr endline
-        jmp r_print
-cpn     ldx ex
-        jsr lexpr
+        jsr r_pstr
+        jmp item
+num     jsr e_or
         lda h_lo
-        beq cp_c
-        jsr fmtnum              ; LORES : au curseur, sans passer à la ligne
+        beq c
+        jsr fmtnum              ; LORES : au curseur
         lda #<numbuf
         ldy #>numbuf
-        jmp h_lstr
-cp_c    lda h_lines
-        cmp #200
-        beq cp_r
+        jsr h_lstr
+        jmp item
+c       lda h_lines
+        cmp #200                ; HIRES plein écran : rien
+        beq item
         jsr fmtnum
         lda #<numbuf
         ldy #>numbuf
         jsr puts
+        jmp item
+semi    inx                     ; « ; » seul en fin de ligne : on reste
+        jsr skipsp
+        beq r
+        cmp #";"
+        beq r
+nl      lda h_lo                ; dans la console : ligne suivante
+        bne r
+        lda h_lines
+        cmp #200
+        beq r
         jmp crlf
-cp_r    rts
+r       rts
+.)
 c_end   jsr endline
         ldx sav_sp              ; comme en fin de fichier
         txs

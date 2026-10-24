@@ -43,7 +43,8 @@
 ;    r_cmp      X = 1 = 2 <> 3 < 4 <= 5 > 6 >= : gardée ? courante -> r_j
 ;    r_copy     chaîne gardée -> chaîne courante (le reste à 0)
 ;    r_print    PRINT : en LORES au curseur, rien en HIRES plein écran,
-;               sinon dans la console avec passage à la ligne
+;               sinon dans la console avec passage à la ligne ; r_pstr :
+;               de même, sans passer à la ligne
 ;    r_input    saisie dans la chaîne courante ; r_ninput : entier -> r_j
 ;    r_fill     A/Y : tout le tableau à r_j
 ;  Rectangles de l'écran (LORES : cases ; image : octets sur lignes de
@@ -802,6 +803,15 @@ r_print
         jmp BDOS
 qr       rts
 .)
+
+; r_pstr : comme r_print, sans passer à la ligne (PRINT à plusieurs
+;   éléments) ; rien en HIRES plein écran
+r_pstr  lda h_lo
+        bne r_prt
+        lda h_lines
+        cmp #200
+        bne r_prt
+        rts
 
 ; r_prt : affiche la chaîne courante ; en LORES, les codes 0-31 tels
 ;   quels (attributs) ; dans la console, remplacés par un espace

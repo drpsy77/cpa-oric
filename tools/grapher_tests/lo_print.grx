@@ -1,0 +1,15 @@
+; LORES : PRINT a plusieurs elements, PRINTV, ; sans effet
+LORES
+DIM A$(5)
+A$ = "abc"
+V = 42
+LOCATE 2 1
+PRINT "V= " V " " A$
+PRINT "+" ;
+LOCATE 2 2
+PRINT A$ = "abc" -V
+LOCATE 30 3
+PRINTV "N" V A$
+LOCATE 2 4
+ECHO "  x  " y
+PRINT 7

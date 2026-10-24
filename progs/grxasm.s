@@ -1966,27 +1966,78 @@ k_delay jsr k_pexpr
         lda #<s_delay
         ldy #>s_delay
         jmp oi
-k_print stx ex                  ; une chaîne ?
-        lda #1
+; PRINT e1 e2 ... [;] : chaque élément calcule sa valeur (g_ev) ou sa
+;   chaîne, puis l'appel qui l'affiche (g_pnum, r_pstr) ; celui du dernier
+;   est gardé (kpp) : un élément seul sans « ; » donne l'appel qui passe
+;   aussi à la ligne (g_print, r_print), sinon g_pend à la fin
+k_print
+.(
+        stx ex
+        lda #0
+        sta kpp+1
+        sta kpi
+kpit    ldx ex
+        jsr skipsp
+        beq kpnl
+        cmp #";"
+        beq kpsm
+        stx ex
+        jsr kp_fl
+        inc kpi
+        lda #1                  ; espaces permis dans un calcul (A - B)
         sta edep
         lda #0
         sta vsp
-        jsr is_str
-        bcs kpn
+        jsr is_str              ; une chaîne seule (pas une comparaison) ?
+        bcs kpnum
         jsr str_only
-        bcs kpn
+        bcs kpnum
         jsr k_str
-        ldx ex
-        jsr endline
-        lda #<s_rprint
-        ldy #>s_rprint
-        jmp oi
-kpn     ldx ex
-        jsr k_lexpr
+        lda #<s_rpstr
+        ldy #>s_rpstr
+        bne kpend
+kpnum   jsr k_or
         jsr k_mat
-        lda #<s_print
-        ldy #>s_print
+        lda #<s_pnum
+        ldy #>s_pnum
+kpend   sta kpp
+        sty kpp+1
+        jmp kpit
+kpsm    inx                     ; « ; » seul en fin de ligne : on reste
+        jsr skipsp
+        beq kp_fl
+        cmp #";"
+        beq kp_fl
+kpnl    lda kpi                 ; un seul élément : l'appel avec passage
+        cmp #1                  ;   à la ligne
+        bne kpn2
+        lda kpp
+        ldy #<s_print
+        ldx #>s_print
+        cmp #<s_pnum
+        beq kpn1
+        ldy #<s_rprint
+        ldx #>s_rprint
+kpn1    tya
+        pha
+        txa
+        tay
+        pla
         jmp oi
+kpn2    jsr kp_fl
+        lda #<s_pend
+        ldy #>s_pend
+        jmp oi
+.)
+; kp_fl : écrit l'appel en attente du PRINT (kpp), s'il y en a un
+kp_fl   lda kpp+1
+        beq kpf_r
+        ldy kpp+1
+        lda kpp
+        ldx #0
+        stx kpp+1
+        jmp oi
+kpf_r   rts
 k_gload lda #<s_gload
         ldy #>s_gload
         jmp k_img
@@ -3001,6 +3052,9 @@ s_rcopy .asc "jsr r_copy",0
 s_rcmp  .asc "jsr r_cmp",0
 s_rlen  .asc "jsr r_len",0
 s_rprint .asc "jsr r_print",0
+s_rpstr .asc "jsr r_pstr",0
+s_pnum  .asc "jsr g_pnum",0
+s_pend  .asc "jsr g_pend",0
 s_rinput .asc "jsr r_input",0
 s_rninp .asc "jsr r_ninput",0
 s_rfill .asc "jsr r_fill",0
@@ -5283,7 +5337,9 @@ ipos    = kch+1         ; lecture d'une bibliothèque : position dans ibuf
 ieof    = ipos+1
 cnt     = ieof+1        ; numéro de la dernière routine lue (2 octets)
 kep     = cnt+2         ; fin des arêtes (2 octets)
-ibuf    = kep+2         ; 128 octets
+kpp     = kep+2         ; PRINT : appel en attente (2 octets ; octet haut 0 :
+kpi     = kpp+2         ;   aucun), nombre d'éléments
+ibuf    = kpi+1         ; 128 octets
 kroot   = ibuf+128      ; noms relevés (terminés par 0 ; 0 à la fin)
 KROOT   = 768
 obuf    = kroot+KROOT   ; NOM.ASM : enregistrement en cours

@@ -39,8 +39,18 @@ README.TXT (on the disk) give a summary (`tools/gen_readme_txt.py`).
   (`X = $1`, `GTEXT 2 90 $2`).
 - **Space rule**: a space separates parameters; an expression among several parameters
   therefore contains no space, except inside brackets (`LINE X 0 (239 - X) 199`). An
-  expression alone at the end of the line (`X = ...`, `IF`, `WHILE`, `PRINT`) may contain
-  some.
+  expression alone at the end of the line (`X = ...`, `IF`, `WHILE`) may contain some, like
+  the items of `PRINT`.
+- **Display**: `PRINT e1 e2 ...` writes one after the other numbers (calculations), strings
+  (`A$`, `M$(l)`) and texts within quotes, with nothing between them: `PRINT "V= " V`,
+  `PRINT A " " B`. Items are separated by spaces; a calculation stops where it cannot go on
+  (`PRINT A - B " points"`). In the console (`TEXT`, `SPLIT`), `PRINT` goes to the next line
+  at the end, except with a final `;` (`PRINT "Total: " ;`, then `PRINT T`); for a comment
+  after it, `;;` (`PRINT X ;; stays on the line`). In LORES it never goes to the next line
+  (§ 7); in full-screen HIRES it displays nothing. `PRINT` alone goes to the next line. A
+  string followed by `=`, `<` or `>` is a comparison (`PRINT A$ = B$` shows 1 or 0).
+  `ECHO text` writes the text of the line, then goes to the next line in the console; within
+  quotes, the text alone, spaces included.
 
 ## 3. Numbers, variables, expressions
 
@@ -132,7 +142,7 @@ as ordinary keys. The program sets the colour attributes itself, wherever it wan
 | `SCRN(col,lin)` | function: the byte of the cell |
 | `ECHO text` | writes the text at the cursor, which moves on. Without quotes, leading spaces are skipped; within quotes, the text is taken as is (`ECHO "  Score : "`) |
 | `ECHO` (alone) | column 0 of the next line; after line 27: line 0; nothing is cleared |
-| `PRINT expr`, `PRINT A$` | writes the number or the string at the cursor, without a new line |
+| `PRINT e1 e2 ...` | writes at the cursor, one after the other, numbers, strings and texts within quotes (`PRINT "Score: " S`), without a new line |
 | `SPC n [x]` | writes byte x n times (32 by default): to clear, to restore attribute 16, to draw a line |
 | `TAB n` | moves the cursor n columns on without writing (relative: `LOCATE` gives the absolute column) |
 | `PRINTV`, `ECHOV`, `SPCV` | like `PRINT`, `ECHO` and `SPC`, but the cursor **goes down**: one character per line, in the same column (a column of digits, a vertical word, a wall: `SPCV 20 35`). `ECHOV` alone: line 0 of the next column |
@@ -405,13 +415,14 @@ full: `DIM N$(12)` holds 12 characters at most. A string is at most 255 characte
 | `A$ = "text"`, `A$ = B$`, `M$(I) = A$` | assignment; the rest of the capacity is set to 0; too long: `string too long` |
 | `=` `<>` `<` `<=` `>` `>=` | comparison of two strings, or of a string and a text (`IF R$ = "O"`), in code order (`"AB" < "ABC"`); 1 or 0 |
 | `LEN(A$)`, `LEN(M$(I))` | length |
-| `PRINT A$` | in LORES: at the cursor, codes 0-31 written as they are (a level line keeps its colours). In the console: codes 0-31 replaced by a space, then a new line. `PRINT A$ = B$` prints the comparison |
+| `PRINT A$` | in LORES: at the cursor, codes 0-31 written as they are (a level line keeps its colours). In the console: codes 0-31 replaced by a space. With other items: `PRINT "Name: " A$` (§ 2). `PRINT A$ = B$` prints the comparison |
 | `INPUT A$`, `INPUT M$(I)` | input. In LORES: at the cursor (cell in reverse video), characters 32-126, DEL erases, RETURN confirms, stops at the capacity or the right edge. Elsewhere: console line input, cut at the capacity |
 | `INPUT V` | integer from -32768 to 32767: digits and `-`, 6 characters at most; empty or out of range: a beep, and try again |
 | `FILL A v`, `FILL M$ 32` | the whole array set to v |
 
-- A string does not mix with calculations (`string in a calculation`).
-  There is no concatenation or conversion: chain `ECHO` and `PRINT`.
+- A string does not mix with calculations (`string in a calculation`). There is no
+  concatenation or conversion in memory; for display, `PRINT` puts texts, numbers and strings
+  end to end (§ 2).
 - `ECHO` only writes the program's text (`ECHO A$` writes "A$").
 - Attribute 0 cannot be displayed with `PRINT` (it is the end of a string): write it with
   `CHAR` or `M$(X,Y) = 0`.
@@ -666,14 +677,14 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (17,686 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (17,756 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
   bytes per slot and 192 bytes for the two pools; `TILESET`, (wid × hgt + 1) pages (§ 7.3).
   The free area for the text, the arrays and an animation is about 17 KB (text from
-  `$59BF`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
+  `$5A05`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
   21 KB), which need translation.
 - **Memory** (translated): the program at `$0500`, then the tables of `hires.inc`. Arrays are
   reserved below `$9D60` as when interpreted: fixed arrays (§ 12) at start, in the order of
