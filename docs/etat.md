@@ -183,7 +183,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
    - USBDIR : liste des appareils du LOCI (`opendir("")`) ;
    - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
      LOGO ou un `.COM`, à trouver.
-7. **Version anglaise** (en cours)
+7. **Version anglaise** (faite le 24/10/2026 ; tout nouveau texte affiché ou document d'utilisation se fait dans les deux langues)
    - Décidé : une seule disquette anglaise, `cpa-en.dsk` (le contenu de `cpa.dsk`, programmes
      de `build/progs-en`) ; pas de disquettes par usage en anglais tant que LOGO n'est pas
      traduit. Les mots-clés de GRAPHER restent ceux d'aujourd'hui dans les deux langues :
@@ -238,7 +238,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      qui est une primitive d'arrivée) ; aller-retour identique sur les exemples et les
      scénarios de test. Exemples `.LOG` anglais passés aux primitives anglaises par LOGOTR.
      `LANGUE=en tools/test_logo.sh` (références `tools/logo_tests/en`).
-   - Reste : `smoke_test` en anglais.
+   - `smoke_test` : les deux disquettes anglaises ensemble (`GRXASM MAP /C`, `cpa-en.dsk`
+     sur A:, `cpa-project-en.dsk` sur B:) ; le reste du smoke test ne dépend pas de la langue.
    - Documentation : faite. `README.md` en anglais (français : `README.fr.md`), documents
      d'utilisation dans `docs/en/` (mêmes noms, `tools/check_en.py`), documents internes en
      français seulement.
