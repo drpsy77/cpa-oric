@@ -95,6 +95,12 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
      `.ASM` de ~130 Ko pendant l'assemblage. Bon cas d'essai pour la limite de 20 Ko et pour
      `RUN` : la génération d'un niveau, programme à part, écrit le niveau dans des fichiers
      de données que le jeu relit.
+   - **Son** (décidé par Pierre, rien codé) : GRAPHER n'a aucune commande de son (seul le
+     bip d'un `INPUT` refusé, `rz_bip` d'`ARR.INC`). Commandes à spécifier avec Pierre
+     avant tout code (notes, bruit, durées, attente, son en cours ; s'inspirer de LOGO sans
+     sa lourdeur, § 2 point 6). Interprété et traduit par la fonction 116 du BDOS ; avec
+     `GRXASM /O`, `snd.s` (~600 octets) rejoint le socle `ORIC.INC` (`docs/oric-basic.md`
+     § 4). Place : GRAPHER a 676 octets libres dans son dernier bloc (§ 3).
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
    faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
    a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
