@@ -11,6 +11,8 @@
 - **Écrivez un jeu, dessinez-le, compilez-le** en 6502 rapide, sans jamais quitter la machine.
 - **Puis partagez-le** : par la clé USB du LOCI aujourd'hui, sur une simple cassette pour tout
   Oric bientôt.
+- **Solide comme un roc** : sur un vrai Atmos avec un LOCI, des séances de travail entières
+  sans un plantage ni un redémarrage.
 
 **L'essayer en cinq minutes.** Téléchargez [`cpa.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa.dsk), copiez-le sur la clé USB du LOCI
 (ou la carte SD du Cumulus) et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
@@ -66,6 +68,29 @@ Deux variantes sont construites à partir des mêmes sources :
   l'écran, défilement compris), interprété ou traduit en
   assembleur.
 - Images HIRES compressées et animations plein écran (VOIR).
+
+## Stabilité
+
+Sur un vrai Oric Atmos avec un LOCI, des séances entières passent sans un plantage ni un
+redémarrage : importer des sources de la clé USB avec CMDER, les éditer, assembler un
+programme sur l'Oric lui-même (`LOGOTR.COM`), ajouter un score à un jeu GRAPHER, jouer les
+animations, ouvrir tous les menus de tous les programmes, et même débrancher la clé USB en
+plein travail. Sur l'Oric, où redémarrer après un programme qui a piétiné la mémoire est un
+rituel familier, c'est la première chose qu'on remarque. Cela tient à la conception :
+
+- **un contrat mémoire** : le système vit dans la RAM overlay, hors de l'espace des
+  programmes ; tout programme est chargé en `$0500` et parle au système par le BDOS et les
+  variables documentées de la page 2 (`docs/architecture.md`) ;
+- **un démarrage à chaud après chaque programme** : écran texte et console sont remis en
+  place, même après une image HIRES plein écran ou un jeu en mode texte ;
+- **la reprise** : la mémoire libre est laissée remplie de `$00` (`BRK`), un programme qui
+  s'égare s'arrête donc sur `*BRK* at xxxx` ; le bouton RESET rend le prompt
+  (`*RESET* at xxxx`) et, pendant un accès disque, attend la fin du secteur : le répertoire
+  n'est jamais laissé à moitié écrit ;
+- **des erreurs signalées, pas fatales** : un lecteur vide du LOCI, ou la clé USB
+  débranchée, donne une erreur BDOS et le prompt ; la clé remise, `DIR` relit la disquette ;
+- **des enregistrements sûrs** : EDIT et GRAPHER écrivent par `NOM.$$$`, un disque plein ou
+  un RESET laisse l'ancien fichier ou le nouveau, entier (au pire sous `NOM.$$$`).
 
 ## Documentation
 

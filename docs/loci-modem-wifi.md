@@ -1,5 +1,8 @@
 # Relier un Raspberry Pi Pico W (modem WiFi) au LOCI
 
+**État** : le Pico W ne marche pas encore avec le LOCI ; un firmware du LOCI qui le prenne
+en charge est attendu. Ce document reste la marche à suivre.
+
 But : donner à un vrai Oric un accès réseau (envoi et réception de fichiers) à travers le
 LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation.
 Côté CP/A, `TERM.COM` (terminal, `docs/manuel.md` « Terminal série ») existe ; le pilote
