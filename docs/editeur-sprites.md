@@ -18,25 +18,25 @@ L'écran texte entier, 40 colonnes (0-1 : papier et encre de l'utilisateur, invi
 ici), dans la police standard sauf l'aperçu :
 
      0|  Fichier Edit Sprite Dessin Vue     A
-     1|     1  |  2  |  3  |  4  | Codes
-     2|   ....####...:.....:.....: 0F3F2D3F
-     3|   ...######..:.....:.....: 0F0C3F3F
-     4|   ...# ## #..:.....:.....: 0F3F3F3F
-     5|  1...######..:.....:.....: 0F0C3F3F
+     1|     1  |  2  |  3  |  4  | HEROS.SPR
+     2|   ....####...:.....:.....: HER1 2x2 S
+     3|   ...######..:.....:.....: HER2 2x2 S
+     4|   ...# ## #..:.....:.....: MSTR 2x2 M
+     5|  1...######..:.....:.....: BOSS 4x4 S
      6|   ....####...:.....:.....:
-     7|   .....##....:.....:.....: HEROS.SPR
-     8|   ..########.:.....:.....: HER1 2x2 S
-     9|   _##########+_____+_____+ HER2 2x2 S
-    10|   .#..####..#:.....:.....: MSTR 2x2 M
-    11|   .#..####..#:.....:.....: BOSS 4x4 S
+     7|   .....##....:.....:.....:
+     8|   ..########.:.....:.....:
+     9|   _##########+_____+_____+
+    10|   .#..####..#:.....:.....:
+    11|   .#..####..#:.....:.....:
     12|   ....####...:.....:.....:
     13|  2....#:.#...:.....:.....:
     14|   ...##:.##..:.....:.....:
-    15|   ...#.:..#..:.....:.....:
+    15|   ...#.:..#..:.....:.....: 1/4 sprites
     16|   ..##.:..##.:.....:.....:
     17|   _____+_____+_____+_____+
-    18|   .....:.....:.....:.....:
-    19|   .....:.....:.....:.....: Reel
+    18|   .....:.....:.....:.....: Reel
+    19|   .....:.....:.....:.....:
     20|   .....:.....:.....:.....: ::::::
     21|  3.....:.....:.....:.....: ::::::
     22|   .....:.....:.....:.....: ::@@::
@@ -45,6 +45,22 @@ ici), dans la police standard sauf l'aperçu :
     25|   _____+_____+_____+_____+ ::::::
     26|  x 7 y 12  case 1,1  # crayon   ^S
     27|
+
+Avec l'affichage hexadécimal (menu Vue, `^H`) :
+
+     0|  Fichier Edit Sprite Dessin Vue     A
+     1|     1  |  2  |  3  |  4  | Codes S
+     2|   ....####...:.....:.....: 0330
+     3|   ...######..:.....:.....: 0738
+     4|   ...# ## #..:.....:.....: 0528
+     5|  1...######..:.....:.....: 0738
+     6|   ....####...:.....:.....: 0330
+     7|   .....##....:.....:.....: 0120
+     8|   ..########.:.....:.....: 0F3C
+     9|   _##########+_____+_____+ 1F3E
+    10|   .#..####..#:.....:.....: 1332
+    11|   .#..####..#:.....:.....: 1332
+    ...
 
 - **Grille** (colonnes 3-26, lignes 2-25) : un point du sprite par case de l'écran, 4 × 3
   caractères visibles (24 × 24 points) ; un sprite de 4 lignes défile d'une ligne de
@@ -63,11 +79,14 @@ ici), dans la police standard sauf l'aperçu :
   (`:`, `_`, `+` ci-dessus pour le transparent). Le trait se superpose à l'état : allumé
   sur une case vide ou grisée, éteint sur une case pleine. D'où 12 caractères : 3 états ×
   (sans trait, à droite, en bas, les deux).
-- **Codes** (lignes 2-5) : les octets du dessin (`S`) ou de la silhouette (`M`), deux
-  chiffres hexadécimaux par octet ; lesquels : § 3.
-- **Liste** (ligne 7 : le fichier ; puis un sprite par ligne : nom, taille, `S` ou `M`) ;
-  le sprite courant en vidéo inverse.
-- **Réel** (lignes 20-25, colonnes 28-33) : le sprite en taille réelle, au milieu d'un
+- **Liste** (ligne 1 : le fichier ; lignes 2-13 : un sprite par ligne, nom, taille, `S`
+  ou `M`, défilement au-delà de 12) ; le sprite courant en vidéo inverse. Ligne 15 : rang
+  et nombre de sprites, genre.
+- **Codes** (option, menu Vue ou `^H`) : à la place de la liste et de « Réel », en face
+  de chaque ligne de points de la grille, ses octets en hexadécimal (deux chiffres par
+  caractère de largeur, 8 au plus) : ceux du dessin en mode `S`, de la silhouette en
+  mode `M` ; ils défilent avec la grille. `^H` de nouveau : la liste et « Réel ».
+- **Réel** (titre ligne 18 ; lignes 20-25, colonnes 28-33) : le sprite en taille réelle, au milieu d'un
   décor (menu Vue : vide, damier, briques, herbe), avec les vrais caractères redessinés ;
   il suit chaque point posé.
 - **Ligne d'état** (26) : position du curseur, case, état et crayon, `^S` si le fichier a
@@ -92,6 +111,7 @@ CTRL-I passe de l'une à l'autre (ou menu Sprite, Select / Saisie).
 | CTRL-↑ / CTRL-↓ | premier / dernier sprite | premier / dernier sprite |
 | ESPACE | point plein / transparent | — |
 | `M` | masque / transparent (genre 0) | `S` / `M` : mode sprite ou masque du sprite choisi |
+| CTRL-H | affichage hexadécimal / liste et « Réel » | idem |
 | `P` | crayon : en se déplaçant, le curseur pose le dernier état choisi ; `P` de nouveau, ou ESC, le lève | — |
 | RETURN | — | passer à la saisie du sprite choisi |
 
@@ -108,7 +128,7 @@ CTRL-I passe de l'une à l'autre (ou menu Sprite, Select / Saisie).
   (sprite carré), Décaler d'un point (4 sens, ce qui sort rentre de l'autre côté),
   Silhouette = dessin. Genre 1 : « Prendre dans la police » copie le dessin de
   caractères existants (codes 32-127 du jeu standard) comme point de départ.
-- **Vue** : Décor de l'aperçu, Animer (fait défiler dans « Réel » les sprites dont le nom
+- **Vue** : Codes hexa `^H`, Décor de l'aperçu, Animer (fait défiler dans « Réel » les sprites dont le nom
   commence pareil, `HER1` `HER2`... ; une touche arrête).
 
 ### 2.4 Fichiers et sûreté
@@ -137,7 +157,4 @@ CTRL-I passe de l'une à l'autre (ou menu Sprite, Select / Saisie).
 
 ## 3. Questions ouvertes
 
-1. « Codes » : 4 lignes de 8 chiffres, soit 16 octets, alors qu'un sprite de 4 × 4 en a
-   128 (dessin ou silhouette). Lesquels montrer : les 4 lignes de points à partir de celle
-   du curseur (4 octets par ligne, la largeur d'un sprite de 4 caractères), ou un octet par
-   ligne de la grille, aligné sur elle (la zone serait alors haute de 24 lignes) ?
+Aucune.
