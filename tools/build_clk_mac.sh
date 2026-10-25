@@ -4,8 +4,7 @@
 # le lecteur (premier vide, A: à D:), et une disquette glissée sur la fenêtre
 # va dans le premier lecteur vide (A: est remplacé si les quatre sont pleins).
 # Le panneau Insérer s'ouvre dans le dossier de la disquette de démarrage.
-# Contient aussi le rétablissement de l'interruption du Microdisc, sans
-# lequel la version 50e3b4d ne démarre aucune disquette.
+# Clock Signal est pris au même commit que le banc Linux (tools/setup_clk.sh).
 # Il faut Xcode (l'application complète, pas seulement les outils en ligne de
 # commande). Tout reste dans tools/clk-mac/ (ignoré par git).
 # Résultat : tools/clk-mac/Clock Signal.app (signée pour cet ordinateur).
@@ -18,7 +17,7 @@
 set -e
 cd "$(dirname "$0")"
 TOOLS=$(pwd)
-CLK_COMMIT=50e3b4d9327c211d14eb9dcca5ccc2b8ef5f8786
+CLK_COMMIT=b1035a1cb83f303f00e82e1e22c856da5a5e8da6
 
 command -v xcodebuild >/dev/null || { echo "!! xcodebuild introuvable : installer Xcode"; exit 1; }
 mkdir -p clk-mac
