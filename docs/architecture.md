@@ -118,6 +118,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
     python3 tools/test_fichiers.py   # EDIT, GRAPHER : disque plein, R/O, RESET pendant l'écriture
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, puis CLOAD sous BASIC 1.1
+    tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
@@ -138,7 +139,8 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
 | MKTAP.COM, `tools/mktap.py` | en plus : `tools/test_mktap.sh` |
-| GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, essai Oricutron des exemples `.GRX` (dessin) |
+| ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
+| GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, `tools/test_oric.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
@@ -149,7 +151,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   programme, jamais assemblés seuls. `progs/hires.inc` est une bibliothèque livrée sur les
   disquettes (`HIRES.INC`, nom 8.3 pour ASM) ; ses étiquettes internes commencent par `hz_`
   pour ne gêner aucun programme. `progs/grx.inc` (`GRX.INC`) est la bibliothèque d'exécution
-  des programmes traduits par `GRXASM NOM` (ou `GRAPHER NOM /A`). `progs/arr.inc` (`ARR.INC`,
+  des programmes traduits par `GRXASM NOM` (ou `GRAPHER NOM /A`) ; `progs/oric.inc`
+  (`ORIC.INC`) remplace `CPA.INC` pour ceux qui sont traduits pour un Oric seul
+  (`GRXASM NOM /O` : `.TAP` sans CP/A, `docs/grapher.md` § 12.1). `progs/arr.inc` (`ARR.INC`,
   tableaux), `progs/fil.inc` (`FIL.INC`, fichiers de données) et `progs/spr.inc` (`SPR.INC`,
   sprites en mode texte) servent à l'interpréteur et aux programmes traduits. `progs/anim.inc` (`ANIM.INC`) joue les
   animations `.ANI` ; il s'inclut avant `HIRES.INC`, qui reste à la fin du programme (ses
@@ -205,15 +209,17 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `files/readme.txt`, `files/en/readme.txt`) et les textes de HELP.COM (`helptab.msg` dans
   `progs/msg/fr` et `progs/msg/en`, compressés en LZSS, décodés par `help.s`), à partir d'une
   liste par langue (mêmes rubriques, même nombre de lignes : vérifié).
-- Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC) : copies sans
+- Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
   Leurs messages sont dans `progs/msg/fr` et `progs/msg/en` (`arr.msg`...) : dans la
   bibliothèque, une ligne `;#msg nom.msg` marque leur place, `strip_inc.py` les y recopie
   dans la langue de la disquette (`build/src`, `build/src-en` pour `cpa-en.dsk`), et un
   programme de `progs/` qui inclut la bibliothèque inclut aussi ses messages, juste après.
-  Les six bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, HIRES) sont en
-  plus marquées par `tools/mark_inc.py` (lignes de commentaire `;@`) : GRXASM n'en recopie
-  que les routines utiles (`docs/grapher.md` § 12, § 15).
+  Les sept bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, ORIC, HIRES)
+  sont en plus marquées par `tools/mark_inc.py` (lignes de commentaire `;@`) : GRXASM n'en
+  recopie que les routines utiles (`docs/grapher.md` § 12, § 15). Annotations des sources,
+  gardées par `strip_inc.py` pour `mark_inc.py` : `;[` ... `;]` (vérifications de
+  l'interpréteur, retirées des copies), `;>a b` et `;&nom` (besoins et lignes d'`ORIC.INC`).
 - Git : un commit par livraison, message en français, testé avant. Le dépôt est publié sur
   GitHub (https://github.com/drpsy77/cpa-oric).
 
@@ -227,7 +233,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `files/` | fichiers copiés tels quels sur la disquette (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | outils PC : images disque, tables, tests |
 | `docs/` | documentation (index dans `README.md`) |
-| `build/` | résultats ; seuls `cpa.dsk` et `cpa.rom` sont versionnés |
+| `build/` | résultats ; seules les images prêtes à l'emploi sont versionnées : disquettes (`*.dsk`), `cpa.rom`, `.TAP` d'exemple (`build/tap/`) |
 
 ## 7. Documentation
 

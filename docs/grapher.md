@@ -25,6 +25,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | `GRXASM NOM [p1 ... p9]` | n'exécute pas : écrit `NOM.ASM`, à assembler par `ASM NOM` (§ 12) |
 | `GRAPHER NOM /A [p1 ... p9]` | la même chose : GRAPHER passe la main à GRXASM (`/A` juste après le nom) |
 | `GRXASM NOM /C [p1 ... p9]`, `GRAPHER NOM /C [...]` | traduit, puis enchaîne `ASM NOM /E` : il ne reste que `NOM.COM` (`NOM.ASM` est effacé si l'assemblage réussit ; une erreur le laisse, pour le lire) |
+| `GRXASM NOM /O [p1 ... p9]`, `GRAPHER NOM /O [...]` | traduit pour un Oric seul, puis enchaîne `ASM NOM /E /T` : `NOM.TAP`, que tout Oric charge par `CLOAD""`, sans CP/A ni BASIC (§ 12.1) |
 
 ## 2. Écriture d'un programme
 
@@ -598,7 +599,8 @@ Une erreur arrête le programme : retour à la console, puis `L n COMMANDE : mes
 (`L 3 LINE : valeur hors de 0-255`). Un programme traduit ne vérifie rien pendant
 l'exécution (§ 12) ; il ne lui reste que les erreurs qui ne sont pas des fautes du programme,
 sans numéro de ligne : fichiers (`Erreur : disque plein`...), `memoire pleine` à un `DIM`
-de taille calculée. ESC ne l'arrête pas (§ 8). Les messages sont en français sur `cpa.dsk`,
+de taille calculée (de taille constante, il est vérifié pendant la traduction). ESC ne
+l'arrête pas (§ 8). Les messages sont en français sur `cpa.dsk`,
 en anglais sur `cpa-en.dsk` (ceux de GRXASM et des programmes traduits aussi).
 
 | Sujet | Messages |
@@ -610,6 +612,7 @@ en anglais sur `cpa-en.dsk` (ceux de GRXASM et des programmes traduits aussi).
 | Tableaux | `deja dimensionne`, `tableau non dimensionne`, `indice hors limites`, `memoire pleine`, `chaine trop longue`, `chaine dans un calcul` |
 | Sprites | `SPRITES d'abord`, `SPOOL d'abord`, `fichier .SPR ?` (pas un `.SPR` de sprites, ou sprite mal formé), `plus de caracteres pour les sprites` (tas vide) ; `valeur hors limites` : emplacement, rang du sprite, code du tas, sprite hors de l'écran |
 | Fichiers | `Fichier introuvable` et `Fichier trop gros` (le `.GRX`), `image introuvable`, `disque plein`, `repertoire plein`, `fichier protege`, `animation introuvable`, `animation trop grande` ; données (§ 10) : `ligne trop longue : L n`, `trop de lignes : L n`, `nombre ? : L n`, `code 0-31 : BSAVE` |
+| Oric seul (GRXASM `/O`, § 12.1) | `pas avec /O`, `trop de fichiers (/O)` ; `NOM.EXT absent : pas inclus` (avertissement) |
 
 Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute normalement.
 
@@ -649,7 +652,9 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   programme traduit se comporte mal, on le relance en interprété pour trouver l'erreur.
   - Vérifié pendant la traduction (avec le numéro de ligne) : la syntaxe et les blocs, une
     constante hors de 0-255 (paramètre ou octet d'un tableau `$`), un pas constant nul, une
-    division par une constante nulle, la profondeur des expressions.
+    division par une constante nulle, la profondeur des expressions, les tailles constantes
+    d'un `DIM` (`valeur hors limites` hors de 1-32767 ; `memoire pleine` si le tableau
+    dépasse 32 767 octets, ou si les tableaux fixes descendent sous le programme).
   - Plus vérifié du tout : un paramètre calculé hors de 0-255 (seul son octet bas compte),
     une colonne ou une ligne hors de l'écran, une commande du LORES hors du LORES, les
     indices et les tableaux, une chaîne trop longue (coupée à la capacité), une division par
@@ -684,32 +689,86 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   `h_text`, `PRINT`), plus `ARR.INC` si le programme a des tableaux ou des chaînes (un
   `PRINT "..."` suffit), `FIL.INC` s'il
   lit ou écrit des fichiers de données (`SAVE`... `FOUND`), `SPR.INC` s'il a des sprites et
-  `ANIM.INC` s'il anime. Ces fichiers sont cherchés sur le lecteur du `.GRX`, puis sur les
+  `ANIM.INC` s'il anime (avec `/O` : `ORIC.INC` aussi, § 12.1). Les vérifications de
+  l'interpréteur n'y sont pas : les copies de la disquette en sont privées (§ 15). Ces fichiers sont cherchés sur le lecteur du `.GRX`, puis sur les
   lecteurs déjà lus de A: à D: (la disquette système en A:, le projet en B:) ; sinon :
   `GRX.INC absente (bibliotheque)`. ASM n'a ensuite besoin que de `CPA.INC`, cherché de même.
   Pour CARTE, `NOM.ASM` fait 46 Ko : `/C` ne laisse que `NOM.COM` (8 Ko). Ils sont,
   avec GRXASM, sur la disquette complète, la disquette Assembleur et la disquette
   Animations (pas sur la disquette Logo, qui n'a pas ASM).
 - Taille d'un `.COM` traduit : 1,4 Ko pour `ARDOISE`, 1,7 Ko pour `DESSIN`, 2,2 Ko pour
-  `MOTIFS`, 4,0 Ko pour `SERPENT`, 6,0 Ko pour `SPRITES` (les contrôles retirés en ont ôté
-  4 à 15 %). `NOM.ASM` est plus long (10 Ko pour `DESSIN`, 34 Ko pour
-  `SPRITES`) : il faut la place sur la disquette pendant la traduction. ASM met moins d'une
-  minute pour `MOTIFS`.
+  `MOTIFS`, 3,9 Ko pour `SERPENT`, 6,0 Ko pour `PUZZLE` (`JEU.GRX`), 6,1 Ko pour
+  `SPRITES` (les contrôles retirés en ont ôté 4 à 15 %, puis les vérifications de
+  l'interpréteur sorties des bibliothèques jusqu'à 4 % de plus : 221 octets pour
+  `PUZZLE`). `NOM.ASM` est plus long
+  (10 Ko pour `DESSIN`, 34 Ko pour `SPRITES`) : il faut la place sur la disquette pendant
+  la traduction. ASM met moins d'une minute pour `MOTIFS`.
+
+### 12.1 Pour un Oric seul (`/O`)
+
+    A>GRXASM CARTE /O
+    CARTE.ASM ecrit : ASM CARTE
+    A>ASM CARTE /E /T
+    ...
+    CARTE.TAP $04EF-$2BF2 : 9988 octets
+
+`GRXASM NOM /O` traduit le programme pour un Oric sans CP/A : `NOM.TAP`, une cassette à
+démarrage automatique que tout Oric (Atmos ou Oric-1) charge par `CLOAD""`. Le programme
+prend toute la machine : ni CP/A, ni BASIC, ni ROM pendant qu'il tourne. Transport :
+`EXPORT NOM.TAP` sur la clé USB du LOCI, cassette montée par le menu du LOCI ; dans
+Oricutron, `-t NOM.TAP`.
+
+- **Une seule commande** : GRXASM enchaîne `ASM NOM /E /T`, qui écrit `NOM.TAP` et efface
+  `NOM.ASM` (une erreur le laisse). `NOM.ASM` porte lui-même l'en-tête du `.TAP` ; l'option
+  `/T` d'ASM ne fait que nommer le fichier écrit (`docs/manuel.md`, ASM).
+- **Même traduction** que sans `/O`, mêmes bibliothèques ; seul le socle change :
+  `ORIC.INC`, recopiée comme les autres (routines utiles seulement, environ 1,2 Ko), au lieu
+  de `CPA.INC`. Elle reprend les routines de CP/A (clavier, compteur 50 Hz, console, retour
+  au texte) et n'appelle jamais la ROM : le même `.TAP` sert sous BASIC 1.0 et 1.1.
+- **Mémoire** : le programme commence en `$0503` (avant de le lancer, la ROM met `$00` en
+  `$0500-$0502`) ; les tableaux restent sous `$9D60`, comme sous CP/A. Programme et
+  fichiers recopiés doivent finir avant `$96C9`, pour laisser la place aux tables qui le
+  suivent ; au-delà, ASM refuse la ligne `.byt` de l'en-tête, qui porte `O_PLACE`, et
+  n'écrit pas le `.TAP`.
+- **Fichiers** : `LOAD`, `BLOAD` (`SCREEN` compris), `GLOAD` et `ANIM` lisent des fichiers
+  **recopiés dans le programme** : GRXASM les lit sur la disquette pendant la traduction
+  (le lecteur écrit, sinon le lecteur courant ; type par défaut comme à l'exécution : `TXT`,
+  `DAT`, `SCR`, `HIR`, `ANI`). Un fichier absent est signalé (`NOM.EXT absent : pas
+  inclus`) ; à l'exécution, `FOUND` vaut alors 0, et `GLOAD` ou `ANIM` s'arrêtent sur leur
+  erreur. Un fichier lu prend deux fois sa place : dans le programme, puis dans le tableau
+  ou l'image où il est lu (une animation de 12 Ko en prend 24). 16 fichiers au plus
+  (`trop de fichiers (/O)`), 32 Ko chacun.
+- **Refusés pendant la traduction** (`pas avec /O`) : `SPLIT`, `SAVE`, `BSAVE`, `GSAVE`,
+  et `GLOAD` d'une image `.IMG` (le format du SPLIT) : un Oric seul n'a ni console sous
+  l'image ni disque où écrire.
+- **Console** : en mode texte (au lancement, et après `TEXT`), 27 lignes (lignes 1 à 27,
+  colonnes 2 à 39, papier noir, encre blanche) reçoivent `PRINT`, `ECHO`, `INPUT` et les
+  messages d'erreur (`Erreur : memoire pleine`). Clavier comme sous CP/A : majuscules au
+  départ (CTRL-T les bascule, dans la console seulement), répétition après une demi-seconde,
+  flèches et CTRL ; FUNCT ne fait rien. Un nombre refusé par `INPUT` donne un bip.
+- **Fin** : `END`, ou la fin du texte, redémarre l'Oric (la ROM, comme à la mise sous
+  tension). Si la console a du texte (un `PRINT` final, un message d'erreur), une touche est
+  attendue d'abord ; sinon (HIRES, LORES) le redémarrage est immédiat. Le bouton RESET
+  redémarre aussi. Pas de retour au BASIC.
+- **Exemples** : `build/tap/` contient `CARTE.TAP`, `SERPENT.TAP` et `DEFILE.TAP`, et leurs
+  jumeaux anglais `MAP.TAP`, `SNAKE.TAP` et `ROAD.TAP` (4,5 à 10 Ko), refaits et essayés
+  sous BASIC 1.1 par `tools/test_oric.sh`.
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (17 756 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (17 769 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas ; `TILESET`, (larg × haut + 1)
   pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
-  17 Ko (texte à partir de `$5A05`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  17 Ko (texte à partir de `$5AD2`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
   ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
-- **Mémoire** (traduit) : le programme en `$0500`, puis les tables de `hires.inc`. Les
-  tableaux sont réservés sous `$9D60` comme en interprété : les tableaux fixes (§ 12) au
-  lancement, dans l'ordre des `DIM`, puis les autres à leur `DIM`.
+- **Mémoire** (traduit) : le programme en `$0500` (`$0503` pour un Oric seul, § 12.1),
+  puis les tables de `hires.inc`. Les tableaux sont réservés sous `$9D60` comme en
+  interprété : les tableaux fixes (§ 12) au lancement, dans l'ordre des `DIM`, puis les
+  autres à leur `DIM`.
 - **Tailles d'un programme traduit** (mesure des onze exemples, `files/*.grx` ; part du
   programme séparée de celle des bibliothèques) :
 
@@ -725,7 +784,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   intermédiaire fait environ 6,5 fois le `.GRX`, plus le texte des routines recopiées (5
   à 32 Ko ; les six bibliothèques font 69 Ko sur la disquette, aucun programme ne les
   prend toutes). Un `.GRX` ne dépasse pas ~17 Ko en interprété (texte et tableaux
-  ensemble) ni ~21 Ko pour GRXASM (texte de `$48AF` à `$9CE0`). Pire cas pour un `.GRX`
+  ensemble) ni ~20 Ko pour GRXASM (texte de `$4E6F` à `$9CE0`). Pire cas pour un `.GRX`
   de 17 Ko : `.ASM` de 145 à 175 Ko et `.COM` d'environ 30 Ko, présents ensemble pendant
   l'assemblage, soit ~200 Ko sur la disquette de projet (336 Ko) ; `/C` n'y laisse ensuite
   que le `.COM`. La limite qui compte est la mémoire : le `.COM` et ses tableaux tiennent
@@ -776,6 +835,7 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |
 | `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) et tuiles (`t_set`, `t_map`, `t_get`, `t_font` ; `g_tmap` de `GRX.INC` pour le traduit), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et quatre messages (`f_mlo`, `f_mful`, `f_mro`, `f_mdir`) ; écriture par `NOM.$$$` (`f_wopen`, `f_wclose`, `f_wabort`), type d'origine gardé dans `f_ext` |
+| `progs/oric.inc` (`ORIC.INC`) | socle des programmes traduits pour un Oric seul (`/O`), à la place de `CPA.INC` : prise de la machine (`o_init`), interruption (`o_irq`), clavier (`o_kscan`), BDOS réduit (`BDOS`, `o_ftab`), console (`o_con`, `o_rdl`), fichiers recopiés (`o_open`, `o_read`), retour au texte (`o_text`), bip (`o_snd`), fin (`o_end`, `o_nmi`) |
 
 Les tampons (noms de fichiers, paramètres, mots...) sont après la fin du programme, mis à 0
 au lancement : ils ne sont pas dans le fichier.
@@ -804,13 +864,13 @@ instruction le remet à 0 (`o_tab`) ; `o_skipz` n'écrit alors que `bne *+5` / `
 `k_incdec` reconnaît `V = V + 1` et `V = V - 1`.
 
 **Bibliothèques recopiées** (GRXASM) : `build.sh` passe les copies allégées de la
-disquette (`tools/strip_inc.py`) dans `tools/mark_inc.py`, qui découpe les six
+disquette (`tools/strip_inc.py`) dans `tools/mark_inc.py`, qui découpe les sept
 bibliothèques des programmes traduits en routines (d'une étiquette en colonne 0, hors bloc
 `.( .)`, à la suivante), les numérote à la suite dans l'ordre de `NOM.ASM` (GRX, ARR, FIL,
-SPR, ANIM, HIRES) et écrit des lignes de commentaire : `;@#NNN` (la première routine du
+SPR, ANIM, ORIC, HIRES) et écrit des lignes de commentaire : `;@#NNN` (la première routine du
 fichier est NNN+1), `;@DDDEEE` devant chaque routine (les routines dont elle a besoin : ce
 que nomment ses instructions et ses données, et la suivante si elle ne finit ni par `rts`,
-ni par `jmp`, ni par des données ; `;@*` : toujours gardée, `g_init`), `;@+DDD` (suite),
+ni par `jmp`, ni par des données ; `;@*` : toujours gardée, `g_init` et `o_init`), `;@+DDD` (suite),
 `;@=NNN` (lignes d'une autre routine : une constante qui vaut une étiquette, comme
 `a_fail = g_stop`, est un nom de cette routine ; `000` : toujours recopiées). Pendant la
 traduction, `oc` relève les noms écrits qui commencent par une minuscule et contiennent `_`
@@ -820,8 +880,23 @@ est gardée (`KMK`, une marque par numéro), et chaque besoin donne une arête (
 octets) ; `kl_clos` parcourt les arêtes jusqu'à ce que rien ne change ; la seconde lecture
 (`kl_run` 1) recopie les lignes des routines gardées. Ces tables occupent la place du texte
 du `.GRX`, qui ne sert plus. `tools/test_inc.sh` vérifie que les copies marquées s'assemblent
-comme les originaux et que chaque programme traduit s'assemble (une routine oubliée donne
-une étiquette non définie) ; `test_grapher.sh` traduit avec elles.
+comme les originaux et que chaque programme traduit s'assemble, avec et sans `/O` (une
+routine oubliée donne une étiquette non définie) ; `test_grapher.sh` traduit avec elles.
+Trois annotations des sources, que `strip_inc.py` garde et que `mark_inc.py` lit puis
+retire :
+
+- `;[` ... `;]` (`ARR.INC`) : les vérifications de l'interpréteur (`lda r_chk` et ce qu'il
+  commande, jusqu'au message d'erreur). Les lignes entre les deux sont retirées des copies
+  marquées, donc jamais recopiées : un programme traduit ne vérifie rien, et ces lignes
+  étaient du code mort, avec leurs messages (221 octets de moins pour `PUZZLE`, 125 pour
+  `SERPENT`). Une ligne qui suit un fragment doit rester juste sans lui (`r_fill` : `bne qa`
+  après `cmp #2`).
+- `;>a b` (`ORIC.INC`) : la routine `a`, d'une autre bibliothèque, a besoin de `b` ; elle
+  appelle `BDOS` avec le numéro d'une fonction que `b` traite (`;>rz_get o_rdl` : `INPUT`
+  dans la console ; `;>h_load o_open o_read`).
+- `;&nom` ... `;&` (`ORIC.INC`) : les lignes appartiennent à la routine `nom`, sans en être
+  un besoin de la routine où elles sont : les entrées de la table `o_ftab` (fonction,
+  adresse) ne sont recopiées qu'avec leur routine.
 
 **Deux dimensions** : le programme écrit (colonne, ligne) ; `ARR.INC` garde en mémoire et dans
 le descripteur l'ordre (lignes, colonnes) : `r_dim2` et `r_ea2` (donc `r_get2`) échangent
@@ -831,8 +906,9 @@ second indice, et le premier s'y ajoute (`kf_ix`) ; quand les deux sont calculé
 colonne attend sur la pile du 6502, puis dans `g_et`. `tools/grx_colig.py` passe un `.GRX`
 écrit dans l'ancien ordre (ligne, colonne) au nouveau.
 
-**Tableaux fixes** (GRXASM) : `kf_new` décide, au `DIM`, qu'un tableau est fixe et calcule
-son adresse comme `r_dim` le fera (`kftop` suit `r_top`, à partir de `$9D60`) ; rien n'est
+**Tableaux fixes** (GRXASM) : `kf_new` vérifie les tailles constantes d'un `DIM` (1 à
+32767, octets du tableau, place sous `$9D60` jusqu'à `$0500`), décide qu'un tableau est
+fixe et calcule son adresse comme `r_dim` le fera (`kftop` suit `r_top`, à partir de `$9D60`) ; rien n'est
 écrit à la ligne du `DIM`. L'en-tête de `NOM.ASM` appelle `G_INIT` : sans tableau fixe,
 `G_INIT = g_init` (écrit après `HIRES.INC`) ; sinon une routine (`kf_init`) qui appelle
 `g_init`, corrige `g_sp` (deux `inc` : la pile du lancement), puis fait les `r_dim1` /
@@ -902,8 +978,45 @@ donc `ARR.INC`, dont GRXASM ne recopie que les routines utiles.
 - Tests : `lo_rect.grx` (LORES : rectangles, signes, octet, rotations, écriture verticale,
   `PASTE`, `GRAB`), `rect.grx` (image, par `POINT`), `e_rect*.grx` (erreurs).
 
-Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine du hasard ; GRXASM : pointeurs), `$10-$2C` pour `GRX.INC`, `$B0-$BF` pour
-`spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`.
+Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine du hasard ; GRXASM : pointeurs) et `$5D` (GRXASM : `/O`), `$10-$2C` pour `GRX.INC`, `$B0-$BF` pour
+`spr.inc`, `$C0-$C7` pour `hires.inc`, `$C8-$CF` pour `arr.inc`, `$D0-$DF` pour `fil.inc`,
+`$E0-$EF` et `$FA` pour `oric.inc`.
+
+**Oric seul** (`/O`, GRXASM et `oric.inc`) :
+
+- GRXASM : `cmode` 3 (`get_params`, commun avec GRAPHER, qui passe `/O` par CHAIN), `korc`
+  = 1. `ko_head` écrit l'en-tête du `.TAP` (synchro, `$24`, code, démarrage automatique,
+  fin `h_end - 1`, début `$0503`, nom) en `.byt` juste avant `$0503` (`*=` calculé d'après
+  la longueur du nom), puis `jsr o_init` et `jsr G_INIT` ; pas de `#include "CPA.INC"`.
+  `ko_no` refuse `SPLIT`, les écritures et `.IMG` ; `ko_add` note chaque fichier lu (type
+  par défaut mis dans `ifcb`, donc aussi dans le nom écrit après l'appel), une fois par nom
+  (16 au plus, `kof`) ; `ko_files` écrit `O_FILES` avant les bibliothèques : pour chaque
+  fichier, son nom (8 + 3), son nombre d'enregistrements (fonction 35), puis ses
+  enregistrements en `.byt` (16 octets par ligne), enfin un 0. `ORIC.INC` est la sixième
+  bibliothèque lue par `kl_libs` (drapeau `korc`), avant `HIRES.INC` (ses tables suivent
+  `h_end`). Le CHAIN est `ASM NOM /E /T`.
+- `o_init` : la pile vidée (le programme reviendra dans `o_end`), un `JMP` vers `o_irq` et
+  `o_nmi` là où pointent les vecteurs de la ROM (`$FFFE`, `$FFFA` : `$0244` et `$0247`
+  sur l'Atmos, `$0228` et `$022B` sur l'Oric-1), le VIA et l'AY comme `hw_init` de CP/A,
+  T1 à une trame, écran texte effacé, attribut `$1A` en `$BFDF`. Variables publiques aux
+  adresses de CP/A (`SYS_TICKS` `$021B`, `KB_HELD` `$0217`, `SCR_PROG` `$020E`...),
+  internes en `$0215-$023F` (hors des vecteurs de l'Oric-1), DMA par défaut en `$0480`.
+- `BDOS` traite lui-même les fonctions 2 (`o_con`), 115 (`o_gfx`), 26 et 16 ; les autres
+  passent par `o_ftab` (fonction, adresse - 1), dont chaque entrée appartient à sa routine
+  (`;&`) : un programme sans `INPUT` dans la console n'emporte pas `o_rdl`.
+- `o_open` cherche le nom (8 + 3 caractères, lecteur ignoré) dans `O_FILES` et met dans le
+  FCB l'adresse des données (octets 16-17) et les enregistrements restants (18) ; `o_read`
+  copie 128 octets vers le DMA. `o_gfx` : opération 11 (mode) rend 0, opération 10 (mode)
+  appelle `o_text` : police recopiée depuis `h_fnt` (la copie de `h_init`, au lancement),
+  console effacée, `$1A` en `$BFDF` en dernier, puis deux tops d'horloge pour que le circuit
+  vidéo l'ait lu (sans quoi il resterait en HIRES).
+- `o_end` : si `o_used` (un caractère affiché depuis le dernier effacement), une touche ;
+  puis `o_nmi` : interruptions du VIA coupées, son coupé, `$1A` en `$BFDF`,
+  `JMP ($FFFC)`. Un `BRK` y mène aussi (`o_irq`).
+- Tests : `tools/test_oric.sh` (refus, fichier absent, ASM `/T` contre xa, puis sous BASIC
+  1.1 dans Oricutron : `tools/oric_tests/o_cons.grx` et les six exemples) ;
+  `tools/test_inc.sh` assemble les tests de GRAPHER traduits avec `/O` ; `e_dim0.grx`,
+  `e_mem.grx`, `e_mem2.grx` (tailles de `DIM`).
 
 **Sprites** (`spr.inc`) :
 

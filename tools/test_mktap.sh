@@ -61,6 +61,7 @@ cas T4 ZFIN.BIN 600,17
 cas T5 GROS.BIN A000 TEST.COM 9000 /R DATA.BIN 600 ZFIN.BIN 8000
 cas T6 TEST.COM 1000 /R
 cas T7 TEST.COM A00 /R DATA.BIN 9100
+cas T8 TEST.COM 503 /R
 # erreurs : le .TAP ne doit pas être écrit
 erreur() {
   n=$1; shift
@@ -77,6 +78,8 @@ erreur E5 TEST.COM 9000,100
 erreur E6 ABSENT.COM 9000
 erreur E7 TEST.COM 9000 /R DATA.BIN 8000 /R
 erreur E8 TEST.COM XYZ
+erreur E9 TEST.COM 502 /R
+erreur E10 TEST.COM 500 /R
 
 # chargement sous BASIC 1.1 (Oricutron de test)
 if [ -x tools/oricutron/Oricutron-sdl2 ] && [ -f tools/oricutron/roms/basic11b.rom ]; then

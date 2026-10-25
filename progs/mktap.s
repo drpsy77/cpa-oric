@@ -16,7 +16,8 @@
 ;            seul) : 10 CLOAD"":CLOAD"":...:CALL#adr
 ;  Contrôles avant d'écrire : blocs dans $0500-$BFFF, sans chevauchement
 ;  (chargeur compris), longueur non nulle et pas plus grande que le
-;  fichier. Le dernier enregistrement du .TAP est complété par des ^Z,
+;  fichier, bloc /R en $0503 au plus tôt (la ROM met $00 en $0500-$0502
+;  avant de le lancer). Le dernier enregistrement du .TAP est complété par des ^Z,
 ;  que EXPORT retire (un octet 0 est ajouté d'abord si le dernier octet
 ;  utile vaut $1A). Format : docs/oric-basic.md § 1. Même résultat que
 ;  tools/mktap.py (sur le PC).
@@ -308,13 +309,24 @@ fin     lda lenl,y              ; fin = adr + (lg - 1), lg >= 1
         lda endh,y
         cmp #$C0
         bcs range
-        inc ib
+        cpy aut                 ; bloc /R : $0503 au plus tôt
+        bne nr
+        lda adrh,y
+        cmp #$05
+        bne nr
+        lda adrl,y
+        cmp #3
+        bcc low
+nr      inc ib
         lda ib
         cmp nb
         beq r
         jmp c1
 range   lda #<m_range
         ldy #>m_range
+        jmp failn
+low     lda #<m_rlow
+        ldy #>m_rlow
         jmp failn
 r       rts
 .)

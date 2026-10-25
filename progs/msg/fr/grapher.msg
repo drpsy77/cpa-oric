@@ -8,5 +8,5 @@ m_nolo  .asc "LORES d'abord",0
 m_ro    .asc "fichier protege",0
 m_dirf  .asc "repertoire plein",0
 m_nonext .asc "NEXT manquant",0
-m_use   .asc "GRAPHER NOM [/A|/C] [p1..p9]",13,10,"$"
+m_use   .asc "GRAPHER NOM [/A|/C|/O] [p1..p9]",13,10,"$"
 m_chain .asc "Ligne trop longue",13,10,"$"

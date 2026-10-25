@@ -1,0 +1,4 @@
+; memoire pleine a un DIM de taille calculee : verifie a l execution
+N = 10000
+DIM A(N) B(N)
+PRINT 1

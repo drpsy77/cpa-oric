@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 38 | 5 | 171 | 36 | 72 | **322** | 68 | **390** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
-| GRAPHER + GRXASM | 35 | 22 | 125 | 29 | 18 | **229** | 51 | **280** |
+| GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 14 | 0 | 21 | 13 | 9 | **57** | 22 | **79** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 14 | 0 | 11 | 9 | 3 | **37** | 7 | **44** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *147* | *47* | *393* | *92* | *102* | ***781*** | *201* | ***982*** |
+| *Applications* | *147* | *47* | *393* | *97* | *102* | ***786*** | *206* | ***992*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 110 | 18 | **175** | 45 | **220** |
-| **Total** | **199** | **77** | **616** | **294** | **198** | **1384** | **330** | **1714** |
+| Outillage PC | 7 | 15 | 25 | 114 | 18 | **179** | 45 | **224** |
+| **Total** | **199** | **77** | **616** | **303** | **198** | **1393** | **335** | **1728** |
 
-Points ajustés (indicatif, § 9) : 1 384 × 1,05 ≈ 1 453.
+Points ajustés (indicatif, § 9) : 1 393 × 1,05 ≈ 1 463.
 
-Nombre de fonctions comptées : 28 ILF, 15 EIF, 198 EI, 72 EO, 66 EQ.
+Nombre de fonctions comptées : 28 ILF, 15 EIF, 198 EI, 74 EO, 66 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -344,7 +344,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.D05 | Animations `.ANI` | EIF | 1 | 3 | F | 5 |
 | GRA.D06 | Sprites `.SPR` | EIF | 2 | 5 | F | 5 |
 | GRA.D07 | Emplacements de sprites et codes réservés | ILF | 2 | 6 | F | 7 |
-| GRA.D08 | Bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, HIRES) | EIF | 6 | 3 | M | 7 |
+| GRA.D08 | Bibliothèques des programmes traduits (GRX, ARR, FIL, SPR, ANIM, ORIC, HIRES) | EIF | 7 | 3 | M | 7 |
 | GRA.D09 | Tuiles : tables par place, carte du dernier TMAP | ILF | 2 | 6 | F | 7 |
 | GRA.T01 | Exécuter un `.GRX` (paramètres `$1`-`$9`, boucles, conditions, sous-programmes, ESC) | EI | 2 | 6 | M | 4 |
 | GRA.T02 | Affectation `V = expr` | EI | 1 | 2 | F | 3 |
@@ -400,6 +400,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.T52 | TILE(x,y) | EQ | 2 | 3 | F | 3 |
 | GRA.T53 | TFONT | EI | 2 | 3 | F | 3 |
 | GRA.T54 | `/C` : traduire puis assembler (CHAIN vers `ASM NOM /E`), `NOM.COM` seul | EO | 2 | 3 | F | 4 |
+| GRA.T55 | `/O` : traduire pour un Oric seul, puis assembler (CHAIN vers `ASM NOM /E /T`) : `NOM.TAP` (en-tête, fichiers lus recopiés, refus de SPLIT et des écritures) | EO | 3 | 6 | M | 5 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -418,6 +419,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A13 | GRXASM : routines utiles des bibliothèques (graphe des besoins, fermeture) | `grxasm.s` | 5 |
 | GRA.A14 | `/A`, `/C` : passage à GRXASM, puis à ASM, par CHAIN ; bibliothèques cherchées sur le lecteur du `.GRX`, puis sur les lecteurs lus | `grapher.s`, `grxasm.s` | 1 |
 | GRA.A15 | Tuiles : une table par place dans la tuile, carte traduite par morceaux (avant, dans, après la carte), instructions modifiées par ligne, coordonnées sans division | `spr.inc` | 5 |
+| GRA.A16 | Oric seul : socle sans la ROM (vecteurs pris où la ROM les envoie, clavier, console, BDOS réduit à table d'entrées gardées avec leur routine, fichiers recopiés dans le programme, retour au texte), en-tête du `.TAP` dans la source | `oric.inc`, `grxasm.s` | 5 |
 
 ### 4.3 LOGO
 
@@ -575,7 +577,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T03 | USBDIR : liste (tailles, dossiers) | EQ | 1 | 4 | F | 3 |
 | USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`, `/L` : CR LF) | EI | 1 | 3 | F | 3 |
 | USB.T05 | TERM : affichage de ce qui arrive du port série (CR -> CR LF) | EO | 1 | 2 | F | 4 |
-| USB.T06 | MKTAP : `.TAP` pour l'Oric sous BASIC (blocs, longueurs, `/R`, chargeur BASIC, contrôles des plages) | EO | 2 | 7 | M | 5 |
+| USB.T06 | MKTAP : `.TAP` pour l'Oric sous BASIC (blocs, longueurs, `/R` en `$0503` au plus tôt, chargeur BASIC, contrôles des plages) | EO | 2 | 7 | M | 5 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -590,7 +592,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
 | ASM.D01 | Source `.ASM` et inclusions | EIF | 1 | 3 | F | 5 |
-| ASM.T01 | Assembler : `NOM.COM`, `NOM.SYM` (`/S`), liste des erreurs ; `/E` : source effacée après succès | EO | 1 | 7 | F | 4 |
+| ASM.T01 | Assembler : `NOM.COM`, `NOM.SYM` (`/S`), liste des erreurs ; `/E` : source effacée après succès ; `/T` : `NOM.TAP` | EO | 1 | 8 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -738,7 +740,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T10 | `gen_asm_tab.py` : mnémoniques et opcodes | EO | 0 | 2 | F | 4 |
 | OUT.T11 | `gen_readme_txt.py` : README.TXT et textes de HELP | EO | 0 | 3 | F | 4 |
 | OUT.T12 | `strip_inc.py` : bibliothèques sans commentaires | EO | 1 | 1 | F | 4 |
-| OUT.T13 | `mark_inc.py` : bibliothèques marquées par routine | EO | 1 | 3 | F | 4 |
+| OUT.T13 | `mark_inc.py` : bibliothèques marquées par routine (annotations `;[ ;] ;> ;&`) | EO | 1 | 3 | F | 4 |
 | OUT.T14 | `lzhir.py c` : compresser | EO | 1 | 2 | F | 4 |
 | OUT.T15 | `lzhir.py d` : décompresser | EO | 1 | 2 | F | 4 |
 | OUT.T16 | `lzhir.py i` : informations | EQ | 1 | 2 | F | 3 |
@@ -767,6 +769,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T39 | `test_fichiers.py` : sûreté des enregistrements (EDIT, GRAPHER) | EO | 2 | 4 | F | 4 |
 | OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
 | OUT.T41 | `grx_colig.py` : `.GRX` passé de (ligne, colonne) à (colonne, ligne) | EO | 1 | 2 | F | 4 |
+| OUT.T42 | `test_oric.sh` : GRXASM `/O`, ASM `/T`, `.TAP` chargés sous BASIC 1.1 (`build/tap/`) | EO | 2 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -793,47 +796,47 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 673 | 10 % | 37 833 | 35 | 117 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 673 | 10 % | 37 834 | 35 | 117 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 22 | 13 167 | 1 024 | 428 | 0 | 7 % | 32 931 | 57 | 144 |
+| GRAPHER + GRXASM | 23 | 14 261 | 1 192 | 460 | 0 | 8 % | 33 936 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
 | CMDER | 3 | 6 185 | 314 | 196 | 0 | 5 % | 13 581 | 109 | 238 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 18 | 2 679 | 276 | 117 | 0 | 9 % | 6 780 | 72 | 183 |
-| ASM | 4 | 2 489 | 130 | 78 | 70 | 5 % | 6 130 | 277 | 681 |
+| USB | 18 | 2 692 | 277 | 117 | 0 | 9 % | 6 825 | 73 | 184 |
+| ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 32 | 1 094 | 73 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 171 | 7 811 | 907 | 506 | 0 | 10 % | — | 45 | — |
-| **Total** | 346 | 67 510 | 5 337 | 2 698 | 2 589 | 7 % | 147 817 | 49 | 107 |
+| Outillage PC | 176 | 8 005 | 955 | 512 | 0 | 11 % | — | 45 | — |
+| **Total** | 352 | 68 803 | 5 557 | 2 735 | 2 589 | 7 % | 148 878 | 49 | 107 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 357 | 80 | 4,2 | 75 |
+| Système et commandes | 1 371 | 80 | 4,3 | 77 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 872 | 69 | 3,8 | 39 |
+| GRAPHER + GRXASM | 975 | 70 | 4,2 | 39 |
 | LOGO | 311 | 63 | 1,6 | 20 |
 | CMDER | 174 | 24 | 3,1 | 12 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 38 | 9 | 1,0 | 10 |
-| ASM | 58 | 10 | 6,4 | 5 |
+| USB | 38 | 9 | 1,0 | 11 |
+| ASM | 62 | 10 | 6,9 | 5 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 24 |
-| Outillage PC | 328 | — | 1,9 | 113 |
-| Transverse (projet) | 2 136 | — | — | 66 |
-| Traduction anglaise (docs/en) | 2 524 | — | — | 29 |
-| **Total** | 8 186 | 309 | 5,9 | 190 |
+| Outillage PC | 328 | — | 1,8 | 114 |
+| Transverse (projet) | 2 197 | — | — | 72 |
+| Traduction anglaise (docs/en) | 2 633 | — | — | 31 |
+| **Total** | 8 477 | 310 | 6,1 | 196 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 190 commits du 2026-10-04 au 2026-10-24.
+Historique : 196 commits du 2026-10-04 au 2026-10-25.
 
-Réutilisation : 50 122 lignes de code écrites dans `progs/`, 55 694 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,11 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 51 199 lignes de code écrites dans `progs/`, 55 974 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,09 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -894,6 +897,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-24 | EDSPRITE | 0.9 | 1 376 | 328 | 1 704 | 188 | `EDSPRITE.COM` : éditeur plein écran des sprites et caractères `.SPR` |
 | 2026-10-24 | EDSPRITE 2 | 0.9 | 1 379 | 329 | 1 708 | 189 | EDSPRITE : curseur toujours clignotant, grisé sombre, ligne d'aide, Détourer, tuiles en motif |
 | 2026-10-24 | MKTAP | 0.9 | 1 384 | 330 | 1 714 | 191 | `MKTAP.COM` et `tools/mktap.py` : `.TAP` pour l'Oric sous BASIC (blocs, démarrage automatique, chargeur BASIC) ; `test_mktap.sh` |
+| 2026-10-25 | GRXASM /O | 0.9 | 1 393 | 335 | 1 728 | 197 | `GRXASM NOM /O` : `.TAP` pour un Oric seul sur le socle `ORIC.INC` ; ASM `/T` ; vérifications de l'interpréteur retirées des copies d'`ARR.INC` ; tailles constantes de `DIM` vérifiées à la traduction ; MKTAP : `/R` en `$0503` au plus tôt ; `test_oric.sh` |
 
 ## 11. Comparaisons
 

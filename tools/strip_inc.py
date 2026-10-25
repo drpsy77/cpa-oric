@@ -15,7 +15,10 @@ Une ligne « ;#msg NOM.msg » de la bibliothèque est remplacée par la copie
 allégée de DOSSIER_MSG/NOM.msg (par défaut msg/fr à côté de SOURCE ;
 msg/en pour la disquette anglaise) : la copie de la disquette porte ses
 messages, que les programmes de progs/ incluent à part (ASM n'a qu'un
-niveau d'inclusion). « - » : marques retirées sans les messages."""
+niveau d'inclusion). « - » : marques retirées sans les messages.
+Les annotations « ;> » et « ;& » (ORIC.INC), « ;[ » et « ;] » (ARR.INC :
+« ;[ » seul, sans son commentaire) restent : tools/mark_inc.py les lit, puis
+les retire."""
 import os
 import sys
 
@@ -58,6 +61,12 @@ def main(src, dst, msgdir=None):
                     s = strip_line(ml)
                     if s:
                         res.append(s)
+            continue
+        if l.startswith(";>") or l.startswith(";&"):
+            res.append(l.rstrip())        # pour mark_inc.py
+            continue
+        if l.startswith(";[") or l.startswith(";]"):
+            res.append(l[:2])             # (ARR.INC) pour mark_inc.py
             continue
         s = strip_line(l)
         if s:

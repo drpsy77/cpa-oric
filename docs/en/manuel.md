@@ -64,8 +64,9 @@ Other programs on the disk:
   (`edsprite.md`).
 - `GRAPHER.COM NAME`, the small drawing language of `.GRX` files (run), and `GRXASM.COM NAME`
   (or `GRAPHER NAME /A`), which translates it into assembly (copying the useful routines of
-  `GRX.INC`, `HIRES.INC`...), with its examples (`grapher.md` § 14), and `VOIR.COM NAME`,
-  which shows a picture (see "Full-screen HIRES" below).
+  `GRX.INC`, `HIRES.INC`...), with its examples (`grapher.md` § 14); `GRXASM NAME /O` makes
+  it a `.TAP` for a bare Oric, without CP/A (`ORIC.INC` base, `grapher.md` § 12.1); and
+  `VOIR.COM NAME`, which shows a picture (see "Full-screen HIRES" below).
 - `ASM.COM NAME`, the 6502 assembler, with the example sources `HELLO.ASM`, `GTEST.ASM`,
   `CPA.INC` and `HIRES.INC`.
 - `DEBUG.COM NAME`, the monitor, disassembler and single-stepper.
@@ -264,8 +265,8 @@ visible.
 |---|---|---|---|
 | `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
 | `build/cpa-notes-en.dsk` | EDIT | | |
-| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, MKTAP, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, MKTAP, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 
 On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
@@ -503,7 +504,8 @@ with its subfolder `int` for `0:`).
 
 `MKTAP` makes a `.TAP` file: a tape that any Oric Atmos loads with `CLOAD""`, without CP/A or
 a disk (BASIC ROM 1.1). The program is first assembled for its address under BASIC
-(`*= $8000`, for instance), then:
+(`*= $8000`, for instance), then (a GRAPHER program, for its part, becomes a `.TAP` in a
+single command: `GRXASM NAME /O`, `grapher.md` § 12.1):
 
     A>MKTAP GAME GAME.COM 8000 /R
     GAME     8000-84D1 /R
@@ -532,8 +534,9 @@ a disk (BASIC ROM 1.1). The program is first assembled for its address under BAS
 - The code that is run lives under the Oric's ROM: no CP/A BDOS or BIOS (`JSR $0203`, `$C000`),
   no files; an `RTS` returns to BASIC. Under BASIC, a BASIC program uses `$0501-$97FF`, and
   page 2 and the zero page belong to the ROM (`docs/oric-basic.md` § 1).
-- A block run by `/R` must not start at `$0500`: before running it, the ROM puts `$00` at
-  `$0500-$0502`. Without `/R`, a block at `$0500` arrives intact.
+- A block run by `/R` starts at `$0503` at the earliest (`/R before 0503` otherwise): before
+  running it, the ROM puts `$00` at `$0500-$0502`. Without `/R`, a block at `$0500` arrives
+  intact.
 - A `.COM` written by ASM ends with zeros (the fill of its last record): they are loaded too,
   with no effect; `,len` removes them.
 - Transport: `EXPORT GAME.TAP` to the LOCI's USB stick, tape mounted from the LOCI menu, then
@@ -985,11 +988,14 @@ padding `^Z`s (`1A`). A read-only (R/O) file can be viewed but not saved.
     A>ASM PROG
     A>PROG
 
-`ASM NAME [/S] [/E]` assembles `NAME.ASM` (or `NAME.ext` if you give the type) and writes
+`ASM NAME [/S] [/E] [/T]` assembles `NAME.ASM` (or `NAME.ext` if you give the type) and writes
 `NAME.COM`. You can thus write, assemble and run a program without leaving the Oric. `/S` also
 writes `NAME.SYM`, the list of symbols for DEBUG; `/E` erases the source if assembly succeeded
-(this is what `GRXASM NAME /C` does, its `.ASM` being only an intermediate). Example on the
-disk:
+(this is what `GRXASM NAME /C` does, its `.ASM` being only an intermediate); `/T` names the
+file written `NAME.TAP` instead of `NAME.COM`, without changing its content: the source
+carries the `.TAP` header itself (as `.byt`, before the code; this is what `GRXASM NAME /O`
+writes, and it chains `ASM NAME /E /T`). For a hand-written program, MKTAP makes the header
+("Publishing for the Oric under BASIC"). Example on the disk:
 
     A>ASM HELLO /S
     ASM CP/A 1.0
@@ -1247,13 +1253,16 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   byte, record by record. Disk full: the started `.TAP` is erased. The BASIC loader is
   tokenised (`CLOAD` = `$B6`, `CALL` = `$BF`, table of ROM 1.1); its block is one byte longer
   than the program, because the ROM takes the end of the block as the start of the variables.
-  `tools/test_mktap.sh`: MKTAP.COM against `mktap.py`, then loading under BASIC 1.1 in
-  Oricutron.
+  A `/R` block before `$0503` is refused. `tools/test_mktap.sh`: MKTAP.COM against
+  `mktap.py`, then loading under BASIC 1.1 in Oricutron.
 - **EDIT**: exactly 8,192 bytes (any addition costs a 2 KB block; 842 bytes of buffers could
   leave the file). `/L`: the Quitter item becomes Retour (back to LOGO).
 - **ASM** writes the code during pass 2, record by record (`wput`): memory is only used for the
-  symbols. The file is erased if there are errors. `tools/test_asm.sh`: each program of
-  `progs/` assembled by ASM.COM must be identical to xa's output.
+  symbols. The file is erased if there are errors. `/T` only changes the type of the file
+  written (`t_out`, also in the final message). Calls to the BDOS on the output FCB go through
+  `bd_out` (room gained for `/T`: ASM still fits in three blocks, 4 bytes short).
+  `tools/test_asm.sh`: each program of `progs/` assembled by ASM.COM must be identical to
+  xa's output; `tools/test_oric.sh` tries `/T`.
 - **HEX** writes in place (random access); leaving a modified window writes it.
 - **EDSPRITE** keeps the whole file in memory and saves it as EDIT does (`NAME.$$$`);
   details in `edsprite.md` § 6.

@@ -5,9 +5,9 @@ pour que GRXASM n'en recopie que les routines utiles.
   mark_inc.py DOSSIER
 
 Lit dans DOSSIER les copies allégées (tools/strip_inc.py) GRX.INC, ARR.INC,
-FIL.INC, SPR.INC, ANIM.INC et HIRES.INC, et les réécrit avec des lignes de
-commentaire (ASM et xa les ignorent). Les routines sont numérotées de 1 à
-$FFF, à la suite d'un fichier à l'autre, dans cet ordre :
+FIL.INC, SPR.INC, ANIM.INC, ORIC.INC et HIRES.INC, et les réécrit avec des
+lignes de commentaire (ASM et xa les ignorent). Les routines sont numérotées
+de 1 à $FFF, à la suite d'un fichier à l'autre, dans cet ordre :
 
   ;@#NNN     première ligne : la première routine du fichier est NNN+1
   ;@DDDEEE   une routine commence (numéro suivant) ; la ligne qui suit porte
@@ -22,13 +22,24 @@ elle a besoin de tout ce que ses instructions et ses données nomment, et de la
 suivante si elle ne finit ni par rts, ni par jmp, ni par des données (elle
 continue dedans). Une constante qui vaut une étiquette appartient à la routine
 de cette étiquette (« a_fail = g_stop » : GRXASM la reconnaît comme un nom de
-g_stop) ; les autres sont toujours recopiées."""
+g_stop) ; les autres sont toujours recopiées.
+
+Deux annotations de la source (gardées par strip_inc.py, retirées ici) :
+  ;>a b c    la routine a (de n'importe quelle bibliothèque) a aussi besoin
+             de b et c : ORIC.INC, dont les routines du BDOS ne sont
+             appelées que par leur numéro de fonction (rz_get : o_rdl)
+  ;&nom      les lignes qui suivent appartiennent à la routine nom (gardées
+             avec elle, sans être un besoin de la routine où elles sont) ;
+             « ;& » seul, ou la routine suivante : fin. La table des
+             fonctions d'ORIC.INC n'a ainsi que les entrées utiles.
+Les lignes entre « ;[ » et « ;] » (ARR.INC : vérifications de
+l'interpréteur, r_chk) sont retirées : un programme traduit ne vérifie rien."""
 import os
 import re
 import sys
 
-ORDRE = ["GRX.INC", "ARR.INC", "FIL.INC", "SPR.INC", "ANIM.INC", "HIRES.INC"]
-TOUJOURS = {"g_init"}
+ORDRE = ["GRX.INC", "ARR.INC", "FIL.INC", "SPR.INC", "ANIM.INC", "ORIC.INC", "HIRES.INC"]
+TOUJOURS = {"g_init", "o_init"}
 MNEM = set("adc and asl bcc bcs beq bit bmi bne bpl brk bvc bvs clc cld cli clv cmp "
            "cpx cpy dec dex dey eor inc inx iny jmp jsr lda ldx ldy lsr nop ora pha "
            "php pla plp rol ror rti rts sbc sec sed sei sta stx sty tax tay tsx txa "
@@ -43,17 +54,36 @@ def idents(s):
 
 
 def analyse(fichiers):
-    """-> lignes par fichier [(texte, nom_de_bloc ou None, equate)], blocs, constantes"""
+    """-> lignes par fichier [(texte, nom_de_bloc ou None, equate, propriétaire
+    imposé)], blocs, constantes, besoins ajoutés"""
     blocs = []          # dicts : nom, fichier, refs, fin
     equ = {}            # nom -> identifiants de la valeur
     lignes = {}
+    extra = []          # (a, b) : a a besoin de b (« ;> »)
     for f, texte in fichiers:
         prof = 0
         cour = None
+        force = None
+        saute = False
         res = []
         for l in texte.split("\n"):
             if l.startswith(";@"):
                 continue                    # déjà marqué : on refait
+            if l.startswith(";>"):
+                n = l[2:].split()
+                extra += [(n[0], b) for b in n[1:]]
+                continue
+            if l.startswith(";&"):
+                force = l[2:].strip() or None
+                continue
+            if l.startswith(";["):
+                saute = True
+                continue
+            if l.startswith(";]"):
+                saute = False
+                continue
+            if saute:
+                continue                    # interprété seulement : retiré
             t = l.split()
             proprio = cour
             eq = None
@@ -68,6 +98,10 @@ def analyse(fichiers):
                     cour = {"nom": m.group(1), "fichier": f, "refs": set(), "fin": None}
                     blocs.append(cour)
                     proprio = cour
+                    force = None
+            if force is not None and proprio is cour:
+                res.append((l, None, None, force))
+                continue
             if proprio is not None and not l.startswith(";"):
                 corps = l
                 if l and l[0] not in " \t.":
@@ -83,13 +117,13 @@ def analyse(fichiers):
                         proprio["fin"] = "data"
                     elif "=" in corps:      # constante locale d'un bloc
                         proprio["refs"] |= idents(corps.split("=", 1)[1])
-            res.append((l, proprio, eq))
+            res.append((l, proprio, eq, None))
             if ".(" in t:
                 prof += 1
             if ".)" in t:
                 prof -= 1
         lignes[f] = res
-    return lignes, blocs, equ
+    return lignes, blocs, equ, extra
 
 
 def main(dossier):
@@ -97,7 +131,7 @@ def main(dossier):
     for f in ORDRE:
         p = os.path.join(dossier, f)
         fichiers.append((f, open(p, encoding="latin-1").read().rstrip("\n")))
-    lignes, blocs, equ = analyse(fichiers)
+    lignes, blocs, equ, extra = analyse(fichiers)
     num = {}
     for i, b in enumerate(blocs):
         b["n"] = i + 1
@@ -140,13 +174,27 @@ def main(dossier):
                 and blocs[i + 1]["fichier"] == b["fichier"]:
             d.add(blocs[i + 1]["n"])     # continue dans la suivante
         b["deps"] = sorted(d)
+    for a, nb in extra:                  # « ;> »
+        ra, rb = resout(a), resout(nb)
+        if not ra or not rb:
+            sys.exit("mark_inc : ;>%s %s : routine inconnue" % (a, nb))
+        ra[0]["deps"] = sorted(set(ra[0]["deps"]) | {rb[0]["n"]})
     total = 0
     for f, _ in fichiers:
         mes = [b for b in blocs if b["fichier"] == f]
         corps = [";@#%03X" % (mes[0]["n"] - 1)]
         cour = 0
         partis = set()
-        for l, proprio, eq in lignes[f]:
+        for l, proprio, eq, force in lignes[f]:
+            if force is not None:         # « ;& » : lignes d'une autre routine
+                if force not in num:
+                    sys.exit("mark_inc : ;&%s : routine inconnue" % force)
+                p = num[force]["n"]
+                if p != cour:
+                    corps.append(";@=%03X" % p)
+                    cour = p
+                corps.append(l)
+                continue
             if eq is not None:
                 p = proprio_eq[eq]["n"] if eq in proprio_eq else 0
             else:
