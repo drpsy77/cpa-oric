@@ -24,3 +24,8 @@ tools/clk-mac/
 !build/cpa-anim-en.dsk
 !build/cpa-project-en.dsk
 *~
+# sources du LOCI (firmware, ROM du menu) : lues pour USBMOUNT, pas versionnées
+archives/loci-firmware-main/
+archives/loci-firmware-main.zip
+archives/loci-rom-main/
+archives/loci-rom-main.zip

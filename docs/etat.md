@@ -75,7 +75,7 @@ quand on en a besoin.
 
 Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
 
-**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) `USBMOUNT JEU.TAP` ;
+**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) la clé USB depuis CP/A, par lots (`docs/usb.md`) ;
 (2) programmes BASIC en texte (`.BAS`) codés par MKTAP. Détail au point 3 ci-dessous ; le
 reste de la liste garde son ordre. Fait le 25/10/2026 : `GRXASM NOM /O`.
 
@@ -106,6 +106,24 @@ reste de la liste garde son ordre. Fait le 25/10/2026 : `GRXASM NOM /O`.
      `GRXASM /O`, `snd.s` (~600 octets) rejoint le socle `ORIC.INC` (`docs/oric-basic.md`
      § 4 ; aujourd'hui un bip seulement). Place : GRAPHER a 663 octets libres dans son
      dernier bloc (§ 3).
+   - **Bibliothèques compilées** (idée de Pierre, 25/10/2026 ; backlog, pas prioritaire :
+     sur le LOCI, la traduction est longue mais ne gêne pas). Mesure dans le 6502 simulé,
+     `GRXASM SERPENT /O` : 12,9 s de calcul, 729 enregistrements lus (716 pour les quatre
+     bibliothèques, lues deux fois en entier : relevé des dépendances, puis recopie) et 239
+     écrits ; `ASM` : 17,9 s, 478 lus (le `.ASM` deux fois), 41 écrits. Le `.ASM` fait
+     30 Ko, dont 21 Ko de texte recopié des bibliothèques pour 3,6 Ko de code. Piste : les
+     bibliothèques compilées par `build.sh` (xa, sur le PC) avec, pour chaque routine, ses
+     dépendances et ses adresses à reloger (cible = routine + décalage ; octet haut seul :
+     garder l'octet bas pour la retenue ; symboles du programme : `O_FILES`, `h_end`,
+     `s_hst`...) ; GRXASM ne lit qu'un index et n'écrit que le code du programme ; ASM
+     ajoute les routines relogées à la même place qu'aujourd'hui, donc un `.COM` / `.TAP`
+     identique à l'octet près (les tests actuels restent l'oracle ; un relogeur Python pour
+     xa). Gains estimés : ~4 fois moins d'enregistrements, ~3 fois moins de calcul, ~50 Ko
+     de moins sur chaque disquette qui porte GRXASM ; aussi pour l'assembleur écrit à la
+     main. Prix : outil de construction, ASM d'un ou deux blocs de plus, `.ASM` qui ne
+     contient plus les bibliothèques. Première étape possible : l'index des dépendances
+     seul (plus de première lecture). À minuter d'abord sur l'Oric (traduction, puis
+     assemblage) : le partage entre calcul et accès au LOCI n'est pas connu.
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
    faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
    a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
@@ -119,36 +137,20 @@ reste de la liste garde son ordre. Fait le 25/10/2026 : `GRXASM NOM /O`.
      petits), les tailles constantes de `DIM` vérifiées à la traduction, MKTAP qui refuse un
      bloc `/R` avant `$0503`. Décidé, pas encore fait : SPLIT dans `ORIC.INC`, le son quand
      GRAPHER en aura.
-   - Suite, dans l'ordre : **`USBMOUNT JEU.TAP`** (ci-dessous) ; puis les **`.BAS`** : MKTAP
+   - Suite, dans l'ordre : **la clé USB depuis CP/A** (ci-dessous, `docs/usb.md`) ; puis les **`.BAS`** : MKTAP
      code un programme BASIC écrit dans EDIT (`docs/oric-basic.md` § 2) ; `CASSETTE.COM`
      (décidé) ensuite.
    - Plus tard : la boîte à outils appelée par `!` depuis le BASIC (`docs/oric-basic.md`
      § 5). Écartée : la traduction de GRAPHER en BASIC (§ 6).
-   - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
-     - **`USBMOUNT`** (nom choisi) : une seule commande pour monter un fichier de la clé du
-       LOCI depuis CP/A, sans repasser par son menu ; le type du fichier dit quoi faire.
-       - `USBMOUNT B: JEU.DSK` : monte un `.dsk` en B:, C: ou D: (relire le répertoire comme
-         après un changement de disquette). **A: interdit** (décidé par Pierre) : les `.COM`
-         et le fichier de banques du système y sont lus. Une disquette Sedoric seulement
-         pour booter dessus.
-       - `USBMOUNT JEU.TAP` : monte le `.TAP` dans le lecteur cassette du LOCI ; avec `/B`
-         (option à confirmer), rend la main à la ROM BASIC et lance le chargement (on quitte
-         CP/A). Ferme la boucle développer, publier, essayer.
-       - Ne remplace pas le menu du LOCI au premier démarrage.
-       - Complétion des noms de la clé USB (demandée) : la complétion du prompt (BDOS 10,
-         `rline.s`) ne lit que les disquettes CP/A ; l'étendre à la clé coûterait de la place
-         résidente et l'API du LOCI dans le système. Décidé : c'est `USBMOUNT` qui la fait.
-         Sans nom, ou avec un début de nom (`USBMOUNT JE`), il montre la liste des `.DSK` /
-         `.TAP` de la clé qui conviennent (navigable aux flèches, RETURN monte, ESC sort) ;
-         un seul possible : monté directement. Noms longs de la clé : coupés à 37 colonnes.
-     - Préalable : vérifier dans les sources du LOCI (firmware et ROM du menu) que
-       le montage `.TAP` / `.dsk` est appelable depuis un programme 6502 (USBDIR utilise déjà
-       l'API du LOCI). Des `.COM`, rien dans le contrat.
-     - L'équivalent de `CSAVE` est `CASSETTE.COM` (déjà décidé, `docs/oric-basic.md` § 2).
-       Sous CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette
-       (timing à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
-     - Ordre proposé : `USBMOUNT` sur `.TAP` avec boot, puis sur `.dsk` en B:, puis
-       `CASSETTE.COM`.
+   - **La clé USB et le LOCI depuis CP/A** (USBCD, `USBDIR /S`, USBMOUNT pour disquettes et
+     cassette, CMDER : renommer, dupliquer, monter ; répertoire courant propre à CP/A) :
+     spécification, maquettes et lots dans `docs/usb.md` (API du LOCI et configuration du
+     menu en XRAM lues dans `archives/`, non versionnées). Lot 1 d'abord (répertoire
+     courant et supports). Niveau 2 (un répertoire de la clé comme lecteur) : après la
+     descente de PUT en banque (§ 3).
+   - L'équivalent de `CSAVE` est `CASSETTE.COM` (décidé, `docs/oric-basic.md` § 2). Sous
+     CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette (timing
+     à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md` ; Pico W préparé, firmware
    recompilé, liaison Mac vérifiée ; **le Pico W ne marche pas encore avec le LOCI** : en
    attente d'un firmware du LOCI qui le prenne en charge, TERM reste à essayer) : `TERM.COM` fait (scrute l'ACIA lui-même, sans le

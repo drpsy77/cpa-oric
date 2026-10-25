@@ -101,8 +101,8 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - Si quelqu'un a un **Oric-1** (ROM 1.0) : le même `.TAP` (format et mots-clés supposés
   identiques, jamais vérifié).
 
-**GRXASM `/O`** (programme GRAPHER pour un Oric seul ; essayé seulement dans Oricutron, ROM
-BASIC 1.1) :
+**GRXASM `/O`** (programme GRAPHER pour un Oric seul ; la chaîne entière vérifiée avec un jeu,
+ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
 - Les `.TAP` tout faits de `build/tap/` (copiés sur la clé depuis le Mac) : monter
   `serpent.tap` comme cassette dans le menu du LOCI, `CLOAD""` : le jeu démarre tout seul ;
@@ -111,17 +111,15 @@ BASIC 1.1) :
   (tuiles dessinées dans le jeu secondaire : arbres, eau, montagnes ; X et Y changent aux
   flèches) et `defile.tap` (la route défile ; perdu : `Perdu ! Score`, une touche, puis le
   redémarrage). Le bouton RESET en plein jeu doit aussi redémarrer l'Oric proprement.
-- Toute la chaîne sur l'Oric : `cpa.dsk` en A:, `cpa-projet.dsk` en B:, `COPY SERPENT.GRX
-  B:`, `GRXASM B:SERPENT /O` : la traduction enchaîne `ASM B:SERPENT /E /T`, qui doit
-  écrire `B:SERPENT.TAP` (et effacer `SERPENT.ASM`) ; `EXPORT B:SERPENT.TAP`, puis comme
-  ci-dessus. Même chose pour `CARTE` (avec `TUILES.SPR` sur B:, recopié dans le `.TAP`) :
-  noter les durées de la traduction et de l'assemblage.
+- Les durées sur l'Oric, au chronomètre : `GRXASM NOM /O`, d'abord la traduction (jusqu'à
+  `NOM.ASM ecrit`), puis l'assemblage ; pour `SERPENT`, et pour `CARTE` (avec `TUILES.SPR`,
+  recopié dans le `.TAP`). Dans le 6502 simulé, pour `SERPENT` : 12,9 s de calcul et 968
+  enregistrements lus ou écrits pour la traduction, 17,9 s et 519 pour l'assemblage.
+- Les autres réglages du LOCI que AUTO pour la cassette (seul AUTO essayé).
 - Une saisie dans la console : un `.GRX` de trois lignes (`INPUT N$`, `INPUT V`,
   `PRINT N$ " " V`), traduit avec `/O` : le curseur (case inversée) suit la frappe, DEL
   efface, un nombre refusé (`x`) donne un bip court ; à la fin, la ligne affichée reste
   jusqu'à une touche, puis le redémarrage.
-- `EXPORT` d'un `.TAP` écrit par ASM `/T` : il finit par des octets 0 (complément du dernier
-  enregistrement, pas des `^Z`) ; le LOCI doit le monter et le charger sans s'en soucier.
 - Sur `cpa-en.dsk` : `GRXASM B:SNAKE /O` (messages anglais, `MAP.TAP` et `ROAD.TAP` de
   `build/tap/` aussi).
 - Si quelqu'un a un **Oric-1** : `serpent.tap` doit marcher aussi (vecteurs pris en `$0228`
@@ -200,6 +198,13 @@ Cas limites et disquette française, 24 octobre 2026 :
 - GRAPHER traduit, boucle sans lecture du clavier : arrêtée par RESET, système rendu ;
 - LOGO : son (essayé plus tôt ; maniement jugé lourd, `docs/etat.md` § 2 point 6) ;
 - TERM : RETURN ne passait pas à la ligne (corrigé, en attente du Pico ci-dessus).
+
+GRXASM `/O`, 25 octobre 2026 : un jeu de puzzle (`JEUCOUL.TAP`) écrit dans EDIT sur l'Oric,
+mis au point en interprété (`GRAPHER`), puis `GRXASM NOM /O` : traduction, `ASM /E /T`
+enchaîné, `.TAP` écrit sans blocage ; `EXPORT` vers la clé ; `CLOAD""` sur l'Atmos depuis le
+LOCI en mode cassette (réglage AUTO), sans disquette : le jeu démarre seul ; à la fin, l'Oric
+redémarre comme à la mise sous tension (voulu). Le `.TAP` d'ASM `/T`, complété par des 0, se
+charge sans souci. Traduction jugée assez longue (non minutée), assemblage plus rapide.
 
 EDSPRITE, première version, 24 octobre 2026 (`cpa.dsk`) : grille lisible (grisé jugé trop
 clair pour le curseur : assombri), tous les menus sans traces, héros modifié vu dans
