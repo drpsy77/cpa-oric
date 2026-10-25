@@ -69,6 +69,18 @@ GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Trois étages : 
   `tools/test_mktap.sh` (MKTAP.COM contre `mktap.py` dans le 6502 simulé, puis chargement
   sous BASIC 1.1 dans Oricutron : chargeur, code, données, BASIC encore modifiable).
 
+**Décidé, pas encore fait : programmes BASIC en texte.** MKTAP accepte un fichier `.BAS`
+(programme BASIC écrit dans EDIT, avec ses numéros de ligne) et le code comme le ferait la ROM
+(mots-clés en un octet, sauf entre guillemets, après `REM` et selon la règle de `DATA`) ; le
+bloc va en `$0501`, avec l'octet de plus du § 1, et peut voisiner avec des blocs de langage
+machine dans le même `.TAP`. Le codage imite celui de la ROM 1.1 (ordre de sa table des
+mots-clés), pas celui de bas2tap. Essai : le même programme tapé dans Oricutron sous BASIC,
+mémoire comparée octet par octet ; `tools/mktap.py` fait de même sur le PC. Taille estimée :
+~2 Ko de plus (table des mots-clés ~500 octets). À décider : les minuscules (la ROM ne
+reconnaît les mots-clés qu'en majuscules), les lignes plus longues que l'éditeur de l'Oric
+(~78 caractères). Plus tard, le sens inverse (`.TAP` vers texte) pour reprendre de vieux
+programmes dans EDIT.
+
 **Décidé, pas encore fait** : **`CASSETTE.COM`** écrit un `.TAP` sur le port cassette (vrai
 magnétophone) et lit une cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`,
 rien dans le système de la version disquette ; dans la version ROM, ce sera une fonction du
@@ -96,6 +108,12 @@ système (`docs/projet-rom.md`).
   `.TAP` au moment de la traduction ; `SAVE` et les noms calculés sont refusés à la traduction.
 - **Modes** : LORES et HIRES d'abord ; SPLIT (console sous l'image) refusé à la traduction
   dans une première version, ajouté ensuite.
+- **Contrôles des bibliothèques** : en traduit, les contrôles d'`ARR.INC` (indices,
+  longueur des chaînes, plage 0-255) sont sautés (`r_chk` à 0), mais leur code et leurs
+  messages restent recopiés avec les routines (environ 300 octets morts dans PUZZLE, dont
+  ~150 de messages). Décidé : marquer dans `ARR.INC` les fragments « interprété seulement »,
+  que GRXASM saute en recopiant ; les `DIM` de taille constante vérifiés à la traduction
+  (taille, mémoire totale). Avec `/O`, plus de console pour « Erreur : ».
 - Exemples à livrer : `CARTE.GRX`, `SERPENT.GRX`, `DEFILE.GRX` en `.TAP` (et leurs jumeaux
   anglais).
 
@@ -160,8 +178,13 @@ au BASIC les opérations rapides de GRAPHER par la commande `!` :
 - Données de `LOAD` / `BLOAD` dans le `.TAP` : recopiées dans le programme (`.byt` dans le
   `.ASM`, simple mais long à assembler pour une image), ou blocs à part. Blocs à part : le
   code est en `$0500`, là où se charge le chargeur BASIC de MKTAP. À essayer : le dernier
-  `CLOAD""` du chargeur charge le code en `$0500` avec la marque de démarrage automatique,
-  que la ROM lance tout de suite, avant de relire la ligne écrasée.
+  `CLOAD""` du chargeur charge le code avec la marque de démarrage automatique, que la ROM
+  lance tout de suite, avant de relire la ligne écrasée (point d'entrée en `$0503` au plus
+  tôt, § 1).
+- `DIM` de taille calculée en traduit : garder le contrôle « mémoire pleine » à l'exécution,
+  ou l'enlever comme les autres (un tableau trop grand écraserait alors la mémoire) : à
+  décider par Pierre.
+- MKTAP : refuser un bloc `/R` qui commence avant `$0503` (§ 1) : proposé, à confirmer.
 - Boîte à outils (§ 5) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
   module ou plusieurs selon la place ; adresse du module (sous `HIMEM`, ou `$9800-$9FFF`
   quand le programme reste en mode texte).

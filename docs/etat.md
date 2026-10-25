@@ -75,6 +75,10 @@ quand on en a besoin.
 
 Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
 
+**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) `GRXASM NOM /O` ;
+(2) `USBMOUNT JEU.TAP` ; (3) programmes BASIC en texte (`.BAS`) codés par MKTAP. Détail au
+point 3 ci-dessous ; le reste de la liste garde son ordre.
+
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
      bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1), rectangles (`PASTE`, `GRAB`,
@@ -104,9 +108,11 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
    faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
    a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
-   - Suite : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP` autonome pour un
-     Oric seul, sur un socle `ORIC.INC` qui remplace `CPA.INC` (routines de CP/A recopiées,
-     aucun appel à la ROM ; `docs/oric-basic.md` § 3 et 4) ; puis `CASSETTE.COM` (décidé).
+   - Suite, dans l'ordre : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP`
+     autonome pour un Oric seul, sur un socle `ORIC.INC` qui remplace `CPA.INC` (routines de
+     CP/A recopiées, aucun appel à la ROM ; `docs/oric-basic.md` § 3 et 4) ; puis
+     **`USBMOUNT JEU.TAP`** (ci-dessous) ; puis les **`.BAS`** : MKTAP code un programme
+     BASIC écrit dans EDIT (`docs/oric-basic.md` § 2) ; `CASSETTE.COM` (décidé) ensuite.
    - Plus tard : la boîte à outils appelée par `!` depuis le BASIC (`docs/oric-basic.md`
      § 5). Écartée : la traduction de GRAPHER en BASIC (§ 6).
    - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
