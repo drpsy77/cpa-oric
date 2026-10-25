@@ -35,23 +35,23 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 279 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 280 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 13 581 | gestionnaire de fichiers plein écran, deux colonnes, clé USB | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 1 750, 1 735, 994 | échange avec la clé USB du LOCI | `manuel.md` |
-| MKTAP | 2 301 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique ou chargeur BASIC | `manuel.md`, `oric-basic.md` |
+| MKTAP | 2 346 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC | `manuel.md`, `oric-basic.md` |
 | TERM | 762 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
 | EDSPRITE | 8 967 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) | `edsprite.md` |
-| ASM | 6 130 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée ; `#include` cherchés sur A: à D: | `manuel.md` |
+| ASM | 6 140 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 963 | Logo (français, ou anglais sur les disquettes anglaises : 18 758) : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | LOGOTR | 4 402 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
-| GRAPHER, GRXASM | 17 756, 15 175 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
+| GRAPHER, GRXASM | 17 769, 16 264 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -75,9 +75,9 @@ quand on en a besoin.
 
 Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
 
-**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) `GRXASM NOM /O` ;
-(2) `USBMOUNT JEU.TAP` ; (3) programmes BASIC en texte (`.BAS`) codés par MKTAP. Détail au
-point 3 ci-dessous ; le reste de la liste garde son ordre.
+**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) `USBMOUNT JEU.TAP` ;
+(2) programmes BASIC en texte (`.BAS`) codés par MKTAP. Détail au point 3 ci-dessous ; le
+reste de la liste garde son ordre. Fait le 25/10/2026 : `GRXASM NOM /O`.
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -104,15 +104,24 @@ point 3 ci-dessous ; le reste de la liste garde son ordre.
      avant tout code (notes, bruit, durées, attente, son en cours ; s'inspirer de LOGO sans
      sa lourdeur, § 2 point 6). Interprété et traduit par la fonction 116 du BDOS ; avec
      `GRXASM /O`, `snd.s` (~600 octets) rejoint le socle `ORIC.INC` (`docs/oric-basic.md`
-     § 4). Place : GRAPHER a 676 octets libres dans son dernier bloc (§ 3).
+     § 4 ; aujourd'hui un bip seulement). Place : GRAPHER a 663 octets libres dans son
+     dernier bloc (§ 3).
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
    faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
    a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
-   - Suite, dans l'ordre : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP`
-     autonome pour un Oric seul, sur un socle `ORIC.INC` qui remplace `CPA.INC` (routines de
-     CP/A recopiées, aucun appel à la ROM ; `docs/oric-basic.md` § 3 et 4) ; puis
-     **`USBMOUNT JEU.TAP`** (ci-dessous) ; puis les **`.BAS`** : MKTAP code un programme
-     BASIC écrit dans EDIT (`docs/oric-basic.md` § 2) ; `CASSETTE.COM` (décidé) ensuite.
+   - Fait (25/10/2026) : **`GRXASM NOM /O`**, un programme GRAPHER traduit en `.TAP`
+     autonome pour un Oric seul (Atmos, Oric-1), sur le socle `ORIC.INC` qui remplace
+     `CPA.INC` (routines de CP/A recopiées, aucun appel à la ROM), en une commande (ASM
+     `/T`) ; fichiers lus recopiés dans le programme ; `SPLIT` et écritures refusés ; essayé
+     sous BASIC 1.1 dans Oricutron (`tools/test_oric.sh`, exemples dans `build/tap/`).
+     `docs/grapher.md` § 12.1, `docs/oric-basic.md` § 3 et 4. Avec lui : les vérifications de
+     l'interpréteur retirées des copies d'`ARR.INC` (programmes traduits jusqu'à 4 % plus
+     petits), les tailles constantes de `DIM` vérifiées à la traduction, MKTAP qui refuse un
+     bloc `/R` avant `$0503`. Décidé, pas encore fait : SPLIT dans `ORIC.INC`, le son quand
+     GRAPHER en aura.
+   - Suite, dans l'ordre : **`USBMOUNT JEU.TAP`** (ci-dessous) ; puis les **`.BAS`** : MKTAP
+     code un programme BASIC écrit dans EDIT (`docs/oric-basic.md` § 2) ; `CASSETTE.COM`
+     (décidé) ensuite.
    - Plus tard : la boîte à outils appelée par `!` depuis le BASIC (`docs/oric-basic.md`
      § 5). Écartée : la traduction de GRAPHER en BASIC (§ 6).
    - Demandé par Pierre le 23/10/2026 (rien codé ; ergonomie du menu LOCI jugée peu pratique) :
@@ -435,19 +444,21 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 756 octets) prend 9 blocs, 676 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (15 175) prend 8 blocs ;
+- GRAPHER (17 769 octets) prend 9 blocs, 663 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (16 264) prend 8 blocs, 120
+  octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
+  ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 279) prend 6 blocs, **plein** à 9 octets près : une rubrique de plus coûte un bloc ou des
+  blocs, 1 844 octets libres dans le dernier. HELP (12 280) prend 6 blocs, **plein** à 8 octets près : une rubrique de plus coûte un bloc ou des
   textes raccourcis (la rubrique EDSPRITE et la ligne de TERM ont été taillées pour y tenir). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 243 octets de code avant la page suivante, 71 en
-  français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 130) est à 14
-  octets du bloc suivant, 91 en anglais (6 053) : un message français de plus doit être
+  français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
+  octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste ~50 Ko, peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste 38 Ko, peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

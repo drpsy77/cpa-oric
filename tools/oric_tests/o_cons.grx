@@ -1,0 +1,26 @@
+; o_cons.grx : GRXASM /O : console, saisie, fichiers recopies,
+; retour au texte apres le HIRES, fin (une touche, puis la ROM)
+DIM A(3) T$(10,2) N$(8)
+ECHO Oric seul
+PRINT "deux " 2+2
+LOAD A ODAT
+PRINT A(0) " " A(1) " " A(2)
+LOAD T$ OLIG
+PRINT T$(0) "/" T$(1)
+LOAD A ABSENT
+PRINT "FOUND " FOUND
+BLOAD N$ OBIN
+PRINT N$ " " FOUND
+INPUT N$
+PRINT "nom : " N$
+INPUT V
+PRINT "V = " V*2
+LORES
+CHAR 5 5 65
+K = SCRN(5,5)
+TEXT
+PRINT "lores " K
+HIRES
+GLOAD LOGO.HIZ
+TEXT
+PRINT "fin"

@@ -1,10 +1,12 @@
 ; =====================================================================
 ;  ASM.COM — assembleur 6502 résident pour CP/A
 ;
-;  ASM NOM [/S] [/E]  assemble NOM.ASM (ou NOM.ext) et écrit NOM.COM
+;  ASM NOM [/S] [/E] [/T]  assemble NOM.ASM (ou NOM.ext) et écrit NOM.COM
 ;                     /S : écrit aussi NOM.SYM (symboles, pour DEBUG)
 ;                     /E : efface la source si l'assemblage a réussi
 ;                     (GRXASM NOM /C : NOM.ASM n'est qu'un intermédiaire)
+;                     /T : le fichier écrit s'appelle NOM.TAP (la source
+;                     porte l'en-tête du .TAP : GRXASM NOM /O)
 ;  Un #include est cherché sur le lecteur de la source, puis sur les
 ;  lecteurs déjà lus (fonction 24) de A: à D: (disquette système).
 ;
@@ -170,13 +172,7 @@ cp      lda FCB1,x
         sta fcb_src+10
         lda #"M"
         sta fcb_src+11
-hasext  lda #"C"                ; sortie : NOM.COM
-        sta fcb_out+9
-        lda #"O"
-        sta fcb_out+10
-        lda #"M"
-        sta fcb_out+11
-        lda fcb_src+9           ; NOM.COM ne peut pas être la source
+hasext  lda fcb_src+9           ; NOM.COM ne peut pas être la source
         cmp #"C"
         bne okn
         lda fcb_src+10
@@ -189,7 +185,7 @@ hasext  lda #"C"                ; sortie : NOM.COM
         ldy #>m_usage
         jsr puts
         jmp WBOOT
-okn     ldx #0                  ; options /S et /E
+okn     ldx #0                  ; options /S, /E et /T
 op      lda TAIL+1,x
         beq opd
         cmp #"/"
@@ -200,11 +196,23 @@ op      lda TAIL+1,x
         bne op1
         sta opt_s
 op1     cmp #"E"
-        bne opn
+        bne op2
         sta opt_e
+op2     cmp #"T"                ; /T : NOM.TAP
+        bne opn
+        ldy #2
+op3     lda t_tap,y
+        sta t_out,y
+        dey
+        bpl op3
 opn     inx
         bne op
-opd     lda #<m_banner
+opd     ldx #2                  ; sortie : NOM.COM, ou NOM.TAP
+od      lda t_out,x
+        sta fcb_out+9,x
+        dex
+        bpl od
+        lda #<m_banner
         ldy #>m_banner
         jsr puts
         lda #0
@@ -251,14 +259,10 @@ found   lda #1
         jmp WBOOT
 some    jsr clr_out
         ldx #F_DELETE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         jsr clr_out
         ldx #F_MAKE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         cmp #$FF
         bne mk_ok
         jmp wfull
@@ -271,14 +275,10 @@ mk_ok   lda #0
         ora errs+1
         beq write
         ldx #F_CLOSE            ; erreurs : pas de NOM.COM
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         jsr clr_out
         ldx #F_DELETE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         lda errs
         sta val
         lda errs+1
@@ -344,9 +344,7 @@ pad     lda rp                  ; fin du dernier enregistrement : zéros
         jsr wput
         jmp pad
 done    ldx #F_CLOSE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         lda opt_s
         beq nosym
         jsr write_sym
@@ -363,8 +361,8 @@ nm      lda fcb_out,x
         inx
         cpx #9
         bne nm
-dot     lda #<m_com
-        ldy #>m_com
+dot     lda #<m_out
+        ldy #>m_out
         jsr puts
         lda org
         sta val
@@ -436,14 +434,10 @@ write_sym
         sta fcb_out+11
         jsr clr_out
         ldx #F_DELETE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         jsr clr_out
         ldx #F_MAKE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         cmp #$FF
         bne ok
         rts
@@ -511,12 +505,12 @@ pad     lda rp
         lda #0
         jsr wput
         jmp pad
-close   ldx #F_CLOSE
-        lda #<fcb_out
+close   ldx #F_CLOSE        ; (suite juste après le bloc)
+.)
+; bd_out : fonction X du BDOS sur le FCB de sortie (NOM.COM, NOM.SYM)
+bd_out  lda #<fcb_out
         ldy #>fcb_out
         jmp BDOS
-
-.)
 
 ; wput : octet A dans l'enregistrement obuf, écrit dans fcb_out tous les
 ;   128 octets (NOM.COM en passe 2, puis NOM.SYM) ; garde Y ; disque
@@ -533,18 +527,14 @@ wput    ldx rp
         ldy #>obuf
         jsr BDOS
         ldx #F_WRITE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         cmp #0
         bne wfull
         sta rp
         ldy wy
 wr      rts
 wfull   ldx #F_CLOSE
-        lda #<fcb_out
-        ldy #>fcb_out
-        jsr BDOS
+        jsr bd_out
         lda #<m_dfull
         ldy #>m_dfull
         jsr puts
@@ -2599,6 +2589,10 @@ err_tab .word e_syn, e_undef, e_dup, e_mode, e_range, e_branch, e_mnem
 #include "asm.msg"            ; messages (progs/msg/fr, en)
 opt_s     .byt 0            ; /S : NOM.SYM écrit
 opt_e     .byt 0            ; /E : NOM.ASM effacé après succès
+m_out     .asc "."          ; type du fichier écrit, dans le message de fin
+t_out     .asc "COM"        ;   (/T : TAP)
+          .asc " ",0
+t_tap     .asc "TAP"
 
 ; ---------------------------------------------------------------------
 ; Zones de travail (hors du fichier .COM)

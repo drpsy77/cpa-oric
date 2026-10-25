@@ -24,7 +24,9 @@
 ;  r_dim2 et r_ea2 (donc r_get2) échangent r_i et r_j en entrant. Les
 ;  routines internes (rz_ea2...) gardent l'ordre (ligne, colonne).
 ;  r_chk <> 0 : indices et tableaux vérifiés (interprété) ; 0 : rien
-;  (programmes traduits : la vitesse d'abord).
+;  (programmes traduits : la vitesse d'abord). Les lignes entre « ;[ » et
+;  « ;] » ne servent qu'à ces vérifications : tools/mark_inc.py les retire
+;  des copies de la disquette, dont GRXASM recopie les routines.
 ;
 ;    r_dim1     A/Y = descripteur, X = 1 ou 2 octets, r_j = taille
 ;    r_dim2     idem, r_i = colonnes, r_j = lignes (échangés en entrant)
@@ -258,6 +260,7 @@ rz_desc
 .(
         sta r_dp
         sty r_dp+1
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda r_chk
         beq qr
         ldy #1
@@ -266,6 +269,7 @@ rz_desc
         lda #<rz_m_nodim
         ldy #>rz_m_nodim
         jmp r_fail
+;]
 qr       rts
 .)
 
@@ -302,6 +306,7 @@ r_ea1
         sta rz_ix
         lda r_j+1
         sta rz_ix+1
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda r_chk
         beq qok
         lda rz_ix+1
@@ -324,12 +329,15 @@ r_ea1
         lda rz_ix+1
         sbc rz_p+1
         bcs qbad
+;]
 qok      lda rz_ix
         sta rz_p
         lda rz_ix+1
         sta rz_p+1
         jmp rz_addr
+;[ interprété seulement (GRXASM ne le recopie pas)
 qbad     jmp rz_idx
+;]
 .)
 
 ; r_ea2 : élément (r_i, r_j) = (colonne, ligne)
@@ -337,6 +345,7 @@ r_ea2   jsr rz_sw
         jsr rz_desc
 rz_ea2                          ; (r_dp déjà choisi ; r_i ligne, r_j colonne)
 .(
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda r_chk
         beq qcalc
         ldy #7
@@ -361,6 +370,7 @@ rz_ea2                          ; (r_dp déjà choisi ; r_i ligne, r_j colonne)
         lda r_j+1
         sbc (r_dp),y
         bcs qbad
+;]
 qcalc    lda r_i                 ; r_i * taille 2 + r_j
         sta rz_a
         lda r_i+1
@@ -380,7 +390,9 @@ qcalc    lda r_i                 ; r_i * taille 2 + r_j
         adc r_j+1
         sta rz_p+1
         jmp rz_addr
+;[ interprété seulement (GRXASM ne le recopie pas)
 qbad     jmp rz_idx
+;]
 .)
 
 ; rz_addr : r_sa <- adresse + rz_p * (octets par élément)
@@ -442,11 +454,14 @@ r_stw   ldy #0
         lda r_j+1
         sta (r_i),y
         rts
-r_stb   lda r_j+1
+r_stb
+;[ interprété seulement (GRXASM ne le recopie pas)
+        lda r_j+1
         beq qstb1
         lda r_chk               ; traduit : l'octet bas, sans erreur
         beq qstb1
         jmp rz_rng
+;]
 qstb1    ldy #0
         lda r_j
         sta (r_i),y
@@ -478,11 +493,14 @@ r_fill
         sta rz_es
         cmp #2
         beq qw
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda rz_v+1              ; tableau $ : 0-255 (vérifié en interprété)
         beq qa
         lda r_chk
         bne qbad
         beq qa
+;]
+        bne qa                  ; (sans les lignes du dessus : Z=0, cmp #2)
 qw       asl rz_p
         rol rz_p+1
 qa       ldy #0
@@ -492,7 +510,9 @@ qa       ldy #0
         lda (r_dp),y
         sta r_sa+1
         jmp rz_fillb
+;[ interprété seulement (GRXASM ne le recopie pas)
 qbad     jmp rz_rng
+;]
 .)
 
 ; rz_fillb : rz_p octets à partir de r_sa : rz_v (rz_es = 2 : mots)
@@ -532,6 +552,7 @@ qr       rts
 ;   à Y dimensions
 rz_byt
 .(
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda r_chk
         beq qr
         sty rz_nd
@@ -543,8 +564,11 @@ rz_byt
         jsr rz_fld
         cmp rz_nd
         bne qbad
+;]
 qr       rts
+;[ interprété seulement (GRXASM ne le recopie pas)
 qbad     jmp rz_idx
+;]
 .)
 
 ; rz_cap : r_sc <- valeur A/X (lo/hi), 255 au plus
@@ -764,11 +788,13 @@ r_copy
         beq qok
         bcc qok
         ldx r_sc                ; traduit : coupée à la capacité
+;[ interprété seulement (GRXASM ne le recopie pas)
         lda r_chk
         beq qok
         lda #<rz_m_long
         ldy #>rz_m_long
         jmp r_fail
+;]
 qok      stx rz_a
         ldy #0
 qcp      cpy rz_a

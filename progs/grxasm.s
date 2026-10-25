@@ -1,8 +1,8 @@
 ;  =====================================================================
 ;  GRXASM.COM — traduit un fichier GRAPHER (.GRX) en assembleur
 ;
-;  GRXASM NOM [/A|/C] [p1 ... p9]   (ou GRAPHER NOM /A ou /C, qui
-;    passe la main ici)
+;  GRXASM NOM [/A|/C|/O] [p1 ... p9]   (ou GRAPHER NOM /A, /C ou /O,
+;    qui passe la main ici)
 ;    NOM.GRX -> NOM.ASM, à assembler par ASM avec CPA.INC. Les routines
 ;    utiles de GRX.INC, HIRES.INC (ARR.INC, FIL.INC, SPR.INC, ANIM.INC
 ;    si besoin) y sont recopiées ; ces bibliothèques sont cherchées sur
@@ -11,10 +11,17 @@
 ;    routines communes sont dans grxc_inc.s. $1 à $9 sont remplacés
 ;    pendant la traduction ; /A est ignoré ; /C enchaîne « ASM NOM /E »
 ;    (CHAIN) : NOM.COM, et NOM.ASM effacé si l'assemblage réussit.
+;    /O : pour un Oric seul (sans CP/A ni BASIC) : NOM.ASM porte l'en-tête
+;    du .TAP et recopie ORIC.INC au lieu d'inclure CPA.INC ; les fichiers
+;    lus par LOAD, BLOAD, GLOAD et ANIM y sont recopiés (O_FILES) ; SPLIT
+;    et les écritures sont refusés ; puis « ASM NOM /E /T » : NOM.TAP.
 ;  =====================================================================
 
 #include "cpa.inc"
 #include "grxd_inc.s"
+
+korc    = $5D           ; 1 : /O (Oric seul : NOM.TAP, ORIC.INC)
+KNF     = 16            ; /O : fichiers recopiés dans le programme, au plus
 
         *= $0500
 
@@ -59,6 +66,13 @@ z2      sta kvu-1,x             ; variables à deux caractères : aucune
 
 compile
 .(
+        lda cmode               ; /O : pour un Oric seul
+        cmp #3
+        lda #0
+        sta knf                 ; fichiers recopiés : aucun
+        bcc o0
+        lda #1
+o0      sta korc
         jsr o_open
         lda #<h_head1           ; en-tête
         ldy #>h_head1
@@ -72,13 +86,17 @@ compile
         ldy #>h_head2b
         jsr os
         jsr o_name
-        lda #<h_head3
+        lda korc
+        beq h0
+        jsr ko_head
+        jmp h1
+h0      lda #<h_head3
         ldy #>h_head3
         jsr os
         lda #<h_code
         ldy #>h_code
         jsr os
-        lda #0
+h1      lda #0
         sta kn
         sta kn+1
         sta kanim
@@ -168,6 +186,7 @@ bl2     lda #0
 bend    jsr o_vars
         jsr kf_init             ; G_INIT, tables des lignes, adresses des
                                 ;   tableaux fixes
+        jsr ko_files            ; /O : fichiers recopiés (O_FILES)
         jsr kl_libs             ; routines utiles des bibliothèques
         jsr kf_none             ; sans tableau fixe : « G_INIT = g_init »
         jsr o_close
@@ -177,9 +196,9 @@ bend    jsr o_vars
         jsr puts
         jsr o_name
         jsr crlf
-        lda cmode               ; /C : ASM NOM /E
+        lda cmode               ; /C : ASM NOM /E ; /O : ASM NOM /E /T
         cmp #2
-        beq to_asm
+        bcs to_asm
         jmp quit
 .)
 
@@ -212,13 +231,20 @@ c2      lda sfcb,x
         inx
         cpx #9
         bne c2
-e       ldx #0
-c3      lda t_ce,x              ; « /E », 0
+e       lda #3                  ; « /E », ou « /E /T » (/O)
+        ldx korc
+        beq e1
+        lda #6
+e1      sta gd
+        ldx #0
+c3      lda t_ce,x
         sta rawbuf,y
         iny
         inx
-        cpx #4
+        cpx gd
         bne c3
+        lda #0
+        sta rawbuf,y
         lda #<rawbuf
         ldy #>rawbuf
         ldx #F_CHAIN
@@ -1654,7 +1680,10 @@ k_hires lda #<s_hires
         lda #>s_hires
         pha
         jmp k_call0
-k_split lda #<s_split
+k_split lda korc
+        beq ks0
+        jmp ko_no
+ks0     lda #<s_split
         pha
         lda #>s_split
         pha
@@ -2038,29 +2067,43 @@ kp_fl   lda kpp+1
         stx kpp+1
         jmp oi
 kpf_r   rts
-k_gload lda #<s_gload
+; GLOAD, GSAVE : l'appel, puis le nom (lecteur, 8 + 3) ; /O : GSAVE
+;   refusé, une image .IMG (SPLIT) aussi, les autres recopiées (HIR par
+;   défaut, comme GLOAD hors du SPLIT)
+k_gload
+.(
+        jsr getname
+        lda korc
+        beq g
+        ldx #2
+c       lda ifcb+9,x
+        cmp ft_img,x
+        bne ga
+        dex
+        bpl c
+        bmi ko_no
+ga      lda #<ft_hir
+        ldy #>ft_hir
+        jsr ko_add
+g       lda #<s_gload
         ldy #>s_gload
-        jmp k_img
+        jmp oi_fnm
+.)
 k_anim  jsr animarg             ; passages dans A, puis l'appel et le nom
         lda #1
         sta kanim
+        lda #<a_sig             ; /O : animation recopiée (ANI mis par animarg)
+        ldy #>a_sig
+        jsr ko_add
         lda #<s_anim
         ldy #>s_anim
         jsr oi
         jmp k_fnm
-k_gsave lda #<s_gsave
+k_gsave lda korc
+        bne ko_no
+        jsr getname
+        lda #<s_gsave
         ldy #>s_gsave
-k_img
-.(
-        pha
-        tya
-        pha
-        jsr getname             ; le nom (lecteur, 8 + 3) suit l'appel
-        pla
-        tay
-        pla
-        jmp oi_fnm
-.)
 oi_fnm  jsr oi
 ; k_fnm : lecteur et nom de ifcb, écrits après l'appel (.byt, .asc)
 k_fnm
@@ -2083,6 +2126,209 @@ l       lda ifcb,x
         lda #34
         jsr oc
         jmp ocrlf
+.)
+
+; ---------------------------------------------------------------------
+; /O : programme pour un Oric seul
+; ---------------------------------------------------------------------
+; ko_no : commande refusée (ni SPLIT ni écriture sur un Oric seul)
+ko_no   lda #<m_noo
+        ldy #>m_noo
+        jmp error
+
+; ko_head : en-tête de NOM.ASM : celui du .TAP (bloc à démarrage
+;   automatique de $0503 à h_end - 1, nommé NOM), écrit juste avant
+;   $0503 (ASM /T met tout à la suite), puis la prise de la machine
+ko_head
+.(
+        lda #<h_head3o
+        ldy #>h_head3o
+        jsr os
+        ldx #1                  ; longueur du nom + 1
+l       lda sfcb,x
+        cmp #" "
+        beq e
+        inx
+        cpx #9
+        bne l
+e       stx gd
+        lda #<s_org4
+        ldy #>s_org4
+        jsr os
+        lda #$F5                ; $0503 - 14 - (nom + 0)
+        sec
+        sbc gd
+        jsr ohexd
+        jsr ocrlf
+        lda #<s_taph
+        ldy #>s_taph
+        jsr os
+        jsr o_name
+        lda #<s_tapn
+        ldy #>s_tapn
+        jmp os
+.)
+
+; ko_add : le fichier ifcb (type vide : celui de A/Y, 3 lettres, mis dans
+;   ifcb) sera recopié dans le programme par ko_files ; une fois par nom
+;   et type (le lecteur sert seulement à le lire). Rien sans /O
+ko_add
+.(
+        ldx korc
+        beq r
+        sta kp
+        sty kp+1
+        lda ifcb+9
+        cmp #" "
+        bne t1
+        ldy #2
+t       lda (kp),y
+        sta ifcb+9,y
+        dey
+        bpl t
+t1      lda #<kof               ; déjà noté ?
+        sta kp2
+        lda #>kof
+        sta kp2+1
+        ldx knf
+l       beq new
+        ldy #11
+c       lda (kp2),y
+        cmp ifcb,y
+        bne nx
+        dey
+        bne c
+r       rts
+nx      clc
+        lda kp2
+        adc #12
+        sta kp2
+        bcc n1
+        inc kp2+1
+n1      dex
+        jmp l
+new     lda knf
+        cmp #KNF
+        bcs full
+        ldy #11
+s       lda ifcb,y
+        sta (kp2),y
+        dey
+        bpl s
+        inc knf
+        rts
+full    lda #<m_nfil
+        ldy #>m_nfil
+        jmp error
+.)
+
+; ko_files : O_FILES : pour chaque fichier noté, son nom (8 + 3), son
+;   nombre d'enregistrements, puis ses enregistrements (.byt) ; un 0 à la
+;   fin. Un fichier absent est signalé et n'y est pas (FOUND vaudra 0)
+ko_files
+.(
+        lda korc
+        beq r
+        lda #0
+        sta kcap                ; (plus rien à relever)
+        sta kli
+        lda #<s_ofil
+        ldy #>s_ofil
+        jsr os
+        lda #<kof
+        sta kp2
+        lda #>kof
+        sta kp2+1
+l       lda kli
+        cmp knf
+        bne f
+        lda #<s_byt0
+        ldy #>s_byt0
+        jmp os
+r       rts
+f       ldy #11
+c       lda (kp2),y
+        sta ifcb,y
+        dey
+        bpl c
+        jsr kl_open
+        bne ok
+        jsr kl_pnm              ; absent : signalé
+        lda #<m_nofil
+        ldy #>m_nofil
+        jsr puts
+        jsr crlf
+        jmp nx
+ok      ldx #F_FSIZE            ; enregistrements
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        lda ifcb+FCB_R0+1
+        ora ifcb+FCB_R0+2
+        beq sz
+        jsr kl_pnm              ; plus de 255 enregistrements
+        lda #<m_big
+        ldy #>m_big
+        jmp stop_msg
+sz      lda ifcb+FCB_R0
+        sta kt
+        jsr kl_open             ; relu depuis le début
+        lda #<s_asc
+        ldy #>s_asc
+        jsr os
+        ldx #1
+n       lda ifcb,x
+        jsr oc
+        inx
+        cpx #12
+        bne n
+        lda #34
+        jsr oc
+        jsr ocrlf
+        lda #<s_byt
+        ldy #>s_byt
+        jsr os
+        lda kt
+        jsr ohex
+        jsr ocrlf
+rec     lda kt
+        beq nx
+        ldx #F_SETDMA
+        lda #<ibuf
+        ldy #>ibuf
+        jsr BDOS
+        ldx #F_READ
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        lda #0
+        sta kt+1
+b0      lda #<s_byt             ; 16 octets par ligne
+        ldy #>s_byt
+        jsr os
+b1      ldy kt+1
+        lda ibuf,y
+        jsr ohex
+        inc kt+1
+        lda kt+1
+        and #15
+        beq b2
+        lda #","
+        jsr oc
+        jmp b1
+b2      jsr ocrlf
+        lda kt+1
+        bpl b0
+        dec kt
+        jmp rec
+nx      clc
+        lda kp2
+        adc #12
+        sta kp2
+        bcc n2
+        inc kp2+1
+n2      inc kli
+        jmp l
 .)
 
 ; k_rebyte : (après k_pexpr) A <- valeur à l'exécution
@@ -3166,6 +3412,21 @@ h_head1 .asc "; ",0
 h_code  .asc "#include ",34,"CPA.INC",34,13,10   ; après le commentaire h_head3
         .asc "*= $0500",13,10
         .asc " jsr G_INIT",13,10,0
+; /O : en-tête du .TAP (synchro, $24, type $80 code, démarrage $80, fin,
+;   début $0503, nom), écrit juste avant $0503 ; puis la prise de la
+;   machine et G_INIT. O_PLACE (un octet nul de l'en-tête) vaut 256 ou
+;   plus, refusé par ASM, si le programme finit au-delà de $96C8 : ses
+;   tables (h_init, 1 688 octets) dépasseraient $9D60 (R_DESC)
+s_org4  .asc "*= $04",0
+s_taph  .asc "O_PLACE = (h_end-$0503)/$91C6*256",13,10
+        .asc ".byt $16,$16,$16,$16,$24,O_PLACE,0,$80,$80,>(h_end-1),<(h_end-1),5,3,0",13,10
+        .asc ".asc ",34,0
+s_tapn  .asc 34,",0",13,10
+        .asc "*= $0503",13,10
+        .asc " jsr o_init",13,10
+        .asc " jsr G_INIT",13,10,0
+s_ofil  .asc "O_FILES",13,10,0
+s_byt0  .asc ".byt 0",13,10,0
 s_sres  .asc "jsr s_res",0
 s_spool .asc "jsr s_pool",0
 s_sshow .asc "jsr s_show",0
@@ -3210,7 +3471,27 @@ k_file
         jsr f_arg
         jsr getname
         jsr k_fil
-        lda #<s_ffnm
+        pla
+        pha
+        lsr                     ; C=0 : SAVE, BSAVE (refusés avec /O)
+        bcs rd
+        lda korc
+        beq wr
+        jmp ko_no
+rd      ldx #<ft_txt             ; /O : LOAD : TXT ; BLOAD : DAT, SCREEN :
+        ldy #>ft_txt             ;   SCR, par défaut ; fichier recopié
+        lsr
+        bcc ad
+        ldx #<ft_dat
+        ldy #>ft_dat
+        lda aak
+        cmp #2
+        bne ad
+        ldx #<ft_scr
+        ldy #>ft_scr
+ad      txa
+        jsr ko_add
+wr      lda #<s_ffnm
         ldy #>s_ffnm
         jsr oi_fnm
         pla
@@ -3471,23 +3752,22 @@ e       sta kfe
 r       rts
 .)
 
-; kf_new : le tableau aal, aak du DIM (tailles kf_s1, kf_s2, kdn
-;   dimensions) peut-il être fixe ? C=0 : oui, il est réservé ici
+; kf_new : le tableau aal, aak du DIM (tailles constantes kf_s1, kf_s2,
+;   kdn dimensions) peut-il être fixe ? C=0 : oui, il est réservé ici.
+;   Les tailles sont vérifiées ici (1 à 32767 : « valeur hors limites » ;
+;   trop d'octets, ou des tableaux fixes qui descendent sous le
+;   programme : « memoire pleine »), avec le numéro de la ligne : le
+;   programme traduit ne vérifie que les DIM de taille calculée
 kf_new
 .(
-        lda csp                 ; hors de tout bloc
-        beq k0
-nt      sec
-        rts
-k0      lda aal                 ; premier DIM de ce tableau
-        ldx aak
-        jsr kd_get
-        bne nt
-        lda kf_s1+1             ; taille 1 : 1 à 32767
-        bmi nt
+        lda kf_s1+1             ; taille 1 : 1 à 32767 (vérifiée ici : le
+        bmi lim                 ;   programme traduit ne le fera pas)
         ora kf_s1
-        beq nt
-        lda kf_s1
+        bne s1
+lim     lda #<m_lim
+        ldy #>m_lim
+        jmp error
+s1      lda kf_s1
         sta km_a
         lda kf_s1+1
         sta km_a+1
@@ -3499,29 +3779,38 @@ k0      lda aal                 ; premier DIM de ce tableau
         cmp #2
         bne n1
         lda kf_s2+1             ; taille 2 : 1 à 32767
-        bmi nt
+        bmi lim
         ora kf_s2
-        beq nt
+        beq lim
         lda kf_s2
         sta km_b
         lda kf_s2+1
         sta km_b+1
 n1      jsr kmul                ; éléments, puis octets (comme r_dim)
-        bcs no
-        lda aak
+        bcc n0
+mem     lda #<m_mem
+        ldy #>m_mem
+        jmp error
+n0      lda aak
         bne n2
         asl km_p
         rol km_p+1
-        bmi no
-n2      sec                     ; adresse = haut - octets
+        bmi mem
+n2      lda csp                 ; fixe : hors de tout bloc,
+        bne nt
+        lda aal                 ;   premier DIM de ce tableau
+        ldx aak
+        jsr kd_get
+        bne nt
+        sec                     ; adresse = haut - octets
         lda kftop
         sbc km_p
         sta kt
         lda kftop+1
         sbc km_p+1
-        bcc no
-        cmp #>$0500             ; trop bas : DIM ordinaire (« memoire
-        bcc no                  ;   pleine » au lancement)
+        bcc mem
+        cmp #>$0500             ; sous le programme : « memoire pleine »
+        bcc mem
         sta kt+1
         lda aal
         ldx aak
@@ -3552,7 +3841,7 @@ sm0     txa
         sta kf_sm,y
         clc
         rts
-no      sec
+nt      sec
         rts
 .)
 
@@ -4750,7 +5039,7 @@ l       ldy kli
 go      jsr kl_file
 nx      inc kli
         lda kli
-        cmp #6
+        cmp #7
         bne l
         rts
 .)
@@ -4822,22 +5111,7 @@ n       lda klnm,x
         jsr kl_find
         bcc ok
         jsr to_text             ; absente : « GRX.INC absente »
-        ldx #1
-p       lda ifcb,x
-        cmp #" "
-        beq p1
-        stx kli
-        jsr putc
-        ldx kli
-p1      inx
-        cpx #9
-        bne p2
-        lda #"."
-        stx kli
-        jsr putc
-        ldx kli
-p2      cpx #12
-        bne p
+        jsr kl_pnm
         lda #<m_noinc
         ldy #>m_noinc
         jmp stop_msg
@@ -4940,6 +5214,28 @@ nm4     jsr kr_find
 nm5     lda #0
         sta kname
         jmp line
+.)
+
+; kl_pnm : nom de ifcb sur la console (NOM.EXT)
+kl_pnm
+.(
+        ldx #1
+p       lda ifcb,x
+        cmp #" "
+        beq p1
+        stx lx
+        jsr putc
+        ldx lx
+p1      inx
+        cpx #9
+        bne p2
+        lda #"."
+        stx lx
+        jsr putc
+        ldx lx
+p2      cpx #12
+        bne p
+        rts
 .)
 
 ; kl_idc : C=0 si A peut faire partie d'un nom
@@ -5152,8 +5448,9 @@ klnm    .asc "GRX     INC"
         .asc "FIL     INC"
         .asc "SPR     INC"
         .asc "ANIM    INC"
+        .asc "ORIC    INC"          ; /O seulement : le socle
         .asc "HIRES   INC"
-klfl    .byt 0,karr,kfil,kspr,kanim,0
+klfl    .byt 0,karr,kfil,kspr,kanim,korc,0
 #include "grxasm.msg"          ; messages, en-tête du .ASM (progs/msg/fr, en)
 #include "grxc.msg"            ; messages de grxc_inc.s
 
@@ -5168,8 +5465,13 @@ an_none lda #<s_lda0            ; ANIM nom : 0 (jusqu'à une touche)
 to_text rts                     ; (la console reste en mode texte)
 
 t_casm  .asc "ASM "
-t_ce    .asc " /E",0
+t_ce    .asc " /E /T"
 a_sig   .asc "ANI"
+ft_hir  .asc "HIR"
+ft_img  .asc "IMG"
+ft_txt  .asc "TXT"
+ft_dat  .asc "DAT"
+ft_scr  .asc "SCR"
 R_DESC  = PTOP          ; descripteurs des tableaux (= R_DESC de arr.inc)
 
 #include "grxc_inc.s"
@@ -5339,7 +5641,9 @@ cnt     = ieof+1        ; numéro de la dernière routine lue (2 octets)
 kep     = cnt+2         ; fin des arêtes (2 octets)
 kpp     = kep+2         ; PRINT : appel en attente (2 octets ; octet haut 0 :
 kpi     = kpp+2         ;   aucun), nombre d'éléments
-ibuf    = kpi+1         ; 128 octets
+knf     = kpi+1         ; /O : fichiers notés par ko_add
+kof     = knf+1         ;   lecteur, nom, type (12 octets chacun)
+ibuf    = kof+12*KNF    ; 128 octets
 kroot   = ibuf+128      ; noms relevés (terminés par 0 ; 0 à la fin)
 KROOT   = 768
 obuf    = kroot+KROOT   ; NOM.ASM : enregistrement en cours

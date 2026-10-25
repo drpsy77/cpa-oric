@@ -7,5 +7,5 @@ m_nolo  .asc "LORES first",0
 m_ro    .asc "read-only file",0
 m_dirf  .asc "directory full",0
 m_nonext .asc "missing NEXT",0
-m_use   .asc "GRAPHER NAME [/A|/C] [p1..p9]",13,10,"$"
+m_use   .asc "GRAPHER NAME [/A|/C|/O] [p1..p9]",13,10,"$"
 m_chain .asc "Line too long",13,10,"$"

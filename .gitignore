@@ -8,6 +8,7 @@ build/*
 !build/cpa-anim.dsk
 !build/cpa-projet.dsk
 !build/cpa-en.dsk
+!build/tap/
 progs/*.err
 tools/xa
 tools/pylib/

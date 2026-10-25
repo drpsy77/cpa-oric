@@ -19,16 +19,16 @@ e_org     .asc "Address",0
 e_fwd     .asc "Forward reference too complex",0
 e_big     .asc "Code too big",0
 
-m_usage   .asc "Usage : ASM NAME [/S] [/E]",13,10
+m_usage   .asc "Usage : ASM NAME [/S] [/E] [/T]",13,10
           .asc " NAME.ASM -> NAME.COM ; /S : NAME.SYM",13,10
-          .asc " /E : erases NAME.ASM if all is well",13,10,0
+          .asc " /E : erases NAME.ASM if all is well",13,10
+          .asc " /T : NAME.TAP (GRXASM /O)",13,10,0
 m_banner  .asc "ASM CP/A 1.0",13,10,0
 m_nosrc   .asc "Source not found",13,10,0
 m_pass    .asc "Pass ",0
 m_big     .asc "Program too big for memory",13,10,0
 m_errs    .asc " error(s): nothing written.",13,10,0
 m_empty   .asc "No code produced.",13,10,0
-m_com     .asc ".COM ",0
 m_comma   .asc " : ",0
 m_bytes   .asc " bytes",13,10,0
 m_syms    .asc " symbols",0

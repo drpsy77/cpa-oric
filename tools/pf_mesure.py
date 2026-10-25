@@ -42,7 +42,7 @@ COMPOSANTS = [
              + ["progs/msg/*/%s.msg" % n for n in SYS_COM]),
     ("EDIT", ["progs/edit.s", "progs/edit_tab.s", "progs/msg/*/edit.msg"]),
     ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
-              "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc"]
+              "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc", "progs/oric.inc"]
              + ["progs/msg/*/%s.msg" % n for n in "grapher grxasm grxc grx arr fil spr".split()]),
     ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s",
               "progs/logotr.s", "progs/lgtr_tab.s"]
@@ -61,7 +61,7 @@ COMPOSANTS = [
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",
               "files/*.spr", "files/anim/*", "files/JEU.GRX", "files/en/*.asm"]),
     ("OUT",  ["build.sh", "tools/*.py", "tools/*.sh", "tools/*.patch", "tools/*.s",
-              "tools/grapher_tests/*.grx", "tools/logo_tests/*.log"]),
+              "tools/grapher_tests/*.grx", "tools/logo_tests/*.log", "tools/oric_tests/*.grx"]),
 ]
 NOMS = {"SYS": "Système et commandes", "EDIT": "EDIT", "GRA": "GRAPHER + GRXASM",
         "LOGO": "LOGO", "CMD": "CMDER", "HEX": "HEX", "EDS": "EDSPRITE", "VOIR": "VOIR", "USB": "USB",

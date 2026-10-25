@@ -20,7 +20,8 @@
 
 Contrôles (les mêmes que MKTAP.COM) : 8 blocs au plus, un seul /R, chaque
 bloc dans $0500-$BFFF, pas de chevauchement (chargeur BASIC compris),
-LONG non nulle et pas plus grande que la taille brute.
+LONG non nulle et pas plus grande que la taille brute, bloc /R en $0503 au
+plus tôt (la ROM met $00 en $0500-$0502 avant de le lancer).
 
 Le fichier écrit a la taille exacte (MKTAP.COM, lui, complète son dernier
 enregistrement par des ^Z, que EXPORT retire ; si le dernier octet utile
@@ -33,6 +34,7 @@ T_CLOAD = 0xB6
 T_CALL = 0xBF
 
 MIN_ADR = 0x0500
+MIN_AUTO = 0x0503        # bloc /R : la ROM met $00 en $0500-$0502 avant de le lancer
 MAX_ADR = 0xBFFF
 MAX_BLOCS = 8
 BASIC = 0x0501          # début des programmes BASIC
@@ -130,6 +132,8 @@ def fabrique(blocs, nom_tap):
         fin = adr + lg - 1
         if adr < MIN_ADR or fin > MAX_ADR:
             sys.exit("%s : hors de 0500-BFFF" % f)
+        if auto and adr < MIN_AUTO:
+            sys.exit("%s : /R avant 0503" % f)
         plages.append((nom_bloc(f), adr, fin))
         contenus.append(data[:lg])
     auto = [b for b in blocs if b[3]]

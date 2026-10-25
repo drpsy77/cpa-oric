@@ -68,6 +68,8 @@ Deux variantes sont construites à partir des mêmes sources :
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
   l'écran, défilement compris), interprété ou traduit en
   assembleur, avec **EDSPRITE**, un éditeur plein écran de ses sprites et caractères.
+  `GRXASM JEU /O` fait d'un jeu traduit un `.TAP` qui tourne sur tout Oric, sans CP/A
+  (`CLOAD""`) : des exemples prêts dans `build/tap/`.
 - Images HIRES compressées et animations plein écran (VOIR).
 
 ## Stabilité
@@ -109,7 +111,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
-| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP` (MKTAP), jeux GRAPHER autonomes, routines pour le BASIC plus tard (spécification) |
+| `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP` (MKTAP), jeux GRAPHER autonomes (`GRXASM /O`, `ORIC.INC`), routines pour le BASIC plus tard (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |

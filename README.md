@@ -65,7 +65,9 @@ Two variants are built from the same sources:
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the
   screen, scrolling), interpreted or translated into assembly, with **EDSPRITE**, a
-  full-screen editor for its sprites and characters.
+  full-screen editor for its sprites and characters. `GRXASM GAME /O` makes a translated
+  game a `.TAP` that runs on any Oric without CP/A (`CLOAD""`): ready-made examples in
+  `build/tap/`.
 - Compressed HIRES pictures and full-screen animations (VOIR).
 
 ## Stability
@@ -108,7 +110,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/etat.md` | project status, what comes next, space reserves |
 | `docs/projet-rom.md` | the ROM version |
-| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games, routines for BASIC later (specification) |
+| `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (`GRXASM /O`, `ORIC.INC`), routines for BASIC later (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |

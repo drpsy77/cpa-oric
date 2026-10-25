@@ -1,0 +1,2 @@
+; DIM de taille constante nulle : refuse des la traduction
+DIM A(0)

@@ -14,6 +14,18 @@ m_done  .asc ".ASM ecrit : ASM ",0
 m_nodim .asc "tableau non dimensionne",0
 m_noinc .asc " absente (bibliotheque)",0
 m_names .asc "Trop de noms (bibliotheques)",0
-m_use   .asc "GRXASM NOM [/C] [p1..p9] : traduit",13,10
+m_use   .asc "GRXASM NOM [/C|/O] [p1..p9] : traduit",13,10
         .asc "NOM.GRX en NOM.ASM (pour ASM) ;",13,10
-        .asc "/C : puis ASM, NOM.COM seul",13,10,"$"
+        .asc "/C : puis ASM, NOM.COM seul",13,10
+        .asc "/O : NOM.TAP pour un Oric seul",13,10,"$"
+; /O (Oric seul)
+h_head3o .asc " /T donne le .TAP pour un Oric",13,10
+        .asc "; seul (CLOAD",34,34,") ; les routines utiles",13,10
+        .asc "; des bibliotheques, ORIC.INC compris,",13,10
+        .asc "; sont recopiees a la fin ; O_PLACE plus",13,10
+        .asc "; grand que 255 : trop gros pour l'Oric",13,10,0
+m_lim   .asc "valeur hors limites",0
+m_mem   .asc "memoire pleine",0
+m_noo   .asc "pas avec /O",0
+m_nfil  .asc "trop de fichiers (/O)",0
+m_nofil .asc " absent : pas inclus",0

@@ -101,6 +101,32 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - Si quelqu'un a un **Oric-1** (ROM 1.0) : le même `.TAP` (format et mots-clés supposés
   identiques, jamais vérifié).
 
+**GRXASM `/O`** (programme GRAPHER pour un Oric seul ; essayé seulement dans Oricutron, ROM
+BASIC 1.1) :
+
+- Les `.TAP` tout faits de `build/tap/` (copiés sur la clé depuis le Mac) : monter
+  `serpent.tap` comme cassette dans le menu du LOCI, `CLOAD""` : le jeu démarre tout seul ;
+  les flèches mènent le serpent (répétition quand on garde la touche), Q finit, et l'Oric
+  redémarre en BASIC (`ORIC EXTENDED BASIC`, `37631 BYTES FREE`). De même `carte.tap`
+  (tuiles dessinées dans le jeu secondaire : arbres, eau, montagnes ; X et Y changent aux
+  flèches) et `defile.tap` (la route défile ; perdu : `Perdu ! Score`, une touche, puis le
+  redémarrage). Le bouton RESET en plein jeu doit aussi redémarrer l'Oric proprement.
+- Toute la chaîne sur l'Oric : `cpa.dsk` en A:, `cpa-projet.dsk` en B:, `COPY SERPENT.GRX
+  B:`, `GRXASM B:SERPENT /O` : la traduction enchaîne `ASM B:SERPENT /E /T`, qui doit
+  écrire `B:SERPENT.TAP` (et effacer `SERPENT.ASM`) ; `EXPORT B:SERPENT.TAP`, puis comme
+  ci-dessus. Même chose pour `CARTE` (avec `TUILES.SPR` sur B:, recopié dans le `.TAP`) :
+  noter les durées de la traduction et de l'assemblage.
+- Une saisie dans la console : un `.GRX` de trois lignes (`INPUT N$`, `INPUT V`,
+  `PRINT N$ " " V`), traduit avec `/O` : le curseur (case inversée) suit la frappe, DEL
+  efface, un nombre refusé (`x`) donne un bip court ; à la fin, la ligne affichée reste
+  jusqu'à une touche, puis le redémarrage.
+- `EXPORT` d'un `.TAP` écrit par ASM `/T` : il finit par des octets 0 (complément du dernier
+  enregistrement, pas des `^Z`) ; le LOCI doit le monter et le charger sans s'en soucier.
+- Sur `cpa-en.dsk` : `GRXASM B:SNAKE /O` (messages anglais, `MAP.TAP` et `ROAD.TAP` de
+  `build/tap/` aussi).
+- Si quelqu'un a un **Oric-1** : `serpent.tap` doit marcher aussi (vecteurs pris en `$0228`
+  et `$022B`, d'après la ROM 1.0, jamais essayé).
+
 ## À vérifier ailleurs
 
 - **Vrai Microdisc** (chez un ami de Pierre, qui n'en a pas) : FORMAT, DISKCOPY, attributs et COPY avec jokers ; premier accès après

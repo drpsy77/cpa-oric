@@ -14,6 +14,18 @@ m_done  .asc ".ASM written: ASM ",0
 m_nodim .asc "array not dimensioned",0
 m_noinc .asc " missing (library)",0
 m_names .asc "Too many names (libraries)",0
-m_use   .asc "GRXASM NAME [/C] [p1..p9]: turns",13,10
+m_use   .asc "GRXASM NAME [/C|/O] [p1..p9]: turns",13,10
         .asc "NAME.GRX into NAME.ASM (for ASM);",13,10
-        .asc "/C: then ASM, NAME.COM only",13,10,"$"
+        .asc "/C: then ASM, NAME.COM only",13,10
+        .asc "/O: NAME.TAP for a bare Oric",13,10,"$"
+; /O (bare Oric)
+h_head3o .asc " /T gives the .TAP for a bare",13,10
+        .asc "; Oric (CLOAD",34,34,"; the useful routines",13,10
+        .asc "; of the libraries, ORIC.INC included,",13,10
+        .asc "; are copied at the end; O_PLACE over",13,10
+        .asc "; 255: too big for the Oric",13,10,0
+m_lim   .asc "value out of range",0
+m_mem   .asc "memory full",0
+m_noo   .asc "not with /O",0
+m_nfil  .asc "too many files (/O)",0
+m_nofil .asc " missing: not included",0
