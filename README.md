@@ -5,6 +5,7 @@
 *My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
 
 <p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO draws a tree"> <img src="cpa-menus-oricutron.png" width="320" alt="Pull-down menus at the A> prompt"></p>
+<img src="sprites.png" width="320" alt="EDSPRITE, the sprite editor with mask management in LORES mode"></p>
 
 - **Your Oric becomes a real workstation**: pull-down menus, command history, completion, a
   full-screen editor and file manager.

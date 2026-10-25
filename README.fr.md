@@ -5,6 +5,7 @@
 *My Oric back to life: create, develop and publish — all on the lovely little machine itself.*
 
 <p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO dessine un arbre"> <img src="cpa-menus-oricutron.png" width="320" alt="Menus déroulants au prompt A>"></p>
+<img src="sprites.png" width="320" alt="EDSPRITE, l'éditeur de sprites avec gestion de masque en mode LORES"></p>
 
 - **Votre Oric devient un vrai poste de travail** : menus déroulants, historique, complétion,
   éditeur et gestionnaire de fichiers plein écran.
