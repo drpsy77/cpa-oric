@@ -245,7 +245,7 @@ file, COPY and IMPORT answer `file protected`. Programs go through BDOS function
 byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of all files.
 
 On the disk provided, the commands and applications (COPY, STAT, HELP, EDIT, LOGO, ASM...),
-README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC and SPR.INC are
+README.TXT, USBCD.BAT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC and SPR.INC are
 **read-only** (R/O) and stay **visible** in DIR, as on a CP/M disk: an `ERA *.*` or a name
 completed with ESC can no longer erase them. To replace a command with a new version:
 `SET COPY.COM RW`, then copy it. The examples (HELLO, GTEST and their `.ASM`, DEMO.LOG, the
@@ -257,7 +257,7 @@ renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BA
 
 **Disks by use.** `build.sh` also makes four bootable disks, lighter to look at. On each one,
 the basic commands (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, EXPORT,
-IMPORT, USBDIR, VOIR, CMDER) are read-only and **hidden** (SYS): `DIR` only shows the disk's
+IMPORT, USBDIR, VOIR, CMDER, and the script USBCD.BAT) are read-only and **hidden** (SYS): `DIR` only shows the disk's
 tool and the working files, `DIRS` shows everything. EDIT is on every disk, read-only and
 visible.
 
@@ -463,23 +463,43 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
 
 | Command | Effect |
 |---|---|
-| `EXPORT file [name]` | copies the CP/A file `file` to the stick, under the name `name` (by default, `file` as typed, lower case kept, at the root) |
-| `EXPORT afn [folder]` | with wildcards (`*.LOG`, `B:*.*`): each file under its own name, in lower case if the pattern was typed in lower case, at the root or in the given folder; a `.DSK` is skipped, ESC stops between two files |
-| `IMPORT name [file] [/T]` | copies the file `name` from the stick into CP/A, under the name `file` (by default, the stick's name without its path, cut to 8 + 3 characters; `B:` alone: that name on drive B:); `/T`: text, a lone LF (Mac or Linux line ending) becomes CR LF and a tab (which the Oric does not have) a space — essential for a `.LOG` written on the Mac, which LOGO's `CHARGE` only reads with CR LF |
-| `USBDIR [path]` | lists a folder of the stick (the root by default): name and size, `<REP>` for a folder |
+| `EXPORT file [name]` | copies the CP/A file `file` to the stick, under the name `name` (by default, `file` as typed, lower case kept, in the current directory) |
+| `EXPORT afn [folder]` | with wildcards (`*.LOG`, `B:*.*`): each file under its own name, in lower case if the pattern was typed in lower case, in the current directory or the given folder; a `.DSK` is skipped, ESC stops between two files |
+| `IMPORT name [file] [/T]` | copies the file `name` from the stick into CP/A, under the name `file` (by default, the stick's name without its path, cut to 8 + 3 characters; `B:` alone: that name on drive B:); with wildcards (`GAME*.TXT`), the only file that matches; `/T`: text, a lone LF (Mac or Linux line ending) becomes CR LF and a tab (which the Oric does not have) a space — essential for a `.LOG` written on the Mac, which LOGO's `LOAD` only reads with CR LF |
+| `USBDIR [path]` | writes the full path, then lists the folder (the current directory by default): name and size, `<DIR>` for a folder; `USBDIR *.DSK`: the names that match the pattern |
+| `USBDIR /S` | the devices: `0:` (the LOCI's internal memory) and the USB sticks, with their size; `*`: the current directory's one |
+| `USBCD [dir]` | changes the current directory: a script (`CMDER USB:$1 /R`) that opens CMDER in `dir`, directories only; ESC once there |
 
-    A>EXPORT LETTRE.TXT
-    A>EXPORT B:GAME.LOG 1:/oric/game.log
+    A>EXPORT LETTER.TXT
+    A>EXPORT B:GAME.LOG oric/game.log
     A>export *.log oric
     A>IMPORT notes.txt /T
     A>IMPORT docs/MATH.LOG B:
     A>USBDIR docs
+    A>USBDIR /S
+    0: LOCI memory              15 MB
+    2: SanDisk Cruzer Blade   14.9 GB *
+    4: Kingston DataTraveler   7.5 GB
 
-Names on the stick can have a path. Without a drive, it is the first USB stick seen by the
-LOCI: this is the safest, because with a hub the stick is not necessarily `1:` (the LOCI
-numbers the USB devices). `0:` is the LOCI's internal memory (`USBDIR 0:`,
-`EXPORT X.TXT 0:X.TXT`). A name with spaces does not pass on the command line: rename it on the
-Mac.
+**Current directory.** CP/A keeps its own current directory on the stick, independent of the
+LOCI menu's one and kept across a restart (file `0:CPA.CWD`, in the LOCI's internal memory).
+It is chosen in CMDER: go there, quit (`CMDER USB:`, or `USBCD`). As long as it has never been
+chosen, it is the root of the first stick. Names on the stick are given relative to it:
+
+| Written | Means |
+|---|---|
+| `name`, `dir/name` | in the current directory |
+| `..` | the parent directory |
+| `/dir/name` | from the root of the current device |
+| `2:/dir/name`, `0:name` | on that device (`0:`: the LOCI's internal memory) |
+
+A stick's number is its USB address: it changes with the socket, the hub and the other
+devices (keyboard, Pico W). CP/A recognises the current directory's stick by its description
+(maker, model, size): if its number changed, the command finds it and says so (`Stick found
+in 4:`); if it is gone, `Stick missing : SanDisk Cruzer Blade`, and the command starts from
+the root of the first stick (the noted directory comes back when the stick is plugged in
+again). A full path is 127 characters at most (`Path too long`). A name with spaces does not
+pass on the command line: rename it on the Mac.
 
 - A file with the same name is replaced, on the stick as in CP/A.
 - EXPORT removes the `^Z` (`$1A`) that pad the last record (same rule as STAT): a text arrives
@@ -491,6 +511,8 @@ Mac.
   says so (EXPORT).
 - USBDIR shows neither hidden or system files, nor those starting with a dot (the `._NAME`
   files the Mac leaves on FAT sticks). ESC or CTRL-C stops the list.
+- A command that expects a single file (IMPORT) and whose pattern matches several writes
+  them (8 at most) and stops: `Several files : be more precise`; none: `Not found : GAME*`.
 - Without a LOCI (Oricutron, Microdisc, Cumulus): `No LOCI : USB stick out of reach`. LOCI
   errors are shown with their code: `USB error 36 : not found`.
 
@@ -498,7 +520,8 @@ These commands go through the interface the LOCI offers the 6502, that of the Pi
 (registers at `$03A0-$03BF`, details in `progs/loci_inc.s`). To try them without the hardware,
 the workshop's Oricutron simulates this interface on a folder of the PC: `ORIC_LOCI=folder`
 (see "Tools"), or the line `loci = '~/Oric/loci'` in `oricutron.cfg` (the folder must exist,
-with its subfolder `int` for `0:`).
+with its subfolder `int` for `0:`; several sticks: its subfolders `usb1` to `usb8`,
+`docs/atelier.md`).
 
 ## Publishing for the Oric under BASIC: MKTAP
 

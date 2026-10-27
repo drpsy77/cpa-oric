@@ -6,7 +6,7 @@
 
 Full-screen file manager: one or two panels, disks A: to D: and the LOCI's USB stick. A list
 you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes, exact sizes;
-copying with a single drive. A `.COM` (13,566 bytes), nothing resident. It is first of all a
+copying with a single drive. A `.COM` (15,193 bytes, 8 blocks), nothing resident. It is first of all a
 tool for listing and sorting; to copy a whole disk, DISKCOPY is faster.
 
 ## 1. Starting it
@@ -14,12 +14,19 @@ tool for listing and sorting; to copy a whole disk, DISKCOPY is faster.
     CMDER                current drive, all files, full screen
     CMDER B:*.COM        drive B:, filter *.COM
     CMDER A: B:          two panels (one pattern per drive: CMDER A:*.COM B:)
-    CMDER USB:[path]     the LOCI's USB stick (no path: root of the first stick)
+    CMDER USB:[path]     the LOCI's USB stick, in CP/A's current directory, or at the
+                         path given, relative to it (GAMES, .., /GAMES, 2:/GAMES, 0:)
     CMDER A: USB:        two panels, disk and stick (the USB panel left or right)
+    CMDER USB:GAMES /R   directories only in the USB panel (/R at the end)
 
 `CMDER A: A:` is refused (`Two different drives`), and so is `CMDER USB: USB:` (`Only one
 USB column`). To load another drive into a
-panel: `^L`, or quit and start again. ESC quits: every operation is carried out at once.
+panel: `^L`, or quit and start again. ESC quits: every operation is carried out at once. **On leaving, the last USB directory
+shown becomes CP/A's current directory** (file `0:CPA.CWD`, `docs/usb.md` § 2.1), the one
+USBDIR, IMPORT, EXPORT and the next `CMDER USB:` start from: changing directory on the stick
+means entering CMDER, going where you want and quitting. The script `USBCD.BAT`
+(`CMDER USB:$1 /R`, on the disks) makes it a shortcut: `USBCD GAMES` opens CMDER in `GAMES`,
+directories only; ESC once there.
 Started in SPLIT mode, CMDER switches back to text (the picture is lost).
 
 ## 2. Screen
@@ -60,10 +67,26 @@ scroll bar of the left panel, column 39 that of the right one. Header: `A:*.*#  
 panel, which alone shows its cursor. Lines 25-26: active panel. Each panel keeps its own
 drive, filter, sort order, marks and cursor.
 
-**USB panel**: header `USB:GAMES/` (current directory only; `USB:?` if the LOCI is missing or
-the stick unreadable, `+` after the number of files if the list is cut at 128). `..` (except at
-the root) and the subdirectories (`<DIR>`) come first, whatever the sort order. Long names are
-cut with `~` (12 characters in two panels, 26 in full screen).
+**USB panel**: header `USB:GAMES/` (last directory of the path only, `USB:2:/` at the root;
+`USB:?` if the LOCI is missing or the stick unreadable, `+` after the number of files if the
+list is cut at 128). `..` and the subdirectories (`<DIR>`) come first, whatever the sort
+order. Long names are cut with `~` (12 characters in two panels, 26 in full screen).
+
+**Devices**: `..` at the root of a device leads to the list of devices (header
+`USB:devices`): `0:`, the LOCI's internal memory, and the USB sticks, with their maker,
+model and size; `*` marks the one you came from, and the cursor goes there. RETURN enters the
+root of a device. A stick's number is its USB address, which changes with the socket
+(`docs/usb.md` § 2.1):
+
+```
+ 1 |USB:devices          3 fls           |
+ 2 |  NAME+                         SIZE |
+ 3 |  0: LOCI memory       15 MB         |
+ 4 |  2: SanDisk Cruzer  14.9 GB *       |
+ 5 |  4: Kingston DataTra 7.5 GB         |
+```
+
+Nothing is copied in the list of devices (`Choose a device first` as a destination).
 
 ## 3. Sizes
 
@@ -109,15 +132,19 @@ all types (`LO*` = `LO*.*`). When keys are equal, files are sorted by name, A to
 
 ## 5. Menus
 
-The items type codes (`$81-$98`): an item and its shortcut go through the same dispatch; the
+The items type codes (`$81-$9F`): an item and its shortcut go through the same dispatch; the
 shortcut is written to the right of the label.
 
 - **File**: View RET, Copy... ^C, Copy as text..., Move... ^X, Rename... ^N, Erase DEL,
   Attributes... ^A, Info ?, Print list, Drive... ^L, Reread ^R, Quit ^Q (or ESC).
 - **Mark**: Mark SPC, Mark... +, Unmark... -, Invert *, All, None.
 - **Sort**: Disk order 1, Name 2, Type 3, Size 4.
-- **View**: Filter... /, No filter, Hide SYS (becomes Show SYS), Exact size ^E, Not on
-  other, Zoom ^Z, Swap ^W, Other col. ^I.
+- **View**: Filter... /, No filter, Directories only, Hide SYS (becomes Show SYS), Exact
+  size ^E, Not on other, Zoom ^Z, Swap ^W, Other col. ^I.
+
+**Directories only** (stick panel, toggle; `USB stick only` elsewhere; `/R` when starting):
+only `..` and the `<DIR>` entries stay, to walk the tree without the files; the header counts
+the visible ones (`3/5 fls`).
 
 ## 6. Operations
 
@@ -160,14 +187,21 @@ After every operation: directory (or directories) read again, cursor kept on the
 **USB stick**: a gateway, the real medium remains the disk. Copy in both directions (like
 EXPORT and IMPORT: `^Z` removed when sending, added on arrival, names brought down to 8 + 3
 with `_` for a forbidden character, `.DSK` refused when sending, file on the stick replaced
-without asking). `/T` at the end of the Copy answer (or `Copy as text...`) turns a lone LF into
+without asking). Towards the stick, the answer `USB:dir` is relative to the USB panel's
+directory (or, without one, to CP/A's current directory); `USB:` alone: that directory. `/T` at the end of the Copy answer (or `Copy as text...`) turns a lone LF into
 CR LF and a tab (TAB) into a space. Move from a disk to the stick, not the other way. Erase,
 Rename, Attributes refused: `USB key : read and copy only`. No copy of a whole directory.
 
 ## 7. Implementation
 
-- `progs/cmder.s`, with `progs/loci_inc.s` (USB stick); zero page outside `$30-$3B` (the area
-  of `loci_inc.s`).
+- `progs/cmder.s`, with `progs/loci_inc.s` (USB stick: LOCI API, current directory, paths,
+  devices); zero page outside `$30-$3B` (the area of `loci_inc.s`).
+- **Current directory**: `cw_get` (at the first `USB:`) reads it, finds a renumbered stick
+  from its description, and gives the base of relative paths (`lpath`); `k_quit` writes it
+  through `cw_put` if a panel shows the stick (not the list of devices), only if it changed.
+  An empty `upath` = the list of devices (`u_sups`: one "directory" entry per device, its
+  number in `E_SIZE`, its `dv_fmt` line as long name); `usup`: the device marked `*`.
+- **Directories only**: bit 1 of `hides` (bit 0 hides SYS files), per panel.
 - **Texts**: menu bar, messages, column titles, kind names and the column of the sort sign
   (`spos`, `spos2`) are in `progs/msg/en/cmder.msg` and `progs/msg/fr/cmder.msg`
   (French disks: `Fichier Marque Trier Vue`, columns `NOM TYP TAILLE RS N GENRE`, answers

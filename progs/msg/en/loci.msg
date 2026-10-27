@@ -10,3 +10,12 @@ m_e_name .asc " : bad name",0
 m_e_deny .asc " : refused (stick full ?)",0
 m_e_wp  .asc " : stick protected",0
 m_e_nousb .asc " : no readable USB stick",0
+m_long  .asc "Path too long",13,10,0
+m_found .asc "Stick found in ",0
+m_absent .asc "Stick missing : ",0
+m_nfw   .asc "Not found : ",0
+m_many  .asc "Several files : be more precise",13,10,0
+m_dots  .asc "...",13,10,0
+m_int   .asc "LOCI memory",0
+m_intsz .asc "15 MB",0
+UNIT_B  = "B"

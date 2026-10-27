@@ -29,6 +29,7 @@ files/trasinus.log          PLOTSIN.LOG
 files/trasinxx.log          PLOTSINX.LOG
 files/fleches.log           ARROWS.LOG
 files/demo.bat              DEMO.BAT
+files/usbcd.bat             USBCD.BAT
 files/anim/CUBE.ANI         CUBE.ANI
 files/anim/BALLE.ANI        BALL.ANI
 files/anim/VAISSEAU.ANI     SHIP.ANI

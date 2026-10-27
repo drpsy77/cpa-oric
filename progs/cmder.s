@@ -3,6 +3,11 @@
 ;
 ;  CMDER [d:][afn]    liste du lecteur d: (courant par défaut), filtre
 ;                     afn déjà posé (CMDER B:*.COM)
+;  CMDER USB:[chemin] la clé USB du LOCI, dans le répertoire courant de
+;                     CP/A ou le chemin donné, relatif à lui
+;                     (docs/usb.md § 2.1) ; en sortant, le dernier
+;                     répertoire USB montré devient le répertoire courant
+;  /R                 (à la fin) répertoires seuls dans la colonne USB
 ;
 ;  Une disquette, en plein écran : liste triable (ordre du répertoire,
 ;  nom, type, taille), filtre, marquage, et les opérations Voir,
@@ -75,7 +80,8 @@ top     = $28           ; première ligne affichée
 drv     = $29           ; lecteur de la liste (1 = A:)
 skey    = $2A           ; tri : 1 disque, 2 nom, 3 type, 4 taille
 srev    = $2B           ; 1 = ordre inverse
-hides   = $2C           ; 1 = fichiers SYS cachés
+hides   = $2C           ; bit 0 : fichiers SYS cachés ; bit 1 : répertoires
+                        ; seuls (clé USB)
 nmark   = $2D
 used    = $2E           ; blocs occupés
 dok     = $2F           ; 1 = lecteur lisible
@@ -168,6 +174,8 @@ ucnt    = $A4
 ulen    = $A5           ; u_hdr : longueur maximale du nom
 vprev   = $A6           ; Voir : caractère précédent (CR LF)
 curk    = $A7           ; copie : rang du fichier en cours (0 = premier)
+rfl     = $A8           ; 1 = option /R : répertoires seuls (colonne USB)
+usup    = $A9           ; support marqué * dans la liste des supports
 ; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
 ; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
 PZ0     = $25
@@ -226,6 +234,7 @@ txt     lda #>bufs              ; tampon de copie : page suivant les tables
         sta IO_QUIET            ; CMDER les signale lui-même (bit 7)
         jsr cur_off
         jsr get_args            ; les mots tels que tapés (USB:chemin)
+        jsr opt_r
         ldx #0
         jsr skipsp
         stx tk1
@@ -588,6 +597,8 @@ ktab    .byt 11
         .word k_x-1
         .byt $9E
         .word k_copyt-1
+        .byt $9F
+        .word k_donly-1
         .byt 0
 
 ; ---------------------------------------------------------------------
@@ -931,6 +942,20 @@ kp      jmp rebuild_keep
 rt      rts
 .)
 
+; k_donly : répertoires seuls (colonne de la clé), ou tout
+k_donly
+.(
+        lda ptype
+        bne u
+        lda #<m_usbonly
+        ldy #>m_usbonly
+        jmp set_msg
+u       lda hides
+        eor #2
+        sta hides
+        jmp rebuild_keep
+.)
+
 k_nofilt
 .(
         ldx #10
@@ -946,6 +971,7 @@ k_sys
         lda hides
         eor #1
         sta hides
+        and #1
         ldx #10                 ; libellé du menu
         tay
         beq show
@@ -1010,12 +1036,19 @@ lp      lda vi
         jsr ent_ptr
         jsr match
         bne hide
-        lda hides
-        beq ab
         ldy #E_ATTR
+        lda hides
+        lsr
+        bcc ns
         lda (ep),y
         and #$40
         bne hide
+ns      lda hides
+        and #2
+        beq ab
+        lda (ep),y              ; répertoires seuls
+        and #$20
+        beq hide
 ab      lda absf                ; absents de l'autre colonne seulement
         beq show
         jsr in_other
@@ -3755,6 +3788,22 @@ k_reload
         jmp reload_keep
 
 k_quit
+.(
+        lda ptype               ; une colonne de la clé : son répertoire
+        bne u                   ; devient le répertoire courant de CP/A
+        lda mode2
+        beq q
+        lda pz2+PZN+1
+        beq q
+u       lda upath               ; (pas la liste des supports)
+        beq q
+        jsr u_chk
+        bcs q
+        lda #<upath
+        ldy #>upath
+        jsr cw_put
+q
+.)
         lda #0                  ; messages d'erreur du BDOS rendus
         sta IO_QUIET
         ldx #F_CONOUT
@@ -4979,6 +5028,7 @@ c9b     .byt $9B,0
 c9c     .byt $9C,0
 c9d     .byt $9D,0
 c9e     .byt $9E,0
+c9f     .byt $9F,0
 
 ; ---------------------------------------------------------------------
 ; Messages (37 colonnes au plus, sans accents)
@@ -5019,45 +5069,90 @@ no      stx t0                  ; X revient au début du mot
         rts
 .)
 
-; usb_pan : colonne de la clé, chemin d'après le mot args,X (après USB:)
+; usb_pan : colonne de la clé, chemin d'après le mot args,X (après USB:),
+; relatif au répertoire courant de CP/A (0:CPA.CWD) ; /R : répertoires
+; seuls
 usb_pan
 .(
         lda #1
         sta ptype
-        inx
-        inx
-        inx
-        inx
-        ldy #0
-lp      lda args,x
-        beq e
-        cmp #" "
-        beq e
-        sta upath,y
-        inx
-        iny
-        cpy #99
-        bne lp
-e       cpy #2                  ; « / » final retiré (sauf « / », « 1:/ »)
-        bcc ez
-        lda upath-1,y
-        cmp #"/"
-        bne ez
-        lda upath-2,y
-        cmp #":"
-        beq ez
-        dey
-ez      lda #0
-        sta upath,y
-        cpy #0
-        bne hp
-        lda #"/"                ; sans chemin : la racine de la clé
+        lda #"/"                ; sans LOCI : « / » (u_load le dira)
         sta upath
         lda #0
         sta upath+1
-hp      lda #<m_blnk            ; filtre : tout (FCB sans nom)
+        sta usup
+        stx t0
+        jsr u_chk
+        bcs np
+        jsr cw_get
+        lda cwd
+        sta usup
+        lda t0
+        clc
+        adc #4
+        tax
+        jsr lpath_a
+        ldx #0
+        bcc ap
+cw      lda cwd,x               ; chemin trop long : le répertoire courant
+        sta upath,x
+        beq np
+        inx
+        bne cw
+ap      lda apath,x
+        sta upath,x
+        beq np
+        inx
+        bne ap
+np      lda #<m_blnk            ; filtre : tout (FCB sans nom)
         ldy #>m_blnk
-        jmp init_pan
+        jsr init_pan
+        lda rfl
+        beq rt
+        lda #2
+        sta hides
+rt      rts
+.)
+
+; opt_r : option /R (un mot de args) : rfl = 1, et le mot effacé ; en
+; premier mot, FCB2 passe en FCB1 (CMDER /R B:)
+opt_r
+.(
+        lda #0
+        sta rfl
+        ldx #0
+lp      jsr skipsp
+        lda args,x
+        beq rt
+        cmp #"/"
+        bne nx
+        lda args+1,x
+        and #$DF
+        cmp #"R"
+        bne nx
+        lda args+2,x
+        beq hit
+        cmp #" "
+        bne nx
+hit     inc rfl
+        lda #" "
+        sta args,x
+        sta args+1,x
+        cpx #0
+        bne rt
+        ldx #15
+f       lda FCB2,x
+        sta FCB1,x
+        lda #" "
+        sta FCB2,x
+        dex
+        bpl f
+        lda #0
+        sta FCB2
+        rts
+nx      jsr skipw
+        jmp lp
+rt      rts
 .)
 
 ; is_usbin : C=1 si la réponse (inbuf) commence par USB:
@@ -5159,9 +5254,10 @@ u_load
         lda #<m_noloci2         ; LOCI absent : message
         ldy #>m_noloci2
         jmp set_msg
-lc      jsr is_root
-        bcs op
-        lda #0                  ; « .. »
+lc      lda upath
+        bne nsu
+        jmp u_sups              ; au-dessus des racines : les supports
+nsu     lda #0                  ; « .. » (à la racine : vers les supports)
         jsr ent_ptr
         jsr ent_zero
         lda #"."
@@ -5209,6 +5305,79 @@ cl      lda ufd
         sta dok
 rt      rts
 .)
+
+; u_sups : table des supports (upath vide) : un « répertoire » par
+; support, son numéro en E_SIZE, sa ligne (dv_fmt) en nom long
+u_sups
+.(
+        jsr dv_open
+        bcs rt
+lp      jsr dv_next
+        bcs cl
+        lda cnt
+        jsr ent_ptr
+        jsr ent_zero
+        ldy #0
+        lda dv_n
+        ora #"0"
+        sta (ep),y
+        iny
+        lda #":"
+        sta (ep),y
+        ldy #E_ATTR
+        lda #$20
+        sta (ep),y
+        ldy #E_SIZE
+        lda dv_n
+        sta (ep),y
+        lda cnt
+        ldy #E_RANK
+        sta (ep),y
+        jsr lname_ptr
+        lda #26
+        jsr dv_fmt
+        ldy #26
+c       lda dv_line,y
+        sta (sp),y
+        dey
+        bpl c
+        inc cnt
+        jmp lp
+cl      jsr dv_close
+        lda #1
+        sta dok
+rt      rts
+.)
+
+; u_cursup : liste des supports : curseur sur usup
+u_cursup
+.(
+        lda upath
+        bne rt
+        ldx #0
+lp      cpx nvis
+        beq rt
+        stx t0
+        lda vis,x
+        jsr ent_ptr
+        jsr u_cur
+        beq hit
+        ldx t0
+        inx
+        bne lp
+hit     ldx t0
+        stx cur
+        jmp clamp
+rt      rts
+.)
+
+; u_cur : Z=1 si le support de l'entrée ep est usup
+u_cur
+        ldy #E_SIZE
+        lda (ep),y
+        ora #"0"
+        cmp usup
+        rts
 
 ; u_skip : Z=1 si l'entrée dirent n'est pas montrée
 u_skip
@@ -5497,13 +5666,20 @@ y       sec
         rts
 .)
 
-; path_up : upath remonte d'un répertoire. « /REP » -> « / »,
+; path_up : upath remonte d'un répertoire ; d'une racine, à la liste des
+; supports (upath vide). « /REP » -> « / »,
 ; « 1:/REP » -> « 1:/ », « A/B » -> « A », « 1:REP » -> « 1: »,
 ; « REP » (relatif, sans « / » ni « : ») -> « / »
 path_up
 .(
         jsr is_root
-        bcs rt
+        bcc nr
+        lda upath               ; racine : la liste des supports, celui
+        sta usup                ; d'où l'on vient marqué *
+        lda #0
+        sta upath
+        rts
+nr
         ldy t1
         bmi nos                 ; aucun « / »
         beq kp                  ; « / » en tête : on le garde
@@ -5532,7 +5708,11 @@ u_full
 .(
         sta pp
         sty pp+1
-        ldx #0
+        lda upath               ; liste des supports : pas de fichier
+        bne ok0
+        sec
+        rts
+ok0     ldx #0
 c1      lda upath,x
         beq e1
         sta ufull,x
@@ -5611,20 +5791,34 @@ u_open_ep
         bne ent
         jsr path_up
         jmp rl
-ent     ldy #E_RANK
+ent     lda upath               ; un support : sa racine
+        bne ent2
+        ldy #E_SIZE
+        lda (ep),y
+        ora #"0"
+        sta upath
+        lda #":"
+        sta upath+1
+        lda #"/"
+        sta upath+2
+        lda #0
+        sta upath+3
+        beq rl
+ent2    ldy #E_RANK
         lda (ep),y
         jsr u_name
         bcs er
-        ldx #0                  ; upath = ufull (99 caractères au plus)
+        ldx #0                  ; upath = ufull (127 caractères au plus)
 c       lda ufull,x
         sta upath,x
         beq rl
         inx
-        cpx #99
+        cpx #127
         bne c
         lda #0
         sta upath,x
 rl      jsr reload
+        jsr u_cursup
         sec
         rts
 fil     ldy #E_RANK
@@ -5878,9 +6072,23 @@ no      sec
 ; sans ses ^Z (comme EXPORT) ; .DSK refusé ; Déplacer efface l'original
 ucopy_out
 .(
-        ldx #4                  ; répertoire : après USB:, sinon celui de
-        ldy #0                  ; la colonne de la clé, sinon la racine
-        cpx inlen
+        jsr u_chk
+        bcc lk
+        lda #<m_noloci2
+        ldy #>m_noloci2
+        jmp set_msg
+lk      lda #0                  ; colonne de la clé à l'écran ?
+        sta t2
+        lda mode2
+        beq nc
+        lda pz2+PZN+1
+        sta t2
+nc      lda t2
+        bne hc
+        jsr cw_get              ; sinon : le répertoire courant de CP/A
+hc      ldx #4                  ; répertoire : après USB:, relatif à
+        ldy #0                  ; celui de la colonne de la clé (ou au
+        cpx inlen               ; répertoire courant), sinon celui-là
         beq dflt
 cp      lda inbuf,x
         sta udest,y
@@ -5890,26 +6098,41 @@ cp      lda inbuf,x
         bne cp
         lda #0
         sta udest,y
-        beq go0
-dflt    lda mode2
-        beq root
-        lda pz2+PZN+1
-        beq root
-        ldx #0
+        lda t2
+        beq rs
+        lda #<upath
+        sta lp_base
+        lda #>upath
+        sta lp_base+1
+rs      lda #<udest
+        ldy #>udest
+        jsr lpath
+        bcc ap
+        jmp ue
+ap      ldx #0
+c1      lda apath,x
+        sta udest,x
+        beq go
+        inx
+        bne c1
+dflt    ldx #0
+        lda t2
+        beq dc
+        lda upath               ; liste des supports : pas de destination
+        bne c2
+        lda #<m_nosup
+        ldy #>m_nosup
+        jmp set_msg
 c2      lda upath,x
         sta udest,x
-        beq go0
+        beq go
         inx
         bne c2
-root    lda #"/"
-        sta udest
-        lda #0
-        sta udest+1
-go0     jsr u_chk
-        bcc go
-        lda #<m_noloci2
-        ldy #>m_noloci2
-        jmp set_msg
+dc      lda cwd,x
+        sta udest,x
+        beq go
+        inx
+        bne dc
 go      jsr u_init
 lp      lda vi
         cmp ntg
@@ -5954,7 +6177,7 @@ c3      lda upath,x
         pla
         sta udest,x
         inx
-        cpx #100
+        cpx #128
         bne c3
         lda #<lbuf
         ldy #>lbuf
@@ -5968,7 +6191,7 @@ c4      lda upath,x
         pla
         sta udest,x
         inx
-        cpx #100
+        cpx #128
         bne c4
         plp
         bcc pgo
@@ -6092,7 +6315,12 @@ u_hdr
         bne ok
         lda #"?"
         jmp lb_chr
-ok      jsr slashes
+ok      lda upath
+        bne ok2
+        lda #<m_sups            ; « USB:supports »
+        ldy #>m_sups
+        jmp lb_str
+ok2     jsr slashes
         ldy t1                  ; après le dernier « / »
         iny
         lda upath,y
@@ -6139,7 +6367,14 @@ e       ldy #E_ATTR
         lda (ep),y
         and #$20
         beq sz
-        ldx #4                  ; répertoire
+        lda upath
+        bne rp
+        jsr u_cur               ; support : * pour celui d'où l'on vient
+        bne r0
+        lda #"*"
+        sta lbuf+29
+r0      rts
+rp      ldx #4                  ; répertoire
 r       lda m_rep,x
         sta lbuf+32,x
         dex
@@ -6191,7 +6426,10 @@ e       ldy #E_ATTR
         lda (ep),y
         and #$20
         beq sz
-        lda po                  ; répertoire
+        lda upath               ; support : rien de plus
+        bne rp
+        rts
+rp      lda po                  ; répertoire
         clc
         adc #13
         tax
@@ -6221,7 +6459,10 @@ u_info
         lda (ep),y
         and #$20
         beq sz
-        lda #<m_rep
+        lda upath               ; support : la ligne seulement
+        bne rp
+        rts
+rp      lda #<m_rep
         ldy #>m_rep
         jmp lb_str
 sz      ldy #E_SIZE
@@ -6272,8 +6513,9 @@ ch_k    = tg+128                ; tranches : fichier, enreg., drapeaux
 ch_nl   = ch_k+NCH
 ch_nh   = ch_nl+NCH
 ch_f    = ch_nh+NCH
-upath   = ch_f+NCH              ; clé USB : répertoire de la colonne (100)
-ufull   = upath+100             ;   chemin complet d'un fichier (128)
-udest   = ufull+128             ;   répertoire de destination (100)
-lnames  = udest+100             ;   noms longs affichés (128 x 27)
+upath   = ch_f+NCH              ; clé USB : répertoire de la colonne (128 ;
+                                ;   vide : la liste des supports)
+ufull   = upath+128             ;   chemin complet d'un fichier (128)
+udest   = ufull+128             ;   répertoire de destination (128)
+lnames  = udest+128             ;   noms longs affichés (128 x 27)
 bufs    = lnames+NMAX*27        ; noms marqués (relecture), tampon de copie

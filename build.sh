@@ -114,7 +114,7 @@ GRX_EX="files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx file
   files/tuiles.spr files/defile.grx files/rotscrol.grx files/JEU.GRX"
 EXEMPLES="build/progs/HELLO.COM build/progs/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM files/demo.log files/edit.cfg $GRX_EX"
 PROTEGES=""
-for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC build/src/ORIC.INC files/readme.txt; do
+for f in build/progs/*.COM build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC build/src/ORIC.INC files/readme.txt files/usbcd.bat; do
   case " $(echo $EXEMPLES) " in *" $f "*) ;; *) PROTEGES="$PROTEGES $f" ;; esac
 done
 disque build/cpa.dsk build/cpa-en.dsk --ro $PROTEGES --rw $EXEMPLES
@@ -125,7 +125,7 @@ disque build/cpa.dsk build/cpa-en.dsk --ro $PROTEGES --rw $EXEMPLES
 P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM
-  $P/VOIR.COM $P/CMDER.COM"
+  $P/VOIR.COM $P/CMDER.COM files/usbcd.bat"
 theme() {   # theme NOM NOM_EN "visibles" "système en plus" "exemples"
   disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg \
     --ro --dir $P/EDIT.COM $3 --rw $5

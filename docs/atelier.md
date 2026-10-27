@@ -44,7 +44,15 @@ outils, et suit toujours la même boucle.
      dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
      opérations de fichiers et de répertoires sont simulées, et d'un coup (le vrai LOCI fait
      attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT.
-     De quoi essayer EXPORT, IMPORT et USBDIR sans le matériel. Le contrôleur de
+     De quoi essayer EXPORT, IMPORT, USBDIR et CMDER sans le matériel. **Plusieurs clés** :
+     les sous-dossiers `usb1` à `usb8` du dossier (le numéro est l'adresse USB, comme sur le
+     LOCI ; sans eux, le dossier lui-même est la clé 1), la description de chacune dans
+     `usbN.txt` (première ligne, au format du LOCI : `MSC 14.9 GB SanDisk  Cruzer Blade    rev
+     1.00`) ; `autres.txt` ajoute d'autres appareils à la liste (`3: HID keyboard`). La liste
+     des appareils (opendir d'un chemin vide) est imitée ; renuméroter une clé, c'est renommer
+     son dossier. Un répertoire intermédiaire absent est refusé comme sur le LOCI.
+     `MIA_TRACE=1` écrit chaque opération du LOCI (et sa pile d'échange) sur la sortie
+     d'erreur. Le contrôleur de
      disquettes imite aussi celui du LOCI (loci-firmware, `src/mia/oric/dsk.c`) : `$0319`
      se lit `L`, la fenêtre 1 de la XRAM (`$03A8-$03AB`) montre la configuration gardée par
      le menu du LOCI (`LOCI` en `$8000`, lecteurs montés en `$800B`, d'après les disquettes
@@ -205,7 +213,7 @@ Variables utiles :
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
 | `DISK_OPTS=""` (pour `build.sh`) | système sans la complétion des commandes par ESC (option `CPLCMD`, ~120 octets résidents) ; par défaut `-DCPLCMD` |
-| `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR) ; sans elle, ces commandes répondent `LOCI absent` |
+| `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR, CMDER ; plusieurs clés : `usb1` à `usb8`) ; sans elle, ces commandes répondent `LOCI absent` |
 | `ORIC_WARP=1` | émulateur sans attente du temps réel (même résultat, bien plus vite) |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |
 

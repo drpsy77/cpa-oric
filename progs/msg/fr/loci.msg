@@ -10,3 +10,12 @@ m_e_name .asc " : nom invalide",0
 m_e_deny .asc " : refus (cle pleine ?)",0
 m_e_wp  .asc " : cle protegee",0
 m_e_nousb .asc " : pas de cle USB lisible",0
+m_long  .asc "Chemin trop long",13,10,0
+m_found .asc "Cle trouvee en ",0
+m_absent .asc "Cle absente : ",0
+m_nfw   .asc "Introuvable : ",0
+m_many  .asc "Plusieurs fichiers : preciser",13,10,0
+m_dots  .asc "...",13,10,0
+m_int   .asc "memoire du LOCI",0
+m_intsz .asc "15 Mo",0
+UNIT_B  = "o"           ; GB -> Go, MB -> Mo

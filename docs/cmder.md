@@ -2,8 +2,8 @@
 
 Gestionnaire de fichiers en plein écran : une ou deux colonnes, disquettes A: à D: et clé USB
 du LOCI. Liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer,
-Attributs, tailles exactes ; copie avec un seul lecteur. Un `.COM` (13 566 octets), rien de
-résident. C'est d'abord un outil de liste et de tri ; pour copier une disquette entière,
+Attributs, tailles exactes ; copie avec un seul lecteur. Un `.COM` (15 354 octets, 8 blocs),
+rien de résident. C'est d'abord un outil de liste et de tri ; pour copier une disquette entière,
 DISKCOPY est plus rapide.
 
 ## 1. Appel
@@ -11,12 +11,19 @@ DISKCOPY est plus rapide.
     CMDER                lecteur courant, tous les fichiers, plein écran
     CMDER B:*.COM        lecteur B:, filtre *.COM
     CMDER A: B:          deux colonnes (un modèle par lecteur : CMDER A:*.COM B:)
-    CMDER USB:[chemin]   la clé USB du LOCI (sans chemin : racine de la première clé)
+    CMDER USB:[chemin]   la clé USB du LOCI, dans le répertoire courant de CP/A, ou au
+                         chemin donné, relatif à lui (JEUX, .., /JEUX, 2:/JEUX, 0:)
     CMDER A: USB:        deux colonnes, disquette et clé (la colonne USB à gauche ou à droite)
+    CMDER USB:JEUX /R    répertoires seuls dans la colonne USB (/R à la fin)
 
 `CMDER A: A:` est refusé (`Deux lecteurs differents`), `CMDER USB: USB:` aussi (`Une seule
 colonne USB`). Pour charger un autre lecteur dans une colonne : `^L`, ou quitter et relancer.
-ESC quitte : toute opération est faite tout de suite. Lancé en mode SPLIT, CMDER repasse en
+ESC quitte : toute opération est faite tout de suite. **En sortant, le dernier répertoire
+USB affiché devient le répertoire courant de CP/A** (fichier `0:CPA.CWD`, `docs/usb.md`
+§ 2.1), celui d'où partent USBDIR, IMPORT, EXPORT et le prochain `CMDER USB:` : changer de
+répertoire sur la clé, c'est entrer dans CMDER, aller où l'on veut et quitter. Le script
+`USBCD.BAT` (`CMDER USB:$1 /R`, sur les disquettes) en fait un raccourci : `USBCD JEUX`
+ouvre CMDER dans `JEUX`, répertoires seuls ; ESC une fois arrivé. Lancé en mode SPLIT, CMDER repasse en
 texte (l'image est perdue).
 
 ## 2. Écran
@@ -57,10 +64,27 @@ la colonne 20 sert d'ascenseur à la colonne de gauche, la 39 à celle de droite
 active, qui seule montre son curseur. Lignes 25-26 : colonne active. Chaque colonne garde son
 lecteur, son filtre, son tri, ses marques, son curseur.
 
-**Colonne USB** : en-tête `USB:JEUX/` (répertoire courant seulement ; `USB:?` si le LOCI est
-absent ou la clé illisible, `+` après le nombre de fichiers si la liste est coupée à 128).
-`..` (sauf à la racine) et les sous-répertoires (`<REP>`) en tête, quel que soit le tri. Noms
-longs coupés avec `~` (12 caractères en deux colonnes, 26 en plein écran).
+**Colonne USB** : en-tête `USB:JEUX/` (dernier répertoire du chemin seulement, `USB:2:/` à la
+racine ; `USB:?` si le LOCI est absent ou la clé illisible, `+` après le nombre de fichiers si
+la liste est coupée à 128). `..` et les sous-répertoires (`<REP>`) en tête, quel que soit le
+tri. Noms longs coupés avec `~` (12 caractères en deux colonnes, 26 en plein écran).
+
+**Supports** : `..` à la racine d'un support mène à la liste des supports (en-tête
+`USB:supports`) : `0:`, la mémoire interne du LOCI, et les clés USB, avec leur fabricant,
+leur modèle et leur taille ; `*` marque celui d'où l'on vient, et le curseur s'y place.
+RETURN entre à la racine d'un support. Le numéro d'une clé est son adresse USB, qui change
+selon la prise (`docs/usb.md` § 2.1) :
+
+```
+ 1 |USB:supports         3 fic           |
+ 2 |  NOM+                        TAILLE |
+ 3 |  0: memoire du LOCI   15 Mo         |
+ 4 |  2: SanDisk Cruzer  14.9 Go *       |
+ 5 |  4: Kingston DataTra 7.5 Go         |
+```
+
+Dans la liste des supports, rien ne se copie (`Choisir d'abord un support` comme
+destination).
 
 ## 3. Tailles
 
@@ -107,7 +131,7 @@ curseur s'il n'y en a pas.** Un modèle sans point vaut pour tous les types (`LO
 
 ## 5. Menus
 
-Les articles tapent des codes (`$81-$98`) : un article et son raccourci passent par le même
+Les articles tapent des codes (`$81-$9F`) : un article et son raccourci passent par le même
 aiguillage ; le raccourci est écrit à droite du libellé.
 
 - **Fichier** : Voir RET, Copier... ^C, Copier texte..., Deplacer... ^X, Renommer... ^N,
@@ -115,8 +139,12 @@ aiguillage ; le raccourci est écrit à droite du libellé.
   Quitter ^Q (ou ESC).
 - **Marque** : Marquer ESP, Marquer... +, Oter... -, Inverser *, Tout, Rien.
 - **Trier** : Ordre disque 1, Nom 2, Type 3, Taille 4.
-- **Vue** : Filtrer... /, Sans filtre, Cacher SYS (devient Montrer SYS), Taille exacte ^E,
-  Absents autre, Zoom ^Z, Echanger ^W, Autre col. ^I.
+- **Vue** : Filtrer... /, Sans filtre, Repertoires seuls, Cacher SYS (devient Montrer SYS),
+  Taille exacte ^E, Absents autre, Zoom ^Z, Echanger ^W, Autre col. ^I.
+
+**Répertoires seuls** (colonne de la clé, bascule ; `Cle USB seulement` ailleurs ; `/R` à
+l'appel) : seuls `..` et les `<REP>` restent, pour parcourir l'arborescence sans les fichiers ;
+l'en-tête compte les visibles (`3/5 fic`).
 
 ## 6. Opérations
 
@@ -159,14 +187,22 @@ Après toute opération : répertoire(s) relu(s), curseur gardé sur le même fi
 **Clé USB** : une passerelle, le vrai support reste la disquette. Copier dans les deux sens
 (comme EXPORT et IMPORT : `^Z` retirés à l'envoi, ajoutés à l'arrivée, noms ramenés en 8 + 3
 avec `_` pour un caractère interdit, `.DSK` refusé à l'envoi, fichier de la clé remplacé sans
-question). `/T` à la fin de la réponse de Copier (ou `Copier texte...`) change un LF seul en
+question). Vers la clé, la réponse `USB:rep` est relative au répertoire de la colonne USB (ou,
+sans elle, au répertoire courant de CP/A) ; `USB:` seul : ce répertoire-là. `/T` à la fin de la réponse de Copier (ou `Copier texte...`) change un LF seul en
 CR LF et une tabulation (TAB) en un espace. Déplacer d'une disquette vers la clé, pas l'inverse. Effacer, Renommer, Attributs
 refusés : `Cle USB : lecture et copie seulement`. Pas de copie de répertoire entier.
 
 ## 7. Mise en œuvre
 
-- `progs/cmder.s`, avec `progs/loci_inc.s` (clé USB) ; page zéro hors de `$30-$3B` (zone de
-  `loci_inc.s`).
+- `progs/cmder.s`, avec `progs/loci_inc.s` (clé USB : API du LOCI, répertoire courant,
+  chemins, supports) ; page zéro hors de `$30-$3B` (zone de `loci_inc.s`).
+- **Répertoire courant** : `cw_get` (au premier `USB:`) le lit, retrouve une clé renumérotée
+  d'après sa description, et rend la base des chemins relatifs (`lpath`) ; `k_quit` l'écrit
+  par `cw_put` si une colonne montre la clé (pas la liste des supports), seulement s'il a
+  changé. `upath` vide = la liste des supports (`u_sups` : une entrée « répertoire » par
+  support, son numéro dans `E_SIZE`, sa ligne de `dv_fmt` en nom long) ; `usup` : le support
+  marqué `*`.
+- **Répertoires seuls** : bit 1 de `hides` (le bit 0 cache les SYS), par colonne.
 - **Textes** : barre de menus, messages, en-têtes de colonnes, noms des genres et colonne du
   signe de tri (`spos`, `spos2`) dans `progs/msg/fr/cmder.msg` et `progs/msg/en/cmder.msg`
   (`cpa-en.dsk` : `File Mark Sort View`, colonnes `NAME TYP SIZE RS N KIND`, réponses `Y`,

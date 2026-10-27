@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..8cb8314 100644
+index 00b7b0e..64ad83c 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,201 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,275 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -166,7 +166,9 @@ index 00b7b0e..8cb8314 100644
 +   variable ORIC_LOCI donne un dossier, qui tient lieu de clé USB ("1:",
 +   ou pas de lecteur) ; "0:" (mémoire interne) est son sous-dossier int.
 +   Opérations faites d'un coup (pas d'attente) : 00 vide la pile, 14 open,
-+   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire.
++   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire
++   (80 d'un chemin vide : liste des appareils). Plusieurs clés : voir
++   mia_haskeys. MIA_TRACE=1 : chaque opération sur stderr.
 +   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
 +static int loci_wedged = 0;                    /* voir mia_write */
 +static struct machine *mia_oric = NULL;
@@ -184,6 +186,7 @@ index 00b7b0e..8cb8314 100644
 +static int mia_xp = 512, mia_init = 0;
 +static FILE *mia_f[16];
 +static DIR *mia_d[4];
++static int mia_dev = -1;                 /* liste des appareils ouverte */
 +static char mia_dpath[4][1024];
 +
 +static void mia_ret(int ax)
@@ -205,14 +208,43 @@ index 00b7b0e..8cb8314 100644
 +  if (e && *e) return e;
 +  return loci_dir[0] ? loci_dir : NULL;
 +}
-+/* chemin de l'Oric -> chemin du PC (casse ignorée, comme FAT) ; 0 si refusé */
++/* Supports : "0:" est le sous-dossier int ; les clés sont les
++   sous-dossiers usb1 à usb8 (numéro = adresse USB, comme le LOCI), leur
++   description la première ligne de usbN.txt ; sans dossier usbN, le
++   dossier lui-même est la clé 1. autres.txt : lignes "N: texte" d'autres
++   appareils (clavier...), montrées dans la liste des appareils. */
++static int mia_haskeys(void)
++{
++  char d[1100]; struct stat st; int n;
++  for (n = 1; n <= 8; n++) {
++    snprintf(d, sizeof d, "%s/usb%d", mia_root(), n);
++    if (!stat(d, &st) && S_ISDIR(st.st_mode)) return 1;
++  }
++  return 0;
++}
++static int mia_key(int n, char *out)          /* 1 : la clé n existe */
++{
++  struct stat st;
++  if (!mia_haskeys()) { snprintf(out, 1024, "%s", mia_root()); return n == 1; }
++  snprintf(out, 1024, "%s/usb%d", mia_root(), n);
++  return !stat(out, &st) && S_ISDIR(st.st_mode);
++}
++static int mia_firstkey(void)
++{
++  char d[1024]; int n;
++  for (n = 1; n <= 8; n++) if (mia_key(n, d)) return n;
++  return 0;
++}
++/* chemin de l'Oric -> chemin du PC (casse ignorée, comme FAT) ; 0 si
++   refusé, 3 si le support n'existe pas */
 +static int mia_path(const char *p, char *out, int create)
 +{
-+  const char *root = mia_root();
 +  char comp[256];
-+  int internal = 0;
-+  if (p[0] >= '0' && p[0] <= '9' && p[1] == ':') { internal = (p[0] == '0'); p += 2; }
-+  snprintf(out, 1024, "%s%s", root, internal ? "/int" : "");
++  int n;
++  if (p[0] >= '0' && p[0] <= '9' && p[1] == ':') { n = p[0] - '0'; p += 2; }
++  else n = mia_firstkey();
++  if (n == 0) snprintf(out, 1024, "%s/int", mia_root());
++  else if (!mia_key(n, out)) return 3;
 +  while (*p) {
 +    int n = 0;
 +    while (*p == '/') p++;
@@ -229,7 +261,8 @@ index 00b7b0e..8cb8314 100644
 +        closedir(d);
 +      }
 +      if (!found) {
-+        if (*p || !create) { strcat(out, "/"); strcat(out, comp); return 2; }  /* absent */
++        if (*p) return 4;                     /* répertoire intermédiaire absent */
++        if (!create) { strcat(out, "/"); strcat(out, comp); return 2; }  /* absent */
 +        strcat(out, "/"); strcat(out, comp);
 +      }
 +    }
@@ -238,16 +271,23 @@ index 00b7b0e..8cb8314 100644
 +}
 +static void mia_op(unsigned char op)
 +{
++  if (getenv("MIA_TRACE")) {
++    int k; fprintf(stderr, "MIA op %02X A=%02X xs[%d]=\"", op, mia_r[0x14], 512 - mia_xp);
++    for (k = mia_xp; k < 512 && k < mia_xp + 60; k++) fputc(mia_xs[k] >= 32 && mia_xs[k] < 127 ? mia_xs[k] : '.', stderr);
++    fprintf(stderr, "\"\n");
++  }
 +  char path[1024];
-+  int a = mia_r[0x14], i, n;
++  int a = mia_r[0x14], i, n, r;
 +  switch (op) {
 +  case 0x00: mia_xp = 512; mia_ret(0); return;
 +  case 0x14: {            /* open : A = drapeaux de cc65 */
-+    const char *mode; int r;
++    const char *mode;
 +    for (i = 0; i < 16 && mia_f[i]; i++) ;
 +    if (i == 16) { mia_err(5); return; }
 +    r = mia_path((char *)&mia_xs[mia_xp], path, (a & 0x10) != 0);
 +    mia_xp = 512;
++    if (r == 3) { mia_err(32 + 11); return; }
++    if (r == 4) { mia_err(32 + 5); return; }
 +    if (!r) { mia_err(32 + 6); return; }
 +    if ((a & 3) == 1) mode = "rb";
 +    else if (a & 0x10) mode = (a & 0x20) ? "wb" : (a & 0x40) ? "ab" : "r+b";
@@ -276,20 +316,54 @@ index 00b7b0e..8cb8314 100644
 +  case 0x1B:
 +    if (mia_path((char *)&mia_xs[mia_xp], path, 0) != 1 || remove(path)) { mia_err(32 + 4); return; }
 +    mia_xp = 512; mia_ret(0); return;
-+  case 0x80:              /* opendir ("" : liste des appareils, non simulée) */
-+    if (!mia_xs[mia_xp]) { mia_err(4); return; }
++  case 0x80:              /* opendir ("" : liste des appareils) */
++    if (!mia_xs[mia_xp]) {
++      if (mia_dev >= 0) { mia_err(5); return; }
++      mia_dev = 0; mia_xp = 512; mia_ret(8); return;
++    }
 +    for (i = 0; i < 4 && mia_d[i]; i++) ;
-+    if (i == 4 || mia_path((char *)&mia_xs[mia_xp], path, 0) != 1) { mia_err(32 + 5); return; }
++    r = (i == 4) ? 0 : mia_path((char *)&mia_xs[mia_xp], path, 0);
++    if (r == 3) { mia_err(32 + 11); return; }
++    if (r != 1) { mia_err(32 + 5); return; }
 +    mia_xp = 512;
 +    mia_d[i] = opendir(path);
 +    if (!mia_d[i]) { mia_err(32 + 5); return; }
 +    strcpy(mia_dpath[i], path);
 +    mia_ret(64 + i); return;
 +  case 0x81:
++    if (a == 8 && mia_dev >= 0) { mia_dev = -1; mia_xp = 512; mia_ret(0); return; }
 +    if (a < 64 || a >= 68 || !mia_d[a - 64]) { mia_err(7); return; }
 +    closedir(mia_d[a - 64]); mia_d[a - 64] = NULL; mia_xp = 512; mia_ret(0); return;
 +  case 0x82: {            /* readdir : 72 octets, comme struct dir_dirent */
 +    struct dirent *e; unsigned char *d = &mia_xs[512 - 72];
++    if (a == 8 && mia_dev >= 0) {   /* liste des appareils (dir.c du LOCI) */
++      memset(d, 0, 72); d[66] = 0x04;
++      if (mia_dev == 0) { strcpy((char *)d + 2, "0: Internal storage [15MB]"); mia_dev = 1; }
++      else {
++        char txt[256], f[1100]; FILE *t;
++        for (; mia_dev <= 8; mia_dev++) {
++          txt[0] = 0;
++          if (mia_key(mia_dev, f)) {
++            snprintf(f, sizeof f, "%s/usb%d.txt", mia_root(), mia_dev);
++            snprintf(txt, sizeof txt, "MSC 1.0 GB ORICUTRN USB%d            rev 1.00", mia_dev);
++            if ((t = fopen(f, "r")) != NULL) {
++              if (fgets(txt, sizeof txt, t)) txt[strcspn(txt, "\r\n")] = 0;
++              fclose(t);
++            }
++          } else {
++            snprintf(f, sizeof f, "%s/autres.txt", mia_root());
++            if ((t = fopen(f, "r")) != NULL) {
++              while (fgets(txt, sizeof txt, t))
++                if (atoi(txt) == mia_dev && txt[1] == ':') { txt[strcspn(txt, "\r\n")] = 0; memmove(txt, txt + 3, strlen(txt + 3) + 1); break; }
++                else txt[0] = 0;
++              fclose(t);
++            }
++          }
++          if (txt[0]) { snprintf((char *)d + 2, 64, "%d: %s", mia_dev, txt); mia_dev++; break; }
++        }
++      }
++      mia_xp = 512 - 72; mia_ret(0); return;
++    }
 +    if (a < 64 || a >= 68 || !mia_d[a - 64]) { mia_err(7); return; }
 +    memset(d, 0, 72);
 +    d[0] = a;
@@ -359,7 +433,7 @@ index 00b7b0e..8cb8314 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,8 +712,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,8 +786,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -378,7 +452,7 @@ index 00b7b0e..8cb8314 100644
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
        acia_write(&oric->tele_acia, addr, data);
-@@ -918,6 +1121,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+@@ -918,6 +1195,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {

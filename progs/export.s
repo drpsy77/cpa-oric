@@ -5,13 +5,14 @@
 ;  EXPORT afn [dossier]
 ;    fic  fichier de CP/A (lecteur facultatif : B:LETTRE.TXT)
 ;    afn  jokers (*.LOG, B:*.*) : chaque fichier sous son nom (en
-;         minuscules si le modèle est tapé en minuscules), à la racine
-;         de la clé ou dans le dossier donné (1:/ORIC) ; ESC entre deux
-;         fichiers ; un .DSK est sauté
-;    nom  nom sur la clé, avec un chemin si l'on veut (1:/DOCS/X.TXT,
-;         0:X.TXT pour la mémoire interne du LOCI) ; par défaut, le nom
-;         de fic tel qu'il a été tapé (minuscules gardées), à la racine
-;         de la clé
+;         minuscules si le modèle est tapé en minuscules), dans le
+;         répertoire courant de la clé ou dans le dossier donné (ORIC,
+;         2:/ORIC) ; ESC entre deux fichiers ; un .DSK est sauté
+;    nom  nom sur la clé, relatif au répertoire courant de CP/A
+;         (docs/usb.md § 2.1), avec un chemin si l'on veut (DOCS/X.TXT,
+;         /X.TXT, 2:/DOCS/X.TXT, 0:X.TXT pour la mémoire interne du
+;         LOCI) ; par défaut, le nom de fic tel qu'il a été tapé
+;         (minuscules gardées), dans le répertoire courant
 ;  Un fichier du même nom sur la clé est remplacé. Les ^Z ($1A) qui
 ;  complètent le dernier enregistrement sont retirés (même règle que
 ;  STAT) : un texte arrive à sa vraie taille. Les fins de ligne restent
@@ -91,7 +92,8 @@ ce      lda #0
 okn     jsr mia_chk
         bcc open
         rts
-open    ldx #35                 ; fichier de CP/A
+open    jsr cw_get
+        ldx #35                 ; fichier de CP/A
         lda #0
 z       sta fcb,x
         dex
@@ -155,7 +157,8 @@ pz      sty plen
         jsr mia_chk
         bcc go
         rts
-go      ldx #11                 ; noms (premier extent de chacun)
+go      jsr cw_get
+        ldx #11                 ; noms (premier extent de chacun)
 c2      lda FCB1,x
         sta fcb,x
         dex
@@ -369,9 +372,15 @@ opened  lda #0
         sta tot+2
         sta tot+3
 
-        ; fichier de la clé, créé ou vidé
+        ; fichier de la clé, créé ou vidé (chemin relatif au répertoire
+        ; courant de CP/A)
         lda #<uname
         ldy #>uname
+        jsr lpath
+        bcc pok
+        rts
+pok     lda #<apath
+        ldy #>apath
         ldx #O_WRONLY+O_CREAT+O_TRUNC
         jsr usb_open
         bcc uok

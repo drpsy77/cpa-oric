@@ -32,6 +32,30 @@ insérés, enregistré à 32 761 octets) se rouvre sans `Fichier tronque`, en en
 texte à sa place) ; un fichier encore plus gros donne toujours le message ; un texte court
 s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
 
+**Clé USB, lot 1 : répertoire courant et supports** (`docs/usb.md` § 1 ; sur `cpa.dsk`,
+puis quelques commandes sur `cpa-en.dsk`) :
+
+- `USBDIR /S` : `0: memoire du LOCI`, puis chaque clé avec son fabricant, son modèle et sa
+  taille (comparer avec le menu du LOCI) ; ni le clavier ni la Pico W dans la liste ;
+- `CMDER USB:` : `..` à la racine de la clé mène à `USB:supports`, curseur sur la clé ;
+  entrer dans `0:` puis dans la clé, descendre dans un répertoire, ESC ; `USBDIR` écrit ce
+  chemin et liste ce répertoire ; `EXPORT`, `IMPORT` d'un nom sans chemin y vont ;
+- éteindre et rallumer l'Oric : `USBDIR` repart du même répertoire ; le menu du LOCI garde
+  le sien (CP/A ne l'a pas changé) ;
+- clé changée de prise (ou un hub, la Pico W branchée avant) pour que son numéro change :
+  `USBDIR` dit `Cle trouvee en n:` une fois, puis plus rien ; clé retirée : `Cle absente :
+  ...`, liste de la racine de l'autre clé (ou une erreur s'il n'y en a pas) ; clé remise :
+  retour au répertoire noté ;
+- chemins : `USBDIR ..`, `USBDIR /`, `USBDIR 2:/JEUX` (le numéro de sa clé), `USBDIR 0:`,
+  `USBDIR *.DSK` ; `IMPORT DOCS/LET*.TXT /T` (un seul fichier), `IMPORT *.TXT` (plusieurs :
+  la liste, `Plusieurs fichiers : preciser`) ;
+- `USBCD JEUX` : CMDER dans `JEUX`, répertoires seuls (`3/12 fic`), ESC ; menu Vue,
+  `Repertoires seuls` sur une colonne de disquette : `Cle USB seulement` ;
+- CMDER deux colonnes `CMDER A: USB:` : `^C` vers `USB:DOCS` (relatif au répertoire de la
+  colonne USB) ;
+- durée : chaque commande USB lit `0:CPA.CWD` et la liste des appareils ; dire si cela se
+  sent avant la liste de `USBDIR`.
+
 **Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
 
 - HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli

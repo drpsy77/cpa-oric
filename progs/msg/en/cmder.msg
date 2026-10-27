@@ -85,7 +85,7 @@ mn_t    .byt 4,14
         .byt MA_TYPE
         .word c94
 
-mn_v    .byt 8,16
+mn_v    .byt 9,16
         .asc "View",0
         .asc "Filter...      /",0
         .byt MA_TYPE
@@ -93,6 +93,9 @@ mn_v    .byt 8,16
         .asc "No filter",0
         .byt MA_TYPE
         .word c96
+        .asc "Directories only",0
+        .byt MA_TYPE
+        .word c9f
 it_sys  .asc "Hide SYS   ",0
         .byt MA_TYPE
         .word c97
@@ -158,6 +161,9 @@ m_ioerr .asc "Disk error : check the disk",0
 m_t2    .asc " NAME     TYP   KB"
 m_twod  .asc "Two different drives",0
 m_twou  .asc "Only one USB column",0
+m_usbonly .asc "USB stick only",0
+m_nosup .asc "Choose a device first",0
+m_sups  .asc "devices",0
 m_usb   .asc "USB:",0
 m_usbro .asc "USB key : read and copy only",0
 m_usberr .asc "USB error (key missing or full ?)",0
