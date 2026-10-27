@@ -2,8 +2,10 @@
 ;  IMPORT.COM — copie un fichier de la clé USB du LOCI dans CP/A
 ;
 ;  IMPORT nom [fic] [/T]
-;    nom  nom sur la clé, avec un chemin si l'on veut (1:/DOCS/X.TXT,
-;         0:X.TXT pour la mémoire interne du LOCI)
+;    nom  nom sur la clé, relatif au répertoire courant de CP/A
+;         (docs/usb.md § 2.1) ; avec un chemin si l'on veut (DOCS/X.TXT,
+;         ../X.TXT, /X.TXT, 2:/DOCS/X.TXT, 0:X.TXT pour la mémoire
+;         interne du LOCI) ; jokers * et ? : le seul fichier qui répond
 ;    fic  fichier de CP/A (lecteur facultatif) ; par défaut, le nom de
 ;         la clé sans son chemin, coupé à 8 + 3 caractères ; B: seul :
 ;         ce nom-là, sur le lecteur B:
@@ -86,6 +88,18 @@ cl      lda args,x
         bne cl
 ce      lda #0
         sta uname,y
+        jsr mia_chk             ; chemin complet (apath), jokers résolus
+        bcc lk
+        rts
+lk      jsr cw_get
+        lda #<uname
+        ldy #>uname
+        jsr lpath
+        bcs nok
+        jsr lp_find
+        bcc fk
+nok     rts
+fk
 
         ; nom de CP/A : le 2e mot, sinon le nom de la clé sans son
         ; chemin (sur le lecteur donné si le 2e mot n'est que B:)
@@ -119,37 +133,29 @@ named   txa
         adc #0
         sta pp+1
         jmp parse
-deflt   lda #<uname
-        sta pp
-        lda #>uname
-        sta pp+1
-        ldy #0
-bn      lda uname,y
-        beq parse
+deflt   ldy #0
+bn      lda apath,y
+        beq bnd
         iny
         cmp #"/"
-        beq slash
-        cmp #":"
         bne bn
-slash   tya                     ; après le dernier / ou :
+        sty i                   ; après le dernier /
+        jmp bn
+bnd    lda i
         clc
-        adc #<uname
+        adc #<apath
         sta pp
-        lda #>uname
+        lda #>apath
         adc #0
         sta pp+1
-        jmp bn
 parse   jsr pname
         bcs badn
         lda drv
         beq pok
         sta fcb
 
-pok     jsr mia_chk
-        bcc open
-        rts
-open    lda #<uname
-        ldy #>uname
+pok     lda #<apath
+        ldy #>apath
         ldx #O_RDONLY
         jsr usb_open
         bcc uok
@@ -448,6 +454,7 @@ badc    .asc "*?.,;:<>=[]|/",$5C,$22
 
 #include "import.msg"
 
+#include "ljok_inc.s"
 #include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
 

@@ -252,7 +252,7 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 tous les fichiers.
 
 Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC et SPR.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
+ASM...), README.TXT, USBCD.BAT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC et SPR.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
 comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
 effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
 copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`, HEROS.SPR, TUILES.SPR) restent
@@ -264,7 +264,7 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 
 **Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables, plus légères
 à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
-FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR, CMDER) sont protégées et **cachées** (SYS) : `DIR`
+FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR, CMDER, et le script USBCD.BAT) sont protégées et **cachées** (SYS) : `DIR`
 ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
 y est partout, protégé et visible.
 
@@ -476,23 +476,44 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 
 | Commande | Effet |
 |---|---|
-| `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, à la racine) |
-| `EXPORT afn [dossier]` | avec des jokers (`*.LOG`, `B:*.*`) : chaque fichier sous son nom, en minuscules si le modèle a été tapé en minuscules, à la racine ou dans le dossier donné ; un `.DSK` est sauté, ESC arrête entre deux fichiers |
-| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF et une tabulation (que l'Oric n'a pas) un espace — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
-| `USBDIR [chemin]` | liste un dossier de la clé (la racine par défaut) : nom et taille, `<REP>` pour un dossier |
+| `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, dans le répertoire courant) |
+| `EXPORT afn [dossier]` | avec des jokers (`*.LOG`, `B:*.*`) : chaque fichier sous son nom, en minuscules si le modèle a été tapé en minuscules, dans le répertoire courant ou le dossier donné ; un `.DSK` est sauté, ESC arrête entre deux fichiers |
+| `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; avec des jokers (`JEU*.TXT`), le seul fichier qui y répond ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF et une tabulation (que l'Oric n'a pas) un espace — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
+| `USBDIR [chemin]` | écrit le chemin complet, puis liste le dossier (le répertoire courant par défaut) : nom et taille, `<REP>` pour un dossier ; `USBDIR *.DSK` : les noms qui répondent au modèle |
+| `USBDIR /S` | les supports : `0:` (mémoire interne du LOCI) et les clés USB, avec leur taille ; `*` : celui du répertoire courant |
+| `USBCD [rep]` | change de répertoire courant : un script (`CMDER USB:$1 /R`) qui ouvre CMDER dans `rep`, répertoires seuls ; ESC une fois arrivé |
 
     A>EXPORT LETTRE.TXT
-    A>EXPORT B:JEU.LOG 1:/oric/jeu.log
+    A>EXPORT B:JEU.LOG oric/jeu.log
     A>export *.log oric
     A>IMPORT notes.txt /T
     A>IMPORT docs/MATH.LOG B:
     A>USBDIR docs
+    A>USBDIR /S
+    0: memoire du LOCI          15 Mo
+    2: SanDisk Cruzer Blade   14.9 Go *
+    4: Kingston DataTraveler   7.5 Go
 
-Les noms de la clé peuvent avoir un chemin. Sans lecteur, c'est la première clé USB vue par
-le LOCI : c'est le plus sûr, car avec un hub la clé n'est pas forcément `1:` (le LOCI
-numérote les appareils USB). `0:` désigne la mémoire interne du LOCI (`USBDIR 0:`,
-`EXPORT X.TXT 0:X.TXT`). Un nom avec des espaces ne passe pas sur la ligne de commande :
-le renommer sur le Mac.
+**Répertoire courant.** CP/A garde son propre répertoire courant sur la clé, indépendant de
+celui du menu du LOCI et conservé après un redémarrage (fichier `0:CPA.CWD`, dans la mémoire
+interne du LOCI). Il se choisit dans CMDER : on y va, on quitte (`CMDER USB:`, ou `USBCD`).
+Tant qu'on ne l'a jamais choisi, c'est la racine de la première clé. Les noms de la clé se
+donnent par rapport à lui :
+
+| Écrit | Désigne |
+|---|---|
+| `nom`, `rep/nom` | dans le répertoire courant |
+| `..` | le répertoire parent |
+| `/rep/nom` | depuis la racine du support courant |
+| `2:/rep/nom`, `0:nom` | sur ce support (`0:` : la mémoire interne du LOCI) |
+
+Le numéro d'une clé est son adresse USB : il change selon la prise, le hub et les autres
+appareils (clavier, Pico W). CP/A reconnaît la clé du répertoire courant à sa description
+(fabricant, modèle, taille) : si elle a changé de numéro, la commande la retrouve et le dit
+(`Cle trouvee en 4:`) ; si elle n'est plus là, `Cle absente : SanDisk Cruzer Blade`, et la
+commande part de la racine de la première clé (le répertoire noté revient quand la clé est
+rebranchée). Un chemin complet fait 127 caractères au plus (`Chemin trop long`). Un nom avec
+des espaces ne passe pas sur la ligne de commande : le renommer sur le Mac.
 
 - Un fichier du même nom est remplacé, sur la clé comme dans CP/A.
 - EXPORT retire les `^Z` (`$1A`) qui complètent le dernier enregistrement (même règle que
@@ -504,6 +525,9 @@ le renommer sur le Mac.
   le dit (EXPORT).
 - USBDIR ne montre ni les fichiers cachés ou système, ni ceux qui commencent par un point
   (les `._NOM` que le Mac laisse sur les clés FAT). ESC ou CTRL-C arrête la liste.
+- Une commande qui attend un seul fichier (IMPORT) et dont le modèle en désigne plusieurs
+  les écrit (8 au plus) et s'arrête : `Plusieurs fichiers : preciser` ; aucun :
+  `Introuvable : JEU*`.
 - Sans LOCI (Oricutron, Microdisc, Cumulus) : `LOCI absent : cle USB inaccessible`.
   Les erreurs du LOCI s'affichent avec leur code : `Erreur USB 36 : introuvable`.
 
@@ -511,7 +535,8 @@ Ces commandes passent par l'interface que le LOCI offre au 6502, celle du Picoco
 (registres en `$03A0-$03BF`, détail dans `progs/loci_inc.s`). Pour les essayer sans le
 matériel, l'Oricutron de l'atelier simule cette interface sur un dossier du PC :
 `ORIC_LOCI=dossier` (voir « Outils »), ou la ligne `loci = '~/Oric/loci'` dans `oricutron.cfg`
-(le dossier doit exister, avec son sous-dossier `int` pour `0:`).
+(le dossier doit exister, avec son sous-dossier `int` pour `0:` ; plusieurs clés : ses
+sous-dossiers `usb1` à `usb8`, `docs/atelier.md`).
 
 ## Publier pour l'Oric sous BASIC : MKTAP
 

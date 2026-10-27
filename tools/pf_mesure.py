@@ -52,7 +52,7 @@ COMPOSANTS = [
     ("EDS",  ["progs/edsprite.s", "progs/msg/*/edsprite.msg"]),
     ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg",
               "progs/msg/*/anim.msg"]),
-    ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s",
+    ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/loci_inc.s", "progs/ljok_inc.s",
               "progs/msg/*/export.msg", "progs/msg/*/import.msg", "progs/msg/*/usbdir.msg",
               "progs/msg/*/loci.msg", "progs/term.s", "progs/msg/*/term.msg",
               "progs/mktap.s", "progs/msg/*/mktap.msg"]),

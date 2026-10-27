@@ -85,7 +85,7 @@ mn_t    .byt 4,14
         .byt MA_TYPE
         .word c94
 
-mn_v    .byt 8,16
+mn_v    .byt 9,17
         .asc "Vue",0
         .asc "Filtrer...     /",0
         .byt MA_TYPE
@@ -93,6 +93,9 @@ mn_v    .byt 8,16
         .asc "Sans filtre",0
         .byt MA_TYPE
         .word c96
+        .asc "Repertoires seuls",0
+        .byt MA_TYPE
+        .word c9f
 it_sys  .asc "Cacher SYS ",0
         .byt MA_TYPE
         .word c97
@@ -158,6 +161,9 @@ m_ioerr .asc "Erreur disque : verifiez la disquette",0
 m_t2    .asc " NOM      TYP   Ko"
 m_twod  .asc "Deux lecteurs differents",0
 m_twou  .asc "Une seule colonne USB",0
+m_usbonly .asc "Cle USB seulement",0
+m_nosup .asc "Choisir d'abord un support",0
+m_sups  .asc "supports",0
 m_usb   .asc "USB:",0
 m_usbro .asc "Cle USB : lecture et copie seulement",0
 m_usberr .asc "Erreur USB (cle absente ou pleine ?)",0
