@@ -257,7 +257,7 @@ renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BA
 
 **Disks by use.** `build.sh` also makes four bootable disks, lighter to look at. On each one,
 the basic commands (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, EXPORT,
-IMPORT, USBDIR, VOIR, CMDER, and the script USBCD.BAT) are read-only and **hidden** (SYS): `DIR` only shows the disk's
+IMPORT, USBDIR, USBMOUNT, VOIR, CMDER, and the script USBCD.BAT) are read-only and **hidden** (SYS): `DIR` only shows the disk's
 tool and the working files, `DIRS` shows everything. EDIT is on every disk, read-only and
 visible.
 
@@ -469,6 +469,9 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
 | `USBDIR [path]` | writes the full path, then lists the folder (the current directory by default): name and size, `<DIR>` for a folder; `USBDIR *.DSK`: the names that match the pattern |
 | `USBDIR /S` | the devices: `0:` (the LOCI's internal memory) and the USB sticks, with their size; `*`: the current directory's one |
 | `USBCD [dir]` | changes the current directory: a script (`CMDER USB:$1 /R`) that opens CMDER in `dir`, directories only; ESC once there |
+| `USBMOUNT` | what is mounted in A: to D: and the tape (`K7:`); `USBMOUNT B:`: the full path of B:'s image |
+| `USBMOUNT B: name` | mounts the disk image `name` in B: (C:, D:; A:, the system disk, is refused); `B: /E` ejects |
+| `USBMOUNT name.TAP [/B]` | mounts the tape; `/B`: then leaves CP/A for the LOCI's BASIC 1.1, which loads the tape by itself; `K7: /E` ejects |
 
     A>EXPORT LETTER.TXT
     A>EXPORT B:GAME.LOG oric/game.log
@@ -480,6 +483,14 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
     0: LOCI memory              15 MB
     2: SanDisk Cruzer Blade   14.9 GB *
     4: Kingston DataTraveler   7.5 GB
+    A>USBMOUNT B: GAMES/PUZZLE.DSK
+    B: puzzle.dsk
+    A>USBMOUNT
+    A: cpa-en.dsk
+    B: puzzle.dsk
+    C: -
+    D: -
+    K7: -
 
 **Current directory.** CP/A keeps its own current directory on the stick, independent of the
 LOCI menu's one and kept across a restart (file `0:CPA.CWD`, in the LOCI's internal memory).
@@ -511,7 +522,13 @@ pass on the command line: rename it on the Mac.
   says so (EXPORT).
 - USBDIR shows neither hidden or system files, nor those starting with a dot (the `._NAME`
   files the Mac leaves on FAT sticks). ESC or CTRL-C stops the list.
-- A command that expects a single file (IMPORT) and whose pattern matches several writes
+- **USBMOUNT** keeps the LOCI menu's configuration up to date (mounted drives, image names):
+  the menu shows the same thing, whoever mounted. Refused: an image already mounted in another
+  drive (`Already mounted in C:`), a file that is not a disk image (`Not a disk image`) or a
+  tape, a `.TAP` still on a CP/A disk (`Export it first : EXPORT GAME.TAP`). After mounting or
+  ejecting, the disks are read again, as after a CTRL-C; an ejected current drive gives way to
+  A:. To come back to CP/A after `/B`: the LOCI menu (FDC switched back on).
+- A command that expects a single file (IMPORT, USBMOUNT) and whose pattern matches several writes
   them (8 at most) and stops: `Several files : be more precise`; none: `Not found : GAME*`.
 - Without a LOCI (Oricutron, Microdisc, Cumulus): `No LOCI : USB stick out of reach`. LOCI
   errors are shown with their code: `USB error 36 : not found`.

@@ -58,7 +58,7 @@ Two variants are built from the same sources:
   arrows, CTRL-X/C/V), printer, graphics and sound.
 - File and disk commands that work with one drive or several (COPY, FORMAT, DISKCOPY...),
   and **CMDER**, a full-screen two-panel file manager.
-- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), and **TERM**, a serial terminal for a WiFi modem on the LOCI (`docs/loci-modem-wifi.md`).
+- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), USBMOUNT to mount disk and tape images (and start BASIC on a tape), and **TERM**, a serial terminal for a WiFi modem on the LOCI (`docs/loci-modem-wifi.md`).
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step), and **MKTAP**,
   which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""`.

@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 21 | 0 | 11 | 9 | 6 | **47** | 11 | **58** |
+| USB | 28 | 0 | 23 | 9 | 9 | **69** | 14 | **83** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *161* | *47* | *396* | *97* | *108* | ***809*** | *210* | ***1019*** |
+| *Applications* | *168* | *47* | *408* | *97* | *111* | ***831*** | *213* | ***1044*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 114 | 18 | **179** | 45 | **224** |
-| **Total** | **213** | **77** | **619** | **303** | **204** | **1416** | **339** | **1755** |
+| **Total** | **220** | **77** | **631** | **303** | **207** | **1438** | **342** | **1780** |
 
-Points ajustés (indicatif, § 9) : 1 416 × 1,05 ≈ 1 487.
+Points ajustés (indicatif, § 9) : 1 438 × 1,05 ≈ 1 510.
 
-Nombre de fonctions comptées : 30 ILF, 15 EIF, 199 EI, 74 EO, 68 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 202 EI, 74 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -576,6 +576,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.D01 | Fichiers des lecteurs | ILF | 1 | 5 | F | 7 |
 | USB.D02 | Fichiers et dossiers de la clé USB et de la mémoire du LOCI | ILF | 2 | 5 | F | 7 |
 | USB.D03 | Répertoire courant de CP/A (`0:CPA.CWD` : chemin, description du support ; corrigé si la clé est renumérotée) | ILF | 1 | 2 | F | 7 |
+| USB.D04 | Configuration du menu du LOCI en XRAM (lecteurs montés, noms des images, réglages de démarrage) | ILF | 2 | 9 | F | 7 |
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés, jokers : un seul fichier) | EI | 2 | 6 | M | 4 |
 | USB.T03 | USBDIR : liste (chemin, tailles, dossiers, modèle à jokers) | EQ | 1 | 4 | F | 3 |
@@ -583,6 +584,10 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T05 | TERM : affichage de ce qui arrive du port série (CR -> CR LF) | EO | 1 | 2 | F | 4 |
 | USB.T06 | MKTAP : `.TAP` pour l'Oric sous BASIC (blocs, longueurs, `/R` en `$0503` au plus tôt, chargeur BASIC, contrôles des plages) | EO | 2 | 7 | M | 5 |
 | USB.T07 | USBDIR /S : supports (mémoire du LOCI, clés : fabricant, modèle, taille ; celui du répertoire courant) | EQ | 1 | 4 | F | 3 |
+| USB.T08 | USBMOUNT : monter une disquette ou la cassette (jokers, refus : A:, déjà montée, signature, `.TAP` d'une disquette) | EI | 3 | 6 | É | 6 |
+| USB.T09 | USBMOUNT : éjecter | EI | 2 | 2 | F | 3 |
+| USB.T10 | USBMOUNT : ce qui est monté, chemin complet d'une image | EQ | 1 | 4 | F | 3 |
+| USB.T11 | USBMOUNT `/B` : démarrage du BASIC 1.1 sur la cassette (configuration du menu) | EI | 1 | 5 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -593,6 +598,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.A05 | Format `.TAP`, chargeur BASIC tokenisé (fin du bloc = début des variables), taille sans les `^Z`, chevauchements | `mktap.s` | 1 |
 | USB.A06 | Chemins relatifs au répertoire courant (`..`, racine, support) ; clé renumérotée retrouvée d'après sa description ; texte du LOCI en fabricant, modèle, taille | `loci_inc.s` | 3 |
 | USB.A07 | Jokers `*` et `?` (retour arrière sur le dernier `*`), nom unique | `ljok_inc.s` | 1 |
+| USB.A08 | Changement d'image sans commande vers un lecteur vide (A: en service, lecteurs relus, lecteur courant rendu) ; image déjà montée (getcwd + nom du menu) | `lmnt_inc.s` | 3 |
 
 ### 4.8 ASM
 
@@ -803,7 +809,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 675 | 10 % | 37 829 | 35 | 117 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 691 | 10 % | 37 959 | 35 | 118 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -811,39 +817,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 19 | 3 575 | 344 | 137 | 0 | 9 % | 11 666 | 76 | 248 |
+| USB | 23 | 4 308 | 442 | 178 | 0 | 9 % | 11 672 | 62 | 169 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 76 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 175 | 8 086 | 954 | 511 | 0 | 11 % | — | 45 | — |
-| **Total** | 353 | 70 003 | 5 645 | 2 759 | 2 591 | 7 % | 155 628 | 49 | 110 |
+| Outillage PC | 175 | 8 094 | 954 | 511 | 0 | 11 % | — | 45 | — |
+| **Total** | 357 | 70 744 | 5 743 | 2 800 | 2 607 | 8 % | 155 764 | 49 | 108 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 371 | 80 | 4,3 | 78 |
+| Système et commandes | 1 371 | 81 | 4,3 | 79 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 206 | 25 | 2,9 | 12 |
+| CMDER | 206 | 25 | 2,9 | 13 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 61 | 10 | 1,3 | 12 |
+| USB | 79 | 13 | 1,1 | 13 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 24 |
-| Outillage PC | 336 | — | 1,9 | 116 |
-| Transverse (projet) | 2 273 | — | — | 74 |
-| Traduction anglaise (docs/en) | 2 686 | — | — | 32 |
-| **Total** | 8 672 | 312 | 6,1 | 201 |
+| Exemples | 0 | — | 0,0 | 25 |
+| Outillage PC | 341 | — | 1,9 | 117 |
+| Transverse (projet) | 2 304 | — | — | 75 |
+| Traduction anglaise (docs/en) | 2 703 | — | — | 33 |
+| **Total** | 8 743 | 316 | 6,1 | 202 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 201 commits du 2026-10-04 au 2026-10-25.
+Historique : 202 commits du 2026-10-04 au 2026-10-27.
 
-Réutilisation : 52 285 lignes de code écrites dans `progs/`, 59 056 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,13 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 52 998 lignes de code écrites dans `progs/`, 60 988 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,15 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -906,6 +912,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-24 | MKTAP | 0.9 | 1 384 | 330 | 1 714 | 191 | `MKTAP.COM` et `tools/mktap.py` : `.TAP` pour l'Oric sous BASIC (blocs, démarrage automatique, chargeur BASIC) ; `test_mktap.sh` |
 | 2026-10-25 | GRXASM /O | 0.9 | 1 393 | 335 | 1 728 | 197 | `GRXASM NOM /O` : `.TAP` pour un Oric seul sur le socle `ORIC.INC` ; ASM `/T` ; vérifications de l'interpréteur retirées des copies d'`ARR.INC` ; tailles constantes de `DIM` vérifiées à la traduction ; MKTAP : `/R` en `$0503` au plus tôt ; `test_oric.sh` |
 | 2026-10-27 | clé USB, lot 1 | 0.9 | 1 416 | 339 | 1 755 | 202 | répertoire courant de CP/A (`0:CPA.CWD`), chemins relatifs, clé renumérotée ; `USBDIR /S`, jokers (USBDIR, IMPORT) ; CMDER : supports, répertoires seuls, `/R` ; `USBCD.BAT` |
+| 2026-10-27 | clé USB, lot 2 | 0.9 | 1 438 | 342 | 1 780 | 203 | `USBMOUNT.COM` : disquettes B: à D:, cassette, `/B` (BASIC 1.1 sur la cassette) ; configuration du menu du LOCI ; `lmnt_inc.s` |
 
 ## 11. Comparaisons
 

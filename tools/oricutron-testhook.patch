@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..64ad83c 100644
+index 00b7b0e..6866bf1 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,275 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,337 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -167,8 +167,11 @@ index 00b7b0e..64ad83c 100644
 +   ou pas de lecteur) ; "0:" (mémoire interne) est son sous-dossier int.
 +   Opérations faites d'un coup (pas d'attente) : 00 vide la pile, 14 open,
 +   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire
-+   (80 d'un chemin vide : liste des appareils). Plusieurs clés : voir
-+   mia_haskeys. MIA_TRACE=1 : chaque opération sur stderr.
++   (80 d'un chemin vide : liste des appareils), 88 getcwd, 90 mount, 91
++   umount (lecteurs 0-3 : la disquette insérée change ; cassette notée),
++   A0 boot (drapeaux écrits dans boot.txt, pas de démarrage). XRAM
++   $8000-$81FF inscriptible (configuration du menu). Plusieurs clés :
++   voir mia_haskeys. MIA_TRACE=1 : chaque opération sur stderr.
 +   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
 +static int loci_wedged = 0;                    /* voir mia_write */
 +static struct machine *mia_oric = NULL;
@@ -187,6 +190,7 @@ index 00b7b0e..64ad83c 100644
 +static FILE *mia_f[16];
 +static DIR *mia_d[4];
 +static int mia_dev = -1;                 /* liste des appareils ouverte */
++static char mia_mp[6][256];              /* images montées par l'API (getcwd) */
 +static char mia_dpath[4][1024];
 +
 +static void mia_ret(int ax)
@@ -378,6 +382,44 @@ index 00b7b0e..64ad83c 100644
 +      }
 +    }
 +    mia_xp = 512 - 72; mia_ret(0); return; }
++  case 0x90: {            /* mount : A = lecteur (0-3), 4 cassette, 5 ROM */
++    char p2[256];
++    snprintf(p2, sizeof p2, "%s", (char *)&mia_xs[mia_xp]);
++    mia_xp = 512;
++    if (a > 5) { mia_err(32 + 19); return; }
++    r = mia_path(p2, path, 0);
++    if (r == 3) { mia_err(32 + 11); return; }
++    if (r != 1) { mia_err(32 + 4); return; }
++    if (a < 4 && mia_oric) {
++      if (mia_oric->wddisk.disk[a] && mia_oric->wddisk.disk[a]->modified)
++        diskimage_save(mia_oric, mia_oric->wddisk.disk[a]->filename, a);
++      if (!diskimage_load(mia_oric, path, a) && mia_oric->wddisk.disk[a])
++        disk_eject(mia_oric, a);                /* le LOCI, lui, « monte » quand même */
++    }
++    strcpy(mia_mp[a], p2);
++    mia_ret(0); return; }
++  case 0x91:              /* umount */
++    if (a < 4 && mia_oric && mia_oric->wddisk.disk[a]) {
++      if (mia_oric->wddisk.disk[a]->modified)
++        diskimage_save(mia_oric, mia_oric->wddisk.disk[a]->filename, a);
++      disk_eject(mia_oric, a);
++    }
++    if (a < 6) mia_mp[a][0] = 0;
++    mia_xp = 512; mia_ret(0); return;
++  case 0x88: {            /* getcwd : répertoire de l'image du lecteur A */
++    const char *e; int len;
++    if (a > 5) { mia_err(32 + 4); return; }
++    e = strrchr(mia_mp[a], '/');
++    len = e ? (int)(e - mia_mp[a]) + 1 : (int)strlen(mia_mp[a]);
++    mia_xp = 512 - len - 1;
++    memcpy(&mia_xs[mia_xp], mia_mp[a], len);
++    mia_xs[511] = 0;
++    mia_ret(len); return; }
++  case 0xA0: {            /* boot : non simulé ; drapeaux écrits dans boot.txt */
++    char f[1100]; FILE *t;
++    snprintf(f, sizeof f, "%s/boot.txt", mia_root());
++    if ((t = fopen(f, "w")) != NULL) { fprintf(t, "%02X\n", a); fclose(t); }
++    mia_err(13); return; }
 +  default:
 +    mia_err(13);
 +  }
@@ -393,17 +435,36 @@ index 00b7b0e..64ad83c 100644
 +   simulée : "LOCI" en $8000, puis la configuration ; en $800B l'octet
 +   mounts (bit n : lecteur n monté) d'après les disquettes insérées. */
 +static unsigned short mia_xa1 = 0;
++static unsigned char mia_xr[0x200];      /* XRAM $8000-$81FF (configuration du menu) */
++static int mia_xr_ok = 0;
++/* première lecture : configuration d'un menu qui aurait monté les
++   disquettes insérées (noms = noms des fichiers) */
++static void mia_xr_init(void)
++{
++  int n, m = 0;
++  if (mia_xr_ok || !mia_oric) return;
++  mia_xr_ok = 1;
++  memcpy(mia_xr, "LOCI", 4);
++  mia_xr[4] = 1;                                /* fdc_on */
++  mia_xr[8] = 1;                                /* b11_on */
++  for (n = 0; n < 4; n++)
++    if (mia_oric->wddisk.disk[n]) {
++      const char *f = mia_oric->wddisk.disk[n]->filename, *b = strrchr(f, '/');
++      m |= 1 << n;
++      snprintf((char *)&mia_xr[0x10D + 35 * n], 33, "%s", b ? b + 1 : f);
++    }
++  mia_xr[0x0B] = m;                             /* mounts */
++}
 +static unsigned char mia_xram(unsigned short a)
 +{
-+  static const unsigned char magic[] = "LOCI";
-+  int n, m = 0;
-+  if (a >= 0x8000 && a < 0x8004) return magic[a - 0x8000];
-+  if (a == 0x8004) return 1;                    /* fdc_on */
-+  if (a == 0x800B && mia_oric) {                /* mounts */
-+    for (n = 0; n < 4; n++) if (mia_oric->wddisk.disk[n]) m |= 1 << n;
-+    return m;
-+  }
++  mia_xr_init();
++  if (a >= 0x8000 && a < 0x8200) return mia_xr[a - 0x8000];
 +  return 0;
++}
++static void mia_xram_w(unsigned short a, unsigned char d)
++{
++  mia_xr_init();
++  if (a >= 0x8000 && a < 0x8200) mia_xr[a - 0x8000] = d;
 +}
 +/* Contrôleur de disquettes du LOCI (loci-firmware, src/mia/oric/dsk.c) :
 +   une commande pour un lecteur sans image n'est jamais terminée (état
@@ -416,7 +477,8 @@ index 00b7b0e..64ad83c 100644
 +    if (i == 0x0A) mia_xa1 = (mia_xa1 & 0xff00) | data; else mia_xa1 = (mia_xa1 & 0xff) | (data << 8);
 +    mia_r[0x08] = mia_xram(mia_xa1);
 +  }
-+  if (i == 0x0C) { if (mia_xp) mia_xs[--mia_xp] = data; mia_r[0x0C] = mia_xs[mia_xp]; }
++  if (i == 0x08) { mia_xram_w(mia_xa1, data); mia_xa1 += (signed char)mia_r[0x09]; mia_r[0x08] = mia_xram(mia_xa1); }
++  else if (i == 0x0C) { if (mia_xp) mia_xs[--mia_xp] = data; mia_r[0x0C] = mia_xs[mia_xp]; }
 +  else if (i == 0x0F) { mia_r[0x0F] = data; mia_op(data); }
 +  else mia_r[i] = data;
 +}
@@ -433,7 +495,7 @@ index 00b7b0e..64ad83c 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,8 +786,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,8 +848,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -452,7 +514,7 @@ index 00b7b0e..64ad83c 100644
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
        acia_write(&oric->tele_acia, addr, data);
-@@ -918,6 +1195,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+@@ -918,6 +1257,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -755,7 +817,7 @@ index a47cd0c..95af81c 100644
  #else
    loop_handler(&ctx);
 diff --git a/oricutron.cfg b/oricutron.cfg
-index 8b977e2..afa5711 100644
+index 8b977e2..3e77ee9 100644
 --- a/oricutron.cfg
 +++ b/oricutron.cfg
 @@ -1,228 +1,4 @@
@@ -817,7 +879,7 @@ index 8b977e2..afa5711 100644
 -
 -; Write back all changes to disk images (if turned off, you have to press
 -; F7 to write changes back to the disk image)
-+atmosrom = 'roms/basic11b'
++atmosrom = 'roms/cpa'
 +rendermode = soft
  diskautosave = yes
 -

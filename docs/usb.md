@@ -26,7 +26,7 @@ candidats. Le code commun (chemins, répertoire courant, supports, configuration
 - EXPORT, IMPORT, USBDIR (`docs/manuel.md`) et la colonne USB de CMDER (`docs/cmder.md`) :
   copie dans les deux sens, liste d'un répertoire, `0:` (mémoire interne du LOCI).
 - La clé est une passerelle : lecture et copie ; ni effacement, ni renommage, ni montage
-  (lots 2 et 3).
+  (USBMOUNT monte ; renommer, effacer, dupliquer : lot 3).
 - `progs/loci_inc.s` : appel de l'API du LOCI (ouvrir, lire, écrire, fermer, lister),
   répertoire courant, chemins, supports ; `progs/ljok_inc.s` : jokers.
 - Oricutron de test (`ORIC_LOCI`, `docs/atelier.md`) : un dossier du PC tient lieu de clé,
@@ -52,8 +52,7 @@ candidats. Le code commun (chemins, répertoire courant, supports, configuration
   sinon `Cle absente : SanDisk Cruzer`, et la commande part de la racine de la première clé ;
   le fichier n'est pas réécrit (le répertoire noté revient avec la clé ; le message se
   répète à chaque commande jusque-là).
-- **Chemins** dans toutes les commandes USB (USBDIR, IMPORT, EXPORT, CMDER ; USBMOUNT au
-  lot 2) :
+- **Chemins** dans toutes les commandes USB (USBDIR, IMPORT, EXPORT, USBMOUNT, CMDER) :
 
 | Écrit | Désigne |
 |---|---|
@@ -68,8 +67,8 @@ candidats. Le code commun (chemins, répertoire courant, supports, configuration
   Chemin complet de 127 caractères au plus (`Chemin trop long`). Noms longs : affichés coupés
   (`~`), relus en entier sur la clé pour l'ouverture (comme CMDER).
 - **Jokers** (`*`, `?`, casse ignorée ; `.*` final accepte aussi un nom sans point) dans le
-  dernier élément d'un nom de la clé : `USBDIR *.DSK` filtre la liste ; IMPORT (et USBMOUNT,
-  lot 2), qui attend un seul fichier, prend le seul qui répond, sinon les écrit (un par
+  dernier élément d'un nom de la clé : `USBDIR *.DSK` filtre la liste ; IMPORT et USBMOUNT,
+  qui attendent un seul fichier, prennent le seul qui répond, sinon les écrit (un par
   ligne, 8 au plus, puis `...`) et s'arrête : `Plusieurs fichiers : preciser` ; aucun :
   `Introuvable : JE*`.
 
@@ -125,9 +124,9 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
 - **Copier vers la clé** : `USB:rep` est relatif au répertoire de la colonne USB (sans elle,
   au répertoire courant de CP/A) ; `USB:` seul : ce répertoire-là.
 
-## 2. Décidé, pas encore fait
+**Lot 2 : USBMOUNT.**
 
-### 2.1 USBMOUNT
+### 1.4 USBMOUNT
 
     USBMOUNT               ce qui est monté
     USBMOUNT B:            chemin complet de l'image de B:
@@ -154,14 +153,27 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
   écritures sur le même fichier l'abîmeraient) ; un fichier qui n'est pas une image de
   disquette (`Pas une image de disquette` : signature `MFM_DISK` vérifiée) ; un `.TAP`
   d'une disquette CP/A (`Exporter d'abord : EXPORT JEU.TAP`).
+- Une cassette doit commencer par l'octet de synchronisation `$16` (`Pas une cassette
+  (.TAP)`) ; un nom en `.DSK` sans lecteur : `Lecteur ? USBMOUNT B: nom.DSK`.
 - Après un montage ou une éjection de disquette : écritures en attente faites, disques
   réinitialisés (fonction 13 du BDOS), comme après un changement de disquette et un CTRL-C.
+  Pendant le changement, A: est le lecteur en service : un lecteur sans image ne reçoit
+  jamais de commande (le contrôleur du LOCI se bloquerait). Le lecteur courant éjecté laisse
+  la place à A:.
+- Le nom gardé par le menu est celui de la clé (casse comprise), retrouvé dans le
+  répertoire ; `USBMOUNT B:` écrit le répertoire de l'image (getcwd) suivi de ce nom.
 - `/B` part tout de suite (pas de question) : démarrage du LOCI en BASIC 1.1, cassette en
-  service, chargement automatique (`CLOAD""` sans rien taper). Les disquettes restent
-  montées pour un retour à CP/A par le menu du LOCI. Ferme la boucle : `GRXASM JEU /O`,
+  service, chargement automatique (`CLOAD""` sans rien taper). La configuration du menu est
+  écrite d'abord comme il l'écrirait (FDC hors service, cassette, BASIC 1.1, chargement
+  automatique ; le mode bit à bit gardé), puis l'opération `$A0` avec les drapeaux `$96`
+  (`$9E` en mode bit à bit), interruptions du VIA coupées comme le fait le menu. Les
+  disquettes restent montées pour un retour à CP/A par le menu du LOCI (FDC remis en
+  service). Si le LOCI refuse : `Erreur USB n`, et l'on reste dans CP/A. Ferme la boucle : `GRXASM JEU /O`,
   `EXPORT JEU.TAP`, `USBMOUNT JEU.TAP /B`.
 
-### 2.2 CMDER, opérations sur la clé
+## 2. Décidé, pas encore fait
+
+### 2.1 CMDER, opérations sur la clé
 
 - **Renommer** (`^N`) sur la clé : un fichier ; refusé pour une image montée (`Image montee
   en B:`).
@@ -174,13 +186,13 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
   ESC arrête. La copie s'écrit sous un nom provisoire, renommé à la fin ; un arrêt efface le
   provisoire.
 - **Monter** (nouvel article) sur un `.DSK` (`Monter en : B:`) ou un `.TAP` (cassette),
-  avec les mêmes règles et le même code que USBMOUNT (§ 2.1).
+  avec les mêmes règles et le même code que USBMOUNT (§ 1.4, `lmnt_inc.s`).
 - **Nom de la disquette** de chaque lecteur : plein écran, dans l'en-tête (`A: cpa.dsk
   *.*  22/40 fic 126K libre`, nom coupé à 12) ; en deux colonnes, à la place du filtre
   quand il n'y en a pas (`B:projets~   112K`).
 - Copier et Déplacer vers la clé, Voir, `?` : comme aujourd'hui.
 
-### 2.3 Mise en œuvre
+### 2.2 Mise en œuvre
 
 **API du LOCI** (firmware, `src/mia/main.c` pour la liste, `api/mnt.c`, `api/dir.c`,
 `usb/msc.c`), en plus de ce que `loci_inc.s` appelle déjà :
@@ -218,23 +230,28 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
 - Code commun, par fichiers (ASM n'a pas d'assemblage conditionnel) : `loci_inc.s` (API,
   répertoire courant `cw_get` / `cw_put` / `cw_write`, chemins `lpath`, supports `dv_open`,
   `dv_next`, `dv_parse`, `dv_fmt` : tous les programmes USB, ~1,7 Ko), `ljok_inc.s` (jokers
-  `wmatch`, `lp_find` : USBDIR, IMPORT, USBMOUNT ; ~0,4 Ko) ; montage et configuration du
-  LOCI (USBMOUNT, CMDER) dans un troisième fichier au lot 2. Messages en 37 colonnes, sans
-  accents (`loci.msg`).
-- Oricutron de test, lots 2 et 3 : `mount` change la disquette insérée (lecteurs B: à D:)
-  et la configuration en XRAM ; `rename` ; `boot` ne s'imite pas (essai sur le vrai Oric).
+  `wmatch`, `lp_find`, `lp_findx` : USBDIR, IMPORT, USBMOUNT ; ~0,4 Ko), `lmnt_inc.s`
+  (montage `mt_mount`, `mt_eject`, configuration du menu en XRAM, `mt_where`, `mt_head`,
+  `mt_pre` / `mt_post` autour du BDOS : USBMOUNT, et CMDER au lot 3 ; ~0,8 Ko ; ses tampons
+  sont placés par le programme après `loci_inc.s`). Messages en 37 colonnes, sans accents
+  (`loci.msg`, `usbmount.msg`).
+- Oricutron de test : `mount` change la disquette insérée (lecteurs 0 à 3 : l'image de la
+  clé, réécrite à l'éjection si elle a changé), `umount`, `getcwd`, XRAM `$8000-$81FF`
+  inscriptible (au départ : la configuration d'un menu qui aurait monté les disquettes
+  insérées) ; `boot` ne démarre rien, il écrit ses drapeaux dans `boot.txt` et répond par une
+  erreur (le démarrage s'essaie sur le vrai Oric). Lot 3 : `rename`.
 
 ## 3. Lots
 
 | Lot | Contenu | Essais | Place (estimée large) |
 |---|---|---|---|
 | 1 | **Fait.** Répertoire courant et supports (§ 1) | Oricutron : deux clés, renumérotation, clé absente, `0:` ; matériel : `docs/essais-materiel.md` | CMDER +1 773 octets (8 blocs) ; USBDIR 2 810, IMPORT 3 443, EXPORT 3 055 (un bloc de plus chacun) |
-| 2 | **USBMOUNT** : ce qui est monté, chemin d'une image, disquettes (montage, éjection, refus), cassette, `/B` | Oricutron : montage, écriture puis relecture sur l'image montée ; matériel : menu du LOCI ouvert ensuite (mêmes noms), `/B` | 2,5 à 3,5 Ko |
+| 2 | **Fait.** USBMOUNT (§ 1.4) | Oricutron : montage, écriture puis relecture sur l'image montée, éjection du lecteur courant, refus, cassette, drapeaux de `/B` ; matériel : `docs/essais-materiel.md` | USBMOUNT 4 086 octets (2 blocs) ; HELP passe à 7 blocs |
 | 3 | **CMDER, opérations sur la clé** : Renommer, Effacer, Dupliquer, Monter, noms des disquettes dans les en-têtes | Oricutron, puis matériel | +1,5 à 2,5 Ko |
 
 CMDER (15 354 octets, 8 blocs, 1 030 octets libres) passera probablement à 9 blocs au lot 3.
 Chaque lot se livre seul (règles de livraison habituelles) et sert dès sa sortie ; le lot 1
-est le socle des deux autres.
+est le socle des deux autres. Reste le lot 3.
 
 ## 4. Ce que ce niveau ne fait pas
 
