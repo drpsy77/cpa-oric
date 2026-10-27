@@ -60,7 +60,7 @@ Deux variantes sont construites à partir des mêmes sources :
   édition de ligne avec historique et complétion par TAB ou ESC, mêmes touches dans tous les programmes (SHIFT et CTRL avec les flèches, CTRL-X/C/V), imprimante, graphisme et son.
 - Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
-- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), avec un répertoire courant propre à CP/A sur la clé et tous ses supports (plusieurs clés, la mémoire interne du LOCI), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
+- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), avec un répertoire courant propre à CP/A sur la clé et tous ses supports (plusieurs clés, la mémoire interne du LOCI), USBMOUNT pour monter les images de disquette et de cassette (et lancer le BASIC sur une cassette), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas), et **MKTAP**,
   qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""`.

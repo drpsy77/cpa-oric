@@ -50,7 +50,12 @@ outils, et suit toujours la même boucle.
      `usbN.txt` (première ligne, au format du LOCI : `MSC 14.9 GB SanDisk  Cruzer Blade    rev
      1.00`) ; `autres.txt` ajoute d'autres appareils à la liste (`3: HID keyboard`). La liste
      des appareils (opendir d'un chemin vide) est imitée ; renuméroter une clé, c'est renommer
-     son dossier. Un répertoire intermédiaire absent est refusé comme sur le LOCI.
+     son dossier. Un répertoire intermédiaire absent est refusé comme sur le LOCI. Montage
+     (USBMOUNT) : `mount` met l'image de la clé dans le lecteur (réécrite à l'éjection si elle
+     a changé), `umount`, `getcwd` ; la XRAM `$8000-$81FF` est inscriptible (au départ, la
+     configuration d'un menu qui aurait monté les disquettes insérées, sous le nom de leur
+     fichier) ; `boot` ne démarre rien : il écrit ses drapeaux dans `boot.txt` du dossier et
+     répond par une erreur.
      `MIA_TRACE=1` écrit chaque opération du LOCI (et sa pile d'échange) sur la sortie
      d'erreur. Le contrôleur de
      disquettes imite aussi celui du LOCI (loci-firmware, `src/mia/oric/dsk.c`) : `$0319`

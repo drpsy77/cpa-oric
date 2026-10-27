@@ -124,7 +124,7 @@ disque build/cpa.dsk build/cpa-en.dsk --ro $PROTEGES --rw $EXEMPLES
 # disquette protégés et visibles, les exemples modifiables.
 P=build/progs
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
-  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM
+  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
   $P/VOIR.COM $P/CMDER.COM files/usbcd.bat"
 theme() {   # theme NOM NOM_EN "visibles" "système en plus" "exemples"
   disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg \

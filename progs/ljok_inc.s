@@ -121,11 +121,16 @@ lu_r    rts
 ;   plusieurs : leurs noms (8 au plus), « Plusieurs fichiers : preciser ».
 ;   C=1 sauf pour un seul fichier.
 lp_find
-.(
         jsr lp_last
-        bcs yfw
+        bcs lp_fx
         rts                     ; sans joker : rien à chercher (C=0)
-yfw      stx lp_p
+; lp_findx : de même sans joker : le nom est cherché (casse ignorée) et
+;   remplacé par celui de la clé
+lp_findx
+        jsr lp_last
+lp_fx
+.(
+        stx lp_p
         jsr lp_cut
         lda #<apath
         ldy #>apath

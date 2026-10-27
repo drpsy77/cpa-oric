@@ -56,6 +56,23 @@ puis quelques commandes sur `cpa-en.dsk`) :
 - durée : chaque commande USB lit `0:CPA.CWD` et la liste des appareils ; dire si cela se
   sent avant la liste de `USBDIR`.
 
+**Clé USB, lot 2 : USBMOUNT** (`docs/usb.md` § 1.4 ; sur `cpa.dsk`, puis quelques
+commandes sur `cpa-en.dsk`) :
+
+- `USBMOUNT` : les mêmes noms que le menu du LOCI (A: à D:, K7:) ; `USBMOUNT B:` : le
+  chemin complet de l'image ;
+- `USBMOUNT C: un.dsk` (une image de travail, copie d'abord) : `DIR C:`, `COPY` d'un fichier
+  dessus, `USBMOUNT C: /E`, puis `USBMOUNT C: un.dsk` : le fichier est là ; ouvrir ensuite
+  le menu du LOCI : C: montre l'image (et rien après l'éjection), puis retour à CP/A ;
+- monter une image dans le lecteur courant (`C:`, puis `USBMOUNT C: autre.dsk`), puis
+  l'éjecter : pas de blocage du LOCI, le prompt revient en `A>` ;
+- refus : `USBMOUNT A: x.dsk`, la même image dans deux lecteurs, un `.TXT` comme disquette,
+  un `.TAP` resté sur la disquette (`Exporter d'abord`) ;
+- **`/B`** : `GRXASM JEU /O`, `EXPORT JEU.TAP`, `USBMOUNT JEU.TAP /B` : l'Oric doit
+  redémarrer en BASIC 1.1 et charger la cassette tout seul ; dire si rien ne se passe, si
+  le BASIC démarre sans charger, ou si `Erreur USB` s'affiche (code). Puis le retour à CP/A
+  par le menu du LOCI (FDC à remettre en service) : les disquettes sont toujours montées.
+
 **Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
 
 - HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli

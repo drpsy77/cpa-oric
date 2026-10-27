@@ -264,7 +264,7 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 
 **Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables, plus légères
 à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
-FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, VOIR, CMDER, et le script USBCD.BAT) sont protégées et **cachées** (SYS) : `DIR`
+FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, USBMOUNT, VOIR, CMDER, et le script USBCD.BAT) sont protégées et **cachées** (SYS) : `DIR`
 ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
 y est partout, protégé et visible.
 
@@ -482,6 +482,9 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 | `USBDIR [chemin]` | écrit le chemin complet, puis liste le dossier (le répertoire courant par défaut) : nom et taille, `<REP>` pour un dossier ; `USBDIR *.DSK` : les noms qui répondent au modèle |
 | `USBDIR /S` | les supports : `0:` (mémoire interne du LOCI) et les clés USB, avec leur taille ; `*` : celui du répertoire courant |
 | `USBCD [rep]` | change de répertoire courant : un script (`CMDER USB:$1 /R`) qui ouvre CMDER dans `rep`, répertoires seuls ; ESC une fois arrivé |
+| `USBMOUNT` | ce qui est monté dans A: à D: et la cassette (`K7:`) ; `USBMOUNT B:` : le chemin complet de l'image de B: |
+| `USBMOUNT B: nom` | monte l'image de disquette `nom` en B: (C:, D: ; A:, la disquette système, est refusé) ; `B: /E` éjecte |
+| `USBMOUNT nom.TAP [/B]` | monte la cassette ; `/B` : puis quitte CP/A pour le BASIC 1.1 du LOCI, qui charge la cassette tout seul ; `K7: /E` éjecte |
 
     A>EXPORT LETTRE.TXT
     A>EXPORT B:JEU.LOG oric/jeu.log
@@ -493,6 +496,14 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
     0: memoire du LOCI          15 Mo
     2: SanDisk Cruzer Blade   14.9 Go *
     4: Kingston DataTraveler   7.5 Go
+    A>USBMOUNT B: JEUX/PUZZLE.DSK
+    B: puzzle.dsk
+    A>USBMOUNT
+    A: cpa.dsk
+    B: puzzle.dsk
+    C: -
+    D: -
+    K7: -
 
 **Répertoire courant.** CP/A garde son propre répertoire courant sur la clé, indépendant de
 celui du menu du LOCI et conservé après un redémarrage (fichier `0:CPA.CWD`, dans la mémoire
@@ -525,7 +536,14 @@ des espaces ne passe pas sur la ligne de commande : le renommer sur le Mac.
   le dit (EXPORT).
 - USBDIR ne montre ni les fichiers cachés ou système, ni ceux qui commencent par un point
   (les `._NOM` que le Mac laisse sur les clés FAT). ESC ou CTRL-C arrête la liste.
-- Une commande qui attend un seul fichier (IMPORT) et dont le modèle en désigne plusieurs
+- **USBMOUNT** tient à jour la configuration du menu du LOCI (lecteurs montés, noms des
+  images) : le menu montre la même chose, quel que soit celui qui a monté. Refusés : une image
+  déjà montée dans un autre lecteur (`Deja montee en C:`), un fichier qui n'est pas une image
+  de disquette (`Pas une image de disquette`) ou de cassette, un `.TAP` resté sur une
+  disquette de CP/A (`Exporter d'abord : EXPORT JEU.TAP`). Après un montage ou une éjection,
+  les disquettes sont relues, comme après un CTRL-C ; un lecteur courant éjecté laisse la
+  place à A:. Pour revenir à CP/A après `/B` : le menu du LOCI (FDC remis en service).
+- Une commande qui attend un seul fichier (IMPORT, USBMOUNT) et dont le modèle en désigne plusieurs
   les écrit (8 au plus) et s'arrête : `Plusieurs fichiers : preciser` ; aucun :
   `Introuvable : JEU*`.
 - Sans LOCI (Oricutron, Microdisc, Cumulus) : `LOCI absent : cle USB inaccessible`.
