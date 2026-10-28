@@ -2,6 +2,7 @@
 ;  MKTAP.COM — fabrique un fichier .TAP pour l'Oric sous BASIC (CLOAD)
 ;
 ;  MKTAP NOM fic adr[,lg] [/R] [fic adr[,lg] [/R]]...
+;  MKTAP NOM prog.BAS [/R] [fic adr[,lg] [/R]]...
 ;    NOM     fichier écrit (type .TAP par défaut), lecteur facultatif
 ;    fic     un bloc par fichier, chargé en adr (hexadécimal, $ admis),
 ;            nommé d'après le fichier sans son type ; 8 fichiers au plus
@@ -14,6 +15,9 @@
 ;            seul bloc : marque de démarrage automatique ; plusieurs :
 ;            un chargeur BASIC est mis en tête (nommé NOM, lancé tout
 ;            seul) : 10 CLOAD"":CLOAD"":...:CALL#adr
+;    .BAS    programme BASIC en texte (un seul, sans adresse) : codé
+;            comme le ferait la ROM 1.1 (codebas), chargé en $0501 ;
+;            /R : il est lancé (RUN) à la fin du chargement
 ;  Contrôles avant d'écrire : blocs dans $0500-$BFFF, sans chevauchement
 ;  (chargeur compris), longueur non nulle et pas plus grande que le
 ;  fichier, bloc /R en $0503 au plus tôt (la ROM met $00 en $0500-$0502
@@ -28,7 +32,11 @@
 MAXB    = 8             ; blocs au plus
 T_CLOAD = $B6           ; mots-clés du BASIC (ROM 1.1)
 T_CALL  = $BF
+T_DATA  = $91
+T_REM   = $9D
+T_PRINT = $BA
 BASIC   = $0501         ; début d'un programme BASIC
+BASMAX  = $97FF         ; fin d'un programme BASIC au plus (sous HIMEM)
 
 fp      = $10           ; 2 octets : FCB en cours
 sp      = $12           ; 2 octets : chaîne affichée
@@ -50,6 +58,20 @@ sp0     = $25           ; pile au départ
 pa      = $26           ; 2 octets : comparaisons
 pb      = $28           ; 2 octets
 px      = $2A           ; X gardé par putb
+bas     = $2B           ; bloc .BAS ($FF : aucun)
+pw      = $2C           ; 2 octets : ligne codée suivante (pbuf...)
+po      = $2E           ; 2 octets : texte codé de la ligne en cours
+num     = $30           ; 2 octets : numéro de la ligne
+nxt     = $32           ; 2 octets : plus petit numéro admis ensuite
+slen    = $34           ; longueur de la ligne de texte (sbuf)
+sovf    = $35           ; $80 : ligne de plus de 255 caractères
+eof     = $36           ; $80 : fin du .BAS
+dmode   = $37           ; $80 : dans un DATA
+kp      = $38           ; 2 octets : mot-clé comparé
+tok     = $3A           ; code du mot-clé comparé
+sx      = $3B           ; début du mot comparé dans sbuf
+sy      = $3C           ; Y gardé
+clen    = $3D           ; octets codés de la ligne
 
         *= $0500
 start
@@ -88,6 +110,7 @@ e1      lda #0
         sta nb
         lda #$FF
         sta aut
+        sta bas
 loop    jsr skipsp
         lda TAIL,x
         bne l0
@@ -102,8 +125,12 @@ l1      sta ib
         jsr setfp
         jsr pname
         bcs badname
-        jsr gethex
-        bcs badadr
+        jsr isbas
+        bne notbas
+        jmp isb
+bada    jmp badadr
+notbas  jsr gethex
+        bcs bada
         ldy nb
         lda val
         sta adrl,y
@@ -117,10 +144,10 @@ l1      sta ib
         bne nolen
         inx
         jsr gethex
-        bcs badadr
+        bcs bada
         lda val
         ora val+1
-        beq badadr
+        beq bada
         ldy nb
         lda val
         sta lenl,y
@@ -164,6 +191,26 @@ parsed  lda nb
         lda #<m_done
         ldy #>m_done
         jmp puts
+isb     lda bas                 ; .BAS : un seul, sans adresse
+        bmi b1
+        lda #<m_one
+        ldy #>m_one
+        jmp fail
+b1      lda nb
+        sta bas
+        stx sy
+        jsr gethex
+        bcs b2
+        lda #<m_basa
+        ldy #>m_basa
+        jmp fail
+b2      ldx sy
+        ldy nb
+        lda #<BASIC
+        sta adrl,y
+        lda #>BASIC
+        sta adrh,y
+        jmp nolen
 .)
 
 ; fail : message A/Y puis retour au CCP (pile du départ)
@@ -198,7 +245,13 @@ c1      jsr setfp
         lda #<m_abs
         ldy #>m_abs
         jmp failn
-o1      lda fp
+o1      lda ib
+        cmp bas
+        bne o2
+        jsr codebas             ; longueur : celle du programme codé
+        ldy ib
+        jmp fin
+o2      lda fp
         ldy fp+1
         ldx #F_FSIZE
         jsr BDOS
@@ -309,6 +362,8 @@ fin     lda lenl,y              ; fin = adr + (lg - 1), lg >= 1
         lda endh,y
         cmp #$C0
         bcs range
+        cpy bas                 ; .BAS : sa propre limite
+        beq bl
         cpy aut                 ; bloc /R : $0503 au plus tôt
         bne nr
         lda adrh,y
@@ -322,6 +377,12 @@ nr      inc ib
         cmp nb
         beq r
         jmp c1
+bl      lda endh,y              ; programme BASIC : sous HIMEM
+        cmp #>BASMAX+1
+        bcc nr
+big2    lda #<m_big
+        ldy #>m_big
+        jmp failn
 range   lda #<m_range
         ldy #>m_range
         jmp failn
@@ -332,17 +393,25 @@ r       rts
 .)
 
 ; ---------------------------------------------------------------------
-; loader : avec /R et plusieurs blocs, programme BASIC dans lbuf
-;   10 CLOAD"":CLOAD"":...:CALL#adr ; sa plage devient le bloc nb
+; loader : avec /R (pas sur le .BAS) et plusieurs blocs, programme
+;   BASIC dans lbuf : 10 CLOAD"":CLOAD"":...:CALL#adr ; sa plage devient
+;   le bloc nb
 loader
 .(
         lda nb
         sta nall
         lda aut
         bmi r
+        cmp bas
+        beq r
         lda nb
         cmp #2
-        bcs go
+        bcc r
+        lda bas                 ; chargeur et .BAS : tous deux en $0501
+        bmi go
+        lda #<m_rbas
+        ldy #>m_rbas
+        jmp fail
 r       rts
 go
         ldy #2
@@ -538,9 +607,18 @@ b1      jsr setfp
         cmp aut
         bne b2
         ldy #$80
-b2      lda #$80
-        jsr header
-        jsr setfp
+b2      lda #$80                ; type : code machine, ou BASIC
+        ldx ib
+        cpx bas
+        bne b4
+        lda #0
+b4      jsr header
+        ldx ib                  ; .BAS : le programme codé (pbuf)
+        cpx bas
+        bne b5
+        jsr pbas
+        jmp cpd
+b5      jsr setfp
         jsr fopen               ; relu depuis le début
         cmp #$FF
         bne b3
@@ -580,8 +658,9 @@ cpd     jsr sumline
         inc ib
         lda ib
         cmp nb
-        bne b1
-        lda lastb               ; un ^Z utile ne doit pas être pris
+        beq b6
+        jmp b1
+b6      lda lastb               ; un ^Z utile ne doit pas être pris
         cmp #$1A                ; pour du remplissage
         bne pad
         lda #0
@@ -717,9 +796,11 @@ n       lda (fp),y
         jsr phex
         lda endl,x
         jsr phex
+        cpx bas
+        beq sb
         cpx nb
         bne sa
-        lda #<m_bas
+sb      lda #<m_bas
         ldy #>m_bas
         jsr puts
 sa      cpx aut
@@ -728,6 +809,514 @@ sa      cpx aut
         ldy #>m_run
         jsr puts
 e       jmp crlf
+.)
+
+; ---------------------------------------------------------------------
+; isbas : Z=1 si le FCB fp est de type .BAS (X gardé)
+isbas
+.(
+        ldy #9
+        lda (fp),y
+        cmp #"B"
+        bne r
+        iny
+        lda (fp),y
+        cmp #"A"
+        bne r
+        iny
+        lda (fp),y
+        cmp #"S"
+r       rts
+.)
+
+; ---------------------------------------------------------------------
+; codebas : code le .BAS (fp, ouvert) dans pbuf comme la ROM 1.1 ;
+;   lenl/lenh du bloc ib <- longueur du programme (fin 0 0, plus un
+;   octet : la ROM en fait le début des variables). Erreurs : numéro
+;   absent ou trop grand, ordre, ligne trop longue, caractère de code
+;   $80 ou plus hors texte, plus de place ; avertissement : ligne de
+;   plus de 78 caractères. Même codage que tools/mktap.py (code_bas).
+codebas
+.(
+        lda #0
+        sta eof
+        sta nxt
+        sta nxt+1
+        lda #128                ; enregistrement à lire
+        sta ipos
+        lda #<pbuf
+        sta pw
+        lda #>pbuf
+        sta pw+1
+line    lda pw+1                ; place pour une ligne (260 octets) et
+        clc                     ; la fin du programme
+        adc #2
+        cmp TPA_TOP+1
+        bcc l0
+        jmp nomem
+l0      jsr rdline
+        bcc l1
+        jmp eofb
+l1      ldx #0                  ; espaces de tête
+sk      cpx slen
+        beq line                ; ligne vide (ou d'espaces)
+        lda sbuf,x
+        cmp #" "
+        bne n0
+        inx
+        bne sk
+n0      lda #0                  ; numéro : chiffres, espaces admis
+        sta num                 ; (comme Txt2Int de la ROM)
+        sta num+1
+        sta nd
+n1      cpx slen
+        beq n4
+        lda sbuf,x
+        cmp #" "
+        beq n3
+        sec
+        sbc #"0"
+        cmp #10
+        bcs n4
+        ldy num+1               ; 6400 ou plus : un chiffre de trop
+        cpy #$19
+        bcs badnum
+        pha
+        lda num                 ; num x 10 + chiffre
+        asl
+        rol num+1
+        sta pa
+        ldy num+1
+        asl
+        rol num+1
+        asl
+        rol num+1
+        adc pa
+        sta num
+        tya
+        adc num+1
+        sta num+1
+        pla
+        clc
+        adc num
+        sta num
+        bcc n2
+        inc num+1
+n2      inc nd
+n3      inx
+        bne n1
+n4      lda nd
+        bne n5
+badnum  lda #<m_aft             ; « apres N : numero invalide »
+        ldy #>m_aft
+        jsr puts
+        lda nxt                 ; N : la ligne précédente (0 au début)
+        sec
+        sbc #1
+        sta val
+        lda nxt+1
+        sbc #0
+        sta val+1
+        bcs bn1
+        lda #0
+        sta val
+        sta val+1
+bn1     jsr pdec
+        lda #<m_num
+        ldy #>m_num
+        jmp fail
+n5      bit sovf
+        bpl n6
+        lda #<m_long
+        ldy #>m_long
+        jmp lfail
+n6      cpx slen                ; numéro seul : rien
+        bne n7
+        jmp line
+n7      lda num                 ; numéros croissants
+        cmp nxt
+        lda num+1
+        sbc nxt+1
+        bcs n8
+        lda #<m_ord
+        ldy #>m_ord
+        jmp lfail
+n8      lda slen                ; plus que l'éditeur de l'Oric
+        cmp #79
+        bcc n9
+        stx sx
+        jsr lnum
+        lda #<m_78
+        ldy #>m_78
+        jsr puts
+        ldx sx
+n9      lda pw                  ; texte codé en pw + 4
+        clc
+        adc #4
+        sta po
+        lda pw+1
+        adc #0
+        sta po+1
+        jsr crunch
+        cpy #251                ; 250 octets codés au plus
+        bcc c1
+        lda #<m_long
+        ldy #>m_long
+        jmp lfail
+c1      lda #0                  ; fin de la ligne
+        sta (po),y
+        iny
+        tya                     ; pw <- po + Y (ligne suivante)
+        clc
+        adc po
+        sta po
+        lda po+1
+        adc #0
+        sta po+1
+        ldy #0                  ; lien : son adresse sous BASIC,
+        lda po                  ; $0501 + (po - pbuf)
+        sec
+        sbc #<pbuf
+        php
+        clc
+        adc #<BASIC
+        sta (pw),y
+        lda po+1
+        adc #>BASIC
+        plp
+        sbc #>pbuf
+        iny
+        sta (pw),y
+        iny
+        lda num                 ; numéro
+        sta (pw),y
+        iny
+        lda num+1
+        sta (pw),y
+        lda po
+        sta pw
+        lda po+1
+        sta pw+1
+        lda num                 ; numéro suivant au moins num + 1
+        clc
+        adc #1
+        sta nxt
+        lda num+1
+        adc #0
+        sta nxt+1
+        jmp line
+eofb    ldy #2                  ; fin : 0 0, plus un octet
+        lda #0
+e1      sta (pw),y
+        dey
+        bpl e1
+        lda pw                  ; longueur = pw + 3 - pbuf
+        clc
+        adc #3
+        sta pa
+        lda pw+1
+        adc #0
+        sta pa+1
+        ldy ib
+        lda pa
+        sec
+        sbc #<pbuf
+        sta lenl,y
+        lda pa+1
+        sbc #>pbuf
+        sta lenh,y
+        bne r
+        lda lenl,y
+        cmp #4
+        bcs r
+        lda #<m_void            ; aucune ligne
+        ldy #>m_void
+        jmp failn
+nomem   lda #<m_big
+        ldy #>m_big
+        jmp failn
+r       rts
+.)
+
+; lfail : « ligne N : » message A/Y, retour au CCP
+lfail
+.(
+        pha
+        tya
+        pha
+        jsr lnum
+        pla
+        tay
+        pla
+        jmp fail
+.)
+
+; lnum : « ligne N » (num)
+lnum    lda #<m_lig
+        ldy #>m_lig
+        jsr puts
+        lda num
+        sta val
+        lda num+1
+        sta val+1
+        ; puis pdec
+
+; pdec : val en décimal, sans zéros de tête (val détruit)
+pdec
+.(
+        lda #0
+        sta pch
+        ldx #4
+c       ldy #0                  ; chiffre : soustractions de 10^X
+s       lda val
+        sec
+        sbc dl,x
+        pha
+        lda val+1
+        sbc dh,x
+        bcc d
+        sta val+1
+        pla
+        sta val
+        iny
+        bne s
+d       pla
+        tya
+        bne w
+        cpx #0
+        beq w
+        lda pch
+        beq n
+w       tya
+        ora #"0"
+        jsr putc
+        lda #1
+        sta pch
+n       dex
+        bpl c
+        rts
+dl      .byt <1,<10,<100,<1000,<10000
+dh      .byt >1,>10,>100,>1000,>10000
+.)
+
+; ---------------------------------------------------------------------
+; rdline : ligne de texte suivante du .BAS -> sbuf (slen caractères,
+;   0 après), sans les caractères de contrôle ; sovf : plus de 255.
+;   C=1 : fin du fichier, plus de ligne
+rdline
+.(
+        lda #0
+        sta slen
+        sta sovf
+        bit eof
+        bmi e
+l       jsr getch
+        bcs f
+        cmp #13
+        beq r
+        cmp #10
+        beq r
+        cmp #" "
+        bcc l
+        ldy slen
+        cpy #255
+        bcs o
+        sta sbuf,y
+        inc slen
+        bne l
+o       lda #$80
+        sta sovf
+        bne l
+f       lda slen                ; dernière ligne sans fin de ligne
+        ora sovf
+        bne r
+e       sec
+        rts
+r       ldy slen
+        lda #0
+        sta sbuf,y
+        clc
+        rts
+.)
+
+; getch : caractère suivant du .BAS -> A ; C=1 : fin (^Z ou fin du
+;   fichier)
+getch
+.(
+        bit eof
+        bmi e
+        lda ipos
+        bpl g
+        jsr dmai
+        lda fp
+        ldy fp+1
+        ldx #F_READ
+        jsr BDOS
+        cmp #0
+        bne f
+        sta ipos
+g       ldx ipos
+        inc ipos
+        lda ibuf,x
+        cmp #$1A
+        beq f
+        clc
+        rts
+f       lda #$80
+        sta eof
+e       sec
+        rts
+.)
+
+; ---------------------------------------------------------------------
+; crunch : texte sbuf,X (après le numéro) -> (po),Y comme TokeniseLine
+;   de la ROM 1.1 ($C5FA), lettres en majuscules hors texte -> Y =
+;   octets codés. Erreur : caractère de code $80 ou plus hors texte.
+crunch
+.(
+        ldy #0
+        sty dmode
+cl      cpx slen
+        bne c0
+        rts
+c0      lda sbuf,x
+        cmp #$22                ; chaîne : jusqu'au guillemet
+        bne c1
+s       sta (po),y
+        iny
+        inx
+        cpx slen
+        bne s0
+        rts
+s0      lda sbuf,x
+        cmp #$22
+        bne s
+        sta (po),y
+        iny
+        inx
+        jmp cl
+c1      cmp #" "
+        beq st
+        bit dmode               ; DATA : tel quel jusqu'au « : »
+        bmi st
+        cmp #"?"
+        bne c2
+        lda #T_PRINT
+        bne st
+c2      cmp #"0"                ; chiffres, « : », « ; »
+        bcc kw
+        cmp #";"+1
+        bcc st
+kw      cmp #$80
+        bcc k0
+        lda #<m_car
+        ldy #>m_car
+        jmp lfail
+k0      stx sx                  ; mots-clés, dans l'ordre de la table
+        sty sy
+        lda #<bastab
+        sta kp
+        lda #>bastab
+        sta kp+1
+        lda #$80
+        sta tok
+k1      ldy #0
+k2      lda sbuf,x
+        jsr upc
+        sta pa
+        lda (kp),y
+        and #$7F
+        cmp pa
+        bne kn
+        lda (kp),y
+        bmi kf
+        inx
+        iny
+        bne k2
+kn      lda (kp),y              ; mot suivant
+        iny
+        asl
+        bcc kn
+        tya
+        clc
+        adc kp
+        sta kp
+        bcc k3
+        inc kp+1
+k3      inc tok
+        ldx sx
+        ldy #0
+        lda (kp),y
+        bne k1
+        lda sbuf,x              ; aucun : le caractère, en majuscule
+        jsr upc
+        ldy sy
+        jmp st
+kf      lda tok
+        ldy sy
+st      inx
+        sta (po),y
+        iny
+        cmp #":"
+        bne p1
+        lda #0
+        sta dmode
+        jmp cl
+p1      cmp #T_DATA
+        bne p2
+        lda #$80
+        sta dmode
+        jmp cl
+p2      cmp #T_REM
+        beq r
+        jmp cl
+r       cpx slen                ; REM : le reste tel quel
+        beq done
+        lda sbuf,x
+        sta (po),y
+        iny
+        inx
+        bne r
+done    rts
+.)
+
+upc
+.(
+        cmp #"a"
+        bcc r
+        cmp #"z"+1
+        bcs r
+        and #$DF
+r       rts
+.)
+
+; pbas : le programme codé (pbuf, lenl/lenh du bloc ib) dans le .TAP
+pbas
+.(
+        lda #<pbuf
+        sta pa
+        lda #>pbuf
+        sta pa+1
+        ldx ib
+        lda lenl,x
+        sta k
+        lda lenh,x
+        sta k+1
+        ldy #0
+l       lda k
+        ora k+1
+        beq r
+        lda (pa),y
+        jsr putb
+        inc pa
+        bne d
+        inc pa+1
+d       lda k
+        bne d2
+        dec k+1
+d2      dec k
+        jmp l
+r       rts
 .)
 
 ; ---------------------------------------------------------------------
@@ -1054,6 +1643,7 @@ r       rts
 .)
 
 #include "mktap.msg"
+#include "bas_tab.s"
 
 adrl    .dsb MAXB+1,0   ; plages des blocs (indice MAXB : chargeur)
 adrh    .dsb MAXB+1,0
@@ -1067,3 +1657,5 @@ bfcb    = endp          ; FCB des blocs (36 x 8)
 ibuf    = bfcb+36*MAXB  ; enregistrement lu
 obuf    = ibuf+128      ; enregistrement à écrire
 lbuf    = obuf+128      ; chargeur BASIC (50 octets au plus)
+sbuf    = lbuf+50       ; ligne de texte du .BAS (255 caractères, 0)
+pbuf    = sbuf+256      ; programme BASIC codé

@@ -63,7 +63,8 @@ Deux variantes sont construites à partir des mêmes sources :
 - L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), avec un répertoire courant propre à CP/A sur la clé et tous ses supports (plusieurs clés, la mémoire interne du LOCI), USBMOUNT pour monter les images de disquette et de cassette (et lancer le BASIC sur une cassette), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas), et **MKTAP**,
-  qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""`.
+  qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""` (code machine,
+  données, ou programme BASIC tapé dans EDIT et codé exactement comme le ferait la ROM).
 - **LOGO** en français et en anglais (tortue, décimaux, mots et listes, son ; `LOGOTR`
   traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que

@@ -118,6 +118,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/pf_mesure.py --ecrire   # mesures et totaux de docs/points-de-fonction.md
     python3 tools/test_fichiers.py   # EDIT, GRAPHER : disque plein, R/O, RESET pendant l'écriture
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, puis CLOAD sous BASIC 1.1
+    python3 tools/test_bas.py        # .BAS : codage de mktap.py == ROM 1.1 (6502 simulé)
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
@@ -138,7 +139,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | Système (BIOS, BDOS, CCP, menus) | en plus : essai Oricutron ciblé sur ce qui change, `tools/smoke_test.sh` |
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, ou les fonctions BDOS 10, 47, 115, 116 | en plus : `tools/test_logo.sh` |
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
-| MKTAP.COM, `tools/mktap.py` | en plus : `tools/test_mktap.sh` |
+| MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s` | en plus : `tools/test_mktap.sh` (lance aussi `tools/test_bas.py`) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, `tools/test_oric.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
