@@ -35,13 +35,13 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 437 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 458 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 17 889 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 810 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD.BAT` | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
-| MKTAP | 2 346 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC | `manuel.md`, `oric-basic.md` |
+| MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
 | TERM | 762 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
@@ -61,7 +61,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 458 points de fonction IFPUG et 343 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 467 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -76,10 +76,10 @@ quand on en a besoin.
 
 Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
 
-**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) programmes BASIC en texte (`.BAS`) codés par
-MKTAP. Détail au point 3 ci-dessous ; le reste de la liste garde son
-ordre. Faits : `GRXASM NOM /O` (25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois
-lots (27-28/10/2026, `docs/usb.md`).
+**Prochains développements** : la liste fixée par Pierre est faite : `GRXASM NOM /O`
+(25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois lots (27-28/10/2026,
+`docs/usb.md`) ; les programmes BASIC en texte (`.BAS`) codés par MKTAP (28/10/2026). Suite
+du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde son ordre.
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -139,9 +139,12 @@ lots (27-28/10/2026, `docs/usb.md`).
      petits), les tailles constantes de `DIM` vérifiées à la traduction, MKTAP qui refuse un
      bloc `/R` avant `$0503`. Décidé, pas encore fait : SPLIT dans `ORIC.INC`, le son quand
      GRAPHER en aura.
-   - Suite, dans l'ordre : **la clé USB depuis CP/A** (ci-dessous, `docs/usb.md`) ; puis les **`.BAS`** : MKTAP
-     code un programme BASIC écrit dans EDIT (`docs/oric-basic.md` § 2) ; `CASSETTE.COM`
-     (décidé) ensuite.
+   - Fait (28/10/2026) : les **`.BAS`** : MKTAP code un programme BASIC écrit dans EDIT
+     comme la ROM 1.1 quand on le tape (minuscules mises en majuscules hors du texte, ligne
+     de plus de 78 caractères acceptée avec un avertissement), en `$0501`, lancé par `/R` ;
+     codage comparé à la ROM elle-même (`tools/test_bas.py`) et au programme tapé dans
+     Oricutron (`docs/oric-basic.md` § 2). Plus tard : le sens inverse (`.TAP` vers texte).
+   - Suite : `CASSETTE.COM` (décidé).
    - Plus tard : la boîte à outils appelée par `!` depuis le BASIC (`docs/oric-basic.md`
      § 5). Écartée : la traduction de GRAPHER en BASIC (§ 6).
    - **La clé USB et le LOCI depuis CP/A** (CMDER seul écran interactif : répertoire
@@ -458,10 +461,11 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 437) prend 7 blocs depuis USBMOUNT (6 en anglais, 12 258), 1 851 octets libres
-  dans le dernier : de la place pour le lot 3 de la clé USB. CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
+  blocs, 1 844 octets libres dans le dernier. HELP (12 458) prend 7 blocs depuis USBMOUNT (6 en anglais, 12 282 : plein à 6 octets
+  près), 1 878 octets libres dans le dernier. CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
-  USBMOUNT (4 086) prend 2 blocs, plein à 10 octets près (51 en anglais). EDSPRITE (8 967) prend
+  USBMOUNT (4 086) prend 2 blocs, plein à 10 octets près (51 en anglais) ; MKTAP (4 079)
+  aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte

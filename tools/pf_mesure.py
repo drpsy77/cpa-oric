@@ -55,7 +55,7 @@ COMPOSANTS = [
     ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/usbmount.s", "progs/loci_inc.s", "progs/ljok_inc.s", "progs/lmnt_inc.s",
               "progs/msg/*/export.msg", "progs/msg/*/import.msg", "progs/msg/*/usbdir.msg", "progs/msg/*/usbmount.msg",
               "progs/msg/*/loci.msg", "progs/term.s", "progs/msg/*/term.msg",
-              "progs/mktap.s", "progs/msg/*/mktap.msg"]),
+              "progs/mktap.s", "progs/bas_tab.s", "progs/msg/*/mktap.msg"]),
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s", "progs/msg/*/asm.msg"]),
     ("DBG",  ["progs/debug.s", "progs/msg/*/debug.msg"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",

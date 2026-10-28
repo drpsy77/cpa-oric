@@ -3,8 +3,10 @@
 m_use   .asc "MKTAP nom fic adr[,lg] [/R] ...",13,10
         .asc "ecrit NOM.TAP pour CLOAD (BASIC)",13,10
         .asc "adr, lg : hexa ; /R : bloc lance",13,10
+        .asc "fic.BAS : BASIC en texte, sans adr",13,10
         .asc "MKTAP JEU JEU.COM 8000 /R",13,10
-        .asc "MKTAP J P.COM 9000 /R IMG.HIR A000",13,10,0
+        .asc "MKTAP J P.COM 9000 /R IMG.HIR A000",13,10
+        .asc "MKTAP JEU JEU.BAS /R",13,10,0
 m_many  .asc "8 fichiers au plus",13,10,0
 m_two   .asc "/R une seule fois",13,10,0
 m_name  .asc "Nom invalide",13,10,0
@@ -22,3 +24,14 @@ m_full  .asc 13,10,"Disque plein",13,10,0
 m_done  .asc " ecrit",13,10,0
 m_bas   .asc " BASIC",0
 m_run   .asc " /R",0
+m_one   .asc "Un seul .BAS",13,10,0
+m_basa  .asc "Pas d'adresse apres un .BAS",13,10,0
+m_rbas  .asc "Avec un .BAS, /R sur lui seulement",13,10,0
+m_big   .asc " : trop long",13,10,0
+m_lig   .asc "ligne ",0
+m_aft   .asc "apres ",0
+m_num   .asc " : numero invalide",13,10,0
+m_ord   .asc " : hors d'ordre",13,10,0
+m_long  .asc " : trop longue",13,10,0
+m_car   .asc " : caractere invalide",13,10,0
+m_78    .asc " : plus de 78 caracteres",13,10,0

@@ -153,8 +153,17 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - Chargeur BASIC : `MKTAP TAP2 TAPTEST.COM 9000 /R TAPTEST.ASM 8000` (deux blocs), même
   chemin, un seul `CLOAD""` : les deux blocs se chargent, le texte s'affiche ; puis `LIST`
   montre `10 CLOAD"":CLOAD"":CALL#9000`, et une ligne tapée (`20 A=1`) s'ajoute normalement.
+- **Programme BASIC écrit dans EDIT** (`.BAS`) : dans EDIT, `ESSAI.BAS` avec quelques lignes
+  en minuscules (`10 cls`, `20 for i=1 to 5:print "Ligne";i:next`, `30 data abc,Def`,
+  `40 read a$,b$:print a$;b$`, `50 rem Fin`), puis `MKTAP ESSAI ESSAI.BAS /R`, `EXPORT
+  ESSAI.TAP`, BASIC, cassette montée par le menu du LOCI, `CLOAD""` : le programme démarre
+  tout seul ; `abcDef` s'affiche tel quel ; `LIST` montre les mots-clés en majuscules,
+  `"Ligne"`, `abc,Def` et le `REM` restés tels quels ; une ligne tapée (`60 PRINT "OK"`)
+  s'ajoute, `RUN` marche. Sans `/R` : `CLOAD""` charge sans lancer. Une ligne de plus de 78
+  caractères : MKTAP l'annonce, le `.TAP` marche quand même.
 - Si quelqu'un a un **Oric-1** (ROM 1.0) : le même `.TAP` (format et mots-clés supposés
-  identiques, jamais vérifié).
+  identiques, jamais vérifié ; un `.BAS` sans `STORE`, `RECALL`, `INVERSE`, `NORMAL`, ni `GO`
+  hors de `GOTO` et `GOSUB` : mêmes codes dans les deux ROM, `docs/oric-basic.md` § 2).
 
 **GRXASM `/O`** (programme GRAPHER pour un Oric seul ; la chaîne entière vérifiée avec un jeu,
 ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASIC 1.1) :
