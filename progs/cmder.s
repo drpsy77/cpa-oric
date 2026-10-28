@@ -176,6 +176,15 @@ vprev   = $A6           ; Voir : caractère précédent (CR LF)
 curk    = $A7           ; copie : rang du fichier en cours (0 = premier)
 rfl     = $A8           ; 1 = option /R : répertoires seuls (colonne USB)
 usup    = $A9           ; support marqué * dans la liste des supports
+askl    = $AA           ; 1 = saisie longue (noms de la clé, 63 car.)
+haslmn  = $AB           ; 1 = LOCI et configuration de son menu présents
+inmx    = $AC           ; longueur maximale de la saisie en cours
+ufd2    = $AD           ; Dupliquer : fichier écrit
+dkb     = $AE           ;   Ko copiés (2)
+dtot    = $B0           ;   Ko en tout (2)
+dsub    = $B2           ;   enregistrements dans le Ko en cours
+hnm     = $B3           ; en-tête : caractères du nom de l'image montrés
+hnl     = $B4           ;   longueur du nom
 ; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
 ; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
 PZ0     = $25
@@ -233,7 +242,15 @@ txt     lda #>bufs              ; tampon de copie : page suivant les tables
         lda #1                  ; erreurs disque sans message du BDOS :
         sta IO_QUIET            ; CMDER les signale lui-même (bit 7)
         jsr cur_off
-        jsr get_args            ; les mots tels que tapés (USB:chemin)
+        lda #0                  ; noms des images dans les en-têtes ?
+        sta haslmn
+        sta askl
+        jsr u_chk
+        bcs nl
+        jsr mt_ok
+        bcs nl
+        inc haslmn
+nl      jsr get_args            ; les mots tels que tapés (USB:chemin)
         jsr opt_r
         ldx #0
         jsr skipsp
@@ -599,6 +616,14 @@ ktab    .byt 11
         .word k_copyt-1
         .byt $9F
         .word k_donly-1
+        .byt 21                 ; ^U
+        .word k_dup-1
+        .byt 15                 ; ^O
+        .word k_mnt-1
+        .byt $A0
+        .word k_dup-1
+        .byt $A1
+        .word k_mnt-1
         .byt 0
 
 ; ---------------------------------------------------------------------
@@ -2046,11 +2071,38 @@ pd      ldx po
         lda #"?"
         jsr lb_chr
         jmp hd
-ok      lda fpb
+ok      ldy #10                 ; sans filtre : le nom de l'image
+pq      lda (fpb),y
+        cmp #"?"
+        bne pf
+        dey
+        bpl pq
+        lda absf
+        bne pf
+        ldx drv
+        jsr hdnm
+        beq pf
+        sta t2
+        ldx #0
+pn      lda mt_nm,x
+        cpx #9
+        bne pc
+        ldy t2
+        cpy #11
+        bcc pc
+        lda #"~"
+        jsr lb_chr
+        jmp pz
+pc      jsr lb_chr
+        inx
+        cpx t2
+        bne pn
+        beq pz
+pf      lda fpb
         ldy fpb+1
         jsr lb_pat
         jsr absmark
-        lda #NBLK               ; place libre en Ko, cadrée à droite
+pz      lda #NBLK               ; place libre en Ko, cadrée à droite
         sec
         sbc used
         bcs fr
@@ -2274,10 +2326,40 @@ dsk     lda drv
         ldy #>m_nodrv
         jsr lb_str
         jmp out
-ok      lda #<fpat
-        ldy #>fpat
-        jsr lb_pat
-        jsr absmark
+ok      ldx drv                 ; nom de l'image (menu du LOCI), filtre
+        jsr hdnm
+        sta hnl
+        cmp #12
+        bcc h1
+        lda #12
+h1      sta hnm
+hl      jsr hleft
+        jsr hcnt                ; assez de place avant le nombre ?
+        cmp lx
+        bcs cnt1
+        ldx hnm
+        beq cnt1
+        sta t2                  ; non : nom raccourci d'autant
+        lda lx
+        sec
+        sbc t2
+        sta t2
+        lda hnm
+        sec
+        sbc t2
+        bcc h0
+        cmp #2
+        bcs h2
+h0      lda #0
+h2      sta hnm
+        jsr lb_clear
+        lda drv
+        clc
+        adc #"A"-1
+        sta lbuf
+        lda #":"
+        sta lbuf+1
+        jmp hl
 cnt1    lda #0
         sta sepf
         jsr num_cnt
@@ -2872,11 +2954,25 @@ ask
 .(
         sta askp
         sty askp+1
+        lda #MAXIN              ; saisie courte, ou longue (askl : noms de
+        ldx askl                ; la clé)
+        beq sh
+        lda #63
+sh      sta inmx
+        lda #0
+        sta askl
 red     jsr lb_clear
         lda askp
         ldy askp+1
         jsr lb_str
-        ldx #0
+        lda inlen               ; trop long pour la ligne : la fin seulement
+        sec
+        adc lx
+        sec
+        sbc #W
+        bcs st
+        lda #0
+st      tax
 il      cpx inlen
         beq eol
         lda inbuf,x
@@ -2901,7 +2997,7 @@ key     jsr B_CONIN
         cmp #$7F
         bcs key
         ldx inlen
-        cpx #MAXIN
+        cpx inmx
         bcs key
         sta inbuf,x
         inc inlen
@@ -3259,7 +3355,10 @@ vprompt
 ; ---------------------------------------------------------------------
 k_del
 .(
-        jsr usb_ro
+        lda ptype               ; clé : u_del
+        beq dk
+        jmp u_del
+dk      jsr usb_ro
         bcs rt
         jsr targets
         bcs rt
@@ -3386,7 +3485,10 @@ comma   lda #","
 ; ---------------------------------------------------------------------
 k_ren
 .(
-        jsr usb_ro
+        lda ptype               ; clé : u_ren
+        beq dk
+        jmp u_ren
+dk      jsr usb_ro
         bcs rt
         jsr targets
         bcs rt
@@ -5029,6 +5131,8 @@ c9c     .byt $9C,0
 c9d     .byt $9D,0
 c9e     .byt $9E,0
 c9f     .byt $9F,0
+ca0     .byt $A0,0
+ca1     .byt $A1,0
 
 ; ---------------------------------------------------------------------
 ; Messages (37 colonnes au plus, sans accents)
@@ -6482,8 +6586,758 @@ sz      ldy #E_SIZE
         jmp lb_str
 .)
 
-; Clé USB du LOCI : bibliothèque commune (page zéro $30-$3B, tampons
-; args, iobuf, dirent après elle)
+; ---------------------------------------------------------------------
+; Clé USB, lot 3 (docs/usb.md § 2.1) : Renommer, Effacer, Dupliquer,
+; Monter ; noms des disquettes dans les en-têtes
+; ---------------------------------------------------------------------
+
+; u_fonly : C=1 (message) si l'entrée ep n'est pas un fichier de la clé
+;   (répertoire, « .. », support)
+u_fonly
+.(
+        ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        beq ok
+        lda #<m_fonly
+        ldy #>m_fonly
+        jsr set_msg
+        sec
+        rts
+ok      clc
+        rts
+.)
+
+; u_one : un seul fichier visé de la clé -> ep ; C=1 (message) sinon
+u_one
+.(
+        jsr targets
+        bcs rt
+        lda ntg
+        cmp #1
+        beq one
+        lda #<m_one1
+        ldy #>m_one1
+        jsr set_msg
+        sec
+        rts
+one     lda tg
+        jsr ent_ptr
+        jmp u_fonly
+rt      rts
+.)
+
+; u_mnted : ufull est-elle une image montée ? C=1, X = lecteur (0-3, 4
+;   cassette) ; C=0 sinon (ou sans configuration du LOCI)
+u_mnted
+.(
+        ldx #0
+c       lda ufull,x
+        sta apath,x
+        beq e
+        inx
+        bpl c
+e       lda haslmn
+        beq no
+        lda #$FF
+        sta mt_d
+        jmp mt_where
+no      clc
+        rts
+.)
+
+; u_dlb : « B: » (X = 0-3) ou « K7: » (X = 4) dans lbuf
+u_dlb
+.(
+        cpx #4
+        beq k
+        txa
+        clc
+        adc #"A"
+        jsr lb_chr
+        jmp c
+k       lda #"K"
+        jsr lb_chr
+        lda #"7"
+        jsr lb_chr
+c       lda #":"
+        jmp lb_chr
+.)
+
+; u_mmsg : message « Image montee en B: » (X = lecteur)
+u_mmsg
+        stx t2
+        jsr lb_clear
+        lda #<m_imgm
+        ldy #>m_imgm
+        jsr lb_str
+        ldx t2
+        jsr u_dlb
+        jmp lb_to_msg
+
+; u_lerr : message d'erreur de la clé (nom déjà pris : errno 40)
+u_lerr
+.(
+        lda MIA_ERRNO
+        cmp #40
+        bne g
+        lda #<m_taken
+        ldy #>m_taken
+        jmp set_msg
+g       lda #<m_usberr
+        ldy #>m_usberr
+        jmp set_msg
+.)
+
+; u_rename : udest (ancien chemin) devient ufull -> C=1 si refusé
+u_rename
+        lda #<udest
+        ldy #>udest
+        jsr push_str
+        lda #0
+        sta MIA_XSTACK
+        lda #<ufull
+        ldy #>ufull
+        jsr push_str
+        lda #$1C                ; rename
+        jmp mia_call
+
+; u_unlink : efface le fichier A/Y de la clé -> C=1 si refusé
+u_unlink
+        jsr push_str
+        lda #$1B                ; unlink
+        jmp mia_call
+
+; u_nmin : le nom long de l'entrée (dirent+2) proposé dans inbuf
+u_nmin
+.(
+        ldx #0
+l       lda dirent+2,x
+        beq e
+        sta inbuf,x
+        inx
+        cpx #63
+        bne l
+e       stx inlen
+        rts
+.)
+
+; u_inz : inbuf fini par un 0 (pour u_full)
+u_inz
+        ldx inlen
+        lda #0
+        sta inbuf,x
+        rts
+
+; u_ren : Renommer sur la clé (un fichier ; pas une image montée)
+u_ren
+.(
+        jsr u_one
+        bcs rt
+        ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcs er
+        jsr u_mnted
+        bcc nm
+        jmp u_mmsg
+nm      ldx #0                  ; ancien chemin -> udest
+c       lda ufull,x
+        sta udest,x
+        beq cd
+        inx
+        bpl c
+cd      jsr u_nmin
+        inc askl
+        lda #<m_newn
+        ldy #>m_newn
+        jsr ask
+        bcs rt
+        jsr u_inz
+        lda #<inbuf
+        ldy #>inbuf
+        jsr u_full
+        bcs er
+        ldx #0                  ; même nom : rien à faire
+s       lda ufull,x
+        cmp udest,x
+        bne df
+        cmp #0
+        beq rt
+        inx
+        bpl s
+df      jsr u_rename
+        bcc ok
+        jmp u_lerr
+ok      jsr reload_keep
+        lda #<m_renok
+        ldy #>m_renok
+        jmp set_msg
+er      lda #<m_usberr
+        ldy #>m_usberr
+        jmp set_msg
+rt      rts
+.)
+
+; u_del : Effacer sur la clé (fichiers seulement, images montées sautées)
+u_del
+.(
+        jsr targets
+        bcc dt
+        rts
+dt
+        lda #0                  ; fichiers visés
+        sta vk
+        sta vi
+cl      lda vi
+        cmp ntg
+        beq cd
+        tax
+        lda tg,x
+        jsr ent_ptr
+        ldy #E_FLAG
+        lda (ep),y
+        and #$FF-FL_SKIP
+        sta (ep),y
+        ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        bne cn
+        inc vk
+        lda ep                  ; (le dernier, pour un seul fichier)
+        sta ep2
+        lda ep+1
+        sta ep2+1
+cn      inc vi
+        bne cl
+cd      lda vk
+        bne q
+        lda #<m_fonly
+        ldy #>m_fonly
+        jmp set_msg
+q       jsr lb_clear            ; « Effacer NOM de la cle (O/N) ? »
+        lda #<m_era
+        ldy #>m_era
+        jsr lb_str
+        lda vk
+        cmp #1
+        bne qm
+        ldy #E_RANK
+        lda (ep2),y
+        jsr lname_ptr
+        lda sp
+        ldy sp+1
+        jsr lb_str
+        jmp qe
+qm      jsr num8
+        lda #0
+        sta sepf
+        jsr lb_numl
+        lda #<m_nfic
+        ldy #>m_nfic
+        jsr lb_str
+qe      lda #<m_ofkey
+        ldy #>m_ofkey
+        jsr lb_str
+        lda #<m_yn
+        ldy #>m_yn
+        jsr lb_str
+        jsr lb_to_msg
+        lda #<mbuf
+        ldy #>mbuf
+        jsr ask_yn
+        bcs go
+        lda #0
+        sta msgp+1
+rt      rts
+go      lda #0
+        sta ncp
+        sta nro
+        sta nerr
+        sta nrf
+        lda #$FF                ; aucun lecteur pour u_mmsg
+        sta curk
+        lda vk
+        sta retry
+lp      lda #$FF                ; le fichier visé de plus haut rang, pas
+        sta ci                  ; encore traité (effacer ne change pas
+        lda #0                  ; les rangs plus bas)
+        sta vi
+        sta cei
+f       lda vi
+        cmp ntg
+        beq fe
+        tax
+        lda tg,x
+        jsr ent_ptr
+        ldy #E_ATTR
+        lda (ep),y
+        and #$20
+        bne fn
+        ldy #E_FLAG
+        lda (ep),y
+        and #FL_SKIP
+        bne fn
+        ldy #E_RANK
+        lda (ep),y
+        ldx ci
+        cpx #$FF
+        beq fb
+        cmp cei
+        bcc fn
+fb      sta cei
+        lda vi
+        sta ci
+fn      inc vi
+        bne f
+fe      lda ci
+        cmp #$FF
+        beq done
+        tax
+        lda tg,x
+        jsr ent_ptr
+        ldy #E_FLAG
+        lda (ep),y
+        ora #FL_SKIP
+        sta (ep),y
+        lda cei
+        jsr u_name
+        bcs bad
+        jsr u_mnted
+        bcc ul
+        stx curk
+        inc nrf
+        jmp lp
+ul      lda #<ufull
+        ldy #>ufull
+        jsr u_unlink
+        bcs bad
+        inc ncp
+        jmp lp
+bad     inc nerr
+        jmp lp
+done    jsr reload_keep
+        lda retry               ; un seul fichier, une image montée
+        cmp #1
+        bne rp
+        ldx curk
+        bmi rp
+        jmp u_mmsg
+rp      lda #<m_erased
+        ldy #>m_erased
+        jmp report
+.)
+
+; u_next : nom proposé pour Dupliquer, dans inbuf : le nombre à la fin
+;   du nom (avant le type) augmenté, sinon « 1 » ajouté (PROJETS.DSK ->
+;   PROJETS1.DSK, JEU2.TAP -> JEU3.TAP, JEU9 -> JEU10)
+u_next
+.(
+        jsr u_nmin
+        ldx inlen               ; fin du nom : le dernier point
+        stx t0
+f       dex
+        bmi nf
+        lda inbuf,x
+        cmp #"."
+        bne f
+        stx t0
+nf      ldx t0
+d       dex
+        bmi ins
+        lda inbuf,x
+        cmp #"9"
+        bne d9
+        lda #"0"
+        sta inbuf,x
+        jmp d
+d9      cmp #"0"
+        bcc ins
+        cmp #"9"
+        bcs ins
+        inc inbuf,x             ; 0 à 8 : +1
+        rts
+ins     inx                     ; « 1 » inséré en X
+        stx t1
+        ldx inlen
+        cpx #63
+        bcs rt
+s       cpx t1
+        beq pu
+        lda inbuf-1,x
+        sta inbuf,x
+        dex
+        jmp s
+pu      lda #"1"
+        sta inbuf,x
+        inc inlen
+rt      rts
+.)
+
+; k_dup : Dupliquer (clé) : copie dans le même répertoire, par un nom
+;   provisoire renommé à la fin ; ESC arrête (provisoire effacé)
+k_dup
+.(
+        lda ptype
+        bne u
+        lda #<m_usbonly
+        ldy #>m_usbonly
+        jmp set_msg
+u       jsr u_one
+        bcc ku1
+        rts
+ku1      ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcc ku2
+        jmp er
+ku2      jsr u_next
+        inc askl
+        lda #<m_dupq
+        ldy #>m_dupq
+        jsr ask
+        bcc u3
+        rts
+u3      jsr u_inz
+        lda #<inbuf             ; nom final -> udest
+        ldy #>inbuf
+        jsr u_full
+        bcs er
+        ldx #0
+c1      lda ufull,x
+        sta udest,x
+        beq c1e
+        inx
+        bpl c1
+c1e     lda #<udest             ; déjà pris ?
+        ldy #>udest
+        ldx #O_RDONLY
+        jsr usb_open
+        bcs fr
+        jsr usb_close
+        lda #<m_taken
+        ldy #>m_taken
+        jmp set_msg
+fr      lda #<m_tmpn            ; nom provisoire -> apath
+        ldy #>m_tmpn
+        jsr u_full
+        bcs er
+        ldx #0
+c2      lda ufull,x
+        sta apath,x
+        beq c2e
+        inx
+        bpl c2
+c2e     ldy #E_RANK             ; original -> ufull
+        lda (ep),y
+        jsr u_name
+        bcs er
+        ldy #E_SIZE+1           ; taille en Ko (octets / 1024)
+        lda (ep),y
+        sta dtot
+        iny
+        lda (ep),y
+        lsr
+        ror dtot
+        lsr
+        ror dtot
+        sta dtot+1
+        lda #<ufull
+        ldy #>ufull
+        ldx #O_RDONLY
+        jsr usb_open
+        bcs er
+        sta ufd
+        lda #<apath
+        ldy #>apath
+        ldx #O_WRONLY+O_CREAT+O_TRUNC
+        jsr usb_open
+        bcc dko2
+        lda ufd
+        jsr usb_close
+er      lda #<m_usberr
+        ldy #>m_usberr
+        jmp set_msg
+dko2      sta ufd2
+        lda #0
+        sta dkb
+        sta dkb+1
+        sta dsub
+        jsr d_prog
+lp      jsr esc_chk
+        bcs stop
+        lda ufd
+        jsr usb_read
+        bcs ioe
+        cmp #0
+        beq end
+        sta ucnt
+        tax
+        lda ufd2
+        jsr usb_write
+        bcs ioe
+        cmp ucnt
+        bne ioe
+        inc dsub
+        lda dsub
+        cmp #8
+        bne lp
+        lda #0
+        sta dsub
+        inc dkb
+        bne pg
+        inc dkb+1
+pg      jsr d_prog
+        jmp lp
+stop    lda #<m_esc
+        ldy #>m_esc
+        bne kill
+ioe     lda #<m_usberr
+        ldy #>m_usberr
+kill    sta errm
+        sty errm+1
+        jsr d_close
+        lda #<apath             ; provisoire effacé
+        ldy #>apath
+        jsr u_unlink
+        jsr reload_keep
+        lda errm
+        ldy errm+1
+        jmp set_msg
+end     jsr d_close
+        ldx #0                  ; provisoire -> nom final
+c3      lda apath,x
+        sta ufull,x
+        beq c3e
+        inx
+        bpl c3
+c3e     ldx #0                  ; (u_rename : udest -> ufull)
+c4      lda udest,x
+        pha
+        lda ufull,x
+        sta udest,x
+        pla
+        sta ufull,x
+        inx
+        bpl c4
+        jsr u_rename
+        php
+        jsr reload_keep
+        plp
+        bcc ok
+        jmp u_lerr
+ok      lda #<m_dupok
+        ldy #>m_dupok
+        jmp set_msg
+.)
+
+d_close
+        lda ufd
+        jsr usb_close
+        lda ufd2
+        jmp usb_close
+
+; d_prog : « Copie : 132/525 Ko » en ligne 26
+d_prog
+        jsr lb_clear
+        lda #<m_cpy
+        ldy #>m_cpy
+        jsr lb_str
+        lda #0
+        sta sepf
+        sta cnum+2
+        lda dkb
+        sta cnum
+        lda dkb+1
+        sta cnum+1
+        jsr lb_numl
+        lda #"/"
+        jsr lb_chr
+        lda dtot
+        sta cnum
+        lda dtot+1
+        sta cnum+1
+        jsr lb_numl
+        lda #<m_ko
+        ldy #>m_ko
+        jsr lb_str
+        jsr lb_to_msg
+        jmp draw_msg
+
+; k_mnt : Monter (clé) : une image de disquette (lecteur demandé) ou une
+;   cassette, comme USBMOUNT (lmnt_inc.s)
+k_mnt
+.(
+        lda ptype
+        bne u
+        lda #<m_usbonly
+        ldy #>m_usbonly
+        jmp set_msg
+u       lda haslmn
+        bne ku0
+        lda #<m_noloci2
+        ldy #>m_noloci2
+        jmp set_msg
+ku0      jsr u_one
+        bcc ku1
+        rts
+ku1      ldy #E_RANK
+        lda (ep),y
+        jsr u_name
+        bcc kn
+        jmp er
+kn      jsr u_mnted             ; (ufull -> apath)
+        bcc ku2
+        jmp tw
+ku2      jsr mt_head
+        bcs ni
+        jsr mt_isdsk
+        beq dsk
+        lda iobuf
+        cmp #$16
+        bne ni
+        lda #4
+        sta mt_d
+        jsr mt_mount
+        jmp e
+ni      lda #<m_notimg
+        ldy #>m_notimg
+        jmp set_msg
+dsk     lda #"B"                ; « Monter en : B: »
+        sta inbuf
+        lda #":"
+        sta inbuf+1
+        lda #2
+        sta inlen
+        lda #<m_mntq
+        ldy #>m_mntq
+        jsr ask
+        bcs rt
+        ldx #0
+sk      cpx inlen
+        beq rt
+        lda inbuf,x
+        inx
+        cmp #" "
+        beq sk
+        jsr upc
+        sec
+        sbc #"A"
+        beq sa
+        cmp #4
+        bcs bd
+        sta mt_d
+        jsr mt_pre
+        jsr mt_mount
+        php
+        jsr mt_post
+        plp
+e       bcs er
+        jsr reload_both
+        jsr lb_clear            ; « B: puzzle.dsk »
+        ldx mt_d
+        jsr u_dlb
+        lda #" "
+        jsr lb_chr
+        jsr mt_lname
+        lda #<mt_nm
+        ldy #>mt_nm
+        jsr lb_str
+        jmp lb_to_msg
+sa      lda #<m_sysa
+        ldy #>m_sysa
+        jmp set_msg
+bd      lda #<m_drvbad
+        ldy #>m_drvbad
+        jmp set_msg
+tw      jmp u_mmsg
+er      lda #<m_usberr
+        ldy #>m_usberr
+        jmp set_msg
+rt      rts
+.)
+
+; hdnm : nom de l'image du lecteur X (1 = A:) d'après le menu du LOCI ->
+;   mt_nm, A = longueur (0 : aucun, ou pas de LOCI)
+hdnm
+.(
+        lda haslmn
+        beq no
+        dex
+        jsr mt_on
+        beq no
+        jsr mt_rname
+        tya
+        rts
+no      lda #0
+        rts
+.)
+
+; hleft : en-tête plein écran : « A: » puis le nom de l'image (hnm
+;   caractères au plus, « ~ » s'il est coupé), le filtre
+hleft
+.(
+        lda #3
+        sta lx
+        lda hnm
+        beq flt
+        ldx #0
+l       cpx hnm
+        beq ne
+        lda mt_nm,x
+        sta lbuf+3,x
+        inx
+        bne l
+ne      txa
+        clc
+        adc #3
+        sta lx
+        cpx hnl
+        beq hsp
+        dec lx                  ; coupé : « ~ » à la place du dernier
+        lda #"~"
+        jsr lb_chr
+hsp      lda #" "
+        jsr lb_chr
+flt     lda #<fpat
+        ldy #>fpat
+        jsr lb_pat
+        jmp absmark
+.)
+
+; hcnt : A = dernière colonne libre avant le nombre de fichiers (« 22/40 »
+;   finit en colonne 21)
+hcnt
+.(
+        lda cnt
+        jsr dig
+        sta t2
+        lda nvis
+        cmp cnt
+        beq e
+        jsr dig
+        sec
+        adc t2
+        sta t2
+e       lda #21
+        sec
+        sbc t2
+        rts
+dig     cmp #10
+        bcc d1
+        cmp #100
+        bcc d2
+        lda #3
+        rts
+d2      lda #2
+        rts
+d1      lda #1
+        rts
+.)
+
+; Clé USB du LOCI : bibliothèques communes (page zéro $30-$3B, tampons
+; args, iobuf, dirent après elles)
+#include "lmnt_inc.s"
 #include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
 
@@ -6491,8 +7345,8 @@ sz      ldy #E_SIZE
 ; Zones de travail (après le programme, non chargées)
 ; ---------------------------------------------------------------------
 lbuf    = lib_free              ; ligne de travail (40)
-inbuf   = lbuf+40               ; saisie (24)
-mbuf    = inbuf+24              ; message construit (40)
+inbuf   = lbuf+40               ; saisie (64)
+mbuf    = inbuf+64              ; message construit (40)
 dbuf    = mbuf+40               ; chiffres (8)
 tfcb    = dbuf+8                ; FCB de travail (36)
 sfcb    = tfcb+36               ; FCB source (36)
@@ -6518,4 +7372,11 @@ upath   = ch_f+NCH              ; clé USB : répertoire de la colonne (128 ;
 ufull   = upath+128             ;   chemin complet d'un fichier (128)
 udest   = ufull+128             ;   répertoire de destination (128)
 lnames  = udest+128             ;   noms longs affichés (128 x 27)
-bufs    = lnames+NMAX*27        ; noms marqués (relecture), tampon de copie
+mt_nm   = lnames+NMAX*27        ; lmnt_inc.s : nom d'une image (33),
+mt_path = mt_nm+33              ;   chemin complet (160),
+mt_d    = mt_path+160           ;   lecteur visé,
+mt_x    = mt_d+1
+mt_len  = mt_d+2
+mt_fd   = mt_d+3
+mt_cur  = mt_d+4
+bufs    = mt_d+5                ; noms marqués (relecture), tampon de copie

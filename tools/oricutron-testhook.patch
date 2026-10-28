@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..6866bf1 100644
+index 00b7b0e..8781179 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,337 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,350 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -169,7 +169,7 @@ index 00b7b0e..6866bf1 100644
 +   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire
 +   (80 d'un chemin vide : liste des appareils), 88 getcwd, 90 mount, 91
 +   umount (lecteurs 0-3 : la disquette insérée change ; cassette notée),
-+   A0 boot (drapeaux écrits dans boot.txt, pas de démarrage). XRAM
++   A0 boot (drapeaux écrits dans boot.txt, pas de démarrage), 1C rename. XRAM
 +   $8000-$81FF inscriptible (configuration du menu). Plusieurs clés :
 +   voir mia_haskeys. MIA_TRACE=1 : chaque opération sur stderr.
 +   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
@@ -382,6 +382,19 @@ index 00b7b0e..6866bf1 100644
 +      }
 +    }
 +    mia_xp = 512 - 72; mia_ret(0); return; }
++  case 0x1C: {            /* rename : pile = nouveau nom, 0, ancien nom */
++    char nw[256], od[256], pn[1024]; int k = mia_xp;
++    snprintf(nw, sizeof nw, "%s", (char *)&mia_xs[k]);
++    while (k < 512 && mia_xs[k]) k++;
++    if (k >= 511) { mia_xp = 512; mia_err(32 + 19); return; }
++    snprintf(od, sizeof od, "%s", (char *)&mia_xs[k + 1]);
++    mia_xp = 512;
++    if (mia_path(od, path, 0) != 1) { mia_err(32 + 4); return; }
++    r = mia_path(nw, pn, 0);
++    if (r == 1) { mia_err(32 + 8); return; }            /* FR_EXIST */
++    if (r != 2) { mia_err(32 + 5); return; }
++    if (rename(path, pn)) { mia_err(32 + 7); return; }
++    mia_ret(0); return; }
 +  case 0x90: {            /* mount : A = lecteur (0-3), 4 cassette, 5 ROM */
 +    char p2[256];
 +    snprintf(p2, sizeof p2, "%s", (char *)&mia_xs[mia_xp]);
@@ -495,7 +508,7 @@ index 00b7b0e..6866bf1 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,8 +848,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,8 +861,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -514,7 +527,7 @@ index 00b7b0e..6866bf1 100644
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
        acia_write(&oric->tele_acia, addr, data);
-@@ -918,6 +1257,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+@@ -918,6 +1270,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -817,7 +830,7 @@ index a47cd0c..95af81c 100644
  #else
    loop_handler(&ctx);
 diff --git a/oricutron.cfg b/oricutron.cfg
-index 8b977e2..3e77ee9 100644
+index 8b977e2..afa5711 100644
 --- a/oricutron.cfg
 +++ b/oricutron.cfg
 @@ -1,228 +1,4 @@
@@ -879,7 +892,7 @@ index 8b977e2..3e77ee9 100644
 -
 -; Write back all changes to disk images (if turned off, you have to press
 -; F7 to write changes back to the disk image)
-+atmosrom = 'roms/cpa'
++atmosrom = 'roms/basic11b'
 +rendermode = soft
  diskautosave = yes
 -

@@ -18,21 +18,21 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
 | GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
-| CMDER | 21 | 0 | 24 | 13 | 12 | **70** | 22 | **92** |
+| CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
 | USB | 28 | 0 | 23 | 9 | 9 | **69** | 14 | **83** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *47* | *408* | *97* | *111* | ***831*** | *213* | ***1044*** |
+| *Applications* | *168* | *47* | *424* | *101* | *111* | ***851*** | *214* | ***1065*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 25 | 114 | 18 | **179** | 45 | **224** |
-| **Total** | **220** | **77** | **631** | **303** | **207** | **1438** | **342** | **1780** |
+| **Total** | **220** | **77** | **647** | **307** | **207** | **1458** | **343** | **1801** |
 
-Points ajustés (indicatif, § 9) : 1 438 × 1,05 ≈ 1 510.
+Points ajustés (indicatif, § 9) : 1 458 × 1,05 ≈ 1 531.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 202 EI, 74 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 206 EI, 75 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -521,6 +521,11 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | CMD.T12 | Imprimer la liste | EO | 1 | 6 | F | 4 |
 | CMD.T13 | Liste des supports (numéro, fabricant et modèle, taille, celui d'où l'on vient) | EQ | 1 | 4 | F | 3 |
 | CMD.T14 | Répertoire courant de CP/A : départ (chemin relatif), écrit à la sortie | EI | 1 | 2 | F | 3 |
+| CMD.T15 | Clé : renommer (nom long, image montée refusée) | EI | 2 | 3 | F | 3 |
+| CMD.T16 | Clé : effacer (confirmation, images montées sautées, bilan) | EI | 2 | 3 | F | 3 |
+| CMD.T17 | Clé : dupliquer (nom proposé, progression, arrêt, provisoire) | EI | 2 | 5 | M | 4 |
+| CMD.T18 | Clé : monter une disquette ou la cassette | EI | 3 | 5 | É | 6 |
+| CMD.T19 | Nom de la disquette de chaque lecteur dans les en-têtes | EO | 1 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -533,7 +538,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | CMD.A07 | Clé : noms ramenés en 8 + 3, dossiers | `cmder.s` | 1 |
 | CMD.A08 | Fins de ligne et tabulations converties | `cmder.s` | 1 |
 | CMD.A09 | Deux colonnes : états échangés, seule la colonne active redessinée | `cmder.s` | 1 |
-| CMD.A10 | Saisie en ligne propre (texte proposé modifiable) | `cmder.s` | 1 |
+| CMD.A10 | Saisie en ligne propre (texte proposé modifiable ; longue : la fin seulement) | `cmder.s` | 1 |
+| CMD.A11 | Effacer sur la clé du rang le plus haut au plus bas ; nom proposé (nombre augmenté avec retenue) ; en-tête coupé selon la place | `cmder.s` | 1 |
 
 ### 4.5 HEX
 
@@ -813,43 +819,43 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
-| CMDER | 3 | 6 417 | 331 | 201 | 0 | 5 % | 15 398 | 92 | 220 |
+| CMDER | 3 | 7 257 | 363 | 222 | 0 | 5 % | 17 889 | 81 | 199 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 23 | 4 308 | 442 | 178 | 0 | 9 % | 11 672 | 62 | 169 |
+| USB | 23 | 4 308 | 442 | 178 | 0 | 9 % | 11 719 | 62 | 170 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 76 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 175 | 8 094 | 954 | 511 | 0 | 11 % | — | 45 | — |
-| **Total** | 357 | 70 744 | 5 743 | 2 800 | 2 607 | 8 % | 155 764 | 49 | 108 |
+| Outillage PC | 175 | 8 158 | 954 | 511 | 0 | 10 % | — | 46 | — |
+| **Total** | 357 | 71 648 | 5 775 | 2 821 | 2 607 | 7 % | 158 302 | 49 | 109 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 371 | 81 | 4,3 | 79 |
+| Système et commandes | 1 371 | 81 | 4,3 | 80 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 206 | 25 | 2,9 | 13 |
+| CMDER | 234 | 26 | 2,6 | 13 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 79 | 13 | 1,1 | 13 |
+| USB | 79 | 13 | 1,1 | 14 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 25 |
-| Outillage PC | 341 | — | 1,9 | 117 |
-| Transverse (projet) | 2 304 | — | — | 75 |
-| Traduction anglaise (docs/en) | 2 703 | — | — | 33 |
-| **Total** | 8 743 | 316 | 6,1 | 202 |
+| Outillage PC | 341 | — | 1,9 | 118 |
+| Transverse (projet) | 2 323 | — | — | 76 |
+| Traduction anglaise (docs/en) | 2 731 | — | — | 34 |
+| **Total** | 8 818 | 317 | 6,0 | 203 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 202 commits du 2026-10-04 au 2026-10-27.
+Historique : 203 commits du 2026-10-04 au 2026-10-27.
 
-Réutilisation : 52 998 lignes de code écrites dans `progs/`, 60 988 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,15 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 53 806 lignes de code écrites dans `progs/`, 62 206 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -913,6 +919,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-25 | GRXASM /O | 0.9 | 1 393 | 335 | 1 728 | 197 | `GRXASM NOM /O` : `.TAP` pour un Oric seul sur le socle `ORIC.INC` ; ASM `/T` ; vérifications de l'interpréteur retirées des copies d'`ARR.INC` ; tailles constantes de `DIM` vérifiées à la traduction ; MKTAP : `/R` en `$0503` au plus tôt ; `test_oric.sh` |
 | 2026-10-27 | clé USB, lot 1 | 0.9 | 1 416 | 339 | 1 755 | 202 | répertoire courant de CP/A (`0:CPA.CWD`), chemins relatifs, clé renumérotée ; `USBDIR /S`, jokers (USBDIR, IMPORT) ; CMDER : supports, répertoires seuls, `/R` ; `USBCD.BAT` |
 | 2026-10-27 | clé USB, lot 2 | 0.9 | 1 438 | 342 | 1 780 | 203 | `USBMOUNT.COM` : disquettes B: à D:, cassette, `/B` (BASIC 1.1 sur la cassette) ; configuration du menu du LOCI ; `lmnt_inc.s` |
+| 2026-10-28 | clé USB, lot 3 | 0.9 | 1 458 | 343 | 1 801 | 204 | CMDER sur la clé : renommer, effacer, dupliquer (`^U`), monter (`^O`) ; nom des disquettes dans les en-têtes ; saisie longue |
 
 ## 11. Comparaisons
 

@@ -1,39 +1,10 @@
 ; =====================================================================
 ;  ljok_inc.s — jokers dans les noms de la clé USB (docs/usb.md § 2.1) :
 ;  modèle comparé aux noms d'un répertoire, nom unique cherché. Inclus
-;  par USBDIR et IMPORT avant loci.msg et loci_inc.s (dont il utilise
-;  apath, dirent, les messages et les tampons) ; jamais assemblé seul.
+;  par USBDIR, IMPORT et USBMOUNT avant loci.msg et loci_inc.s (dont il
+;  utilise apath, dirent, lp_last, lupc, les messages et les tampons) ;
+;  jamais assemblé seul.
 ; =====================================================================
-
-; lp_last : X = début du dernier élément d'apath (après le dernier
-;   « / ») ; C=1 s'il contient un joker (* ou ?)
-lp_last
-.(
-        ldy #0
-        ldx #0
-ylp      lda apath,y
-        beq ye
-        iny
-        cmp #"/"
-        bne ylp
-        tya
-        tax
-        bne ylp
-ye       stx lt0
-yw       lda apath,x
-        beq yno
-        inx
-        cmp #"*"
-        beq yy
-        cmp #"?"
-        bne yw
-yy       sec
-        ldx lt0
-        rts
-yno      clc
-        ldx lt0
-        rts
-.)
 
 ; lp_cut : apath coupé avant son dernier élément (début X, de lp_last)
 ;   pour ouvrir le répertoire : le caractère enlevé est gardé (lp_sv,
@@ -106,15 +77,6 @@ yno      ldx wm_p0
         lda #1
         rts
 .)
-
-; lupc : A en majuscule
-lupc
-        cmp #"a"
-        bcc lu_r
-        cmp #"z"+1
-        bcs lu_r
-        and #$DF
-lu_r    rts
 
 ; lp_find : le dernier élément d'apath a des jokers : il est remplacé
 ;   par le seul fichier qui y répond. Aucun : « Introuvable : X » ;

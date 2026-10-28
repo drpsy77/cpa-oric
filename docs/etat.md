@@ -35,10 +35,10 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 405 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 437 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
-| CMDER | 15 354 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls) ; fixe le répertoire courant de la clé | `cmder.md` |
+| CMDER | 17 889 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 810 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD.BAT` | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 2 346 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC | `manuel.md`, `oric-basic.md` |
@@ -61,7 +61,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 438 points de fonction IFPUG et 342 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 458 points de fonction IFPUG et 343 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -76,10 +76,10 @@ quand on en a besoin.
 
 Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier, échanger.
 
-**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) la clé USB depuis CP/A, par lots (`docs/usb.md`) : lot 3
-(opérations de CMDER sur la clé) ; (2) programmes BASIC en texte
-(`.BAS`) codés par MKTAP. Détail au point 3 ci-dessous ; le reste de la liste garde son
-ordre. Faits : `GRXASM NOM /O` (25/10/2026) ; lots 1 et 2 de la clé USB (27/10/2026).
+**Prochains développements, dans cet ordre** (décidé par Pierre) : (1) programmes BASIC en texte (`.BAS`) codés par
+MKTAP. Détail au point 3 ci-dessous ; le reste de la liste garde son
+ordre. Faits : `GRXASM NOM /O` (25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois
+lots (27-28/10/2026, `docs/usb.md`).
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -152,9 +152,9 @@ ordre. Faits : `GRXASM NOM /O` (25/10/2026) ; lots 1 et 2 de la clé USB (27/10/
      propre à CP/A (`0:CPA.CWD`, clé renumérotée retrouvée d'après sa description), chemins
      relatifs, jokers, `USBDIR /S`, supports et répertoires seuls dans CMDER, `USBCD.BAT`.
      Fait (lot 2, 27/10/2026) : USBMOUNT (disquettes B: à D:, cassette, `/B` pour le
-     BASIC ; configuration du menu du LOCI tenue à jour ; `lmnt_inc.s`). Suite : lot 3 (CMDER :
-     renommer, effacer, dupliquer, monter, noms des disquettes ; CMDER passera probablement à
-     9 blocs). Niveau 2 (un répertoire de la clé
+     BASIC ; configuration du menu du LOCI tenue à jour ; `lmnt_inc.s`). Fait (lot 3,
+     28/10/2026) : CMDER renomme, efface, duplique et monte sur la clé ; noms des disquettes
+     dans les en-têtes ; CMDER passe à 9 blocs. Niveau 2 (un répertoire de la clé
      comme lecteur) : après la descente de PUT en banque (§ 3).
    - L'équivalent de `CSAVE` est `CASSETTE.COM` (décidé, `docs/oric-basic.md` § 2). Sous
      CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette (timing
@@ -458,8 +458,8 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 405) prend 7 blocs depuis USBMOUNT (6 en anglais, 12 226), 1 883 octets libres
-  dans le dernier : de la place pour le lot 3 de la clé USB. CMDER (15 354) prend 8 blocs, 1 030 octets libres dans le dernier ;
+  blocs, 1 844 octets libres dans le dernier. HELP (12 437) prend 7 blocs depuis USBMOUNT (6 en anglais, 12 258), 1 851 octets libres
+  dans le dernier : de la place pour le lot 3 de la clé USB. CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 086) prend 2 blocs, plein à 10 octets près (51 en anglais). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
@@ -469,7 +469,7 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
   octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 22 Ko (24 sur `cpa-en.dsk`), peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste 20 Ko (22 sur `cpa-en.dsk`), peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

@@ -6,7 +6,8 @@
 
 Full-screen file manager: one or two panels, disks A: to D: and the LOCI's USB stick. A list
 you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes, exact sizes;
-copying with a single drive. A `.COM` (15,193 bytes, 8 blocks), nothing resident. It is first of all a
+copying with a single drive; on the stick, Duplicate and Mount. A `.COM` (17,727 bytes,
+9 blocks), nothing resident. It is first of all a
 tool for listing and sorting; to copy a whole disk, DISKCOPY is faster.
 
 ## 1. Starting it
@@ -114,6 +115,8 @@ On the stick: exact size, and the blocks the file would take on a disk.
 | `^C` | Copy... |
 | `^X` | Move... |
 | `^N` | Rename... |
+| `^U` | Duplicate... (stick) |
+| `^O` | Mount... (stick) |
 | `^A` | Attributes... |
 | `?` | Info (exact size, blocks) |
 | `^E` | Exact sizes |
@@ -136,6 +139,7 @@ The items type codes (`$81-$9F`): an item and its shortcut go through the same d
 shortcut is written to the right of the label.
 
 - **File**: View RET, Copy... ^C, Copy as text..., Move... ^X, Rename... ^N, Erase DEL,
+  Duplicate... ^U, Mount... ^O,
   Attributes... ^A, Info ?, Print list, Drive... ^L, Reread ^R, Quit ^Q (or ESC).
 - **Mark**: Mark SPC, Mark... +, Unmark... -, Invert *, All, None.
 - **Sort**: Disk order 1, Name 2, Type 3, Size 4.
@@ -189,8 +193,28 @@ EXPORT and IMPORT: `^Z` removed when sending, added on arrival, names brought do
 with `_` for a forbidden character, `.DSK` refused when sending, file on the stick replaced
 without asking). Towards the stick, the answer `USB:dir` is relative to the USB panel's
 directory (or, without one, to CP/A's current directory); `USB:` alone: that directory. `/T` at the end of the Copy answer (or `Copy as text...`) turns a lone LF into
-CR LF and a tab (TAB) into a space. Move from a disk to the stick, not the other way. Erase,
-Rename, Attributes refused: `USB key : read and copy only`. No copy of a whole directory.
+CR LF and a tab (TAB) into a space. Move from a disk to the stick, not the other way. No
+attributes on the stick (`USB stick : no attributes`), no copy of a whole directory. On the
+stick, files only (`Files only` for a directory):
+
+- **Rename** (`^N`): the current long name is proposed (63 characters at most; the line
+  scrolls); `Name already used`; a mounted image is refused (`Image mounted in B:`).
+- **Erase** (DEL): `Erase 3 files from the stick (Y/N) ?` (the long name for a single one);
+  mounted images are skipped (summary `2 erased, 1 refused`; for a single one: `Image
+  mounted in B:`); directories stay.
+- **Duplicate** (`^U`, stick only): copy in the same directory; name proposed from the
+  original, changeable: the number at the end of the name increased, otherwise `1` added
+  (`PROJECTS.DSK` → `PROJECTS1.DSK`, `GAME2.TAP` → `GAME3.TAP`, `GAME9` → `GAME10`);
+  `Name already used`; progress `Copy : 132/525 KB`, ESC stops (`Interrupted`). The copy is
+  written as `~CPADUP.TMP`, renamed at the end; a stop or an error erases it.
+- **Mount** (`^O`, stick only): a disk image (`Mount in : B:`, A: refused) or a tape
+  (`.TAP`, at once), with USBMOUNT's rules (`docs/usb.md` § 1.4); `Not an image (.DSK or
+  .TAP)`, `Image mounted in C:`; message `C: puzzle.dsk`.
+
+**Disk name** of each drive, from the LOCI menu (on a LOCI only): full screen, in the header
+(`A: cpa-en.dsk *.*  22/40 fls 126K free`), cut with `~` (12 characters at most, fewer if
+the filter and the number of files need the room); in two panels, instead of the filter when
+there is none (`B:projects-~  112K`, 10 characters at most).
 
 ## 7. Implementation
 
@@ -202,6 +226,12 @@ Rename, Attributes refused: `USB key : read and copy only`. No copy of a whole d
   An empty `upath` = the list of devices (`u_sups`: one "directory" entry per device, its
   number in `E_SIZE`, its `dv_fmt` line as long name); `usup`: the device marked `*`.
 - **Directories only**: bit 1 of `hides` (bit 0 hides SYS files), per panel.
+- **Operations on the stick**: `u_ren`, `u_del`, `k_dup`, `k_mnt`; mounting through
+  `progs/lmnt_inc.s` (the same code as USBMOUNT; its buffers after `lnames`). Erase handles
+  the files from the highest rank to the lowest: erasing one does not change the rank of the
+  next ones (`u_name` reads the directory again). Long input (`askl`): 63 characters, only
+  the end if the line overflows. Headers: `hdnm` reads the name in XRAM (`haslmn`: LOCI and
+  menu configuration seen at start-up).
 - **Texts**: menu bar, messages, column titles, kind names and the column of the sort sign
   (`spos`, `spos2`) are in `progs/msg/en/cmder.msg` and `progs/msg/fr/cmder.msg`
   (French disks: `Fichier Marque Trier Vue`, columns `NOM TYP TAILLE RS N GENRE`, answers

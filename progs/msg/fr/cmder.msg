@@ -10,7 +10,7 @@
 bar     .byt 4
         .word mn_f, mn_m, mn_t, mn_v
 
-mn_f    .byt 12,16
+mn_f    .byt 14,16
         .asc "Fichier",0
         .asc "Voir         RET",0
         .byt MA_TYPE
@@ -30,6 +30,12 @@ mn_f    .byt 12,16
         .asc "Effacer      DEL",0
         .byt MA_TYPE
         .word c85
+        .asc "Dupliquer...  ^U",0
+        .byt MA_TYPE
+        .word ca0
+        .asc "Monter...     ^O",0
+        .byt MA_TYPE
+        .word ca1
         .asc "Attributs...  ^A",0
         .byt MA_TYPE
         .word c86
@@ -164,8 +170,18 @@ m_twou  .asc "Une seule colonne USB",0
 m_usbonly .asc "Cle USB seulement",0
 m_nosup .asc "Choisir d'abord un support",0
 m_sups  .asc "supports",0
+m_fonly .asc "Fichiers seulement",0
+m_imgm  .asc "Image montee en ",0
+m_ofkey .asc " de la cle",0
+m_dupq  .asc "Dupliquer en : ",0
+m_dupok .asc "Duplique",0
+m_tmpn  .asc "~CPADUP.TMP",0
+m_ko    .asc " Ko",0
+m_mntq  .asc "Monter en : ",0
+m_notimg .asc "Pas une image (.DSK ou .TAP)",0
+m_sysa  .asc "A: interdit (disquette systeme)",0
 m_usb   .asc "USB:",0
-m_usbro .asc "Cle USB : lecture et copie seulement",0
+m_usbro .asc "Cle USB : pas d'attributs",0
 m_usberr .asc "Erreur USB (cle absente ou pleine ?)",0
 m_noloci2 .asc "LOCI absent : cle USB inaccessible",0
 m_refus .asc " refuse(s)",0

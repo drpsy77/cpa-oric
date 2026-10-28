@@ -1,4 +1,4 @@
-# La clé USB et le LOCI depuis CP/A — spécification
+# La clé USB et le LOCI depuis CP/A
 
 Le but : ne plus repasser par le menu du LOCI (ni par son gestionnaire de fichiers) pour
 travailler. Depuis CP/A, on parcourt tous les supports du LOCI, on monte une disquette ou une
@@ -25,8 +25,8 @@ candidats. Le code commun (chemins, répertoire courant, supports, configuration
 
 - EXPORT, IMPORT, USBDIR (`docs/manuel.md`) et la colonne USB de CMDER (`docs/cmder.md`) :
   copie dans les deux sens, liste d'un répertoire, `0:` (mémoire interne du LOCI).
-- La clé est une passerelle : lecture et copie ; ni effacement, ni renommage, ni montage
-  (USBMOUNT monte ; renommer, effacer, dupliquer : lot 3).
+- La clé est une passerelle : copie dans les deux sens, montage (USBMOUNT, CMDER) ;
+  renommer, effacer, dupliquer dans CMDER seulement.
 - `progs/loci_inc.s` : appel de l'API du LOCI (ouvrir, lire, écrire, fermer, lister),
   répertoire courant, chemins, supports ; `progs/ljok_inc.s` : jokers.
 - Oricutron de test (`ORIC_LOCI`, `docs/atelier.md`) : un dossier du PC tient lieu de clé,
@@ -171,28 +171,17 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
   service). Si le LOCI refuse : `Erreur USB n`, et l'on reste dans CP/A. Ferme la boucle : `GRXASM JEU /O`,
   `EXPORT JEU.TAP`, `USBMOUNT JEU.TAP /B`.
 
-## 2. Décidé, pas encore fait
+**Lot 3 : opérations de CMDER sur la clé.**
 
-### 2.1 CMDER, opérations sur la clé
+### 1.5 CMDER, opérations sur la clé
 
-- **Renommer** (`^N`) sur la clé : un fichier ; refusé pour une image montée (`Image montee
-  en B:`).
-- **Effacer** (DEL) sur la clé : les fichiers visés, après `Effacer 3 fichiers de la cle
-  (O/N) ?` ; une image montée est sautée (`Image montee en B:`) ; pas les répertoires.
-- **Dupliquer** (nouvel article du menu Fichier ; raccourci à fixer au codage parmi les
-  touches libres, pas `^D`, qui efface sous le curseur dans la ligne de commande et EDIT) :
-  copie dans le même répertoire de la clé, nom proposé d'après l'original (dernier chiffre augmenté, sinon `1` ajouté : `PROJETS.DSK` →
-  `PROJETS1.DSK`, `JEU2.TAP` → `JEU3.TAP`), modifiable ; progression `Copie : 132/525 Ko`,
-  ESC arrête. La copie s'écrit sous un nom provisoire, renommé à la fin ; un arrêt efface le
-  provisoire.
-- **Monter** (nouvel article) sur un `.DSK` (`Monter en : B:`) ou un `.TAP` (cassette),
-  avec les mêmes règles et le même code que USBMOUNT (§ 1.4, `lmnt_inc.s`).
-- **Nom de la disquette** de chaque lecteur : plein écran, dans l'en-tête (`A: cpa.dsk
-  *.*  22/40 fic 126K libre`, nom coupé à 12) ; en deux colonnes, à la place du filtre
-  quand il n'y en a pas (`B:projets~   112K`).
-- Copier et Déplacer vers la clé, Voir, `?` : comme aujourd'hui.
+Renommer, Effacer (images montées sautées), Dupliquer (`^U`, nom provisoire `~CPADUP.TMP`
+renommé à la fin), Monter (`^O`, le code de USBMOUNT : `lmnt_inc.s`), nom de la disquette de
+chaque lecteur dans les en-têtes : détail dans `docs/cmder.md` (§ 6, « Clé USB »). Des
+fichiers seulement (`Fichiers seulement`) ; les noms longs se saisissent en entier (63
+caractères, la ligne défile).
 
-### 2.2 Mise en œuvre
+## 2. Mise en œuvre
 
 **API du LOCI** (firmware, `src/mia/main.c` pour la liste, `api/mnt.c`, `api/dir.c`,
 `usb/msc.c`), en plus de ce que `loci_inc.s` appelle déjà :
@@ -235,11 +224,11 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
   `mt_pre` / `mt_post` autour du BDOS : USBMOUNT, et CMDER au lot 3 ; ~0,8 Ko ; ses tampons
   sont placés par le programme après `loci_inc.s`). Messages en 37 colonnes, sans accents
   (`loci.msg`, `usbmount.msg`).
-- Oricutron de test : `mount` change la disquette insérée (lecteurs 0 à 3 : l'image de la
+- Oricutron de test : `rename` ; `mount` change la disquette insérée (lecteurs 0 à 3 : l'image de la
   clé, réécrite à l'éjection si elle a changé), `umount`, `getcwd`, XRAM `$8000-$81FF`
   inscriptible (au départ : la configuration d'un menu qui aurait monté les disquettes
   insérées) ; `boot` ne démarre rien, il écrit ses drapeaux dans `boot.txt` et répond par une
-  erreur (le démarrage s'essaie sur le vrai Oric). Lot 3 : `rename`.
+  erreur (le démarrage s'essaie sur le vrai Oric).
 
 ## 3. Lots
 
@@ -247,11 +236,9 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
 |---|---|---|---|
 | 1 | **Fait.** Répertoire courant et supports (§ 1) | Oricutron : deux clés, renumérotation, clé absente, `0:` ; matériel : `docs/essais-materiel.md` | CMDER +1 773 octets (8 blocs) ; USBDIR 2 810, IMPORT 3 443, EXPORT 3 055 (un bloc de plus chacun) |
 | 2 | **Fait.** USBMOUNT (§ 1.4) | Oricutron : montage, écriture puis relecture sur l'image montée, éjection du lecteur courant, refus, cassette, drapeaux de `/B` ; matériel : `docs/essais-materiel.md` | USBMOUNT 4 086 octets (2 blocs) ; HELP passe à 7 blocs |
-| 3 | **CMDER, opérations sur la clé** : Renommer, Effacer, Dupliquer, Monter, noms des disquettes dans les en-têtes | Oricutron, puis matériel | +1,5 à 2,5 Ko |
+| 3 | **Fait.** CMDER, opérations sur la clé (§ 1.5) | Oricutron : renommer, effacer (image montée sautée), dupliquer (ESC compris), monter, en-têtes ; matériel : `docs/essais-materiel.md` | CMDER +2 535 octets (9 blocs) |
 
-CMDER (15 354 octets, 8 blocs, 1 030 octets libres) passera probablement à 9 blocs au lot 3.
-Chaque lot se livre seul (règles de livraison habituelles) et sert dès sa sortie ; le lot 1
-est le socle des deux autres. Reste le lot 3.
+Les trois lots sont faits ; CMDER fait 17 889 octets (9 blocs, 543 octets libres).
 
 ## 4. Ce que ce niveau ne fait pas
 
