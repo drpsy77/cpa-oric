@@ -2,9 +2,8 @@
 ;  lmnt_inc.s — montage des images du LOCI (docs/usb.md § 2.1) : API
 ;  mount, umount, getcwd, configuration du menu du LOCI en XRAM (lecteurs
 ;  montés, noms des images), refus (signature, image déjà montée).
-;  Inclus par USBMOUNT (et CMDER au lot 3) avant ljok_inc.s (lupc,
-;  lp_last), loci.msg et loci_inc.s ; sans message à lui. Jamais
-;  assemblé seul.
+;  Inclus par USBMOUNT et CMDER avant loci.msg et loci_inc.s (lupc,
+;  lp_last, apath) ; sans message à lui. Jamais assemblé seul.
 ;
 ;  Configuration du menu (loci-rom, persist.c), fenêtre 1 de la XRAM :
 ;    $8000 "LOCI" ; $8004 fdc_on, $8005 tap_on, $8006 bit_on, $8007

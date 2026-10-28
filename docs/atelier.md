@@ -55,7 +55,7 @@ outils, et suit toujours la même boucle.
      a changé), `umount`, `getcwd` ; la XRAM `$8000-$81FF` est inscriptible (au départ, la
      configuration d'un menu qui aurait monté les disquettes insérées, sous le nom de leur
      fichier) ; `boot` ne démarre rien : il écrit ses drapeaux dans `boot.txt` du dossier et
-     répond par une erreur.
+     répond par une erreur ; `rename` (CMDER).
      `MIA_TRACE=1` écrit chaque opération du LOCI (et sa pile d'échange) sur la sortie
      d'erreur. Le contrôleur de
      disquettes imite aussi celui du LOCI (loci-firmware, `src/mia/oric/dsk.c`) : `$0319`

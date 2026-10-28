@@ -2,8 +2,8 @@
 
 Gestionnaire de fichiers en plein écran : une ou deux colonnes, disquettes A: à D: et clé USB
 du LOCI. Liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer,
-Attributs, tailles exactes ; copie avec un seul lecteur. Un `.COM` (15 354 octets, 8 blocs),
-rien de résident. C'est d'abord un outil de liste et de tri ; pour copier une disquette entière,
+Attributs, tailles exactes ; copie avec un seul lecteur ; sur la clé, Dupliquer et Monter. Un
+`.COM` (17 889 octets, 9 blocs), rien de résident. C'est d'abord un outil de liste et de tri ; pour copier une disquette entière,
 DISKCOPY est plus rapide.
 
 ## 1. Appel
@@ -113,6 +113,8 @@ exacte, et les blocs qu'il occuperait sur une disquette.
 | `^C` | Copier... |
 | `^X` | Déplacer... |
 | `^N` | Renommer... |
+| `^U` | Dupliquer... (clé) |
+| `^O` | Monter... (clé) |
 | `^A` | Attributs... |
 | `?` | Infos (taille exacte, blocs) |
 | `^E` | Tailles exactes |
@@ -135,7 +137,7 @@ Les articles tapent des codes (`$81-$9F`) : un article et son raccourci passent 
 aiguillage ; le raccourci est écrit à droite du libellé.
 
 - **Fichier** : Voir RET, Copier... ^C, Copier texte..., Deplacer... ^X, Renommer... ^N,
-  Effacer DEL, Attributs... ^A, Infos ?, Imprimer liste, Lecteur... ^L, Relire ^R,
+  Effacer DEL, Dupliquer... ^U, Monter... ^O, Attributs... ^A, Infos ?, Imprimer liste, Lecteur... ^L, Relire ^R,
   Quitter ^Q (ou ESC).
 - **Marque** : Marquer ESP, Marquer... +, Oter... -, Inverser *, Tout, Rien.
 - **Trier** : Ordre disque 1, Nom 2, Type 3, Taille 4.
@@ -189,8 +191,30 @@ Après toute opération : répertoire(s) relu(s), curseur gardé sur le même fi
 avec `_` pour un caractère interdit, `.DSK` refusé à l'envoi, fichier de la clé remplacé sans
 question). Vers la clé, la réponse `USB:rep` est relative au répertoire de la colonne USB (ou,
 sans elle, au répertoire courant de CP/A) ; `USB:` seul : ce répertoire-là. `/T` à la fin de la réponse de Copier (ou `Copier texte...`) change un LF seul en
-CR LF et une tabulation (TAB) en un espace. Déplacer d'une disquette vers la clé, pas l'inverse. Effacer, Renommer, Attributs
-refusés : `Cle USB : lecture et copie seulement`. Pas de copie de répertoire entier.
+CR LF et une tabulation (TAB) en un espace. Déplacer d'une disquette vers la clé, pas
+l'inverse. Pas d'attributs sur la clé (`Cle USB : pas d'attributs`), pas de copie de
+répertoire entier. Sur la clé, des fichiers seulement (`Fichiers seulement` pour un
+répertoire) :
+
+- **Renommer** (`^N`) : le nom long actuel est proposé (63 caractères au plus ; la ligne
+  défile) ; `Nom deja pris` ; une image montée est refusée (`Image montee en B:`).
+- **Effacer** (DEL) : `Effacer 3 fichiers de la cle (O/N) ?` (le nom long pour un seul) ;
+  les images montées sont sautées (bilan `2 efface(s), 1 refuse(s)` ; pour une seule :
+  `Image montee en B:`) ; les répertoires restent.
+- **Dupliquer** (`^U`, clé seulement) : copie dans le même répertoire ; nom proposé d'après
+  l'original, modifiable : le nombre à la fin du nom augmenté, sinon `1` ajouté
+  (`PROJETS.DSK` → `PROJETS1.DSK`, `JEU2.TAP` → `JEU3.TAP`, `JEU9` → `JEU10`) ;
+  `Nom deja pris` ; progression `Copie : 132/525 Ko`, ESC arrête (`Interrompu`). La copie
+  s'écrit sous `~CPADUP.TMP`, renommé à la fin ; un arrêt ou une erreur l'efface.
+- **Monter** (`^O`, clé seulement) : une image de disquette (`Monter en : B:`, A: refusé)
+  ou une cassette (`.TAP`, aussitôt), avec les règles de USBMOUNT (`docs/usb.md` § 1.4) ;
+  `Pas une image (.DSK ou .TAP)`, `Image montee en C:` ; message `C: puzzle.dsk`.
+
+**Nom de la disquette** de chaque lecteur, d'après le menu du LOCI (sur un LOCI seulement) :
+plein écran, dans l'en-tête (`A: cpa.dsk *.*    22/40 fic 126K libre`), coupé avec `~`
+(12 caractères au plus, moins si le filtre et le nombre de fichiers prennent la place) ; en
+deux colonnes, à la place du filtre quand il n'y en a pas (`B:projets-2~  112K`, 10
+caractères au plus).
 
 ## 7. Mise en œuvre
 
@@ -203,6 +227,12 @@ refusés : `Cle USB : lecture et copie seulement`. Pas de copie de répertoire e
   support, son numéro dans `E_SIZE`, sa ligne de `dv_fmt` en nom long) ; `usup` : le support
   marqué `*`.
 - **Répertoires seuls** : bit 1 de `hides` (le bit 0 cache les SYS), par colonne.
+- **Opérations sur la clé** : `u_ren`, `u_del`, `k_dup`, `k_mnt` ; montage par
+  `progs/lmnt_inc.s` (le même code que USBMOUNT ; ses tampons après `lnames`). Effacer
+  traite les fichiers du rang le plus haut au plus bas : un effacement ne change pas le rang
+  des suivants (`u_name` relit le répertoire). Saisie longue (`askl`) : 63 caractères, la
+  fin seulement si la ligne déborde. En-têtes : `hdnm` lit le nom en XRAM (`haslmn` : LOCI
+  et configuration du menu vus au démarrage).
 - **Textes** : barre de menus, messages, en-têtes de colonnes, noms des genres et colonne du
   signe de tri (`spos`, `spos2`) dans `progs/msg/fr/cmder.msg` et `progs/msg/en/cmder.msg`
   (`cpa-en.dsk` : `File Mark Sort View`, colonnes `NAME TYP SIZE RS N KIND`, réponses `Y`,

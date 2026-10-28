@@ -10,7 +10,7 @@
 bar     .byt 4
         .word mn_f, mn_m, mn_t, mn_v
 
-mn_f    .byt 12,16
+mn_f    .byt 14,16
         .asc "File",0
         .asc "View         RET",0
         .byt MA_TYPE
@@ -30,6 +30,12 @@ mn_f    .byt 12,16
         .asc "Erase        DEL",0
         .byt MA_TYPE
         .word c85
+        .asc "Duplicate...  ^U",0
+        .byt MA_TYPE
+        .word ca0
+        .asc "Mount...      ^O",0
+        .byt MA_TYPE
+        .word ca1
         .asc "Attributes... ^A",0
         .byt MA_TYPE
         .word c86
@@ -164,8 +170,18 @@ m_twou  .asc "Only one USB column",0
 m_usbonly .asc "USB stick only",0
 m_nosup .asc "Choose a device first",0
 m_sups  .asc "devices",0
+m_fonly .asc "Files only",0
+m_imgm  .asc "Image mounted in ",0
+m_ofkey .asc " from the stick",0
+m_dupq  .asc "Duplicate as : ",0
+m_dupok .asc "Duplicated",0
+m_tmpn  .asc "~CPADUP.TMP",0
+m_ko    .asc " KB",0
+m_mntq  .asc "Mount in : ",0
+m_notimg .asc "Not an image (.DSK or .TAP)",0
+m_sysa  .asc "A: refused (system disk)",0
 m_usb   .asc "USB:",0
-m_usbro .asc "USB key : read and copy only",0
+m_usbro .asc "USB stick : no attributes",0
 m_usberr .asc "USB error (key missing or full ?)",0
 m_noloci2 .asc "No LOCI : USB key unreachable",0
 m_refus .asc " refused",0

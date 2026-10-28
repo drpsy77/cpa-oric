@@ -73,6 +73,20 @@ commandes sur `cpa-en.dsk`) :
   le BASIC démarre sans charger, ou si `Erreur USB` s'affiche (code). Puis le retour à CP/A
   par le menu du LOCI (FDC à remettre en service) : les disquettes sont toujours montées.
 
+**Clé USB, lot 3 : CMDER sur la clé** (`docs/cmder.md` § 6 ; sur des **copies** d'images) :
+
+- `^U` sur une image de quelques centaines de Ko : nom proposé (`PROJETS1.DSK`), progression
+  `Copie : n/525 Ko`, durée à noter ; puis ESC au milieu d'une autre copie : `Interrompu`, et
+  pas de `~CPADUP.TMP` resté sur la clé (le vérifier aussi sur le Mac) ;
+- `^N` d'un fichier de la clé, avec un nom long (plus de 20 caractères : la ligne défile) ;
+  `^N` et DEL sur une image montée : `Image montee en B:` ;
+- DEL de plusieurs fichiers marqués (`Effacer 3 fichiers de la cle (O/N) ?`) : bilan, et
+  les fichiers ont bien disparu sur le Mac ;
+- `^O` sur un `.DSK` (`Monter en : C:`), puis sur un `.TAP` : le menu du LOCI montre les
+  mêmes images ;
+- en-têtes : `CMDER`, `CMDER A: B:` : nom de chaque image (coupé avec `~` s'il est long) ;
+  sur un Oric sans LOCI (s'il y en a un sous la main) : en-têtes comme avant.
+
 **Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
 
 - HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli

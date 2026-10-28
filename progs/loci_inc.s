@@ -1018,6 +1018,45 @@ lp_end
         cmp #"/"
 lpe     rts
 
+; lp_last : X = début du dernier élément d'apath (après le dernier
+;   « / ») ; C=1 s'il contient un joker (* ou ?)
+lp_last
+.(
+        ldy #0
+        ldx #0
+ylp      lda apath,y
+        beq ye
+        iny
+        cmp #"/"
+        bne ylp
+        tya
+        tax
+        bne ylp
+ye       stx lt0
+yw       lda apath,x
+        beq yno
+        inx
+        cmp #"*"
+        beq yy
+        cmp #"?"
+        bne yw
+yy       sec
+        ldx lt0
+        rts
+yno      clc
+        ldx lt0
+        rts
+.)
+
+; lupc : A en majuscule
+lupc
+        cmp #"a"
+        bcc lu_r
+        cmp #"z"+1
+        bcs lu_r
+        and #$DF
+lu_r    rts
+
 cw_fn   .asc "0:CPA.CWD"
 cw_nul  .byt 0
 m_msc   .asc "MSC "
