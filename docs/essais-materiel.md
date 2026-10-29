@@ -136,8 +136,8 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 
 **En attente**
 
-- TERM : le Pico W ne marche pas encore avec le LOCI (firmware du LOCI à venir) ; les essais
-  de TERM sont dans `docs/loci-modem-wifi.md` ;
+- TERM : la liaison avec `nc` sur le Mac marche dans les deux sens (LOCI 0.3.98) ; reste le
+  contre-essai avec la 0.3.1 officielle (`docs/loci-modem-wifi.md`, « Firmware du LOCI ») ;
 - TERM, touche RETURN : un CR reçu s'affiche maintenant en CR LF (`TERM /E` : l'écho de
   RETURN passe à la ligne) ; `/L` envoie CR LF ; essayé seulement dans Oricutron (boucle) ;
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera

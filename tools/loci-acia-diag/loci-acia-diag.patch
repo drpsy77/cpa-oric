@@ -1,0 +1,113 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index da7c582..1863c45 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -174,7 +174,7 @@ set_property(TARGET loci-firmware
+     LOCIFW_MAX_PHI2=8000
+     LOCIFW_EXFAT=1
+     LOCIFW_BOARD="Rev 1.x"
+-    EMBEDDED_TEST108K_ROM=1
++    #EMBEDDED_TEST108K_ROM=1  (diag build: ROM not available)
+     EMBEDDED_EXTRA_ROMS=1
+ )
+ if(DEFINED LOCIFW_VERSION)
+@@ -193,3 +193,7 @@ if(LOCIFW_COMPILE_DEFINITIONS MATCHES "LOCIFW_VERSION=\"\"")
+         COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_LIST_DIR}/mia/sys/sys.c
+     )
+ endif()
++
++# DIAG build: with Ubuntu's GCC 13 / newlib 4.4 the full newlib printf/scanf
++# code overflows RAM (copy_to_ram binary). Link against newlib-nano instead.
++target_link_options(loci-firmware PRIVATE --specs=nano.specs)
+diff --git a/src/mia/oric/acia.c b/src/mia/oric/acia.c
+index 77c33ed..2ad0892 100644
+--- a/src/mia/oric/acia.c
++++ b/src/mia/oric/acia.c
+@@ -106,6 +106,7 @@ void acia_task(void){
+     static uint8_t cnt = 0;
+     bool fire_irq = false;
+     if(acia_dev < 0){
++        IOREGS(0x038C) = (acia_line_state_dtr ? 0x02 : 0x00);  //DIAG: no modem
+         for(uint8_t i=0; i < CFG_TUH_CDC; i++){
+         //Only hooking up to CDC devices with AT commands aka modems
+         //TODO make configurable what CDC device to "mount"
+@@ -192,6 +193,7 @@ void acia_task(void){
+         acia_ctrl_todo = false;
+     }
+ 
++    IOREGS(0x038C) = (acia_dev >= 0 ? 0x01 : 0x00) | (acia_line_state_dtr ? 0x02 : 0x00);  //DIAG
+     __dmb();
+     if(fire_irq){
+         acia_stat_irq = ACIA_STAT_IRQ;
+diff --git a/src/mia/sys/mia.c b/src/mia/sys/mia.c
+index 1110cbb..6110f23 100644
+--- a/src/mia/sys/mia.c
++++ b/src/mia/sys/mia.c
+@@ -789,24 +789,30 @@ static __attribute__((optimize("O1"))) void act_loop(void)
+                     case CASE_WRITE(0x340):
+                     case CASE_WRITE(0x380):
+                         data = wait_act_data();
++                        IOREGS(0x0389)++;           //DIAG: ACIA writes seen
+                         if(write_enable)
+                             acia_write(data);
+                         break;
+                     case CASE_WRITE(0x341):
+                     case CASE_WRITE(0x381):
+                         data = wait_act_data();
++                        IOREGS(0x0389)++;           //DIAG: ACIA writes seen
+                         if(write_enable)
+                             acia_reset(false);
+                         break;
+                     case CASE_WRITE(0x342):
+                     case CASE_WRITE(0x382):
+                         data = wait_act_data();
++                        IOREGS(0x0389)++;           //DIAG: ACIA writes seen
++                        IOREGS(0x038A) = data;      //DIAG: last CMD byte on the bus
+                         if(write_enable)
+                             acia_cmd(data);
+                         break;
+                     case CASE_WRITE(0x343):
+                     case CASE_WRITE(0x383):
+                         data = wait_act_data();
++                        IOREGS(0x0389)++;           //DIAG: ACIA writes seen
++                        IOREGS(0x038B) = data;      //DIAG: last CTRL byte on the bus
+                         if(write_enable)
+                             acia_ctrl(data);
+                         break;
+@@ -930,6 +936,7 @@ static __attribute__((optimize("O1"))) void act_loop(void)
+                     case CASE_READ(0x341):
+                     case CASE_READ(0x381):
+                         acia_clr_irq();
++                        IOREGS(0x0388)++;           //DIAG: status reads seen
+                         break;
+                     case CASE_READ(0x03AC): // xstack
+                         if (xstack_ptr < XSTACK_SIZE)
+@@ -1491,6 +1498,28 @@ void mia_init(void)
+    //LOCI identity marker
+    IOREGS(0x0319) = 'L';
+ 
++    //DIAG (ACIA read path probe, CP/A test build)
++    //  $0384-$0387 and $0344-$0347 : fixed pattern A5 5A 0F F0
++    //  $0388 : count of status ($0381) reads seen by the LOCI
++    //  $0389 : count of writes to $0380-$0383 seen by the LOCI
++    //  $038A / $038B : last CMD / CTRL byte written, as seen on the bus
++    //  $038C : bit 0 modem mounted, bit 1 DTR on
++    //  $038D : $D1 (diag build marker)
++    {
++        static const uint8_t pat[4] = {0xA5, 0x5A, 0x0F, 0xF0};
++        for(int i=0; i<4; i++){
++            IOREGS(0x0384 + i) = pat[i];
++            IOREGS(0x0344 + i) = pat[i];
++        }
++        for(int i=0x0388; i<=0x038F; i++)
++            IOREGS(i) = 0x00;
++        IOREGS(0x038D) = 0xD1;
++        //Read response on $0384-$038F (bits 1-3 of map[1]) and $0344-$0347 (bit 17 of map[0])
++        for(int i=(0x84 >> 2); i<=(0x8F >> 2); i++)
++            mia_iopage_read_enable_map[1] |= (0x1UL << (i & 0x1F));
++        mia_iopage_read_enable_map[0] |= (0x1UL << ((0x44 >> 2) & 0x1F));
++    }
++
+     mia_boot_settings = 0;
+     mia_boot_state = MIA_IDLE;
+ 
