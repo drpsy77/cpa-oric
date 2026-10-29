@@ -1,7 +1,7 @@
 # Relier un Raspberry Pi Pico W (modem WiFi) au LOCI
 
-**État** : le Pico W ne marche pas encore avec le LOCI ; un firmware du LOCI qui le prenne
-en charge est attendu. Ce document reste la marche à suivre.
+**État** : la liaison marche dans les deux sens (Oric, LOCI, Pico W, WiFi, Mac), avec le
+firmware 0.3.98 du LOCI (`tools/loci-acia-diag/`, voir « Firmware du LOCI »).
 
 But : donner à un vrai Oric un accès réseau (envoi et réception de fichiers) à travers le
 LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation.
@@ -23,7 +23,10 @@ sans `T`, `P` ou `I`, répond `ERROR`).
   du firmware vise le Pico W ; rien n'indique qu'elle fonctionne sur le Pico 2 W.
 - **Un câble pour le relier au LOCI.** Le Pico W a une prise micro-USB, le LOCI une prise
   USB-C en mode hôte : il faut un câble USB-C mâle vers micro-USB mâle qui transporte
-  les données (ou un adaptateur USB-C OTG et un câble micro-USB classique).
+  les données (ou un adaptateur USB-C OTG et un câble micro-USB classique). Un câble de
+  charge seule alimente le Pico (sa diode s'allume) mais le LOCI ne voit aucun modem :
+  `$038C` reste à 0 dans `ACIADIAG`, l'état de l'ACIA reste `70` et les ordres de l'Oric
+  (DTR, vitesse) ne sont pas appliqués.
 - **Peut-être un hub USB.** Le LOCI n'a qu'un port USB. Si `cpa.dsk` est sur une clé USB,
   il faut un hub pour la clé et le Pico. La documentation du LOCI conseille un petit hub
   USB 2.0, plutôt ancien et simple : la plupart des hubs récents ne marchent pas avec lui.
@@ -64,6 +67,23 @@ sans `T`, `P` ou `I`, répond `ERROR`).
       (cd src/pico-sdk && git submodule update --init)
       (cd src/pico-extras && git submodule update --init)
       mkdir src/bld && cd src/bld && cmake -G Ninja .. && ninja    # -> wifi_modem.uf2
+
+## Firmware du LOCI
+
+- **0.3.98 « acia-diag »** (`tools/loci-acia-diag/`) : les sources de la 0.3.1 (dépôt
+  `sodiumlb/loci-firmware`, branche `main`), la ROM du LOCI 0.3.0 recompilée et intégrée,
+  et des registres de contrôle en lecture seule : motif `A5 5A 0F F0` en `$0384-$0387` et
+  `$0344-$0347`, lectures de `$0381` vues (`$0388`), écritures dans `$0380-$0383` vues
+  (`$0389`), derniers octets écrits en commande et contrôle (`$038A`, `$038B`), modem monté
+  et DTR (`$038C`, bits 0 et 1), marque `$D1` (`$038D`). `CONFIG.SYS` garde son format. Mode
+  d'emploi et lecture des résultats : `tools/loci-acia-diag/LISEZMOI.md`. Construit avec
+  GCC 13 et newlib-nano.
+- **0.3.1 officielle** : `TERM /D` y lisait `A7 4C D0` (état, commande, contrôle), mais le
+  Pico était alors relié par un câble sans données ; contre-essai à refaire avec le bon
+  câble (`docs/etat.md` § 2 point 4).
+- La branche de l'issue 17 du firmware (ACIA en `$0340` ou `$0380`, mars 2026) n'est pas
+  finie : elle enregistre `CONFIG.SYS` avant que le système de fichiers soit monté et ne
+  réapplique pas le réglage lu ; ne pas l'installer en l'état.
 
 ## Préparer le Pico, sur le Mac
 
@@ -106,9 +126,13 @@ port 23 par défaut. `ATNETn` : 0 sans telnet, 1 vrai, 2 simulé.
 
 ## Tester la chaîne
 
-Avec `TERM` (ou `TERM /E`) côté Oric et `nc -l 2323` côté Mac, on vérifie toute la chaîne :
-Oric, LOCI, Pico, WiFi, Mac. Si les caractères passent dans les deux sens, le pilote série
-et le transfert XMODEM de CP/A n'auront plus d'inconnue matérielle. Oricomms (terminal
+1. **Le LOCI et le modem** : `ACIADIAG.TAP` (`tools/loci-acia-diag/`) monté comme cassette,
+   BASIC, `CLOAD""`. Attendu avec le Pico branché : marque `D1`, les deux motifs justes,
+   modem `1`, ACIA avant `10 2 0`, 10 lectures et 2 écritures vues, `B 1E`, ACIA après
+   `18 B 1E` (le modem a déjà répondu), modem `3`. Sous CP/A : `DEBUG`, `D 0380`.
+2. **La chaîne entière** : `TERM /E` côté Oric, `nc -l 2323` côté Mac ; `AT` répond `OK`,
+   puis `ATDT-IP_DU_MAC:2323` : ce qui est tapé d'un côté apparaît de l'autre. Essayé :
+   ça passe dans les deux sens. Oricomms (terminal
 Prestel des années 80) plante à la première touche sur ce montage : ne pas s'en servir.
 
 L'ACIA du LOCI (`loci-firmware`, `src/mia/oric/acia.c`) : registres toujours présents en
@@ -120,9 +144,9 @@ Accès : `LDA` / `STA` absolus seulement. Une écriture indexée (`STA (zp),Y`, 
 `POKE` en BASIC) lit l'adresse visée avant de l'écrire : sur le registre de données, c'est un
 octet reçu consommé (avertissement de l'auteur du LOCI, forum defence-force, sujet 2926).
 Même sujet : sodiumlb affirme que les binaires publiés (0.3.1) marchent en `$0380` ; un autre
-utilisateur y lit pourtant `$36`/`$76` (bus non piloté), cause non trouvée. Sur l'Oric de
-Pierre (0.3.1, Pico vu « CDC modem mounted ») : `TERM /D` lit `A7 4C D0` (état, commande,
-contrôle) avant et après le réglage, au lieu de `70 02 00` puis `10 0B 1E`.
+utilisateur y lit pourtant `$36`/`$76` (bus non piloté), cause non trouvée. Avec la 0.3.98 :
+`70 02 00` au démarrage sans modem, `10 02 00` avec le Pico monté, puis `18 0B 1E` après le
+réglage (voir « Firmware du LOCI » pour la 0.3.1).
 
 ## Côté CP/A
 

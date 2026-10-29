@@ -162,12 +162,18 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    - L'équivalent de `CSAVE` est `CASSETTE.COM` (décidé, `docs/oric-basic.md` § 2). Sous
      CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette (timing
      à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
-4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md` ; Pico W préparé, firmware
-   recompilé, liaison Mac vérifiée ; **le Pico W ne marche pas encore avec le LOCI** : en
-   attente d'un firmware du LOCI qui le prenne en charge, TERM reste à essayer) : `TERM.COM` fait (scrute l'ACIA lui-même, sans le
+4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`). La liaison marche dans les
+   deux sens : Oric, LOCI (firmware 0.3.98 de diagnostic, `tools/loci-acia-diag/`), Pico W,
+   WiFi, `nc` sur le Mac, avec `TERM /E`. `TERM.COM` fait (scrute l'ACIA lui-même, sans le
    BIOS). Reste : pilote série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le
    LOCI, `$031C` dans Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord
-   libérer de la place, § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py`.
+   libérer de la place, § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; passerelle
+   vers Claude sur le Pi 400 (serveur TCP : appel de l'API, accents translittérés, lignes de
+   38 colonnes, historique gardé côté Pi).
+   - Contre-essai à faire : la 0.3.1 officielle avec le câble de données (`ACIADIAG.TAP`,
+     `TERM /D`). Avec un câble sans données, elle lisait `A7 4C D0` en `$0381-$0383` ;
+     la même source recompilée (0.3.98) lit `70 02 00`. Résultat à porter dans l'issue 17
+     du firmware du LOCI.
 5. **Sûreté des fichiers et défauts constatés**
    - **Contrôleur du LOCI qui ne répond plus après un RESET pendant `DISKCOPY A: D:`**
      (D: vide ; `*RESET* at C6C6`, disquettes intactes). Le pilote en fait maintenant une
