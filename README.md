@@ -14,20 +14,21 @@
 - **Rock solid**: on a real Atmos with a LOCI, whole working sessions without a single
   crash or reboot.
 
-**Try it in five minutes.** Download [`cpa-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-en.dsk), put it on the USB stick of your LOCI
+**Try it in five minutes.** Download [`cpa-examples-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-examples-en.dsk), put it on the USB stick of your LOCI
 (or the SD card of your Cumulus) and boot, or run it in Oricutron (see below). At the `A>`
 prompt:
 
     DIR               what's on the disk
     HELP              help topics
-    LOGO DEMO         then type DEMO: the turtle draws a tree
     GRAPHER MAP       explore a random island of tiles (arrows, Q to quit)
     GRXASM SNAKE      translate the snake game into assembly...
     ASM SNAKE         ...assemble it on the Oric...
     SNAKE             ...and play the compiled version
     CMDER             full-screen file manager (ESC to quit)
 
-The FUNCT key opens the menus everywhere.
+The FUNCT key opens the menus everywhere. Then [`cpa-anim-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-anim-en.dsk):
+`DEMO` (pictures and animations); [`cpa-logo-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-logo-en.dsk): `LOGO DEMO`, then
+`DEMO` (the turtle draws a tree).
 
 **See it run**: GRAPHER and the scrolling road of `ROAD.GRX` (video, French version of the disk).
 
@@ -40,9 +41,11 @@ Two variants are built from the same sources:
 - **`build/cpa-en.dsk`**, the main version: a bootable disk for the Microdisc controller, and
   therefore also for the Cumulus and the LOCI. The system loads into the 16 KB of overlay RAM
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
-  intact. Four more disks, by use: `cpa-logo-en.dsk`, `cpa-notes-en.dsk`, `cpa-asm-en.dsk`,
-  `cpa-anim-en.dsk`; and a blank one, `cpa-project-en.dsk`, for your work in `B:` next to the
-  system disk in `A:`. Every disk exists in English and in French (`cpa.dsk`, `cpa-logo.dsk`...):
+  intact. This is the system disk: every program (except LOGO) and all the help, no
+  examples. Four more disks, by use, start on their own with their tools: `cpa-anim-en.dsk`
+  (the demonstration), `cpa-logo-en.dsk` (LOGO), `cpa-examples-en.dsk` (GRAPHER and ASM
+  examples), `cpa-notes-en.dsk` (writing); and a blank one, `cpa-project-en.dsk`, for your
+  work in `B:` next to the system disk in `A:`. Every disk exists in English and in French (`cpa.dsk`, `cpa-logo.dsk`...):
   the same programs and the same examples, with the messages, menus, help and examples in the
   language of the disk; the examples have English names on the English disks (`MAP.GRX` is
   `CARTE.GRX` in French; the list is in `files/en/noms.txt`). LOGO speaks the language of the

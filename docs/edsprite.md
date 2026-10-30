@@ -4,7 +4,7 @@
 (genre 0 : dessin et silhouette) et tuiles ou caractères (genre 1 : dessin seul, copiés dans
 la police par `TFONT`). Il remplace HEX et `tools/mkspr.py` pour fabriquer ces fichiers sur
 l'Oric. Un `.COM` (8 967 octets ; 8 802 en anglais), rien de résident. Sur les disquettes qui
-ont GRAPHER : `cpa.dsk`, `cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` et leurs jumelles
+ont GRAPHER : `cpa.dsk`, `cpa-exemples.dsk`, `cpa-anim.dsk` et leurs jumelles
 anglaises.
 
 ## 1. Appel

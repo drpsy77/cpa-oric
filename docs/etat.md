@@ -60,10 +60,13 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
-Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.dsk`,
-`cpa-asm.dsk`, `cpa-anim.dsk`, et `cpa-projet.dsk` (vierge, sans système : le travail en B:,
-la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
-`cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
+Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
+suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
+86 Ko libres), `cpa-anim.dsk` (la démonstration, 44 Ko libres), `cpa-logo.dsk` (LOGO seul,
+200 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 50 Ko libres), `cpa-notes.dsk` (écrire, 248 Ko libres), et `cpa-projet.dsk` (vierge,
+sans système : le travail en B:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
+`cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
 **Mesure** : 1 480 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
@@ -340,8 +343,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      anglais (`files/en/noms.txt`) : `.GRX`, `.LOG` (ELIZA réécrit pour l'anglais :
      table de reflet, mots-clés, réponses), `DEMO.BAT`,
      `HELLO.ASM`, `GTEST.ASM` (`GTEST.COM` anglais). `ROTSCROL.GRX` et `JEU.GRX`
-     (`PUZZLE.GRX`), cités au § 14 de `grapher.md`, sont maintenant sur `cpa.dsk` et
-     `cpa-logo.dsk` (et leurs jumelles).
+     (`PUZZLE.GRX`), cités au § 14 de `grapher.md`, sont sur `cpa-exemples.dsk` (et sa
+     jumelle).
    - Fait aussi : `docs/en` décrit les disquettes anglaises (écrans, menus, messages de
      `cpa-en.dsk` ; `architecture.md` § 7) ; README.md renvoie à `cpa-en.dsk`.
    - Fait aussi : **LOGO** (`logo.md`). Une seule table de primitives
@@ -522,7 +525,7 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
   octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 18 Ko (18 sur `cpa-en.dsk`), peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste 86 Ko (86 sur `cpa-en.dsk`), peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

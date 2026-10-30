@@ -4,7 +4,7 @@ build/*
 !build/cpa.rom
 !build/cpa-logo.dsk
 !build/cpa-notes.dsk
-!build/cpa-asm.dsk
+!build/cpa-exemples.dsk
 !build/cpa-anim.dsk
 !build/cpa-projet.dsk
 !build/cpa-en.dsk
@@ -20,7 +20,7 @@ tools/clk/
 tools/clk-mac/
 !build/cpa-logo-en.dsk
 !build/cpa-notes-en.dsk
-!build/cpa-asm-en.dsk
+!build/cpa-examples-en.dsk
 !build/cpa-anim-en.dsk
 !build/cpa-project-en.dsk
 *~

@@ -245,35 +245,37 @@ them), REN answers `File protected`; EDIT and HEX refuse to save a read-only
 file, COPY and IMPORT answer `file protected`. Programs go through BDOS function 30 (bit 7 of
 byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of all files.
 
-On the disk provided, the commands and applications (COPY, STAT, HELP, EDIT, LOGO, ASM...),
-README.TXT, USBCD.BAT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC and SPR.INC are
-**read-only** (R/O) and stay **visible** in DIR, as on a CP/M disk: an `ERA *.*` or a name
-completed with ESC can no longer erase them. To replace a command with a new version:
-`SET COPY.COM RW`, then copy it. The examples (HELLO, GTEST and their `.ASM`, DEMO.LOG, the
-`.GRX` files, HERO.SPR, TILES.SPR) stay changeable: `ASM HELLO` rewrites HELLO.COM. No file is hidden
-(SYS): the attribute stays at the user's disposal.
+**The system disk** (`cpa-en.dsk`) has every program except LOGO (its own disk:
+`cpa-logo-en.dsk`), and no examples (disk `cpa-examples-en.dsk`); HELP has all its topics.
+Everything on it is **read-only** (R/O): an `ERA *.*` or a name completed with ESC cannot
+erase anything. To replace a command with a new version: `SET COPY.COM RW`, then copy it.
+`DIR` shows the applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER, GRXASM, EDSPRITE,
+ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; the basic
+commands (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO), MEM, POKE, GO, the script
+USBCD.BAT, the eight libraries (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) and EDIT.CFG (changeable) are **hidden** (SYS): `DIRS` shows them.
 
 SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still runs (a file
 renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BAT` files).
 
-**Disks by use.** `build.sh` also makes four bootable disks, lighter to look at. On each one,
-the basic commands (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, EXPORT,
-IMPORT, USBDIR, USBMOUNT, VOIR, CMDER, and the script USBCD.BAT) are read-only and **hidden** (SYS): `DIR` only shows the disk's
-tool and the working files, `DIRS` shows everything. EDIT is on every disk, read-only and
-visible.
+**Disks by use.** `build.sh` also makes four bootable disks: each one starts on its own and
+carries its tools (one drive is enough). On each one, the basic commands (TYPE, ERA, REN, SET,
+STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), the USB stick (EXPORT, IMPORT, USBDIR,
+USBMOUNT, the script USBCD.BAT), TERM and XFER are read-only and **hidden** (SYS): `DIR` only
+shows the disk's tool and the working files, `DIRS` shows everything. EDIT is on every disk,
+read-only and visible.
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-logo-en.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, ARROWS.LOG, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX |
-| `build/cpa-notes-en.dsk` | EDIT | | |
-| `build/cpa-asm-en.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, MKTAP, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim-en.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim-en.dsk` (the demonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, the eight libraries | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-logo-en.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, ARROWS.LOG |
+| `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-notes-en.dsk` (writing) | EDIT | | |
 
 On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).
 
 **French disks.** Every disk has a French twin: `cpa.dsk`, `cpa-logo.dsk`, `cpa-notes.dsk`,
-`cpa-asm.dsk`, `cpa-anim.dsk`, `cpa-projet.dsk`. Same programs, same files, same attributes,
+`cpa-exemples.dsk`, `cpa-anim.dsk`, `cpa-projet.dsk`. Same programs, same files, same attributes,
 with the system, messages, menus, help (HELP, README.TXT), `EDIT.CFG` and the libraries of
 translated programs in French (the "yes" key is `O` there, and "all" is `T` in EDIT's
 replacements). The examples have French names there; the same code, with comments, displayed
@@ -301,12 +303,13 @@ the files of the French one.
 336 KB for files), to put in `B:` and copy for each project.
 
 Suggested use: the system disk in `A:` (`cpa-en.dsk`, or a disk for the task), a project disk in
-`B:`, and `B:` as the current drive. From `B>`, `EDIT`, `LOGO`, `ASM`, `GRAPHER` or `GRXASM`
-are found on `A:`, and so are the libraries (`CPA.INC`, `HIRES.INC`, `GRX.INC`...) that ASM and
+`B:`, and `B:` as the current drive. From `B>`, `EDIT`, `ASM`, `GRAPHER` or `GRXASM` are
+found on `A:` (LOGO, with `cpa-logo-en.dsk` in `A:`), and so are the libraries (`CPA.INC`, `HIRES.INC`, `GRX.INC`...) that ASM and
 GRXASM look for on the project's drive, then on A: to D:; everything produced (`.ASM`,
 `.COM`, `.SYM`, data files) goes to `B:`, and `DIR` only shows the work in progress.
-`build/cpa-en.dsk` remains the complete disk, everything visible, and the demonstration; about
-70 KB are left on it, little for working (a GRXASM translation quickly writes over 40 KB).
+With a single drive, boot the disk for the task and work on a copy (DISKCOPY) rather than on
+the original. About 86 KB are left on `cpa-en.dsk`, little for working (a GRXASM translation
+quickly writes over 40 KB).
 
 Keys: CTRL-T toggles upper case (indicator `A`, or `a` for lower case, at the end of the menu
 bar), CTRL-C on an empty line at the prompt does a warm start. The RESET button returns to the
