@@ -81,6 +81,9 @@ puis quelques commandes sur `cpa-en.dsk`) :
   répertoire ;
 - avec le firmware 0.3.98 (clé décrite `MSC  GB`, sans taille) : `USBDIR /S` montre la clé
   (`1: General UDisk  Go *`), `USBCD files` écrit `1:/FILES` (avec le numéro) ;
+- `0:CPA.CWD` absent au départ : `USBCD files` le crée (`USBDIR 0:` le montre), `USBDIR`
+  liste `FILES` ; `USBCD ..` le réécrit ; `EXPORT README.TXT 0:NEW.TXT` (fichier absent de
+  `0:`) : copié ; de même une copie vers `0:` dans CMDER ;
 - `USBMOUNT B: 0:CPA-ANIM.DSK` : `Pas d'image sur 0:`, rien ne se fige ; de même `^O` dans
   CMDER sur une image de `0:` ;
 - passer par le menu du LOCI (parcourir la clé), revenir à CP/A, `USBDIR` : pas de gel

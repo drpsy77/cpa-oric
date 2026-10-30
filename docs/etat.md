@@ -41,9 +41,9 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | HELP | 12 580 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
-| CMDER | 17 935 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
-| EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 933 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
-| USBMOUNT | 4 095 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
+| CMDER | 17 961 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
+| EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
+| USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
 | TERM | 852 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XFER | 2 037 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` | `manuel.md` |
@@ -224,7 +224,9 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      la clé se décrit `1: MSC  GB General  UDisk` ; `dv_next` l'écartait (il attendait un
      chiffre), d'où `USBDIR /S` sans la clé, un répertoire courant sans support (`/files`)
      et `CPA.CWD` qui ne retenait rien. Corrigé (`docs/usb.md` § 2) ; à revérifier sur le
-     matériel. Le montage d'une image de `0:` (`USBMOUNT B: 0:CPA-ANIM.DSK`) a figé le
+     matériel. `CPA.CWD` n'était de plus jamais créé : sur `0:`, le firmware traduit
+     `O_CREAT+O_TRUNC` sans `O_CREAT` (`std.c`) ; contourné dans `usb_open` (créer, puis
+     tronquer), reproduit dans Oricutron ; à signaler au firmware du LOCI. Le montage d'une image de `0:` (`USBMOUNT B: 0:CPA-ANIM.DSK`) a figé le
      LOCI (le firmware ne vérifie pas l'ouverture du fichier, `mnt.c`) : refusé par
      USBMOUNT et CMDER (`Pas d'image sur 0:`) ; à signaler au firmware du LOCI. Un
      `USBDIR` a aussi figé l'Oric et le LOCI après un passage par le menu du LOCI, avec un
@@ -509,9 +511,9 @@ multiple de 2 048) :
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
   blocs, 1 844 octets libres dans le dernier. HELP (12 580) prend 7 blocs, 1 756 octets libres dans le dernier (12 417 en anglais, 7
-  blocs). CMDER (17 935) prend 9 blocs, 497 octets libres dans le dernier ;
+  blocs). CMDER (17 961) prend 9 blocs, 471 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
-  USBMOUNT (4 095) prend 2 blocs, plein à 1 octet près (24 en anglais) ; MKTAP (4 079)
+  USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)
   aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;

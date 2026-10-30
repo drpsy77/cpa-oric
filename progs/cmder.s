@@ -7344,6 +7344,7 @@ d1      lda #1
 ; Clé USB du LOCI : bibliothèques communes (page zéro $30-$3B, tampons
 ; args, iobuf, dirent après elles)
 #include "lmnt_inc.s"
+#include "lcwp_inc.s"
 #include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
 

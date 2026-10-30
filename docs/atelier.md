@@ -43,7 +43,8 @@ outils, et suit toujours la même boucle.
      `$03A0-$03BF`, celle du Picocomputer 6502) est alors simulée dans `machine.c`, avec ce
      dossier pour clé USB (`0:`, la mémoire interne, est son sous-dossier `int`). Seules les
      opérations de fichiers et de répertoires sont simulées, et d'un coup (le vrai LOCI fait
-     attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT.
+     attendre le 6502 dans `$03B0`) ; la casse des noms est ignorée, comme sur une clé FAT ;
+     comme le firmware, `O_CREAT+O_TRUNC` ne crée pas un fichier absent de `0:`.
      De quoi essayer EXPORT, IMPORT, USBDIR et CMDER sans le matériel. **Plusieurs clés** :
      les sous-dossiers `usb1` à `usb8` du dossier (le numéro est l'adresse USB, comme sur le
      LOCI ; sans eux, le dossier lui-même est la clé 1), la description de chacune dans
