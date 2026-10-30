@@ -217,6 +217,18 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      bloqué, ne lève jamais INTRQ (l'attente du premier octet échouait déjà) ; à voir sur le
      LOCI (`docs/essais-materiel.md`). Si c'est un rebond : ignorer une NMI arrivée peu après
      la précédente.
+   - **Clé USB absente de la liste des appareils** (vrai LOCI, 30/10/2026) : `USBDIR /S` ne
+     montre que `0:` ; le répertoire courant retombe sur `/`, sans numéro de support
+     (`USBDIR` affichait `/files`), d'où les chemins envoyés sans lecteur (le LOCI prend
+     alors son lecteur courant FatFs) et `CPA.CWD` qui ne retient rien. `USBDIR 1:` :
+     erreur 43 (FatFs 11, lecteur invalide) : la clé n'est pas en 1:. Piste : le firmware
+     rend un nom vide pour un appareil monté sans texte d'état (`dir.c`, liste des
+     appareils), et `dv_next` (`loci_inc.s`) prend un nom vide pour la fin de la liste ;
+     correction possible : sauter les noms vides, 8 appareils au plus
+     (`CFG_TUH_DEVICE_MAX`), ~13 octets (USBMOUNT, plein à 10 octets près, passerait à 3
+     blocs). À confirmer par la liste du menu du LOCI. Après un passage par le menu du
+     LOCI, un `USBDIR` a figé l'Oric et le LOCI (lien possible avec les chemins sans
+     lecteur) : à reproduire.
    - EDIT et GRAPHER (`SAVE`, `BSAVE`, `BSAVE SCREEN`) passent la batterie
      `tools/test_fichiers.py` (disque plein, répertoire plein, R/O, RESET balayé). Reste
      une fenêtre d'une demi-seconde, entre l'effacement de l'ancien fichier et le
@@ -450,51 +462,78 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
 
-**Décidé par Pierre le 23/10/2026 (rien codé) : PUT descend en banque**, avant de toucher
-aux menus (fonction phare, gardés résidents). PUT sert très peu ; le pilote série (~300
-octets, § 2 point 4 : console à distance) est plus utile.
-- Le tampon de PUT (`$F7C0-$FCFF`, 1 280 octets) devient une **fenêtre partagée**. Le code
-  de PUT (`src/put.s`, 525 octets de `put_char` à `cmd_do`) va dans un fichier de banques
-  sur A: (type SYS, chargé par les routines de fichiers résidentes) ; seuls restent les
-  crochets du BIOS, du BDOS et du CCP (`put_on`, `put_end`, `put_flush`...) et un chargeur
-  de banque. PUT chargé : son code et un tampon plus petit (~750 octets) dans la fenêtre.
-  Variables de PUT en page 2 : internes (`$02AA-$02AE`), pas de contrat touché.
-- Dans la même fenêtre, des fonctions rares qui ne servent jamais pendant un PUT :
-  - le **code du démarrage à froid** (`ram_test`, `ram_report`, et ce qui ne sert qu'à la
-    mise en route dans `hw_init` / `font_init`, à vérifier) : chargé avec le système dans
-    la fenêtre, exécuté une fois, puis écrasé ; ni banque ni accès disque ; ~200 à 300
-    octets ;
-  - **pas** la complétion des commandes : sur un vrai Microdisc, un chargement de banque
-    à chaque ESC ajouterait du retard à une complétion déjà lente. Elle reste résidente.
-  - **GSAVE / GLOAD** (BDOS 115 op 12 et 13, `g_gsave` à `img_load`, et les commandes du
-    CCP `cmd_gsave`, `cmd_gload`, `img_msg` : ~300 octets) et **`SAVE n fichier`**
-    (`cmd_save`, ~130 octets) : rares, et déjà des accès disque (5 Ko pour une image), le
-    chargement de la banque se voit peu. Bonus : GSAVE doit de toute façon passer par
-    `NOM.$$$` (§ 2 point 5), écrit dans la banque sans coût résident.
-  - **Prêt de la fenêtre pendant un PUT** : GLOAD / GSAVE sont appelés par GRAPHER, LOGO
-    et les programmes traduits, donc possibles sous `PUT`. À l'entrée de tout appel BDOS,
-    PUT a déjà vidé son tampon (`put_flush`) ; le code de PUT ne garde pas d'état hors de la page 2 (à vérifier : `pc_st` est modifié par le code, mais recalculé à chaque caractère).
-    Donc : copie de la console suspendue (`put_on` à 0), banque IMG chargée, opération,
-    banque PUT rechargée, `put_on` rendu. Coût : une relecture de ~525 octets, rare.
-- **Pas les fonctions graphiques** (BDOS 115, `gfx.s`) : ~1,7 Ko, plus que la fenêtre ;
-  appelées sans cesse par GRAPHER, LOGO et les programmes traduits (`GRX.INC`,
-  `HIRES.INC`) ; et un PUT d'un programme qui dessine (`PUT LOG.TXT GRAPHER DEMO`, en
-  SPLIT ou en HIRES) aurait besoin des deux à la fois dans la fenêtre. Aujourd'hui ce cas
-  marche (texte copié, dessin à l'écran, tampon de PUT dans l'overlay hors de l'image) ;
-  il doit continuer de marcher.
-- Gain résident estimé : ~525 (PUT) + ~250 (démarrage) + ~430 (GSAVE, GLOAD, SAVE), moins
-  le chargeur et le prêt (~120) : ~1,1 Ko ; le pilote série (~300) y tient avec de la marge.
-- **Les banques sont une option, pas du dur** (pour la construction sur l'Oric, § 2 point
-  8) : chaque module qui peut descendre (PUT, IMG = GSAVE / GLOAD / SAVE) a une option à
-  trois valeurs dans le fichier de configuration : résident, en banque, absent. Résident :
-  assemblé avec le reste, appels directs (le relais devient un simple `JSR`) ; en banque :
-  assemblé dans le fichier de banques, appelé par le relais ; absent : le numéro répond
-  « absent ». Chargeur et prêt de fenêtre assemblés seulement si au moins un module est en
-  banque. Le code du démarrage à froid va toujours dans la zone du tampon de PUT (gain sans
-  banque). Le contrôle de la fin du code (`rom_end`) dit à l'assemblage s'il faut en
-  descendre un. La ROM n'a que résident ou absent.
-- À vérifier : que le chargeur du système remplit bien `$F7C0-$FCFF` depuis la disquette ;
-  la vitesse de chargement de la banque de PUT sur un vrai Microdisc et sur le LOCI.
+**Décidé (23/10/2026, précisé le 30/10/2026), rien codé : PUT descend dans une fenêtre**,
+avant de toucher aux menus (fonction phare, gardés résidents). Le pilote série (~300 octets,
+§ 2 point 4 : console à distance) est plus utile que PUT résident.
+
+- **La fenêtre** : `$F7C0-$FCFF` (1 344 octets, aujourd'hui `PUT_SAVE` et le tampon de PUT).
+  Le chargeur d'amorçage lit les 16 Ko `$C000-$FFFF` (64 secteurs, `boot/boot.s`) : ce que
+  l'image du système met dans la fenêtre y est au démarrage (vérifié : les secteurs 3-66
+  de `cpa.dsk` et `cpa-en.dsk` sont `cpa_sys.bin`). Pas de place dans les pistes système
+  (LSN 3-66 pris, 67 seul libre) : une banque rechargée est un fichier.
+- **Contenu de la fenêtre** (variable interne, dans `$FDF8-$FDFF`) : PUT, IMG ou rien.
+  - **Au démarrage** : le code de PUT en tête, à sa place définitive, et le code du
+    démarrage à froid dans la zone du futur tampon. PUT est donc là sans lire de fichier ;
+    le démarrage à chaud ne recharge pas la fenêtre.
+  - **PUT** (`src/put.s`, 525 octets de `put_char` à `cmd_do`) : il n'a pas d'état hors de
+    la page 2 et de l'overlay (vérifié : `pc_st` et `pr_ld`, modifiés par le code, sont
+    posés avant chaque usage ; `put_fcb` en `$FDD4`). Restent résidents les crochets
+    (`conout`, entrée du BDOS, `wboot`, CCP, `put_nl` de DIR), par une table de sauts en tête
+    de la fenêtre. Tampon commençant sur une page (`pc_st` : `adc #>PUTBUF`) : 768 octets
+    (`$FA00-$FCFF`) si code et sauvegarde tiennent dans 576 octets (~15 à gagner), sinon
+    512.
+  - **IMG** (lot 2) : GSAVE et GLOAD (BDOS 115 op 12 et 13, `g_gsave` à `g_mode`, 241
+    octets ; `cmd_gsave`, `cmd_gload`, `img_msg`, `img_name`, 64) et `SAVE n fichier`
+    (`cmd_save`, 132) : 437 octets. Chargée depuis le fichier de banques quand elle sert,
+    elle reste dans la fenêtre (les GLOAD suivants ne relisent rien) ; le PUT suivant
+    relit PUT.
+  - **Prêt pendant un PUT** (lot 2) : le fichier de banques est ouvert d'abord (absent :
+    opération refusée, PUT intact), copie suspendue (`put_on` à 0), IMG lu sur le code de
+    PUT sans toucher au tampon (son reste, moins de 128 octets, est en tête), opération,
+    PUT relu, copie rendue. À l'entrée du BDOS, `put_flush` a déjà écrit le tampon. Le
+    chargeur prend son FCB dans la zone `PUT_SAVE`, libre à ce moment (`put_fcb` est ouvert).
+    Un RESET pendant le prêt perd la copie en cours (le fichier n'a que ce qui était écrit).
+- **Pas dans la fenêtre** : la complétion des commandes (un chargement à chaque ESC ralentirait
+  le vrai Microdisc) ; les fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko, appelées sans
+  cesse ; `PUT LOG.TXT GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et `font_init`,
+  qui servent aussi au démarrage à chaud et à `crash_screen` ; `msg_banner` (VER).
+- **Démarrage à froid** : seuls `ram_test`, `ram_report` et leurs deux messages vont dans la
+  fenêtre (~120 octets, pas 200 à 300). `BOOT` (`$C000`) et le vecteur `$FFFC` restent sur
+  `cold_boot`, résident, qui n'appelle le code de la fenêtre que si la variable de la
+  fenêtre dit qu'il est là (valeur posée par l'image, lue avant l'effacement de
+  `$FD00-$FDFF`). Un `BOOT` appelé plus tard refait donc tout sauf le test de RAM
+  (précise le contrat, ne le change pas ; aucun programme n'appelle `$C000`).
+- **`AUTO.BAT`** (§ 2 point 6) : dans le même code du démarrage à froid ; s'il est sur A:,
+  la ligne `AUTO` est laissée au CCP comme par CHAIN (`chain_on`, `CMDBUF`).
+- **Fichier de banques** (lot 2) : `CPA.BNK` (SYS, R/O), sur toutes les disquettes
+  système, français et anglais ; signature calculée par `build.sh`, comparée à celle du
+  système : une banque d'une autre version est refusée avec un message. Cherché comme les
+  programmes (lecteur courant, puis A: à D:).
+- **Ce qui recule** : sans `CPA.BNK` en ligne, GSAVE, GLOAD et SAVE sont refusés (PUT marche
+  tant qu'IMG n'a pas pris sa place) ; sous PUT, chaque GSAVE ou GLOAD relit ~1 Ko de
+  banques ; le tampon de PUT passe de 1 280 à 768 octets. Ce dernier point ne touche que
+  les programmes qui affichent par le BIOS (`B_CONOUT`) sans appeler le BDOS : DEBUG et
+  TERM ; ceux qui passent par la fonction 2 vident le tampon à chaque enregistrement.
+  TERM passe à la fonction 2 dans le lot 1, DEBUG avec sa refonte (§ 2). Règle à écrire dans
+  `architecture.md` § 5 : un programme dont la sortie doit pouvoir être capturée par PUT
+  affiche par le BDOS.
+- **Lots** :
+  1. fenêtre au démarrage (PUT et démarrage à froid), `AUTO.BAT`, TERM par la fonction 2,
+     règle ci-dessus ; PUT refusé si la fenêtre a été prise (ne peut pas encore arriver).
+     Gain ~640 octets (PUT 525, démarrage ~120), moins la table de sauts et les tests.
+  2. fichier de banques, chargeur, IMG en banque, prêt de la fenêtre ; GSAVE par `NOM.$$$`
+     (§ 2 point 5) et dans `tools/test_fichiers.py`. Gain ~437, moins le chargeur (~120).
+  3. options résident / en banque / absent, d'abord par `-D` dans `build.sh` (puis le
+     fichier de configuration de la construction sur l'Oric, § 2 point 8) ; la ROM n'a que
+     résident ou absent. Le code du démarrage à froid va toujours dans la fenêtre.
+- **Tests du lot 1** : `./build.sh` (marges), `smoke_test.sh`, `test_asm.sh`,
+  `test_fichiers.py` (par précaution : PUT écrit des fichiers), `test_xfer.sh` (TERM) ; dans Oricutron : démarrage (test de RAM affiché),
+  `PUT` d'un DIR, d'un HELP, d'une session TERM en boucle (`serial = 'loopback'`), PUT
+  débordé (`PUT: end lost`), disque plein, RESET pendant un PUT, `AUTO.BAT` présent,
+  absent, interrompu par ESC, `BOOT` appelé par `GO C000`.
+- **À vérifier sur le matériel** : vitesse de chargement d'une banque sur un vrai Microdisc
+  et sur le LOCI (lot 2) ; démarrage et `AUTO.BAT` qui monte des disquettes par USBMOUNT
+  (les lecteurs montés sont lus tout de suite).
 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :
