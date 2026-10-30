@@ -16,7 +16,7 @@
   sans un plantage ni un redémarrage.
 
 **L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
-(ou la carte SD du Cumulus) et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
+et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
 prompt `A>` :
 
     DIR               ce qu'il y a sur la disquette
@@ -39,8 +39,8 @@ Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Versi
 
 Deux variantes sont construites à partir des mêmes sources :
 
-- **`build/cpa.dsk`**, la version principale : une disquette amorçable pour le contrôleur
-  Microdisc, donc aussi pour le Cumulus et le LOCI. Le système se charge dans les 16 Ko de RAM
+- **`build/cpa.dsk`**, la version principale : une disquette amorçable au format du
+  contrôleur Microdisc, pour le LOCI (Microdisc : voir plus bas). Le système se charge dans les 16 Ko de RAM
   overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
   programmes reste intact. C'est la disquette système : tous les programmes (sauf LOGO) et
   toute l'aide, sans exemples. Quatre autres disquettes, par usage, démarrent seules avec
@@ -146,9 +146,14 @@ Version disque : l'EPROM du Microdisc fait appel à la ROM BASIC 1.1, il faut do
 
 Version ROM : copier `build/cpa.rom` dans `roms/`, puis mettre `atmosrom = 'roms/cpa'` dans `oricutron.cfg`.
 
-Sur le matériel, copier `cpa.dsk` sur la clé USB (resp. la carte SD) du LOCI (resp. du Cumulus) et
-démarrer dessus. CP/A est utilisé sur un vrai Oric Atmos avec un LOCI ; les couleurs des
-menus, peu lisibles dans certains émulateurs, sont nettes sur un vrai écran.
+Sur le matériel, copier `cpa.dsk` sur la clé USB du LOCI et démarrer dessus. CP/A fonctionne
+dans les émulateurs et sur un vrai Oric Atmos muni d'un LOCI ; les couleurs des menus, peu
+lisibles dans certains émulateurs, sont nettes sur un vrai écran.
+
+**Microdisc.** Le lecteur 3″ d'origine du Microdisc n'a qu'une face de 40 pistes : il ne lit
+pas les disquettes de CP/A (2 faces de 42 pistes). Cumulus, Gotek, HxC ou lecteur double
+face : jamais essayés, et sans LOCI la clé USB et le réseau manquent. Aucun portage pour le
+Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt pour en parler.
 
 **Plusieurs lecteurs.** La version disquette gère quatre lecteurs, `A:` à `D:`, comme le
 contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :

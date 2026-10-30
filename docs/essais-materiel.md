@@ -249,8 +249,6 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 ## À vérifier ailleurs
 
-- **Vrai Microdisc** (chez un ami de Pierre, qui n'en a pas) : FORMAT, DISKCOPY, attributs et COPY avec jokers ; premier accès après
-  une pause de plus de 3 s (TYPE, PUT, FORMAT).
 - **Clock Signal** (simule la rotation et le chargement de tête) : premier accès après plus
   de 3 s. Ses images ne sont pas fiables après écriture : en réécrivant une piste dans le
   fichier, il ne garde que deux des trois `$A1` de chaque synchronisation (Oricutron et le
