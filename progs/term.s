@@ -39,8 +39,9 @@
 ;  Reçu : affiché par CONOUT (CR, LF, BS, FF, TAB compris ; autres codes
 ;  de contrôle et octets >= 128 ignorés). Un CR est affiché en CR LF (un
 ;  serveur qui ne renvoie que CR, ou l'écho local de RETURN, passe bien à
-;  la ligne) ; un LF qui suit aussitôt un CR est sauté (pas de ligne vide
-;  avec ceux qui envoient CR LF). La pause en fin d'écran est
+;  la ligne), un LF seul aussi (un serveur Unix, comme nc sur le Mac,
+;  n'envoie que LF) ; un LF qui suit aussitôt un CR est sauté (pas de
+;  ligne vide avec ceux qui envoient CR LF). La pause en fin d'écran est
 ;  coupée pendant TERM (elle bloquerait la réception) puis rendue.
 ; =====================================================================
 
@@ -53,7 +54,7 @@ savpg   = $13           ; PAGE_ON à rendre
 cnt     = $14           ; compteur d'attente (2 octets)
 diag    = $16           ; 1 = diagnostic (/D)
 last    = $17           ; dernier état affiché (/D)
-wascr   = $18           ; 1 = le dernier caractère affiché était un CR
+wascr   = $18           ; 1 = dernier caractère reçu CR, 2 = LF seul (début de ligne)
 crlf    = $19           ; 1 = RETURN envoie CR LF (/L)
 
 ; registres de l'ACIA (base + 0 à 3) : données, état (bit 3 : reçu,
@@ -271,24 +272,29 @@ n       adc #"0"
 .)
 
 ; show : affiche le caractère reçu A (CONOUT ignore les codes inutiles) ;
-;   CR -> CR LF, LF qui suit aussitôt un CR sauté
+;   CR -> CR LF, LF seul -> CR LF, LF qui suit aussitôt un CR sauté
 show
 .(
         and #$7F
-        ldx #0
         cmp #10
         bne s1
-        ldy wascr
+        ldx wascr
+        dex
+        bne lf                  ; LF seul : CR LF
+        stx wascr               ; LF après CR : déjà fait (wascr = 0)
+        rts
+lf      ldx #2                  ; début de ligne, mais un LF suivant compte
         stx wascr
-        beq out                 ; LF seul : affiché
-        rts                     ; LF après CR : déjà fait
-s1      cmp #13
+        lda #13
+        bne cr                  ; (toujours)
+s1      ldx #0
+        cmp #13
         bne s2
         inx
 s2      stx wascr
         cpx #1
         beq cr
-out     jmp B_CONOUT
+        jmp B_CONOUT
 cr      jsr B_CONOUT
         lda #10
         jmp B_CONOUT

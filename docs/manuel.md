@@ -633,8 +633,11 @@ sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `
 - `Pas de modem (DSR) : brancher le Pico` : le LOCI ne voit pas de modem USB ; TERM reste
   ouvert, et `Modem muet : caractere perdu` s'affiche si l'on tape.
 - Ce qui arrive : un CR s'affiche comme CR LF (un correspondant qui ne renvoie que CR, et
-  l'écho local de RETURN, passent bien à la ligne) ; un LF qui suit aussitôt un CR est sauté
-  (pas de ligne vide avec ceux qui envoient CR LF).
+  l'écho local de RETURN, passent bien à la ligne), un LF seul aussi (fin de ligne du Mac et
+  de Linux, celle de `nc`) ; un LF qui suit aussitôt un CR est sauté (pas de ligne vide avec
+  ceux qui envoient CR LF).
+- Ce qui part : RETURN envoie CR seul, ce qu'attend le modem en mode commande ; une fois
+  connecté à `nc` sur le Mac, qui attend LF, lancer `TERM /E /L`.
 - TERM n'accède aux registres de l'ACIA que par `LDA` / `STA` absolus : une écriture indexée
   (`STA (zp),Y`, et `POKE` en BASIC) lit l'adresse avant de l'écrire, et une lecture de
   l'ACIA a des effets (le registre de données consomme l'octet reçu).
