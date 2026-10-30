@@ -58,7 +58,7 @@ Two variants are built from the same sources:
   arrows, CTRL-X/C/V), printer, graphics and sound.
 - File and disk commands that work with one drive or several (COPY, FORMAT, DISKCOPY...),
   and **CMDER**, a full-screen two-panel file manager.
-- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), USBMOUNT to mount disk and tape images (and start BASIC on a tape), and **TERM**, a serial terminal for a WiFi modem on the LOCI (`docs/loci-modem-wifi.md`).
+- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), USBMOUNT to mount disk and tape images (and start BASIC on a tape), **TERM**, a serial terminal for a WiFi modem on the LOCI, and **XFER**, file transfer over that modem (XMODEM) with a small server for the Mac or a Raspberry Pi, `tools/xfer_server.py` (`docs/loci-modem-wifi.md`).
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step), and **MKTAP**,
   which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""` (machine code, data,
@@ -117,7 +117,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
 | `docs/usb.md` | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1, in French) |
-| `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM |
+| `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |
 
 ## Building
 

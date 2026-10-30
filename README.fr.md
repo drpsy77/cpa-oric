@@ -60,7 +60,7 @@ Deux variantes sont construites à partir des mêmes sources :
   édition de ligne avec historique et complétion par TAB ou ESC, mêmes touches dans tous les programmes (SHIFT et CTRL avec les flèches, CTRL-X/C/V), imprimante, graphisme et son.
 - Des commandes de fichiers et de disquettes qui marchent avec un ou plusieurs lecteur(s) (COPY, FORMAT,
   DISKCOPY...), et **CMDER**, un gestionnaire de fichiers plein écran à deux colonnes.
-- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), avec un répertoire courant propre à CP/A sur la clé et tous ses supports (plusieurs clés, la mémoire interne du LOCI), USBMOUNT pour monter les images de disquette et de cassette (et lancer le BASIC sur une cassette), et **TERM**, un terminal série pour un modem WiFi branché sur le LOCI (`docs/loci-modem-wifi.md`).
+- L'échange de fichiers avec la clé USB du LOCI (EXPORT, IMPORT, USBDIR, CMDER), avec un répertoire courant propre à CP/A sur la clé et tous ses supports (plusieurs clés, la mémoire interne du LOCI), USBMOUNT pour monter les images de disquette et de cassette (et lancer le BASIC sur une cassette), **TERM**, un terminal série pour un modem WiFi branché sur le LOCI, et **XFER**, l'envoi et la réception de fichiers par ce modem (XMODEM) avec un petit serveur pour le Mac ou un Raspberry Pi, `tools/xfer_server.py` (`docs/loci-modem-wifi.md`).
 - Des outils pour développer sur l'Oric : **EDIT** (éditeur), **HEX** (éditeur hexadécimal),
   **ASM** (assembleur 6502), **DEBUG** (moniteur, désassembleur, pas à pas), et **MKTAP**,
   qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""` (code machine,
@@ -118,7 +118,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
 | `docs/usb.md` | les clés USB du LOCI depuis CP/A : répertoire courant, montage des disquettes et cassettes, duplication, renommage, effacement (référence du niveau 1) |
-| `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM |
+| `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM, XFER |
 
 ## Construire
 

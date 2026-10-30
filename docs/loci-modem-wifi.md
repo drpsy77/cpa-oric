@@ -5,8 +5,8 @@ firmware 0.3.98 du LOCI (`tools/loci-acia-diag/`, voir « Firmware du LOCI »).
 
 But : donner à un vrai Oric un accès réseau (envoi et réception de fichiers) à travers le
 LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation.
-Côté CP/A, `TERM.COM` (terminal, `docs/manuel.md` « Terminal série ») existe ; le pilote
-série du BIOS et `XFER.COM` sont à faire.
+Côté CP/A, `TERM.COM` (terminal, `docs/manuel.md` « Terminal série ») et `XFER.COM`
+(fichiers, « Transfert de fichiers ») existent ; le pilote série du BIOS est à faire.
 
 ## Principe
 
@@ -153,9 +153,11 @@ réglage (voir « Firmware du LOCI » pour la 0.3.1).
 1. `TERM.COM` : fait (`docs/manuel.md`, « Terminal série »).
 2. Pilote série dans le BIOS : entrées CP/M `PUNCH` / `READER` reliées à l'ACIA
    (adresse dans une variable : `$0380` sur LOCI, `$031C` dans Oricutron). À faire.
-3. `XFER.COM` : envoi et réception de fichiers en XMODEM (paquets de 128 octets acquittés
-   un par un, ce qui supporte le tampon de 32 octets du LOCI et les accès disque), avec un
-   script `tools/xfer_server.py` côté Mac. À faire.
+3. `XFER.COM` : envoi et réception de fichiers en XMODEM-CRC (blocs de 128 octets
+   acquittés un par un), avec le serveur `tools/xfer_server.py` sur le Mac ou le Pi : fait
+   (`docs/manuel.md`, « Transfert de fichiers » ; `tools/test_xfer.sh` dans Oricutron).
+   TERM et XFER partagent la bibliothèque `progs/acia_inc.s` (port, réglage, lecture et
+   écriture par scrutation), que le pilote du BIOS reprendra.
 
 Débit : 9600 bauds, environ 1 Ko par seconde.
 

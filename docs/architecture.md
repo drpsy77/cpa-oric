@@ -120,6 +120,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, puis CLOAD sous BASIC 1.1
     python3 tools/test_bas.py        # .BAS : codage de mktap.py == ROM 1.1 (6502 simulé)
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
+    tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
 - `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
@@ -141,6 +142,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s` | en plus : `tools/test_mktap.sh` (lance aussi `tools/test_bas.py`) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
+| XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | en plus : `tools/test_xfer.sh` (~4 min) ; pour TERM, essai Oricutron en boucle (`serial = 'loopback'`) |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, `tools/test_oric.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |

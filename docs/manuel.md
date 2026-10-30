@@ -71,6 +71,7 @@ Autres programmes de la disquette :
 - `MKTAP.COM NOM fic adr [/R]...` : fichier `.TAP` pour l'Oric sous BASIC (voir « Publier pour
   l'Oric sous BASIC »).
 - `TERM.COM [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série »).
+- `XFER.COM R|E fic [nom] [/T]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
@@ -644,7 +645,53 @@ sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `
 - La pause en fin d'écran est coupée pendant TERM (elle bloquerait la réception). Pendant
   les menus (FUNCT), le LOCI garde ce qui arrive.
 - Dans Oricutron : `serial = 'loopback'` dans `oricutron.cfg` renvoie chaque caractère
-  envoyé ; `serial = 'modem'` relie l'ACIA à un modem simulé (commandes AT réduites).
+  envoyé ; `serial = 'modem'` relie l'ACIA à un modem simulé (commandes AT réduites ;
+  numéro sans tiret : `ATDT127.0.0.1:2323`).
+
+## Transfert de fichiers : XFER
+
+`XFER` envoie un fichier de CP/A à un serveur, ou en reçoit un, par le modem WiFi du LOCI.
+Le serveur est `tools/xfer_server.py`, un script Python sans dépendance, lancé sur le Mac ou
+sur un Raspberry Pi du même réseau :
+
+    python3 tools/xfer_server.py --dir ~/Oric/echange      (port 2323 par défaut)
+
+Il sert les fichiers du dossier donné. Sur l'Oric, la liaison s'établit d'abord par TERM,
+puis XFER s'utilise autant de fois qu'on veut :
+
+    A>TERM
+    ATDT-192.168.1.20:2323
+    CONNECT
+    XFER : serveur CP/A pret
+    (CTRL-Q : TERM s'arrête, la liaison reste ouverte)
+    A>XFER E LETTRE.TXT
+    Envoi de LETTRE.TXT
+    Bloc 12 : termine
+    A>XFER R B:JEU.GRX jeu.grx
+    Reception de jeu.grx
+    Bloc 40 : termine
+
+| Commande | Effet |
+|---|---|
+| `XFER E fic [nom]` | envoie `fic` (lecteur facultatif) ; sur le serveur, il s'appelle `nom`, ou `fic` sans le lecteur ; un nom tapé tout en majuscules y est écrit en minuscules ; un fichier du même nom y est remplacé |
+| `XFER R fic [nom]` | reçoit `nom` (ou `fic`, sans tenir compte des majuscules) et l'écrit dans `fic` |
+| `/T` | texte : le serveur passe les fins de ligne LF du Mac en CR LF et une tabulation en espace à l'envoi vers l'Oric, et CR LF en LF dans l'autre sens |
+| ESC | annule le transfert en cours |
+
+- Pas de jokers : un fichier à la fois.
+- Le transfert se fait en XMODEM (blocs de 128 octets, un enregistrement CP/M, contrôlés par
+  CRC-16 et acquittés un par un) : environ 1 Ko par seconde. Un bloc abîmé est redemandé,
+  dix fois au plus.
+- Réception : le fichier est écrit dans `NOM.$$$`, qui remplace `NOM` seulement à la fin ;
+  un échec (ESC, disque plein, coupure) laisse l'ancien `NOM` intact. Un `NOM` protégé (R/O)
+  n'est pas remplacé.
+- Les `^Z` qui complètent le dernier enregistrement sont retirés sur le serveur (même règle
+  que STAT et EXPORT) : un texte y arrive à sa vraie taille.
+- Messages : `Serveur : fichier absent` (le serveur n'a pas `nom`), `Serveur : refus` (nom
+  avec un chemin), `Pas de reponse du serveur` (liaison non établie : passer par TERM), `Pas de modem (DSR)`.
+- XFER ne refait pas le réglage du port s'il est déjà fait : la liaison ouverte par TERM
+  reste en place. Le serveur affiche chaque transfert dans son terminal.
+- Dans Oricutron (`serial = 'modem'`) : `ATDT127.0.0.1:2323` dans TERM (sans tiret).
 
 ## Démarrage et reprise après plantage
 
