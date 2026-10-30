@@ -113,6 +113,11 @@ sans `T`, `P` ou `I`, répond `ERROR`).
 Réglages par défaut du modem : 9600 bauds, 8 bits, sans parité, 1 bit d'arrêt.
 `ATDT[+=-]hôte[:port]` : `+` telnet simulé, `=` vrai telnet, `-` sans telnet ;
 port 23 par défaut. `ATNETn` : 0 sans telnet, 1 vrai, 2 simulé.
+Noms d'hôtes : le modem résout les noms par le DNS du réseau (`ATDT-ipinfo.io:80` :
+CONNECT) ; pas les noms mDNS en `.local` (`NO CARRIER`). Numéros abrégés avec alias
+(`AT&Zn=hôte:port,alias`, `ATDSn`, ou l'alias après `ATDT`), d'après la documentation
+de PicoWiFiModem : `AT&Z0=...` répond OK mais l'entrée enregistrée ne change pas
+(écriture en flash par `AT&W` ? elle gèle la v0.1.0) ; non résolu.
 
 ## Brancher le Pico sur le LOCI
 

@@ -76,9 +76,14 @@ candidats. Le code commun (chemins, répertoire courant, supports, configuration
 
 **USBDIR** :
 
-    USBDIR [chemin]        liste un répertoire (sans chemin : le répertoire courant,
-                           dont le chemin est écrit d'abord : 2:/JEUX/ORIC)
+    USBDIR [chemin]        liste un répertoire (sans chemin : le répertoire courant),
+                           puis son chemin complet et le nombre d'éléments
+                           (2:/JEUX/ORIC : 12 element(s) ; nombre à la ligne
+                           si le chemin dépasse 20 caractères)
     USBDIR /S              catalogue des supports
+    USBDIR /C [chemin]     le répertoire devient le répertoire courant, écrit en
+                           retour ; sans chemin : CMDER USB: /R (par CHAIN) ;
+                           c'est le script USBCD.BAT
 
     A>USBDIR /S
     0: memoire du LOCI          15 Mo
@@ -96,8 +101,8 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
 
 - **Répertoire courant** : la colonne USB s'ouvre dans le répertoire courant (`CMDER USB:`,
   ou `CMDER USB:rep` pour partir d'ailleurs) ; en sortant, le dernier répertoire USB affiché
-  devient le répertoire courant. **Changer de répertoire, c'est entrer dans CMDER, aller où
-  l'on veut, quitter** ; il n'y a pas d'autre commande pour cela.
+  devient le répertoire courant. Changer de répertoire, c'est entrer dans CMDER, aller où
+  l'on veut, quitter ; ou, en ligne, `USBCD rep` (§ 1.2, `USBDIR /C`).
 - **Supports** : `..` à la racine d'un support montre la liste des supports (en-tête
   `USB:supports`), celui d'où l'on vient marqué `*`, le curseur dessus ; RETURN sur un
   support entre à sa racine ; rien ne s'y copie (`Choisir d'abord un support`) :
@@ -112,15 +117,11 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
 
 - **Répertoires seuls** : un filtre de plus (menu Vue, `Repertoires seuls`, par colonne ;
   `Cle USB seulement` sur une disquette ; option `/R` à l'appel) ne montre que `..` et les
-  `<REP>` ; avec `CMDER USB:JEUX /R`, on parcourt l'arborescence sans les fichiers. Un
-  script d'une ligne en fait un raccourci, sans nouveau programme :
-
-      ; USBCD.BAT : changer de répertoire sur la clé (ESC quand on y est)
-      CMDER USB:$1 /R
-
-  (`USBCD JEUX` ouvre CMDER dans `JEUX`, répertoires seuls ; ESC : c'est le répertoire
-  courant.) `USBCD.BAT` est sur toutes les disquettes, protégé (caché sur les disquettes par
-  usage, comme les commandes de base).
+  `<REP>` ; avec `CMDER USB:JEUX /R`, on parcourt l'arborescence sans les fichiers. Le
+  script `USBCD.BAT` (une ligne, `USBDIR /C $1`, § 1.2) : `USBCD JEUX` change de
+  répertoire sans écran et écrit le nouveau ; `USBCD` seul ouvre `CMDER USB: /R` (ESC : le
+  répertoire affiché devient le répertoire courant). `USBCD.BAT` est sur toutes les
+  disquettes, protégé (caché sur les disquettes par usage, comme les commandes de base).
 - **Copier vers la clé** : `USB:rep` est relatif au répertoire de la colonne USB (sans elle,
   au répertoire courant de CP/A) ; `USB:` seul : ce répertoire-là.
 
@@ -247,8 +248,6 @@ Les trois lots sont faits ; CMDER fait 17 889 octets (9 blocs, 543 octets libres
 - La complétion des noms de la clé par ESC au prompt : elle est résidente et ne lit que les
   disquettes ; la lui ajouter demanderait l'API du LOCI dans le système (12 octets de
   marge). On choisit dans CMDER.
-- Changer de répertoire sans écran (un `cd` en ligne) : on passe par CMDER (ou
-  `USBCD.BAT`) ; un chemin relatif ou complet se donne aussi directement à chaque commande.
 - Copier, effacer ou créer un répertoire entier (`$83` existe : plus tard si besoin).
 
 ## 5. Plus tard : niveau 2

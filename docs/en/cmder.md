@@ -26,8 +26,8 @@ panel: `^L`, or quit and start again. ESC quits: every operation is carried out 
 shown becomes CP/A's current directory** (file `0:CPA.CWD`, `docs/usb.md` § 2.1), the one
 USBDIR, IMPORT, EXPORT and the next `CMDER USB:` start from: changing directory on the stick
 means entering CMDER, going where you want and quitting. The script `USBCD.BAT`
-(`CMDER USB:$1 /R`, on the disks) makes it a shortcut: `USBCD GAMES` opens CMDER in `GAMES`,
-directories only; ESC once there.
+(`USBDIR /C $1`, on the disks) makes it a shortcut: `USBCD` alone opens CMDER on the stick,
+directories only; ESC once there (`USBCD GAMES` changes directory without opening CMDER).
 Started in SPLIT mode, CMDER switches back to text (the picture is lost).
 
 ## 2. Screen

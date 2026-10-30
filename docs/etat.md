@@ -39,7 +39,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 17 889 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
-| EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 810 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD.BAT` | `manuel.md`, `usb.md` |
+| EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 933 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
 | TERM | 847 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
@@ -62,7 +62,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 474 points de fonction IFPUG et 346 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 477 points de fonction IFPUG et 346 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -173,7 +173,12 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    (`tools/test_xfer.sh` : 40 Ko, `/T`, refus, ESC, erreurs simulées) et sur le vrai Oric
    (30/10/2026, sauf les accents) ; TERM et XFER sur la bibliothèque `acia_inc.s`.
    Décidé, pas encore fait : plusieurs fichiers (jokers), appel du serveur par XFER
-   lui-même (sans passer par TERM).
+   lui-même (sans passer par TERM) ; TERM affiche le texte reçu par la fonction 2 du BDOS
+   au lieu de `B_CONOUT`, pour que `PUT NOM TERM` capture une session sans limite de
+   tampon (avec le lot 1 de la descente de PUT, § 3).
+   Proposé, avec l'appel du serveur par XFER : un fichier texte `HOSTS` (`nom hôte:port`,
+   une ligne par hôte), lu par TERM et XFER (code dans `acia_inc.s`, ~200 octets, rien de
+   résident) ; un nom absent part au modem, qui résout par le DNS (pas les `.local`).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
      a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la
      fenêtre TCP que quand son tampon se vide (`docs/loci-modem-wifi.md`, « Contrôle de
@@ -240,7 +245,16 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      au lieu de l'écran ; `EXPORT` le passe sur la clé, puis directement avec le lecteur
      U: (§ 2 point 9 : `PUT /P U:PRINT.TXT ...`). Coût résident : un test dans LIST vers
      `put_char` (~10 octets), à faire avec la descente de PUT en banque (§ 3).
-   - `AUTO.BAT` exécuté au démarrage ;
+   - **DEBUG** (décidé par Pierre le 30/10/2026, à faire avec sa refonte, pas avant) :
+     afficher par la fonction 2 du BDOS au lieu de `B_CONOUT` (`putc`), pour que
+     `PUT LISTE.TXT DEBUG` garde un long désassemblage sans limite de tampon (puis XFER ou
+     EXPORT vers un ordinateur) ; revoir son ergonomie ;
+   - **`AUTO.BAT`** (décidé par Pierre le 30/10/2026 ; avec le lot 1 de la descente de PUT,
+     § 3) : exécuté au démarrage à froid seulement, s'il est sur A: (par exemple pour monter
+     par USBMOUNT les disquettes d'un usage, ou appeler par XDO un script de profil) ; ESC
+     l'arrête entre deux lignes, comme tout script. Le test de présence et la ligne laissée
+     au CCP (comme CHAIN : `chain_on`, `CMDBUF`) sont dans le code du démarrage à froid,
+     dans la fenêtre : aucun octet résident ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - **Son de LOGO plus simple** (remarque de Pierre le 24/10/2026) : `SON v n vol d` et
      `ENSEMBLE` sont lourds pour un accord et n'ont pas de raccourci. Piste retenue : une

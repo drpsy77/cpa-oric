@@ -9,11 +9,14 @@
 ;  USBDIR /S
 ;    les supports : 0: (mémoire interne) et les clés USB, avec leur
 ;    taille ; * : celui du répertoire courant
-;  Le chemin complet est écrit d'abord, puis une ligne par fichier :
-;  nom (tel quel, minuscules comprises) et taille en octets, <REP> pour
-;  un dossier. Les fichiers cachés ou système et ceux dont le nom
-;  commence par un point (._X du Mac...) ne sont pas montrés. ESC ou
-;  CTRL-C arrête la liste.
+;  USBDIR /C [chemin]  (appelé par USBCD.BAT)
+;    le répertoire devient le répertoire courant, écrit en retour ;
+;    sans chemin : CMDER sur la clé, répertoires seuls (CHAIN)
+;  Une ligne par fichier : nom (tel quel, minuscules comprises) et
+;  taille en octets, <REP> pour un dossier ; à la fin, le chemin complet
+;  listé et le nombre d'éléments. Les fichiers cachés ou système et ceux
+;  dont le nom commence par un point (._X du Mac...) ne sont pas
+;  montrés. ESC ou CTRL-C arrête la liste.
 ; =====================================================================
 
 #include "cpa.inc"
@@ -43,6 +46,8 @@ lok     jsr cw_get
         bne dir
         lda args+1,x
         and #$DF
+        cmp #"C"
+        beq opc
         cmp #"S"
         bne dir
         lda args+2,x
@@ -50,14 +55,24 @@ lok     jsr cw_get
         cmp #" "
         bne dir
 sup     jmp supports
+opc     lda args+2,x            ; /C [chemin] : changer de répertoire
+        beq cmder
+        cmp #" "
+        bne dir
+        inx
+        inx
+        jsr skipsp
+        lda args,x
+        beq cmder
+        jmp chdir
+cmder   lda #<m_cmder           ; /C seul : CMDER, répertoires seuls
+        ldy #>m_cmder
+        ldx #F_CHAIN
+        jmp BDOS
 dir     jsr lpath_a
         bcc pok
         rts
-pok     lda #<apath             ; le chemin d'abord
-        ldy #>apath
-        jsr lputs
-        jsr lcrlf
-        lda #0
+pok     lda #0
         sta wild
         jsr lp_last
         bcc nw
@@ -146,7 +161,25 @@ kp      jsr B_CONIN
         beq end
         jmp next
 
-end     lda cnt
+end     lda #<apath             ; à la fin : chemin listé et nombre
+        ldy #>apath
+        jsr lputs
+        lda #" "
+        jsr lputc
+        lda #":"
+        jsr lputc
+        ldx #0                  ; chemin long : le nombre à la ligne
+pl      lda apath,x
+        beq pls
+        inx
+        bne pl
+pls     cpx #21
+        bcc same
+        jsr lcrlf
+        jmp cnum
+same    lda #" "
+        jsr lputc
+cnum    lda cnt
         sta num
         lda cnt+1
         sta num+1
@@ -162,6 +195,31 @@ close   lda fd
 .)
 
 ; supports : USBDIR /S
+; chdir : USBDIR /C chemin (X : début du chemin dans args). Le chemin
+;   doit être un répertoire ; il devient le répertoire courant (fichier
+;   0:CPA.CWD), qui est écrit en retour
+chdir
+.(
+        jsr lpath_a
+        bcc ok
+        rts
+ok      lda #<apath
+        ldy #>apath
+        jsr usb_opendir
+        bcc od
+        jmp usb_err
+od      jsr usb_closedir
+        lda #<apath
+        ldy #>apath
+        jsr cw_put
+        lda #<cwd
+        ldy #>cwd
+        jsr lputs
+        jmp lcrlf
+.)
+
+m_cmder .asc "CMDER USB: /R",0
+
 supports
 .(
         jsr dv_open
