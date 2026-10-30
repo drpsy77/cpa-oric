@@ -35,14 +35,15 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 458 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 550 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 17 889 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 810 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD.BAT` | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 776 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| TERM | 847 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| XFER | 2 035 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -61,7 +62,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 467 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 474 points de fonction IFPUG et 346 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -165,7 +166,12 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`). La liaison marche dans les
    deux sens : Oric, LOCI (firmware 0.3.98 de diagnostic, `tools/loci-acia-diag/`), Pico W,
    WiFi, `nc` sur le Mac, avec `TERM /E`. `TERM.COM` fait (scrute l'ACIA lui-même, sans le
-   BIOS ; CR, LF seul et CR LF reçus vont tous à la ligne).
+   BIOS ; CR, LF seul et CR LF reçus vont tous à la ligne). `XFER.COM` fait (30/10/2026) :
+   envoi et réception d'un fichier en XMODEM-CRC, serveur `tools/xfer_server.py` (Mac ou
+   Pi), réception par `NOM.$$$` ; essayé dans Oricutron (`tools/test_xfer.sh` : 40 Ko,
+   `/T`, refus, ESC, erreurs simulées) ; TERM et XFER sur la bibliothèque `acia_inc.s`.
+   Décidé, pas encore fait : plusieurs fichiers (jokers), appel du serveur par XFER
+   lui-même (sans passer par TERM).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
      a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la
      fenêtre TCP que quand son tampon se vide (`docs/loci-modem-wifi.md`, « Contrôle de
@@ -176,9 +182,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
      EDIT). Elle demande le pilote dans le BIOS, pas un `.COM` : elle doit survivre aux
      programmes.
-   - Ordre : (1) `XFER.COM` (XMODEM) et `tools/xfer_server.py`, sur une bibliothèque
-     commune `acia_inc.s` dont TERM se sert aussi ; (2) descente de PUT en banque (§ 3) ;
-     (3) pilote série du BIOS, par scrutation, reprenant ce code : PUNCH / READER (BDOS 3
+   - Ordre : (1) descente de PUT en banque (§ 3) ; (2) pilote série du BIOS, par
+     scrutation, reprenant le code d'`acia_inc.s` : PUNCH / READER (BDOS 3
      et 4), état de la réception, console redirigée (CONST, CONIN, CONOUT ; commande et
      forme à spécifier) ; ~150 octets estimés, ~300 à prévoir.
    - Contraintes du pilote : écritures dans l'ACIA par `STA` absolu seulement (une écriture
@@ -303,7 +308,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    - Fait aussi : HELP et README.TXT (`tools/gen_readme_txt.py`, une liste par langue,
      mêmes rubriques ; `helptab.msg` dans `progs/msg/fr` et `en`, `files/en/readme.txt`).
      Sujets anglais : KEYS PROGRAMS EDIT HEX LOGO ASM DEBUG MEMORY USB GRAPHER CMDER ; la
-     rubrique LOGO donne les primitives anglaises. HELP anglais : 6 blocs comme le
+     rubrique LOGO donne les primitives anglaises. HELP anglais : 7 blocs comme le
      français.
    - Fait aussi : toutes les disquettes en deux langues (jumelles `-en`, `architecture.md`
      § 5 ; `cpa-project-en.dsk` pour la vierge) et tous les exemples traduits sous des noms
@@ -485,8 +490,8 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 458) prend 7 blocs depuis USBMOUNT (6 en anglais, 12 282 : plein à 6 octets
-  près), 1 878 octets libres dans le dernier. CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
+  blocs, 1 844 octets libres dans le dernier. HELP (12 550) prend 7 blocs, 1 786 octets libres dans le dernier (12 377 en anglais, 7
+  blocs depuis XFER). CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 086) prend 2 blocs, plein à 10 octets près (51 en anglais) ; MKTAP (4 079)
   aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend
@@ -497,7 +502,7 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
   octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 20 Ko (22 sur `cpa-en.dsk`), peu pour travailler (CARTE :
+- usage à deux disquettes : sur `cpa.dsk` il reste 18 Ko (18 sur `cpa-en.dsk`), peu pour travailler (CARTE :
   `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes

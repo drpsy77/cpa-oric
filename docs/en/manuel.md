@@ -75,6 +75,7 @@ Other programs on the disk:
 - `MKTAP.COM NAME file adr [/R]...`: `.TAP` file for the Oric under BASIC (see "Publishing for
   the Oric under BASIC").
 - `TERM.COM [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
+- `XFER.COM R|S file [name] [/T]`: receives or sends a file over the modem (see "File transfer").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]`: copies a disk, or its system.
 
@@ -627,7 +628,54 @@ without telnet), `+++` with a one-second pause before and after (back to command
 - The end-of-screen pause is off during TERM (it would block reception). While the menus
   (FUNCT) are open, the LOCI keeps what arrives.
 - In Oricutron: `serial = 'loopback'` in `oricutron.cfg` sends back each character sent;
-  `serial = 'modem'` links the ACIA to a simulated modem (reduced AT command set).
+  `serial = 'modem'` links the ACIA to a simulated modem (reduced AT command set; number
+  without a dash: `ATDT127.0.0.1:2323`).
+
+## File transfer: XFER
+
+`XFER` sends a CP/A file to a server, or receives one from it, over the LOCI's WiFi modem.
+The server is `tools/xfer_server.py`, a Python script with no dependency, run on the Mac or
+on a Raspberry Pi on the same network:
+
+    python3 tools/xfer_server.py --dir ~/Oric/exchange      (port 2323 by default)
+
+It serves the files of the given folder. On the Oric, the link is first set up with TERM,
+then XFER can be used as many times as wanted:
+
+    A>TERM
+    ATDT-192.168.1.20:2323
+    CONNECT
+    XFER : serveur CP/A pret
+    (CTRL-Q: TERM stops, the link stays open)
+    A>XFER S LETTER.TXT
+    Sending LETTER.TXT
+    Block 12 : done
+    A>XFER R B:GAME.GRX game.grx
+    Receiving game.grx
+    Block 40 : done
+
+| Command | Effect |
+|---|---|
+| `XFER S file [name]` | sends `file` (optional drive); on the server it is called `name`, or `file` without the drive; a name typed all in capitals is written there in lower case; a file of the same name is replaced |
+| `XFER R file [name]` | receives `name` (or `file`, case-insensitive) and writes it into `file` |
+| `/T` | text: the server turns the Mac's LF line endings into CR LF and a tab into a space when sending to the Oric, and CR LF into LF the other way |
+| ESC | cancels the transfer in progress |
+
+- No wildcards: one file at a time. `E` (French "envoyer") is accepted for `S`.
+- The transfer uses XMODEM (128-byte blocks, one CP/M record, checked by CRC-16 and
+  acknowledged one by one): about 1 KB per second. A damaged block is asked again, ten times
+  at most.
+- Receiving: the file is written into `NAME.$$$`, which replaces `NAME` only at the end; a
+  failure (ESC, full disk, broken link) leaves the old `NAME` intact. A read-only `NAME` is
+  not replaced.
+- The `^Z` that pad the last record are removed on the server (same rule as STAT and
+  EXPORT): a text arrives there at its true size.
+- Messages: `Server : no such file` (the server does not have `name`), `Server : refused`
+  (name with a path), `No answer from the server` (link not set up: go through TERM),
+  `No modem (DSR)`.
+- XFER does not set the port up again if it already is: the link opened by TERM stays in
+  place. The server shows each transfer in its terminal.
+- In Oricutron (`serial = 'modem'`): `ATDT127.0.0.1:2323` in TERM (no dash).
 
 ## Start-up and recovery after a crash
 

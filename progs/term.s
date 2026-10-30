@@ -17,19 +17,11 @@
 ;             vérifier les écritures quand les lectures de l'ACIA sont
 ;             fausses (TERM /B, puis ATDT vers nc sur le Mac).
 ;
-;  Accès aux registres : uniquement par LDA / STA absolus (routines
-;  r_xxx / w_xxx, adresses posées au démarrage). Jamais d'adressage
-;  indexé : STA (zp),Y lit l'adresse visée avant de l'écrire, et une
-;  lecture de l'ACIA a des effets (registre de données : octet consommé),
-;  le LOCI en particulier (avis de son auteur, forum defence-force).
-;
-;  Port : l'ACIA 6551 émulée par le LOCI en $0380 (modem USB, un Pico W
-;  avec PicoWiFiModemUSB : docs/loci-modem-wifi.md) ; sans LOCI, celle
-;  d'Oricutron en $031C (serial = 'loopback' ou 'modem' dans
-;  oricutron.cfg). Réglage : 9600 bauds, 8 bits, sans parité, 1 bit
-;  d'arrêt, interruptions de l'ACIA coupées (tout est lu par scrutation).
-;  Le LOCI transmet la vitesse au modem USB : jamais 1200 bauds (le
-;  firmware de juin 2026 redémarre alors le Pico en mode BOOTSEL).
+;  Port, réglage et accès aux registres : bibliothèque acia_inc.s
+;  (LOCI en $0380, Oricutron en $031C ; 9600 bauds 8N1 ; LDA / STA
+;  absolus seulement). Le LOCI transmet la vitesse au modem USB : jamais
+;  1200 bauds (le firmware de juin 2026 redémarre alors le Pico en mode
+;  BOOTSEL).
 ;
 ;  Touches envoyées : ASCII 0-127 tel quel, DEL -> BS (8), CTRL-H à
 ;  CTRL-K (28-31) -> 8-11. Flèches, SHIFT et CTRL avec les flèches :
@@ -47,18 +39,13 @@
 
 #include "cpa.inc"
 
-base    = $10           ; octet bas de l'adresse de l'ACIA ($80 LOCI, $1C Oricutron)
 blind   = $11           ; 1 = envoi sans attendre l'émetteur (/B)
 echo    = $12           ; 1 = écho local
 savpg   = $13           ; PAGE_ON à rendre
-cnt     = $14           ; compteur d'attente (2 octets)
 diag    = $16           ; 1 = diagnostic (/D)
 last    = $17           ; dernier état affiché (/D)
 wascr   = $18           ; 1 = dernier caractère reçu CR, 2 = LF seul (début de ligne)
 crlf    = $19           ; 1 = RETURN envoie CR LF (/L)
-
-; registres de l'ACIA (base + 0 à 3) : données, état (bit 3 : reçu,
-; bit 4 : émetteur libre, bit 6 : pas de DSR), commande, contrôle
 
         *= $0500
 start
@@ -94,52 +81,22 @@ op4     cmp #"L"
         sty crlf
 opn     inx
         bne op
-opd     jsr loci_chk
-        bcs oric
-        lda #$80                ; LOCI : $0380
-        sta base
+opd     jsr ac_find
         lda #<m_loci
         ldy #>m_loci
-        bne hello
-oric    lda #$1C                ; Oricutron : $031C
-        sta base
+        bcc hello
         lda #<m_oric
         ldy #>m_oric
-hello   pha
-        lda base                ; adresses des routines d'accès
-        sta r_data+1
-        sta w_data+1
-        clc
-        adc #1
-        sta r_stat+1
-        sta w_stat+1
-        adc #1
-        sta r_cmd+1
-        sta w_cmd+1
-        adc #1
-        sta r_ctrl+1
-        sta w_ctrl+1
-        pla
-        ldx #F_PRINT
+hello   ldx #F_PRINT
         jsr BDOS
         lda #<m_keys
         ldy #>m_keys
         ldx #F_PRINT
         jsr BDOS
         jsr dregs               ; /D : registres avant le réglage
-        jsr w_stat              ; remise à zéro programmée
-        lda #$1E                ; 9600 bauds, horloge interne, 8 bits, 1 arrêt
-        jsr w_ctrl
-        lda #$0B                ; DTR, RTS, pas de parité, ni écho ni IRQ
-        jsr w_cmd
-        ldx #0                  ; laisse au LOCI le temps de prendre l'ordre
-        ldy #0
-w1      dey
-        bne w1
-        dex
-        bne w1
+        jsr ac_setup
         jsr dregs               ; /D : et après
-        jsr r_stat
+        jsr ac_rsta
         and #$40                ; DSR absent : pas de modem branché
         beq loop
         lda #<m_nodsr
@@ -147,7 +104,7 @@ w1      dey
         ldx #F_PRINT
         jsr BDOS
 
-loop    jsr r_stat              ; reçu ?
+loop    jsr ac_rsta             ; reçu ?
         ldx diag
         beq nod
         cmp last                ; /D : chaque changement de l'état
@@ -164,7 +121,7 @@ loop    jsr r_stat              ; reçu ?
         pla
 nod     and #$08
         beq key
-        jsr r_data
+        jsr ac_rdat
         jsr show
 key     jsr B_CONST
         beq loop
@@ -192,7 +149,7 @@ send    pha
         jsr txwait
         pla
         bcs lost
-        jsr w_data              ; (A gardé)
+        jsr ac_wdat             ; (A gardé)
         cmp #13                 ; /L : LF après CR
         bne s9
         ldx crlf
@@ -200,7 +157,7 @@ send    pha
         jsr txwait
         bcs lost
         lda #10
-        jsr w_data
+        jsr ac_wdat
         lda #13
 s9      ldx echo
         beq loop
@@ -232,11 +189,11 @@ dregs
         ldy #>m_regs
         ldx #F_PRINT
         jsr BDOS
-        jsr r_stat
+        jsr ac_rsta
         jsr hexsp
-        jsr r_cmd
+        jsr ac_rcmd
         jsr hexsp
-        jsr r_ctrl
+        jsr ac_rctl
         jsr hexsp
         lda #$FF                ; le premier état sera affiché
         sta last
@@ -300,14 +257,15 @@ cr      jsr B_CONOUT
         jmp B_CONOUT
 .)
 
-; txwait : attend que l'émetteur soit libre ; C=1 s'il ne l'est pas après
-;   ~0,3 s (modem débranché : le LOCI ne vide plus le registre).
-;   /B : pas de lecture de l'état, pause fixe d'environ 3 ms, C=0.
+; txwait : attend que l'émetteur soit libre (ac_txw) ; C=1 s'il ne l'est
+;   pas après ~0,3 s. /B : pas de lecture de l'état, pause fixe d'environ
+;   3 ms, C=0.
 txwait
 .(
         lda blind
-        beq nb
-        ldx #4
+        bne b
+        jmp ac_txw
+b       ldx #4
         ldy #0
 p       dey
         bne p
@@ -315,68 +273,7 @@ p       dey
         bne p
         clc
         rts
-nb      lda #0
-        sta cnt
-        lda #$40
-        sta cnt+1
-w       jsr r_stat
-        and #$10
-        bne ok
-        dec cnt
-        bne w
-        dec cnt+1
-        bne w
-        sec
-        rts
-ok      clc
-        rts
 .)
 
-; routines d'accès aux registres : LDA / STA absolus, octet bas de
-;   l'adresse posé au démarrage (base + 0 à 3). Préservent X et Y.
-r_data  lda $0380
-        rts
-r_stat  lda $0381
-        rts
-r_cmd   lda $0382
-        rts
-r_ctrl  lda $0383
-        rts
-w_data  sta $0380
-        rts
-w_stat  sta $0381
-        rts
-w_cmd   sta $0382
-        rts
-w_ctrl  sta $0383
-        rts
-
-; loci_chk : C=0 si le LOCI répond (même test que mia_chk de loci_inc.s,
-;   sans message) : opération 0 lancée, puis CLV/BVC/LDA #/LDX #/RTS lus
-;   en $03B0. Sans LOCI, l'écriture tombe sur un registre du VIA, sans effet.
-loci_chk
-.(
-        lda #0
-        sta $03AF
-        lda $03B0
-        cmp #$B8
-        bne no
-        lda $03B1
-        cmp #$50
-        bne no
-        lda $03B3
-        cmp #$A9
-        bne no
-        lda $03B5
-        cmp #$A2
-        bne no
-        lda $03B7
-        cmp #$60
-        bne no
-        clc
-        rts
-no      sec
-        rts
-.)
-
+#include "acia_inc.s"
 #include "term.msg"

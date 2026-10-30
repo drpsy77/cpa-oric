@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 0 | 23 | 9 | 9 | **69** | 14 | **83** |
+| USB | 28 | 0 | 27 | 13 | 9 | **77** | 17 | **94** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *47* | *424* | *101* | *111* | ***851*** | *214* | ***1065*** |
+| *Applications* | *168* | *47* | *428* | *105* | *111* | ***859*** | *217* | ***1076*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 25 | 114 | 18 | **179** | 45 | **224** |
-| **Total** | **220** | **77** | **647** | **307** | **207** | **1458** | **343** | **1801** |
+| Outillage PC | 7 | 15 | 29 | 118 | 18 | **187** | 45 | **232** |
+| **Total** | **220** | **77** | **655** | **315** | **207** | **1474** | **346** | **1820** |
 
-Points ajustés (indicatif, § 9) : 1 458 × 1,05 ≈ 1 531.
+Points ajustés (indicatif, § 9) : 1 474 × 1,05 ≈ 1 548.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 206 EI, 75 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 208 EI, 77 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -575,7 +575,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | VOIR.A03 | HIRES.INC : segment et cercle | `hires.inc` | 3 |
 | VOIR.A04 | HIRES.INC : écran texte au programme (LORES), texte, attributs, chargement et sauvegarde | `hires.inc` | 1 |
 
-### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, MKTAP)
+### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, XFER, MKTAP)
 
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
@@ -594,17 +594,20 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T09 | USBMOUNT : éjecter | EI | 2 | 2 | F | 3 |
 | USB.T10 | USBMOUNT : ce qui est monté, chemin complet d'une image | EQ | 1 | 4 | F | 3 |
 | USB.T11 | USBMOUNT `/B` : démarrage du BASIC 1.1 sur la cassette (configuration du menu) | EI | 1 | 5 | F | 3 |
+| USB.T12 | XFER R : réception d'un fichier (nom distant, `/T`, `NOM.$$$`, R/O gardé, ESC, refus du serveur) | EI | 2 | 6 | M | 4 |
+| USB.T13 | XFER E : envoi d'un fichier (nom distant, `/T`, absent, refus du serveur) | EO | 1 | 5 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
 | USB.A01 | API de la MIA du LOCI : détection, opérations, transferts par 128 octets | `loci_inc.s` | 3 |
 | USB.A02 | Conversions `^Z` et `/T` | `export.s`, `import.s` | 1 |
 | USB.A03 | Noms longs en 8.3 | `import.s` | 1 |
-| USB.A04 | ACIA 6551 scrutée (LOCI ou Oricutron), attente bornée de l'émetteur | `term.s` | 1 |
+| USB.A04 | ACIA 6551 scrutée (LOCI ou Oricutron), attente bornée de l'émetteur, réception avec délai au compteur 50 Hz | `acia_inc.s` | 1 |
 | USB.A05 | Format `.TAP`, chargeur BASIC tokenisé (fin du bloc = début des variables), taille sans les `^Z`, chevauchements | `mktap.s` | 1 |
 | USB.A06 | Chemins relatifs au répertoire courant (`..`, racine, support) ; clé renumérotée retrouvée d'après sa description ; texte du LOCI en fabricant, modèle, taille | `loci_inc.s` | 3 |
 | USB.A07 | Jokers `*` et `?` (retour arrière sur le dernier `*`), nom unique | `ljok_inc.s` | 1 |
 | USB.A08 | Changement d'image sans commande vers un lecteur vide (A: en service, lecteurs relus, lecteur courant rendu) ; image déjà montée (getcwd + nom du menu) | `lmnt_inc.s` | 3 |
+| USB.A09 | XMODEM : blocs numérotés (modulo 256), CRC-16 bit à bit ou somme, NAK et reprises, bloc répété ignoré, délais, annulation | `xfer.s` | 3 |
 
 ### 4.8 ASM
 
@@ -789,6 +792,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
 | OUT.T41 | `grx_colig.py` : `.GRX` passé de (ligne, colonne) à (colonne, ligne) | EO | 1 | 2 | F | 4 |
 | OUT.T42 | `test_oric.sh` : GRXASM `/O`, ASM `/T`, `.TAP` chargés sous BASIC 1.1 (`build/tap/`) | EO | 2 | 3 | F | 4 |
+| OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte, noms, erreurs simulées) | EI | 2 | 6 | M | 4 |
+| OUT.T44 | `test_xfer.sh` : XFER de bout en bout dans Oricutron (modem simulé, serveur) | EO | 2 | 4 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -815,7 +820,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 691 | 10 % | 37 959 | 35 | 118 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 710 | 10 % | 38 104 | 35 | 118 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -823,39 +828,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 23 | 4 308 | 442 | 178 | 0 | 9 % | 11 719 | 62 | 170 |
+| USB | 28 | 5 775 | 578 | 227 | 0 | 9 % | 13 452 | 75 | 175 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 76 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 175 | 8 158 | 954 | 511 | 0 | 10 % | — | 46 | — |
-| **Total** | 357 | 71 648 | 5 775 | 2 821 | 2 607 | 7 % | 158 302 | 49 | 109 |
+| Outillage PC | 178 | 8 876 | 1 065 | 578 | 0 | 11 % | — | 47 | — |
+| **Total** | 365 | 73 833 | 6 022 | 2 937 | 2 626 | 8 % | 160 180 | 50 | 109 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 371 | 81 | 4,3 | 80 |
+| Système et commandes | 1 415 | 82 | 4,4 | 83 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 234 | 26 | 2,6 | 13 |
+| CMDER | 234 | 26 | 2,6 | 14 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 79 | 13 | 1,1 | 14 |
+| USB | 79 | 13 | 1,0 | 17 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 25 |
-| Outillage PC | 341 | — | 1,9 | 118 |
-| Transverse (projet) | 2 323 | — | — | 76 |
-| Traduction anglaise (docs/en) | 2 731 | — | — | 34 |
-| **Total** | 8 818 | 317 | 6,0 | 203 |
+| Outillage PC | 341 | — | 1,8 | 120 |
+| Transverse (projet) | 2 406 | — | — | 80 |
+| Traduction anglaise (docs/en) | 2 775 | — | — | 36 |
+| **Total** | 8 989 | 318 | 6,1 | 207 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 203 commits du 2026-10-04 au 2026-10-27.
+Historique : 207 commits du 2026-10-04 au 2026-10-30.
 
-Réutilisation : 53 806 lignes de code écrites dans `progs/`, 62 206 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 55 207 lignes de code écrites dans `progs/`, 63 829 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -920,6 +925,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-27 | clé USB, lot 1 | 0.9 | 1 416 | 339 | 1 755 | 202 | répertoire courant de CP/A (`0:CPA.CWD`), chemins relatifs, clé renumérotée ; `USBDIR /S`, jokers (USBDIR, IMPORT) ; CMDER : supports, répertoires seuls, `/R` ; `USBCD.BAT` |
 | 2026-10-27 | clé USB, lot 2 | 0.9 | 1 438 | 342 | 1 780 | 203 | `USBMOUNT.COM` : disquettes B: à D:, cassette, `/B` (BASIC 1.1 sur la cassette) ; configuration du menu du LOCI ; `lmnt_inc.s` |
 | 2026-10-28 | clé USB, lot 3 | 0.9 | 1 458 | 343 | 1 801 | 204 | CMDER sur la clé : renommer, effacer, dupliquer (`^U`), monter (`^O`) ; nom des disquettes dans les en-têtes ; saisie longue |
+| 2026-10-30 | XFER | 0.9 | 1 474 | 346 | 1 820 | 208 | `XFER.COM` : envoi et réception par le modem (XMODEM-CRC) ; `tools/xfer_server.py`, `test_xfer.sh` ; `acia_inc.s` commun à TERM et XFER ; TERM : LF seul affiché en CR LF |
 
 ## 11. Comparaisons
 
@@ -1165,7 +1171,7 @@ qu'on disait indispensables. Place d'après la règle de `docs/architecture.md` 
 | dBASE II | base de données | fichiers de données de GRAPHER | une base simple sur l'accès direct (déjà notée, `docs/etat.md` § 2.6) |
 | MBASIC, CBASIC | BASIC avec décimaux et fichiers | LOGO (décimaux), GRAPHER (fichiers) | pas de BASIC sous CP/A : le pont va dans l'autre sens, vers le BASIC de l'Oric (`docs/oric-basic.md`) |
 | Turbo Pascal, BDS C | langage compilé avec éditeur | GRAPHER : interprété pour la mise au point, traduit en assembleur par GRXASM pour la vitesse ; ASM | peu de chose : les phases d'un jeu, les tuiles (`docs/grapher.md` § 16, § 17) |
-| MODEM7, Kermit, XMODEM | communication | `TERM.COM` (terminal) | prévu : `XFER.COM` (`docs/etat.md` § 2.4) |
+| MODEM7, Kermit, XMODEM | communication | `TERM.COM` (terminal), `XFER.COM` (XMODEM-CRC, serveur `xfer_server.py`) | Kermit, YMODEM (plusieurs fichiers, noms transmis) |
 | NSWEEP, SD | gestion des fichiers | CMDER, DIR, STAT | rien |
 | UNERA | récupérer un fichier effacé | — | tout (le répertoire garde les entrées effacées, comme CP/M) |
 | FINDBAD | repérer les secteurs défectueux | relecture de FORMAT et de DISKCOPY `/V` | verrouiller les blocs défectueux |

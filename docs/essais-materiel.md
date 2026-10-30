@@ -147,6 +147,22 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
+**XFER** (essayé seulement dans Oricutron, `tools/test_xfer.sh`), en français et en anglais :
+sur le Mac, `python3 tools/xfer_server.py --dir DOSSIER` ; sur l'Oric, `TERM`,
+`ATDT-IP_DU_MAC:2323` (la bannière `XFER : serveur CP/A pret` s'affiche), CTRL-Q, puis :
+
+- `XFER E README.TXT` puis `XFER R COPIE.TXT readme.txt` : `readme.txt` sur le Mac à sa
+  vraie taille, `COPIE.TXT` identique à `README.TXT` (`TYPE`, ou `EXPORT` et comparaison) ;
+- un gros fichier (GRAPHER.COM, 17 Ko) dans les deux sens, vers B: : durée (environ 1 Ko
+  par seconde attendu) ; le `.COM` reçu doit se lancer ;
+- `/T` : un texte écrit sur le Mac (LF, tabulations) reçu par `XFER R NOTE.TXT /T`, lu dans
+  EDIT ; renvoyé par `XFER E NOTE.TXT /T`, relu sur le Mac ;
+- ESC pendant une réception : `Annule (ESC)`, ni le fichier ni `NOM.$$$` sur le disque ;
+  l'ancien fichier du même nom intact ;
+- XFER sans liaison (modem en mode commande, ou après `ATH`) : `Pas de reponse du serveur`
+  au bout de 10 s, sans blocage ;
+- un XFER après l'autre sans repasser par TERM : la liaison reste ouverte.
+
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
 - Sur `cpa-asm.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire
