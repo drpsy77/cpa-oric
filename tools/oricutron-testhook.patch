@@ -157,7 +157,7 @@ diff --git a/machine.c b/machine.c
 index 00b7b0e..8781179 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,350 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,355 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -286,17 +286,22 @@ index 00b7b0e..8781179 100644
 +  case 0x00: mia_xp = 512; mia_ret(0); return;
 +  case 0x14: {            /* open : A = drapeaux de cc65 */
 +    const char *mode;
++    int z; struct stat st;
 +    for (i = 0; i < 16 && mia_f[i]; i++) ;
 +    if (i == 16) { mia_err(5); return; }
++    z = mia_xs[mia_xp] == '0' && mia_xs[mia_xp + 1] == ':';
 +    r = mia_path((char *)&mia_xs[mia_xp], path, (a & 0x10) != 0);
 +    mia_xp = 512;
 +    if (r == 3) { mia_err(32 + 11); return; }
 +    if (r == 4) { mia_err(32 + 5); return; }
 +    if (!r) { mia_err(32 + 6); return; }
++    /* littlefs de 0: (firmware, std.c) : O_TRUNC, O_APPEND ou O_EXCL y
++       vont sans O_CREAT ; un fichier absent n'est pas créé (LFS_ERR_NOENT) */
++    if (z && (a & 0x10) && (a & 0xE0) && stat(path, &st)) { mia_err(128 + 2); return; }
 +    if ((a & 3) == 1) mode = "rb";
 +    else if (a & 0x10) mode = (a & 0x20) ? "wb" : (a & 0x40) ? "ab" : "r+b";
 +    else mode = "r+b";
-+    if ((a & 0x10) && !(a & 0x20) && !(a & 0x40) && r == 2) mode = "w+b";
++    if ((a & 0x10) && !(a & 0x60) && stat(path, &st)) mode = "w+b";  /* O_CREAT : créé s'il manque */
 +    mia_f[i] = fopen(path, mode);
 +    if (!mia_f[i]) { mia_err(32 + 4); return; }
 +    mia_ret(i + 3); return; }

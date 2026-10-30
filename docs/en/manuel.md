@@ -380,12 +380,16 @@ it displays is also written into the file, in CP/M text format (`^Z` at the end)
 read it again with `TYPE` or change it with `EDIT`. During a PUT, the end-of-screen pause is
 suspended. DIR lines, which fill the screen, get their line ending in the file.
 
-How it works: `conout` also stores each character in a 1,280-byte buffer. Writing to the disk
+How it works: `conout` also stores each character in a 768-byte buffer. Writing to the disk
 in the middle of a display would be dangerous (the display can happen in the middle of a BDOS
 function, or between "search first" and "search next"). Full records are therefore written on
 entry to the next BDOS call, saving then restoring the state of the file system. The file is
 closed on return to the prompt (or at warm start). A program that displayed a lot without ever
-calling the BDOS would overflow the buffer: the end would be lost, and a message says so.
+calling the BDOS would overflow the buffer: the end would be lost, and a message says so
+(`PUT: end lost`). The programs supplied display through the BDOS (TERM included:
+`PUT SESSION.TXT TERM` keeps a whole session), except DEBUG, each command of which keeps at most
+768 characters. If the disk fills up, copying stops, the file keeps what was written and
+`Disk full` is displayed at the end.
 
 **Scripts: DO.** `DO NAME [p1 ... p9]` reads `NAME.BAT` and runs its lines one by one, as if
 they were typed at the prompt (each line is shown after `A>`). Empty lines and those starting
@@ -414,6 +418,17 @@ the script. Example:
 
 `ECHO` and DO's parameters keep lower case as typed (the rest of the command line is turned to
 upper case).
+
+**Start-up script: AUTO.BAT.** At cold start (power on with the system disk), if
+`AUTO.BAT` is on `A:`, CP/A runs it: `A>AUTO` is shown after the RAM test, then the lines of the
+script. For example, to mount the disks for a given use and move to the work disk:
+
+    ; AUTO.BAT
+    USBMOUNT B: PROJECT.DSK
+    B:
+
+ESC typed between two lines stops it, as with any script. A warm start (RESET button, end of a
+program) does not run it again.
 
 **Limits of scripts.** A script is only a series of commands, as typed on the keyboard: there
 is no calculation, no variable, no condition, no loop. `$1` to `$9` are replaced by the text of
@@ -682,7 +697,9 @@ then XFER can be used as many times as wanted:
 
 At cold start, CP/A tests the program RAM as the Atmos ROM does: it writes `$AA` then `$55` into
 each byte and checks what it reads back. It then displays `RAM test OK.` or the address of the
-first faulty byte. The test takes about 1.5 s.
+first faulty byte. The test takes about 1.5 s. It then runs `A:AUTO.BAT` if it exists
+("Start-up script" above). The code of the test and of AUTO.BAT is in memory only when the
+system is loaded: a `GO C000` (the BIOS BOOT) redoes the cold start without them.
 
 Unlike the ROM, it leaves the memory filled with `$00`, which is the `BRK` instruction. A
 program that jumps into an empty area by mistake is therefore caught: `*BRK* at xxxx` is

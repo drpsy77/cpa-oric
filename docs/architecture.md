@@ -98,7 +98,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`, PUT `$F7C0-$FCFF`), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; libres : `$FDF8-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (code chargé avec le système qui n'a pas besoin d'y rester : PUT et son tampon, démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDF9-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -123,8 +123,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
-- `build.sh` refuse un système disque qui dépasse `$F670`, une page `$FF00` qui atteint les
-  vecteurs (`$FFFA`) et une ROM qui ne fait pas 16 Ko ; il affiche les deux marges.
+- `build.sh` refuse un système disque qui dépasse `$F670`, une fenêtre qui déborde (PUT après
+  `$FA00`, démarrage à froid après `$FD00`), une page `$FF00` qui atteint les vecteurs (`$FFFA`)
+  et une ROM qui ne fait pas 16 Ko ; il affiche les marges.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
   `tools/oricutron-testhook.patch` ; `DSK=` pour la disquette, `ORIC_ROM=cpa` pour la ROM) et
   `tools/screen.py` (texte de l'écran).
@@ -168,6 +169,10 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   Écran texte (LORES, `h_lores` de `hires.inc`) : `SCR_PROG` (`$020E`) à 1, mêmes effets
   (FUNCT et CTRL-T arrivent au programme comme des touches) ; `h_text` et le démarrage à chaud
   rendent la console.
+- Affichage et PUT : un programme dont la sortie doit pouvoir être capturée par
+  `PUT fichier programme` affiche par le BDOS (fonctions 2 et 9), pas par CONOUT du BIOS
+  (`B_CONOUT`) : l'entrée du BDOS vide le tampon de PUT (768 octets). Par CONOUT seul, ce qui
+  dépasse le tampon entre deux appels du BDOS est perdu (`PUT: end lost`).
 - Assembleur : syntaxe `xa` de l'OSDK. Les programmes de `progs/` restent dans le sous-ensemble
   compris par ASM.COM (pas de `&étiquette`, pas de `#define`) : `tools/test_asm.sh` le vérifie.
   Le système (`src/`) peut utiliser tout `xa`.

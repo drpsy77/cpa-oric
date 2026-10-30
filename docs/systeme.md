@@ -117,8 +117,13 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   d'appel de 78 caractères, sans XDO.COM la ligne d'appel est sautée.
 - **CHAIN** (BDOS 47) : ligne recopiée en `$0400`, `chain_on` (`$0244`) à 1, démarrage à
   chaud ; le CCP l'exécute avant toute ligne d'un script DO.
-- **PUT** n'écrit jamais sur le disque pendant un affichage : tampon de 1 280 octets vidé à
-  l'entrée de l'appel BDOS suivant, état du système de fichiers sauvé puis rendu.
+- **PUT** n'écrit jamais sur le disque pendant un affichage : tampon de 768 octets vidé à
+  l'entrée de l'appel BDOS suivant, état du système de fichiers sauvé puis rendu. Son code
+  est dans la fenêtre (§ 6). Disque plein : copie arrêtée (`put_on` à 0), fichier refermé et
+  `Disk full` affiché au retour au prompt (`put_end` regarde aussi `put_lost`).
+- **AUTO.BAT** : le code du démarrage à froid (dans la fenêtre) cherche `A:AUTO.BAT` après le
+  test de la RAM ; présent, il laisse la ligne `AUTO` au CCP comme CHAIN (`CMDBUF`,
+  `chain_on`), qui la lance comme un script (ESC l'arrête entre deux lignes).
 - TYPE, ERA et REN sont des `.COM` (place résidente) ; le menu Fichiers tape toujours leur
   nom.
 
@@ -136,6 +141,25 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   note quelques millisecondes avant le départ. Le démarrage à chaud remet `s_hold` à 0.
 
 ## 6. Place
+
+**La fenêtre** (`src/win.s`, `$F7C0-$FCFF`, 1 344 octets) : code chargé avec le système qui
+n'a pas besoin d'y rester toujours. `win_id` (`$FDF8`) dit ce qu'elle contient : bit 0
+(`WIN_PUT`) le code de PUT, bit 7 (`WIN_COLD`) le code du démarrage à froid (`src/cold.s` :
+test de la RAM, AUTO.BAT). L'image du système pose les deux ; `cold_boot` lit `win_id` avant
+d'effacer `$FD00-$FDFF`, appelle `cold_win`, puis ne garde que `WIN_PUT`. Le démarrage à chaud
+n'y touche pas.
+
+| Zone | Contenu |
+|---|---|
+| `$F7C0` | table de sauts : `W_CHAR`, `W_FLUSH`, `W_END`, `W_CMD`, seuls points d'entrée |
+| `$F7CC` | code de PUT, puis `PUT_SAVE` (54 octets : état sauvé pendant l'écriture) |
+| `$FA00-$FCFF` | `PUTBUF`, tampon de PUT (768 octets, commence sur une page) ; dans l'image : `cold_win` |
+
+Le code résident n'entre dans la fenêtre qu'après ses propres tests (`src/put.s`) : `conout`
+et `put_nl` si `put_on`, l'entrée du BDOS si `put_pend`, `put_end` si `put_on` ou `put_lost`,
+la commande PUT si `win_id` a `WIN_PUT` (sinon `PUT: not loaded`). `./build.sh` contrôle que
+PUT finit avant `$FA00` et `cold_win` avant `$FD00`, et affiche les marges.
+
 
 Mesurer par module et par routine avec `build/cpa_sys.sym`. Les plus gros postes : `fs.s`,
 `bios.s`, `gfx.s`, `menu.s`, `ccp_disk.s`, `rline.s`, tables, police. La page `$FF00`

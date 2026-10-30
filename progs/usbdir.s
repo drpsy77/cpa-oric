@@ -212,7 +212,9 @@ od      jsr usb_closedir
         lda #<apath
         ldy #>apath
         jsr cw_put
-        lda #<cwd
+        bcc wok
+        jmp usb_err             ; 0:CPA.CWD non écrit
+wok     lda #<cwd
         ldy #>cwd
         jsr lputs
         jmp lcrlf
