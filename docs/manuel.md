@@ -392,13 +392,17 @@ On peut ensuite le relire avec `TYPE` ou le modifier avec `EDIT`. Pendant un PUT
 d'écran est suspendue. Les lignes de DIR, qui remplissent l'écran, reçoivent leur fin de ligne
 dans le fichier.
 
-Comment ça marche : `conout` range aussi chaque caractère dans un tampon de 1 280 octets. Écrire
+Comment ça marche : `conout` range aussi chaque caractère dans un tampon de 768 octets. Écrire
 sur le disque au milieu d'un affichage serait dangereux (l'affichage peut avoir lieu au milieu
 d'une fonction du BDOS ou entre « chercher premier » et « chercher suivant »). Les
 enregistrements pleins sont donc écrits à l'entrée de l'appel BDOS suivant, en sauvant puis en
 rendant l'état du système de fichiers. Le fichier est refermé au retour au prompt (ou au
 démarrage à chaud). Un programme qui afficherait beaucoup sans jamais appeler le BDOS ferait
-déborder le tampon : la fin serait perdue, et un message le signale.
+déborder le tampon : la fin serait perdue, et un message le signale (`PUT: end lost`). Les
+programmes livrés affichent par le BDOS (TERM compris : `PUT SESSION.TXT TERM` garde toute une
+session), sauf DEBUG, dont chaque commande garde au plus 768 caractères. Si le disque se
+remplit, la copie s'arrête, le fichier garde ce qui était écrit et `Disk full` s'affiche à la
+fin.
 
 **Scripts : DO.** `DO NOM [p1 ... p9]` lit `NOM.BAT` et exécute ses lignes une à une, comme si on
 les tapait au prompt (chaque ligne est affichée après `A>`). Les lignes vides et celles qui
@@ -427,6 +431,18 @@ en fin d'écran repart à zéro à chaque ligne du script. Exemple :
 
 `ECHO` et les paramètres de DO gardent les minuscules telles qu'elles sont tapées
 (le reste de la ligne de commande passe en majuscules).
+
+**Script de démarrage : AUTO.BAT.** Au démarrage à froid (mise sous tension avec la disquette
+système), si `AUTO.BAT` est sur `A:`, CP/A l'exécute : `A>AUTO` s'affiche après le
+test de la RAM, puis les lignes du script. Par exemple, pour monter les disquettes d'un usage
+et passer sur la disquette de travail :
+
+    ; AUTO.BAT
+    USBMOUNT B: PROJET.DSK
+    B:
+
+ESC tapé entre deux lignes l'arrête, comme tout script. Le démarrage à chaud (bouton RESET,
+fin d'un programme) ne le relance pas.
 
 **Limites des scripts.** Un script n'est qu'une suite de commandes, comme tapées au clavier :
 il n'y a ni calcul, ni variable, ni condition, ni boucle. `$1` à `$9` sont remplacés par le
@@ -698,7 +714,10 @@ puis XFER s'utilise autant de fois qu'on veut :
 
 Au démarrage à froid, CP/A teste la RAM des programmes comme le fait la ROM de l'Atmos :
 il écrit `$AA` puis `$55` dans chaque octet et vérifie la relecture. Il affiche ensuite
-`RAM test OK.` ou l'adresse du premier octet défectueux. Le test dure environ 1,5 s.
+`RAM test OK.` ou l'adresse du premier octet défectueux. Le test dure environ 1,5 s. Puis
+il exécute `A:AUTO.BAT` s'il existe (« Script de démarrage » ci-dessus). Le code du test et
+d'AUTO.BAT n'est en mémoire qu'au chargement du système : un `GO C000` (le BOOT du BIOS) refait
+le démarrage à froid sans eux.
 
 Contrairement à la ROM, il laisse la mémoire remplie de `$00`, qui est l'instruction `BRK`.
 Un programme qui saute par erreur dans une zone vide est donc intercepté :

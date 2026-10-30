@@ -18,6 +18,9 @@
 
 #include "cpa.inc"
 
+; ne crée aucun fichier : sans le détour de usb_open ni cw_put (loci_inc.s)
+#define LOCI_SANS_CREATION
+
 w1      = $10           ; position des mots dans args ($FF : absent)
 w2      = $11
 oe      = $12           ; 1 = /E

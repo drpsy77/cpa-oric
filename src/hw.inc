@@ -314,9 +314,12 @@ ORIGBUF     = $F670     ; la ligne de commande avant passage en majuscules
 scr_fcb     = $F6C0     ; FCB du script (36 octets)
 scr_buf     = $F6E4     ; enregistrement courant (128 octets)
 scr_par     = $F764     ; paramètres $1-$9 (80 octets)
-PUT_SAVE    = $F7C0     ; sauvegarde de l'état pendant l'écriture (64 octets)
-PUT_NZP     = 26        ; page zéro $E0-$F9
-PUTBUF      = $F800     ; tampon (1280 octets, jusqu'à $FCFF)
-PUTMAX      = 1280
+PUT_NZP     = 26        ; page zéro $E0-$F9 (sauvée dans PUT_SAVE, win.s)
+WIN         = $F7C0     ; fenêtre (win.s) : table de sauts, code de PUT
+PUTBUF      = $FA00     ; tampon de PUT (768 octets, jusqu'à $FCFF) ;
+PUTMAX      = 768       ;   code du démarrage à froid dans l'image
+win_id      = $FDF8     ; contenu de la fenêtre :
+WIN_PUT     = $01       ;   PUT
+WIN_COLD    = $80       ;   code du démarrage à froid (cold.s)
 SYS_END     = $F670     ; le code du système doit finir avant
 #endif

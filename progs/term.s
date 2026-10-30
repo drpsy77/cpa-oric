@@ -28,8 +28,9 @@
 ;  rien (pas encore d'ANSI). FUNCT ouvre les menus du système ; pendant
 ;  ce temps le LOCI garde ce qui arrive (il ne lit le modem que s'il a
 ;  de la place : rien n'est perdu).
-;  Reçu : affiché par CONOUT (CR, LF, BS, FF, TAB compris ; autres codes
-;  de contrôle et octets >= 128 ignorés). Un CR est affiché en CR LF (un
+;  Reçu : affiché par la fonction 2 du BDOS, pour que PUT le capture
+;  (CR, LF, BS, FF, TAB compris ; autres codes de contrôle et octets
+;  >= 128 ignorés). Un CR est affiché en CR LF (un
 ;  serveur qui ne renvoie que CR, ou l'écho local de RETURN, passe bien à
 ;  la ligne), un LF seul aussi (un serveur Unix, comme nc sur le Mac,
 ;  n'envoie que LF) ; un LF qui suit aussitôt un CR est sauté (pas de
@@ -112,12 +113,12 @@ loop    jsr ac_rsta             ; reçu ?
         sta last
         pha
         lda #"["
-        jsr B_CONOUT
+        jsr out
         pla
         pha
         jsr phex
         lda #"]"
-        jsr B_CONOUT
+        jsr out
         pla
 nod     and #$08
         beq key
@@ -174,9 +175,9 @@ quit    lda savpg
         lda wascr               ; déjà en début de ligne : rien
         bne qr
         lda #13
-        jsr B_CONOUT
+        jsr out
         lda #10
-        jmp B_CONOUT
+        jmp out
 qr      rts
 .)
 
@@ -198,9 +199,9 @@ dregs
         lda #$FF                ; le premier état sera affiché
         sta last
         lda #13
-        jsr B_CONOUT
+        jsr out
         lda #10
-        jmp B_CONOUT
+        jmp out
 r       rts
 .)
 
@@ -208,7 +209,7 @@ r       rts
 hexsp
         pha
         lda #" "
-        jsr B_CONOUT
+        jsr out
         pla
 ; phex : affiche A en deux chiffres hexadécimaux
 phex
@@ -225,7 +226,7 @@ dig     cmp #10
         bcc n
         adc #6                  ; (C=1) 10 -> "A"
 n       adc #"0"
-        jmp B_CONOUT
+        jmp out
 .)
 
 ; show : affiche le caractère reçu A (CONOUT ignore les codes inutiles) ;
@@ -251,11 +252,18 @@ s1      ldx #0
 s2      stx wascr
         cpx #1
         beq cr
-        jmp B_CONOUT
-cr      jsr B_CONOUT
+        jmp out
+cr      jsr out
         lda #10
-        jmp B_CONOUT
+        jmp out
 .)
+
+; out : affiche A par la fonction 2 du BDOS, pas par CONOUT du BIOS :
+;   l'entrée du BDOS vide le tampon de PUT, donc PUT NOM TERM capture une
+;   session entière (X n'est pas gardé)
+out
+        ldx #F_CONOUT
+        jmp BDOS
 
 ; txwait : attend que l'émetteur soit libre (ac_txw) ; C=1 s'il ne l'est
 ;   pas après ~0,3 s. /B : pas de lecture de l'état, pause fixe d'environ

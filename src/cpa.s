@@ -80,10 +80,22 @@ bios_table
 #include "put.s"
 #include "script.s"
 #endif
+#ifndef DISK
+#include "cold.s"
+#endif
 #include "tables.s"
 #include "font.s"
 
 rom_end
+
+#ifdef DISK
+; ---------------------------------------------------------------------
+; Zones de travail ($F670-$F7BF), puis la fenêtre $F7C0-$FCFF : code
+; chargé avec le système mais qui n'a pas besoin d'y rester (PUT, puis
+; démarrage à froid dans la zone du tampon de PUT), et win_id ($FDF8).
+; ---------------------------------------------------------------------
+#include "win.s"
+#endif
 
 ; ---------------------------------------------------------------------
 ; Page $FF00-$FFF9 : chargée avec le système (version disquette), elle

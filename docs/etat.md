@@ -7,9 +7,11 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code `$C000-$F664` en français (`$F638` en anglais), **marge 12 octets**
-jusqu'à `$F670` (135 sans l'option `CPLCMD`) ; page `$FF00-$FFEF`, marge 10 octets (table
-des touches de l'édition de ligne, encres des menus). `./build.sh` affiche les deux marges.
+**Système** : code résident `$C000-$F424` en français (`$F3F8` en anglais), **marge 588
+octets** jusqu'à `$F670` (711 sans l'option `CPLCMD`) ; fenêtre `$F7C0-$FCFF` (PUT, marge 2
+octets avant son tampon de 768 ; code du démarrage à froid dans le tampon, marge 565 ;
+`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de l'édition
+de ligne, encres des menus). `./build.sh` affiche les marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
   et pagination (`PAPER`, `INK`, `PAGE`) ;
@@ -20,7 +22,8 @@ des touches de l'édition de ligne, encres des menus). `./build.sh` affiche les 
   et, en début de ligne, des commandes (sur les lecteurs où elles seraient cherchées) ;
 - fichiers CP/M 2.2 (séquentiel, accès direct, attributs R/O et SYS), lecteurs A: à D: ;
 - programmes et scripts cherchés sur le lecteur du script (ou le courant), puis A: à D: ;
-  scripts `.BAT` (DO, `$1`-`$9`, appel de script à script par XDO) ; CHAIN (BDOS 47) ;
+  scripts `.BAT` (DO, `$1`-`$9`, appel de script à script par XDO, `AUTO.BAT` au démarrage
+  à froid) ; CHAIN (BDOS 47) ; PUT (sortie d'une commande dans un fichier) ;
 - imprimante Centronics (LIST, BDOS 5, CTRL-P) ;
 - graphisme SPLIT (BDOS 115), son AY (BDOS 116) ; HIRES plein écran et écran texte (LORES)
   laissés aux programmes, avec retour assuré par le démarrage à chaud ;
@@ -35,14 +38,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 550 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 580 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 17 935 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 933 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 095 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 847 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| TERM | 852 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XFER | 2 037 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
@@ -62,7 +65,7 @@ Disquettes : `cpa.dsk` (tout, et la démonstration), `cpa-logo.dsk`, `cpa-notes.
 la disquette système en A:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`, `cpa-logo-en.dsk`...
 `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 477 points de fonction IFPUG et 346 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 480 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -171,11 +174,10 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    Pi), réception par `NOM.$$$`, `/T` (fins de ligne, texte du Mac passé en ASCII :
    accents et cédille retirés, `œ` -> `oe`, `æ` -> `ae`) ; essayé dans Oricutron
    (`tools/test_xfer.sh` : 40 Ko, `/T`, refus, ESC, erreurs simulées) et sur le vrai Oric
-   (30/10/2026, sauf les accents) ; TERM et XFER sur la bibliothèque `acia_inc.s`.
+   (30/10/2026, sauf les accents) ; TERM et XFER sur la bibliothèque `acia_inc.s`. TERM
+   affiche par la fonction 2 du BDOS : `PUT NOM TERM` capture une session entière.
    Décidé, pas encore fait : plusieurs fichiers (jokers), appel du serveur par XFER
-   lui-même (sans passer par TERM) ; TERM affiche le texte reçu par la fonction 2 du BDOS
-   au lieu de `B_CONOUT`, pour que `PUT NOM TERM` capture une session sans limite de
-   tampon (avec le lot 1 de la descente de PUT, § 3).
+   lui-même (sans passer par TERM).
    Proposé, avec l'appel du serveur par XFER : un fichier texte `HOSTS` (`nom hôte:port`,
    une ligne par hôte), lu par TERM et XFER (code dans `acia_inc.s`, ~200 octets, rien de
    résident) ; un nom absent part au modem, qui résout par le DNS (pas les `.local`).
@@ -189,7 +191,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
      EDIT). Elle demande le pilote dans le BIOS, pas un `.COM` : elle doit survivre aux
      programmes.
-   - Ordre : (1) descente de PUT en banque (§ 3) ; (2) pilote série du BIOS, par
+   - Ordre : (1) descente de PUT, lot 1 fait (§ 3 : ~580 octets résidents rendus) ;
+     (2) pilote série du BIOS, par
      scrutation, reprenant le code d'`acia_inc.s` : PUNCH / READER (BDOS 3
      et 4), état de la réception, console redirigée (CONST, CONIN, CONOUT ; commande et
      forme à spécifier) ; ~150 octets estimés, ~300 à prévoir.
@@ -250,7 +253,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 6. **Petites améliorations notées**
    - **Imprimante dans un fichier** (demandé par Pierre le 24/10/2026, sans imprimante ;
      Oricutron écrit déjà `printer.out`). Décidé : par PUT, plutôt que par un pilote LOCI
-     dans le BIOS (marge de 12 octets, API du LOCI résidente) : `PUT /P NOM commande`
+     dans le BIOS (API du LOCI résidente) : `PUT /P NOM commande`
      recopie dans le fichier ce qui part à l'imprimante (LIST, BDOS 5, CTRL-P, `^P` d'EDIT)
      au lieu de l'écran ; `EXPORT` le passe sur la clé, puis directement avec le lecteur
      U: (§ 2 point 9 : `PUT /P U:PRINT.TXT ...`). Coût résident : un test dans LIST vers
@@ -259,12 +262,6 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      afficher par la fonction 2 du BDOS au lieu de `B_CONOUT` (`putc`), pour que
      `PUT LISTE.TXT DEBUG` garde un long désassemblage sans limite de tampon (puis XFER ou
      EXPORT vers un ordinateur) ; revoir son ergonomie ;
-   - **`AUTO.BAT`** (décidé par Pierre le 30/10/2026 ; avec le lot 1 de la descente de PUT,
-     § 3) : exécuté au démarrage à froid seulement, s'il est sur A: (par exemple pour monter
-     par USBMOUNT les disquettes d'un usage, ou appeler par XDO un script de profil) ; ESC
-     l'arrête entre deux lignes, comme tout script. Le test de présence et la ligne laissée
-     au CCP (comme CHAIN : `chain_on`, `CMDBUF`) sont dans le code du démarrage à froid,
-     dans la fenêtre : aucun octet résident ;
    - son dans les scripts : commande `NOTE` au prompt ou `PLAY.COM` (partition texte) ;
    - **Son de LOGO plus simple** (remarque de Pierre le 24/10/2026) : `SON v n vol d` et
      `ENSEMBLE` sont lourds pour un accord et n'ont pas de raccourci. Piste retenue : une
@@ -448,90 +445,58 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 
 ## 3. Réserves de place
 
-**Système** (marge 12 octets ; page `$FF00` : 10 octets) :
+**Système** (marge 588 octets ; fenêtre : 2 octets pour PUT ; page `$FF00` : 10 octets) :
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
 | H : masque de point calculé au lieu de la table `g_xbit` (240 octets) | ~220 | un peu plus lent en SPLIT |
 | Police rangée sur 5 octets par caractère, dépliée par `font_init` | ~250 | le texte de `gfx.s` doit lire la police recopiée |
-| I : test de RAM réduit à un remplissage, test complet en `.COM` | ~105 | — |
-| Code répété (`g_box`/`g_line`, `go`/`f_delete`, `cmd_put`/`run_transient`) | < 500 | coût des `JSR` |
+| Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
 | Option `CPLCMD` retirée (complétion des commandes) | 123 | perte de la fonction |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
 
-**Décidé (23/10/2026, précisé le 30/10/2026), rien codé : PUT descend dans une fenêtre**,
-avant de toucher aux menus (fonction phare, gardés résidents). Le pilote série (~300 octets,
-§ 2 point 4 : console à distance) est plus utile que PUT résident.
+**La fenêtre** (`$F7C0-$FCFF`, `docs/systeme.md` § 6). Fait (lot 1) : PUT et le code du
+démarrage à froid (test de la RAM, `AUTO.BAT`) y sont chargés avec le système ; 576 octets
+résidents rendus. La place sert d'abord au pilote série (~300 octets, § 2 point 4 : console
+à distance) ; les menus (fonction phare) restent résidents.
 
-- **La fenêtre** : `$F7C0-$FCFF` (1 344 octets, aujourd'hui `PUT_SAVE` et le tampon de PUT).
-  Le chargeur d'amorçage lit les 16 Ko `$C000-$FFFF` (64 secteurs, `boot/boot.s`) : ce que
-  l'image du système met dans la fenêtre y est au démarrage (vérifié : les secteurs 3-66
-  de `cpa.dsk` et `cpa-en.dsk` sont `cpa_sys.bin`). Pas de place dans les pistes système
-  (LSN 3-66 pris, 67 seul libre) : une banque rechargée est un fichier.
-- **Contenu de la fenêtre** (variable interne, dans `$FDF8-$FDFF`) : PUT, IMG ou rien.
-  - **Au démarrage** : le code de PUT en tête, à sa place définitive, et le code du
-    démarrage à froid dans la zone du futur tampon. PUT est donc là sans lire de fichier ;
-    le démarrage à chaud ne recharge pas la fenêtre.
-  - **PUT** (`src/put.s`, 525 octets de `put_char` à `cmd_do`) : il n'a pas d'état hors de
-    la page 2 et de l'overlay (vérifié : `pc_st` et `pr_ld`, modifiés par le code, sont
-    posés avant chaque usage ; `put_fcb` en `$FDD4`). Restent résidents les crochets
-    (`conout`, entrée du BDOS, `wboot`, CCP, `put_nl` de DIR), par une table de sauts en tête
-    de la fenêtre. Tampon commençant sur une page (`pc_st` : `adc #>PUTBUF`) : 768 octets
-    (`$FA00-$FCFF`) si code et sauvegarde tiennent dans 576 octets (~15 à gagner), sinon
-    512.
-  - **IMG** (lot 2) : GSAVE et GLOAD (BDOS 115 op 12 et 13, `g_gsave` à `g_mode`, 241
-    octets ; `cmd_gsave`, `cmd_gload`, `img_msg`, `img_name`, 64) et `SAVE n fichier`
-    (`cmd_save`, 132) : 437 octets. Chargée depuis le fichier de banques quand elle sert,
-    elle reste dans la fenêtre (les GLOAD suivants ne relisent rien) ; le PUT suivant
-    relit PUT.
-  - **Prêt pendant un PUT** (lot 2) : le fichier de banques est ouvert d'abord (absent :
-    opération refusée, PUT intact), copie suspendue (`put_on` à 0), IMG lu sur le code de
-    PUT sans toucher au tampon (son reste, moins de 128 octets, est en tête), opération,
-    PUT relu, copie rendue. À l'entrée du BDOS, `put_flush` a déjà écrit le tampon. Le
-    chargeur prend son FCB dans la zone `PUT_SAVE`, libre à ce moment (`put_fcb` est ouvert).
-    Un RESET pendant le prêt perd la copie en cours (le fichier n'a que ce qui était écrit).
-- **Pas dans la fenêtre** : la complétion des commandes (un chargement à chaque ESC ralentirait
-  le vrai Microdisc) ; les fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko, appelées sans
-  cesse ; `PUT LOG.TXT GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et `font_init`,
-  qui servent aussi au démarrage à chaud et à `crash_screen` ; `msg_banner` (VER).
-- **Démarrage à froid** : seuls `ram_test`, `ram_report` et leurs deux messages vont dans la
-  fenêtre (~120 octets, pas 200 à 300). `BOOT` (`$C000`) et le vecteur `$FFFC` restent sur
-  `cold_boot`, résident, qui n'appelle le code de la fenêtre que si la variable de la
-  fenêtre dit qu'il est là (valeur posée par l'image, lue avant l'effacement de
-  `$FD00-$FDFF`). Un `BOOT` appelé plus tard refait donc tout sauf le test de RAM
-  (précise le contrat, ne le change pas ; aucun programme n'appelle `$C000`).
-- **`AUTO.BAT`** (§ 2 point 6) : dans le même code du démarrage à froid ; s'il est sur A:,
-  la ligne `AUTO` est laissée au CCP comme par CHAIN (`chain_on`, `CMDBUF`).
-- **Fichier de banques** (lot 2) : `CPA.BNK` (SYS, R/O), sur toutes les disquettes
-  système, français et anglais ; signature calculée par `build.sh`, comparée à celle du
-  système : une banque d'une autre version est refusée avec un message. Cherché comme les
-  programmes (lecteur courant, puis A: à D:).
-- **Ce qui recule** : sans `CPA.BNK` en ligne, GSAVE, GLOAD et SAVE sont refusés (PUT marche
-  tant qu'IMG n'a pas pris sa place) ; sous PUT, chaque GSAVE ou GLOAD relit ~1 Ko de
-  banques ; le tampon de PUT passe de 1 280 à 768 octets. Ce dernier point ne touche que
-  les programmes qui affichent par le BIOS (`B_CONOUT`) sans appeler le BDOS : DEBUG et
-  TERM ; ceux qui passent par la fonction 2 vident le tampon à chaque enregistrement.
-  TERM passe à la fonction 2 dans le lot 1, DEBUG avec sa refonte (§ 2). Règle à écrire dans
-  `architecture.md` § 5 : un programme dont la sortie doit pouvoir être capturée par PUT
-  affiche par le BDOS.
-- **Lots** :
-  1. fenêtre au démarrage (PUT et démarrage à froid), `AUTO.BAT`, TERM par la fonction 2,
-     règle ci-dessus ; PUT refusé si la fenêtre a été prise (ne peut pas encore arriver).
-     Gain ~640 octets (PUT 525, démarrage ~120), moins la table de sauts et les tests.
+Décidé, pas encore fait :
+
+- **IMG** (lot 2) : GSAVE et GLOAD (BDOS 115 op 12 et 13, `g_gsave` à `g_mode`, 241 octets ;
+  `cmd_gsave`, `cmd_gload`, `img_msg`, `img_name`, 64) et `SAVE n fichier` (`cmd_save`, 132) :
+  437 octets. Chargée depuis le fichier de banques quand elle sert, elle reste dans la
+  fenêtre (les GLOAD suivants ne relisent rien) ; le PUT suivant relit PUT (`win_id` :
+  nouveau bit, `cmd_put` refuse déjà une fenêtre sans PUT).
+- **Prêt pendant un PUT** (lot 2) : le fichier de banques est ouvert d'abord (absent :
+  opération refusée, PUT intact), copie suspendue (`put_on` à 0), IMG lu sur le code de PUT
+  sans toucher au tampon (son reste, moins de 128 octets, est en tête), opération, PUT relu,
+  copie rendue. À l'entrée du BDOS, `put_flush` a déjà écrit le tampon. Le chargeur prend
+  son FCB dans `PUT_SAVE` (`$F9C3`, après le code de PUT : IMG doit s'arrêter avant) ;
+  `put_end` regarde aussi `put_lost` (disque plein) : le prêt ne doit pas laisser l'un sans
+  l'autre. Un RESET pendant le prêt perd la copie en cours (le fichier n'a que ce qui était
+  écrit).
+- **Pas dans la fenêtre** : la complétion des commandes (un chargement à chaque ESC
+  ralentirait le vrai Microdisc) ; les fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko,
+  appelées sans cesse ; `PUT LOG.TXT GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et
+  `font_init`, qui servent aussi au démarrage à chaud et à `crash_screen` ; `msg_banner`
+  (VER).
+- **Fichier de banques** (lot 2) : `CPA.BNK` (SYS, R/O), sur toutes les disquettes système,
+  français et anglais ; signature calculée par `build.sh`, comparée à celle du système : une
+  banque d'une autre version est refusée avec un message. Cherché comme les programmes
+  (lecteur courant, puis A: à D:). Pas de place dans les pistes système (LSN 3-66 pris, 67
+  seul libre).
+- **Ce qui recule** (lot 2) : sans `CPA.BNK` en ligne, GSAVE, GLOAD et SAVE sont refusés (PUT
+  marche tant qu'IMG n'a pas pris sa place) ; sous PUT, chaque GSAVE ou GLOAD relit ~1 Ko de
+  banques.
+- **Lots** suivants :
   2. fichier de banques, chargeur, IMG en banque, prêt de la fenêtre ; GSAVE par `NOM.$$$`
      (§ 2 point 5) et dans `tools/test_fichiers.py`. Gain ~437, moins le chargeur (~120).
   3. options résident / en banque / absent, d'abord par `-D` dans `build.sh` (puis le
      fichier de configuration de la construction sur l'Oric, § 2 point 8) ; la ROM n'a que
      résident ou absent. Le code du démarrage à froid va toujours dans la fenêtre.
-- **Tests du lot 1** : `./build.sh` (marges), `smoke_test.sh`, `test_asm.sh`,
-  `test_fichiers.py` (par précaution : PUT écrit des fichiers), `test_xfer.sh` (TERM) ; dans Oricutron : démarrage (test de RAM affiché),
-  `PUT` d'un DIR, d'un HELP, d'une session TERM en boucle (`serial = 'loopback'`), PUT
-  débordé (`PUT: end lost`), disque plein, RESET pendant un PUT, `AUTO.BAT` présent,
-  absent, interrompu par ESC, `BOOT` appelé par `GO C000`.
-- **À vérifier sur le matériel** : vitesse de chargement d'une banque sur un vrai Microdisc
-  et sur le LOCI (lot 2) ; démarrage et `AUTO.BAT` qui monte des disquettes par USBMOUNT
-  (les lecteurs montés sont lus tout de suite).
+- **À vérifier sur le matériel** (lot 2) : vitesse de chargement d'une banque sur un vrai
+  Microdisc et sur le LOCI.
 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :
@@ -543,8 +508,8 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 550) prend 7 blocs, 1 786 octets libres dans le dernier (12 377 en anglais, 7
-  blocs depuis XFER). CMDER (17 935) prend 9 blocs, 497 octets libres dans le dernier ;
+  blocs, 1 844 octets libres dans le dernier. HELP (12 580) prend 7 blocs, 1 756 octets libres dans le dernier (12 417 en anglais, 7
+  blocs). CMDER (17 935) prend 9 blocs, 497 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 095) prend 2 blocs, plein à 1 octet près (24 en anglais) ; MKTAP (4 079)
   aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend

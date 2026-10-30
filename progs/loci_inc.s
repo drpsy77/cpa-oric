@@ -117,11 +117,30 @@ done    rts
 .)
 
 ; usb_open : ouvre le fichier A/Y, X = drapeaux -> A = descripteur, C=1 si erreur
+;   O_WRONLY+O_CREAT+O_TRUNC : sur 0: (littlefs), le firmware du LOCI
+;   traduit O_TRUNC sans O_CREAT (std.c) et ne crée pas un fichier absent.
+;   Le fichier est donc d'abord ouvert avec O_CREAT seul (créé s'il manque)
+;   et refermé, puis ouvert avec les drapeaux demandés. Un programme qui
+;   ne crée aucun fichier (USBMOUNT) définit LOCI_SANS_CREATION : ni ce
+;   détour, ni cw_put.
 usb_open
-        jsr push_str
+.(
+#ifndef LOCI_SANS_CREATION
+        cpx #O_WRONLY+O_CREAT+O_TRUNC
+        bne one
+        ldx #O_WRONLY+O_CREAT
+        jsr one
+        bcs two
+        jsr usb_close
+two     lda lptr                ; push_str y a laissé le chemin
+        ldy lptr+1
+        ldx #O_WRONLY+O_CREAT+O_TRUNC
+#endif
+one     jsr push_str
         stx MIA_A
         lda #OP_OPEN
         jmp mia_call
+.)
 
 ; usb_close : ferme le descripteur A
 usb_close
@@ -566,9 +585,10 @@ ynone    lda #"/"                ; aucune clé : « / », le LOCI répondra
         rts
 .)
 
+#ifndef LOCI_SANS_CREATION
 ; cw_put : le chemin A/Y (complet) devient le répertoire courant :
 ;   cwd, description du support, fichier 0:CPA.CWD (rien n'est écrit si
-;   le répertoire ne change pas)
+;   le répertoire ne change pas) ; C=1 si l'écriture échoue
 cw_put
 .(
         sta lptr
@@ -580,6 +600,7 @@ ycq      lda (lptr),y
         iny
         cmp #0
         bne ycq
+        clc                     ; inchangé : rien à écrire
         rts
 ydif     ldy #0
 ycp      lda (lptr),y
@@ -611,6 +632,7 @@ ydc      lda dirent+5,x
 yscd     jsr dv_close
 ywr      ; (suite dans cw_write)
 .)
+#endif
 
 ; cw_write : écrit cwd et cwdesc dans 0:CPA.CWD
 cw_write

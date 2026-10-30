@@ -14,7 +14,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 <!-- synthese:debut -->
 | Composant | ILF | EIF | EI | EO | EQ | **PF IFPUG** | Algorithmes | **Total** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 38 | 5 | 171 | 36 | 72 | **322** | 68 | **390** |
+| Système et commandes | 38 | 5 | 174 | 36 | 72 | **325** | 69 | **394** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
 | GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
@@ -28,11 +28,11 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | *Applications* | *168* | *47* | *431* | *105* | *111* | ***862*** | *217* | ***1079*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 29 | 118 | 18 | **187** | 45 | **232** |
-| **Total** | **220** | **77** | **658** | **315** | **207** | **1477** | **346** | **1823** |
+| **Total** | **220** | **77** | **661** | **315** | **207** | **1480** | **347** | **1827** |
 
-Points ajustés (indicatif, § 9) : 1 477 × 1,05 ≈ 1 551.
+Points ajustés (indicatif, § 9) : 1 480 × 1,05 ≈ 1 554.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 209 EI, 77 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 210 EI, 77 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -261,6 +261,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.T96 | Écrire un secteur (WRITE) | EI | 1 | 4 | F | 3 |
 | SYS.T97 | BOOT, WBOOT (= SYS.T36, SYS.T37) | — | — | — | — | 0 |
 | SYS.T98 | MENUBAR : barre de menus d'un programme (codes `$81`...) | EQ | 0 | 5 | F | 3 |
+| SYS.T99 | AUTO.BAT : script lancé au démarrage à froid s'il est sur A: | EI | 1 | 1 | F | 3 |
 
 **Algorithmes**
 
@@ -279,12 +280,12 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A11 | Rectangles, texte dans l'image, attributs, test d'un point | `gfx.s` | 1 |
 | SYS.A12 | Son AY : notes en périodes, durées sous IRQ, enveloppe, départ simultané | `snd.s` | 3 |
 | SYS.A13 | Scripts : lecture ligne à ligne, remplacement de `$1`-`$9` | `script.s` | 1 |
-| SYS.A14 | PUT : sortie en tampon, écrite hors affichage, état du système de fichiers sauvé et rendu | `put.s` | 3 |
+| SYS.A14 | PUT : sortie en tampon, écrite hors affichage, état du système de fichiers sauvé et rendu | `put.s`, `win.s` | 3 |
 | SYS.A15 | CHAIN : ligne différée exécutée après le démarrage à chaud | `bdos.s` | 1 |
 | SYS.A16 | Reprise après plantage et RESET : vecteurs, écran, police et console remis ; RESET différé jusqu'à la fin d'un transfert de secteur | `bios.s`, `disk.s` | 3 |
 | SYS.A17 | Imprimante Centronics : strobe, accusé, VIA partagé avec l'AY | `bios.s` | 1 |
 | SYS.A18 | Police et tables de l'écran (lignes de points du SPLIT calculées) | `bios.s` | 1 |
-| SYS.A19 | Test de la RAM au démarrage | `bios.s` | 1 |
+| SYS.A19 | Test de la RAM au démarrage | `cold.s` | 1 |
 | SYS.A20 | Chargeur d'amorçage Microdisc | `boot.s` | 3 |
 | SYS.A21 | COPY : jokers à la source et à la destination | `copy.s` | 3 |
 | SYS.A22 | FORMAT : image de piste du WD1793, entrelacement 2:1, relecture | `format.s` | 3 |
@@ -294,6 +295,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A26 | STAT : place libre d'après le répertoire | `stat.s` | 1 |
 | SYS.A27 | VSYNC : calage du timer de l'IRQ sur le balayage vidéo | `vsync.s` | 3 |
 | SYS.A28 | ERA, REN, SET, TYPE, MEM, POKE, GO : contrôles, décodage des paramètres | `progs/` | 1 |
+| SYS.A29 | Fenêtre : code chargé avec le système hors de la partie résidente (PUT, démarrage à froid), crochets résidents, contenu lu avant l'effacement | `win.s`, `put.s`, `bios.s` | 1 |
 
 ## 4. Applications
 
@@ -821,7 +823,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 710 | 10 % | 38 110 | 35 | 118 |
+| Système et commandes | 66 | 11 247 | 1 241 | 543 | 1 714 | 10 % | 37 534 | 35 | 115 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -829,39 +831,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 28 | 5 833 | 586 | 229 | 0 | 9 % | 13 562 | 73 | 170 |
+| USB | 28 | 5 836 | 590 | 230 | 0 | 9 % | 13 562 | 73 | 170 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 178 | 8 903 | 1 071 | 582 | 0 | 11 % | — | 48 | — |
-| **Total** | 365 | 73 926 | 6 037 | 2 943 | 2 626 | 8 % | 160 342 | 50 | 109 |
+| Outillage PC | 178 | 8 908 | 1 073 | 582 | 0 | 11 % | — | 48 | — |
+| **Total** | 367 | 74 021 | 6 099 | 2 953 | 2 630 | 8 % | 159 766 | 50 | 108 |
 
-Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 348 (`$C000-$F424`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 417 | 82 | 4,4 | 86 |
+| Système et commandes | 1 458 | 83 | 4,5 | 87 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 235 | 26 | 2,6 | 15 |
+| CMDER | 235 | 26 | 2,6 | 16 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 80 | 13 | 1,0 | 21 |
+| USB | 80 | 13 | 1,0 | 22 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 26 |
 | Outillage PC | 341 | — | 1,8 | 124 |
-| Transverse (projet) | 2 492 | — | — | 85 |
-| Traduction anglaise (docs/en) | 2 776 | — | — | 39 |
-| **Total** | 9 080 | 318 | 6,1 | 212 |
+| Transverse (projet) | 2 510 | — | — | 86 |
+| Traduction anglaise (docs/en) | 2 790 | — | — | 40 |
+| **Total** | 9 153 | 319 | 6,2 | 213 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 212 commits du 2026-10-04 au 2026-10-30.
+Historique : 213 commits du 2026-10-04 au 2026-10-30.
 
-Réutilisation : 55 269 lignes de code écrites dans `progs/`, 63 891 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 55 272 lignes de code écrites dans `progs/`, 63 894 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -927,6 +929,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-27 | clé USB, lot 2 | 0.9 | 1 438 | 342 | 1 780 | 203 | `USBMOUNT.COM` : disquettes B: à D:, cassette, `/B` (BASIC 1.1 sur la cassette) ; configuration du menu du LOCI ; `lmnt_inc.s` |
 | 2026-10-28 | clé USB, lot 3 | 0.9 | 1 458 | 343 | 1 801 | 204 | CMDER sur la clé : renommer, effacer, dupliquer (`^U`), monter (`^O`) ; nom des disquettes dans les en-têtes ; saisie longue |
 | 2026-10-30 | XFER | 0.9 | 1 474 | 346 | 1 820 | 208 | `XFER.COM` : envoi et réception par le modem (XMODEM-CRC) ; `tools/xfer_server.py`, `test_xfer.sh` ; `acia_inc.s` commun à TERM et XFER ; TERM : LF seul affiché en CR LF |
+| 2026-10-30 | fenêtre, lot 1 | 0.9 | 1 480 | 347 | 1 827 | 214 | PUT et démarrage à froid dans la fenêtre `$F7C0-$FCFF` (~580 octets résidents rendus) ; `AUTO.BAT` ; TERM par la fonction 2 du BDOS ; PUT referme le fichier après un disque plein |
 
 ## 11. Comparaisons
 
@@ -942,11 +945,11 @@ d'équivalent.
 <!-- comparaison:debut -->
 | Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Système, commandes, utilitaires de fichiers | 322 | 68 | 390 | 261 | 41 | 302 | 1,3 |
+| Système, commandes, utilitaires de fichiers | 325 | 69 | 394 | 261 | 41 | 302 | 1,3 |
 | Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
 | Assembleur (ASM / ASM et LOAD) | 9 | 12 | 21 | 13 | 13 | 26 | 0,8 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **480** | **111** | **591** | **396** | **78** | **474** | **1,2** |
+| **Total** | **483** | **112** | **595** | **396** | **78** | **474** | **1,3** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

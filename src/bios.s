@@ -15,6 +15,7 @@ cold_boot
 #ifdef DISK
         lda #MD_BASE            ; garde la RAM overlay visible, EPROM et IRQ disque coupées
         sta MD_CTRL
+        ldy win_id              ; contenu de la fenêtre (win.s), avant l'effacement
         lda #0                  ; variables système du BDOS (RAM overlay)
         tax
 cb_sys  sta ALV,x
@@ -30,8 +31,11 @@ cb_clr  sta $00,x
         inx
         bne cb_clr
         sta HIST                ; historique des lignes vide (A = 0)
-
+#ifdef DISK
+        sty win_id
+#else
         jsr ram_test            ; teste la TPA et la remplit de $00 (BRK)
+#endif
         jsr video_vars_text
         jsr hw_init
         lda #<T1_PERIOD
@@ -62,7 +66,14 @@ cb_clr  sta $00,x
         lda #<msg_banner
         ldy #>msg_banner
         jsr print_z
+#ifdef DISK
+        bit win_id              ; test de RAM et AUTO.BAT : dans la fenêtre,
+        bpl cb_w                ; juste après le chargement seulement
+        jsr cold_win
+cb_w
+#else
         jsr ram_report
+#endif
         ; continue en démarrage à chaud
 
 ; ---------------------------------------------------------------------
@@ -209,59 +220,6 @@ yl      lda ZP_PTR
         bpl yl                  ; 128 lignes
         rts
 .)
-
-; ---------------------------------------------------------------------
-; ram_test : comme la ROM de l'Atmos, écrit $AA puis $55 dans chaque
-;   octet de la TPA et vérifie la relecture ; laisse ensuite $00 (BRK),
-;   pour qu'un saut perdu dans la TPA soit intercepté.
-;   ram_badf <> 0 si un octet est défectueux (premier en ram_bad).
-; ---------------------------------------------------------------------
-ram_test
-.(
-        lda #<TPA_START
-        sta ZP_PTR
-        lda #>TPA_START
-        sta ZP_PTR+1
-        ldy #0
-loop    lda #$AA
-        sta (ZP_PTR),y
-        cmp (ZP_PTR),y
-        bne bad
-        lsr                     ; $55
-        sta (ZP_PTR),y
-        cmp (ZP_PTR),y
-        bne bad
-next    lda #0
-        sta (ZP_PTR),y
-        iny
-        bne loop
-        inc ZP_PTR+1
-        lda ZP_PTR+1
-        cmp #>TPA_END
-        bne loop
-        rts
-bad     lda ram_badf
-        bne next
-        inc ram_badf
-        sty ram_bad
-        lda ZP_PTR+1
-        sta ram_bad+1
-        jmp next
-.)
-
-ram_report
-        lda ram_badf
-        bne rr_bad
-        lda #<msg_ramok
-        ldy #>msg_ramok
-        jmp print_z
-rr_bad  lda #<msg_rambad
-        ldy #>msg_rambad
-        jsr print_z
-        lda ram_bad+1
-        ldy ram_bad
-        jsr print_hex16
-        jmp crlf
 
 ; ---------------------------------------------------------------------
 ; crash_screen : remet l'affichage en état après un plantage
@@ -1056,7 +1014,3 @@ msg_reset
         .asc "*RESET* at ",0
 msg_brk
         .asc "*BRK* at ",0
-msg_ramok
-        .asc "RAM test OK.",13,10,0
-msg_rambad
-        .asc "RAM error at ",0

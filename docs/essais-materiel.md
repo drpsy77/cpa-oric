@@ -9,6 +9,20 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Fenêtre : PUT et démarrage à froid** (`docs/systeme.md` § 6 ; sur une **copie** de
+`cpa.dsk`, puis de `cpa-en.dsk`) :
+
+- mise sous tension : `RAM test OK.` comme avant, durée du démarrage inchangée ;
+- `AUTO.BAT` sur A: (fait dans EDIT), par exemple `USBMOUNT B: PROJET.DSK` puis `B:` : au
+  démarrage, `A>AUTO`, le montage, puis `B>` ; `DIR B:` lit bien l'image montée ;
+- le même, ESC tapé pendant le démarrage : `Script arrete.` ; bouton RESET ensuite : AUTO.BAT
+  ne repart pas ; `GO C000` : démarrage sans test de RAM ni AUTO.BAT, puis `PUT L.TXT DIR`
+  marche ;
+- `PUT L.TXT DIR`, `PUT H.TXT HELP`, puis `TYPE` ; `PUT S.TXT TERM` avec le modem, quelques
+  écrans (`ATI`, une page d'un serveur), CTRL-Q : `S.TXT` a toute la session ;
+- disque presque plein (une copie remplie par `COPY`), `PUT T.TXT TYPE GRX.INC` : `Disk full`
+  à la fin, `T.TXT` garde ce qui tenait.
+
 **Après la correction du pilote** (un contrôleur qui ne répond plus donne une erreur disque,
 plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en anglais, sur une
 **copie** de disquette :
