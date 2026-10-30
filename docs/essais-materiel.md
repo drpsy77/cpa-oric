@@ -138,8 +138,12 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 
 - TERM : la liaison avec `nc` sur le Mac marche dans les deux sens (LOCI 0.3.98) ; reste le
   contre-essai avec la 0.3.1 officielle (`docs/loci-modem-wifi.md`, « Firmware du LOCI ») ;
-- TERM, touche RETURN : un CR reçu s'affiche maintenant en CR LF (`TERM /E` : l'écho de
-  RETURN passe à la ligne) ; `/L` envoie CR LF ; essayé seulement dans Oricutron (boucle) ;
+- TERM, fins de ligne, avec `nc -l 2323` sur le Mac et `TERM /E /L` : les lignes tapées
+  sur le Mac (LF seul) doivent revenir en colonne 2 sur l'Oric ; celles tapées sur l'Oric
+  doivent passer à la ligne dans `nc` ; essayé dans Oricutron (boucle : CR, LF seul, CR LF) ;
+- TERM, réception sans perte (`docs/loci-modem-wifi.md`, « Contrôle de flux ») : sur le
+  Mac, `nc -l 2323 < un_long_texte.txt` (quelques Ko, lignes courtes), puis `TERM /E /L` et
+  `ATDT-IP_DU_MAC:2323` : le texte doit arriver entier, alors que l'écran défile ;
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 

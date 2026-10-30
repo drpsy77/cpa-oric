@@ -159,6 +159,24 @@ réglage (voir « Firmware du LOCI » pour la 0.3.1).
 
 Débit : 9600 bauds, environ 1 Ko par seconde.
 
+## Contrôle de flux
+
+Aucun octet ne se perd quand l'Oric tarde à lire, sans RTS/CTS et sans rien côté Oric :
+
+- LOCI (`loci-firmware`, `src/mia/oric/acia.c`) : il ne lit le modem USB que pour la place
+  libre de son tampon de 32 octets ; tant que l'Oric ne lit pas, l'USB n'avance pas.
+- Pico W (`PicoWiFiModemUSB`, `src/ser_cdc.c`) : `ser_putc` attend que l'USB accepte
+  l'octet ; le tampon de réception TCP (`src/tcp_support.h`) ne rend la fenêtre à l'émetteur
+  (`altcp_recved`) que s'il reste sous un segment : le Mac attend à son tour.
+
+Les tampons sont donc dans le LOCI, le Pico et la pile TCP, pas dans l'Oric : le pilote série
+de CP/A travaille par scrutation. Ce n'est vrai que du LOCI : un vrai 6551 (Oricutron en
+`$031C`, carte série) n'a qu'un octet de réception et le perd si on tarde.
+
+Fins de ligne : le modem, en mode commande, prend CR (ou LF) comme fin de commande ; `nc` sur
+le Mac envoie LF seul et attend LF. TERM affiche CR, LF seul et CR LF comme un passage à la
+ligne ; vers `nc`, `TERM /E /L` (RETURN envoie CR LF).
+
 Autre piste : le LOCI expose aussi une interface (registres en `$03A0`) pour lire et écrire
 des fichiers ordinaires sur sa clé USB ; une commande CP/A pourrait exporter un fichier
 vers la clé sans passer par `mkdisk.py`. En attendant, la clé ou la carte du LOCI contient

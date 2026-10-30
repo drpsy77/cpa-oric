@@ -42,7 +42,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 810 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD.BAT` | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 762 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
+| TERM | 776 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -165,9 +165,27 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 4. **Réseau par le LOCI** (matériel : `docs/loci-modem-wifi.md`). La liaison marche dans les
    deux sens : Oric, LOCI (firmware 0.3.98 de diagnostic, `tools/loci-acia-diag/`), Pico W,
    WiFi, `nc` sur le Mac, avec `TERM /E`. `TERM.COM` fait (scrute l'ACIA lui-même, sans le
-   BIOS). Reste : pilote série dans le BIOS sur PUNCH / READER (ACIA 6551, `$0380` sur le
-   LOCI, `$031C` dans Oricutron ; ~150 octets estimés, donc ~300 à prévoir : il faut d'abord
-   libérer de la place, § 3) ; `XFER.COM` (XMODEM) et `tools/xfer_server.py` ; passerelle
+   BIOS ; CR, LF seul et CR LF reçus vont tous à la ligne).
+   - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
+     a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la
+     fenêtre TCP que quand son tampon se vide (`docs/loci-modem-wifi.md`, « Contrôle de
+     flux »). Un Oric occupé (défilement, disque, interruptions coupées) ne perd rien : ni
+     interruption ni tampon circulaire côté Oric. Vaut pour le LOCI seulement ; un vrai 6551
+     (Oricutron `$031C`, carte série) perd un octet si on tarde.
+   - Décidé par Pierre : **console à distance** (le Mac tape et lit à la place du clavier et
+     de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
+     EDIT). Elle demande le pilote dans le BIOS, pas un `.COM` : elle doit survivre aux
+     programmes.
+   - Ordre : (1) `XFER.COM` (XMODEM) et `tools/xfer_server.py`, sur une bibliothèque
+     commune `acia_inc.s` dont TERM se sert aussi ; (2) descente de PUT en banque (§ 3) ;
+     (3) pilote série du BIOS, par scrutation, reprenant ce code : PUNCH / READER (BDOS 3
+     et 4), état de la réception, console redirigée (CONST, CONIN, CONOUT ; commande et
+     forme à spécifier) ; ~150 octets estimés, ~300 à prévoir.
+   - Contraintes du pilote : écritures dans l'ACIA par `STA` absolu seulement (une écriture
+     indexée lit d'abord le registre et consomme un octet reçu) : l'adresse `$0380` /
+     `$031C` choisie au démarrage se pose dans le code (RAM overlay) ; la ROM devra fixer
+     `$0380` ou copier ces quelques instructions en RAM.
+   - Aussi : passerelle
    vers Claude sur le Pi 400 (serveur TCP : appel de l'API, accents translittérés, lignes de
    38 colonnes, historique gardé côté Pi).
    - Contre-essai à faire : la 0.3.1 officielle avec le câble de données (`ACIADIAG.TAP`,
@@ -413,7 +431,7 @@ suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> 
 
 **Décidé par Pierre le 23/10/2026 (rien codé) : PUT descend en banque**, avant de toucher
 aux menus (fonction phare, gardés résidents). PUT sert très peu ; le pilote série (~300
-octets, § 2 point 4) est plus utile.
+octets, § 2 point 4 : console à distance) est plus utile.
 - Le tampon de PUT (`$F7C0-$FCFF`, 1 280 octets) devient une **fenêtre partagée**. Le code
   de PUT (`src/put.s`, 525 octets de `put_char` à `cmd_do`) va dans un fichier de banques
   sur A: (type SYS, chargé par les routines de fichiers résidentes) ; seuls restent les
