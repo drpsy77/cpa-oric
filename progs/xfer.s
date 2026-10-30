@@ -8,7 +8,8 @@
 ;    nom  nom du fichier côté serveur ; par défaut fic tel qu'il a été
 ;         tapé, sans le lecteur (minuscules gardées)
 ;    /T   texte : le serveur passe les fins de ligne LF du Mac en CR LF
-;         (et l'inverse), une tabulation en espace
+;         (et l'inverse), une tabulation en espace, et le texte en ASCII
+;         (accents et cédille retirés, oe, ae)
 ;
 ;  La liaison doit être établie : TERM, ATDT-hote:port vers le serveur
 ;  (tools/xfer_server.py sur le Mac ou le Pi), puis CTRL-Q (la liaison

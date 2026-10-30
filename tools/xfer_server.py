@@ -16,7 +16,8 @@ inconnue) ; XFER affiche son propre message, dans la langue de la
 disquette. Le serveur est l'émetteur pour GET, le
 récepteur pour PUT. Les ^Z ($1A) qui complètent le dernier bloc sont
 retirés à la réception (même règle que STAT et EXPORT). Avec T : texte,
-LF -> CR LF et tabulation -> espace vers l'Oric, CR LF -> LF vers le Mac.
+accents et cédille retirés, lettres liées dépliées (oe, ae), LF -> CR LF
+et tabulation -> espace vers l'Oric ; CR LF -> LF vers le Mac.
 
 Noms : sans chemin (ni « / » ni « .. ») ; GET cherche sans tenir compte
 des majuscules ; PUT écrit le nom en minuscules s'il a été tapé tout en
@@ -30,6 +31,7 @@ import os
 import socket
 import sys
 import time
+import unicodedata
 
 SOH, EOT, ACK, NAK, CAN = 0x01, 0x04, 0x06, 0x15, 0x18
 
@@ -219,8 +221,43 @@ def recv_xmodem(link, log, faults=False):
         link.send([ACK])
 
 
+# caractères qui ne se réduisent pas à une lettre de base suivie d'accents
+SPECIAL = {
+    "œ": "oe", "Œ": "OE", "æ": "ae", "Æ": "AE", "ß": "ss", "ø": "o", "Ø": "O",
+    "đ": "d", "Đ": "D", "ł": "l", "Ł": "L", "ð": "d", "Ð": "D", "þ": "th", "Þ": "TH",
+    "‘": "'", "’": "'", "‚": "'", "′": "'", "“": '"', "”": '"', "„": '"', "″": '"',
+    "«": '"', "»": '"', "‹": "'", "›": "'", "–": "-", "—": "-", "‐": "-", "‑": "-",
+    "−": "-", "…": "...", "•": "*", "·": ".", "×": "x", "÷": "/", "€": "EUR",
+    "£": "L", "°": "o", "§": "S", "©": "(c)", "®": "(r)", "™": "TM",
+    "\u00a0": " ", "\u202f": " ", "\u2009": " ", "\ufeff": "",
+}
+
+
+def ascii_oric(text):
+    """Texte Unicode -> ASCII de l'Oric : accents et cédille retirés (é -> e,
+    ç -> c), lettres liées dépliées (œ -> oe, æ -> ae), guillemets et tirets
+    typographiques simplifiés ; ce qui reste hors ASCII devient « ? »."""
+    out = []
+    for ch in text:
+        if ch in SPECIAL:
+            out.append(SPECIAL[ch])
+        elif ord(ch) < 128:
+            out.append(ch)
+        else:
+            base = "".join(c for c in unicodedata.normalize("NFKD", ch)
+                           if not unicodedata.combining(c))
+            out.append(base if base and all(ord(c) < 128 for c in base) else "?")
+    return "".join(out)
+
+
 def to_oric(data):
-    """Texte du Mac vers l'Oric : LF -> CR LF, tabulation -> espace."""
+    """Texte du Mac vers l'Oric : UTF-8 (ou, à défaut, Windows-1252) en ASCII
+    (ascii_oric), LF -> CR LF, tabulation -> espace."""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        text = data.decode("cp1252", "replace")
+    data = ascii_oric(text).encode("ascii")
     data = data.replace(b"\r\n", b"\n").replace(b"\t", b" ")
     return data.replace(b"\n", b"\r\n")
 

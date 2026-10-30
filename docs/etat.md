@@ -168,8 +168,10 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    WiFi, `nc` sur le Mac, avec `TERM /E`. `TERM.COM` fait (scrute l'ACIA lui-même, sans le
    BIOS ; CR, LF seul et CR LF reçus vont tous à la ligne). `XFER.COM` fait (30/10/2026) :
    envoi et réception d'un fichier en XMODEM-CRC, serveur `tools/xfer_server.py` (Mac ou
-   Pi), réception par `NOM.$$$` ; essayé dans Oricutron (`tools/test_xfer.sh` : 40 Ko,
-   `/T`, refus, ESC, erreurs simulées) ; TERM et XFER sur la bibliothèque `acia_inc.s`.
+   Pi), réception par `NOM.$$$`, `/T` (fins de ligne, texte du Mac passé en ASCII :
+   accents et cédille retirés, `œ` -> `oe`, `æ` -> `ae`) ; essayé dans Oricutron
+   (`tools/test_xfer.sh` : 40 Ko, `/T`, refus, ESC, erreurs simulées) et sur le vrai Oric
+   (30/10/2026, sauf les accents) ; TERM et XFER sur la bibliothèque `acia_inc.s`.
    Décidé, pas encore fait : plusieurs fichiers (jokers), appel du serveur par XFER
    lui-même (sans passer par TERM).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il

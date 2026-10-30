@@ -792,7 +792,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
 | OUT.T41 | `grx_colig.py` : `.GRX` passé de (ligne, colonne) à (colonne, ligne) | EO | 1 | 2 | F | 4 |
 | OUT.T42 | `test_oric.sh` : GRXASM `/O`, ASM `/T`, `.TAP` chargés sous BASIC 1.1 (`build/tap/`) | EO | 2 | 3 | F | 4 |
-| OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte, noms, erreurs simulées) | EI | 2 | 6 | M | 4 |
+| OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte et accents en ASCII, noms, erreurs simulées) | EI | 2 | 6 | M | 4 |
 | OUT.T44 | `test_xfer.sh` : XFER de bout en bout dans Oricutron (modem simulé, serveur) | EO | 2 | 4 | F | 4 |
 
 | Id | Algorithme | Où | Points |
