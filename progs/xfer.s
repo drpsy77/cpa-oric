@@ -14,7 +14,8 @@
 ;  La liaison doit être établie : TERM, ATDT-hote:port vers le serveur
 ;  (tools/xfer_server.py sur le Mac ou le Pi), puis CTRL-Q (la liaison
 ;  reste ouverte). XFER envoie une ligne de commande au serveur
-;  (« XFER GET nom [T] » ou « XFER PUT nom [T] », CR), attend sa réponse
+;  (« XFER RECV nom [T] » : l'Oric reçoit, ou « XFER SEND nom [T] » :
+;  l'Oric envoie ; CR), attend sa réponse
 ;  (« +... » : d'accord ; « -A... » : fichier absent ; « -... » : autre
 ;  refus ; message affiché dans la langue de la disquette), puis le
 ;  transfert se fait en XMODEM : blocs de 128 octets (un enregistrement
@@ -521,7 +522,7 @@ b2      lda sum
 .)
 
 ; ---------------------------------------------------------------------
-; command : envoie « XFER GET » ou « XFER PUT » (A/Y), le nom distant,
+; command : envoie « XFER RECV » ou « XFER SEND » (A/Y), le nom distant,
 ;   « T » si /T, CR ; puis attend la réponse du serveur (10 s) :
 ;   « + » : C=0 ; « - » : message affiché, C=1 ; rien : C=1
 command
@@ -753,8 +754,8 @@ tbd     lda #<tfcb
 puts    ldx #F_PRINT
         jmp BDOS
 
-c_get   .asc "XFER GET ",0
-c_put   .asc "XFER PUT ",0
+c_get   .asc "XFER RECV ",0
+c_put   .asc "XFER SEND ",0
 
 #include "acia_inc.s"
 #include "xfer.msg"

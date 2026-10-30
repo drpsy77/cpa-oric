@@ -7,20 +7,20 @@ L'Oric s'y connecte par le modem WiFi du LOCI (TERM, puis
 ATDT-adresse:port, puis CTRL-Q ; dans Oricutron : ATDT127.0.0.1:port).
 Le serveur attend des lignes de commande, terminées par CR ou LF :
 
-    XFER GET nom [T]   l'Oric reçoit le fichier nom du dossier
-    XFER PUT nom [T]   l'Oric envoie un fichier, écrit sous le nom nom
+    XFER RECV nom [T]  l'Oric reçoit le fichier nom du dossier
+    XFER SEND nom [T]  l'Oric envoie un fichier, écrit sous le nom nom
 
 Réponse : « +OK » (le transfert XMODEM suit) ou un refus : « -A ... »
 (fichier absent), « -N ... » (nom refusé), « -C ... » (commande
 inconnue) ; XFER affiche son propre message, dans la langue de la
-disquette. Le serveur est l'émetteur pour GET, le
-récepteur pour PUT. Les ^Z ($1A) qui complètent le dernier bloc sont
-retirés à la réception (même règle que STAT et EXPORT). Avec T : texte,
+disquette. Les mots disent ce que fait l'Oric : le serveur est l'émetteur
+pour RECV, le récepteur pour SEND. Les ^Z ($1A) qui complètent le dernier
+bloc sont retirés à la réception (même règle que STAT et EXPORT). Avec T : texte,
 accents et cédille retirés, lettres liées dépliées (oe, ae), LF -> CR LF
 et tabulation -> espace vers l'Oric ; CR LF -> LF vers le Mac.
 
-Noms : sans chemin (ni « / » ni « .. ») ; GET cherche sans tenir compte
-des majuscules ; PUT écrit le nom en minuscules s'il a été tapé tout en
+Noms : sans chemin (ni « / » ni « .. ») ; RECV cherche sans tenir compte
+des majuscules ; SEND écrit le nom en minuscules s'il a été tapé tout en
 majuscules (l'Oric démarre en majuscules), tel quel sinon, en remplaçant
 un fichier du même nom. Un client à la fois ; une connexion sert autant de commandes
 qu'on veut.
@@ -293,11 +293,11 @@ def serve(conn, folder, log, faults=False):
         if not safe_name(name):
             link.send(b"-N nom refuse\r\n")
             continue
-        if cmd == "GET":
+        if cmd == "RECV":                   # l'Oric reçoit : le serveur envoie
             real = find(folder, name)
             if real is None:
                 link.send(b"-A fichier absent\r\n")
-                log("GET %s : absent" % name)
+                log("RECV %s : absent" % name)
                 continue
             with open(os.path.join(folder, real), "rb") as f:
                 data = f.read()
@@ -305,22 +305,22 @@ def serve(conn, folder, log, faults=False):
                 data = to_oric(data)
             link.send(b"+OK\r\n")
             ok = send_xmodem(link, data, log, faults)
-            log("GET %s%s : %d octets, %s" % (real, " (texte)" if text else "",
+            log("RECV %s%s : %d octets, %s" % (real, " (texte)" if text else "",
                                                len(data), "fait" if ok else "échec"))
-        elif cmd == "PUT":
+        elif cmd == "SEND":                 # l'Oric envoie : le serveur reçoit
             if name == name.upper():        # tapé en majuscules : minuscules
                 name = name.lower()
             link.send(b"+OK\r\n")
             data = recv_xmodem(link, log, faults)
             if data is None:
-                log("PUT %s : échec" % name)
+                log("SEND %s : échec" % name)
                 continue
             data = data.rstrip(b"\x1a")
             if text:
                 data = from_oric(data)
             with open(os.path.join(folder, name), "wb") as f:
                 f.write(data)
-            log("PUT %s%s : %d octets, fait" % (name, " (texte)" if text else "",
+            log("SEND %s%s : %d octets, fait" % (name, " (texte)" if text else "",
                                                  len(data)))
         else:
             link.send(b"-C commande inconnue\r\n")
