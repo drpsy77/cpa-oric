@@ -15,7 +15,7 @@
   crash or reboot.
 
 **Try it in five minutes.** Download [`cpa-examples-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-examples-en.dsk), put it on the USB stick of your LOCI
-(or the SD card of your Cumulus) and boot, or run it in Oricutron (see below). At the `A>`
+and boot, or run it in Oricutron (see below). At the `A>`
 prompt:
 
     DIR               what's on the disk
@@ -38,8 +38,8 @@ A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version
 
 Two variants are built from the same sources:
 
-- **`build/cpa-en.dsk`**, the main version: a bootable disk for the Microdisc controller, and
-  therefore also for the Cumulus and the LOCI. The system loads into the 16 KB of overlay RAM
+- **`build/cpa-en.dsk`**, the main version: a bootable disk in the Microdisc controller's
+  format, for the LOCI (Microdisc: see below). The system loads into the 16 KB of overlay RAM
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
   intact. This is the system disk: every program (except LOGO) and all the help, no
   examples. Four more disks, by use, start on their own with their tools: `cpa-anim-en.dsk`
@@ -146,9 +146,14 @@ Disk version: the Microdisc EPROM calls the BASIC 1.1 ROM, so keep
 ROM version: copy `build/cpa.rom` into `roms/`, then set `atmosrom = 'roms/cpa'` in
 `oricutron.cfg`.
 
-On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI (or the SD card of the Cumulus)
-and boot from it. CP/A is used on a real Oric Atmos with a LOCI; the menu colours, hard to read
-in some emulators, are sharp on a real screen.
+On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI and boot from it. CP/A runs
+in emulators and on a real Oric Atmos fitted with a LOCI; the menu colours, hard to read in
+some emulators, are sharp on a real screen.
+
+**Microdisc.** The original 3″ Microdisc drive has a single side of 40 tracks: it cannot read
+CP/A disks (2 sides of 42 tracks). Cumulus, Gotek, HxC or a double-sided drive: never tried,
+and without a LOCI there is no USB stick and no network. No Microdisc port is planned; if you
+want one, open an issue on this repository to talk about it.
 
 **Several drives.** The disk version handles four drives, `A:` to `D:`, like the Microdisc
 controller, the LOCI and Oricutron (one `-d` per drive:

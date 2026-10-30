@@ -10,7 +10,7 @@ avec elle.
 
 1. Ne rien coder d'emblée. Rien n'est décidé, pas même le principe d'un nouveau format.
 2. D'abord **faire le schéma de ce qui converge et de ce qui diverge** entre les pistes
-   ci-dessous (A à F) et le point 9 d'`etat.md` : ce qu'elles partagent (code, format,
+   ci-dessous (A à E) et le point 9 d'`etat.md` : ce qu'elles partagent (code, format,
    arborescence de distribution), ce qu'elles rendent inutile, ce qui les oppose (public
    visé, contrat, matériel). Le présenter à Pierre, puis seulement proposer un ordre.
 3. Les deux vérifications qui changent tout, avant de choisir : le LOCI lit-il une image de
@@ -47,8 +47,11 @@ avec elle.
 - Le contrôleur Microdisc (WD1793) ne fait que la double densité (250 kbit/s) : pas de
   1,44 Mo sur un vrai Oric. Une image « haute densité » pour le LOCI serait illisible par un
   vrai Microdisc.
-- Lecteur 3″ d'origine : ~40 pistes par face (le format actuel en prend 42). Lecteur 3,5″
-  double densité : 80 pistes, lisible par le Microdisc (SEDORIC s'en sert). Une disquette de
+- Lecteur 3″ d'origine du Microdisc (Hitachi HFD305S) : une seule face (on retourne la
+  disquette), 40 pistes. Il ne lit pas le format de CP/A, qui change de face dès la piste
+  logique 1, système compris (la lecture, `$80`, ne compare pas la face : il lirait la face
+  0 à la place de la 1). Lecteur 3,5″ double densité : 80 pistes, lisible par le Microdisc
+  (SEDORIC s'en sert). Une disquette de
   80 pistes est illisible par un lecteur 3″.
 - LOCI, Cumulus : lisent des images, sans limite mécanique ; nombre de pistes accepté par
   le LOCI **non vérifié** (le firmware n'est plus dans `archives/`). Oricutron et Clock
@@ -63,7 +66,7 @@ avec elle.
   répertoire), lu à la première utilisation du lecteur, pour que 42 et 80 pistes et
   l'ancien format cohabitent. Public : LOCI, Cumulus, lecteurs 3,5″.
 - **B. Blocs de 1 Ko sur 42 pistes** : 340 blocs, donc numéros sur 16 bits aussi ; gain de
-  12 à 34 Ko par disquette, lisible par tout Microdisc. Même cœur que A, sans la géométrie.
+  12 à 34 Ko par disquette. Même cœur que A, sans changer la géométrie.
 - **C. Regrouper les petites commandes** en un fichier où le CCP les cherche : ~14 Ko de
   plus par disquette, sans toucher au format (touche le CCP, sa place).
 - **D. Lecteur « fichiers USB » (U:)**, point 9 d'`etat.md` : les fichiers du BDOS passent
@@ -71,19 +74,14 @@ avec elle.
   le contrat (lecteur sans accès secteur). C'est la direction déjà retenue pour la place.
 - **E. Lire les disquettes SEDORIC** (secteurs chaînés, granularité 256 octets) : projet
   d'échange à part, pas une réponse à la place.
-- **F. Une version pour le Microdisc 3″, avec ses limites.** Sans LOCI, un Oric à
-  Microdisc n'a ni USB ni réseau (TERM et XFER demandent une interface série ; le Telestrat
-  en a une, mais il n'est pas visé). Deux façons :
-  - figer une version (tag git) : immédiat, mais elle ne reçoit plus rien (corrections,
-    plateforme LOGO, GRAPHER) sauf report à la main ;
-  - mêmes sources, deux profils de construction : « Microdisc 3″ » (42 pistes, mêmes
-    disquettes sans EXPORT, IMPORT, USBDIR, USBMOUNT, USBCD, TERM, XFER : 22 Ko de plus
-    par disquette ; HELP complet ; les programmes du LOCI disent déjà « LOCI absent »
-    sans planter) et « LOCI » (tout, puis A ou D). D'abord une affaire de composition des
-    disquettes dans `build.sh` ; un système sans le code du LOCI (mémoire résidente)
-    serait une étape ultérieure, celle du point 8 d'`etat.md` (options de construction,
-    règle des fonctions BDOS facultatives).
-  Converge avec l'arborescence de livraison (`3pouces/` = profil Microdisc).
+- **F. Une version pour le Microdisc** : écartée. Le lecteur 3″ d'origine ne lit pas le
+  format (ci-dessus) ; il faudrait une géométrie une face de 40 pistes (170 Ko, ~148 pour les
+  fichiers : `NSIDES`, `NCYL` de `hw.inc`, `disk.s`, amorce, FORMAT, DISKCOPY, STAT et CMDER
+  recompilés, coffret redécoupé, disquettes illisibles par la version LOCI). Pour le Cumulus,
+  un Gotek, un HxC ou un lecteur double face, les disquettes actuelles sans les programmes du
+  LOCI (EXPORT, IMPORT, USBDIR, USBMOUNT, USBCD, TERM, XFER : 22 Ko de plus par disquette)
+  suffiraient sans doute, mais rien n'y a été essayé. Laissé à qui le demandera (note de
+  `README.md`).
 
 ## Distribution envisagée (si deux formats existent)
 
@@ -94,7 +92,7 @@ disquettes dans chacun, noms actuels gardés (pas de collision sur une même cl�
 disquettes/
   LISEZMOI.TXT   quel dossier choisir
   fr/  en/       80 pistes : LOCI, Cumulus, lecteur 3,5"
-  3pouces/fr/  3pouces/en/   42 pistes : lecteur 3" d'origine
+  42pistes/fr/  42pistes/en/   42 pistes : format actuel
 ```
 
 Sans objet tant qu'un seul format existe. À prévoir : liens des README, `.gitignore`, tests,
@@ -114,16 +112,12 @@ cesseraient de marcher.
   STAT, DIR, `mkdisk.py`, `test_fdc.py`, `test_fichiers.py`, doc ; étapes testées une à une
   (`mkdisk.py` d'abord, comme référence), sinon un défaut du système de fichiers se
   localise mal.
-- Matériel pour le format 3″ : vrai lecteur 3″ disponible ? Sinon, émulateurs seulement
-  (banc Clock Signal pour le minutage).
 - Travaux en parallèle : la descente de PUT touche `bios.s`, `cpa.s`, `hw.inc`.
 
 ## Questions ouvertes
 
-- Version 3″ : figée, ou profil de construction tenu à jour (F) ? Garder CMDER entier
-  (ses fonctions USB répondent « LOCI absent ») ou une variante sans clé ?
-- Faut-il un nouveau format sur disquette, vu le point 9 (U:) ? Pour qui (vrai Microdisc
-  3″, 3,5″, LOCI, Cumulus) ?
+- Faut-il un nouveau format sur disquette, vu le point 9 (U:) ? Pour qui (LOCI, Cumulus,
+  lecteur 3,5″) ?
 - Si oui : A, B ou les deux ? Anciennes disquettes de 2 Ko lues et écrites, ou seulement
   lues (copie vers le nouveau format) ? Répertoire de 128 ou 256 entrées en 80 pistes ?
 - C vaut-il la place qu'il prend dans le CCP ?

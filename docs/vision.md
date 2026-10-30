@@ -19,7 +19,7 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
 
 ## Pour qui
 
-- D'abord le possesseur d'un Atmos avec un lecteur (LOCI, Cumulus, Microdisc) qui veut créer
+- D'abord le possesseur d'un Atmos muni d'un LOCI qui veut créer
   sur sa machine : jeux, dessins, programmes.
 - Ensuite, par la sortie `.TAP`, tout possesseur d'un Oric : il reçoit ce qui a été créé
   sous CP/A et le charge depuis une cassette, sans avoir CP/A.

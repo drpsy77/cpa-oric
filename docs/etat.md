@@ -1,7 +1,8 @@
 # CP/A disquette — état et suite
 
-Système « à la CP/M » pour Oric Atmos, chargé depuis une disquette (Microdisc, LOCI) dans les
-16 Ko de RAM overlay, et enrichi par des programmes `.COM` plutôt que par du code résident.
+Système « à la CP/M » pour Oric Atmos muni d'un LOCI (ou dans un émulateur), chargé depuis
+une disquette au format Microdisc dans les 16 Ko de RAM overlay, et enrichi par des
+programmes `.COM` plutôt que par du code résident.
 Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des données, communiquer
 (réseau par le LOCI). À lire avec `docs/architecture.md`.
 
@@ -384,7 +385,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      de 3 à 4 blocs sur la disquette (2 Ko). Symboles du système : 1 262, ~19 Ko, la
      mémoire libre d'ASM (~37 Ko) suffit. Temps : LOGO (136 Ko de source) s'assemble en
      ~1 min 30 ; le système (130 Ko sans commentaires) devrait être du même ordre, à
-     mesurer sur un vrai Microdisc.
+     mesurer sur le LOCI.
    - Refaire sur l'Oric les contrôles de `build.sh` (marges, fin du code, page `$FF00`).
    - Options touchant une fonction du BDOS (menus, USB, son...) : le numéro doit rester et
      répondre « absent » avec un code connu, et les programmes savoir s'en passer. Règle à
@@ -403,8 +404,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    Microdisc est délicate. Les fichiers restent du **texte sur disque** (EDIT, TYPE, git, le
    Mac) : pas de tokenisation ni de compactage sur disque (ceux du BASIC et de SEDORIC sont
    de leur époque) ; la place viendra du **lecteur « fichiers USB »** ci-dessous, la
-   direction à suivre pour le stockage. Le `.dsk` reste pour démarrer et pour les vrais
-   Microdisc et Cumulus.
+   direction à suivre pour le stockage. Le `.dsk` reste pour démarrer.
    - Étude en cours, rien décidé : `docs/etude-stockage.md` (mesures de la place, format
      80 pistes, blocs de 1 Ko, petites commandes regroupées, arborescence de livraison).
    - **`.dsk` de 1 Mo** : possible mais cher. Cartes d'allocation actuelles : 22 octets par
@@ -423,8 +423,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      et STAT ; les programmes qui lisent des secteurs par le BIOS (DISKCOPY, FORMAT...) ne
      marchent pas sur U:. **Touche le contrat** (un type de lecteur sans accès secteur) :
      à décider avant tout code.
-   - **Construction hybride proposée** : A: reste un `.dsk` (démarrage ; compatible vrai
-     Microdisc et Cumulus ; un utilisateur de Sedoric essaie CP/A sans rien changer), U:
+   - **Construction hybride proposée** : A: reste un `.dsk` (démarrage ;
+     un utilisateur de Sedoric essaie CP/A sans rien changer), U:
      lecteur de travail pour qui a un LOCI (option de la construction, point 8). À terme,
      une variante « tout LOCI » où A: est un dossier de la clé : plus de code de secteurs
      sauf l'amorçage, système plus petit.
@@ -448,7 +448,9 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 
 Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
-suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT.
+suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT ; un portage pour le Microdisc (son lecteur 3″ d'origine
+n'a qu'une face de 40 pistes, les disquettes de CP/A en ont 2 de 42 ; laissé à qui le
+demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
@@ -502,8 +504,7 @@ Décidé, pas encore fait :
   3. options résident / en banque / absent, d'abord par `-D` dans `build.sh` (puis le
      fichier de configuration de la construction sur l'Oric, § 2 point 8) ; la ROM n'a que
      résident ou absent. Le code du démarrage à froid va toujours dans la fenêtre.
-- **À vérifier sur le matériel** (lot 2) : vitesse de chargement d'une banque sur un vrai
-  Microdisc et sur le LOCI.
+- **À vérifier sur le matériel** (lot 2) : vitesse de chargement d'une banque sur le LOCI.
 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :
