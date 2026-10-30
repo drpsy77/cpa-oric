@@ -405,6 +405,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    de leur époque) ; la place viendra du **lecteur « fichiers USB »** ci-dessous, la
    direction à suivre pour le stockage. Le `.dsk` reste pour démarrer et pour les vrais
    Microdisc et Cumulus.
+   - Étude en cours, rien décidé : `docs/etude-stockage.md` (mesures de la place, format
+     80 pistes, blocs de 1 Ko, petites commandes regroupées, arborescence de livraison).
    - **`.dsk` de 1 Mo** : possible mais cher. Cartes d'allocation actuelles : 22 octets par
      lecteur (`$FD00-$FD57`), ~176 blocs de 2 Ko, ~350 Ko. 1 Mo = 512 blocs : cartes de 64
      octets par lecteur (~170 octets résidents de plus) et numéros de bloc sur 2 octets
