@@ -658,7 +658,7 @@ then XFER can be used as many times as wanted:
 |---|---|
 | `XFER S file [name]` | sends `file` (optional drive); on the server it is called `name`, or `file` without the drive; a name typed all in capitals is written there in lower case; a file of the same name is replaced |
 | `XFER R file [name]` | receives `name` (or `file`, case-insensitive) and writes it into `file` |
-| `/T` | text: the server turns the Mac's LF line endings into CR LF and a tab into a space when sending to the Oric, and CR LF into LF the other way |
+| `/T` | text: when sending to the Oric, the server turns the Mac's LF line endings into CR LF, a tab into a space, and the text into ASCII (the Mac's UTF-8, or Windows-1252): accents and cedilla removed (`é` -> `e`, `ç` -> `c`), ligatures spelled out (`œ` -> `oe`, `æ` -> `ae`), typographic quotes and dashes simplified, `?` for the rest; the other way, CR LF into LF |
 | ESC | cancels the transfer in progress |
 
 - No wildcards: one file at a time. `E` (French "envoyer") is accepted for `S`.

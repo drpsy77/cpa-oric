@@ -147,21 +147,9 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
-**XFER** (essayé seulement dans Oricutron, `tools/test_xfer.sh`), en français et en anglais :
-sur le Mac, `python3 tools/xfer_server.py --dir DOSSIER` ; sur l'Oric, `TERM`,
-`ATDT-IP_DU_MAC:2323` (la bannière `XFER : serveur CP/A pret` s'affiche), CTRL-Q, puis :
-
-- `XFER E README.TXT` puis `XFER R COPIE.TXT readme.txt` : `readme.txt` sur le Mac à sa
-  vraie taille, `COPIE.TXT` identique à `README.TXT` (`TYPE`, ou `EXPORT` et comparaison) ;
-- un gros fichier (GRAPHER.COM, 17 Ko) dans les deux sens, vers B: : durée (environ 1 Ko
-  par seconde attendu) ; le `.COM` reçu doit se lancer ;
-- `/T` : un texte écrit sur le Mac (LF, tabulations) reçu par `XFER R NOTE.TXT /T`, lu dans
-  EDIT ; renvoyé par `XFER E NOTE.TXT /T`, relu sur le Mac ;
-- ESC pendant une réception : `Annule (ESC)`, ni le fichier ni `NOM.$$$` sur le disque ;
-  l'ancien fichier du même nom intact ;
-- XFER sans liaison (modem en mode commande, ou après `ATH`) : `Pas de reponse du serveur`
-  au bout de 10 s, sans blocage ;
-- un XFER après l'autre sans repasser par TERM : la liaison reste ouverte.
+**XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
+du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
+" " -`, sans caractère parasite.
 
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
@@ -225,6 +213,10 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 Sur Oric Atmos + LOCI, version disquette :
 
+- XFER (30 octobre 2026, avec `tools/xfer_server.py` sur le Mac) : envoi et réception d'un
+  texte (identiques), d'un gros `.COM` vers B: (il se lance), `/T` (fins de ligne,
+  tabulations), ESC pendant une réception (rien d'écrit, ancien fichier intact), XFER sans
+  liaison (`Pas de reponse du serveur`), plusieurs XFER de suite sans repasser par TERM ;
 - démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO, STAT, MEM, POKE, GO, DO ;
 - historique des lignes (flèche haut) au prompt et dans LOGO, ← → dans LOGO ; complétion des
   noms par ESC ;

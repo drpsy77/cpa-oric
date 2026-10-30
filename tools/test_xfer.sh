@@ -6,8 +6,8 @@
 #     fin retirés sur le serveur) ;
 #   - fichier de 40 Ko (plus de 255 blocs : numéros qui reviennent à 0)
 #     vers B:, et retour : identique ;
-#   - /T : LF et tabulation du serveur -> CR LF et espace sur l'Oric, et
-#     retour en LF ;
+#   - /T : LF, tabulation, accents (UTF-8) du serveur -> CR LF, espace,
+#     ASCII sur l'Oric (Ç -> C, œ -> oe, « -> "), et retour en LF ;
 #   - refus : fichier absent du serveur, fichier absent de CP/A, jokers,
 #     fichier protégé (R/O) gardé tel quel ;
 #   - ESC pendant une réception : annulé, ni NOM ni NOM.$$$ sur le disque ;
@@ -26,7 +26,7 @@ import sys, random
 d = sys.argv[1]
 random.seed(7)
 open(d + "/gros.bin", "wb").write(bytes(random.randrange(256) for _ in range(40000)))
-open(d + "/mac.txt", "wb").write(b"ligne 1\n\tligne 2\nfin\n")
+open(d + "/mac.txt", "wb").write("ligne 1\n\tÇa : cœur, Lætitia, « élève »\nfin\n".encode())
 E
 python3 tools/xfer_server.py --port $PORT --dir "$T/srv" --once --fautes > "$T/srv.log" 2>&1 &
 SRV=$!
@@ -80,8 +80,8 @@ g = get(T + "/o.b.dsk", "GROS.BIN")
 check(g is not None and strip(g) == gros and len(g) % 128 == 0, "R : 40 Ko vers B:, identique")
 check(rd(srv + "retour.bin") == gros, "E : 40 Ko depuis B:, identique")
 check(get(T + "/o.dsk", "MAC.TXT") is not None and
-      strip(get(T + "/o.dsk", "MAC.TXT")) == b"ligne 1\r\n ligne 2\r\nfin\r\n", "R /T : CR LF, espace")
-check(rd(srv + "mac2.txt") == b"ligne 1\n ligne 2\nfin\n", "E /T : LF")
+      strip(get(T + "/o.dsk", "MAC.TXT")) == b'ligne 1\r\n Ca : coeur, Laetitia, " eleve "\r\nfin\r\n', "R /T : CR LF, espace, accents")
+check(rd(srv + "mac2.txt") == b'ligne 1\n Ca : coeur, Laetitia, " eleve "\nfin\n', "E /T : LF")
 check("Serveur : fichier absent" in screen, "R : absent du serveur")
 check("Fichier absent" in screen, "E : absent de CP/A")
 check("pas de jokers" in screen, "jokers refuses")

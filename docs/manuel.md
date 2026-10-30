@@ -675,7 +675,7 @@ puis XFER s'utilise autant de fois qu'on veut :
 |---|---|
 | `XFER E fic [nom]` | envoie `fic` (lecteur facultatif) ; sur le serveur, il s'appelle `nom`, ou `fic` sans le lecteur ; un nom tapé tout en majuscules y est écrit en minuscules ; un fichier du même nom y est remplacé |
 | `XFER R fic [nom]` | reçoit `nom` (ou `fic`, sans tenir compte des majuscules) et l'écrit dans `fic` |
-| `/T` | texte : le serveur passe les fins de ligne LF du Mac en CR LF et une tabulation en espace à l'envoi vers l'Oric, et CR LF en LF dans l'autre sens |
+| `/T` | texte : à l'envoi vers l'Oric, le serveur passe les fins de ligne LF du Mac en CR LF, une tabulation en espace, et le texte en ASCII (UTF-8 du Mac, ou Windows-1252) : accents et cédille retirés (`é` -> `e`, `ç` -> `c`), lettres liées dépliées (`œ` -> `oe`, `æ` -> `ae`), guillemets et tirets typographiques simplifiés, `?` pour le reste ; dans l'autre sens, CR LF en LF |
 | ESC | annule le transfert en cours |
 
 - Pas de jokers : un fichier à la fois.
