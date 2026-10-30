@@ -209,7 +209,7 @@ stick, files only (`Files only` for a directory):
   written as `~CPADUP.TMP`, renamed at the end; a stop or an error erases it.
 - **Mount** (`^O`, stick only): a disk image (`Mount in : B:`, A: refused) or a tape
   (`.TAP`, at once), with USBMOUNT's rules (`docs/usb.md` § 1.4); `Not an image (.DSK or
-  .TAP)`, `Image mounted in C:`; message `C: puzzle.dsk`.
+  .TAP)`, `No image on 0:`, `Image mounted in C:`; message `C: puzzle.dsk`.
 
 **Disk name** of each drive, from the LOCI menu (on a LOCI only): full screen, in the header
 (`A: cpa-en.dsk *.*  22/40 fls 126K free`), cut with `~` (12 characters at most, fewer if

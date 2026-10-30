@@ -209,7 +209,7 @@ répertoire) :
   s'écrit sous `~CPADUP.TMP`, renommé à la fin ; un arrêt ou une erreur l'efface.
 - **Monter** (`^O`, clé seulement) : une image de disquette (`Monter en : B:`, A: refusé)
   ou une cassette (`.TAP`, aussitôt), avec les règles de USBMOUNT (`docs/usb.md` § 1.4) ;
-  `Pas une image (.DSK ou .TAP)`, `Image montee en C:` ; message `C: puzzle.dsk`.
+  `Pas une image (.DSK ou .TAP)`, `Pas d'image sur 0:`, `Image montee en C:` ; message `C: puzzle.dsk`.
 
 **Nom de la disquette** de chaque lecteur, d'après le menu du LOCI (sur un LOCI seulement) :
 plein écran, dans l'en-tête (`A: cpa.dsk *.*    22/40 fic 126K libre`), coupé avec `~`

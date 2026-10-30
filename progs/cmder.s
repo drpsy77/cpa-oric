@@ -7189,7 +7189,13 @@ ku1      ldy #E_RANK
 kn      jsr u_mnted             ; (ufull -> apath)
         bcc ku2
         jmp tw
-ku2      jsr mt_head
+ku2      lda apath               ; image de la mémoire interne : refusée
+        cmp #"0"                ; (voir mt_mount, lmnt_inc.s)
+        bne ku3
+        lda #<m_lfs
+        ldy #>m_lfs
+        jmp set_msg
+ku3      jsr mt_head
         bcs ni
         jsr mt_isdsk
         beq dsk

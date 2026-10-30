@@ -526,7 +526,8 @@ pass on the command line: rename it on the Mac.
 - **USBMOUNT** keeps the LOCI menu's configuration up to date (mounted drives, image names):
   the menu shows the same thing, whoever mounted. Refused: an image already mounted in another
   drive (`Already mounted in C:`), a file that is not a disk image (`Not a disk image`) or a
-  tape, a `.TAP` still on a CP/A disk (`Export it first : EXPORT GAME.TAP`). After mounting or
+  tape, a `.TAP` still on a CP/A disk (`Export it first : EXPORT GAME.TAP`), an image in the
+  LOCI's internal memory (`No image on 0:`). After mounting or
   ejecting, the disks are read again, as after a CTRL-C; an ejected current drive gives way to
   A:. To come back to CP/A after `/B`: the LOCI menu (FDC switched back on).
 - A command that expects a single file (IMPORT, USBMOUNT) and whose pattern matches several writes

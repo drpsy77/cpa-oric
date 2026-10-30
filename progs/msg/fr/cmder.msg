@@ -179,6 +179,7 @@ m_tmpn  .asc "~CPADUP.TMP",0
 m_ko    .asc " Ko",0
 m_mntq  .asc "Monter en : ",0
 m_notimg .asc "Pas une image (.DSK ou .TAP)",0
+m_lfs   .asc "Pas d'image sur 0:",0
 m_sysa  .asc "A: interdit (disquette systeme)",0
 m_usb   .asc "USB:",0
 m_usbro .asc "Cle USB : pas d'attributs",0

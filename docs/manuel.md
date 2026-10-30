@@ -540,8 +540,9 @@ des espaces ne passe pas sur la ligne de commande : le renommer sur le Mac.
 - **USBMOUNT** tient à jour la configuration du menu du LOCI (lecteurs montés, noms des
   images) : le menu montre la même chose, quel que soit celui qui a monté. Refusés : une image
   déjà montée dans un autre lecteur (`Deja montee en C:`), un fichier qui n'est pas une image
-  de disquette (`Pas une image de disquette`) ou de cassette, un `.TAP` resté sur une
-  disquette de CP/A (`Exporter d'abord : EXPORT JEU.TAP`). Après un montage ou une éjection,
+  de disquette (`Pas une disquette`) ou de cassette, un `.TAP` resté sur une
+  disquette de CP/A (`Exporter d'abord : EXPORT JEU.TAP`), une image de la mémoire interne
+  du LOCI (`Pas d'image sur 0:`). Après un montage ou une éjection,
   les disquettes sont relues, comme après un CTRL-C ; un lecteur courant éjecté laisse la
   place à A:. Pour revenir à CP/A après `/B` : le menu du LOCI (FDC remis en service).
 - Une commande qui attend un seul fichier (IMPORT, USBMOUNT) et dont le modèle en désigne plusieurs

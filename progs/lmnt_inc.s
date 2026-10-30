@@ -316,7 +316,15 @@ mt_post
 ;   le menu) -> C=1 si le LOCI refuse (message affiché)
 mt_mount
 .(
-        lda mt_d
+        lda apath               ; image de la mémoire interne : refusée
+        cmp #"0"                ; (le firmware ne vérifie pas l'ouverture
+        bne mm                  ; d'un fichier de 0: avant de le lire)
+        lda #<m_lfs
+        ldy #>m_lfs
+        jsr lputs
+        sec
+        rts
+mm      lda mt_d
         sta MIA_A
         lda #<apath
         ldy #>apath
