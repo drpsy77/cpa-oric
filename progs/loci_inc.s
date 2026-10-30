@@ -120,12 +120,9 @@ done    rts
 ;   O_WRONLY+O_CREAT+O_TRUNC : sur 0: (littlefs), le firmware du LOCI
 ;   traduit O_TRUNC sans O_CREAT (std.c) et ne crée pas un fichier absent.
 ;   Le fichier est donc d'abord ouvert avec O_CREAT seul (créé s'il manque)
-;   et refermé, puis ouvert avec les drapeaux demandés. Un programme qui
-;   ne crée aucun fichier (USBMOUNT) définit LOCI_SANS_CREATION : ni ce
-;   détour, ni cw_put.
+;   et refermé, puis ouvert avec les drapeaux demandés.
 usb_open
 .(
-#ifndef LOCI_SANS_CREATION
         cpx #O_WRONLY+O_CREAT+O_TRUNC
         bne one
         ldx #O_WRONLY+O_CREAT
@@ -135,7 +132,6 @@ usb_open
 two     lda lptr                ; push_str y a laissé le chemin
         ldy lptr+1
         ldx #O_WRONLY+O_CREAT+O_TRUNC
-#endif
 one     jsr push_str
         stx MIA_A
         lda #OP_OPEN
@@ -584,55 +580,6 @@ ynone    lda #"/"                ; aucune clé : « / », le LOCI répondra
         sta cwd+1
         rts
 .)
-
-#ifndef LOCI_SANS_CREATION
-; cw_put : le chemin A/Y (complet) devient le répertoire courant :
-;   cwd, description du support, fichier 0:CPA.CWD (rien n'est écrit si
-;   le répertoire ne change pas) ; C=1 si l'écriture échoue
-cw_put
-.(
-        sta lptr
-        sty lptr+1
-        ldy #0
-ycq      lda (lptr),y
-        cmp cwd,y
-        bne ydif
-        iny
-        cmp #0
-        bne ycq
-        clc                     ; inchangé : rien à écrire
-        rts
-ydif     ldy #0
-ycp      lda (lptr),y
-        sta cwd,y
-        beq ycd
-        iny
-        cpy #127
-        bne ycp
-        lda #0
-        sta cwd,y
-ycd      lda #0
-        sta cwdesc
-        jsr dv_open
-        bcs ywr
-ysc      jsr dv_next
-        bcs yscd
-        ora #"0"
-        cmp cwd
-        bne ysc
-        ldx #0
-ydc      lda dirent+5,x
-        sta cwdesc,x
-        beq yscd
-        inx
-        cpx #63
-        bne ydc
-        lda #0
-        sta cwdesc,x
-yscd     jsr dv_close
-ywr      ; (suite dans cw_write)
-.)
-#endif
 
 ; cw_write : écrit cwd et cwdesc dans 0:CPA.CWD
 cw_write

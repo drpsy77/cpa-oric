@@ -209,6 +209,10 @@ caractères, la ligne défile).
   `MSC mounted, inquiring` (clé pas encore prête) ; la taille affichée se réduit alors à
   l'unité.
 - `readdir` rend le nom court FAT au-delà de la longueur maximale d'un nom.
+- `open` sur `0:` (littlefs, `api/std.c`) : `O_TRUNC`, `O_APPEND` ou `O_EXCL` y remplacent
+  `O_CREAT` au lieu de s'y ajouter ; `O_CREAT+O_TRUNC` ne crée donc pas un fichier absent
+  (erreur 130, `LFS_ERR_NOENT`). `usb_open` ouvre d'abord avec `O_CREAT` seul, referme,
+  puis rouvre avec `O_TRUNC`. L'Oricutron des tests reproduit ce comportement.
 - **Configuration du menu du LOCI en XRAM** (`loci-rom`, `src/persist.h`, `persist.c`),
   lue et écrite par la fenêtre 1 (`$03A8-$03AB`) :
 
@@ -225,8 +229,9 @@ caractères, la ligne défile).
   `drv_names`. USBMOUNT et CMDER les écrivent comme lui ; sans le bit de `mounts`, CP/A
   refuserait le lecteur (`loci_abs`). Le répertoire de l'image se lit par `$88`.
 - Code commun, par fichiers (ASM n'a pas d'assemblage conditionnel) : `loci_inc.s` (API,
-  répertoire courant `cw_get` / `cw_put` / `cw_write`, chemins `lpath`, supports `dv_open`,
-  `dv_next`, `dv_parse`, `dv_fmt` : tous les programmes USB, ~1,7 Ko), `ljok_inc.s` (jokers
+  répertoire courant `cw_get` / `cw_write`, chemins `lpath`, supports `dv_open`,
+  `dv_next`, `dv_parse`, `dv_fmt` : tous les programmes USB, ~1,7 Ko), `lcwp_inc.s`
+  (`cw_put`, changer de répertoire : USBDIR, CMDER), `ljok_inc.s` (jokers
   `wmatch`, `lp_find`, `lp_findx` : USBDIR, IMPORT, USBMOUNT ; ~0,4 Ko), `lmnt_inc.s`
   (montage `mt_mount`, `mt_eject`, configuration du menu en XRAM, `mt_where`, `mt_head`,
   `mt_pre` / `mt_post` autour du BDOS : USBMOUNT, et CMDER au lot 3 ; ~0,8 Ko ; ses tampons

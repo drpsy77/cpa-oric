@@ -255,5 +255,6 @@ e       jmp dv_close
 #include "usbdir.msg"
 
 #include "ljok_inc.s"
+#include "lcwp_inc.s"
 #include "loci.msg"         ; avant loci_inc.s, dont les tampons suivent la fin
 #include "loci_inc.s"
