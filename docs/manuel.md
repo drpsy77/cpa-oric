@@ -252,35 +252,38 @@ refusent d'enregistrer un fichier protégé, COPY et IMPORT répondent `fichier 
 (bit 7 de l'octet 9 du FCB = R/O, de l'octet 10 = SYS). `STAT *.*` montre les attributs de
 tous les fichiers.
 
-Sur la disquette livrée, les commandes et les applications (COPY, STAT, HELP, EDIT, LOGO,
-ASM...), README.TXT, USBCD.BAT, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC et SPR.INC sont **protégées** (R/O) et restent **visibles** dans DIR,
-comme sur une disquette CP/M : un `ERA *.*` ou un nom complété par ESC ne peut plus les
-effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis la
-copier. Les exemples (HELLO, GTEST et leurs `.ASM`, DEMO.LOG, les `.GRX`, HEROS.SPR, TUILES.SPR) restent
-modifiables : `ASM HELLO` réécrit HELLO.COM. Aucun fichier n'est caché (SYS) : l'attribut
-reste à la disposition de l'utilisateur.
+**La disquette système** (`cpa.dsk`) a tous les programmes, sauf LOGO (sa disquette :
+`cpa-logo.dsk`), et aucun exemple (disquette `cpa-exemples.dsk`) ; HELP y a toutes ses
+rubriques. Tout y est **protégé** (R/O) : un `ERA *.*` ou un nom complété par ESC ne peut
+rien effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis
+la copier. `DIR` y montre les applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER,
+GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) et
+README.TXT ; les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
+MEM, POKE, GO, le script USBCD.BAT, les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
+`DIRS` les montre.
 
 SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance toujours
 (un fichier renommé `.SYS` ne serait plus une commande : le CCP ne lance que `.COM` et `.BAT`).
 
-**Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables, plus légères
-à l'affichage. Sur chacune, les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, HELP,
-FORMAT, DISKCOPY, XDO, EXPORT, IMPORT, USBDIR, USBMOUNT, VOIR, CMDER, et le script USBCD.BAT) sont protégées et **cachées** (SYS) : `DIR`
-ne montre que l'outil de la disquette et les fichiers de travail, `DIRS` montre tout. EDIT
-y est partout, protégé et visible.
+**Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables : chacune
+démarre seule et porte ses outils (un seul lecteur suffit). Sur chacune, les commandes de base
+(TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), la clé USB
+(EXPORT, IMPORT, USBDIR, USBMOUNT, le script USBCD.BAT), TERM et XFER sont protégés et
+**cachés** (SYS) : `DIR` ne montre que l'outil de la disquette et les fichiers de travail,
+`DIRS` montre tout. EDIT y est partout, protégé et visible.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-logo.dsk` | EDIT, LOGO, GRAPHER, EDSPRITE | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, FLECHES.LOG, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX |
-| `build/cpa-notes.dsk` | EDIT | | |
-| `build/cpa-asm.dsk` | EDIT, ASM, DEBUG, HEX, GRAPHER, GRXASM, EDSPRITE, MKTAP, CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | MEM, POKE, GO | HELLO, GTEST (`.ASM`, `.COM`) |
-| `build/cpa-anim.dsk` | EDIT, VOIR, VSYNC, GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP | CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-logo.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, FLECHES.LOG |
+| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-notes.dsk` (écrire) | EDIT | | |
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).
 
 **Disquettes anglaises.** Chaque disquette a sa jumelle anglaise : `cpa-en.dsk`,
-`cpa-logo-en.dsk`, `cpa-notes-en.dsk`, `cpa-asm-en.dsk`, `cpa-anim-en.dsk`, `cpa-project-en.dsk`.
+`cpa-anim-en.dsk`, `cpa-logo-en.dsk`, `cpa-examples-en.dsk`, `cpa-notes-en.dsk`, `cpa-project-en.dsk`.
 Mêmes programmes, mêmes fichiers, mêmes attributs, avec le système, les messages, les menus,
 l'aide (HELP, README.TXT), `EDIT.CFG` et les bibliothèques des programmes traduits en anglais
 (la touche « oui » y est `Y`, et « tous » `A` dans les remplacements d'EDIT). Les exemples y
@@ -310,13 +313,14 @@ vierge (sans système, 336 Ko pour les fichiers), à mettre en `B:` et à copier
 projet.
 
 Usage conseillé : la disquette système en `A:` (`cpa.dsk`, ou une disquette d'usage), une
-disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`, `LOGO`,
-`ASM`, `GRAPHER` ou `GRXASM` sont trouvés sur `A:`, ainsi que les bibliothèques (`CPA.INC`,
+disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`, `ASM`,
+`GRAPHER` ou `GRXASM` sont trouvés sur `A:` (LOGO, avec `cpa-logo.dsk` en `A:`), ainsi que les bibliothèques (`CPA.INC`,
 `HIRES.INC`, `GRX.INC`...) qu'ASM et GRXASM cherchent sur le lecteur du projet puis sur A: à
 D: ; tout ce qui est produit (`.ASM`, `.COM`, `.SYM`, fichiers de données) va sur `B:`, et
-`DIR` ne montre que le travail en cours. `build/cpa.dsk` reste la disquette complète, tout
-visible, et la démonstration ; il y reste environ 70 Ko, peu pour travailler (une traduction
-par GRXASM écrit vite plus de 40 Ko).
+`DIR` ne montre que le travail en cours. Avec un seul lecteur, on démarre sur la disquette
+d'usage et l'on travaille sur une copie (DISKCOPY) plutôt que sur l'original. Il reste
+environ 86 Ko sur `cpa.dsk`, peu pour travailler (une traduction par GRXASM écrit vite plus de
+40 Ko).
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C sur une ligne vide du prompt fait un démarrage à

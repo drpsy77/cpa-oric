@@ -15,20 +15,21 @@
 - **Solide comme un roc** : sur un vrai Atmos avec un LOCI, des séances de travail entières
   sans un plantage ni un redémarrage.
 
-**L'essayer en cinq minutes.** Téléchargez [`cpa.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa.dsk), copiez-le sur la clé USB du LOCI
+**L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
 (ou la carte SD du Cumulus) et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
 prompt `A>` :
 
     DIR               ce qu'il y a sur la disquette
     HELP              les rubriques d'aide
-    LOGO DEMO         puis tapez DEMO : la tortue dessine un arbre
     GRAPHER CARTE     une île de tuiles tirée au hasard (flèches, Q pour finir)
     GRXASM SERPENT    traduit le jeu du serpent en assembleur...
     ASM SERPENT       ...l'assemble sur l'Oric...
     SERPENT           ...et lance la version compilée
     CMDER             gestionnaire de fichiers plein écran (ESC pour finir)
 
-La touche FUNCT ouvre les menus partout.
+La touche FUNCT ouvre les menus partout. Ensuite, [`cpa-anim.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-anim.dsk) :
+`DEMO` (images et animations) ; [`cpa-logo.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-logo.dsk) : `LOGO DEMO`, puis
+`DEMO` (la tortue dessine un arbre).
 
 **En vidéo** : GRAPHER et la route qui défile de `DEFILE.GRX`.
 
@@ -41,9 +42,11 @@ Deux variantes sont construites à partir des mêmes sources :
 - **`build/cpa.dsk`**, la version principale : une disquette amorçable pour le contrôleur
   Microdisc, donc aussi pour le Cumulus et le LOCI. Le système se charge dans les 16 Ko de RAM
   overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
-  programmes reste intact. Quatre autres disquettes, par usage : `cpa-logo.dsk`,
-  `cpa-notes.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` ; et une vierge, `cpa-projet.dsk`, pour son
-  travail en `B:` à côté de la disquette système en `A:`. Chaque disquette existe en français
+  programmes reste intact. C'est la disquette système : tous les programmes (sauf LOGO) et
+  toute l'aide, sans exemples. Quatre autres disquettes, par usage, démarrent seules avec
+  leurs outils : `cpa-anim.dsk` (la démonstration), `cpa-logo.dsk` (LOGO),
+  `cpa-exemples.dsk` (les exemples de GRAPHER et d'ASM), `cpa-notes.dsk` (écrire) ; et une
+  vierge, `cpa-projet.dsk`, pour son travail en `B:` à côté de la disquette système en `A:`. Chaque disquette existe en français
   et en anglais (`cpa-en.dsk`, `cpa-logo-en.dsk`... `cpa-project-en.dsk`) : mêmes programmes,
   mêmes exemples, avec les messages, les menus, l'aide et les exemples dans la langue de la
   disquette ; sur les anglaises, les exemples ont des noms anglais (`CARTE.GRX` y est

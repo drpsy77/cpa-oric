@@ -8,7 +8,7 @@
 #
 #   tools/test_logo.sh          compare aux références
 #   REF=1 tools/test_logo.sh    réécrit les références (après vérification !)
-#   LANGUE=en tools/test_logo.sh   LOGO anglais (cpa-en.dsk) : scénarios
+#   LANGUE=en tools/test_logo.sh   LOGO anglais (cpa-logo-en.dsk) : scénarios
 #     traduits par LOGOTR.COM (6502 simulé), commandes tapées par
 #     tools/logo_en.py ; références dans tools/logo_tests/en (les mêmes
 #     empreintes d'images)
@@ -24,9 +24,9 @@ T=$(mktemp -d)
 R=$D
 if [ "$LANGUE" = en ]; then
   R=$D/en; mkdir -p $R
-  cp build/cpa-en.dsk "$T/test.dsk"
+  cp build/cpa-logo-en.dsk "$T/test.dsk"
 else
-  cp build/cpa.dsk "$T/test.dsk"
+  cp build/cpa-logo.dsk "$T/test.dsk"
 fi
 # place pour les scénarios (un bloc de 2 Ko chacun) : GRXASM et sa
 # bibliothèque, inutiles ici, sont retirés de la copie
@@ -36,7 +36,7 @@ for f in GRXASM.COM GRX.INC CMDER.COM GRAPHER.COM ROTSCROL.GRX JEU.GRX PUZZLE.GR
   python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null 2>&1 || true
 done
 mkdir "$T/tr"
-# en anglais, DEMO.LOG est celui de cpa.dsk traduit par LOGOTR (les scénarios
+# en anglais, DEMO.LOG est celui de cpa-logo.dsk traduit par LOGOTR (les scénarios
 # appellent ses procédures : ETOILE...), et les scénarios aussi ; corrections
 # à la main de ce que LOGOTR signale : en/corrige.sed
 for f in $D/*.log files/demo.log; do

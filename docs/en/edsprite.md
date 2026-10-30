@@ -8,7 +8,7 @@ Full-screen editor for GRAPHER's `.SPR` files (format: `grapher.md` § 10.1): sp
 0: drawing and mask) and tiles or characters (kind 1: drawing only, copied into the font by
 `TFONT`). It replaces HEX and `tools/mkspr.py` for making these files on the Oric. One `.COM`
 (8,802 bytes; 8,967 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
-`cpa-logo.dsk`, `cpa-asm.dsk`, `cpa-anim.dsk` and their English twins.
+`cpa-exemples.dsk`, `cpa-anim.dsk` and their English twins.
 
 ## 1. Calling it
 

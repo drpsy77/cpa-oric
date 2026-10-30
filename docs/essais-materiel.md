@@ -9,6 +9,22 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Coffret de disquettes** (une par usage ; `docs/manuel.md`, disquettes par usage ; chaque
+disquette démarre seule, avec un seul lecteur) :
+
+- `cpa.dsk` : `DIR` montre les applications et README.TXT, sans exemple ni LOGO ; `DIRS`
+  montre aussi les commandes de base et les `.INC` ; `HELP LOGO` répond quand même ;
+- `cpa-anim.dsk` : `DEMO` enchaîne l'image, les trois animations et `GRAPHER ANIMS` ;
+- `cpa-logo.dsk` : `DIR` ne montre que LOGO, LOGOTR, EDIT et les `.LOG` ; `LOGO DEMO`, puis
+  `DEMO` ;
+- `cpa-exemples.dsk` seule : `GRAPHER CARTE`, puis `GRXASM SERPENT`, `ASM SERPENT`,
+  `SERPENT` (la place suffit-elle ?) ; `ASM HELLO`, `HELLO` ;
+- `cpa-notes.dsk` : écrire un texte dans EDIT, puis `EXPORT` vers la clé et `XFER` (cachés,
+  présents) ;
+- deux lecteurs : `cpa.dsk` en A:, `cpa-projet.dsk` en B:, `B:`, `GRAPHER` et `ASM` trouvés
+  sur A: ;
+- les mêmes sur les jumelles anglaises (`cpa-examples-en.dsk`...).
+
 **Fenêtre : PUT et démarrage à froid** (`docs/systeme.md` § 6 ; sur une **copie** de
 `cpa.dsk`, puis de `cpa-en.dsk`) :
 
@@ -132,7 +148,7 @@ commandes sur `cpa-en.dsk`) :
 - menus : CMDER, Vue, « Autre col. ^I » ; HEX, Mode, « Hex/ASCII ^I » ; `HELP TOUCHES`.
 
 **Tableaux de GRAPHER en (colonne, ligne)** (`DIM T$(c,l)`, `T$(x,y)`, `PASTE T$(x,y)`) :
-interprété puis traduit (`GRXASM NOM /C`), sur `cpa.dsk` et `cpa-en.dsk` : `CARTE` (lacs plus
+interprété puis traduit (`GRXASM NOM /C`), sur `cpa-exemples.dsk` et `cpa-examples-en.dsk` : `CARTE` (lacs plus
 larges que hauts, chaînes de montagnes horizontales, joueur au centre), `ROTSCROL`,
 `SCORES` (noms et scores relus), `JEU` (les pièces de 5 × 3 cases). Un `.GRX` à soi
 qui a des tableaux à deux dimensions est à passer par `tools/grx_colig.py` (EXPORT, puis
@@ -143,7 +159,7 @@ sur le Mac, puis IMPORT).
 ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
 console : sans les guillemets, espaces gardés.
 
-**EDSPRITE, deuxième version** (curseur, grisé, aide, Détourer, tuiles), sur `cpa.dsk` :
+**EDSPRITE, deuxième version** (curseur, grisé, aide, Détourer, tuiles), sur `cpa-exemples.dsk` :
 
 - le curseur clignote toujours, même après une longue séance, un nouveau sprite, une
   relance (le défaut venait de l'horloge passée `$8000`, ~11 minutes après le démarrage) ;
@@ -187,7 +203,7 @@ du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans 
 
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
-- Sur `cpa-asm.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire
+- Sur `cpa-exemples.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire
   un petit `TAPTEST.ASM` (`*= $9000`, quelques `STA $BB80+...` pour afficher un texte, puis
   `RTS`), `ASM TAPTEST`, puis `MKTAP TAPTEST TAPTEST.COM 9000 /R` et `EXPORT TAPTEST.TAP`.
   Redémarrer l'Oric en BASIC, monter `taptest.tap` comme cassette dans le menu du LOCI,
