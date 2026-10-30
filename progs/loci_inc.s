@@ -685,17 +685,15 @@ ylp      lda dv_fd
         bne ylp
         lda dv_n
         beq yok                  ; « 0: Internal storage [15MB] »
-        ldx #3                  ; « MSC » et un chiffre : stockage USB
-yms      lda dirent+5,x
-        cmp m_msc,x
-        bne ylp
+        ldx #3                  ; « MSC » : stockage USB (taille absente
+yms      lda dirent+5,x          ; si le firmware n'imprime pas les décimaux :
+        cmp m_msc,x             ; « MSC  GB General  UDisk »), sauf
+        bne ylp                 ; « MSC mounted, inquiring » (pas prête)
         dex
         bpl yms
         lda dirent+9
-        sec
-        sbc #"0"
-        cmp #10
-        bcs ylp
+        cmp #"m"
+        beq ylp
 yok      lda dv_n
         clc
         rts

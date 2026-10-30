@@ -152,8 +152,11 @@ SanDisk  Cruzer Blade    rev 1.00`), espaces réduits ; taille `GB` écrite `Go`
   du système y sont lus.
 - Refusés : une image déjà montée dans un autre lecteur (`Deja montee en C:` : deux
   écritures sur le même fichier l'abîmeraient) ; un fichier qui n'est pas une image de
-  disquette (`Pas une image de disquette` : signature `MFM_DISK` vérifiée) ; un `.TAP`
-  d'une disquette CP/A (`Exporter d'abord : EXPORT JEU.TAP`).
+  disquette (`Pas une disquette` : signature `MFM_DISK` vérifiée) ; un `.TAP`
+  d'une disquette CP/A (`Exporter d'abord : EXPORT JEU.TAP`) ; une image de la mémoire
+  interne (`Pas d'image sur 0:` : le firmware ne vérifie pas l'ouverture d'un fichier de
+  `0:` avant de le lire ; un montage de `0:CPA-ANIM.DSK` a figé le LOCI, `mt_mount` de
+  `lmnt_inc.s`, CMDER compris).
 - Une cassette doit commencer par l'octet de synchronisation `$16` (`Pas une cassette
   (.TAP)`) ; un nom en `.DSK` sans lecteur : `Lecteur ? USBMOUNT B: nom.DSK`.
 - Après un montage ou une éjection de disquette : écritures en attente faites, disques
@@ -200,7 +203,11 @@ caractères, la ligne défile).
   répertoire courant est celui de CP/A, § 1.1).
 - `opendir` d'un chemin vide liste les appareils : `0: Internal storage [15MB]`, puis
   `n: MSC 14.9 GB` + fabricant (8) + modèle (16) + révision pour un stockage ; les autres
-  appareils (clavier, Pico W) ont d'autres textes et sont sautés.
+  appareils (clavier, Pico W) ont d'autres textes et sont sautés. Un firmware compilé
+  sans les décimaux dans `printf` (la 0.3.98 de `tools/loci-acia-diag/`) écrit
+  `n: MSC  GB General  UDisk` : `dv_next` retient tout texte qui commence par `MSC `, sauf
+  `MSC mounted, inquiring` (clé pas encore prête) ; la taille affichée se réduit alors à
+  l'unité.
 - `readdir` rend le nom court FAT au-delà de la longueur maximale d'un nom.
 - **Configuration du menu du LOCI en XRAM** (`loci-rom`, `src/persist.h`, `persist.c`),
   lue et écrite par la fenêtre 1 (`$03A8-$03AB`) :

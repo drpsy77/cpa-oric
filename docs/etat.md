@@ -38,9 +38,9 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | HELP | 12 550 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
-| CMDER | 17 889 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
+| CMDER | 17 935 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 055, 3 443, 2 933 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
-| USBMOUNT | 4 086 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
+| USBMOUNT | 4 095 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
 | TERM | 847 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
 | XFER | 2 037 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` | `manuel.md` |
@@ -217,18 +217,16 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      bloqué, ne lève jamais INTRQ (l'attente du premier octet échouait déjà) ; à voir sur le
      LOCI (`docs/essais-materiel.md`). Si c'est un rebond : ignorer une NMI arrivée peu après
      la précédente.
-   - **Clé USB absente de la liste des appareils** (vrai LOCI, 30/10/2026) : `USBDIR /S` ne
-     montre que `0:` ; le répertoire courant retombe sur `/`, sans numéro de support
-     (`USBDIR` affichait `/files`), d'où les chemins envoyés sans lecteur (le LOCI prend
-     alors son lecteur courant FatFs) et `CPA.CWD` qui ne retient rien. `USBDIR 1:` :
-     erreur 43 (FatFs 11, lecteur invalide) : la clé n'est pas en 1:. Piste : le firmware
-     rend un nom vide pour un appareil monté sans texte d'état (`dir.c`, liste des
-     appareils), et `dv_next` (`loci_inc.s`) prend un nom vide pour la fin de la liste ;
-     correction possible : sauter les noms vides, 8 appareils au plus
-     (`CFG_TUH_DEVICE_MAX`), ~13 octets (USBMOUNT, plein à 10 octets près, passerait à 3
-     blocs). À confirmer par la liste du menu du LOCI. Après un passage par le menu du
-     LOCI, un `USBDIR` a figé l'Oric et le LOCI (lien possible avec les chemins sans
-     lecteur) : à reproduire.
+   - **Firmware du LOCI 0.3.98** (vrai LOCI, 30/10/2026) : sans les décimaux dans `printf`,
+     la clé se décrit `1: MSC  GB General  UDisk` ; `dv_next` l'écartait (il attendait un
+     chiffre), d'où `USBDIR /S` sans la clé, un répertoire courant sans support (`/files`)
+     et `CPA.CWD` qui ne retenait rien. Corrigé (`docs/usb.md` § 2) ; à revérifier sur le
+     matériel. Le montage d'une image de `0:` (`USBMOUNT B: 0:CPA-ANIM.DSK`) a figé le
+     LOCI (le firmware ne vérifie pas l'ouverture du fichier, `mnt.c`) : refusé par
+     USBMOUNT et CMDER (`Pas d'image sur 0:`) ; à signaler au firmware du LOCI. Un
+     `USBDIR` a aussi figé l'Oric et le LOCI après un passage par le menu du LOCI, avec un
+     répertoire courant sans support : à reproduire maintenant que les chemins ont toujours
+     leur support.
    - EDIT et GRAPHER (`SAVE`, `BSAVE`, `BSAVE SCREEN`) passent la batterie
      `tools/test_fichiers.py` (disque plein, répertoire plein, R/O, RESET balayé). Reste
      une fenêtre d'une demi-seconde, entre l'effacement de l'ancien fichier et le
@@ -546,9 +544,9 @@ multiple de 2 048) :
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
   blocs, 1 844 octets libres dans le dernier. HELP (12 550) prend 7 blocs, 1 786 octets libres dans le dernier (12 377 en anglais, 7
-  blocs depuis XFER). CMDER (17 889) prend 9 blocs, 543 octets libres dans le dernier ;
+  blocs depuis XFER). CMDER (17 935) prend 9 blocs, 497 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
-  USBMOUNT (4 086) prend 2 blocs, plein à 10 octets près (51 en anglais) ; MKTAP (4 079)
+  USBMOUNT (4 095) prend 2 blocs, plein à 1 octet près (24 en anglais) ; MKTAP (4 079)
   aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend
   5 blocs, 1 273 octets libres dans le dernier. Les disquettes se spécialisent plutôt
   que de gratter des octets ;

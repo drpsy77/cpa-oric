@@ -64,9 +64,13 @@ puis quelques commandes sur `cpa-en.dsk`) :
 - `USBCD ..`, `USBCD /`, `USBCD 0:` ; refus : `USBCD nexiste` et `USBCD fichier.txt`
   (`Erreur USB 37 : introuvable` dans Oricutron : noter le code du vrai LOCI) ;
 - `USBCD` seul : CMDER sur la clé, répertoires seuls ; descendre, ESC : `USBDIR` liste ce
-  répertoire. Si ce n'est pas le cas (constaté avant ce changement, alors que l'émulateur
-  garde bien le répertoire) : `USBDIR 0:` (`CPA.CWD` est-il là ?), puis
-  `IMPORT 0:CPA.CWD /T` et `TYPE CPA.CWD` ;
+  répertoire ;
+- avec le firmware 0.3.98 (clé décrite `MSC  GB`, sans taille) : `USBDIR /S` montre la clé
+  (`1: General UDisk  Go *`), `USBCD files` écrit `1:/FILES` (avec le numéro) ;
+- `USBMOUNT B: 0:CPA-ANIM.DSK` : `Pas d'image sur 0:`, rien ne se fige ; de même `^O` dans
+  CMDER sur une image de `0:` ;
+- passer par le menu du LOCI (parcourir la clé), revenir à CP/A, `USBDIR` : pas de gel
+  (constaté une fois avant la correction, avec un répertoire courant sans support) ;
 - un chemin de plus de 20 caractères : le nombre d'éléments passe à la ligne.
 
 **Clé USB, lot 2 : USBMOUNT** (`docs/usb.md` § 1.4 ; sur `cpa.dsk`, puis quelques

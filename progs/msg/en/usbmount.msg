@@ -6,6 +6,7 @@ m_use   .asc "USBMOUNT [B: [name|/E]] : disk",13,10
 m_sysa  .asc "A: refused (system disk)",13,10,0
 m_twice .asc "Already mounted in ",0
 m_notdsk .asc "Not a disk image",13,10,0
+m_lfs   .asc "No image on 0:",13,10,0
 m_nottap .asc "Not a tape (.TAP)",13,10,0
 m_drvq  .asc "Drive ? USBMOUNT B: name.DSK",13,10,0
 m_exp   .asc "Export it first : EXPORT ",0

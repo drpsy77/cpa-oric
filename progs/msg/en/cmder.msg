@@ -179,6 +179,7 @@ m_tmpn  .asc "~CPADUP.TMP",0
 m_ko    .asc " KB",0
 m_mntq  .asc "Mount in : ",0
 m_notimg .asc "Not an image (.DSK or .TAP)",0
+m_lfs   .asc "No image on 0:",0
 m_sysa  .asc "A: refused (system disk)",0
 m_usb   .asc "USB:",0
 m_usbro .asc "USB stick : no attributes",0

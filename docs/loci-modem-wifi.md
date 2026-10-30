@@ -77,7 +77,9 @@ sans `T`, `P` ou `I`, répond `ERROR`).
   (`$0389`), derniers octets écrits en commande et contrôle (`$038A`, `$038B`), modem monté
   et DTR (`$038C`, bits 0 et 1), marque `$D1` (`$038D`). `CONFIG.SYS` garde son format. Mode
   d'emploi et lecture des résultats : `tools/loci-acia-diag/LISEZMOI.md`. Construit avec
-  GCC 13 et newlib-nano.
+  GCC 13 et newlib-nano : `printf` sans décimaux, la clé se décrit donc `1: MSC  GB General
+  UDisk` (sans sa taille), dans le menu du LOCI comme pour CP/A (`docs/usb.md` § 2). Le
+  montage d'une image de la mémoire interne (`0:`) y fige le LOCI : CP/A le refuse.
 - **0.3.1 officielle** : `TERM /D` y lisait `A7 4C D0` (état, commande, contrôle), mais le
   Pico était alors relié par un câble sans données ; contre-essai à refaire avec le bon
   câble (`docs/etat.md` § 2 point 4).
