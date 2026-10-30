@@ -56,6 +56,19 @@ puis quelques commandes sur `cpa-en.dsk`) :
 - durée : chaque commande USB lit `0:CPA.CWD` et la liste des appareils ; dire si cela se
   sent avant la liste de `USBDIR`.
 
+**USBCD et USBDIR** (`docs/usb.md` § 1.2 ; sur `cpa.dsk`, puis `cpa-en.dsk`) :
+
+- `USBCD files` : écrit `2:/FILES` (le numéro de la clé), sans ouvrir CMDER ; `USBDIR` :
+  le contenu, puis `2:/FILES : n element(s)` ; éteindre et rallumer : `USBDIR` repart de
+  `FILES` ;
+- `USBCD ..`, `USBCD /`, `USBCD 0:` ; refus : `USBCD nexiste` et `USBCD fichier.txt`
+  (`Erreur USB 37 : introuvable` dans Oricutron : noter le code du vrai LOCI) ;
+- `USBCD` seul : CMDER sur la clé, répertoires seuls ; descendre, ESC : `USBDIR` liste ce
+  répertoire. Si ce n'est pas le cas (constaté avant ce changement, alors que l'émulateur
+  garde bien le répertoire) : `USBDIR 0:` (`CPA.CWD` est-il là ?), puis
+  `IMPORT 0:CPA.CWD /T` et `TYPE CPA.CWD` ;
+- un chemin de plus de 20 caractères : le nombre d'éléments passe à la ligne.
+
 **Clé USB, lot 2 : USBMOUNT** (`docs/usb.md` § 1.4 ; sur `cpa.dsk`, puis quelques
 commandes sur `cpa-en.dsk`) :
 

@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 0 | 27 | 13 | 9 | **77** | 17 | **94** |
+| USB | 28 | 0 | 30 | 13 | 9 | **80** | 17 | **97** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *47* | *428* | *105* | *111* | ***859*** | *217* | ***1076*** |
+| *Applications* | *168* | *47* | *431* | *105* | *111* | ***862*** | *217* | ***1079*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 29 | 118 | 18 | **187** | 45 | **232** |
-| **Total** | **220** | **77** | **655** | **315** | **207** | **1474** | **346** | **1820** |
+| **Total** | **220** | **77** | **658** | **315** | **207** | **1477** | **346** | **1823** |
 
-Points ajustés (indicatif, § 9) : 1 474 × 1,05 ≈ 1 548.
+Points ajustés (indicatif, § 9) : 1 477 × 1,05 ≈ 1 551.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 208 EI, 77 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 209 EI, 77 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -585,7 +585,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.D04 | Configuration du menu du LOCI en XRAM (lecteurs montés, noms des images, réglages de démarrage) | ILF | 2 | 9 | F | 7 |
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés, jokers : un seul fichier) | EI | 2 | 6 | M | 4 |
-| USB.T03 | USBDIR : liste (chemin, tailles, dossiers, modèle à jokers) | EQ | 1 | 4 | F | 3 |
+| USB.T03 | USBDIR : liste (tailles, dossiers, modèle à jokers ; chemin et nombre à la fin) | EQ | 1 | 4 | F | 3 |
 | USB.T04 | TERM : touches envoyées au modem (DEL, CTRL-H à K, `/E`, `/L` : CR LF) | EI | 1 | 3 | F | 3 |
 | USB.T05 | TERM : affichage de ce qui arrive du port série (CR -> CR LF) | EO | 1 | 2 | F | 4 |
 | USB.T06 | MKTAP : `.TAP` pour l'Oric sous BASIC (blocs, longueurs, `/R` en `$0503` au plus tôt, chargeur BASIC, contrôles des plages) | EO | 2 | 7 | M | 5 |
@@ -596,6 +596,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T11 | USBMOUNT `/B` : démarrage du BASIC 1.1 sur la cassette (configuration du menu) | EI | 1 | 5 | F | 3 |
 | USB.T12 | XFER R : réception d'un fichier (nom distant, `/T`, `NOM.$$$`, R/O gardé, ESC, refus du serveur) | EI | 2 | 6 | M | 4 |
 | USB.T13 | XFER E : envoi d'un fichier (nom distant, `/T`, absent, refus du serveur) | EO | 1 | 5 | F | 4 |
+| USB.T14 | USBDIR /C (USBCD) : changer de répertoire courant (répertoire vérifié, `0:CPA.CWD`, écrit en retour ; sans chemin : CMDER) | EI | 1 | 3 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -820,7 +821,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 710 | 10 % | 38 104 | 35 | 118 |
+| Système et commandes | 64 | 11 160 | 1 185 | 534 | 1 710 | 10 % | 38 110 | 35 | 118 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -828,39 +829,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 28 | 5 775 | 578 | 227 | 0 | 9 % | 13 452 | 75 | 175 |
+| USB | 28 | 5 825 | 586 | 229 | 0 | 9 % | 13 571 | 73 | 170 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
-| Exemples | 33 | 1 095 | 76 | 55 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 178 | 8 876 | 1 065 | 578 | 0 | 11 % | — | 47 | — |
-| **Total** | 365 | 73 833 | 6 022 | 2 937 | 2 626 | 8 % | 160 180 | 50 | 109 |
+| Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
+| Outillage PC | 178 | 8 903 | 1 071 | 582 | 0 | 11 % | — | 48 | — |
+| **Total** | 365 | 73 910 | 6 037 | 2 943 | 2 626 | 8 % | 160 305 | 50 | 109 |
 
 Octets du système : code résident 13 924 (`$C000-$F664`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 415 | 82 | 4,4 | 83 |
+| Système et commandes | 1 417 | 82 | 4,4 | 85 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 234 | 26 | 2,6 | 14 |
+| CMDER | 235 | 26 | 2,6 | 14 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 3 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 79 | 13 | 1,0 | 17 |
+| USB | 79 | 13 | 1,0 | 20 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 25 |
-| Outillage PC | 341 | — | 1,8 | 120 |
-| Transverse (projet) | 2 406 | — | — | 80 |
-| Traduction anglaise (docs/en) | 2 775 | — | — | 36 |
-| **Total** | 8 989 | 318 | 6,1 | 207 |
+| Outillage PC | 341 | — | 1,8 | 123 |
+| Transverse (projet) | 2 454 | — | — | 83 |
+| Traduction anglaise (docs/en) | 2 775 | — | — | 38 |
+| **Total** | 9 040 | 318 | 6,1 | 210 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 207 commits du 2026-10-04 au 2026-10-30.
+Historique : 210 commits du 2026-10-04 au 2026-10-30.
 
-Réutilisation : 55 207 lignes de code écrites dans `progs/`, 63 829 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 55 257 lignes de code écrites dans `progs/`, 63 879 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

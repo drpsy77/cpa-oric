@@ -22,8 +22,9 @@ ESC quitte : toute opération est faite tout de suite. **En sortant, le dernier 
 USB affiché devient le répertoire courant de CP/A** (fichier `0:CPA.CWD`, `docs/usb.md`
 § 2.1), celui d'où partent USBDIR, IMPORT, EXPORT et le prochain `CMDER USB:` : changer de
 répertoire sur la clé, c'est entrer dans CMDER, aller où l'on veut et quitter. Le script
-`USBCD.BAT` (`CMDER USB:$1 /R`, sur les disquettes) en fait un raccourci : `USBCD JEUX`
-ouvre CMDER dans `JEUX`, répertoires seuls ; ESC une fois arrivé. Lancé en mode SPLIT, CMDER repasse en
+`USBCD.BAT` (`USBDIR /C $1`, sur les disquettes) en fait un raccourci : `USBCD` seul ouvre
+CMDER sur la clé, répertoires seuls ; ESC une fois arrivé (`USBCD JEUX` change de répertoire
+sans ouvrir CMDER). Lancé en mode SPLIT, CMDER repasse en
 texte (l'image est perdue).
 
 ## 2. Écran

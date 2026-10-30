@@ -480,9 +480,9 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 | `EXPORT fic [nom]` | copie le fichier de CP/A `fic` sur la clé, sous le nom `nom` (par défaut, `fic` tel qu'il a été tapé, minuscules gardées, dans le répertoire courant) |
 | `EXPORT afn [dossier]` | avec des jokers (`*.LOG`, `B:*.*`) : chaque fichier sous son nom, en minuscules si le modèle a été tapé en minuscules, dans le répertoire courant ou le dossier donné ; un `.DSK` est sauté, ESC arrête entre deux fichiers |
 | `IMPORT nom [fic] [/T]` | copie le fichier `nom` de la clé dans CP/A, sous le nom `fic` (par défaut, le nom de la clé sans son chemin, coupé à 8 + 3 caractères ; `B:` seul : ce nom-là sur le lecteur B:) ; avec des jokers (`JEU*.TXT`), le seul fichier qui y répond ; `/T` : texte, un LF seul (fin de ligne du Mac, de Linux) devient CR LF et une tabulation (que l'Oric n'a pas) un espace — indispensable pour un `.LOG` écrit sur le Mac, que `CHARGE` de LOGO ne lit qu'en CR LF |
-| `USBDIR [chemin]` | écrit le chemin complet, puis liste le dossier (le répertoire courant par défaut) : nom et taille, `<REP>` pour un dossier ; `USBDIR *.DSK` : les noms qui répondent au modèle |
+| `USBDIR [chemin]` | liste le dossier (le répertoire courant par défaut) : nom et taille, `<REP>` pour un dossier, puis le chemin complet et le nombre d'éléments (`2:/JEUX : 12 element(s)`) ; `USBDIR *.DSK` : les noms qui répondent au modèle |
 | `USBDIR /S` | les supports : `0:` (mémoire interne du LOCI) et les clés USB, avec leur taille ; `*` : celui du répertoire courant |
-| `USBCD [rep]` | change de répertoire courant : un script (`CMDER USB:$1 /R`) qui ouvre CMDER dans `rep`, répertoires seuls ; ESC une fois arrivé |
+| `USBCD rep` | `rep` devient le répertoire courant, écrit en retour (un script : `USBDIR /C $1`) ; `USBCD` seul : CMDER sur la clé, répertoires seuls, ESC une fois arrivé |
 | `USBMOUNT` | ce qui est monté dans A: à D: et la cassette (`K7:`) ; `USBMOUNT B:` : le chemin complet de l'image de B: |
 | `USBMOUNT B: nom` | monte l'image de disquette `nom` en B: (C:, D: ; A:, la disquette système, est refusé) ; `B: /E` éjecte |
 | `USBMOUNT nom.TAP [/B]` | monte la cassette ; `/B` : puis quitte CP/A pour le BASIC 1.1 du LOCI, qui charge la cassette tout seul ; `K7: /E` éjecte |
@@ -508,7 +508,7 @@ du LOCI (une clé FAT, celle qui porte souvent `cpa.dsk`), sans passer par le PC
 
 **Répertoire courant.** CP/A garde son propre répertoire courant sur la clé, indépendant de
 celui du menu du LOCI et conservé après un redémarrage (fichier `0:CPA.CWD`, dans la mémoire
-interne du LOCI). Il se choisit dans CMDER : on y va, on quitte (`CMDER USB:`, ou `USBCD`).
+interne du LOCI). Il se choisit par `USBCD rep`, ou dans CMDER : on y va, on quitte (`CMDER USB:`, ou `USBCD` seul).
 Tant qu'on ne l'a jamais choisi, c'est la racine de la première clé. Les noms de la clé se
 donnent par rapport à lui :
 

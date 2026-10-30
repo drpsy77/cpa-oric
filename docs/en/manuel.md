@@ -467,9 +467,9 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
 | `EXPORT file [name]` | copies the CP/A file `file` to the stick, under the name `name` (by default, `file` as typed, lower case kept, in the current directory) |
 | `EXPORT afn [folder]` | with wildcards (`*.LOG`, `B:*.*`): each file under its own name, in lower case if the pattern was typed in lower case, in the current directory or the given folder; a `.DSK` is skipped, ESC stops between two files |
 | `IMPORT name [file] [/T]` | copies the file `name` from the stick into CP/A, under the name `file` (by default, the stick's name without its path, cut to 8 + 3 characters; `B:` alone: that name on drive B:); with wildcards (`GAME*.TXT`), the only file that matches; `/T`: text, a lone LF (Mac or Linux line ending) becomes CR LF and a tab (which the Oric does not have) a space — essential for a `.LOG` written on the Mac, which LOGO's `LOAD` only reads with CR LF |
-| `USBDIR [path]` | writes the full path, then lists the folder (the current directory by default): name and size, `<DIR>` for a folder; `USBDIR *.DSK`: the names that match the pattern |
+| `USBDIR [path]` | lists the folder (the current directory by default): name and size, `<DIR>` for a folder, then the full path and the number of items (`2:/GAMES : 12 item(s)`); `USBDIR *.DSK`: the names that match the pattern |
 | `USBDIR /S` | the devices: `0:` (the LOCI's internal memory) and the USB sticks, with their size; `*`: the current directory's one |
-| `USBCD [dir]` | changes the current directory: a script (`CMDER USB:$1 /R`) that opens CMDER in `dir`, directories only; ESC once there |
+| `USBCD dir` | `dir` becomes the current directory, written back (a script: `USBDIR /C $1`); `USBCD` alone: CMDER on the stick, directories only, ESC once there |
 | `USBMOUNT` | what is mounted in A: to D: and the tape (`K7:`); `USBMOUNT B:`: the full path of B:'s image |
 | `USBMOUNT B: name` | mounts the disk image `name` in B: (C:, D:; A:, the system disk, is refused); `B: /E` ejects |
 | `USBMOUNT name.TAP [/B]` | mounts the tape; `/B`: then leaves CP/A for the LOCI's BASIC 1.1, which loads the tape by itself; `K7: /E` ejects |
@@ -495,7 +495,7 @@ On an Oric fitted with a LOCI, three commands copy files between CP/A and the LO
 
 **Current directory.** CP/A keeps its own current directory on the stick, independent of the
 LOCI menu's one and kept across a restart (file `0:CPA.CWD`, in the LOCI's internal memory).
-It is chosen in CMDER: go there, quit (`CMDER USB:`, or `USBCD`). As long as it has never been
+It is chosen with `USBCD dir`, or in CMDER: go there, quit (`CMDER USB:`, or `USBCD` alone). As long as it has never been
 chosen, it is the root of the first stick. Names on the stick are given relative to it:
 
 | Written | Means |
