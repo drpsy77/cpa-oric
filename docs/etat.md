@@ -74,7 +74,7 @@ d'ASM, 372 Ko libres), `cpa-notes.dsk` (écrire, 570 Ko libres), et `cpa-projet.
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 480 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 489 points de fonction IFPUG et 351 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric

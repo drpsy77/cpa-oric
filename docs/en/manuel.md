@@ -72,8 +72,8 @@ Other programs on the disk:
 - `DEBUG.COM NAME`, the monitor, disassembler and single-stepper.
 - `STAT.COM`, `MEM.COM`, `POKE.COM`, `GO.COM`, `XDO.COM`, described above.
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM`: file exchange with the LOCI's USB stick.
-- `MKTAP.COM NAME file adr [/R]...`: `.TAP` file for the Oric under BASIC (see "Publishing for
-  the Oric under BASIC").
+- `MKTAP.COM NAME file adr [/R]...`: `.TAP` file for the Oric under BASIC, machine code, data
+  or a BASIC program written in EDIT (see "Publishing for the Oric under BASIC").
 - `TERM.COM [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal").
 - `XFER.COM R|S file [name] [/T]`: receives or sends a file over the modem (see "File transfer").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
@@ -614,6 +614,39 @@ single command: `GRXASM NAME /O`, `grapher.md` § 12.1):
   `CLOAD""`. EXPORT removes the `^Z` that fill the `.TAP` (MKTAP first adds a 0 byte if the
   last useful byte is `$1A`). In Oricutron: `-t GAME.TAP`.
 - On the PC, `tools/mktap.py` does the same with files of the PC (same arguments).
+
+### A BASIC program written in EDIT
+
+A `.BAS` file is a BASIC program as text, with its line numbers, written in EDIT as you would
+type it under BASIC. MKTAP encodes it as ROM 1.1 does when the lines are typed (keywords in
+one byte) and makes it the BASIC program of the tape, at `$0501`; it takes no address:
+
+    A>MKTAP GAME GAME.BAS /R
+    GAME     0501-0A3C BASIC /R
+    GAME.TAP written
+
+- `/R`: the program is run (`RUN`) at the end of loading. Without `/R`, `CLOAD""` loads it and
+  BASIC waits (`LIST`, `RUN`).
+- One `.BAS` per tape. It can sit with blocks of machine code or data, which the program loads
+  itself with `CLOAD""`: `MKTAP GAME GAME.BAS /R ROUT.COM 9000`, with `10 CLOAD""` at the top
+  of `GAME.BAS`. With a `.BAS`, `/R` can only go on it (the BASIC loader of the other blocks
+  would take its place at `$0501`).
+- The text: one line per BASIC line, the number first (63999 at most), increasing numbers.
+  Empty lines are ignored, and so is a line reduced to its number.
+- Lower case: it becomes upper case (`print a$` becomes `PRINT A$`), except between quotes,
+  after `REM` and in a `DATA` (up to the next `:`): the text stays as it is there. The Oric's
+  BASIC only recognises keywords in upper case.
+- The encoding is the ROM's, quirks included: spaces are kept, `?` means `PRINT`, and a
+  keyword is recognised even inside a name (`SCORE` contains `OR`: `SC OR E`), as when the
+  line is typed. A program listed by `LIST` after loading is therefore the one you would have
+  typed.
+- Warning (the `.TAP` is written anyway): `line N: over 78 characters`. Such a line works, but
+  the Oric's editor could not type it again.
+- Refused, with the line number: `after N: invalid number` (line without a number, or 64000
+  and more; N is the previous line), `line N: out of order`, `line N: too long` (over 255
+  characters, or over 250 bytes once encoded: `LIST` would not show it), `line N: invalid
+  character` (code 128 or more outside text), `too long` (end of the program after `$97FF`,
+  BASIC's limit; or no room left in memory to encode it: SPLIT mode leaves less).
 
 ## Serial terminal: TERM
 
@@ -1382,8 +1415,14 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   byte, record by record. Disk full: the started `.TAP` is erased. The BASIC loader is
   tokenised (`CLOAD` = `$B6`, `CALL` = `$BF`, table of ROM 1.1); its block is one byte longer
   than the program, because the ROM takes the end of the block as the start of the variables.
-  A `/R` block before `$0503` is refused. `tools/test_mktap.sh`: MKTAP.COM against
-  `mktap.py`, then loading under BASIC 1.1 in Oricutron.
+  A `/R` block before `$0503` is refused. A `.BAS` is read line by line (buffer of 255
+  characters) and encoded in memory, after the program, before writing: the `crunch` routine
+  follows `TokeniseLine` of ROM 1.1 (`$C5FA`), with its keyword table copied
+  (`progs/bas_tab.s`, 446 bytes), plus the change to upper case; the number is read as
+  `Txt2Int` does (spaces allowed, refused from 6400 before one more digit).
+  `tools/test_mktap.sh`: MKTAP.COM against `mktap.py`, then loading under BASIC 1.1 in
+  Oricutron (the `.BAS` loaded and run is, byte for byte, the program typed on the keyboard);
+  `tools/test_bas.py`: the encoding of `mktap.py` against the ROM itself in the simulated 6502.
 - **EDIT**: exactly 8,192 bytes (any addition costs a 2 KB block; 842 bytes of buffers could
   leave the file). `/L`: the Quitter item becomes Retour (back to LOGO).
 - **ASM** writes the code during pass 2, record by record (`wput`): memory is only used for the
