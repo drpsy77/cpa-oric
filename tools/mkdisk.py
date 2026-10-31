@@ -13,7 +13,8 @@
                                  (code 0 : aucune différence)
   mkdisk.py repare IMAGE SORTIE  réécrit une image saine (secteurs relus
                                  même mal synchronisés ; contenu gardé tel
-                                 quel, même si son CRC est faux)
+                                 quel, même si son CRC est faux), au format
+                                 de l'image (80 pistes, ou 42 avant conv)
   mkdisk.py conv ANCIENNE NOUVELLE [--boot boot.bin --system cpa_sys.bin]
                                  recopie les fichiers (et leurs attributs)
                                  d'une disquette de l'ancien format (42
@@ -53,14 +54,15 @@ octets = un extent de 128 enregistrements (16 Ko) ; octet 0 utilisateur
 système refuse une disquette qui ne l'a pas.
 
 Ancien format (42 pistes, 1 428 secteurs, 170 blocs numérotés sur 8 bits,
-une entrée = deux extents de 16 blocs) : lu par « conv » seulement
-(les autres commandes le refusent).
+une entrée = deux extents de 16 blocs) : lu par « conv » et « repare »
+seulement (les autres commandes le refusent).
 
 Fichiers texte (types TEXTE plus bas : .ASM, .INC, .LOG, .GRX, .TXT, .BAT, .BAS,
 .CFG...) : « new » et « put » mettent des fins de ligne CR LF, celles de
 CP/M qu'attendent EDIT, TYPE, LOGO et ASM (un fichier venu du Mac, en LF
 seul, s'afficherait en escalier). Les CR LF déjà là ne changent pas ; les
 autres types (.COM, .HIZ, .ANI...) sont copiés tels quels.
+
 Entrelacement : sur chaque piste, les secteurs sont rangés un sur ENTREL
 (variable d'environnement CPA_ENTREL pour essayer une autre valeur ; 1 = dans
 l'ordre). Un vrai lecteur tourne pendant que le BDOS traite un secteur : dans
@@ -206,13 +208,13 @@ class Disk:
         return d
 
     def save(self, path):
-        if self.old:
-            raise SystemExit("ancien format : lecture seule (mkdisk.py conv)")
+        """Image MFM_DISK de la géométrie de la disquette (80 pistes, ou 42
+        pour une ancienne : « repare » seulement)."""
         out = bytearray(b"MFM_DISK")
-        out += struct.pack("<III", NSIDES, NCYL, 1)
+        out += struct.pack("<III", NSIDES, self.ncyl, 1)
         out += bytes(256 - len(out))
         for side in range(NSIDES):
-            for cyl in range(NCYL):
+            for cyl in range(self.ncyl):
                 t = bytearray()
                 t += b"\x4e" * (GAP1 - 12)
                 for s in slot_order(ENTREL):
@@ -616,16 +618,32 @@ def conv(src, rest):
     return 0
 
 
+# arguments après IMAGE : (nombre au moins, forme)
+USAGE = {
+    "new": (0, "new IMAGE [--boot boot.bin --system cpa_sys.bin] [fichiers...]"),
+    "ls": (0, "ls IMAGE"),
+    "check": (0, "check IMAGE"),
+    "get": (1, "get IMAGE NOM.EXT [fichier_local]"),
+    "put": (1, "put IMAGE fichier_local [NOM.EXT]"),
+    "era": (1, "era IMAGE NOM.EXT"),
+    "attr": (2, "attr IMAGE NOM.EXT RO|RW|SYS|DIR..."),
+    "diff": (1, "diff AVANT APRES"),
+    "repare": (1, "repare IMAGE SORTIE"),
+    "conv": (1, "conv ANCIENNE NOUVELLE [--boot boot.bin --system cpa_sys.bin]"),
+}
+
+
 def main(argv):
-    if len(argv) < 3:
+    if len(argv) < 2 or argv[1] not in USAGE:
         print(__doc__)
         return 1
-    cmd, img = argv[1], argv[2]
+    cmd = argv[1]
+    if len(argv) < 3 + USAGE[cmd][0]:
+        print("usage : mkdisk.py %s" % USAGE[cmd][1])
+        return 1
+    img = argv[2]
     rest = argv[3:]
     if cmd == "diff":
-        if not rest:
-            print(__doc__)
-            return 1
         return diff(Disk.load(img), Disk.load(rest[0]))
     if cmd == "conv":
         return conv(img, rest)
@@ -663,7 +681,7 @@ def main(argv):
                 d.set_attr(nom, ro=f_ro, sys_=f_sys)
         d.save(img)
         cmd = "ls"
-    d = Disk.load(img)
+    d = Disk.load(img, old_ok=cmd == "repare")
     if cmd == "ls":
         files = d.listing()
         at = d.attrs()
@@ -676,9 +694,12 @@ def main(argv):
     elif cmd == "check":
         return check(d)
     elif cmd == "repare":
+        if os.path.abspath(rest[0]) == os.path.abspath(img):
+            raise SystemExit("repare : SORTIE doit être une autre image que %s" % img)
         d.save(rest[0])
-        print("%s écrite : %d secteur(s) absent(s) (mis à 0), %d à CRC faux (gardés)"
-              % (rest[0], len(d.missing), len(d.crcbad)))
+        print("%s écrite%s : %d secteur(s) absent(s) (mis à 0), %d à CRC faux (gardés)"
+              % (rest[0], " (ancien format, 42 pistes)" if d.old else "",
+                 len(d.missing), len(d.crcbad)))
     elif cmd == "get":
         data = d.read_file(rest[0])
         out = rest[1] if len(rest) > 1 else rest[0]
@@ -702,9 +723,6 @@ def main(argv):
                 raise SystemExit("attribut inconnu : %s (RO RW SYS DIR)" % o)
         d.set_attr(rest[0], **kw)
         d.save(img)
-    else:
-        print(__doc__)
-        return 1
     return 0
 
 
