@@ -4,7 +4,7 @@
 #   build/cpa_sys.bin  système disque, chargé en RAM overlay $C000-$FFFF
 #   build/boot.bin     secteurs d'amorçage Microdisc (3 x 256 octets)
 #   build/progs/*.COM  programmes d'exemple
-#   build/cpa.dsk      disquette système amorçable (MFM_DISK, 2 faces, 42 pistes,
+#   build/cpa.dsk      disquette système amorçable (MFM_DISK, 2 faces, 80 pistes,
 #                      17 secteurs) : tous les programmes sauf LOGO, aucun exemple
 #   build/cpa-anim.dsk, cpa-logo.dsk, cpa-exemples.dsk, cpa-notes.dsk  par usage
 #   build/cpa-projet.dsk  disquette vierge pour les projets (lecteur B:)
@@ -41,9 +41,11 @@ for f in build/cpa.rom build/cpa_sys.bin build/cpa_sys_en.bin; do
   if [ "$SIZE" -ne 16384 ]; then echo "Taille inattendue pour $f : $SIZE"; exit 1; fi
 done
 for L in "" _en; do
-  # le code du système disque doit s'arrêter avant ses zones de travail ($F670 : DO et PUT, puis $FD00)
+  # le code du système disque doit s'arrêter avant ses zones de travail
+  # (SYS_END : cartes d'allocation, puis DO et PUT en $F670, $FD00...)
   END=$(grep -E " rom_end$" build/cpa_sys$L.sym | cut -d' ' -f1)
-  python3 -c "import sys; e=int('$END',16); print('Fin du code disque$L : %04X (marge %d octets)' % (e, 0xF670-e)); sys.exit(e>0xF670)"
+  SEND=$(grep -E " SYS_END$" build/cpa_sys$L.sym | cut -d' ' -f1)
+  python3 -c "import sys; e=int('$END',16); f=int('$SEND',16); print('Fin du code disque$L : %04X (marge %d octets avant %04X)' % (e, f-e, f)); sys.exit(e>f)"
   # fenêtre (src/win.s) : le code de PUT avant son tampon ($FA00), le code du
   # démarrage à froid (dans le tampon) avant les variables ($FD00)
   WEND=$(grep -E " win_put_end$" build/cpa_sys$L.sym | cut -d' ' -f1)

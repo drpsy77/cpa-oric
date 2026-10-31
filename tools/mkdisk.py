@@ -14,6 +14,13 @@
   mkdisk.py repare IMAGE SORTIE  réécrit une image saine (secteurs relus
                                  même mal synchronisés ; contenu gardé tel
                                  quel, même si son CRC est faux)
+  mkdisk.py conv ANCIENNE NOUVELLE [--boot boot.bin --system cpa_sys.bin]
+                                 recopie les fichiers (et leurs attributs)
+                                 d'une disquette de l'ancien format (42
+                                 pistes) sur une disquette neuve de 80
+                                 pistes ; sans --boot ni --system, la
+                                 nouvelle n'a pas de système (l'ancien ne
+                                 lit pas le nouveau format)
 
 « check » sépare les défauts (disquette fausse : secteur illisible, bloc
 partagé ou hors de la disquette, entrée d'un fichier manquante ou en double,
@@ -30,17 +37,30 @@ suivent, --dir les laisse visibles. « ls » montre R/O et SYS. Un fichier
 de « new » peut s'écrire SOURCE=NOM.EXT : SOURCE copié sous le nom NOM.EXT
 (exemples traduits de la disquette anglaise, files/en/noms.txt).
 
-Géométrie : 2 faces x 42 pistes x 17 secteurs de 256 octets.
-Secteur logique (LSN) -> piste logique = LSN // 17, cylindre = piste // 2,
-face = piste % 2, secteur = LSN % 17 + 1.
+Géométrie : 2 faces x 80 pistes x 17 secteurs de 256 octets (2 720
+secteurs, 680 Ko). Secteur logique (LSN) -> piste logique = LSN // 17,
+cylindre = piste // 2, face = piste % 2, secteur = LSN % 17 + 1.
+LSN 0-2 : amorçage, 3-66 : système, 67 : libre, 68-2715 : 331 blocs de 2 Ko
+(blocs 0 et 1 : répertoire de 128 entrées ; blocs 2 à 330 : fichiers,
+658 Ko) ; LSN 2716-2719 inutilisés.
+
+Répertoire (comme CP/M 2.2 au-delà de 255 blocs) : une entrée de 32
+octets = un extent de 128 enregistrements (16 Ko) ; octet 0 utilisateur
+($E5 = libre), 1-11 nom, 12 EX (numéro de l'extent), 15 RC
+(enregistrements de l'extent), 16-31 huit numéros de blocs sur 16 bits
+(poids faible d'abord ; 0 = aucun). L'entrée 0 est l'étiquette du format
+(octet 0 = $20, comme l'étiquette de CP/M 3, puis « CPA-2X80-2K ») : le
+système refuse une disquette qui ne l'a pas.
+
+Ancien format (42 pistes, 1 428 secteurs, 170 blocs numérotés sur 8 bits,
+une entrée = deux extents de 16 blocs) : lu par « conv » seulement
+(les autres commandes le refusent).
 
 Fichiers texte (types TEXTE plus bas : .ASM, .INC, .LOG, .GRX, .TXT, .BAT, .BAS,
 .CFG...) : « new » et « put » mettent des fins de ligne CR LF, celles de
 CP/M qu'attendent EDIT, TYPE, LOGO et ASM (un fichier venu du Mac, en LF
 seul, s'afficherait en escalier). Les CR LF déjà là ne changent pas ; les
 autres types (.COM, .HIZ, .ANI...) sont copiés tels quels.
-LSN 0-2 : amorçage, 3-66 : système, 68+ : blocs de 2 Ko (bloc 0-1 = répertoire).
-
 Entrelacement : sur chaque piste, les secteurs sont rangés un sur ENTREL
 (variable d'environnement CPA_ENTREL pour essayer une autre valeur ; 1 = dans
 l'ordre). Un vrai lecteur tourne pendant que le BDOS traite un secteur : dans
@@ -67,12 +87,18 @@ def crlf_texte(name, data):
         return data
     return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
-SPT, NSIDES, NCYL = 17, 2, 42
-NSECT = SPT * NSIDES * NCYL
+SPT, NSIDES, NCYL = 17, 2, 80
+NSECT = SPT * NSIDES * NCYL                 # 2 720
 SYS_LSN, DIR_LSN = 3, 68
 BLK_SECT = 8
-NBLK = (NSECT - DIR_LSN) // BLK_SECT
+NBLK = (NSECT - DIR_LSN) // BLK_SECT        # 331 (blocs 0-1 : répertoire)
 DIR_ENT = 128
+EXT_REC = 128                               # enregistrements par entrée
+LABEL = b"\x20CPA-2X80-2K" + bytes(20)      # entrée 0 du répertoire
+# ancien format (lu par « conv »)
+OLD_NCYL = 42
+OLD_NSECT = SPT * NSIDES * OLD_NCYL         # 1 428
+OLD_NBLK = (OLD_NSECT - DIR_LSN) // BLK_SECT  # 170
 TRACK_LEN = 6400
 GAP1, GAP2, GAP3 = 72, 34, 50
 ENTREL = int(os.environ.get("CPA_ENTREL", "2"))
@@ -111,16 +137,28 @@ def lsn_chs(lsn):
 
 
 class Disk:
-    def __init__(self, sectors=None):
-        self.sec = sectors or [bytes(256)] * NSECT
+    """Disquette CP/A en mémoire : self.sec = liste des secteurs logiques.
+    old = True : ancien format (42 pistes, blocs sur 8 bits), en lecture
+    seule (conversion)."""
+
+    def __init__(self, sectors=None, old=False):
+        self.old = old
+        self.nsect = OLD_NSECT if old else NSECT
+        self.ncyl = OLD_NCYL if old else NCYL
+        self.nblk = OLD_NBLK if old else NBLK
+        self.sec = sectors or [bytes(256)] * self.nsect
 
     # ------------------------------------------------------- image MFM
     @classmethod
-    def load(cls, path):
+    def load(cls, path, old_ok=False):
         raw = open(path, "rb").read()
         if raw[:8] != b"MFM_DISK":
             raise SystemExit("%s : pas une image MFM_DISK" % path)
         sides, tracks = struct.unpack("<II", raw[8:16])
+        old = tracks == OLD_NCYL
+        if old and not old_ok:
+            raise SystemExit("%s : ancien format de CP/A (42 pistes) ; "
+                             "le convertir : mkdisk.py conv %s NOUVELLE.DSK" % (path, path))
         found = {}
         crcbad = set()
         mal_sync = 0
@@ -156,18 +194,20 @@ class Disk:
         secs = []
         missing = []
         bad = []
-        for lsn in range(NSECT):
+        for lsn in range(OLD_NSECT if old else NSECT):
             c, s, n = lsn_chs(lsn)
             if (c, s, n) not in found:
                 missing.append(lsn)
             elif (c, s, n) in crcbad:
                 bad.append(lsn)
             secs.append(found.get((c, s, n), bytes(256)))
-        d = cls(secs)
+        d = cls(secs, old)
         d.missing, d.crcbad, d.mal_sync = missing, bad, mal_sync
         return d
 
     def save(self, path):
+        if self.old:
+            raise SystemExit("ancien format : lecture seule (mkdisk.py conv)")
         out = bytearray(b"MFM_DISK")
         out += struct.pack("<III", NSIDES, NCYL, 1)
         out += bytes(256 - len(out))
@@ -207,14 +247,33 @@ class Disk:
         self.sec[lsn] = bytes(s)
 
     def format_dir(self):
+        """Répertoire vide : 16 secteurs de $E5, puis l'étiquette du format
+        en entrée 0 (comme FORMAT.COM)."""
         for k in range(2 * BLK_SECT):
             self.sec[DIR_LSN + k] = b"\xe5" * 256
+        self.put_entry(0, LABEL)
+
+    def has_label(self):
+        return bytes(self.dir_entries()[0]) == LABEL
+
+    def blocks(self, e):
+        """Numéros de blocs d'une entrée (0 = aucun), dans l'ordre."""
+        if self.old:
+            return list(e[16:32])
+        return [e[16 + 2 * k] | e[17 + 2 * k] << 8 for k in range(8)]
+
+    def ext_span(self, e):
+        """(premier enregistrement du fichier couvert par l'entrée, nombre
+        d'enregistrements de l'entrée)."""
+        if self.old:                        # une entrée = extents 2p et 2p+1
+            return (e[12] >> 1) * 256, (e[12] & 1) * 128 + e[15]
+        return e[12] * EXT_REC, e[15]
 
     def used_blocks(self):
         used = {0, 1}
         for e in self.dir_entries():
             if e[0] != 0xE5:
-                used.update(b for b in e[16:32] if b)
+                used.update(b for b in self.blocks(e) if b)
         return used
 
     @staticmethod
@@ -229,16 +288,17 @@ class Disk:
                       key=lambda x: x[0])
 
     def read_file(self, name):
-        n = self.name83(name)
+        """name : « NOM.EXT », ou les 11 octets du répertoire."""
+        n = name if isinstance(name, bytes) else self.name83(name)
         parts = self.find(n)
         if not parts:
             raise SystemExit("fichier introuvable : %s" % name)
         data = bytearray()
-        for ex, _, e in parts:              # une entrée = 256 enregistrements
-            nrec = (ex & 1) * 128 + e[15]
-            base = (ex >> 1) * 256
+        for _, _, e in parts:
+            base, nrec = self.ext_span(e)
+            blks = self.blocks(e)
             for r in range(nrec):
-                b = e[16 + r // 16]
+                b = blks[r // 16]
                 pos = (base + r) * 128
                 if len(data) < pos + 128:
                     data += bytes(pos + 128 - len(data))
@@ -249,16 +309,27 @@ class Disk:
                 data[pos:pos + 128] = self.sec[lsn][half * 128:half * 128 + 128]
         return bytes(data)
 
+    def _rw(self):
+        if self.old:
+            raise SystemExit("ancien format : lecture seule (mkdisk.py conv)")
+
     def erase(self, name):
+        self._rw()
         n = self.name83(name)
         for _, i, e in self.find(n):
             e[0] = 0xE5
             self.put_entry(i, e)
 
     def write_file(self, name, data):
-        data = crlf_texte(name, data)
-        self.erase(name)
-        n = self.name83(name)
+        """Fichier NOM.EXT (fins de ligne CR LF pour un type texte)."""
+        self.write_file_raw(self.name83(name), crlf_texte(name, data))
+
+    def write_file_raw(self, n, data):
+        """Fichier de nom n (11 octets, « NOM     EXT »), contenu tel quel."""
+        self._rw()
+        for _, i, e in self.find(n):
+            e[0] = 0xE5
+            self.put_entry(i, e)
         if len(data) % 128:
             data += b"\x1a" * (128 - len(data) % 128)
         nrec = len(data) // 128
@@ -269,20 +340,20 @@ class Disk:
         p = 0
         rec = 0
         while True:
-            n_here = min(256, nrec - rec)
+            n_here = min(EXT_REC, nrec - rec)
             if not free_ent:
                 raise SystemExit("répertoire plein")
             e = bytearray(32)
             e[1:12] = n
-            le_last = 2 * p + (max(n_here, 1) - 1) // 128
-            e[12] = le_last
-            e[15] = n_here - 128 * (le_last - 2 * p)
+            e[12] = p
+            e[15] = n_here
             nb = (n_here + 15) // 16
             if nb > len(free):
                 raise SystemExit("disque plein")
             for k in range(nb):
                 b = free.pop(0)
-                e[16 + k] = b
+                e[16 + 2 * k] = b & 0xFF
+                e[17 + 2 * k] = b >> 8
                 for s in range(BLK_SECT):
                     r0 = rec + k * 16 + s * 2
                     chunk = data[r0 * 128:(r0 + 2) * 128]
@@ -294,7 +365,8 @@ class Disk:
                 break
 
     def set_attr(self, name, ro=None, sys_=None):
-        n = self.name83(name)
+        self._rw()
+        n = name if isinstance(name, bytes) else self.name83(name)
         parts = self.find(n)
         if not parts:
             raise SystemExit("fichier introuvable : %s" % name)
@@ -314,11 +386,14 @@ class Disk:
         return res
 
     def listing(self):
+        """nom -> enregistrements (le plus grand EX * 128 + RC, comme la
+        fonction 35 du BDOS)."""
         files = {}
         for e in self.dir_entries():
             if e[0] == 0:
                 nm = bytes(c & 0x7F for c in e[1:12]).decode("ascii")
-                files[nm] = files.get(nm, 0) + (e[12] & 1) * 128 + e[15]
+                base, nrec = self.ext_span(e)
+                files[nm] = max(files.get(nm, 0), base + nrec)
         return files
 
 
@@ -335,11 +410,11 @@ def bloc_vierge(d, b):
 
 
 def check(d):
-    """Contrôle de l'image chargée : secteurs, entrées du répertoire,
-    blocs, puis cohérence de chaque fichier. Défauts (code de retour 1) :
-    ce qui rend la disquette fausse ; avertissements (code 0) : ce qui
-    reste d'un travail interrompu (NOM.$$$, fichier vide, blocs libres
-    qui contiennent des données)."""
+    """Contrôle de l'image chargée : étiquette, secteurs, entrées du
+    répertoire, blocs, puis cohérence de chaque fichier. Défauts (code de
+    retour 1) : ce qui rend la disquette fausse ; avertissements (code 0) :
+    ce qui reste d'un travail interrompu (NOM.$$$, fichier vide, blocs
+    libres qui contiennent des données)."""
     err = 0
     avert = 0
     def zone(lsn):
@@ -352,9 +427,14 @@ def check(d):
         return "bloc %d" % ((lsn - DIR_LSN) // BLK_SECT)
     if d.mal_sync:
         print("synchronisations à deux $A1 : %d (piste réécrite par Clock Signal ?)" % d.mal_sync)
+    if not d.has_label():
+        print("étiquette du format absente (entrée 0 du répertoire) : "
+              "le système refusera la disquette"); err += 1
     occupes = d.used_blocks()
     for lsn, quoi in [(l, "absent") for l in d.missing] + [(l, ": CRC faux") for l in d.crcbad]:
         b = (lsn - DIR_LSN) // BLK_SECT
+        if lsn >= DIR_LSN + NBLK * BLK_SECT:
+            continue                    # fin de la disquette, hors des blocs
         if lsn >= DIR_LSN and b not in occupes:
             # bloc libre (écriture coupée par RESET, par exemple) : aucun
             # fichier n'y perd rien, DISKCOPY ne copie que les blocs occupés
@@ -364,14 +444,14 @@ def check(d):
     owner = {}
     fichiers = {}                       # (utilisateur, nom) -> entrées
     for i, e in enumerate(d.dir_entries()):
-        if e[0] == 0xE5:
+        if e[0] == 0xE5 or i == 0 and bytes(e) == LABEL:
             continue
         nom = bytes(c & 0x7F for c in e[1:12]).decode("ascii", "replace")
         if e[0] > 15 or any(c & 0x7F < 32 for c in e[1:12]):
             print("entrée %d invraisemblable (utilisateur %d, %r)" % (i, e[0], nom)); err += 1
             continue
         fichiers.setdefault((e[0], nom), []).append(e)
-        for b in e[16:32]:
+        for b in d.blocks(e):
             if not b:
                 continue
             if b < 2 or b >= NBLK:
@@ -381,7 +461,8 @@ def check(d):
                                                      nom_lisible(nom))); err += 1
             owner[b] = nom
 
-    # cohérence de chaque fichier (une entrée = extents 2p et 2p+1)
+    # cohérence de chaque fichier (une entrée = un extent de 128
+    # enregistrements, huit blocs)
     for (u, nom), ents in sorted(fichiers.items()):
         nl = nom_lisible(nom)
         if u:
@@ -389,37 +470,33 @@ def check(d):
         ents.sort(key=lambda e: e[12])
         vues = {}
         for e in ents:
-            p = e[12] // 2
+            p = e[12]
             if p in vues:
-                print("%s : deux entrées pour les extents %d-%d" % (nl, 2 * p, 2 * p + 1)); err += 1
+                print("%s : deux entrées pour l'extent %d" % (nl, p)); err += 1
             vues[p] = e
         dern = max(vues)
         for p in range(dern):
             if p not in vues:
-                print("%s : entrée des extents %d-%d manquante (fichier coupé)"
-                      % (nl, 2 * p, 2 * p + 1)); err += 1
+                print("%s : entrée de l'extent %d manquante (fichier coupé)" % (nl, p)); err += 1
         for p, e in sorted(vues.items()):
             rc = e[15]
-            if rc > 128:
-                print("%s : extent %d, RC = %d (128 au plus)" % (nl, e[12], rc)); err += 1
+            if rc > EXT_REC:
+                print("%s : extent %d, RC = %d (128 au plus)" % (nl, p, rc)); err += 1
                 continue
-            if p < dern and (e[12] & 1 == 0 or rc != 128):
-                print("%s : entrée %d incomplète (extent %d, RC %d) avant la dernière"
-                      % (nl, p, e[12], rc)); err += 1
-            nrec = (e[12] & 1) * 128 + rc
-            utiles = (nrec + 15) // 16          # blocs de 16 enregistrements
-            for k in range(16):
-                b = e[16 + k]
+            if p < dern and rc != EXT_REC:
+                print("%s : extent %d incomplet (RC %d) avant le dernier" % (nl, p, rc)); err += 1
+            utiles = (rc + 15) // 16            # blocs de 16 enregistrements
+            for k, b in enumerate(d.blocks(e)):
                 if k < utiles and not b:
                     print("%s : enregistrements %d-%d sans bloc"
-                          % (nl, p * 256 + k * 16, min(p * 256 + k * 16 + 15,
-                                                       p * 256 + nrec - 1))); err += 1
+                          % (nl, p * EXT_REC + k * 16, min(p * EXT_REC + k * 16 + 15,
+                                                          p * EXT_REC + rc - 1))); err += 1
                 elif k >= utiles and b:
                     print("%s : bloc %d alloué après la fin (%d enregistrement(s))"
-                          % (nl, b, p * 256 + nrec)); err += 1
+                          % (nl, b, p * EXT_REC + rc)); err += 1
         if len({e[9] & 0x80 for e in ents}) > 1:
             print("%s : attribut R/O différent d'une entrée à l'autre" % nl); err += 1
-        taille = 256 * dern + (vues[dern][12] & 1) * 128 + vues[dern][15]
+        taille = EXT_REC * dern + vues[dern][15]
         if nom[8:] == "$$$":
             print("avertissement : %s reste (enregistrement interrompu ?), %d octets"
                   % (nl, taille * 128)); avert += 1
@@ -483,6 +560,62 @@ def diff(a, b):
     return 1 if n else 0
 
 
+def conv(src, rest):
+    """Ancienne disquette (42 pistes) -> nouvelle (80 pistes) : fichiers et
+    attributs recopiés ; amorçage et système seulement s'ils sont donnés."""
+    if not rest:
+        print(__doc__)
+        return 1
+    dst = rest[0]
+    boot = sysb = None
+    i = 1
+    while i < len(rest):
+        if rest[i] == "--boot":
+            boot = open(rest[i + 1], "rb").read(); i += 2
+        elif rest[i] == "--system":
+            sysb = open(rest[i + 1], "rb").read(); i += 2
+        else:
+            print(__doc__)
+            return 1
+    a = Disk.load(src, old_ok=True)
+    if not a.old:
+        raise SystemExit("%s : déjà au format de 80 pistes" % src)
+    if a.missing or a.crcbad:
+        print("avertissement : %d secteur(s) absent(s), %d à CRC faux (mkdisk.py repare)"
+              % (len(a.missing), len(a.crcbad)))
+    d = Disk()
+    if boot:
+        assert len(boot) == 768
+        for k in range(3):
+            d.sec[k] = boot[k * 256:(k + 1) * 256]
+    if sysb:
+        assert len(sysb) == 16384
+        for k in range(64):
+            d.sec[SYS_LSN + k] = sysb[k * 256:(k + 1) * 256]
+    if not sysb and any(any(s) for s in a.sec[SYS_LSN:SYS_LSN + 64]):
+        print("avertissement : système de l'ancienne disquette non recopié "
+              "(il ne lit pas le nouveau format) ; --boot et --system pour en mettre un")
+    d.format_dir()
+    at = a.attrs()
+    # les fichiers dans l'ordre du répertoire d'origine
+    vus = []
+    for e in a.dir_entries():
+        if e[0] == 0:
+            nm = bytes(c & 0x7F for c in e[1:12]).decode("ascii")
+            if nm not in vus:
+                vus.append(nm)
+    for nm in vus:
+        n = nm.encode("ascii")
+        # contenu tel quel, à l'enregistrement près (pas de passage en CR LF)
+        d.write_file_raw(n, a.read_file(n))
+        ro, sy = at.get(nm, (False, False))
+        if ro or sy:
+            d.set_attr(n, ro=ro, sys_=sy)
+    d.save(dst)
+    print("%s écrite : %d fichier(s), %d Ko libres" % (dst, len(vus), (NBLK - len(d.used_blocks())) * 2))
+    return 0
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -494,6 +627,8 @@ def main(argv):
             print(__doc__)
             return 1
         return diff(Disk.load(img), Disk.load(rest[0]))
+    if cmd == "conv":
+        return conv(img, rest)
     if cmd == "new":
         boot = sysb = None
         files = []

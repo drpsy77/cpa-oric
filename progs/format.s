@@ -6,10 +6,11 @@
 ;        formater, puis de remettre la disquette système (le système
 ;        reste en mémoire) : marche avec un seul lecteur
 ;    /Q  rapide : vide seulement le répertoire d'une disquette déjà
-;        formatée (images du LOCI, d'Oricutron)
+;        formatée au format de CP/A (images du LOCI, d'Oricutron)
 ;
-;  Format : 2 faces, 42 pistes, 17 secteurs de 256 octets remplis de
-;  $E5 (le répertoire est donc vide). Chaque piste est écrite d'un coup
+;  Format : 2 faces, 80 pistes, 17 secteurs de 256 octets remplis de
+;  $E5, puis le répertoire : vide, avec l'étiquette du format en entrée 0
+;  (src/fs.s, écrite par le BIOS). Chaque piste est écrite d'un coup
 ;  par la commande Write Track du WD1793, à partir d'une image de piste
 ;  construite en TPA, la même disposition que tools/mkdisk.py (le LOCI
 ;  attend exactement cet écart entre l'en-tête et les données). Les
@@ -22,6 +23,8 @@
 ;  FORMAT tient à jour les mêmes variables (PHY_DRV, DSK_TRK, voir
 ;  src/hw.inc). À la fin, démarrage à chaud : les répertoires sont
 ;  relus.
+;  Une image de 42 pistes ne se formate pas en 80 sur le LOCI (il ne
+;  l'agrandit pas) : erreur à la piste 42, et un message le dit.
 ; =====================================================================
 
 #include "cpa.inc"
@@ -38,12 +41,10 @@ MD_BASE     = $84       ; ROM et EPROM coupées (RAM overlay)
 PHY_DRV     = $FD7F     ; lecteur dont la piste est dans FDC_TRK
 DSK_TRK     = $FDA4     ; piste de chaque lecteur (4 octets)
 
-NCYL        = 42
 NSLOT       = 17
 SLOT        = 354       ; octets d'un secteur dans l'image de piste
 TRKPG       = 24        ; image de piste : 24 pages (6 144 octets)
 ENDOK       = 6040      ; fin utile de l'image (dernières données + CRC)
-DIR_LSN     = 68        ; répertoire : LSN 68 à 83
 
 CMD_RESTORE = $0B       ; piste 0, sans vérification
 CMD_SEEK    = $1B       ; positionnement sans vérification (piste vierge)
@@ -215,26 +216,8 @@ qformat
         lda #<m_unr
         ldy #>m_unr
         jmp puts
-ok      ldy #0
-        lda #$E5
-f       sta sbuf,y
-        iny
-        bne f
-        lda #<sbuf
-        ldy #>sbuf
-        jsr B_SETDMA
-        lda #DIR_LSN
-        sta nsec
-l       lda nsec
-        ldy #0
-        jsr B_SETSEC
-        jsr B_WRITE
-        cmp #0
-        bne err
-        inc nsec
-        lda nsec
-        cmp #DIR_LSN+16
-        bne l
+ok      jsr wdir
+        bcs err
         lda #<m_qok
         ldy #>m_qok
         jmp puts
@@ -242,6 +225,51 @@ err     lda #<m_werr
         ldy #>m_werr
         jmp puts
 .)
+
+; wdir : répertoire vide (16 secteurs de $E5, l'étiquette du format en
+;   tête du premier) par le BIOS, sur le lecteur choisi par SELDSK.
+;   C=1 si erreur d'écriture
+wdir
+.(
+        ldy #0
+        lda #$E5
+f       sta sbuf,y
+        iny
+        bne f
+        ldy #31
+lb      lda dlabel,y
+        sta sbuf,y
+        dey
+        bpl lb
+        lda #<sbuf
+        ldy #>sbuf
+        jsr B_SETDMA
+        lda #D_DIRLSN
+        sta nsec
+l       lda nsec
+        ldy #0
+        jsr B_SETSEC
+        jsr B_WRITE
+        cmp #0
+        bne err
+        ldy #31                 ; les suivants sans l'étiquette
+        lda #$E5
+e       sta sbuf,y
+        dey
+        bpl e
+        inc nsec
+        lda nsec
+        cmp #D_DIRLSN+16
+        bne l
+        clc
+        rts
+err     sec
+        rts
+.)
+; étiquette du format (entrée 0 du répertoire, src/fs.s)
+dlabel  .byt $20
+        .asc "CPA-2X80-2K"
+        .dsb 20,0
 
 ; ---------------------------------------------------------------------
 ; fformat : formatage complet, piste par piste, avec relecture
@@ -299,9 +327,20 @@ noseek  jsr selside
         bne sl
         inc cyl
         lda cyl
-        cmp #NCYL
+        cmp #D_NCYL
         bne cl
-        lda #<m_ok
+        lda #1                  ; répertoire : SELDSK choisit le lecteur
+        sta IO_QUIET            ; même illisible (pas encore d'étiquette),
+        lda drv                 ; sans message
+        jsr B_SELDSK
+        lda #0
+        sta IO_QUIET
+        jsr wdir
+        bcc dok
+        lda #<m_werr
+        ldy #>m_werr
+        jmp puts
+dok     lda #<m_ok
         ldy #>m_ok
         jmp puts
 absent  lda #<m_abs
@@ -320,14 +359,22 @@ wi      cmp #2
         bne wt
         lda #<m_inc
         ldy #>m_inc
-        jmp puts
+        jsr puts
+        jmp hint
 wt      jmp absent
 verr    lda #<m_verr
         ldy #>m_verr
         jsr puts
         lda nsec
         jsr pdec2
-        jmp crlf
+        jsr crlf
+hint    lda cyl                 ; au-delà de 42 pistes : image trop petite ?
+        cmp #42
+        bcc hr
+        lda #<m_42
+        ldy #>m_42
+        jmp puts
+hr      rts
 .)
 
 ; take : le contrôleur passe au lecteur drv (face 0) ; la piste du

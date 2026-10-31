@@ -10,11 +10,20 @@ B_CONIN     = $C009     ; attend une touche (menus FUNCT gérés)
 B_CONOUT    = $C00C     ; affiche A
 B_HOME      = $C018     ; tête du lecteur des accès directs en piste 0
 B_SELDSK    = $C01B     ; A = lecteur (0-3) -> A = 0, $FF si absent/illisible
-B_SETSEC    = $C021     ; A/Y = secteur logique (LSN, 0-1427)
+B_SETSEC    = $C021     ; A/Y = secteur logique (LSN, 0-2719)
 B_SETDMA    = $C024     ; A/Y = tampon de 256 octets
 B_READ      = $C027     ; lit le secteur -> A = 0, 1 si erreur
 B_WRITE     = $C02A     ; écrit le secteur -> A = 0, 1 si erreur
 B_MENUBAR   = $C02D     ; installe la barre de menus A/Y
+
+; Disquette (src/hw.inc) : 2 faces x 80 pistes x 17 secteurs de 256 octets ;
+; blocs de 2 Ko ; dans le répertoire, 8 numéros de blocs sur 16 bits par
+; entrée (poids faible d'abord), une entrée = un extent de 16 Ko (EX) ;
+; entrée 0 = étiquette du format (utilisateur $20)
+D_NCYL      = 80        ; pistes par face
+D_NSECT     = 2720      ; secteurs logiques (LSN 0 à 2719)
+D_DIRLSN    = 68        ; répertoire : LSN 68 à 83 (blocs 0 et 1)
+D_NBLK      = 331       ; blocs : 0-1 répertoire, 2-330 fichiers (658 Ko)
 
 ; Page de base
 FCB1        = $045C

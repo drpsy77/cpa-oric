@@ -1,14 +1,20 @@
 ; =====================================================================
 ;  fs.s — système de fichiers « à la CP/M 2.2 » (fonctions BDOS 13-25)
 ;
-;  Disquette : 2 faces x 42 pistes x 17 secteurs de 256 octets
-;  Blocs de 2 Ko (8 secteurs), 170 blocs, numéros sur 8 bits.
+;  Disquette : 2 faces x 80 pistes x 17 secteurs de 256 octets
+;  Blocs de 2 Ko (8 secteurs), 331 blocs, numéros sur 16 bits (poids
+;  faible d'abord), comme CP/M 2.2 au-delà de 255 blocs.
 ;  Répertoire : blocs 0-1 = 128 entrées de 32 octets, format CP/M :
 ;     0 utilisateur ($E5 = libre), 1-8 nom, 9-11 type, 12 EX, 13 S1,
-;     14 S2, 15 RC, 16-31 numéros de blocs
-;  Une entrée couvre 16 blocs = 32 Ko = 2 extents logiques de 16 Ko
-;  (EXM=1 comme CP/M) ; EX = dernier extent logique, RC = nombre
-;  d'enregistrements de 128 octets dans ce dernier extent.
+;     14 S2, 15 RC, 16-31 huit numéros de blocs
+;  Une entrée couvre 8 blocs = 16 Ko = un extent (EXM=0 comme CP/M) ;
+;  EX = numéro de l'extent, RC = nombre d'enregistrements de 128 octets
+;  dans l'extent.
+;  Entrée 0 : étiquette du format (octet 0 = $20, comme l'étiquette de
+;  CP/M 3, puis « CPA-2X80-2K », le reste à 0), écrite par FORMAT et
+;  tools/mkdisk.py ; aucune fonction ne la voit (utilisateur $20). Un
+;  lecteur dont l'entrée 0 n'est pas l'étiquette (ancien format de 42
+;  pistes, autre système) est refusé à la première utilisation.
 ;
 ;  Lecteurs A: à D: (NDRV) : même format sur chacun ; une carte
 ;  d'allocation par lecteur (ALV + alv_off), faite d'après le répertoire
@@ -109,20 +115,23 @@ write_buf
         rts
 
 io_err
-        lda #0
-        sta buf_ok
-        sta buf_dirty
-        lda io_quiet            ; recherche d'un programme, CMDER : sans
+        lda #<msg_ioerr
+        ldy #>msg_ioerr
+; fs_err : erreur de disque, message A/Y (C=1)
+fs_err
+        ldx #0
+        stx buf_ok
+        stx buf_dirty
+        ldx io_quiet            ; recherche d'un programme, CMDER : sans
         beq ie_p                ; message, erreur notée (bit 7) pour
-        ora #$80                ; l'appelant
+        txa                     ; l'appelant
+        ora #$80
         sta io_quiet
         sec
         rts
 ie_p
-        lda #<msg_ioerr
-        ldy #>msg_ioerr
         jsr print_z
-ie_q    sec
+        sec
         rts
 
 set_secbuf
@@ -184,11 +193,7 @@ next    dey
         lda (ZP_FCB),y
         cmp #"?"
         beq yes
-        lsr
-        sta fs_t1
-        lda (ZP_DIRP),y
-        lsr
-        cmp fs_t1
+        cmp (ZP_DIRP),y
         bne no
 yes     lda #0
         rts
@@ -240,18 +245,20 @@ found   clc
 ; ---------------------------------------------------------------------
 bitmask .byt 1,2,4,8,16,32,64,128
 
-; alv_index : A = bloc -> Y = octet, X = bit
+; alv_index : bloc fs_b0, fs_b1 -> Y = octet, X = bit
 alv_index
-        pha
-        and #7
-        tax
-        pla
+        lda fs_b1
+        lsr                     ; bit 8 du bloc -> C
+        lda fs_b0
+        ror
         lsr
-        lsr
-        lsr
+        lsr                     ; bloc / 8
         clc
         adc alv_off             ; carte du lecteur act_drv
         tay
+        lda fs_b0
+        and #7
+        tax
         rts
 
 alv_set
@@ -269,47 +276,71 @@ alv_clr
         sta ALV,y
         rts
 
-; alloc_block : A = bloc libre (marqué occupé), C=1 si disque plein
+; blk_first : fs_b = 2 (premier bloc après le répertoire)
+blk_first
+        lda #2
+        sta fs_b0
+        lda #0
+        sta fs_b1
+        rts
+
+; blk_next : bloc suivant ; C=1 après le dernier (fs_b >= NBLK)
+blk_next
+        inc fs_b0
+        bne blk_cmp
+        inc fs_b1
+blk_cmp lda fs_b0
+        cmp #<NBLK
+        lda fs_b1
+        sbc #>NBLK
+        rts
+
+; ent_blk : numéro de bloc de l'entrée (ZP_DIRP),y et y+1 -> fs_b0,
+;   fs_b1 ; Y avance d'un octet. C=1 si nul ou hors de la disquette
+ent_blk
+        lda (ZP_DIRP),y
+        sta fs_b0
+        iny
+        lda (ZP_DIRP),y
+        sta fs_b1
+        ora fs_b0
+        bne blk_cmp
+        sec
+        rts
+
+; alloc_block : fs_b0, fs_b1 = bloc libre (marqué occupé), C=1 si
+;   disque plein
 alloc_block
 .(
-        lda #2
-        sta fs_t0
-loop    lda fs_t0
-        cmp #NBLK
-        bcs full
-        jsr alv_index
+        jsr blk_first
+loop    jsr alv_index
         lda ALV,y
         and bitmask,x
         beq got
-        inc fs_t0
-        bne loop
-full    sec
+        jsr blk_next
+        bcc loop
         rts
-got     lda fs_t0
-        jsr alv_set
-        lda fs_t0
+got     jsr alv_set
         clc
         rts
 .)
 
-; count_free : A = nombre de blocs libres
+; count_free : fs_c0, fs_c1 = nombre de blocs libres
 count_free
 .(
         lda #0
-        sta fs_t1
-        lda #2
-        sta fs_t0
-loop    lda fs_t0
-        jsr alv_index
+        sta fs_c0
+        sta fs_c1
+        jsr blk_first
+loop    jsr alv_index
         lda ALV,y
         and bitmask,x
         bne used
-        inc fs_t1
-used    inc fs_t0
-        lda fs_t0
-        cmp #NBLK
-        bne loop
-        lda fs_t1
+        inc fs_c0
+        bne used
+        inc fs_c1
+used    jsr blk_next
+        bcc loop
         rts
 .)
 
@@ -358,8 +389,9 @@ in      cmp act_drv
 same    ldx act_drv
         lda bitmask,x
         and log_vec
-        bne ok
-        lda dir_i
+        beq login
+        jmp ok
+login   lda dir_i
         pha
         ldy alv_off
         ldx #ALV_LEN
@@ -375,14 +407,21 @@ clr     sta ALV,y
 entry   jsr dir_get
         bcs err
         ldy #0
-        lda (ZP_DIRP),y
+        lda dir_i               ; entrée 0 : l'étiquette du format
+        bne ent
+        ldy #11
+lab     lda (ZP_DIRP),y
+        cmp dsk_label,y
+        bne fmt
+        dey
+        bpl lab
+        bmi next
+ent     lda (ZP_DIRP),y
         cmp #$E5
         beq next
         ldy #FCB_AL
-blk     sty fs_idx
-        lda (ZP_DIRP),y
-        beq nb
-        cmp #NBLK
+blk     jsr ent_blk
+        sty fs_idx
         bcs nb
         jsr alv_set
 nb      ldy fs_idx
@@ -409,6 +448,9 @@ next    inc dir_i
 ok      lda #0
         clc
         rts
+fmt     lda #<msg_fmt         ; pas une disquette de CP/A (80 pistes)
+        ldy #>msg_fmt
+        jsr fs_err
 err     pla
         sta dir_i
         ldx act_drv             ; sans réponse : la recherche des
@@ -420,6 +462,8 @@ err     pla
         rts
 alv_ofs .byt 0,ALV_LEN,2*ALV_LEN,3*ALV_LEN
 .)
+dsk_label .byt $20
+        .asc "CPA-2X80-2K"
 
 ; ---------------------------------------------------------------------
 ; Fonction 15 : ouverture (A=0 si trouvé, $FF sinon)
@@ -445,21 +489,8 @@ cp      lda (ZP_DIRP),y
         and #$80
         ldy #FCB_S1
         sta (ZP_FCB),y
-        ; RC de l'extent demandé
-        ldy #FCB_EX
+        ldy #FCB_RC             ; RC de l'extent (une entrée par extent)
         lda (ZP_DIRP),y
-        sta fs_t0               ; EX de l'entrée
-        lda (ZP_FCB),y
-        cmp fs_t0
-        beq same
-        bcs after
-        lda #128                ; extent plein, avant le dernier
-        bne setrc
-after   lda #0
-        beq setrc
-same    ldy #FCB_RC
-        lda (ZP_DIRP),y
-setrc   ldy #FCB_RC
         sta (ZP_FCB),y
         lda #0
         rts
@@ -488,22 +519,10 @@ cp      lda (ZP_FCB),y
 skip    iny
         cpy #32
         bne cp
-        ldy #FCB_EX
-        lda (ZP_DIRP),y
-        sta fs_t0
-        lda (ZP_FCB),y
-        cmp fs_t0
-        bcc done                ; extent antérieur : rien à changer
-        bne newer
-        ldy #FCB_RC             ; même extent : garde le plus grand RC
+        ldy #FCB_RC             ; (même extent) garde le plus grand RC
         lda (ZP_FCB),y
         cmp (ZP_DIRP),y
         bcc done
-        sta (ZP_DIRP),y
-        jmp done
-newer   sta (ZP_DIRP),y         ; EX
-        ldy #FCB_RC
-        lda (ZP_FCB),y
         sta (ZP_DIRP),y
 done    jsr write_buf
         bcs nf
@@ -573,10 +592,8 @@ del     ldy #0
         lda #$E5
         sta (ZP_DIRP),y
         ldy #FCB_AL
-fr      sty fs_idx
-        lda (ZP_DIRP),y
-        beq nb
-        cmp #NBLK
+fr      jsr ent_blk
+        sty fs_idx
         bcs nb
         jsr alv_clr
 nb      ldy fs_idx
@@ -799,20 +816,17 @@ err     jmp ro_err
 ; rec_lsn : enregistrement courant du FCB -> fs_lsn, fs_half
 ;   C=1 si le bloc n'est pas alloué.
 ; ---------------------------------------------------------------------
+; rec_index : fs_rec = CR (0-127), Y = FCB_AL + 2 * (CR / 16) : numéro
+;   du bloc de l'enregistrement (2 octets)
 rec_index
-        ldy #FCB_EX             ; fs_rec = (EX and 1)*128 + CR
-        lda (ZP_FCB),y
-        lsr
         ldy #FCB_CR
         lda (ZP_FCB),y
         and #$7F
-        bcc ri1
-        ora #$80
-ri1     sta fs_rec
-        lsr                     ; Y = FCB_AL + fs_rec/16
+        sta fs_rec
         lsr
         lsr
         lsr
+        and #$FE
         clc
         adc #FCB_AL
         tay
@@ -822,11 +836,13 @@ rec_lsn
 .(
         jsr rec_index
         lda (ZP_FCB),y
-        beq hole
-        sta fs_blk
-        lda #0
+        sta fs_lsn
+        iny
+        lda (ZP_FCB),y
         sta fs_lsn+1
-        lda fs_blk
+        ora fs_lsn
+        beq hole
+        lda fs_lsn
         asl                     ; bloc * 8
         rol fs_lsn+1
         asl
@@ -916,12 +932,8 @@ fw_ok
         lda (ZP_FCB),y
         cmp #128
         bcc room
-        ; extent logique plein : passe au suivant
-        ldy #FCB_EX
-        lda (ZP_FCB),y
-        and #1
-        beq same_entry
-        jsr close_int           ; l'entrée (32 Ko) est pleine : on la ferme
+        ; extent plein (16 Ko, une entrée) : on le ferme
+        jsr close_int
         beq cl_ok
         jmp err
 cl_ok
@@ -930,17 +942,11 @@ cl_ok
         clc
         adc #1
         sta (ZP_FCB),y
-        jsr make_int            ; et on en crée une nouvelle
+        jsr open_ext            ; le suivant existe (fichier réécrit),
+        beq reset_cr
+        jsr make_int            ; sinon on crée son entrée
         beq reset_cr
         jmp dfull
-same_entry
-        lda (ZP_FCB),y
-        clc
-        adc #1
-        sta (ZP_FCB),y
-        ldy #FCB_RC
-        lda #0
-        sta (ZP_FCB),y
 reset_cr
         ldy #FCB_CR
         lda #0
@@ -949,11 +955,17 @@ room
 &fw_room                        ; (écriture directe : enregistrement CR)
         jsr rec_index
         lda (ZP_FCB),y
+        iny
+        ora (ZP_FCB),y
         bne have
         sty fs_idx
         jsr alloc_block
         bcs full
         ldy fs_idx
+        lda fs_b1
+        sta (ZP_FCB),y
+        dey
+        lda fs_b0
         sta (ZP_FCB),y
 have    jsr rec_lsn
         ; ajout en fin de fichier sur un secteur neuf : inutile de le lire
@@ -1029,7 +1041,7 @@ hi      lda SECBUF+128,y
 
 ; ---------------------------------------------------------------------
 ; Accès direct (fonctions 33 à 36). Numéro d'enregistrement : R0-R2 du
-; FCB (octets 33-35), 0 à 4095 (un fichier fait au plus 2720 enreg.).
+; FCB (octets 33-35), 0 à 8191 (un fichier fait au plus 5264 enreg.).
 ; L'enregistrement courant n'avance pas : une lecture séquentielle
 ; reprend au même endroit.
 ; ---------------------------------------------------------------------
@@ -1044,7 +1056,7 @@ rnd_rec
         bne bad
         dey
         lda (ZP_FCB),y
-        cmp #$10
+        cmp #$20
         bcs bad
         sta fs_t1
         dey
@@ -1253,3 +1265,4 @@ f_curdsk
 
 msg_ioerr
         .asc 13,10,"BDOS: disk I/O error",13,10,0
+msg_fmt .asc 13,10,"BDOS: not a CP/A 80-track disk",13,10,0

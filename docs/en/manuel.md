@@ -134,8 +134,16 @@ one is read from `$$$.BAT`, written on the current drive; that drive then comes 
 
 Every drive has the same disk layout. A data disk (without the system) is prepared on the
 Oric with `FORMAT B:`, or on the PC: `python3 tools/mkdisk.py new data.dsk [files...]`; the
-system tracks stay unused there (336 KB for files). On the LOCI, mount the image on drive B, C
+system tracks stay unused there (658 KB for files). On the LOCI, mount the image on drive B, C
 or D.
+
+Disks have 2 sides of 80 tracks (1 MB images). Those of the old format (42 tracks, CP/A 0.9
+and before) are no longer read: `B:` or `DIR B:` gives `BDOS: not a CP/A 80-track disk`, as
+for a disk from another system. To keep their files, copy them on the PC: `python3
+tools/mkdisk.py conv OLD.DSK NEW.DSK` (files and attributes, without the system, which would
+not read the new format; `--boot build/boot.bin --system build/cpa_sys_en.bin` to put one).
+Do not boot an old system with a new-format disk in a drive: it does not recognise it and
+would damage it by writing to it.
 
 On the LOCI, a drive without an image is refused straight away (`BDOS: disk I/O error` if it is
 typed, nothing during the program search): the LOCI's controller never completes a command
@@ -143,24 +151,28 @@ sent to such a drive, and does not answer any more until it restarts. So, before
 another drive, CP/A reads the list of mounted drives kept by the LOCI's menu. An image mounted
 or ejected is taken into account at the next start from the LOCI's menu.
 
-**FORMAT.** `FORMAT B:` formats the disk in drive B: in CP/A's format (2 sides, 42 tracks, 17
+**FORMAT.** `FORMAT B:` formats the disk in drive B: in CP/A's format (2 sides, 80 tracks, 17
 sectors of 256 bytes): each track is written in one go (the controller's Write Track
 command), then read back; progress is shown (`Track 12 side 1`), ESC
-interrupts between two tracks. Confirmation is asked (`All of B: will be erased. Go on (Y/N) ?`). `FORMAT A:` works with a single drive: it asks you to
+interrupts between two tracks. The directory is written at the end, with the format label.
+The LOCI does not enlarge an image: a 42-track image (a SEDORIC disk, an old CP/A one) cannot
+be formatted to 80 tracks (`42-track image? 80 tracks needed` at track 42); start from a copy
+of `cpa-project-en.dsk`. Confirmation is asked (`All of B: will be erased. Go on (Y/N) ?`). `FORMAT A:` works with a single drive: it asks you to
 insert the disk to format, then to put the system disk back (the system stays in memory).
 `FORMAT B: /Q` only empties the directory of a disk already formatted: it is instant, and
-enough for a LOCI or Oricutron image. Sectors are interleaved (1, 10, 2, 11...) so that a real
+enough for a LOCI or Oricutron image (a disk already in CP/A's format; otherwise
+`Unreadable disk : FORMAT without /Q`). Sectors are interleaved (1, 10, 2, 11...) so that a real
 Microdisc drive reads a track in two revolutions instead of seventeen; the images made by
 `mkdisk.py` (`build/*.dsk`) are interleaved the same way. Measured in Clock Signal, which
 simulates rotation: copying LOGO.COM takes about 12 s instead of about 50 s, and booting about
 7 s instead of about 9 s. It changes nothing on the LOCI or in Oricutron.
 
 **DISKCOPY.** `DISKCOPY A: B:` copies the disk in A: onto the one in B: (already formatted):
-boot and system, directory, then only the blocks used by files; `/T` copies all 1,428 sectors,
+boot and system, directory, then only the blocks used by files; `/T` copies all 2,720 sectors,
 `/V` reads back and compares each sector written. The copy is done in slices of about 165
 sectors (the TPA), with progress shown (`Tranche 2 : ecriture`, slice 2: writing); ESC stops
 between two slices. `DISKCOPY A: A:` works with a single drive: source and destination are
-asked for in turn, once per slice (4 swaps for the system disk, 9 with `/T`).
+asked for in turn, once per slice (7 swaps for the system disk, 17 with `/T`).
 
 `DISKCOPY A: B: /S` makes the disk in B: bootable **without touching its files**, like SYSGEN
 under CP/M: it only copies the boot and the system (sectors 0 to 67, outside the file area).
@@ -300,7 +312,7 @@ table used by the build is `files/en/noms.txt`; `build.sh` checks that each Engl
 the files of the French one.
 
 **Project disk.** `build/cpa-project-en.dsk` (`cpa-projet.dsk`) is a blank disk (no system,
-336 KB for files), to put in `B:` and copy for each project.
+658 KB for files), to put in `B:` and copy for each project.
 
 Suggested use: the system disk in `A:` (`cpa-en.dsk`, or a disk for the task), a project disk in
 `B:`, and `B:` as the current drive. From `B>`, `EDIT`, `ASM`, `GRAPHER` or `GRXASM` are
@@ -308,8 +320,7 @@ found on `A:` (LOGO, with `cpa-logo-en.dsk` in `A:`), and so are the libraries (
 GRXASM look for on the project's drive, then on A: to D:; everything produced (`.ASM`,
 `.COM`, `.SYM`, data files) goes to `B:`, and `DIR` only shows the work in progress.
 With a single drive, boot the disk for the task and work on a copy (DISKCOPY) rather than on
-the original. About 86 KB are left on `cpa-en.dsk`, little for working (a GRXASM translation
-quickly writes over 40 KB).
+the original. About 408 KB are left on `cpa-en.dsk`.
 
 Keys: CTRL-T toggles upper case (indicator `A`, or `a` for lower case, at the end of the menu
 bar), CTRL-C on an empty line at the prompt does a warm start. The RESET button returns to the
@@ -1291,15 +1302,19 @@ into account).
 
 ## Disk format
 
-The image is in MFM_DISK format: 2 sides × 42 tracks × 17 sectors of 256 bytes, that is 357 KB.
-Sectors are addressed by logical number (LSN): logical track = LSN / 17, cylinder = track / 2,
-side = track mod 2.
+The image is in MFM_DISK format: 2 sides × 80 tracks × 17 sectors of 256 bytes, that is 680 KB
+(a 1 MB file). Sectors are addressed by logical number (LSN): logical track = LSN / 17,
+cylinder = track / 2, side = track mod 2.
 
 | LSN | Contents |
 |---|---|
 | 0-2 | Microdisc boot (fake Oric DOS directory, loader) |
-| 3-66 | system (16 KB) |
-| 68-1427 | 170 blocks of 2 KB. Blocks 0 and 1 make up the directory: 128 entries in CP/M 2.2 format (EXM=1) |
+| 3-66 | system (16 KB); 67 free |
+| 68-2715 | 331 blocks of 2 KB. Blocks 0 and 1 make up the directory: 128 entries in CP/M 2.2 format (16-bit block numbers, one entry per 16 KB extent: EXM=0); blocks 2 to 330: the files (658 KB) |
+| 2716-2719 | unused |
+
+Directory entry 0 is the format label (byte 0 = `$20`, then `CPA-2X80-2K`): CP/A refuses a
+disk without it. 127 entries are left for files; a file over 16 KB takes one per 16 KB.
 
 Writes go through a write-behind buffer. A file must be closed (function 16) for its data and
 its directory entry to be up to date on the disk.
@@ -1314,6 +1329,8 @@ its directory entry to be up to date on the disk.
     python3 tools/mkdisk.py era build/cpa.dsk NOTES.TXT
     python3 tools/mkdisk.py attr build/cpa.dsk NOTES.TXT RO      # RO RW SYS DIR
     python3 tools/mkdisk.py new data.dsk [files...]          # data disk (B: to D:)
+    python3 tools/mkdisk.py check build/cpa-en.dsk           # image consistency
+    python3 tools/mkdisk.py conv old.dsk new.dsk             # 42 tracks -> 80 tracks
 
 Text files (`.ASM`, `.INC`, `.LOG`, `.GRX`, `.TXT`, `.BAT`, `.CFG`, `.DOC`, `.SUB`, `.PRN`,
 `.LST`) get CR LF line endings, those of CP/M, from `put` and `new` (so also from `build.sh`): a

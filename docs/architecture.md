@@ -38,7 +38,8 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 `$C012` PUNCH, `$C015` READER, `$C018` HOME, `$C01B` SELDSK, `$C01E` SETTRK, `$C021` SETSEC,
 `$C024` SETDMA, `$C027` READ, `$C02A` WRITE, `$C02D` MENUBAR. Version disquette : SELDSK
 prend A = lecteur (0-3) et rend A = 0, ou `$FF` si le lecteur est absent ou illisible ; READ et
-WRITE agissent sur ce lecteur.
+WRITE agissent sur ce lecteur, même illisible (FORMAT écrit ainsi le répertoire d'une
+disquette qu'il vient de formater) ; SETSEC prend un secteur logique de 0 à 2 719.
 
 Les entrées existantes ne bougent jamais ; une nouvelle entrée s'ajoute à la fin (`$C030`…).
 LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 attendu 2 ms au
@@ -75,7 +76,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 | N° | Fonction | Versions |
 |---|---|---|
 | 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus | les deux |
-| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
+| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) ; les entrées du répertoire rendues par 17 et 18 sont celles du format de la disquette (§ 2, « Disquette ») | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
@@ -83,6 +84,18 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 Numéros libres pour l'avenir : 37-46, 48-114 et 117 et suivants. Une fonction ajoutée existe dans les
 deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
+
+### Disquette
+
+2 faces × 80 pistes × 17 secteurs de 256 octets (2 720 secteurs logiques, image MFM_DISK de
+1 Mo), blocs de 2 Ko : 331 blocs, dont 2 pour le répertoire de 128 entrées. Format des
+entrées : celui de CP/M 2.2 au-delà de 255 blocs (8 numéros de bloc sur 16 bits, poids faible
+d'abord ; une entrée = un extent de 16 Ko, EX = son numéro, RC = ses enregistrements).
+Entrée 0 : étiquette du format (octet 0 = `$20`, puis `CPA-2X80-2K`), invisible pour le BDOS ;
+une disquette qui ne l'a pas est refusée. Constantes `D_NCYL`, `D_NSECT`, `D_DIRLSN`, `D_NBLK`
+dans `progs/cpa.inc` ; détail dans `docs/systeme.md` § 3. Les disquettes de 42 pistes (blocs
+numérotés sur 8 bits) ne sont plus lues : `tools/mkdisk.py conv` les recopie au nouveau
+format.
 
 ### Programmes `.COM`
 
@@ -98,7 +111,7 @@ deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F670` au plus (fin réelle : `rom_end`, affichée par `./build.sh`), puis tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (code chargé avec le système qui n'a pas besoin d'y rester : PUT et son tampon, démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (cartes d'allocation des 4 lecteurs `$FD00-$FD57`, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDF9-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F5C8` au plus (`SYS_END` ; fin réelle : `rom_end`, affichée par `./build.sh`), puis cartes d'allocation des 4 lecteurs (`ALV`, `$F5C8-$F66F`), tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (code chargé avec le système qui n'a pas besoin d'y rester : PUT et son tampon, démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (`$FD00-$FD03` : bloc et compte du BDOS, `$FD04-$FD57` libres, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDF9-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -123,7 +136,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
-- `build.sh` refuse un système disque qui dépasse `$F670`, une fenêtre qui déborde (PUT après
+- `build.sh` refuse un système disque qui dépasse `SYS_END` (`$F5C8`), une fenêtre qui déborde (PUT après
   `$FA00`, démarrage à froid après `$FD00`), une page `$FF00` qui atteint les vecteurs (`$FFFA`)
   et une ROM qui ne fait pas 16 Ko ; il affiche les marges.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch

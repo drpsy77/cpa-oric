@@ -119,7 +119,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
-| `docs/etude-stockage.md` | study in progress, nothing decided: room on the disks, 80-track format, 1 KB blocks (in French) |
+| `docs/etude-stockage.md` | room on the disks: the 80-track format (done), the remaining options (in French) |
 | `docs/usb.md` | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1, in French) |
 | `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |
 
@@ -146,13 +146,15 @@ Disk version: the Microdisc EPROM calls the BASIC 1.1 ROM, so keep
 ROM version: copy `build/cpa.rom` into `roms/`, then set `atmosrom = 'roms/cpa'` in
 `oricutron.cfg`.
 
-On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI and boot from it. CP/A runs
+On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI and boot from it. Disks have
+2 sides of 80 tracks (658 KB for files); the 42-track disks of earlier versions are no longer
+read, `tools/mkdisk.py conv` copies their files onto a new one (`docs/en/manuel.md`). CP/A runs
 in emulators and on a real Oric Atmos fitted with a LOCI; the menu colours, hard to read in
 some emulators, are sharp on a real screen.
 
 **Microdisc.** The original 3″ Microdisc drive has a single side of 40 tracks: it cannot read
-CP/A disks (2 sides of 42 tracks). Cumulus, Gotek, HxC or a double-sided drive: never tried,
-and without a LOCI there is no USB stick and no network. No Microdisc port is planned; if you
+CP/A disks (2 sides of 80 tracks, 1 MB images). Cumulus, Gotek, HxC or a double-sided 3.5″
+drive: never tried, and without a LOCI there is no USB stick and no network. No Microdisc port is planned; if you
 want one, open an issue on this repository to talk about it.
 
 **Several drives.** The disk version handles four drives, `A:` to `D:`, like the Microdisc

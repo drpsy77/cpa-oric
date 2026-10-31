@@ -85,10 +85,12 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   (`$03A8-$03AB`). LOCI reconnu à la marque `L` en `$0319`. Signature absente ou octet
   invraisemblable : on laisse passer.
 - **Système de fichiers** (`src/fs.s`) : `set_fcb` choisit le lecteur au début de chaque
-  fonction (`drv_select`) ; une carte d'allocation par lecteur (4 × 22 octets en `$FD00`),
-  faite à la première utilisation depuis le dernier démarrage à chaud (`log_vec`). Lecteur
-  inconnu ou illisible : `$FF`. Changer de disquette demande un CTRL-C, comme sous CP/M.
-  Démarrage à chaud : lecteur courant gardé et relu, retour en A: s'il ne répond plus.
+  fonction (`drv_select`) ; une carte d'allocation par lecteur (4 × 42 octets en `$F5C8`,
+  juste sous les tampons de DO), faite à la première utilisation depuis le dernier démarrage
+  à chaud (`log_vec`). Lecteur inconnu ou illisible : `$FF` ; une disquette sans l'étiquette
+  du format (ci-dessous) est illisible, avec `BDOS: not a CP/A 80-track disk` (muet sous
+  `io_quiet`). Changer de disquette demande un CTRL-C, comme sous CP/M. Démarrage à chaud :
+  lecteur courant gardé et relu, retour en A: s'il ne répond plus.
 - **Recherche des programmes et des scripts** (`open_com`) : un `.COM` ou `.BAT` tapé sans
   lecteur (aussi par DO et XDO) est cherché sur le lecteur du script en cours (au prompt : le
   courant), puis A: à D:, sans essayer deux fois le même. Un lecteur sans réponse est noté
@@ -98,9 +100,19 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   lecteurs essayés après le premier ne donnent pas « BDOS: disk I/O error » (`io_quiet`, bit
   7 = erreur survenue ; remis à 0 au démarrage à chaud). Un nom avec lecteur n'est cherché
   que là. Écartés : un `PATH` (variable de plus dans le contrat), un `$D` dans les scripts.
-- **Format** : 2 faces, 42 pistes, 17 secteurs de 256 octets, entrelacement 2:1 (1, 10, 2,
-  11... 9) pour `mkdisk.py` et FORMAT (sans lui, un vrai Microdisc lit un secteur par tour).
-  Blocs de 2 Ko. Système en LSN 0-67.
+- **Format** : 2 faces, 80 pistes, 17 secteurs de 256 octets (2 720 secteurs, image de
+  1 Mo), entrelacement 2:1 (1, 10, 2, 11... 9) pour `mkdisk.py` et FORMAT (sans lui, un vrai
+  lecteur lit un secteur par tour). LSN -> piste logique = LSN / 17, cylindre = piste / 2,
+  face = piste and 1. Amorçage LSN 0-2, système 3-66, 67 libre ; 331 blocs de 2 Ko de LSN 68
+  à 2715 (2716-2719 inutilisés) : blocs 0-1 = répertoire de 128 entrées, blocs 2-330 =
+  fichiers (658 Ko). Numéros de bloc sur 16 bits, comme CP/M 2.2 au-delà de 255 blocs : une
+  entrée tient 8 blocs, soit un extent de 128 enregistrements (EXM = 0 ; EX = numéro de
+  l'extent, RC = ses enregistrements). Un fichier tient au plus 5 264 enregistrements ;
+  l'accès direct va jusqu'à 8 191. Entrée 0 : étiquette du format, octet 0 = `$20` (utilisateur
+  que le BDOS ne voit pas, comme l'étiquette de CP/M 3) puis `CPA-2X80-2K`, le reste à 0 ;
+  écrite par FORMAT et `mkdisk.py`, contrôlée par `drv_select` ; 127 fichiers au plus.
+  L'ancien format (42 pistes, 170 blocs sur 8 bits, une entrée = deux extents) n'est plus lu
+  par le système : `tools/mkdisk.py conv` recopie une ancienne disquette sur une nouvelle.
 
 ## 4. CCP et scripts
 

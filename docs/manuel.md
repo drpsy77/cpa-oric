@@ -134,8 +134,17 @@ courant ; c'est alors ce lecteur qui passe en premier.
 
 Chaque lecteur a la même organisation de disquette. Une disquette de données (sans système)
 se prépare sur l'Oric avec `FORMAT B:`, ou sur le PC : `python3 tools/mkdisk.py new
-donnees.dsk [fichiers...]` ; les pistes du système y restent inutilisées (336 Ko pour les
+donnees.dsk [fichiers...]` ; les pistes du système y restent inutilisées (658 Ko pour les
 fichiers). Sur le LOCI, monter l'image sur le lecteur B, C ou D.
+
+Les disquettes ont 2 faces de 80 pistes (images de 1 Mo). Celles de l'ancien format (42
+pistes, CP/A 0.9 et avant) ne sont plus lues : `B:` ou `DIR B:` donne `BDOS: not a CP/A
+80-track disk`, comme pour une disquette d'un autre système. Pour garder leurs fichiers, les
+recopier sur le PC : `python3 tools/mkdisk.py conv ANCIENNE.DSK NOUVELLE.DSK` (fichiers et
+attributs, sans le système, qui ne lirait pas le nouveau format ; `--boot build/boot.bin
+--system build/cpa_sys.bin` pour en mettre un). Ne pas démarrer sur un ancien système avec
+une disquette du nouveau format dans un lecteur : il ne la reconnaît pas et l'abîmerait en y
+écrivant.
 
 Sur le LOCI, un lecteur sans image est refusé d'emblée (`BDOS: disk I/O error` s'il est tapé,
 rien pendant la recherche des programmes) : le contrôleur du LOCI ne termine jamais une
@@ -145,13 +154,17 @@ menu du LOCI. Une image montée ou éjectée se prend en compte au démarrage su
 menu du LOCI.
 
 **FORMAT.** `FORMAT B:` formate la disquette du lecteur B: au format de CP/A (2 faces,
-42 pistes, 17 secteurs de 256 octets) : chaque piste est écrite d'un coup (commande Write
+80 pistes, 17 secteurs de 256 octets) : chaque piste est écrite d'un coup (commande Write
 Track du contrôleur), puis relue ; la progression s'affiche (`Piste 12 face 1`), ESC
-interrompt entre deux pistes. Une confirmation est demandée (`Tout B: sera efface. Suite
+interrompt entre deux pistes. Le répertoire est écrit à la fin, avec l'étiquette du format.
+Le LOCI n'agrandit pas une image : une image de 42 pistes (une disquette SEDORIC, une
+ancienne de CP/A) ne se formate pas en 80 (`Image de 42 pistes ? Il en faut 80` à la piste
+42) ; partir d'une copie de `cpa-projet.dsk`. Une confirmation est demandée (`Tout B: sera efface. Suite
 (O/N) ?`). `FORMAT A:` marche avec un seul lecteur : il demande d'insérer la disquette à
 formater, puis de remettre la disquette système (le système reste en mémoire). `FORMAT B: /Q`
 vide seulement le répertoire d'une disquette déjà formatée : c'est instantané, et cela suffit
-pour une image du LOCI ou d'Oricutron. Les secteurs sont entrelacés (1, 10, 2, 11...) pour
+pour une image du LOCI ou d'Oricutron (une disquette déjà au format de CP/A ; sinon
+`Disquette illisible : FORMAT sans /Q`). Les secteurs sont entrelacés (1, 10, 2, 11...) pour
 qu'un vrai lecteur Microdisc lise une piste en deux tours au lieu de dix-sept ; les images
 faites par `mkdisk.py` (`build/*.dsk`) le sont de même. Mesuré dans Clock Signal, qui simule
 la rotation : copier LOGO.COM prend ~12 s au lieu de ~50 s, et le démarrage ~7 s au lieu
@@ -159,11 +172,11 @@ de ~9 s. Cela ne change rien sur le LOCI ni dans Oricutron.
 
 **DISKCOPY.** `DISKCOPY A: B:` copie la disquette de A: sur celle de B: (déjà formatée) :
 amorçage et système, répertoire, puis seulement les blocs occupés par des fichiers ; `/T`
-copie les 1 428 secteurs, `/V` relit et compare chaque secteur écrit. La copie se fait par
+copie les 2 720 secteurs, `/V` relit et compare chaque secteur écrit. La copie se fait par
 tranches d'environ 165 secteurs (la TPA), avec la progression (`Tranche 2 : ecriture`) ;
 ESC arrête entre deux tranches. `DISKCOPY A: A:` marche avec un seul lecteur : la source et
-la destination sont demandées tour à tour, une fois par tranche (4 échanges pour la
-disquette système, 9 avec `/T`).
+la destination sont demandées tour à tour, une fois par tranche (7 échanges pour la
+disquette système, 17 avec `/T`).
 
 `DISKCOPY A: B: /S` rend la disquette de B: démarrable **sans toucher à ses fichiers**, comme
 SYSGEN sous CP/M : il ne copie que l'amorçage et le système (secteurs 0 à 67, hors de la zone
@@ -309,7 +322,7 @@ La table qui sert à la construction est `files/en/noms.txt` ; `build.sh` vérif
 disquette anglaise a bien les fichiers de la française.
 
 **Disquette de projet.** `build/cpa-projet.dsk` (`cpa-project-en.dsk`) est une disquette
-vierge (sans système, 336 Ko pour les fichiers), à mettre en `B:` et à copier pour chaque
+vierge (sans système, 658 Ko pour les fichiers), à mettre en `B:` et à copier pour chaque
 projet.
 
 Usage conseillé : la disquette système en `A:` (`cpa.dsk`, ou une disquette d'usage), une
@@ -319,8 +332,7 @@ disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`,
 D: ; tout ce qui est produit (`.ASM`, `.COM`, `.SYM`, fichiers de données) va sur `B:`, et
 `DIR` ne montre que le travail en cours. Avec un seul lecteur, on démarre sur la disquette
 d'usage et l'on travaille sur une copie (DISKCOPY) plutôt que sur l'original. Il reste
-environ 86 Ko sur `cpa.dsk`, peu pour travailler (une traduction par GRXASM écrit vite plus de
-40 Ko).
+environ 408 Ko sur `cpa.dsk`.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C sur une ligne vide du prompt fait un démarrage à
@@ -1325,15 +1337,20 @@ fonction 35 donne la taille (nombre d'enregistrements, en tenant compte des trou
 
 ## Format de la disquette
 
-L'image est au format MFM_DISK : 2 faces × 42 pistes × 17 secteurs de 256 octets, soit 357 Ko.
-Les secteurs sont adressés par numéro logique (LSN) : piste logique = LSN / 17, cylindre = piste / 2,
-face = piste mod 2.
+L'image est au format MFM_DISK : 2 faces × 80 pistes × 17 secteurs de 256 octets, soit 680 Ko
+(fichier de 1 Mo). Les secteurs sont adressés par numéro logique (LSN) : piste logique = LSN / 17,
+cylindre = piste / 2, face = piste mod 2.
 
 | LSN | Contenu |
 |---|---|
 | 0-2 | amorçage Microdisc (faux répertoire Oric DOS, chargeur) |
-| 3-66 | système (16 Ko) |
-| 68-1427 | 170 blocs de 2 Ko. Les blocs 0 et 1 forment le répertoire : 128 entrées au format CP/M 2.2 (EXM=1) |
+| 3-66 | système (16 Ko) ; 67 libre |
+| 68-2715 | 331 blocs de 2 Ko. Les blocs 0 et 1 forment le répertoire : 128 entrées au format CP/M 2.2 (numéros de bloc sur 16 bits, une entrée par extent de 16 Ko : EXM=0) ; blocs 2 à 330 : les fichiers (658 Ko) |
+| 2716-2719 | inutilisés |
+
+L'entrée 0 du répertoire est l'étiquette du format (octet 0 = `$20`, puis `CPA-2X80-2K`) :
+CP/A refuse une disquette qui ne l'a pas. Il reste 127 entrées pour les fichiers ; un fichier
+de plus de 16 Ko en prend une par tranche de 16 Ko.
 
 Les écritures passent par un tampon en écriture différée. Il faut fermer un fichier (fonction 16)
 pour que ses données et son entrée de répertoire soient à jour sur la disquette.
@@ -1348,6 +1365,8 @@ pour que ses données et son entrée de répertoire soient à jour sur la disque
     python3 tools/mkdisk.py era build/cpa.dsk NOTES.TXT
     python3 tools/mkdisk.py attr build/cpa.dsk NOTES.TXT RO      # RO RW SYS DIR
     python3 tools/mkdisk.py new donnees.dsk [fichiers...]    # disquette de données (B: à D:)
+    python3 tools/mkdisk.py check build/cpa.dsk              # cohérence de l'image
+    python3 tools/mkdisk.py conv ancienne.dsk nouvelle.dsk   # 42 pistes -> 80 pistes
 
 Les fichiers texte (`.ASM`, `.INC`, `.LOG`, `.GRX`, `.TXT`, `.BAT`, `.CFG`, `.DOC`, `.SUB`,
 `.PRN`, `.LST`) sont mis en fins de ligne CR LF, celles de CP/M, par `put` et `new` (donc aussi

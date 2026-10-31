@@ -18,6 +18,7 @@ m_abs2  .asc " missing or empty",13,10,0
 m_wp    .asc 13,10,"Disk write-protected",13,10,0
 m_inc   .asc 13,10,"Track only partly written",13,10,0
 m_verr  .asc 13,10,"Verify : error on sector ",0
+m_42    .asc "42-track image? 80 tracks needed",13,10,0
 m_trk   .asc "Track ",0
 m_face  .asc " side ",0
 K_YES   = "Y"           ; touche Oui (Yes)

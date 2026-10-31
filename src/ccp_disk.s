@@ -296,9 +296,10 @@ nocr    lda ccp_cnt
         bne free
         rts
 free    jsr count_free          ; espace libre en Ko = blocs * 2
+        lda fs_c0
         asl
         tax
-        lda #0
+        lda fs_c1
         rol
         tay
         txa

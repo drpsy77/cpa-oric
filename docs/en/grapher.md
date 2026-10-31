@@ -761,7 +761,7 @@ the LOCI's USB key, tape mounted from the LOCI's menu; in Oricutron, `-t NAME.TA
   are 69 KB on the disk, no program takes them all). A `.GRX` does not exceed ~17 KB
   interpreted (text and arrays together) nor ~20 KB for GRXASM (text from `$4E6F` to
   `$9CE0`). Worst case for a 17 KB `.GRX`: a 145 to 175 KB `.ASM` and a ~30 KB `.COM`, both
-  present during assembly, so ~200 KB on the project disk (336 KB); `/C` then leaves only
+  present during assembly, so ~200 KB on the project disk (658 KB); `/C` then leaves only
   the `.COM`. The limit that matters is memory: the `.COM` and its arrays fit between
   `$0500` and `$9D60` (~38 KB); 30 KB of code leave only ~8 KB of arrays.
 - **Speed**: 150 to a few hundred lines per second interpreted (a sky of 400 stars,

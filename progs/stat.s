@@ -27,11 +27,12 @@ nz      = $1A
 pad     = $1B           ; 1 = sur 6 colonnes
 sptr    = $1C           ; 2 octets
 recs    = $1E           ; 2 octets
-used    = $20           ; blocs occupés
+used    = $20           ; blocs occupés (2 octets : used, usedh)
 nro     = $21           ; fichiers protégés
 nsy     = $22           ; fichiers système (cachés de DIR)
-
-NBLK    = 168           ; blocs de données (170 moins le répertoire)
+usedh   = $23
+fl      = $24           ; blocs libres (2 octets)
+fh      = $25
 
         *= $0500
 start
@@ -242,6 +243,7 @@ q       sta fcb,y
         lda FCB1                ; lecteur donné (STAT B:), sinon courant
         sta fcb
         sty used
+        sty usedh
         sty pad
         lda #"?"
         sta fcb+12
@@ -249,10 +251,14 @@ q       sta fcb,y
         jsr bdos_fcb
 loop    cmp #$FF
         beq done
-        ldy #16
+        ldy #16                 ; blocs de l'entrée (16 bits)
 bl      lda DEF_DMA,y
+        iny
+        ora DEF_DMA,y
         beq nb
         inc used
+        bne nb
+        inc usedh
 nb      iny
         cpy #32
         bne bl
@@ -280,13 +286,17 @@ msk     rol
 ok      lda #<m_free
         ldy #>m_free
         jsr puts
-        lda #NBLK               ; en Ko : blocs libres * 2
+        lda #<(D_NBLK-2)        ; blocs libres (sans le répertoire)
         sec
         sbc used
-        pha
+        sta fl
+        lda #>(D_NBLK-2)
+        sbc usedh
+        sta fh
+        lda fl                  ; en Ko : blocs libres * 2
         asl
         sta num
-        lda #0
+        lda fh
         rol
         sta num+1
         lda #0
@@ -295,10 +305,12 @@ ok      lda #<m_free
         lda #<m_free2
         ldy #>m_free2
         jsr puts
-        pla
+        lda fl
         sta num
-        lda #0
+        lda fh
         sta num+1
+        lda #0
+        sta num+2
         jsr pdec
         lda #<m_free3
         ldy #>m_free3
