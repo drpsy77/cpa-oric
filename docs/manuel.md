@@ -70,8 +70,8 @@ Autres programmes de la disquette :
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
 - `MKTAP.COM NOM fic adr [/R]...` : fichier `.TAP` pour l'Oric sous BASIC, code machine,
   données ou programme BASIC écrit dans EDIT (voir « Publier pour l'Oric sous BASIC »).
-- `TERM.COM [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série »).
-- `XFER.COM R|E fic [nom] [/T]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
+- `TERM.COM [hote] [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série » et « Les hôtes : HOSTS »).
+- `XFER.COM R|E fic [nom] [/T] [@hote]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
@@ -689,6 +689,7 @@ c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
 | Commande, touche | Effet |
 |---|---|
 | `TERM` | terminal (9600 bauds, 8 bits, sans parité, 1 bit d'arrêt) |
+| `TERM hote` | compose d'abord le numéro de `hote` (nom du fichier `HOSTS`, adresse IP ou nom DNS, `:port` facultatif, port 23 par défaut), puis terminal ; si l'appel échoue, TERM s'arrête |
 | `TERM /E` | écho local : affiche aussi ce qu'on tape (pour un correspondant qui ne le renvoie pas, comme `nc` sur le Mac ; le modem, lui, le renvoie en mode commande) |
 | `TERM /L` | RETURN envoie CR LF au lieu de CR seul (pour un correspondant qui attend LF, comme `nc` : `TERM /E /L`) |
 | `TERM /D` | diagnostic : registres de l'ACIA (état, commande, contrôle) relus avant et après le réglage (après : commande `0B`, contrôle `1E`), puis chaque changement de l'état entre crochets (`[10]` émetteur libre, `[18]` caractère reçu, bit 6 (`$40`) : pas de modem) |
@@ -703,6 +704,12 @@ c'est l'ACIA d'Oricutron en `$031C`. La première ligne dit lequel est utilisé.
     AT
     OK
     ATDT-192.168.1.20:2323
+
+    A>TERM BBS
+    TERM : modem du LOCI (ACIA 0380)
+    CTRL-Q : quitter. Essai : AT, ATI
+    Appel de bbs.exemple.org:23...
+    CONNECT
 
 Commandes du modem : `AT?` (liste), `ATI` (état, adresse IP), `ATDT-hote:port` (connexion
 sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `ATH`
@@ -723,7 +730,39 @@ sans telnet), `+++` encadré d'une seconde de pause (retour au mode commande), `
   les menus (FUNCT), le LOCI garde ce qui arrive.
 - Dans Oricutron : `serial = 'loopback'` dans `oricutron.cfg` renvoie chaque caractère
   envoyé ; `serial = 'modem'` relie l'ACIA à un modem simulé (commandes AT réduites ;
-  numéro sans tiret : `ATDT127.0.0.1:2323`).
+  numéro sans tiret : `ATDT127.0.0.1:2323` ; TERM et XFER le savent quand ils composent).
+
+## Les hôtes : HOSTS
+
+Le fichier `HOSTS` donne un nom court aux machines qu'on appelle : `TERM MAC`, `XFER R
+LETTRE.TXT @MAC`. Le modem résout les noms DNS mais pas les noms en `.local`, et ses
+numéros abrégés ne se mettent pas à jour : sans `HOSTS`, il faudrait taper l'adresse IP du
+Mac à chaque fois. C'est un texte, modifiable dans EDIT (`EDIT HOSTS`) ou sur le Mac, une
+ligne par hôte :
+
+    ; HOSTS : un hote par ligne, son nom
+    ; puis son adresse (IP ou nom DNS),
+    ; :port facultatif.
+    mac     192.168.1.20
+    pi      192.168.1.30
+    bbs     =bbs.exemple.org
+
+- Nom : 15 caractères au plus, majuscules et minuscules confondues. Une ligne qui commence
+  par `;` ou par un blanc est ignorée.
+- Port : celui de la ligne (`mac 192.168.1.20:2400`), sinon celui du programme : TERM 23,
+  XFER 2323 (le serveur `xfer_server.py`), REMOTE 2324 (la console à distance, à venir).
+  Un même nom sert donc à tous. `MAC:2400` sur la ligne de commande force le port.
+- `+` ou `=` devant l'adresse : telnet simulé ou vrai (pour un BBS) ; sans signe, des
+  octets bruts (`ATDT-`), ce que veulent XFER et la console à distance.
+- `HOSTS` est cherché sur le lecteur courant, puis sur A:. Chaque disquette amorçable en
+  a un (caché, modifiable), avec les deux lignes d'exemple, à corriger.
+- Un nom absent de `HOSTS` (ou sans fichier) part tel quel au modem : une adresse IP ou un
+  nom DNS (`TERM ipinfo.io:80`).
+- L'appel : `AT`, puis `ATDT-adresse:port`, et `CONNECT` attendu 20 s au plus (ESC pour
+  renoncer). Si le modem ne répond pas à `AT`, la liaison est sans doute restée ouverte :
+  `+++` et `ATH0` d'abord (quelques secondes de plus). Messages : `Appel de
+  adresse:port...`, puis la réponse du modem (`CONNECT`, `NO CARRIER`, `BUSY`...), ou `Pas
+  de reponse du modem`, `Appel abandonne (ESC)`.
 
 ## Transfert de fichiers : XFER
 
@@ -733,26 +772,27 @@ sur un Raspberry Pi du même réseau :
 
     python3 tools/xfer_server.py --dir ~/Oric/echange      (port 2323 par défaut)
 
-Il sert les fichiers du dossier donné. Sur l'Oric, la liaison s'établit d'abord par TERM,
-puis XFER s'utilise autant de fois qu'on veut :
+Il sert les fichiers du dossier donné. Sur l'Oric, le premier XFER compose le numéro du
+serveur (`@hote`, pris dans `HOSTS`) ; la liaison reste ouverte, et les XFER suivants s'en
+servent sans `@` :
 
-    A>TERM
-    ATDT-192.168.1.20:2323
+    A>XFER E LETTRE.TXT @MAC
+    Appel de 192.168.1.20:2323...
     CONNECT
-    XFER : serveur CP/A pret
-    (CTRL-Q : TERM s'arrête, la liaison reste ouverte)
-    A>XFER E LETTRE.TXT
     Envoi de LETTRE.TXT
     Bloc 12 : termine
     A>XFER R B:JEU.GRX jeu.grx
     Reception de jeu.grx
     Bloc 40 : termine
 
+La liaison peut aussi s'ouvrir à la main par TERM (`ATDT-192.168.1.20:2323`, puis CTRL-Q).
+
 | Commande | Effet |
 |---|---|
 | `XFER E fic [nom]` | envoie `fic` (lecteur facultatif) ; sur le serveur, il s'appelle `nom`, ou `fic` sans le lecteur ; un nom tapé tout en majuscules y est écrit en minuscules ; un fichier du même nom y est remplacé |
 | `XFER R fic [nom]` | reçoit `nom` (ou `fic`, sans tenir compte des majuscules) et l'écrit dans `fic` |
 | `/T` | texte : à l'envoi vers l'Oric, le serveur passe les fins de ligne LF du Mac en CR LF, une tabulation en espace, et le texte en ASCII (UTF-8 du Mac, ou Windows-1252) : accents et cédille retirés (`é` -> `e`, `ç` -> `c`), lettres liées dépliées (`œ` -> `oe`, `æ` -> `ae`), guillemets et tirets typographiques simplifiés, `?` pour le reste ; dans l'autre sens, CR LF en LF |
+| `@hote` | compose d'abord le numéro du serveur (« Les hôtes : HOSTS » ; port 2323 par défaut) ; à mettre en dernier ; un `@hote` sur une liaison déjà ouverte la raccroche et rappelle |
 | ESC | annule le transfert en cours |
 
 - Pas de jokers : un fichier à la fois.
@@ -765,10 +805,11 @@ puis XFER s'utilise autant de fois qu'on veut :
 - Les `^Z` qui complètent le dernier enregistrement sont retirés sur le serveur (même règle
   que STAT et EXPORT) : un texte y arrive à sa vraie taille.
 - Messages : `Serveur : fichier absent` (le serveur n'a pas `nom`), `Serveur : refus` (nom
-  avec un chemin), `Pas de reponse du serveur` (liaison non établie : passer par TERM), `Pas de modem (DSR)`.
+  avec un chemin), `Pas de reponse du serveur` (liaison non établie : ajouter `@hote`), `Pas de modem (DSR)` ; ceux de l'appel sont dans « Les hôtes : HOSTS ».
 - XFER ne refait pas le réglage du port s'il est déjà fait : la liaison ouverte par TERM
   reste en place. Le serveur affiche chaque transfert dans son terminal.
-- Dans Oricutron (`serial = 'modem'`) : `ATDT127.0.0.1:2323` dans TERM (sans tiret).
+- Dans Oricutron (`serial = 'modem'`) : `XFER E LETTRE.TXT @127.0.0.1`, ou une ligne
+  `oric 127.0.0.1` dans `HOSTS`.
 
 ## Démarrage et reprise après plantage
 

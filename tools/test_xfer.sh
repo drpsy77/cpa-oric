@@ -1,7 +1,8 @@
 #!/bin/sh
 # XFER.COM et tools/xfer_server.py, de bout en bout dans Oricutron : le
 # modem d'Oricutron (serial = 'modem', ACIA en $031C) se connecte en TCP
-# au serveur lancé ici ; TERM compose le numéro, puis XFER transfère.
+# au serveur lancé ici ; XFER compose le numéro (@ORIC, pris dans un
+# fichier HOSTS mis sur la disquette), puis transfère.
 #   - E puis R d'un texte de cpa.dsk : identique dans les deux sens (^Z de
 #     fin retirés sur le serveur) ;
 #   - fichier de 40 Ko (plus de 255 blocs : numéros qui reviennent à 0)
@@ -13,7 +14,11 @@
 #   - ESC pendant une réception : annulé, ni NOM ni NOM.$$$ sur le disque ;
 #   - erreurs simulées par le serveur (--fautes) à chaque transfert : bloc
 #     abîmé (NAK, renvoyé), bloc répété (ignoré), bloc refusé, acquit perdu
-#     (l'Oric renvoie le bloc au bout de 10 s).
+#     (l'Oric renvoie le bloc au bout de 10 s) ;
+#   - seconde passe en temps réel (le +++ du modem compte en secondes
+#     vraies), sans HOSTS : adresse tapée (@127.0.0.1:port), nouvel appel
+#     sur une liaison restée ouverte (+++, ATH0), TERM vers un hôte
+#     inconnu (BUSY).
 #   tools/test_xfer.sh
 set -e
 cd "$(dirname "$0")/.."
@@ -31,8 +36,11 @@ E
 python3 tools/xfer_server.py --port $PORT --dir "$T/srv" --once --fautes > "$T/srv.log" 2>&1 &
 SRV=$!
 sleep 1
-K="term\n|atdt127.0.0.1:$PORT\n||\034q|"
-K="${K}xfer e readme.txt\n||||||"
+cp build/cpa.dsk "$T/a.dsk"
+printf '; essai\n  blanc ignore\nautre 10.0.0.1\nORIC 127.0.0.1:%s\n' $PORT > "$T/hosts"
+python3 tools/mkdisk.py era "$T/a.dsk" HOSTS > /dev/null
+python3 tools/mkdisk.py put "$T/a.dsk" "$T/hosts" HOSTS > /dev/null
+K="xfer e readme.txt \0172oric\n||||||"
 K="${K}xfer r copie.txt readme.txt\n||||||"
 K="${K}xfer r b:gros.bin\n||||||||||||||||||||||||||||||||||||||||||||||||||"
 K="${K}xfer e b:gros.bin retour.bin\n||||||||||||||||||||||||||||||||||||||||||||||||||"
@@ -45,10 +53,23 @@ K="${K}xfer r readme.txt\n||||"
 K="${K}xfer r b:stop.bin gros.bin\n||\033||||"
 K="${K}dir b:\n|"
 KEYS=$(printf "$K")
-DSK=build/cpa.dsk DSKB=build/cpa-projet.dsk ORIC_KEYS_AT=400 ORIC_WARP=1 \
+DSK="$T/a.dsk" DSKB=build/cpa-projet.dsk ORIC_KEYS_AT=400 ORIC_WARP=1 \
   ORIC_CFG="serial = 'modem'" tools/run_test.sh "$KEYS" 60000 "$T/o" >/dev/null 2>&1 || true
 kill $SRV 2>/dev/null || true
 python3 tools/screen.py "$T/o.mem" > "$T/screen.txt" 2>/dev/null || true
+# seconde passe, en temps réel, sans HOSTS
+python3 tools/mkdisk.py era "$T/a.dsk" HOSTS > /dev/null
+python3 tools/xfer_server.py --port $PORT --dir "$T/srv" > "$T/srv2.log" 2>&1 &
+SRV=$!
+sleep 1
+K="xfer r h.txt readme.txt \0172127.0.0.1:$PORT\n||||"
+K="${K}xfer r h2.txt readme.txt \0172127.0.0.1:$PORT\n||||||||"
+K="${K}term pasla\n|||||"
+KEYS=$(printf "$K")
+DSK="$T/a.dsk" ORIC_KEYS_AT=400 ORIC_CFG="serial = 'modem'" \
+  tools/run_test.sh "$KEYS" 3800 "$T/p" >/dev/null 2>&1 || true
+kill $SRV 2>/dev/null || true
+python3 tools/screen.py "$T/p.mem" > "$T/screen2.txt" 2>/dev/null || true
 rc=0
 python3 - "$T" "$R" <<'E' || rc=1
 import sys, subprocess
@@ -67,6 +88,7 @@ def strip(b):
     return b.rstrip(b"\x1a")
 srv = T + "/srv/"
 screen = open(T + "/screen.txt").read()
+screen2 = open(T + "/screen2.txt").read()
 ko = 0
 def check(ok, what):
     global ko
@@ -88,11 +110,17 @@ check("pas de jokers" in screen, "jokers refuses")
 check("protege" in screen and get(T + "/o.dsk", "README.TXT") == readme, "R/O garde")
 check("Annule (ESC)" in screen and get(T + "/o.b.dsk", "STOP.BIN") is None
       and get(T + "/o.b.dsk", "STOP.$$$") is None, "ESC : rien d'ecrit")
+check("connexion de" in open(T + "/srv.log").read() and rd(srv + "readme.txt") is not None,
+      "@ORIC : appel par HOSTS (premier transfert, sans TERM)")
+check(get(T + "/p.dsk", "H.TXT") == readme, "@adresse:port : appel sans HOSTS")
+check(get(T + "/p.dsk", "H2.TXT") == readme, "nouvel appel sur une liaison ouverte (+++, ATH0)")
+check("Appel de pasla:23" in screen2 and "BUSY" in screen2, "TERM : hote inconnu")
 log = open(T + "/srv.log").read()
 for f in ("bloc 3 abime", "bloc 4 repete", "bloc 2 refuse", "acquit du bloc 5 perdu"):
     check("faute : " + f in log, "erreur simulee : " + f)
 if ko:
     print(screen)
+    print(screen2)
     print(open(T + "/srv.log").read())
 sys.exit(1 if ko else 0)
 E

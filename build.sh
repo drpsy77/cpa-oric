@@ -131,7 +131,8 @@ ASM_EX="$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # Disquette système (cpa.dsk) : tous les programmes, sauf LOGO (il a sa
 # disquette) et les exemples (disquette Exemples) ; HELP garde toutes ses
 # rubriques. Tout est protégé (R/O). Cachés (SYS, montrés par DIRS) : les
-# commandes de base, MEM/POKE/GO, les bibliothèques, EDIT.CFG (modifiable) ;
+# commandes de base, MEM/POKE/GO, les bibliothèques, EDIT.CFG et HOSTS
+# (modifiables) ;
 # DIR montre les applications, et un nouveau programme y apparaît de lui-même.
 SYS_CACHES="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/MEM.COM $P/POKE.COM $P/GO.COM files/usbcd.bat"
@@ -140,19 +141,19 @@ SYS_VISIBLES=""
 for f in $P/*.COM files/readme.txt; do
   case " $(echo $SYS_CACHES $SYS_AILLEURS) " in *" $f "*) ;; *) SYS_VISIBLES="$SYS_VISIBLES $f" ;; esac
 done
-disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/edit.cfg \
+disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/edit.cfg files/hosts \
   --ro --dir $SYS_VISIBLES
 
 # Disquettes par usage : chacune démarre seule et porte ses outils. Les
 # commandes de base, la clé USB, TERM et XFER y sont protégées et cachées
-# (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la disquette
+# (SYS), EDIT.CFG et HOSTS modifiables et cachés, EDIT et l'outil de la disquette
 # protégés et visibles, les exemples modifiables (ASM HELLO réécrit
 # HELLO.COM, LOGO réécrit DEMO.LOG).
 BASE="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
   $P/TERM.COM $P/XFER.COM $P/CMDER.COM files/usbcd.bat"
 theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
-  disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg \
+  disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg files/hosts \
     --ro --dir $P/EDIT.COM $3 --rw $5
 }
 # Animations : VOIR et VSYNC visibles, GRAPHER, GRXASM, ASM et les

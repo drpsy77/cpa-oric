@@ -1,8 +1,13 @@
 ; =====================================================================
 ;  TERM.COM — petit terminal série : parler au modem WiFi et aux serveurs
 ;
-;  TERM [/E] [/L] [/D] [/B]
+;  TERM [hote] [/E] [/L] [/D] [/B]
 ;    Ce qu'on tape part vers le port série ; ce qui arrive s'affiche.
+;    hote   : compose d'abord le numéro (nom du fichier HOSTS, adresse IP
+;             ou nom DNS, « :port » facultatif ; port 23 par défaut ;
+;             « @ » en tête accepté) : acia_inc.s, ac_dial. Sans hôte,
+;             la liaison déjà ouverte sert, ou l'on compose à la main
+;             (ATDT-adresse:port).
 ;    CTRL-Q : quitter (la liaison reste ouverte : DTR reste actif).
 ;    /E     : écho local (pour un serveur qui ne renvoie pas les
 ;             caractères ; le modem, lui, les renvoie en mode commande).
@@ -47,6 +52,7 @@ diag    = $16           ; 1 = diagnostic (/D)
 last    = $17           ; dernier état affiché (/D)
 wascr   = $18           ; 1 = dernier caractère reçu CR, 2 = LF seul (début de ligne)
 crlf    = $19           ; 1 = RETURN envoie CR LF (/L)
+hostx   = $1A           ; position de l'hôte dans TAIL+1 ($FF : aucun)
 
         *= $0500
 start
@@ -60,7 +66,25 @@ start
         sta blind
         sta wascr
         sta crlf
-        ldx #0                  ; options /E, /L, /D, /B
+        lda #$FF                ; hôte : premier mot qui n'est pas une option
+        sta hostx
+        ldx #0
+w0      lda TAIL+1,x
+        beq w3
+        cmp #" "
+        beq w2
+        cmp #"/"
+        beq w1
+        stx hostx
+        bne w3                  ; (toujours : Z=0 après cmp)
+w1      inx                     ; option : sautée jusqu'au blanc
+        lda TAIL+1,x
+        beq w3
+        cmp #" "
+        bne w1
+w2      inx
+        bne w0
+w3      ldx #0                  ; options /E, /L, /D, /B
 op      lda TAIL+1,x
         beq opd
         cmp #"/"
@@ -99,11 +123,20 @@ hello   ldx #F_PRINT
         jsr dregs               ; /D : et après
         jsr ac_rsta
         and #$40                ; DSR absent : pas de modem branché
-        beq loop
+        beq dial
         lda #<m_nodsr
         ldy #>m_nodsr
         ldx #F_PRINT
         jsr BDOS
+dial    ldx hostx               ; hôte : composer d'abord
+        bmi loop
+        lda #<p23
+        ldy #>p23
+        jsr ac_dial
+        bcc loop
+        lda savpg
+        sta PAGE_ON
+        rts
 
 loop    jsr ac_rsta             ; reçu ?
         ldx diag
@@ -283,5 +316,11 @@ p       dey
         rts
 .)
 
+p23     .asc "23",0             ; port par défaut (telnet)
+
+#include "acia.msg"
 #include "acia_inc.s"
 #include "term.msg"
+
+endp                            ; hors du fichier
+ac_wrk  = endp                  ; 266 octets : HOSTS, réponses du modem

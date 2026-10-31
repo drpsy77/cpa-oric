@@ -165,6 +165,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `tools/test_logo.sh` | LOGO.COM : scénarios `tools/logo_tests/*.log` comparés aux `.ref` (texte, images) ; `REF=1` réécrit les références |
 | `tools/run_test.sh TOUCHES TRAME SORTIE` | émulateur piloté : frappe, vidage, capture |
 | `python3 tools/screen.py SORTIE.mem` | écran texte du vidage |
+| `python3 tools/oric_ecran.py SORTIE.mem IMAGE.png` | écran du vidage dessiné comme l'ULA (police de CP/A, attributs), pour la console à distance (`docs/console-distance.md` § 9) |
 | `python3 tools/run_com.py DOSSIER PROG.COM args` | `.COM` dans un 6502 simulé (BDOS minimal) |
 | `python3 tools/mkdisk.py ls IMAGE` | contenu d'une disquette |
 | `python3 tools/mkdisk.py get IMAGE NOM.EXT [local]` | extraire un fichier (ex. un `.ASM` écrit sur l'Oric) |
