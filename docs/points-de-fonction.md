@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 0 | 30 | 13 | 9 | **80** | 17 | **97** |
+| USB | 28 | 0 | 30 | 18 | 9 | **85** | 20 | **105** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *47* | *431* | *105* | *111* | ***862*** | *217* | ***1079*** |
+| *Applications* | *168* | *47* | *431* | *110* | *111* | ***867*** | *220* | ***1087*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 29 | 118 | 18 | **187** | 45 | **232** |
-| **Total** | **220** | **77** | **661** | **315** | **207** | **1480** | **347** | **1827** |
+| Outillage PC | 7 | 15 | 29 | 122 | 18 | **191** | 46 | **237** |
+| **Total** | **220** | **77** | **661** | **324** | **207** | **1489** | **351** | **1840** |
 
-Points ajustés (indicatif, § 9) : 1 480 × 1,05 ≈ 1 554.
+Points ajustés (indicatif, § 9) : 1 489 × 1,05 ≈ 1 563.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 210 EI, 77 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 15 EIF, 210 EI, 79 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -599,6 +599,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T12 | XFER R : réception d'un fichier (nom distant, `/T`, `NOM.$$$`, R/O gardé, ESC, refus du serveur) | EI | 2 | 6 | M | 4 |
 | USB.T13 | XFER E : envoi d'un fichier (nom distant, `/T`, absent, refus du serveur) | EO | 1 | 5 | F | 4 |
 | USB.T14 | USBDIR /C (USBCD) : changer de répertoire courant (répertoire vérifié, `0:CPA.CWD`, écrit en retour ; sans chemin : CMDER) | EI | 1 | 3 | F | 3 |
+| USB.T15 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 (numéros, ordre, minuscules, avertissement au-delà de 78 caractères, refus) | EO | 2 | 8 | M | 5 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -611,6 +612,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.A07 | Jokers `*` et `?` (retour arrière sur le dernier `*`), nom unique | `ljok_inc.s` | 1 |
 | USB.A08 | Changement d'image sans commande vers un lecteur vide (A: en service, lecteurs relus, lecteur courant rendu) ; image déjà montée (getcwd + nom du menu) | `lmnt_inc.s` | 3 |
 | USB.A09 | XMODEM : blocs numérotés (modulo 256), CRC-16 bit à bit ou somme, NAK et reprises, bloc répété ignoré, délais, annulation | `xfer.s` | 3 |
+| USB.A10 | Codage BASIC de la ROM 1.1 suivi pas à pas (`TokeniseLine`, `Txt2Int`), table des mots-clés, liens des lignes | `mktap.s` | 3 |
 
 ### 4.8 ASM
 
@@ -797,6 +799,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T42 | `test_oric.sh` : GRXASM `/O`, ASM `/T`, `.TAP` chargés sous BASIC 1.1 (`build/tap/`) | EO | 2 | 3 | F | 4 |
 | OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte et accents en ASCII, noms, erreurs simulées) | EI | 2 | 6 | M | 4 |
 | OUT.T44 | `test_xfer.sh` : XFER de bout en bout dans Oricutron (modem simulé, serveur) | EO | 2 | 4 | F | 4 |
+| OUT.T45 | `test_bas.py` : codage des `.BAS` contre la ROM BASIC 1.1 dans le 6502 simulé | EO | 1 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -817,6 +820,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.A15 | Comptage des lignes, contrôle des matrices IFPUG | `pf_mesure.py` | 1 |
 | OUT.A16 | Lecture tolérante des images, cohérence des fichiers (extents, blocs), blocs libres écrits, comparaison de deux images | `mkdisk.py` | 3 |
 | OUT.A17 | Scénarios d'enregistrement : disquettes remplies, RESET balayé (fenêtre d'écriture, puis trame par trame) | `test_fichiers.py` | 3 |
+| OUT.A18 | ROM BASIC 1.1 exécutée depuis sa saisie (`CHRGET` recopiée, arrêt avant l'insertion de la ligne), lignes tirées au hasard | `test_bas.py` | 1 |
 
 ## 7. Mesures
 
@@ -831,37 +835,37 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 28 | 5 808 | 591 | 229 | 0 | 9 % | 13 467 | 73 | 168 |
+| USB | 28 | 5 808 | 591 | 229 | 0 | 9 % | 13 467 | 68 | 158 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 178 | 9 030 | 1 121 | 592 | 0 | 11 % | — | 48 | — |
-| **Total** | 367 | 74 222 | 6 182 | 2 968 | 2 630 | 8 % | 160 028 | 50 | 108 |
+| Outillage PC | 178 | 9 035 | 1 134 | 595 | 0 | 11 % | — | 47 | — |
+| **Total** | 367 | 74 227 | 6 195 | 2 971 | 2 630 | 8 % | 160 028 | 50 | 107 |
 
 Octets du système : code résident 13 388 (`$C000-$F44C`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 500 | 83 | 4,6 | 89 |
+| Système et commandes | 1 537 | 83 | 4,7 | 90 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 978 | 70 | 4,2 | 40 |
+| GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
 | LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 235 | 26 | 2,6 | 17 |
+| CMDER | 235 | 26 | 2,6 | 18 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 4 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 80 | 13 | 1,0 | 24 |
+| USB | 80 | 13 | 0,9 | 24 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 26 |
-| Outillage PC | 345 | — | 1,8 | 127 |
-| Transverse (projet) | 2 545 | — | — | 91 |
-| Traduction anglaise (docs/en) | 2 808 | — | — | 42 |
-| **Total** | 9 252 | 319 | 6,3 | 218 |
+| Outillage PC | 345 | — | 1,8 | 131 |
+| Transverse (projet) | 2 574 | — | — | 92 |
+| Traduction anglaise (docs/en) | 2 843 | — | — | 43 |
+| **Total** | 9 353 | 319 | 6,3 | 222 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 218 commits du 2026-10-04 au 2026-10-31.
+Historique : 222 commits du 2026-10-04 au 2026-10-31.
 
 Réutilisation : 55 391 lignes de code écrites dans `progs/`, 64 060 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
@@ -930,6 +934,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-28 | clé USB, lot 3 | 0.9 | 1 458 | 343 | 1 801 | 204 | CMDER sur la clé : renommer, effacer, dupliquer (`^U`), monter (`^O`) ; nom des disquettes dans les en-têtes ; saisie longue |
 | 2026-10-30 | XFER | 0.9 | 1 474 | 346 | 1 820 | 208 | `XFER.COM` : envoi et réception par le modem (XMODEM-CRC) ; `tools/xfer_server.py`, `test_xfer.sh` ; `acia_inc.s` commun à TERM et XFER ; TERM : LF seul affiché en CR LF |
 | 2026-10-30 | fenêtre, lot 1 | 0.9 | 1 480 | 347 | 1 827 | 214 | PUT et démarrage à froid dans la fenêtre `$F7C0-$FCFF` (~580 octets résidents rendus) ; `AUTO.BAT` ; TERM par la fonction 2 du BDOS ; PUT referme le fichier après un disque plein |
+| 2026-10-31 | MKTAP .BAS | 0.9 | 1 489 | 351 | 1 840 | 223 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1, en `$0501`, `/R` ; `test_bas.py` (codage contre la ROM dans le 6502 simulé) ; `.BAS` en texte pour `mkdisk.py` |
 
 ## 11. Comparaisons
 

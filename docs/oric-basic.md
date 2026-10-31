@@ -70,17 +70,41 @@ GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Trois étages : 
   `tools/test_mktap.sh` (MKTAP.COM contre `mktap.py` dans le 6502 simulé, puis chargement
   sous BASIC 1.1 dans Oricutron : chargeur, code, données, BASIC encore modifiable).
 
-**Décidé, pas encore fait : programmes BASIC en texte.** MKTAP accepte un fichier `.BAS`
-(programme BASIC écrit dans EDIT, avec ses numéros de ligne) et le code comme le ferait la ROM
-(mots-clés en un octet, sauf entre guillemets, après `REM` et selon la règle de `DATA`) ; le
-bloc va en `$0501`, avec l'octet de plus du § 1, et peut voisiner avec des blocs de langage
-machine dans le même `.TAP`. Le codage imite celui de la ROM 1.1 (ordre de sa table des
-mots-clés), pas celui de bas2tap. Essai : le même programme tapé dans Oricutron sous BASIC,
-mémoire comparée octet par octet ; `tools/mktap.py` fait de même sur le PC. Taille estimée :
-~2 Ko de plus (table des mots-clés ~500 octets). À décider : les minuscules (la ROM ne
-reconnaît les mots-clés qu'en majuscules), les lignes plus longues que l'éditeur de l'Oric
-(~78 caractères). Plus tard, le sens inverse (`.TAP` vers texte) pour reprendre de vieux
-programmes dans EDIT.
+**Programmes BASIC en texte (fait)** : MKTAP accepte un fichier `.BAS` (programme BASIC écrit
+dans EDIT, avec ses numéros de ligne), un seul, sans adresse ; il le code comme la ROM 1.1
+quand on tape les lignes et en fait un bloc BASIC (type `$00`) en `$0501`, avec l'octet de plus
+du § 1 ; `/R` le lance (`RUN`) à la fin du chargement. Il peut voisiner avec des blocs de
+langage machine dans le même `.TAP` (le programme les charge par `CLOAD""`) ; `/R` ne va alors
+que sur lui, le chargeur des autres blocs prenant `$0501` aussi. Mode d'emploi :
+`docs/manuel.md`, « Un programme BASIC écrit dans EDIT ».
+
+- **Codage** : celui de `TokeniseLine` (`$C5FA`), suivi pas à pas : espaces gardés ; texte
+  recopié entre guillemets, après `REM` et dans un `DATA` jusqu'au `:` ; `?` = `PRINT` ;
+  chiffres, `:` et `;` recopiés ; ailleurs, le premier mot-clé de la table de la ROM (ordre de
+  `$C0EA`, pas celui de bas2tap) qui commence là, même au milieu d'un nom (`SCORE` : `SC OR
+  E`), sinon le caractère. Le numéro est lu comme `Txt2Int` (`$CAE2`) : espaces admis entre les
+  chiffres, refus dès 6400 avant un chiffre de plus (63999 au plus).
+- **Choix** : les minuscules passent en majuscules hors du texte (entre guillemets, après
+  `REM`, dans un `DATA`, elles restent) ; une ligne de plus de 78 caractères (l'éditeur de
+  l'Oric s'arrête là, `GetLine` `$C592`) est acceptée avec un avertissement ; une ligne codée
+  sur plus de 250 octets est refusée (`LIST` parcourt une ligne avec un index d'un octet) ;
+  numéros strictement croissants (pas de tri ni de remplacement comme à la saisie) ; lignes
+  vides et lignes réduites à un numéro ignorées ; caractères de contrôle retirés (le clavier
+  n'en met pas dans une ligne) ; code 128 ou plus hors du texte refusé (la ROM couperait la
+  ligne) ; fin du programme en `$97FF` au plus.
+- **Cible** : la ROM 1.1 (Atmos). La table de la ROM 1.0 (Oric-1, même adresse) ne diffère
+  qu'en deux rangs (`$82`-`$83` : `INVERSE`, `NORMAL` au lieu de `STORE`, `RECALL`) et un
+  mot-clé de plus à la fin (`GO`, `$F7`) : un programme sans ces quatre mots, ni `GO` hors de
+  `GOTO` et `GOSUB` (un nom comme `GOLD` compris), est codé de même pour un Oric-1
+  (comparaison des deux tables ; pas essayé).
+- **Essais** : `tools/test_bas.py` fait tourner la ROM elle-même dans le 6502 simulé (sa saisie
+  depuis `$C4C1` : `CHRGET`, `Txt2Int`, `TokeniseLine`) et compare son codage à celui de
+  `tools/mktap.py`, sur des lignes écrites à la main et 3 000 tirées au hasard, et vérifie que
+  la table de `progs/bas_tab.s` est celle de la ROM ; `tools/test_mktap.sh` compare MKTAP.COM
+  à `mktap.py`, puis charge un `.BAS` dans Oricutron : programme lancé, octets et début des
+  variables identiques à ceux du même programme tapé au clavier.
+- **Plus tard** : le sens inverse (`.TAP` vers texte) pour reprendre de vieux programmes dans
+  EDIT.
 
 **Décidé, pas encore fait** : **`CASSETTE.COM`** écrit un `.TAP` sur le port cassette (vrai
 magnétophone) et lit une cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`,
