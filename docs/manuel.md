@@ -271,16 +271,25 @@ rubriques. Tout y est **protégé** (R/O) : un `ERA *.*` ou un nom complété pa
 rien effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis
 la copier. `DIR` y montre les applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER,
 GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) et
-README.TXT ; les commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
+README.TXT ; CPA.BNK (des parties du système chargées quand elles servent, ci-dessous), les
+commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
 MEM, POKE, GO, le script USBCD.BAT, les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
 `DIRS` les montre.
 
 SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance toujours
 (un fichier renommé `.SYS` ne serait plus une commande : le CCP ne lance que `.COM` et `.BAT`).
 
+**CPA.BNK** porte des parties du système qui ne restent pas en mémoire : GSAVE, GLOAD et SAVE
+(au prompt comme pour les programmes), et une copie de PUT. Il est lu quand elles servent, sur
+le lecteur courant puis sur `A:` à `D:`, comme un programme ; le premier GSAVE ou GLOAD prend
+un instant de plus, les suivants rien. Sans lui, ou s'il vient d'une autre version de CP/A,
+ces commandes répondent `CPA.BNK?` (PUT marche tant qu'il n'a pas laissé la place à GSAVE ou
+GLOAD). Il est sur toutes les disquettes amorçables ; pour une disquette faite par
+`DISKCOPY A: B: /S`, copier aussi `CPA.BNK` (`COPY A:CPA.BNK B:`).
+
 **Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables : chacune
-démarre seule et porte ses outils (un seul lecteur suffit). Sur chacune, les commandes de base
-(TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), la clé USB
+démarre seule et porte ses outils (un seul lecteur suffit). Sur chacune, CPA.BNK, les commandes
+de base (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), la clé USB
 (EXPORT, IMPORT, USBDIR, USBMOUNT, le script USBCD.BAT), TERM et XFER sont protégés et
 **cachés** (SYS) : `DIR` ne montre que l'outil de la disquette et les fichiers de travail,
 `DIRS` montre tout. EDIT y est partout, protégé et visible.
@@ -846,6 +855,9 @@ Le prompt, les commandes et les menus continuent de fonctionner sous l'image.
 mode SPLIT si besoin (la console n'est pas effacée si on y est déjà). Le fichier est la
 copie brute de `$A000-$B3FF` : 5 120 octets, attributs de couleur compris. On peut ainsi
 préparer des images (avec LOGO, ou un programme de dessin) et les recharger dans un jeu.
+GSAVE écrit d'abord `NOM.$$$`, puis efface l'ancien `NOM.IMG` et renomme : un disque plein
+laisse l'ancienne image intacte (`Disk full`), un fichier protégé est refusé (`File R/O`).
+GSAVE, GLOAD et SAVE sont lus dans `CPA.BNK` (« CPA.BNK » plus haut).
 
 Comment ça marche : comme avec le `HIRES` du BASIC, la dernière case de l'écran (`$BFDF`)
 contient l'attribut `$1E`, qui fait commencer la trame suivante en haute résolution : tout
@@ -881,7 +893,8 @@ en main avec la bibliothèque `hires.inc` (voir « HIRES plein écran »), comme
 
 GSAVE et GLOAD (version disque) prennent le type `.IMG` si le nom n'en a pas, et renvoient
 0 si tout va bien, 1 si le fichier est absent, 2 si le disque ou le répertoire est plein,
-`$FF` pour GSAVE hors du mode SPLIT. Un programme qui appelle GLOAD depuis le mode texte doit
+3 si le fichier est protégé (GSAVE), `$FF` pour GSAVE hors du mode SPLIT, et pour l'une et
+l'autre sans `CPA.BNK` (message `CPA.BNK?`). Un programme qui appelle GLOAD depuis le mode texte doit
 rester sous `$A000`.
 
 **Sans programme**, on dessine avec `GRAPHER` et un fichier `.GRX` (`docs/grapher.md`), et

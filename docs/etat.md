@@ -8,11 +8,12 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F44C` en français (`$F420` en anglais), **marge 380
-octets** jusqu'à `$F5C8` (623 sans l'option `CPLCMD`), où commencent les cartes d'allocation
-des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF` (PUT,
-marge 2 octets avant son tampon de 768 ; code du démarrage à froid dans le tampon, marge 565 ;
-`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
+**Système** : code résident `$C000-$F407` en français (`$F3DB` en anglais), **marge 449
+octets** jusqu'à `$F5C8` (692 sans l'option `CPLCMD`), où commencent les cartes d'allocation
+des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
+banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
+GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
+tampon, marge 565 (`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
 l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
@@ -31,7 +32,7 @@ l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
   scripts `.BAT` (DO, `$1`-`$9`, appel de script à script par XDO, `AUTO.BAT` au démarrage
   à froid) ; CHAIN (BDOS 47) ; PUT (sortie d'une commande dans un fichier) ;
 - imprimante Centronics (LIST, BDOS 5, CTRL-P) ;
-- graphisme SPLIT (BDOS 115), son AY (BDOS 116) ; HIRES plein écran et écran texte (LORES)
+- graphisme SPLIT (BDOS 115 ; GSAVE par `NOM.$$$`), son AY (BDOS 116) ; HIRES plein écran et écran texte (LORES)
   laissés aux programmes, avec retour assuré par le démarrage à chaud ;
 - reprise après plantage (BRK, RESET) ; un RESET pendant le transfert d'un secteur attend la
   fin du secteur (un secteur coupé, du répertoire par exemple, serait illisible) ; un
@@ -68,13 +69,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-408 Ko libres), `cpa-anim.dsk` (la démonstration, 366 Ko libres), `cpa-logo.dsk` (LOGO seul,
-522 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 372 Ko libres), `cpa-notes.dsk` (écrire, 570 Ko libres), et `cpa-projet.dsk` (vierge,
+406 Ko libres), `cpa-anim.dsk` (la démonstration, 364 Ko libres), `cpa-logo.dsk` (LOGO seul,
+520 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 370 Ko libres), `cpa-notes.dsk` (écrire, 568 Ko libres) ; `CPA.BNK` (1 408 octets,
+caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 489 points de fonction IFPUG et 351 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 489 points de fonction IFPUG et 354 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -171,7 +173,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      BASIC ; configuration du menu du LOCI tenue à jour ; `lmnt_inc.s`). Fait (lot 3,
      28/10/2026) : CMDER renomme, efface, duplique et monte sur la clé ; noms des disquettes
      dans les en-têtes ; CMDER passe à 9 blocs. Niveau 2 (un répertoire de la clé
-     comme lecteur) : après la descente de PUT en banque (§ 3).
+     comme lecteur) : après les banques de la fenêtre (§ 3 ; lots 1 et 2 faits).
    - L'équivalent de `CSAVE` est `CASSETTE.COM` (décidé, `docs/oric-basic.md` § 2). Sous
      CP/A, la ROM est remplacée par la RAM overlay : réécrire les routines cassette (timing
      à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
@@ -200,8 +202,8 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
      EDIT). Elle demande le pilote dans le BIOS, pas un `.COM` : elle doit survivre aux
      programmes.
-   - Ordre : (1) descente de PUT, lot 1 fait (§ 3 : ~580 octets résidents rendus) ;
-     (2) pilote série du BIOS, par
+   - Ordre : (1) banques de la fenêtre, lots 1 et 2 faits (§ 3) ; (2) pilote série du
+     BIOS, par
      scrutation, reprenant le code d'`acia_inc.s` : PUNCH / READER (BDOS 3
      et 4), état de la réception, console redirigée (CONST, CONIN, CONOUT ; commande et
      forme à spécifier) ; ~150 octets estimés, ~300 à prévoir.
@@ -249,10 +251,13 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      l'effacement et le renommage (variable publique en page 2, ou fonction BDOS de
      remplacement) — touche au contrat, à décider.
    - Écrivent encore en effaçant d'abord l'ancien fichier (disque plein ou RESET : ancien
-     perdu), à passer par `NOM.$$$` et à ajouter à la batterie : `GSAVE` (BDOS 115 op 12,
-     `img_save` de `src/gfx.s`, et `h_save` de `hires.inc`), LOGO (`SAUVE`, et `LOGO.$$$`
+     perdu), à passer par `NOM.$$$` et à ajouter à la batterie : `h_save` de `hires.inc`
+     (image HIRES plein écran ; en SPLIT, GSAVE du système passe déjà par `NOM.$$$`), SAVE
+     du CCP, LOGO (`SAUVE`, et `LOGO.$$$`
      de l'état), COPY et IMPORT sur un fichier existant, ASM (`.COM`, `.SYM` : refaits par
      un nouvel assemblage).
+   - GSAVE du système rend 3 pour un fichier protégé ; GRAPHER (`h_save`) et LOGO
+     (`SAUVEIMAGE`) l'affichent encore comme un disque plein : leur message à corriger.
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut
      qu'après `LOAD` ou `BLOAD`) ; une fonction du genre `EXIST("NOM")`, ou une commande qui
      pose `FOUND`, à décider.
@@ -268,7 +273,7 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      recopie dans le fichier ce qui part à l'imprimante (LIST, BDOS 5, CTRL-P, `^P` d'EDIT)
      au lieu de l'écran ; `EXPORT` le passe sur la clé, puis directement avec le lecteur
      U: (§ 2 point 9 : `PUT /P U:PRINT.TXT ...`). Coût résident : un test dans LIST vers
-     `put_char` (~10 octets), à faire avec la descente de PUT en banque (§ 3).
+     `put_char` (~10 octets ; PUT est une banque de la fenêtre, § 3).
    - **DEBUG** (décidé par Pierre le 30/10/2026, à faire avec sa refonte, pas avant) :
      afficher par la fonction 2 du BDOS au lieu de `B_CONOUT` (`putc`), pour que
      `PUT LISTE.TXT DEBUG` garde un long désassemblage sans limite de tampon (puis XFER ou
@@ -457,8 +462,8 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 380 octets ; fenêtre : 2 octets pour PUT ; page `$FF00` : 10 octets ;
-variables du BDOS : `$FD04-$FD57` libres, 84 octets) :
+**Système** (marge 449 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
+octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets) :
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
@@ -466,49 +471,27 @@ variables du BDOS : `$FD04-$FD57` libres, 84 octets) :
 | Police rangée sur 5 octets par caractère, dépliée par `font_init` | ~250 | le texte de `gfx.s` doit lire la police recopiée |
 | Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
 | Option `CPLCMD` retirée (complétion des commandes) | 243 | perte de la fonction |
+| Autre banque de la fenêtre (une commande ou une fonction rare : 576 octets au plus) | sa taille, moins ~6 par point d'entrée | un accès à `CPA.BNK` au premier usage |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
 
-**La fenêtre** (`$F7C0-$FCFF`, `docs/systeme.md` § 6). Fait (lot 1) : PUT et le code du
-démarrage à froid (test de la RAM, `AUTO.BAT`) y sont chargés avec le système ; 576 octets
-résidents rendus. La place sert d'abord au pilote série (~300 octets, § 2 point 4 : console
-à distance) ; les menus (fonction phare) restent résidents.
+**La fenêtre** (`$F7C0-$FCFF`, `docs/systeme.md` § 6). Fait : lot 1, PUT et le code du
+démarrage à froid (test de la RAM, `AUTO.BAT`) chargés avec le système (576 octets
+résidents rendus) ; lot 2, banque IMG (GSAVE, GLOAD, SAVE) lue dans `CPA.BNK` quand elle
+sert, PUT rechargé de `CPA.BNK`, prêt de la fenêtre pendant un PUT, GSAVE par `NOM.$$$` (69
+octets rendus : le chargeur, `win_call` et les points d'entrée font ~370 octets, coût fixe ;
+chaque banque suivante rend presque toute sa taille). La place sert d'abord au pilote série
+(~300 octets, § 2 point 4 : console à distance) ; les menus (fonction phare) restent
+résidents.
 
-Décidé, pas encore fait :
+Pas dans la fenêtre : la complétion des commandes (un chargement à chaque ESC) ; les
+fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko, appelées sans cesse ; `PUT LOG.TXT
+GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et `font_init`, qui servent aussi au
+démarrage à chaud et à `crash_screen` ; `msg_banner` (VER).
 
-- **IMG** (lot 2) : GSAVE et GLOAD (BDOS 115 op 12 et 13, `g_gsave` à `g_mode`, 241 octets ;
-  `cmd_gsave`, `cmd_gload`, `img_msg`, `img_name`, 64) et `SAVE n fichier` (`cmd_save`, 132) :
-  437 octets. Chargée depuis le fichier de banques quand elle sert, elle reste dans la
-  fenêtre (les GLOAD suivants ne relisent rien) ; le PUT suivant relit PUT (`win_id` :
-  nouveau bit, `cmd_put` refuse déjà une fenêtre sans PUT).
-- **Prêt pendant un PUT** (lot 2) : le fichier de banques est ouvert d'abord (absent :
-  opération refusée, PUT intact), copie suspendue (`put_on` à 0), IMG lu sur le code de PUT
-  sans toucher au tampon (son reste, moins de 128 octets, est en tête), opération, PUT relu,
-  copie rendue. À l'entrée du BDOS, `put_flush` a déjà écrit le tampon. Le chargeur prend
-  son FCB dans `PUT_SAVE` (`$F9C3`, après le code de PUT : IMG doit s'arrêter avant) ;
-  `put_end` regarde aussi `put_lost` (disque plein) : le prêt ne doit pas laisser l'un sans
-  l'autre. Un RESET pendant le prêt perd la copie en cours (le fichier n'a que ce qui était
-  écrit).
-- **Pas dans la fenêtre** : la complétion des commandes (un chargement à chaque ESC
-  ralentirait le vrai Microdisc) ; les fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko,
-  appelées sans cesse ; `PUT LOG.TXT GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et
-  `font_init`, qui servent aussi au démarrage à chaud et à `crash_screen` ; `msg_banner`
-  (VER).
-- **Fichier de banques** (lot 2) : `CPA.BNK` (SYS, R/O), sur toutes les disquettes système,
-  français et anglais ; signature calculée par `build.sh`, comparée à celle du système : une
-  banque d'une autre version est refusée avec un message. Cherché comme les programmes
-  (lecteur courant, puis A: à D:). Pas de place dans les pistes système (LSN 3-66 pris, 67
-  seul libre).
-- **Ce qui recule** (lot 2) : sans `CPA.BNK` en ligne, GSAVE, GLOAD et SAVE sont refusés (PUT
-  marche tant qu'IMG n'a pas pris sa place) ; sous PUT, chaque GSAVE ou GLOAD relit ~1 Ko de
-  banques.
-- **Lots** suivants :
-  2. fichier de banques, chargeur, IMG en banque, prêt de la fenêtre ; GSAVE par `NOM.$$$`
-     (§ 2 point 5) et dans `tools/test_fichiers.py`. Gain ~437, moins le chargeur (~120).
-  3. options résident / en banque / absent, d'abord par `-D` dans `build.sh` (puis le
-     fichier de configuration de la construction sur l'Oric, § 2 point 8) ; la ROM n'a que
-     résident ou absent. Le code du démarrage à froid va toujours dans la fenêtre.
-- **À vérifier sur le matériel** (lot 2) : vitesse de chargement d'une banque sur le LOCI.
+Décidé, pas encore fait (lot 3) : options résident / en banque / absent, d'abord par `-D`
+dans `build.sh` (puis le fichier de configuration de la construction sur l'Oric, § 2 point
+8). Le code du démarrage à froid va toujours dans la fenêtre.
 
 **Disquettes** (blocs de 2 Ko : un octet gagné ne rend un bloc qu'en repassant sous un
 multiple de 2 048) :

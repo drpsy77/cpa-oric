@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Sûreté des fichiers : scénarios d'enregistrement qui tournent mal, joués
-dans Oricutron (tools/run_test.sh), pour EDIT, EDSPRITE et GRAPHER (SAVE,
-BSAVE, BSAVE SCREEN).
+dans Oricutron (tools/run_test.sh), pour EDIT, EDSPRITE, GRAPHER (SAVE,
+BSAVE, BSAVE SCREEN) et GSAVE du système (banque IMG, CPA.BNK).
 
   python3 tools/test_fichiers.py [--vite] [--garde DOSSIER] [filtre...]
 
 Chaque scénario part d'une disquette préparée ici (tools/mkdisk.py : système,
-GRAPHER.COM, EDIT.COM, EDSPRITE.COM, EDIT.CFG, les programmes d'essai de
+CPA.BNK, GRAPHER.COM, EDIT.COM, EDSPRITE.COM, EDIT.CFG, les programmes d'essai de
 tools/fichiers_tests/, l'ancien fichier, et ce qu'il faut pour remplir le
 disque ou le répertoire), tape une commande, puis regarde la disquette
 (mkdisk check et diff, contenu du fichier visé) et l'écran (message).
@@ -69,7 +69,7 @@ def disque(fichiers, libres=None, entrees_libres=None):
     for k in range(64):
         d.sec[M.SYS_LSN + k] = syst[k * 256:(k + 1) * 256]
     d.format_dir()
-    for f in ("progs/GRAPHER.COM", "progs/EDIT.COM", "progs/EDSPRITE.COM"):
+    for f in ("progs/CPA.BNK", "progs/GRAPHER.COM", "progs/EDIT.COM", "progs/EDSPRITE.COM"):
         d.write_file(os.path.basename(f), open(os.path.join(BUILD, f), "rb").read())
         d.set_attr(os.path.basename(f), ro=True)
     d.write_file("EDIT.CFG", open(os.path.join(RACINE, "files/edit.cfg"), "rb").read())
@@ -214,6 +214,25 @@ def scenarios():
           "fichier protege"),
         S("BSAVE SCREEN RESET", "SCREEN", [(c, anc, False)], e, c, "reset",
           ref="BSAVE SCREEN normal"),
+    ]
+    # GSAVE du système (banque IMG chargée de CPA.BNK) : image du mode
+    # SPLIT (5 120 octets, 3 blocs) écrite par NOM.$$$
+    c = "CIBLE.IMG"
+    gs = "SPLIT\nGSAVE CIBLE\n"
+    anc = bytes((i * 13) & 0xFF for i in range(5120))
+    L += [
+        S("GSAVE normal", "GSAVE", [(c, anc, False)], gs, c, "nouveau", None,
+          interdit="disk full", ref="GSAVE normal"),
+        S("GSAVE disque plein", "GSAVE", [(c, anc, False)], gs, c, "ancien", "disk full",
+          libres=1),
+        S("GSAVE nouveau nom, disque plein", "GSAVE", [], gs, c, "absent", "disk full",
+          libres=1),
+        S("GSAVE repertoire plein", "GSAVE", [(c, anc, False)], gs, c, "ancien",
+          "disk full", entrees=0),
+        S("GSAVE nouveau nom, repertoire plein", "GSAVE", [], gs, c, "absent", "disk full",
+          entrees=0),
+        S("GSAVE fichier R/O", "GSAVE", [(c, anc, True)], gs, c, "ancien", "file r/o"),
+        S("GSAVE RESET", "GSAVE", [(c, anc, False)], gs, c, "reset", ref="GSAVE normal"),
     ]
     # EDIT : X tapé au début du document, puis CTRL-S ; « Enreg. sous »
     # par le menu Fichier (FUNCT, 5 fois bas, Entrée)

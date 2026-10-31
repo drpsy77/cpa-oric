@@ -34,9 +34,15 @@ DISK_OPTS=${DISK_OPTS--DCPLCMD}
 cd src
 # ROM : plus construite ni étudiée (CLAUDE.md) ; build/cpa.rom reste la dernière faite
 # $XA -I msg/fr -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
-$XA -I msg/fr -DDISK $DISK_OPTS -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
-$XA -I msg/en -DDISK $DISK_OPTS -o ../build/cpa_sys_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
+$XA -I msg/fr -DDISK $DISK_OPTS -o ../build/cpa_sys_all.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
+$XA -I msg/en -DDISK $DISK_OPTS -o ../build/cpa_sys_all_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
 cd ..
+# banques de la fenêtre (src/bank.s) : l'image de 16 Ko est suivie de la
+# banque IMG ; tools/mkbnk.py les sépare, pose la signature dans le système
+# et écrit CPA.BNK (PUT et IMG), un par langue
+mkdir -p build/progs-en
+python3 tools/mkbnk.py build/cpa_sys_all.bin build/cpa_sys.sym build/cpa_sys.bin build/progs/CPA.BNK
+python3 tools/mkbnk.py build/cpa_sys_all_en.bin build/cpa_sys_en.sym build/cpa_sys_en.bin build/progs-en/CPA.BNK > /dev/null
 for f in build/cpa_sys.bin build/cpa_sys_en.bin; do
   SIZE=$(wc -c < $f)
   if [ "$SIZE" -ne 16384 ]; then echo "Taille inattendue pour $f : $SIZE"; exit 1; fi
@@ -127,7 +133,7 @@ ASM_EX="$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # rubriques. Tout est protégé (R/O). Cachés (SYS, montrés par DIRS) : les
 # commandes de base, MEM/POKE/GO, les bibliothèques, EDIT.CFG (modifiable) ;
 # DIR montre les applications, et un nouveau programme y apparaît de lui-même.
-SYS_CACHES="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
+SYS_CACHES="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/MEM.COM $P/POKE.COM $P/GO.COM files/usbcd.bat"
 SYS_AILLEURS="$P/LOGO.COM $P/LOGOTR.COM $P/HELLO.COM $P/GTEST.COM"
 SYS_VISIBLES=""
@@ -142,7 +148,7 @@ disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/ed
 # (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la disquette
 # protégés et visibles, les exemples modifiables (ASM HELLO réécrit
 # HELLO.COM, LOGO réécrit DEMO.LOG).
-BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
+BASE="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
   $P/TERM.COM $P/XFER.COM $P/CMDER.COM files/usbcd.bat"
 theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"

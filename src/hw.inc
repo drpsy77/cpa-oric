@@ -160,7 +160,8 @@ fs_b0       = $FD00     ; numéro de bloc (2 octets : fs_b0, fs_b1)
 fs_b1       = $FD01
 fs_c0       = $FD02     ; blocs libres comptés (2 octets : fs_c0, fs_c1)
 fs_c1       = $FD03
-                        ; $FD04-$FD57 : libres
+                        ; $FD04-$FD12 : banques (bk_..., img_f, plus bas)
+                        ; $FD13-$FD57 : libres
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C
@@ -211,7 +212,7 @@ seen_vec    = $FDAE     ; bit n : lecteur n lu depuis le démarrage à froid (re
 cp_tn       = $FDAF     ; complétion : noms dans CP_TAB
 CP_TAB      = $B800     ; complétion : noms déjà vus (39 x 13 octets), pendant ESC
 CP_TMAX     = 39        ;   seulement (zone de sauvegarde des menus, libre alors)
-CCP_FCB2    = $FDB0     ; FCB de travail (REN)
+CCP_FCB2    = $FDB0     ; FCB de travail : BNK_FCB (banques, GSAVE)
 SECBUF      = $FE00     ; tampon de secteur (256 octets)
 #endif
 
@@ -330,5 +331,19 @@ PUTBUF      = $FA00     ; tampon de PUT (768 octets, jusqu'à $FCFF) ;
 PUTMAX      = 768       ;   code du démarrage à froid dans l'image
 win_id      = $FDF8     ; contenu de la fenêtre :
 WIN_PUT     = $01       ;   PUT
+WIN_IMG     = $02       ;   IMG (img.s : GSAVE, GLOAD, SAVE)
 WIN_COLD    = $80       ;   code du démarrage à froid (cold.s)
+WIN_END     = PUTBUF    ; une banque s'arrête avant le tampon de PUT
+BNK_BUF     = $FC80     ; chargeur (bank.s) : enregistrement lu, dans la fin
+                        ;   du tampon de PUT (libre pendant un prêt)
+BNK_FCB     = $FDB0     ; FCB de CPA.BNK, puis de NOM.$$$ (GSAVE) : CCP_FCB2
+bk_id       = $FD04     ; win_call : banque demandée
+bk_ent      = $FD05     ;   2 octets : routine
+bk_put      = $FD07     ;   put_on avant le prêt
+bk_id2      = $FD08     ; bnk_load : banque à charger
+bk_dma      = $FD09     ;   2 octets : DMA de l'appelant
+bk_rec      = $FD0B     ;   enregistrement suivant
+bk_dst      = $FD0E     ;   2 octets : adresse dans la fenêtre
+img_f       = $FD10     ; 2 octets : FCB du fichier pendant GSAVE (img.s)
+bk_n        = $FD12     ; bnk_load : octets du morceau en cours
 #endif
