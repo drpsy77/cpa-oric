@@ -5,7 +5,7 @@
 ;    copie la disquette de src: sur celle de dst: (déjà formatée) :
 ;    amorçage et système (LSN 0-67), répertoire, puis les seuls blocs
 ;    occupés de la source
-;    /T  copie tout (les 1 428 secteurs)
+;    /T  copie tout (les 2 720 secteurs)
 ;    /V  relit chaque secteur écrit et le compare
 ;    /S  rend dst: démarrable sans toucher à ses fichiers (comme SYSGEN
 ;        de CP/M) : amorçage et système seulement (LSN 0-67) ; les
@@ -19,10 +19,6 @@
 ; =====================================================================
 
 #include "cpa.inc"
-
-DIR_LSN     = 68
-NSECT       = 1428
-NBLK        = 170
 
 ptr     = $10           ; 2 octets
 src     = $12
@@ -216,11 +212,11 @@ wb      jmp WBOOT
 ; ---------------------------------------------------------------------
 plan
 .(
-        ldx #NBLK-1
+        ldx #0
         lda opt_t
-z       sta bmap,x
-        dex
-        cpx #$FF
+z       sta bmap,x              ; blocs 0 à 255
+        sta bmap+D_NBLK-256,x   ; blocs 75 à 330
+        inx
         bne z
         lda #1                  ; blocs 0 et 1 : le répertoire
         sta bmap
@@ -235,7 +231,7 @@ rd      lda src
         lda #<vbuf
         ldy #>vbuf
         jsr B_SETDMA
-        lda #DIR_LSN
+        lda #D_DIRLSN
         sta i
 sect    lda i
         ldy #0
@@ -255,14 +251,25 @@ ent     ldy #0
         lda (ptr),y
         cmp #$E5
         beq next
-        ldy #16                 ; blocs de l'entrée
+        ldy #16                 ; blocs de l'entrée (16 bits)
 blk     lda (ptr),y
-        beq nb
-        cmp #NBLK
+        sta t0
+        iny
+        lda (ptr),y
+        bne hi
+        ldx t0
+        beq nb                  ; 0 : pas de bloc
+        lda #1
+        sta bmap,x
+        bne nb
+hi      cmp #>D_NBLK            ; blocs 256 à 330
+        bne nb
+        lda t0
+        cmp #<D_NBLK
         bcs nb
         tax
         lda #1
-        sta bmap,x
+        sta bmap+256,x
 nb      iny
         cpy #32
         bne blk
@@ -276,7 +283,7 @@ n2      dec nent
         bne ent
         inc i                   ; secteur suivant du répertoire
         lda i
-        cmp #DIR_LSN+16
+        cmp #D_DIRLSN+16
         bne sect
         clc
         rts
@@ -288,15 +295,17 @@ want
         lda lsn+1
         bne dat2
         lda lsn
-        cmp #DIR_LSN
+        cmp #D_DIRLSN
         bcs dat2
-        sec                     ; amorçage et système : toujours
+yes     sec                     ; amorçage et système : toujours
         rts
-dat2    lda opt_s
+dat2    lda opt_t               ; /T : tout
+        bne yes
+        lda opt_s
         bne no
         lda lsn                 ; bloc = (lsn - 68) / 8
         sec
-        sbc #DIR_LSN
+        sbc #D_DIRLSN
         sta t0
         lda lsn+1
         sbc #0
@@ -307,8 +316,12 @@ dat2    lda opt_s
         lsr
         ror t0
         ldx t0
+        tay                     ; poids fort : 0 ou 1
+        bne w1
         lda bmap,x
-        beq no
+        jmp w2
+w1      lda bmap+256,x
+w2      beq no
         sec
         rts
 no      clc
@@ -327,11 +340,11 @@ copy
 tr      ldx #0                  ; liste des secteurs de la tranche
         stx k
 fill    lda lsn+1
-        cmp #>NSECT
+        cmp #>D_NSECT
         bcc in
         bne filled
         lda lsn
-        cmp #<NSECT
+        cmp #<D_NSECT
         bcs filled
 in      jsr want
         bcc skip
@@ -606,5 +619,5 @@ endp
 vbuf    = endp          ; secteur relu (256)
 lsnlo   = endp+256      ; secteurs de la tranche (256 + 256)
 lsnhi   = endp+512
-bmap    = endp+768      ; blocs à copier (170)
-endb    = endp+938
+bmap    = endp+768      ; blocs à copier (331)
+endb    = endp+768+D_NBLK

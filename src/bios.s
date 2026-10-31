@@ -18,7 +18,7 @@ cold_boot
         ldy win_id              ; contenu de la fenêtre (win.s), avant l'effacement
         lda #0                  ; variables système du BDOS (RAM overlay)
         tax
-cb_sys  sta ALV,x
+cb_sys  sta FS_VARS,x
         inx
         bne cb_sys
 #endif

@@ -18,6 +18,7 @@ m_abs2  .asc " absent ou vide",13,10,0
 m_wp    .asc 13,10,"Disquette protegee en ecriture",13,10,0
 m_inc   .asc 13,10,"Piste ecrite en partie seulement",13,10,0
 m_verr  .asc 13,10,"Relecture : erreur secteur ",0
+m_42    .asc "Image de 42 pistes ? Il en faut 80",13,10,0
 m_trk   .asc "Piste ",0
 m_face  .asc " face ",0
 K_YES   = "O"           ; touche Oui

@@ -8,11 +8,12 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F424` en français (`$F3F8` en anglais), **marge 588
-octets** jusqu'à `$F670` (711 sans l'option `CPLCMD`) ; fenêtre `$F7C0-$FCFF` (PUT, marge 2
-octets avant son tampon de 768 ; code du démarrage à froid dans le tampon, marge 565 ;
-`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de l'édition
-de ligne, encres des menus). `./build.sh` affiche les marges.
+**Système** : code résident `$C000-$F44C` en français (`$F420` en anglais), **marge 380
+octets** jusqu'à `$F5C8` (623 sans l'option `CPLCMD`), où commencent les cartes d'allocation
+des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF` (PUT,
+marge 2 octets avant son tampon de 768 ; code du démarrage à froid dans le tampon, marge 565 ;
+`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
+l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
   et pagination (`PAPER`, `INK`, `PAGE`) ;
@@ -22,6 +23,10 @@ de ligne, encres des menus). `./build.sh` affiche les marges.
 - lecture de ligne (BDOS 10) : édition, historique, complétion par TAB ou ESC des noms de fichiers
   et, en début de ligne, des commandes (sur les lecteurs où elles seraient cherchées) ;
 - fichiers CP/M 2.2 (séquentiel, accès direct, attributs R/O et SYS), lecteurs A: à D: ;
+  disquettes de 2 faces de 80 pistes (images de 1 Mo, 658 Ko pour les fichiers, numéros de
+  bloc sur 16 bits, étiquette du format en entrée 0 ; `docs/systeme.md` § 3) ; celles de 42
+  pistes sont refusées (`BDOS: not a CP/A 80-track disk`) et se convertissent sur le PC
+  (`tools/mkdisk.py conv`) ;
 - programmes et scripts cherchés sur le lecteur du script (ou le courant), puis A: à D: ;
   scripts `.BAT` (DO, `$1`-`$9`, appel de script à script par XDO, `AUTO.BAT` au démarrage
   à froid) ; CHAIN (BDOS 47) ; PUT (sortie d'une commande dans un fichier) ;
@@ -41,8 +46,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 |---|---:|---|---|
 | HELP | 12 580 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
-| FORMAT, DISKCOPY | 1 685, 1 658 | disquettes, avec un seul lecteur | `manuel.md` |
-| CMDER | 17 961 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
+| FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
+| CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
@@ -63,10 +68,10 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-86 Ko libres), `cpa-anim.dsk` (la démonstration, 44 Ko libres), `cpa-logo.dsk` (LOGO seul,
-200 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 50 Ko libres), `cpa-notes.dsk` (écrire, 248 Ko libres), et `cpa-projet.dsk` (vierge,
-sans système : le travail en B:) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
+408 Ko libres), `cpa-anim.dsk` (la démonstration, 366 Ko libres), `cpa-logo.dsk` (LOGO seul,
+522 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 372 Ko libres), `cpa-notes.dsk` (écrire, 570 Ko libres), et `cpa-projet.dsk` (vierge,
+sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
 **Mesure** : 1 480 points de fonction IFPUG et 347 points d'algorithmes ; détail, lignes,
@@ -405,14 +410,12 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
    Mac) : pas de tokenisation ni de compactage sur disque (ceux du BASIC et de SEDORIC sont
    de leur époque) ; la place viendra du **lecteur « fichiers USB »** ci-dessous, la
    direction à suivre pour le stockage. Le `.dsk` reste pour démarrer.
-   - Étude en cours, rien décidé : `docs/etude-stockage.md` (mesures de la place, format
-     80 pistes, blocs de 1 Ko, petites commandes regroupées, arborescence de livraison).
-   - **`.dsk` de 1 Mo** : possible mais cher. Cartes d'allocation actuelles : 22 octets par
-     lecteur (`$FD00-$FD57`), ~176 blocs de 2 Ko, ~350 Ko. 1 Mo = 512 blocs : cartes de 64
-     octets par lecteur (~170 octets résidents de plus) et numéros de bloc sur 2 octets
-     dans le répertoire (comme CP/M 2.2 au-delà de 255 blocs) : nouveau format, anciennes
-     disquettes illisibles. Et le LOCI doit accepter la géométrie (2 faces x 128 pistes ?)
-     : à vérifier dans son firmware.
+   - Fait : **disquettes de 2 faces de 80 pistes** (piste A de `docs/etude-stockage.md`,
+     qui garde les mesures et les pistes restantes) : 658 Ko pour les fichiers au lieu de
+     336, blocs de 2 Ko numérotés sur 16 bits (comme CP/M 2.2 au-delà de 255 blocs),
+     répertoire de 128 entrées dont l'étiquette du format ; anciennes disquettes refusées,
+     converties par `tools/mkdisk.py conv`. Essayé dans Oricutron ; à essayer sur le LOCI
+     (`docs/essais-materiel.md`).
    - **Lecteur « fichiers USB » (U:)**, plus intéressant : les fonctions fichiers du BDOS
      passent par l'interface fichiers du LOCI (ouvrir, lire, écrire, se positionner,
      fermer ; USBDIR s'en sert déjà pour lister). Gains : taille de la clé, vitesse (pas
@@ -449,19 +452,20 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 Écarté : une base de données (hors de la vision : `docs/vision.md`) ; `REDIM` dans GRAPHER (hors de l'esprit du langage : les tailles sont connues à
 l'écriture) ; modules chargeables pour LOGO (le chargement par étapes avec `CHARGE` et `OUBLIE`
 suffit) ; primitive LOGO générique `.SYSTEME n [liste]` ; conversion CR LF -> LF par EXPORT ; un portage pour le Microdisc (son lecteur 3″ d'origine
-n'a qu'une face de 40 pistes, les disquettes de CP/A en ont 2 de 42 ; laissé à qui le
+n'a qu'une face de 40 pistes, les disquettes de CP/A en ont 2 de 80 ; laissé à qui le
 demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 588 octets ; fenêtre : 2 octets pour PUT ; page `$FF00` : 10 octets) :
+**Système** (marge 380 octets ; fenêtre : 2 octets pour PUT ; page `$FF00` : 10 octets ;
+variables du BDOS : `$FD04-$FD57` libres, 84 octets) :
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
 | H : masque de point calculé au lieu de la table `g_xbit` (240 octets) | ~220 | un peu plus lent en SPLIT |
 | Police rangée sur 5 octets par caractère, dépliée par `font_init` | ~250 | le texte de `gfx.s` doit lire la police recopiée |
 | Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
-| Option `CPLCMD` retirée (complétion des commandes) | 123 | perte de la fonction |
+| Option `CPLCMD` retirée (complétion des commandes) | 243 | perte de la fonction |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
 
@@ -517,7 +521,7 @@ multiple de 2 048) :
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
   blocs, 1 844 octets libres dans le dernier. HELP (12 580) prend 7 blocs, 1 756 octets libres dans le dernier (12 417 en anglais, 7
-  blocs). CMDER (17 961) prend 9 blocs, 471 octets libres dans le dernier ;
+  blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)
   aussi, à 17 octets près (57 en anglais). EDSPRITE (8 967) prend
@@ -528,11 +532,13 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
   octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 86 Ko (86 sur `cpa-en.dsk`), peu pour travailler (CARTE :
-  `CARTE.ASM` 46 Ko) ; le travail va sur une disquette de projet en B:, GRXASM `/C` ne
+- usage à deux disquettes : sur `cpa.dsk` il reste 408 Ko (408 sur `cpa-en.dsk`) ; le
+  travail va de préférence sur une disquette de projet en B: (658 Ko), GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
-- blocs de 1 Ko (−27 Ko sur `cpa.dsk`) : format du répertoire à changer, anciennes
-  disquettes illisibles ; en dernier recours.
+- répertoire : 127 fichiers au plus par disquette (entrée 0 : l'étiquette ; un fichier en
+  prend une par tranche de 16 Ko) ; CMDER et la complétion comptent sur 128 entrées au plus ;
+- blocs de 1 Ko : écartés (ce ne serait plus le format de CP/M 2.2,
+  `docs/etude-stockage.md`).
 
 **Mémoire de GRAPHER interprété** : environ 17 Ko pour le texte, les tableaux et une
 animation (`docs/grapher.md` § 13) ; `CUBE.ANI` et `BALLE.ANI` ne se jouent qu'en traduit.

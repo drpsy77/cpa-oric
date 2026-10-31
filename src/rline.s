@@ -556,7 +556,6 @@ one     ldy #0
         bne rone
         ldy #FCB_EX
         lda (ZP_DIRP),y         ; premier extent seulement
-        lsr
         bne rone
         ldy #1                  ; nom -> cp_txt : « NOM.TYP »,0
         ldx #0

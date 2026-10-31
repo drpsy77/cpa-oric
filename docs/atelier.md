@@ -27,7 +27,8 @@ outils, et suit toujours la même boucle.
 1. **`xa`** (l'assembleur de l'OSDK), compilé depuis ses sources. `./build.sh` assemble la ROM,
    le système disque, l'amorce et les programmes `.COM`, puis fabrique la disquette avec
    `tools/mkdisk.py`. Le script contrôle aussi les tailles (ROM de 16 Ko, système disque qui
-   s'arrête avant `$F670`, page `$FF00` qui n'atteint pas les vecteurs).
+   s'arrête avant ses cartes d'allocation (`SYS_END`, `$F5C8`), page `$FF00` qui n'atteint pas
+   les vecteurs).
 2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, surtout dans `main.c`). Le
    correctif lit des variables d'environnement à chaque trame (1/50 s) :
    - `ORIC_KEYS` : texte tapé touche par touche, comme sur le clavier de l'Oric (les caractères
@@ -158,7 +159,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | Commande | Rôle |
 |---|---|
 | `./build.sh` | construit `build/cpa.rom`, le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes |
-| `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: |
+| `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: ; la fin de la disquette (copie d'un fichier de 640 Ko, blocs au-delà de 255) et le refus d'une disquette sans étiquette du format |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
 | `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |
 | `tools/test_logo.sh` | LOGO.COM : scénarios `tools/logo_tests/*.log` comparés aux `.ref` (texte, images) ; `REF=1` réécrit les références |

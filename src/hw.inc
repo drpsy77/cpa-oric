@@ -139,18 +139,28 @@ LOCI_MNT    = $800B     ;   octet mounts : bit n = lecteur n monté
 ; --- Géométrie de la disquette CP/A ---
 SPT         = 17        ; secteurs de 256 octets par piste
 NSIDES      = 2
-NCYL        = 42
-NSECT       = 1428      ; SPT*NSIDES*NCYL
+NCYL        = 80
+NSECT       = 2720      ; SPT*NSIDES*NCYL
 SYS_LSN     = 3         ; système : secteurs logiques 3..66 (16 Ko)
 DIR_LSN     = 68        ; début de la zone de données (bloc 0 = répertoire)
 BLK_SECT    = 8         ; bloc d'allocation = 2 Ko
-NBLK        = 170       ; (NSECT-DIR_LSN)/BLK_SECT
-DIR_ENT     = 128       ; blocs 0 et 1 : 128 entrées de 32 octets
-ALV_LEN     = 22        ; (NBLK+7)/8
+NBLK        = 331       ; (NSECT-DIR_LSN)/BLK_SECT ; numéros sur 16 bits
+DIR_ENT     = 128       ; blocs 0 et 1 : 128 entrées de 32 octets (la 0 :
+                        ;   étiquette du format, fs.s)
+ALV_LEN     = 42        ; (NBLK+7)/8
 
 ; --- RAM système dans la RAM overlay (au-dessus du code) ---
 NDRV        = 4         ; lecteurs A: à D: (Microdisc, LOCI, Oricutron)
-ALV         = $FD00     ; cartes d'allocation des 4 lecteurs (4 x ALV_LEN = 88)
+ALV         = $F5C8     ; cartes d'allocation des 4 lecteurs (4 x ALV_LEN
+                        ;   = 168 octets, jusqu'à $F66F), refaites à la
+                        ;   première utilisation de chaque lecteur
+SYS_END     = ALV       ; le code du système doit finir avant
+FS_VARS     = $FD00     ; variables du BDOS, effacées au démarrage à froid
+fs_b0       = $FD00     ; numéro de bloc (2 octets : fs_b0, fs_b1)
+fs_b1       = $FD01
+fs_c0       = $FD02     ; blocs libres comptés (2 octets : fs_c0, fs_c1)
+fs_c1       = $FD03
+                        ; $FD04-$FD57 : libres
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C
@@ -164,7 +174,7 @@ buf_lsn     = $FD64     ; 2 octets
 buf_ok      = $FD66
 dir_i       = $FD67
 fs_rec      = $FD68
-fs_blk      = $FD69
+                        ; $FD69 : libre
 fs_half     = $FD6A
 fs_t0       = $FD6B
 fs_t1       = $FD6C
@@ -321,5 +331,4 @@ PUTMAX      = 768       ;   code du démarrage à froid dans l'image
 win_id      = $FDF8     ; contenu de la fenêtre :
 WIN_PUT     = $01       ;   PUT
 WIN_COLD    = $80       ;   code du démarrage à froid (cold.s)
-SYS_END     = $F670     ; le code du système doit finir avant
 #endif

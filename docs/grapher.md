@@ -786,7 +786,7 @@ Oricutron, `-t NOM.TAP`.
   prend toutes). Un `.GRX` ne dépasse pas ~17 Ko en interprété (texte et tableaux
   ensemble) ni ~20 Ko pour GRXASM (texte de `$4E6F` à `$9CE0`). Pire cas pour un `.GRX`
   de 17 Ko : `.ASM` de 145 à 175 Ko et `.COM` d'environ 30 Ko, présents ensemble pendant
-  l'assemblage, soit ~200 Ko sur la disquette de projet (336 Ko) ; `/C` n'y laisse ensuite
+  l'assemblage, soit ~200 Ko sur la disquette de projet (658 Ko) ; `/C` n'y laisse ensuite
   que le `.COM`. La limite qui compte est la mémoire : le `.COM` et ses tableaux tiennent
   entre `$0500` et `$9D60` (~38 Ko) ; 30 Ko de code ne laissent que ~8 Ko de tableaux.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400

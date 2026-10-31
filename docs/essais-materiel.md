@@ -9,6 +9,28 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Disquettes de 80 pistes** (2 faces, images de 1 Mo ; `docs/systeme.md` § 3) :
+
+- démarrage sur `cpa.dsk` et sur chaque disquette du coffret : le LOCI monte-t-il une image
+  de 80 pistes, et le système se charge-t-il comme avant ? `DIR` : `408K free` sur `cpa.dsk` ;
+- fin de la disquette : copier sur `cpa-projet.dsk` en B: un fichier de plus de 600 Ko (fait
+  sur le PC : `mkdisk.py put`, ou par `COPY` de B: vers C:), puis `STAT B:*.*` (blocs,
+  octets), relire le fichier (`COPY` vers C:, `mkdisk.py get` et comparer sur le Mac) : les
+  pistes 42 à 79 et les blocs au-delà de 255 se lisent et s'écrivent ;
+- ancienne disquette (42 pistes, une copie !) en B: : `B:` et `DIR B:` donnent `BDOS: not a
+  CP/A 80-track disk`, sans rien écrire ; `CMDER B:` : `lecteur absent ou illisible` ;
+- `FORMAT B:` sur une copie de `cpa-projet.dsk` : 80 pistes, `Formatage termine`, `DIR B:`
+  vide avec `658K free` ; `FORMAT B: /Q` de même ;
+- `FORMAT B:` sur une image de 42 pistes (copie d'une disquette SEDORIC) : arrêt à la piste
+  42 avec `Image de 42 pistes ? Il en faut 80` (le LOCI n'agrandit pas l'image) ; rien
+  d'autre n'est touché ;
+- `DISKCOPY A: B:` et `DISKCOPY A: B: /T /V` vers une disquette formatée ; `DISKCOPY A: A:`
+  avec un seul lecteur (7 échanges, 17 avec `/T`) ;
+- CMDER à deux colonnes : place libre des en-têtes, `?` (blocs d'un gros fichier), copie qui
+  ne tient pas (`Libre ...K, requis ...K`) ;
+- vitesse : un accès vers la fin de la disquette (pistes 70-79) n'est pas plus lent qu'au
+  début de façon visible.
+
 **Coffret de disquettes** (une par usage ; `docs/manuel.md`, disquettes par usage ; chaque
 disquette démarre seule, avec un seul lecteur) :
 

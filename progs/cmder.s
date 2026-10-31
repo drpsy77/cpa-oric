@@ -36,18 +36,19 @@ NMAX    = 128           ; entrées du répertoire au plus
 ESZ     = 24            ; taille d'une entrée de la table
 E_ATTR  = 11            ; bit 7 : R/O, bit 6 : SYS
 E_RECS  = 12            ; enregistrements (2 octets)
-E_BLKS  = 14            ; blocs de 2 Ko
+E_BLKS  = 14            ; blocs de 2 Ko (poids faible ; fort : E_BLKH)
 E_RANK  = 15            ; rang dans le répertoire (ordre sur le disque)
 E_SIZE  = 16            ; taille affichée (3 octets)
 E_FLAG  = 19
 E_GEN   = 20            ; genre (index dans gname)
 E_KIND  = 21            ; 0 répertoire (clé USB) ou fichier de disquette,
                         ; 1 fichier de la clé : les répertoires d'abord
+E_BLKH  = 22            ; blocs : poids fort
 FL_MARK = 1
 FL_EXACT = 2            ; taille exacte (^Z retirés) connue
 FL_DEL  = 4             ; original à effacer (Déplacer)
 FL_SKIP = 8             ; fichier sauté pendant une copie
-NBLK    = 168           ; blocs de données (comme STAT)
+NBLK    = D_NBLK-2      ; blocs de données (comme STAT)
 W       = 37            ; colonnes utilisées (2 à 38)
 R_HDR   = 1
 R_COL   = 2
@@ -83,7 +84,7 @@ srev    = $2B           ; 1 = ordre inverse
 hides   = $2C           ; bit 0 : fichiers SYS cachés ; bit 1 : répertoires
                         ; seuls (clé USB)
 nmark   = $2D
-used    = $2E           ; blocs occupés
+used    = $2E           ; blocs occupés (poids fort : usedh)
 dok     = $2F           ; 1 = lecteur lisible
 msgp    = $88           ; message de la ligne 26 (2 ; poids fort 0 = aucun)
 inlen   = $8A
@@ -154,7 +155,8 @@ sbnc    = $7F           ;   et son caractère sans défilement
 needb   = $80           ; place avant copie : blocs (2)
 fpb     = $82           ; filtre de la colonne dessinée (2)
 curon   = $84           ; 1 = montrer le curseur (colonne active)
-rlen    = $85
+rlen    = $85           ; place : blocs libres (2)
+usedh   = $87           ; blocs occupés : poids fort (échangé par zswap)
 ptype   = $94           ; 1 = la colonne montre la clé USB du LOCI
 ufd     = $95           ; descripteur d'un fichier ou répertoire de la clé
 urp     = $96           ; copie depuis la clé : position dans l'enregistrement
@@ -185,8 +187,9 @@ dtot    = $B0           ;   Ko en tout (2)
 dsub    = $B2           ;   enregistrements dans le Ko en cours
 hnm     = $B3           ; en-tête : caractères du nom de l'image montrés
 hnl     = $B4           ;   longueur du nom
-; Les octets $25-$2F (cnt à dok) et absf sont l'état de la colonne
-; active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
+dusedh  = $B5           ; dir_fp : blocs occupés, poids fort
+; Les octets $25-$2F (cnt à dok), absf, ptype et usedh sont l'état de la
+; colonne active ; ceux de l'autre colonne sont dans pz2 (pswap les échange).
 PZ0     = $25
 PZN     = 11
 
@@ -423,6 +426,10 @@ lp      lda PZ0,x
         ldy pz2+PZN+1
         sta pz2+PZN+1
         sty ptype
+        lda usedh
+        ldy pz2+PZN+2
+        sta pz2+PZN+2
+        sty usedh
         rts
 .)
 main
@@ -1452,6 +1459,7 @@ load_dir
 dk      lda #0
         sta cnt
         sta used
+        sta usedh
         lda #1
         sta addf
         lda drv
@@ -1505,15 +1513,20 @@ q       sta tfcb,x
         sta fp0+1
         sta fp0+2
         sta dused
+        sta dusedh
         ldx #F_SFIRST
         jsr bdos_t
 lp      cmp #$FF
         beq d
         inc fp0+2
-        ldy #16                 ; blocs de l'entrée
+        ldy #16                 ; blocs de l'entrée (16 bits)
 bk      lda DEF_DMA,y
+        iny
+        ora DEF_DMA,y
         beq bn
         inc dused
+        bne bn
+        inc dusedh
 bn      iny
         cpy #32
         bne bk
@@ -1559,10 +1572,12 @@ no      sec
 ; avec le fichier du même nom (un gros fichier a plusieurs entrées)
 add_ent
 .(
-        lda #0                  ; blocs de l'entrée
+        lda #0                  ; blocs de l'entrée (8 numéros sur 16 bits)
         sta t1
         ldy #16
 bl      lda DEF_DMA,y
+        iny
+        ora DEF_DMA,y
         beq nb
         inc t1
 nb      iny
@@ -1572,6 +1587,9 @@ nb      iny
         clc
         adc t1
         sta used
+        bcc ae1
+        inc usedh
+ae1
         lda #0
         sta vk
 look    lda vk
@@ -1623,6 +1641,12 @@ upd     ldy #E_BLKS
         clc
         adc t1
         sta (ep),y
+        bcc ae2
+        ldy #E_BLKH
+        lda (ep),y
+        adc #0                  ; (C = 1)
+        sta (ep),y
+ae2
         lda DEF_DMA+12          ; EX * 128 + RC, le plus grand
         lsr
         sta t2
@@ -2102,18 +2126,11 @@ pf      lda fpb
         ldy fpb+1
         jsr lb_pat
         jsr absmark
-pz      lda #NBLK               ; place libre en Ko, cadrée à droite
-        sec
-        sbc used
-        bcs fr
+pz      lda used                ; place libre en Ko, cadrée à droite
+        ldx usedh
+        jsr nfree
+        jsr free_k
         lda #0
-fr      asl
-        sta cnum
-        lda #0
-        rol
-        sta cnum+1
-        lda #0
-        sta cnum+2
         sta sepf
         lda po
         clc
@@ -2387,18 +2404,10 @@ nf      lda #22
         lda #"+"
         jsr lb_chr
         jmp out
-fr0     lda #NBLK               ; place libre, en Ko
-        sec
-        sbc used
-        bcs fr
-        lda #0
-fr      asl
-        sta cnum
-        lda #0
-        rol
-        sta cnum+1
-        lda #0
-        sta cnum+2
+fr0     lda used                ; place libre, en Ko
+        ldx usedh
+        jsr nfree
+        jsr free_k
         ldy #29
         jsr lb_numr
         lda #30
@@ -2414,6 +2423,44 @@ num_cnt lda cnt
 num8    sta cnum
         lda #0
         sta cnum+1
+        sta cnum+2
+        rts
+
+; blk_num : cnum = blocs de l'entrée ep
+blk_num ldy #E_BLKH
+        lda (ep),y
+        sta cnum+1
+        ldy #E_BLKS
+        lda (ep),y
+        sta cnum
+        lda #0
+        sta cnum+2
+        rts
+
+; nfree : A/X = blocs occupés -> A/X = blocs libres (NBLK moins les
+; occupés, 0 au moins)
+nfree   sta t0
+        stx t1
+        lda #<NBLK
+        sec
+        sbc t0
+        tay
+        lda #>NBLK
+        sbc t1
+        tax
+        tya
+        bcs nf_r
+        lda #0
+        tax
+nf_r    rts
+
+; free_k : A/X = blocs -> cnum = Ko (blocs x 2, 3 octets)
+free_k  sta cnum
+        stx cnum+1
+        lda #0
+        asl cnum
+        rol cnum+1
+        rol
         sta cnum+2
         rts
 
@@ -2605,9 +2652,7 @@ od      lda ep
         lda #<m_enr
         ldy #>m_enr
         jsr lb_str
-        ldy #E_BLKS
-        lda (ep),y
-        jsr num8
+        jsr blk_num
         jsr lb_numl
         lda #<m_blk
         ldy #>m_blk
@@ -3719,9 +3764,7 @@ k_info
         jsr lb_str
         lda #","
         jsr lb_chr
-        ldy #E_BLKS
-        lda (ep),y
-        jsr num8
+        jsr blk_num
         lda #" "
         jsr lb_chr
         jsr lb_numl
@@ -4057,6 +4100,7 @@ lst     stx t1
 place
 .(
         sta rlen
+        stx rlen+1
         lda #0
         sta needb
         sta needb+1
@@ -4083,53 +4127,49 @@ lp      lda vi
         ror t0
         lsr
         ror t0
+        tax                     ; (poids fort)
         lda t0
         clc
         adc needb
         sta needb
-        bcc n1
-        inc needb+1
-n1      jsr repl_blk
+        txa
+        adc needb+1
+        sta needb+1
+        jsr repl_blk            ; moins le fichier remplacé (A/X)
         sta t0
+        stx t1
         lda needb
         sec
         sbc t0
         sta needb
-        bcs n2
-        dec needb+1
-n2      inc vi
+        lda needb+1
+        sbc t1
+        sta needb+1
+        inc vi
         bne lp
 ck      lda needb+1
         bmi ok
-        bne short
-        lda rlen
+        lda rlen                ; libres >= requis ?
         cmp needb
+        lda rlen+1
+        sbc needb+1
         bcs ok
 short   jsr lb_clear            ; « Libre 26K, requis 31K : O/N ? »
         lda #<m_libre
         ldy #>m_libre
         jsr lb_str
         lda rlen
-        asl
-        sta cnum
+        ldx rlen+1
+        jsr free_k
         lda #0
-        rol
-        sta cnum+1
-        lda #0
-        sta cnum+2
         sta sepf
         jsr lb_numl
         lda #<m_req
         ldy #>m_req
         jsr lb_str
         lda needb
-        asl
-        sta cnum
-        lda needb+1
-        rol
-        sta cnum+1
-        lda #0
-        sta cnum+2
+        ldx needb+1
+        jsr free_k
         jsr lb_numl
         lda #<m_ynk
         ldy #>m_ynk
@@ -4147,7 +4187,7 @@ no      lda #0
         rts
 .)
 
-; repl_blk : A = blocs du fichier qui portera le nom de la copie de ep
+; repl_blk : A/X = blocs du fichier qui portera le nom de la copie de ep
 ; sur la destination (0 s'il n'existe pas ou si la destination n'est
 ; pas affichée) ; ep conservé
 repl_blk
@@ -4194,13 +4234,19 @@ cm      cmp (ep),y
         ldy #E_BLKS
         lda (ep),y
         pha
+        ldy #E_BLKH
+        lda (ep),y
+        pha
         jsr back
+        pla
+        tax
         pla
         rts
 nx      inc vk
         bne lp
 nf      jsr back
 zero    lda #0
+        tax
         rts
 back    lda ep2
         sta ep
@@ -4360,9 +4406,8 @@ nn      lda cdst
 dup     lda mvf                 ; même lecteur, autre nom
         beq dp
         jmp do_rename           ; Déplacer = renommer
-dp      lda #NBLK               ; place libre : celle de la liste
-        sec
-        sbc used
+dp      lda used                ; place libre : celle de la liste
+        ldx usedh
         jmp pl
 two     lda cdst                ; autre lecteur : lisible ?
         jsr dir_fp
@@ -4370,12 +4415,10 @@ two     lda cdst                ; autre lecteur : lisible ?
         lda #<m_nodst
         ldy #>m_nodst
         jmp set_msg
-t2ok    lda #NBLK
-        sec
-        sbc dused
-pl      bcs pl2
-        lda #0
-pl2     jsr place               ; assez de place ?
+t2ok    lda dused
+        ldx dusedh
+pl      jsr nfree
+        jsr place               ; assez de place ?
         bcc two0
         rts
 two0    lda #0
@@ -5350,6 +5393,7 @@ u_load
         lda #0
         sta cnt
         sta used
+        sta usedh
         sta ucut
         sta dok
         sta dd
@@ -5619,17 +5663,15 @@ r16     ldy #E_RECS+1
         sta cnum
         lda t2
         adc #0
-        cmp #8
-        bcc b8
-        lda #$FF
-        bne bs
-b8      ldx #3
+        ldx #3
 sh      lsr
         ror cnum
         dex
         bne sh
+        ldy #E_BLKH
+        sta (ep),y
         lda cnum
-bs      ldy #E_BLKS
+        ldy #E_BLKS
         sta (ep),y
 nmx     lda cnt                 ; rang = ordre de la clé = n° du nom long
         ldy #E_RANK
@@ -6024,12 +6066,10 @@ nn      lda cdst                ; lisible, assez de place ?
         lda #<m_nodst
         ldy #>m_nodst
         jmp set_msg
-rd      lda #NBLK
-        sec
-        sbc dused
-        bcs pl
-        lda #0
-pl      jsr place
+rd      lda dused
+        ldx dusedh
+        jsr nfree
+        jsr place
         bcc go
         rts
 bad     jmp bad_name
@@ -7365,8 +7405,9 @@ RSZ     = 11+128+NMAX*ESZ
 fpat2   = fpat+RSZ              ; l'autre colonne : mêmes zones
 vis2    = fpat2+11
 ftab2   = vis2+128
-pz2     = fpat2+RSZ             ;   et sa page zéro (PZN + 2 : absf, ptype)
-pfcb    = pz2+PZN+2             ; nom analysé (12)
+pz2     = fpat2+RSZ             ;   et sa page zéro (PZN + 3 : absf, ptype,
+                                ;   usedh)
+pfcb    = pz2+PZN+3             ; nom analysé (12)
 cname   = pfcb+12               ; autre nom de la copie (11)
 curname = cname+11              ; fichier du curseur (11)
 tg      = curname+11            ; fichiers visés (128)

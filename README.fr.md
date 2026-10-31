@@ -120,7 +120,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
-| `docs/etude-stockage.md` | étude en cours, rien décidé : place sur les disquettes, format 80 pistes, blocs de 1 Ko |
+| `docs/etude-stockage.md` | place sur les disquettes : le format de 80 pistes (fait), les pistes restantes |
 | `docs/usb.md` | les clés USB du LOCI depuis CP/A : répertoire courant, montage des disquettes et cassettes, duplication, renommage, effacement (référence du niveau 1) |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM, XFER |
 
@@ -146,14 +146,18 @@ Version disque : l'EPROM du Microdisc fait appel à la ROM BASIC 1.1, il faut do
 
 Version ROM : copier `build/cpa.rom` dans `roms/`, puis mettre `atmosrom = 'roms/cpa'` dans `oricutron.cfg`.
 
-Sur le matériel, copier `cpa.dsk` sur la clé USB du LOCI et démarrer dessus. CP/A fonctionne
+Sur le matériel, copier `cpa.dsk` sur la clé USB du LOCI et démarrer dessus. Les disquettes
+ont 2 faces de 80 pistes (658 Ko pour les fichiers) ; celles de 42 pistes des versions
+précédentes ne sont plus lues, `tools/mkdisk.py conv` recopie leurs fichiers sur une nouvelle
+(`docs/manuel.md`). CP/A fonctionne
 dans les émulateurs et sur un vrai Oric Atmos muni d'un LOCI ; les couleurs des menus, peu
 lisibles dans certains émulateurs, sont nettes sur un vrai écran.
 
 **Microdisc.** Le lecteur 3″ d'origine du Microdisc n'a qu'une face de 40 pistes : il ne lit
-pas les disquettes de CP/A (2 faces de 42 pistes). Cumulus, Gotek, HxC ou lecteur double
-face : jamais essayés, et sans LOCI la clé USB et le réseau manquent. Aucun portage pour le
-Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt pour en parler.
+pas les disquettes de CP/A (2 faces de 80 pistes, images de 1 Mo). Cumulus, Gotek, HxC ou
+lecteur 3,5″ double face : jamais essayés, et sans LOCI la clé USB et le réseau manquent.
+Aucun portage pour le Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt
+pour en parler.
 
 **Plusieurs lecteurs.** La version disquette gère quatre lecteurs, `A:` à `D:`, comme le
 contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
