@@ -640,11 +640,11 @@ ch      sty g_cnt
         rol ZP_M1+1
         asl
         rol ZP_M1+1
-        clc
-        adc #<font_data
-        sta ZP_M1
+        clc                     ; la police dépliée par font_init (un
+        adc #<(CHARSET+32*8)    ; caractère redéfini par le programme
+        sta ZP_M1               ; est dessiné tel quel)
         lda ZP_M1+1
-        adc #>font_data
+        adc #>(CHARSET+32*8)
         sta ZP_M1+1
         lda #0
         sta g_r                 ; ligne 0 à 7 du caractère

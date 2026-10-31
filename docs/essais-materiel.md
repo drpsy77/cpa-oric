@@ -61,6 +61,11 @@ disquette démarre seule, avec un seul lecteur) :
 - disque presque plein (une copie remplie par `COPY`), `PUT T.TXT TYPE GRX.INC` : `Disk full`
   à la fin, `T.TXT` garde ce qui tenait.
 
+**Police rangée sur 5 octets** (dépliée au démarrage ; identique octet par octet dans
+Oricutron) : au démarrage, puis après un bouton RESET et après `GRAPHER` d'un `.GRX` en
+HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avant ; `SPLIT`,
+`GTEXT 2 10 Bonjour` dans l'image.
+
 **Fenêtre, lot 2 : banques de CPA.BNK** (`docs/systeme.md` § 6 ; sur une **copie** de
 `cpa.dsk`, puis de `cpa-en.dsk`) :
 

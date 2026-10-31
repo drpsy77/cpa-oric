@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F407` en français (`$F3DB` en anglais), **marge 449
-octets** jusqu'à `$F5C8` (692 sans l'option `CPLCMD`), où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F306` en français (`$F2DA` en anglais), **marge 706
+octets** jusqu'à `$F5C8` (949 sans l'option `CPLCMD`), où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
@@ -462,18 +462,34 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 449 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
-octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets) :
+**Système** (marge 706 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
+octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets). Fait : police rangée sur 5
+octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
-| H : masque de point calculé au lieu de la table `g_xbit` (240 octets) | ~220 | un peu plus lent en SPLIT |
-| Police rangée sur 5 octets par caractère, dépliée par `font_init` | ~250 | le texte de `gfx.s` doit lire la police recopiée |
+| H : masque de point sans la table `g_xbit` (240 octets) ; en dernier recours, variante A | A ~185, B ~215 | mesuré (ci-dessous) : A 5 à 8 % plus lent, B 9 à 14 % |
 | Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
 | Option `CPLCMD` retirée (complétion des commandes) | 243 | perte de la fonction |
 | Autre banque de la fenêtre (une commande ou une fonction rare : 576 octets au plus) | sa taille, moins ~6 par point d'entrée | un accès à `CPA.BNK` au premier usage |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
+
+**Piste H mesurée** (6502 simulé, appels par la fonction 115, images identiques ; temps
+actuels à 1 MHz) : A garde `g_xcol` et ajoute une table de 40 multiples de 6 et une de 6
+masques ; B calcule 6 × colonne par décalages.
+
+| Charge | Actuel | A | B |
+|---|---:|---:|---:|
+| 2 000 PLOT | 0,71 s | +4,6 % | +8,8 % |
+| 120 LINE | 2,85 s | +6,4 % | +12,3 % |
+| 40 CIRCLE | 1,14 s | +7,5 % | +14,4 % |
+| 20 BOX | 2,13 s | +6,8 % | +13,1 % |
+
+Les tracés du SPLIT (PLOT, LINE, BOX, CIRCLE, POINT, par `g_addr`) sont un point fort : H
+ne se fait qu'en dernier recours, en variante A. Les primitives du système ne servent pas en
+HIRES plein écran (tables des lignes en `$B400`, dans l'image HIRES) : `hires.inc` a les
+siennes.
 
 **La fenêtre** (`$F7C0-$FCFF`, `docs/systeme.md` § 6). Fait : lot 1, PUT et le code du
 démarrage à froid (test de la RAM, `AUTO.BAT`) chargés avec le système (576 octets

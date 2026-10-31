@@ -52,6 +52,11 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   LORES (`SCR_PROG` = 1). FUNCT ne fait rien, CTRL-T et CTRL-P arrivent comme des touches,
   voyants non dessinés, pas de clignotement ni de pause. Le démarrage à chaud remet le texte,
   la police, l'écran et la barre ; `video_text` recopie la police.
+- **Police** : rangée sur 5 octets par caractère dans le système (`src/font.s`, faite par
+  `tools/gen_font.py` : les 8 lignes de 5 points à la suite), dépliée par `font_init` en 8
+  octets par caractère dans `CHARSET` (points en bits 5..1, bit 0 : espacement) ; 480 octets
+  au lieu de 768, ~0,09 s à chaque dépliage (démarrage, démarrage à chaud, retour du HIRES).
+  GTEXT lit la police dépliée : un caractère redéfini par le programme est dessiné tel quel.
 - Tables `g_ylo` / `g_yhi` du SPLIT calculées par `font_init` en `$B400-$B4FF` (glyphes des
   codes 0-31, jamais affichés).
 
