@@ -181,9 +181,13 @@ hw_vec  lda ram_vectors,x
         bpl hw_vec
         rts
 
-; font_init : recopie la police (96 caractères à partir du code 32),
-;   puis calcule à la place des codes 0-31 les adresses des 128 lignes
-;   de points du mode SPLIT (g_ylo, g_yhi : $A000 + 40 * y)
+; font_init : déplie la police (96 caractères à partir du code 32, 5
+;   octets par caractère : 8 lignes de 5 points à la suite, tools/gen_font.py)
+;   en 8 octets par caractère (points en bits 5..1), puis calcule à la place
+;   des codes 0-31 les adresses des 128 lignes de points du mode SPLIT
+;   (g_ylo, g_yhi : $A000 + 40 * y). ZP_T0 : points en attente, suivis d'un
+;   bit repère (seul : octet suivant à lire) ; ZP_T1 : ligne en cours, avec
+;   un repère qui sort par le bit 7 après 5 points.
 font_init
 .(
         lda #<font_data
@@ -194,16 +198,32 @@ font_init
         sta ZP_PTR2
         lda #>(CHARSET+32*8)
         sta ZP_PTR2+1
-        ldx #3                  ; 3 pages = 768 octets
+        ldx #0
         ldy #0
-loop    lda (ZP_PTR),y
+        lda #$80
+        sta ZP_T0
+line    lda #$04                ; repère : 5 points à prendre
+        sta ZP_T1
+pt      asl ZP_T0               ; point suivant -> C
+        bne got
+        lda (ZP_PTR,x)          ; plus rien : octet suivant de la police
+        inc ZP_PTR
+        bne nc
+        inc ZP_PTR+1
+nc      sec                     ; (repère)
+        rol
+        sta ZP_T0
+got     rol ZP_T1
+        bpl pt
+        asl ZP_T1               ; points en bits 5..1, bit 0 : espacement
+        lda ZP_T1
         sta (ZP_PTR2),y
         iny
-        bne loop
-        inc ZP_PTR+1
+        bne line
         inc ZP_PTR2+1
-        dex
-        bne loop
+        lda ZP_PTR2+1
+        cmp #>(CHARSET+128*8)   ; 3 pages = 768 octets
+        bne line
         stx ZP_PTR              ; (X = 0) <IMG_BASE
         lda #>IMG_BASE
         sta ZP_PTR+1
