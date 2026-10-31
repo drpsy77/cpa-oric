@@ -1,6 +1,6 @@
 #!/bin/sh
 # Construit CP/A :
-#   build/cpa.rom      ROM de 16 Ko (sans disque)
+#   (build/cpa.rom, la ROM de 16 Ko, n'est plus construite : CLAUDE.md)
 #   build/cpa_sys.bin  système disque, chargé en RAM overlay $C000-$FFFF
 #   build/boot.bin     secteurs d'amorçage Microdisc (3 x 256 octets)
 #   build/progs/*.COM  programmes d'exemple
@@ -32,11 +32,12 @@ DISK_OPTS=${DISK_OPTS--DCPLCMD}
 # src/msg/fr ou src/msg/en ; disque en deux langues (cpa_sys.bin,
 # cpa_sys_en.bin pour cpa-en.dsk) ; la ROM, projet à part, en français.
 cd src
-$XA -I msg/fr -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
+# ROM : plus construite ni étudiée (CLAUDE.md) ; build/cpa.rom reste la dernière faite
+# $XA -I msg/fr -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
 $XA -I msg/fr -DDISK $DISK_OPTS -o ../build/cpa_sys.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
 $XA -I msg/en -DDISK $DISK_OPTS -o ../build/cpa_sys_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
 cd ..
-for f in build/cpa.rom build/cpa_sys.bin build/cpa_sys_en.bin; do
+for f in build/cpa_sys.bin build/cpa_sys_en.bin; do
   SIZE=$(wc -c < $f)
   if [ "$SIZE" -ne 16384 ]; then echo "Taille inattendue pour $f : $SIZE"; exit 1; fi
 done
@@ -170,5 +171,5 @@ theme notes notes "" "$P/VOIR.COM" ""
 echo "== build/cpa-projet.dsk, build/cpa-project-en.dsk"
 python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
 cp build/cpa-projet.dsk build/cpa-project-en.dsk
-echo "OK : build/cpa.rom ; build/cpa.dsk, cpa-{anim,logo,exemples,notes,projet}.dsk ;"
+echo "OK : build/cpa.dsk, cpa-{anim,logo,exemples,notes,projet}.dsk ;"
 echo "     build/cpa-en.dsk, cpa-{anim,logo,examples,notes,project}-en.dsk"

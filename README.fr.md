@@ -7,12 +7,12 @@
 <p><img src="cpa-logo-oricutron.png" width="320" alt="LOGO dessine un arbre"> <img src="cpa-menus-oricutron.png" width="320" alt="Menus déroulants au prompt A>"></p>
 <img src="sprites.png" width="320" alt="EDSPRITE, l'éditeur de sprites avec gestion de masque en mode LORES"></p>
 
-- **Votre Oric devient un vrai poste de travail** : menus déroulants, historique, complétion,
+- **Faites de votre Oric une station de travail modernisée** : menus déroulants, historique, complétion,
   éditeur et gestionnaire de fichiers plein écran.
 - **Écrivez un jeu, dessinez-le, compilez-le** en 6502 rapide, sans jamais quitter la machine.
 - **Puis partagez-le** : par la clé USB du LOCI aujourd'hui, sur une simple cassette pour tout
   Oric bientôt.
-- **Solide comme un roc** : sur un vrai Atmos avec un LOCI, des séances de travail entières
+- **Un système fiable et solide** : sur un vrai Atmos avec un LOCI, des séances de travail entières
   sans un plantage ni un redémarrage.
 
 **L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
