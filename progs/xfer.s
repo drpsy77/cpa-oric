@@ -1,8 +1,8 @@
 ; =====================================================================
 ;  XFER.COM — envoi et réception de fichiers par le modem (XMODEM)
 ;
-;  XFER R fic [nom] [/T]   reçoit nom du serveur et l'écrit dans fic
-;  XFER E fic [nom] [/T]   envoie fic au serveur, sous le nom nom
+;  XFER R fic [nom] [/T] [@hote]   reçoit nom du serveur, l'écrit dans fic
+;  XFER E fic [nom] [/T] [@hote]   envoie fic au serveur, sous le nom nom
 ;    (S est accepté pour E : « send » sur la disquette anglaise)
 ;    fic  fichier de CP/A, lecteur facultatif (B:LETTRE.TXT), sans jokers
 ;    nom  nom du fichier côté serveur ; par défaut fic tel qu'il a été
@@ -11,9 +11,14 @@
 ;         (et l'inverse), une tabulation en espace, et le texte en ASCII
 ;         (accents et cédille retirés, oe, ae)
 ;
-;  La liaison doit être établie : TERM, ATDT-hote:port vers le serveur
-;  (tools/xfer_server.py sur le Mac ou le Pi), puis CTRL-Q (la liaison
-;  reste ouverte). XFER envoie une ligne de commande au serveur
+;    @hote  compose d'abord le numéro du serveur (tools/xfer_server.py
+;         sur le Mac ou le Pi) : nom du fichier HOSTS, adresse IP ou nom
+;         DNS, « :port » facultatif, port 2323 par défaut (acia_inc.s,
+;         ac_dial). La liaison reste ouverte après le transfert : un
+;         XFER suivant, sans @hote, s'en sert.
+;
+;  Sans @hote, la liaison doit être ouverte : par un XFER précédent, ou par
+;  TERM (ATDT-hote:port, puis CTRL-Q). XFER envoie une ligne de commande au serveur
 ;  (« XFER RECV nom [T] » : l'Oric reçoit, ou « XFER SEND nom [T] » :
 ;  l'Oric envoie ; CR), attend sa réponse
 ;  (« +... » : d'accord ; « -A... » : fichier absent ; « -... » : autre
@@ -56,6 +61,7 @@ w2      = $1B           ; position du nom de fichier dans TAIL
 w3      = $1C           ; position du nom distant (0 : aucun)
 tmo     = $1D           ; attentes de 5 s restantes
 num     = $1E           ; 2 octets : nombre à afficher
+hostx   = $20           ; position de « @hote » dans TAIL+1 ($FF : aucun)
 
         *= $0500
 start
@@ -63,10 +69,15 @@ start
         lda #0
         sta text
         sta w3
-        ldx #0                  ; /T n'importe où
+        lda #$FF
+        sta hostx
+        ldx #0                  ; /T et @hote n'importe où
 o1      lda TAIL+1,x
         beq o3
-        cmp #"/"
+        cmp #"@"
+        bne o0
+        stx hostx
+o0      cmp #"/"
         bne o2
         lda TAIL+2,x
         and #$DF
@@ -104,6 +115,8 @@ d1      sty dir
         beq d2
         cmp #"/"
         beq d2
+        cmp #"@"
+        beq d2
         stx w3
 d2      lda FCB2+1
         cmp #" "
@@ -127,7 +140,9 @@ d4      lda FCB2,x
         cmp #$1E
         beq d6
 d5      jsr ac_setup
-d6      jsr ac_rsta
+d6      lda hostx               ; @hote : l'appel dira si le modem manque
+        bpl d7                  ;   (Oricutron : DSR absent avant l'appel)
+        jsr ac_rsta
         and #$40
         beq d7
         lda #<m_nodsr
@@ -136,7 +151,14 @@ d6      jsr ac_rsta
 wild    lda #<m_wild
         ldy #>m_wild
         jmp puts
-d7      lda #<buf               ; enregistrements lus et écrits dans buf
+d7      ldx hostx               ; @hote : composer d'abord
+        bmi d9
+        lda #<p2323
+        ldy #>p2323
+        jsr ac_dial
+        bcc d9
+        rts
+d9      lda #<buf               ; enregistrements lus et écrits dans buf
         ldy #>buf
         ldx #F_SETDMA
         jsr BDOS
@@ -250,7 +272,7 @@ r2      lda #1
         sta tries
         lda #"C"                ; XMODEM-CRC demandé
         jsr ac_put
-rl      jsr esc
+rl      jsr ac_esc
         bcc r3
         jmp rcan
 r3      ldy #150                ; 3 s
@@ -407,7 +429,7 @@ s1      lda #<m_snd
         rts
 s2      lda #12                 ; le récepteur a 60 s pour demander
         sta tmo
-sw      jsr esc
+sw      jsr ac_esc
         bcs scan
         ldy #250
         jsr ac_getw
@@ -441,7 +463,7 @@ sl      ldx #F_READ             ; enregistrement suivant
         bne seot
         lda #0
         sta tries
-sb      jsr esc
+sb      jsr ac_esc
         bcs scan
         jsr sblock
 sa      ldy #250                ; réponse : 5 s, deux fois
@@ -632,19 +654,6 @@ l       lda #CAN
         rts
 .)
 
-; esc : C=1 si ESC a été tapé
-esc
-.(
-        jsr B_CONST
-        cmp #0
-        beq no
-        jsr B_CONIN
-        cmp #27
-        beq r
-no      clc
-r       rts
-.)
-
 ; crcupd : CRC-16 XMODEM (polynôme $1021, départ 0) mis à jour par A ;
 ;   garde X
 crcupd
@@ -756,7 +765,9 @@ puts    ldx #F_PRINT
 
 c_get   .asc "XFER RECV ",0
 c_put   .asc "XFER SEND ",0
+p2323   .asc "2323",0           ; port par défaut du serveur
 
+#include "acia.msg"
 #include "acia_inc.s"
 #include "xfer.msg"
 
@@ -768,3 +779,4 @@ ffcb    = endp+37               ; 36 : NOM.$$$ pendant la réception
 rfcb    = endp+73               ; 32 : renommage (ancien, nouveau)
 rname   = endp+105              ; 61 : nom distant
 buf     = endp+166              ; 128 : un enregistrement
+ac_wrk  = endp+294              ; 266 : HOSTS, réponses du modem (acia_inc.s)

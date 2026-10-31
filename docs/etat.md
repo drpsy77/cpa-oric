@@ -45,15 +45,15 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 580 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 708 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 852 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) | `manuel.md` |
-| XFER | 2 037 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` | `manuel.md` |
+| TERM | 1 890 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| XFER | 3 062 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -95,7 +95,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 (25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois lots (27-28/10/2026,
 `docs/usb.md`) ; les programmes BASIC en texte (`.BAS`) codés par MKTAP (28/10/2026). Suite
 du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde son ordre.
-En cours : le pilote série du BIOS et la console à distance (point 4), à spécifier.
+En cours : le pilote série du BIOS et la console à distance (point 4), spécifiés
+(`docs/console-distance.md`), en quatre lots ; d'abord le fichier `HOSTS`.
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -188,11 +189,12 @@ En cours : le pilote série du BIOS et la console à distance (point 4), à spé
    (`tools/test_xfer.sh` : 40 Ko, `/T`, refus, ESC, erreurs simulées) et sur le vrai Oric
    (30/10/2026, sauf les accents) ; TERM et XFER sur la bibliothèque `acia_inc.s`. TERM
    affiche par la fonction 2 du BDOS : `PUT NOM TERM` capture une session entière.
-   Décidé, pas encore fait : plusieurs fichiers (jokers), appel du serveur par XFER
-   lui-même (sans passer par TERM).
-   Proposé, avec l'appel du serveur par XFER : un fichier texte `HOSTS` (`nom hôte:port`,
-   une ligne par hôte), lu par TERM et XFER (code dans `acia_inc.s`, ~200 octets, rien de
-   résident) ; un nom absent part au modem, qui résout par le DNS (pas les `.local`).
+   Fait (01/11/2026, lot 1 de la console à distance) : le fichier `HOSTS` (une ligne
+   `nom adresse[:port]` par hôte, sur chaque disquette amorçable, caché et modifiable) et
+   l'appel du modem par les programmes (`ac_dial` d'`acia_inc.s` : `AT`, sinon `+++` et
+   `ATH0`, puis `ATDT-adresse:port`) : `TERM mac`, `XFER R fic @mac` ; essayé dans
+   Oricutron (`tools/test_xfer.sh`), à essayer sur le vrai Oric. Décidé, pas encore fait :
+   plusieurs fichiers (jokers).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
      a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la
      fenêtre TCP que quand son tampon se vide (`docs/loci-modem-wifi.md`, « Contrôle de
@@ -202,41 +204,17 @@ En cours : le pilote série du BIOS et la console à distance (point 4), à spé
    - Décidé par Pierre : **console à distance** (le Mac tape et lit à la place du clavier et
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
      EDIT). Elle demande le pilote dans le BIOS : elle doit survivre aux programmes.
-   - **Prochain développement : pilote série du BIOS et console à distance.** Place prête
-     (marge 706 octets, § 3 ; banques de la fenêtre et police compactée faites). Découpage
-     proposé, à spécifier avec maquettes avant tout code :
-     - résident, le strict nécessaire (~150 octets estimés) : PUNCH / READER (BIOS `$C012`,
-       `$C015`, BDOS 4 et 3, entrées déjà au contrat), état de la réception, crochets dans
-       CONST, CONIN, CONOUT ; par scrutation, code d'`acia_inc.s` ; variables dans
-       `$FD13-$FD57` ;
-     - service de l'écran (~80 à 100 octets), sans état côté Oric : sur demande du Mac,
-       28 totaux de contrôle (un par ligne de `$BB80`), puis les lignes demandées (40
-       octets) ; le Mac compare à sa copie. Voit tout le mode texte (EDIT, CMDER, HEX et les
-       menus écrivent directement dans `SCREEN`, ligne d'état, couleurs) ; pas le SPLIT ni
-       le HIRES ;
-     - un `.COM` pour le reste (nom à choisir, par exemple `REMOTE ON` / `OFF`) : trouve et
-       règle l'ACIA, pose son adresse dans le pilote, compose éventuellement le numéro,
-       lève le drapeau résident ; ne coûte rien en mémoire et ne gêne ni PUT ni IMG (une
-       banque ne conviendrait pas : la fenêtre sert à PUT et IMG) ;
-     - côté Mac : une fenêtre 40 x 28 à la police et aux couleurs de l'Oric (outils
-       Python du dépôt), qui envoie les touches traduites (flèches, FUNCT, CTRL) ; elle
-       servira aussi aux essais automatiques sur le vrai Oric.
-   - Contrôles à prévoir (pas de double validation : USB et TCP protègent déjà les
-     octets, le LOCI ne lit le modem que s'il a de la place) : envoi à attente bornée
-     (Mac disparu : console à distance coupée d'elle-même, message, l'Oric continue) ;
-     réponses du service de l'écran cadrées (octet de début que la console n'envoie
-     jamais, longueur, petit total) pour que le Mac se resynchronise ; le Mac redemande
-     tout l'écran après un RESET, une reconnexion ou un programme qui a pris l'écran ;
-     Oricutron (`$031C`, 6551) perd un octet si l'Oric tarde : débit modeste pour les
-     essais. ~20 à 30 octets côté Oric.
-   - À décider par Pierre : (1) recopie de l'écran tout de suite ou flux de la console
-     d'abord (proposé : les deux, en deux étapes) ; (2) fenêtre Mac en Tk ou en page web
-     locale ; (3) qui appelle qui (l'Oric compose le numéro du Mac, ou l'inverse) ; nom et
-     forme de la commande. À mesurer d'abord : le débit réel LOCI, Pico W, Mac à 9 600
-     bauds.
-   - Contraintes du pilote : écritures dans l'ACIA par `STA` absolu seulement (une écriture
-     indexée lit d'abord le registre et consomme un octet reçu) : l'adresse `$0380` /
-     `$031C` choisie au démarrage se pose dans le code (RAM overlay).
+   - **Prochain développement : pilote série du BIOS et console à distance**
+     (`docs/console-distance.md`, schéma animé `docs/console-distance.html`). Décidé par
+     Pierre : fonction 117 du BDOS et définition de PUNCH / READER (ajouts au contrat),
+     commande `REMOTE`, l'Oric appelle toujours (le Mac ne peut pas le réveiller sans
+     travaux dans le LOCI). Lots : (1) fichier `HOSTS` et appel du modem par TERM et XFER
+     (`acia_inc.s`) : fait ; (2) mesure du débit par XFER sur le vrai Oric ; (3) pilote résident
+     (~325 octets estimés, 500 prévus), REMOTE.COM, démon `tools/remote.py` avec écho
+     rapide ; (4) page web. Fait d'avance : la fenêtre tkinter pour le petit écran d'un
+     Raspberry Pi Zero (`tools/remote_tk.py`, rendu `tools/oric_ecran.py`, faux démon
+     `tools/faux_demon.py` ; § 9.1 à 9.3), essayée sur la mire et des vidages
+     d'Oricutron, pas encore sur le Pi Zero.
    - Aussi : passerelle
    vers Claude sur le Pi 400 (serveur TCP : appel de l'API, accents translittérés, lignes de
    38 colonnes, historique gardé côté Pi).
@@ -545,7 +523,7 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 580) prend 7 blocs, 1 756 octets libres dans le dernier (12 417 en anglais, 7
+  blocs, 1 844 octets libres dans le dernier. HELP (12 708) prend 7 blocs, 1 628 octets libres dans le dernier (12 535 en anglais, 7
   blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)

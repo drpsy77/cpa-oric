@@ -6,7 +6,8 @@ firmware 0.3.98 du LOCI (`tools/loci-acia-diag/`, voir « Firmware du LOCI »).
 But : donner à un vrai Oric un accès réseau (envoi et réception de fichiers) à travers le
 LOCI et un modem WiFi USB, pour CP/A. Ce document décrit le matériel et sa préparation.
 Côté CP/A, `TERM.COM` (terminal, `docs/manuel.md` « Terminal série ») et `XFER.COM`
-(fichiers, « Transfert de fichiers ») existent ; le pilote série du BIOS est à faire.
+(fichiers, « Transfert de fichiers ») existent et composent eux-mêmes le numéro, pris dans
+le fichier `HOSTS` (« Les hôtes : HOSTS ») ; le pilote série du BIOS est à faire.
 
 ## Principe
 

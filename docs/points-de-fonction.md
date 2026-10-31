@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 0 | 30 | 18 | 9 | **85** | 20 | **105** |
+| USB | 28 | 5 | 34 | 18 | 9 | **94** | 21 | **115** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *47* | *431* | *110* | *111* | ***867*** | *220* | ***1087*** |
+| *Applications* | *168* | *52* | *435* | *110* | *111* | ***876*** | *221* | ***1097*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 29 | 122 | 18 | **191** | 46 | **237** |
-| **Total** | **220** | **77** | **661** | **324** | **207** | **1489** | **354** | **1843** |
+| **Total** | **220** | **82** | **665** | **324** | **207** | **1498** | **355** | **1853** |
 
-Points ajustés (indicatif, § 9) : 1 489 × 1,05 ≈ 1 563.
+Points ajustés (indicatif, § 9) : 1 498 × 1,05 ≈ 1 573.
 
-Nombre de fonctions comptées : 31 ILF, 15 EIF, 210 EI, 79 EO, 69 EQ.
+Nombre de fonctions comptées : 31 ILF, 16 EIF, 211 EI, 79 EO, 69 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -586,6 +586,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.D02 | Fichiers et dossiers de la clé USB et de la mémoire du LOCI | ILF | 2 | 5 | F | 7 |
 | USB.D03 | Répertoire courant de CP/A (`0:CPA.CWD` : chemin, description du support ; corrigé si la clé est renumérotée) | ILF | 1 | 2 | F | 7 |
 | USB.D04 | Configuration du menu du LOCI en XRAM (lecteurs montés, noms des images, réglages de démarrage) | ILF | 2 | 9 | F | 7 |
+| USB.D05 | `HOSTS` (nom, adresse, port, mode telnet), écrit dans EDIT ou sur le Mac | EIF | 1 | 4 | F | 5 |
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés, jokers : un seul fichier) | EI | 2 | 6 | M | 4 |
 | USB.T03 | USBDIR : liste (tailles, dossiers, modèle à jokers ; chemin et nombre à la fin) | EQ | 1 | 4 | F | 3 |
@@ -601,6 +602,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T13 | XFER E : envoi d'un fichier (nom distant, `/T`, absent, refus du serveur) | EO | 1 | 5 | F | 4 |
 | USB.T14 | USBDIR /C (USBCD) : changer de répertoire courant (répertoire vérifié, `0:CPA.CWD`, écrit en retour ; sans chemin : CMDER) | EI | 1 | 3 | F | 3 |
 | USB.T15 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 (numéros, ordre, minuscules, avertissement au-delà de 78 caractères, refus) | EO | 2 | 8 | M | 5 |
+| USB.T16 | TERM `hote`, XFER `@hote` : appel du modem par un nom (`HOSTS`, port du programme ou tapé, telnet, `+++` et `ATH0` sur une liaison restée ouverte, réponse du modem, ESC) | EI | 2 | 7 | M | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -614,6 +616,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.A08 | Changement d'image sans commande vers un lecteur vide (A: en service, lecteurs relus, lecteur courant rendu) ; image déjà montée (getcwd + nom du menu) | `lmnt_inc.s` | 3 |
 | USB.A09 | XMODEM : blocs numérotés (modulo 256), CRC-16 bit à bit ou somme, NAK et reprises, bloc répété ignoré, délais, annulation | `xfer.s` | 3 |
 | USB.A10 | Codage BASIC de la ROM 1.1 suivi pas à pas (`TokeniseLine`, `Txt2Int`), table des mots-clés, liens des lignes | `mktap.s` | 3 |
+| USB.A11 | Dialogue Hayes : lignes du modem reconnues à leurs deux premières lettres (écho sauté), échappement `+++` encadré de silences, délais au compteur 50 Hz | `acia_inc.s` | 1 |
 
 ### 4.8 ASM
 
@@ -828,7 +831,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 68 | 11 569 | 1 330 | 556 | 1 714 | 10 % | 37 732 | 36 | 116 |
+| Système et commandes | 68 | 11 682 | 1 337 | 556 | 1 631 | 10 % | 37 603 | 36 | 116 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -836,18 +839,18 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 28 | 5 808 | 591 | 229 | 0 | 9 % | 13 467 | 68 | 158 |
+| USB | 30 | 6 313 | 651 | 246 | 0 | 9 % | 13 467 | 67 | 143 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 179 | 9 111 | 1 153 | 606 | 0 | 11 % | — | 48 | — |
-| **Total** | 370 | 74 552 | 6 274 | 2 992 | 2 630 | 8 % | 159 959 | 50 | 107 |
+| Outillage PC | 179 | 9 141 | 1 165 | 608 | 0 | 11 % | — | 48 | — |
+| **Total** | 372 | 75 200 | 6 353 | 3 011 | 2 547 | 8 % | 159 830 | 50 | 107 |
 
-Octets du système : code résident 13 319 (`$C000-$F407`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 062 (`$C000-$F306`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 574 | 83 | 4,8 | 91 |
+| Système et commandes | 1 614 | 84 | 5,0 | 94 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
 | LOGO | 311 | 63 | 1,6 | 20 |
@@ -859,16 +862,16 @@ Octets du système : code résident 13 319 (`$C000-$F407`), page `$FF00` 240, 
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 26 |
-| Outillage PC | 345 | — | 1,8 | 131 |
-| Transverse (projet) | 2 573 | — | — | 93 |
-| Traduction anglaise (docs/en) | 2 855 | — | — | 44 |
-| **Total** | 9 401 | 319 | 6,3 | 223 |
+| Outillage PC | 346 | — | 1,8 | 134 |
+| Transverse (projet) | 2 597 | — | — | 96 |
+| Traduction anglaise (docs/en) | 2 888 | — | — | 45 |
+| **Total** | 9 499 | 320 | 6,3 | 227 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 223 commits du 2026-10-04 au 2026-10-31.
+Historique : 227 commits du 2026-10-04 au 2026-10-31.
 
-Réutilisation : 55 391 lignes de code écrites dans `progs/`, 64 060 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 55 886 lignes de code écrites dans `progs/`, 65 009 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -937,6 +940,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-30 | fenêtre, lot 1 | 0.9 | 1 480 | 347 | 1 827 | 214 | PUT et démarrage à froid dans la fenêtre `$F7C0-$FCFF` (~580 octets résidents rendus) ; `AUTO.BAT` ; TERM par la fonction 2 du BDOS ; PUT referme le fichier après un disque plein |
 | 2026-10-31 | MKTAP .BAS | 0.9 | 1 489 | 351 | 1 840 | 223 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1, en `$0501`, `/R` ; `test_bas.py` (codage contre la ROM dans le 6502 simulé) ; `.BAS` en texte pour `mkdisk.py` |
 | 2026-10-31 | fenêtre, lot 2 | 0.9 | 1 489 | 354 | 1 843 | 224 | banques de la fenêtre : `CPA.BNK` (PUT, IMG), chargeur, prêt pendant un PUT ; GSAVE, GLOAD, SAVE en banque ; GSAVE par `NOM.$$$`, fichier protégé refusé ; `tools/mkbnk.py` |
+| 2026-11-01 | HOSTS | 0.9 | 1 498 | 355 | 1 853 | 227 | fichier `HOSTS` et appel du modem par les programmes (`ac_dial`, `ac_host` d'`acia_inc.s`) : `TERM hote`, `XFER ... @hote` ; `test_xfer.sh` sans TERM, en deux passes |
 
 ## 11. Comparaisons
 

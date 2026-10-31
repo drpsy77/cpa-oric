@@ -1,0 +1,8 @@
+; HOSTS : one host per line, its name
+; then its address (IP or DNS name),
+; optional :port. Default port :
+; TERM 23, XFER 2323, REMOTE 2324.
+; + or = before the address : telnet.
+; Examples : TERM MAC, XFER R A.TXT @MAC
+mac     192.168.1.20
+pi      192.168.1.30

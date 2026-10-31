@@ -1,0 +1,8 @@
+; HOSTS : un hote par ligne, son nom
+; puis son adresse (IP ou nom DNS),
+; :port facultatif. Port par defaut :
+; TERM 23, XFER 2323, REMOTE 2324.
+; + ou = devant l'adresse : telnet.
+; Exemples : TERM MAC, XFER R A.TXT @MAC
+mac     192.168.1.20
+pi      192.168.1.30

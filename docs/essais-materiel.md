@@ -240,6 +240,19 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
+**HOSTS et appel du modem** (TERM, XFER ; essayés seulement dans Oricutron) : corriger
+l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer `xfer_server.py` sur le Mac, puis :
+
+- `XFER E LETTRE.TXT @MAC` sans passer par TERM : `Appel de 192.168.1.x:2323...`,
+  `CONNECT`, transfert ; puis `XFER R COPIE.TXT lettre.txt` sans `@` (liaison gardée) ;
+- `XFER R C2.TXT lettre.txt @MAC` sur cette liaison restée ouverte : quelques secondes de
+  plus (`+++`, `ATH0`), puis un nouvel appel qui marche ;
+- `TERM PASLA` (nom inconnu du DNS) : réponse du modem (`NO CARRIER` ?) puis retour au
+  prompt ; `TERM IPINFO.IO:80` : `CONNECT` ;
+- ESC pendant `Appel de...` : `Appel abandonne (ESC)`, le modem reste utilisable
+  (`TERM`, `AT` : `OK`) ;
+- `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`).
+
 **XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
 du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
 " " -`, sans caractère parasite.
@@ -291,6 +304,13 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
   et `$022B`, d'après la ROM 1.0, jamais essayé).
 
 ## À vérifier ailleurs
+
+- **Raspberry Pi Zero, console à distance** (`docs/console-distance.md` § 9.2) : avant le
+  démon, avec `tools/faux_demon.py` (mire) sur le Pi Zero ou le Mac, puis
+  `tools/remote_tk.py --plein-ecran --sans-boutons --demon http://...` sur le Pi Zero :
+  taille de l'écran de l'Oric, lettres nettes, clignotement, frappe (dont flèches,
+  CTRL, F1), temps pour redessiner tout l'écran (passer d'un vidage à l'autre avec
+  `--periode 3`) ; avec `--etirer` aussi.
 
 - **Clock Signal** (simule la rotation et le chargement de tête) : premier accès après plus
   de 3 s. Ses images ne sont pas fiables après écriture : en réécrivant une piste dans le

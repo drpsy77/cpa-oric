@@ -1,9 +1,10 @@
 ; xfer.msg : messages de XFER.COM en anglais (le français est dans
 ;   progs/msg/fr/xfer.msg, mêmes étiquettes). Inclus par progs/xfer.s.
-m_use   .asc "XFER R file [name] [/T] : receive",13,10
-        .asc "XFER S file [name] [/T] : send",13,10
+m_use   .asc "XFER R file [name] [/T] [@host]",13,10
+        .asc "XFER S file [name] [/T] [@host]",13,10
         .asc " /T : text (Mac line endings)",13,10
-        .asc "Connect first with TERM, then ^Q",13,10,"$"
+        .asc " @host : call (HOSTS file) ;",13,10
+        .asc " no @ : link already open",13,10,"$"
 m_wild  .asc "XFER : no wildcards",13,10,"$"
 m_nodsr .asc "No modem (DSR)",13,10,"$"
 m_nofil .asc "No file",13,10,"$"

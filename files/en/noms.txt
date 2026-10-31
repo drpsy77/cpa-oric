@@ -35,6 +35,7 @@ files/anim/BALLE.ANI        BALL.ANI
 files/anim/VAISSEAU.ANI     SHIP.ANI
 files/anim/LOGO.HIZ         LOGO.HIZ
 files/edit.cfg              EDIT.CFG
+files/hosts                 HOSTS
 files/readme.txt            README.TXT
 build/src/HELLO.ASM         HELLO.ASM
 build/src/GTEST.ASM         GTEST.ASM
