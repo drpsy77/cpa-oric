@@ -8,7 +8,7 @@ documentation : `docs/architecture.md` § 7.
 
 ## Contexte de travail
 
-- Machine : Raspberry Pi 400 (machine de test). Pierre parle souvent depuis son téléphone
+- Machine : Raspberry Pi 400 (machine de test) ou Mac. Pierre parle souvent depuis son téléphone
   (Remote Control) : réponses concises, en français, pas de longues sorties de terminal.
 - Tout ce qui se construit reste dans le dépôt (`~/Projets/cpa-oric` sur le Pi,
   `~/Documents/GitHub/cpa-oric` sur le Mac).
@@ -27,7 +27,8 @@ documentation : `docs/architecture.md` § 7.
     ./build.sh                 # ROM, système disque, .COM, disquettes ; erreurs dans build/*.err
 
 Les images `build/*.dsk` et `build/cpa.rom` sont versionnées : après `./build.sh`, `git status`
-montre si elles ont changé.
+montre si elles ont changé. 
+La version rom ne doit plus être étudiée ni compilée.
 
 ## Tester
 
