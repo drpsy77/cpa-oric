@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F407` en français (`$F3DB` en anglais), **marge 449
-octets** jusqu'à `$F5C8` (692 sans l'option `CPLCMD`), où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F306` en français (`$F2DA` en anglais), **marge 706
+octets** jusqu'à `$F5C8` (949 sans l'option `CPLCMD`), où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
@@ -95,6 +95,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 (25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois lots (27-28/10/2026,
 `docs/usb.md`) ; les programmes BASIC en texte (`.BAS`) codés par MKTAP (28/10/2026). Suite
 du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde son ordre.
+En cours : le pilote série du BIOS et la console à distance (point 4), à spécifier.
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -200,17 +201,42 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
      (Oricutron `$031C`, carte série) perd un octet si on tarde.
    - Décidé par Pierre : **console à distance** (le Mac tape et lit à la place du clavier et
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
-     EDIT). Elle demande le pilote dans le BIOS, pas un `.COM` : elle doit survivre aux
-     programmes.
-   - Ordre : (1) banques de la fenêtre, lots 1 et 2 faits (§ 3) ; (2) pilote série du
-     BIOS, par
-     scrutation, reprenant le code d'`acia_inc.s` : PUNCH / READER (BDOS 3
-     et 4), état de la réception, console redirigée (CONST, CONIN, CONOUT ; commande et
-     forme à spécifier) ; ~150 octets estimés, ~300 à prévoir.
+     EDIT). Elle demande le pilote dans le BIOS : elle doit survivre aux programmes.
+   - **Prochain développement : pilote série du BIOS et console à distance.** Place prête
+     (marge 706 octets, § 3 ; banques de la fenêtre et police compactée faites). Découpage
+     proposé, à spécifier avec maquettes avant tout code :
+     - résident, le strict nécessaire (~150 octets estimés) : PUNCH / READER (BIOS `$C012`,
+       `$C015`, BDOS 4 et 3, entrées déjà au contrat), état de la réception, crochets dans
+       CONST, CONIN, CONOUT ; par scrutation, code d'`acia_inc.s` ; variables dans
+       `$FD13-$FD57` ;
+     - service de l'écran (~80 à 100 octets), sans état côté Oric : sur demande du Mac,
+       28 totaux de contrôle (un par ligne de `$BB80`), puis les lignes demandées (40
+       octets) ; le Mac compare à sa copie. Voit tout le mode texte (EDIT, CMDER, HEX et les
+       menus écrivent directement dans `SCREEN`, ligne d'état, couleurs) ; pas le SPLIT ni
+       le HIRES ;
+     - un `.COM` pour le reste (nom à choisir, par exemple `REMOTE ON` / `OFF`) : trouve et
+       règle l'ACIA, pose son adresse dans le pilote, compose éventuellement le numéro,
+       lève le drapeau résident ; ne coûte rien en mémoire et ne gêne ni PUT ni IMG (une
+       banque ne conviendrait pas : la fenêtre sert à PUT et IMG) ;
+     - côté Mac : une fenêtre 40 x 28 à la police et aux couleurs de l'Oric (outils
+       Python du dépôt), qui envoie les touches traduites (flèches, FUNCT, CTRL) ; elle
+       servira aussi aux essais automatiques sur le vrai Oric.
+   - Contrôles à prévoir (pas de double validation : USB et TCP protègent déjà les
+     octets, le LOCI ne lit le modem que s'il a de la place) : envoi à attente bornée
+     (Mac disparu : console à distance coupée d'elle-même, message, l'Oric continue) ;
+     réponses du service de l'écran cadrées (octet de début que la console n'envoie
+     jamais, longueur, petit total) pour que le Mac se resynchronise ; le Mac redemande
+     tout l'écran après un RESET, une reconnexion ou un programme qui a pris l'écran ;
+     Oricutron (`$031C`, 6551) perd un octet si l'Oric tarde : débit modeste pour les
+     essais. ~20 à 30 octets côté Oric.
+   - À décider par Pierre : (1) recopie de l'écran tout de suite ou flux de la console
+     d'abord (proposé : les deux, en deux étapes) ; (2) fenêtre Mac en Tk ou en page web
+     locale ; (3) qui appelle qui (l'Oric compose le numéro du Mac, ou l'inverse) ; nom et
+     forme de la commande. À mesurer d'abord : le débit réel LOCI, Pico W, Mac à 9 600
+     bauds.
    - Contraintes du pilote : écritures dans l'ACIA par `STA` absolu seulement (une écriture
      indexée lit d'abord le registre et consomme un octet reçu) : l'adresse `$0380` /
-     `$031C` choisie au démarrage se pose dans le code (RAM overlay) ; la ROM devra fixer
-     `$0380` ou copier ces quelques instructions en RAM.
+     `$031C` choisie au démarrage se pose dans le code (RAM overlay).
    - Aussi : passerelle
    vers Claude sur le Pi 400 (serveur TCP : appel de l'API, accents translittérés, lignes de
    38 colonnes, historique gardé côté Pi).
@@ -462,18 +488,34 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 449 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
-octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets) :
+**Système** (marge 706 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
+octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets). Fait : police rangée sur 5
+octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
-| H : masque de point calculé au lieu de la table `g_xbit` (240 octets) | ~220 | un peu plus lent en SPLIT |
-| Police rangée sur 5 octets par caractère, dépliée par `font_init` | ~250 | le texte de `gfx.s` doit lire la police recopiée |
+| H : masque de point sans la table `g_xbit` (240 octets) ; en dernier recours, variante A | A ~185, B ~215 | mesuré (ci-dessous) : A 5 à 8 % plus lent, B 9 à 14 % |
 | Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
 | Option `CPLCMD` retirée (complétion des commandes) | 243 | perte de la fonction |
 | Autre banque de la fenêtre (une commande ou une fonction rare : 576 octets au plus) | sa taille, moins ~6 par point d'entrée | un accès à `CPA.BNK` au premier usage |
 
 Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
+
+**Piste H mesurée** (6502 simulé, appels par la fonction 115, images identiques ; temps
+actuels à 1 MHz) : A garde `g_xcol` et ajoute une table de 40 multiples de 6 et une de 6
+masques ; B calcule 6 × colonne par décalages.
+
+| Charge | Actuel | A | B |
+|---|---:|---:|---:|
+| 2 000 PLOT | 0,71 s | +4,6 % | +8,8 % |
+| 120 LINE | 2,85 s | +6,4 % | +12,3 % |
+| 40 CIRCLE | 1,14 s | +7,5 % | +14,4 % |
+| 20 BOX | 2,13 s | +6,8 % | +13,1 % |
+
+Les tracés du SPLIT (PLOT, LINE, BOX, CIRCLE, POINT, par `g_addr`) sont un point fort : H
+ne se fait qu'en dernier recours, en variante A. Les primitives du système ne servent pas en
+HIRES plein écran (tables des lignes en `$B400`, dans l'image HIRES) : `hires.inc` a les
+siennes.
 
 **La fenêtre** (`$F7C0-$FCFF`, `docs/systeme.md` § 6). Fait : lot 1, PUT et le code du
 démarrage à froid (test de la RAM, `AUTO.BAT`) chargés avec le système (576 octets
