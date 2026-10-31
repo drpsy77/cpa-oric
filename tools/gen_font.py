@@ -4,7 +4,8 @@
 Chaque glyphe fait 5 pixels de large sur 8 lignes ; la 6e colonne (bit 0)
 sert d'espacement. Sur l'Oric, seuls les bits 5..0 de chaque octet sont
 affichés, bit 5 à gauche.
-Sortie : src/font.s (directives .byt pour xa).
+Sortie : src/font.s (directives .byt pour xa), 5 octets par caractère
+(les 40 points à la suite), dépliés au démarrage par font_init.
 """
 import sys
 
@@ -113,20 +114,32 @@ g('}', "##...","..#..","..#..","...#.","..#..","..#..","##...",E)
 g('~', E,E,".#...","#.#.#","...#.",E,E,E)
 g(chr(127), "#####","#####","#####","#####","#####","#####","#####","#####")
 
+def glyphe(ch):
+    """Les 8 octets d'un caractère tels que l'Oric les affiche (bits 5..1)."""
+    vals = []
+    for r in G[ch]:
+        v = 0
+        for i, c in enumerate(r):
+            if c == '#':
+                v |= 1 << (5 - i)
+        vals.append(v)
+    return vals
+
+
 def main(out):
-    lines = ["; Police CP/A, caractères 32..127, 8 octets par caractère",
+    """Police rangée sur 5 octets par caractère : les 8 lignes de 5 points
+    à la suite (40 bits, ligne 0 d'abord, point de gauche d'abord), dépliées
+    par font_init (src/bios.s) en 8 octets par caractère dans CHARSET."""
+    lines = ["; Police CP/A, caractères 32..127, 5 octets par caractère : les 8 lignes",
+             "; de 5 points à la suite, point de gauche d'abord (dépliées par font_init)",
              "; Généré par tools/gen_font.py — ne pas éditer à la main",
              "font_data"]
     for code in range(32, 128):
-        rows = G[chr(code)]
-        vals = []
-        for r in rows:
-            v = 0
-            for i, c in enumerate(r):
-                if c == '#':
-                    v |= 1 << (5 - i)
-            vals.append("$%02X" % v)
-        lines.append("        .byt %s ; %r" % (",".join(vals), chr(code)))
+        bits = 0
+        for v in glyphe(chr(code)):
+            bits = (bits << 5) | (v >> 1)
+        octets = [(bits >> (32 - 8 * k)) & 0xFF for k in range(5)]
+        lines.append("        .byt %s ; %r" % (",".join("$%02X" % o for o in octets), chr(code)))
     open(out, "w").write("\n".join(lines) + "\n")
 
 if __name__ == "__main__":

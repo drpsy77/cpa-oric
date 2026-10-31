@@ -284,7 +284,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A15 | CHAIN : ligne différée exécutée après le démarrage à chaud | `bdos.s` | 1 |
 | SYS.A16 | Reprise après plantage et RESET : vecteurs, écran, police et console remis ; RESET différé jusqu'à la fin d'un transfert de secteur | `bios.s`, `disk.s` | 3 |
 | SYS.A17 | Imprimante Centronics : strobe, accusé, VIA partagé avec l'AY | `bios.s` | 1 |
-| SYS.A18 | Police et tables de l'écran (lignes de points du SPLIT calculées) | `bios.s` | 1 |
+| SYS.A18 | Police (dépliée de 5 octets par caractère) et tables de l'écran (lignes de points du SPLIT calculées) | `bios.s` | 1 |
 | SYS.A19 | Test de la RAM au démarrage | `cold.s` | 1 |
 | SYS.A20 | Chargeur d'amorçage Microdisc | `boot.s` | 3 |
 | SYS.A21 | COPY : jokers à la source et à la destination | `copy.s` | 3 |
