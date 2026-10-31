@@ -72,6 +72,6 @@ done
 [ -n "$R" ] || exit 1
 
 echo "== Atelier prêt :"
-echo "   ./build.sh                 construit build/cpa.rom et build/cpa.dsk"
+echo "   ./build.sh                 construit build/cpa.dsk et les autres disquettes"
 echo "   tools/smoke_test.sh        vérifie la chaîne complète (construction + émulateur)"
 echo "   tools/test_asm.sh          ASM.COM contre xa"

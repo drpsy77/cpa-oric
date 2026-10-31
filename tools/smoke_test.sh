@@ -1,6 +1,7 @@
 #!/bin/sh
 # Vérifie que l'atelier fonctionne de bout en bout : construction, puis
-# démarrage de la disquette et de la ROM dans Oricutron, lecture de l'écran.
+# démarrage de la disquette dans Oricutron, lecture de l'écran (la ROM n'est
+# plus construite ni essayée : CLAUDE.md).
 set -e
 NL='
 '
@@ -62,10 +63,11 @@ python3 tools/mkdisk.py get "$T/g.c.dsk" GROS.BIN "$T/g2.bin" >/dev/null
 cmp -s "$T/g1.bin" "$T/g2.bin" && python3 tools/mkdisk.py check "$T/g.c.dsk" >/dev/null || \
   { echo "ECHEC : fin de disquette"; exit 1; }
 grep -q "not a CP/A 80-track disk" "$T/g.txt" || { echo "ECHEC : disquette sans etiquette"; exit 1; }
-echo "== ROM : VER"
-ORIC_ROM=cpa tools/run_test.sh "VER$NL" 300 "$T/r"
-python3 tools/screen.py "$T/r.mem" > "$T/r.txt"
-head -8 "$T/r.txt"
-grep -qi "A>VER" "$T/r.txt" || { echo "ECHEC : ROM"; exit 1; }
+# ROM : plus essayée (CLAUDE.md)
+# echo "== ROM : VER"
+# ORIC_ROM=cpa tools/run_test.sh "VER$NL" 300 "$T/r"
+# python3 tools/screen.py "$T/r.mem" > "$T/r.txt"
+# head -8 "$T/r.txt"
+# grep -qi "A>VER" "$T/r.txt" || { echo "ECHEC : ROM"; exit 1; }
 rm -rf "$T"
 echo "OK : l'atelier fonctionne"
