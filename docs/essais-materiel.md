@@ -61,6 +61,22 @@ disquette démarre seule, avec un seul lecteur) :
 - disque presque plein (une copie remplie par `COPY`), `PUT T.TXT TYPE GRX.INC` : `Disk full`
   à la fin, `T.TXT` garde ce qui tenait.
 
+**Fenêtre, lot 2 : banques de CPA.BNK** (`docs/systeme.md` § 6 ; sur une **copie** de
+`cpa.dsk`, puis de `cpa-en.dsk`) :
+
+- `SPLIT`, `GSAVE T` : dire combien de temps prend le premier (lecture de `CPA.BNK` sur le
+  LOCI) et le suivant ; `TEXT`, `GLOAD T` : l'image revient ; `SAVE 4 S.BIN`, `DIR` ;
+- puis `PUT L.TXT DIR` : PUT relu de `CPA.BNK` (un instant), `TYPE L.TXT` ;
+- sous PUT, un programme qui fait GSAVE : `PUT L.TXT GRAPHER` d'un `.GRX` avec `SPLIT`, un
+  `PRINT`, `GSAVE`, un `PRINT` : `L.TXT` a les deux textes, l'image est écrite ;
+- `GSAVE T` deux fois de suite (remplacement), sur un `T.IMG` protégé (`SET T.IMG RO` :
+  `File R/O`, l'ancienne image reste), et sur une disquette presque pleine (`Disk full`,
+  l'ancienne reste) ;
+- disquette sans `CPA.BNK` (`SET CPA.BNK RW`, `ERA CPA.BNK` sur la copie) : `GSAVE T` répond
+  `CPA.BNK?`, `PUT L.TXT DIR` marche encore ;
+- RESET pendant le premier `GSAVE` (pendant la lecture de `CPA.BNK`) : retour au prompt, puis
+  `GSAVE T` et `PUT L.TXT DIR` marchent.
+
 **Après la correction du pilote** (un contrôleur qui ne répond plus donne une erreur disque,
 plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en anglais, sur une
 **copie** de disquette :

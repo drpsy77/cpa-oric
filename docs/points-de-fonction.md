@@ -14,7 +14,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 <!-- synthese:debut -->
 | Composant | ILF | EIF | EI | EO | EQ | **PF IFPUG** | Algorithmes | **Total** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 38 | 5 | 174 | 36 | 72 | **325** | 69 | **394** |
+| Système et commandes | 38 | 5 | 174 | 36 | 72 | **325** | 72 | **397** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
 | GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
@@ -28,7 +28,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | *Applications* | *168* | *47* | *431* | *110* | *111* | ***867*** | *220* | ***1087*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
 | Outillage PC | 7 | 15 | 29 | 122 | 18 | **191** | 46 | **237** |
-| **Total** | **220** | **77** | **661** | **324** | **207** | **1489** | **351** | **1840** |
+| **Total** | **220** | **77** | **661** | **324** | **207** | **1489** | **354** | **1843** |
 
 Points ajustés (indicatif, § 9) : 1 489 × 1,05 ≈ 1 563.
 
@@ -182,7 +182,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.T26 | PAUSE : attendre une touche | EI | 0 | 2 | F | 3 |
 | SYS.T27 | SPLIT, TEXT : mode d'écran | EI | 2 | 2 | F | 3 |
 | SYS.T28 | GCLS : effacer l'image | EI | 1 | 1 | F | 3 |
-| SYS.T29 | GSAVE : enregistrer l'image | EI | 2 | 2 | F | 3 |
+| SYS.T29 | GSAVE : enregistrer l'image (par `NOM.$$$`, fichier protégé refusé) | EI | 2 | 3 | F | 3 |
 | SYS.T30 | GLOAD : charger une image | EI | 2 | 2 | F | 3 |
 | SYS.T31 | MEM : carte de la mémoire selon le mode | EO | 1 | 10 | F | 4 |
 | SYS.T32 | POKE : écrire en mémoire | EI | 0 | 3 | F | 3 |
@@ -296,6 +296,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A27 | VSYNC : calage du timer de l'IRQ sur le balayage vidéo | `vsync.s` | 3 |
 | SYS.A28 | ERA, REN, SET, TYPE, MEM, POKE, GO : contrôles, décodage des paramètres | `progs/` | 1 |
 | SYS.A29 | Fenêtre : code chargé avec le système hors de la partie résidente (PUT, démarrage à froid), crochets résidents, contenu lu avant l'effacement | `win.s`, `put.s`, `bios.s` | 1 |
+| SYS.A30 | Banques de la fenêtre : chargeur de CPA.BNK (signature, lecture directe par morceaux sans toucher au tampon de PUT), appel d'une routine de banque, prêt de la fenêtre pendant un PUT ; banque assemblée avec le système et découpée par `mkbnk.py` | `bank.s`, `img.s`, `tools/mkbnk.py` | 3 |
 
 ## 4. Applications
 
@@ -827,7 +828,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 66 | 11 320 | 1 270 | 546 | 1 714 | 10 % | 37 801 | 35 | 116 |
+| Système et commandes | 68 | 11 569 | 1 330 | 556 | 1 714 | 10 % | 37 732 | 36 | 116 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -839,14 +840,14 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 178 | 9 035 | 1 134 | 595 | 0 | 11 % | — | 47 | — |
-| **Total** | 367 | 74 227 | 6 195 | 2 971 | 2 630 | 8 % | 160 028 | 50 | 107 |
+| Outillage PC | 179 | 9 111 | 1 153 | 606 | 0 | 11 % | — | 48 | — |
+| **Total** | 370 | 74 552 | 6 274 | 2 992 | 2 630 | 8 % | 159 959 | 50 | 107 |
 
-Octets du système : code résident 13 388 (`$C000-$F44C`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 319 (`$C000-$F407`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 537 | 83 | 4,7 | 90 |
+| Système et commandes | 1 574 | 83 | 4,8 | 91 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
 | LOGO | 311 | 63 | 1,6 | 20 |
@@ -859,13 +860,13 @@ Octets du système : code résident 13 388 (`$C000-$F44C`), page `$FF00` 240, 
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 26 |
 | Outillage PC | 345 | — | 1,8 | 131 |
-| Transverse (projet) | 2 574 | — | — | 92 |
-| Traduction anglaise (docs/en) | 2 843 | — | — | 43 |
-| **Total** | 9 353 | 319 | 6,3 | 222 |
+| Transverse (projet) | 2 573 | — | — | 93 |
+| Traduction anglaise (docs/en) | 2 855 | — | — | 44 |
+| **Total** | 9 401 | 319 | 6,3 | 223 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 222 commits du 2026-10-04 au 2026-10-31.
+Historique : 223 commits du 2026-10-04 au 2026-10-31.
 
 Réutilisation : 55 391 lignes de code écrites dans `progs/`, 64 060 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
@@ -891,8 +892,8 @@ Défauts connus : `docs/etat.md` § 5 ; points à vérifier : `docs/essais-mater
 | **Total** | **6** | **1** | **45** |
 
 Effacent l'ancien fichier avant d'écrire (disque plein ou RESET : ancien perdu) :
-- Système et commandes : `GSAVE` (BDOS 115 op 12), COPY sur un fichier existant ;
-- GRAPHER : `GSAVE` (`h_save`) ; manque : savoir si un fichier existe sans le charger ;
+- Système et commandes : SAVE du CCP, COPY sur un fichier existant ;
+- GRAPHER : `GSAVE` en HIRES plein écran (`h_save`) ; manque : savoir si un fichier existe sans le charger ;
 - LOGO : `SAUVE` ; USB : IMPORT sur un fichier existant ; ASM : `.COM`, `.SYM`.
 
 ## 9. Facteur d'ajustement (indicatif)
@@ -935,6 +936,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-30 | XFER | 0.9 | 1 474 | 346 | 1 820 | 208 | `XFER.COM` : envoi et réception par le modem (XMODEM-CRC) ; `tools/xfer_server.py`, `test_xfer.sh` ; `acia_inc.s` commun à TERM et XFER ; TERM : LF seul affiché en CR LF |
 | 2026-10-30 | fenêtre, lot 1 | 0.9 | 1 480 | 347 | 1 827 | 214 | PUT et démarrage à froid dans la fenêtre `$F7C0-$FCFF` (~580 octets résidents rendus) ; `AUTO.BAT` ; TERM par la fonction 2 du BDOS ; PUT referme le fichier après un disque plein |
 | 2026-10-31 | MKTAP .BAS | 0.9 | 1 489 | 351 | 1 840 | 223 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1, en `$0501`, `/R` ; `test_bas.py` (codage contre la ROM dans le 6502 simulé) ; `.BAS` en texte pour `mkdisk.py` |
+| 2026-10-31 | fenêtre, lot 2 | 0.9 | 1 489 | 354 | 1 843 | 224 | banques de la fenêtre : `CPA.BNK` (PUT, IMG), chargeur, prêt pendant un PUT ; GSAVE, GLOAD, SAVE en banque ; GSAVE par `NOM.$$$`, fichier protégé refusé ; `tools/mkbnk.py` |
 
 ## 11. Comparaisons
 
@@ -950,11 +952,11 @@ d'équivalent.
 <!-- comparaison:debut -->
 | Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Système, commandes, utilitaires de fichiers | 325 | 69 | 394 | 261 | 41 | 302 | 1,3 |
+| Système, commandes, utilitaires de fichiers | 325 | 72 | 397 | 261 | 41 | 302 | 1,3 |
 | Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
 | Assembleur (ASM / ASM et LOAD) | 9 | 12 | 21 | 13 | 13 | 26 | 0,8 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **483** | **112** | **595** | **396** | **78** | **474** | **1,3** |
+| **Total** | **483** | **115** | **598** | **396** | **78** | **474** | **1,3** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

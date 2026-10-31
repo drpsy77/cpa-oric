@@ -78,6 +78,7 @@ bios_table
 #include "fs.s"
 #include "ccp_disk.s"
 #include "put.s"
+#include "bank.s"
 #include "script.s"
 #endif
 #ifndef DISK
@@ -117,3 +118,15 @@ ff_end
         .word V_NMI             ; NMI  (bouton RESET de l'Atmos)
         .word cold_boot         ; RESET (mise sous tension)
         .word V_IRQ             ; IRQ/BRK
+
+#ifdef DISK
+; ---------------------------------------------------------------------
+; Banque IMG (img.s) : assemblée pour la fenêtre, à la suite de l'image
+; de 16 Ko dans le fichier produit ; tools/mkbnk.py la découpe et la
+; range dans CPA.BNK avec PUT. Elle n'est pas chargée au démarrage.
+; ---------------------------------------------------------------------
+        *= WIN
+img_bank
+#include "img.s"
+img_bank_end
+#endif

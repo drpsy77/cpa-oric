@@ -154,24 +154,49 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
 
 ## 6. Place
 
-**La fenêtre** (`src/win.s`, `$F7C0-$FCFF`, 1 344 octets) : code chargé avec le système qui
-n'a pas besoin d'y rester toujours. `win_id` (`$FDF8`) dit ce qu'elle contient : bit 0
-(`WIN_PUT`) le code de PUT, bit 7 (`WIN_COLD`) le code du démarrage à froid (`src/cold.s` :
-test de la RAM, AUTO.BAT). L'image du système pose les deux ; `cold_boot` lit `win_id` avant
-d'effacer `$FD00-$FDFF`, appelle `cold_win`, puis ne garde que `WIN_PUT`. Le démarrage à chaud
-n'y touche pas.
+**La fenêtre** (`src/win.s`, `$F7C0-$FCFF`, 1 344 octets) : code chargé quand il sert, une
+**banque** à la fois dans `$F7C0-$F9FF` (576 octets, `WIN`-`WIN_END`), puis le tampon de PUT.
+`win_id` (`$FDF8`) dit ce qu'elle contient : bit 0 (`WIN_PUT`) PUT, bit 1 (`WIN_IMG`) IMG, bit 7
+(`WIN_COLD`) le code du démarrage à froid (`src/cold.s` : test de la RAM, AUTO.BAT), 0 rien
+(chargement manqué). L'image du système pose `WIN_PUT` et `WIN_COLD` ; `cold_boot` lit `win_id`
+avant d'effacer `$FD00-$FDFF`, appelle `cold_win`, puis ne garde que `WIN_PUT`. Le démarrage à
+chaud n'y touche pas.
 
 | Zone | Contenu |
 |---|---|
-| `$F7C0` | table de sauts : `W_CHAR`, `W_FLUSH`, `W_END`, `W_CMD`, seuls points d'entrée |
-| `$F7CC` | code de PUT, puis `PUT_SAVE` (54 octets : état sauvé pendant l'écriture) |
-| `$FA00-$FCFF` | `PUTBUF`, tampon de PUT (768 octets, commence sur une page) ; dans l'image : `cold_win` |
+| `$F7C0-$F9FF` | banque PUT (dans l'image) : table de sauts `W_CHAR`, `W_FLUSH`, `W_END`, `W_CMD`, code de PUT, `PUT_SAVE` (54 octets : état sauvé pendant l'écriture) ; ou banque IMG (`src/img.s`) |
+| `$FA00-$FCFF` | `PUTBUF`, tampon de PUT (768 octets, commence sur une page) ; dans l'image : `cold_win` ; `$FC80-$FCFF` : `BNK_BUF`, enregistrement lu par le chargeur |
+
+- **Banques** : PUT, et IMG (GSAVE et GLOAD, BDOS 115 op 12 et 13 ; SAVE, GSAVE et GLOAD du
+  CCP). IMG est assemblée avec le système (`src/cpa.s`, après les vecteurs, `*= WIN` : xa change
+  l'adresse sans remplir), donc avec ses symboles ; `tools/mkbnk.py` la sépare de l'image de
+  16 Ko et écrit `CPA.BNK` (SYS, R/O, sur toutes les disquettes amorçables, un par langue).
+- **CPA.BNK** : enregistrement 0 = signature (CRC-16 de l'image et de la banque IMG, posée
+  aussi en `bnk_sig` dans le système) ; la banque de bit b occupe les enregistrements 5b-4 à
+  5b (PUT 1-5, IMG 6-10 : 576 octets chacune, bourrées). 1 408 octets.
+- **Chargeur** (`bnk_load`, `src/bank.s`) : CPA.BNK cherché comme un programme (`open_com`),
+  FCB `BNK_FCB` (`$FDB0`), lecture directe (fonction 33) de chaque enregistrement dans
+  `BNK_BUF`, recopié dans la fenêtre sans rien écrire après `WIN_END`. Absent ou d'une autre
+  signature : `CPA.BNK?`, fenêtre intacte ; erreur pendant la copie : `win_id` à 0. DMA et FCB
+  de l'appelant gardés.
+- **Appel** (`win_call`) : le code résident appelle une routine de banque par `win_call`
+  (A = bit, X/Y = adresse) ; points d'entrée résidents `g_gsave_r`, `g_gload_r` (table de
+  `gfx.s`), `cmd_save`, `cmd_gsave`, `cmd_gload` (table du CCP). Banque absente : chargée ; la
+  suivante qui demande la fenêtre la remplace (PUT est relu par la commande PUT).
+- **Prêt pendant un PUT** : tampon de PUT écrit (`W_FLUSH`), copie suspendue (`put_on` à 0),
+  banque chargée, routine, PUT relu, copie rendue ; aussi si le disque plein a arrêté la copie
+  (`put_lost`) : le fichier reste à refermer. Ce que la routine affiche n'est pas copié. Le
+  reste du tampon (moins de 128 octets) est en tête de `PUTBUF`, loin de `BNK_BUF`.
+- **RESET pendant un prêt** : la copie en cours est perdue (le fichier n'a que ce qui était
+  écrit) ; `put_end` ne va dans la fenêtre que si `win_id` a `WIN_PUT`.
+- **GSAVE** écrit `NOM.$$$` (FCB `BNK_FCB`), puis efface `NOM.IMG` et renomme ; fichier
+  protégé : code 3 ; disque ou répertoire plein : `NOM.$$$` effacé, code 2.
 
 Le code résident n'entre dans la fenêtre qu'après ses propres tests (`src/put.s`) : `conout`
-et `put_nl` si `put_on`, l'entrée du BDOS si `put_pend`, `put_end` si `put_on` ou `put_lost`,
-la commande PUT si `win_id` a `WIN_PUT` (sinon `PUT: not loaded`). `./build.sh` contrôle que
-PUT finit avant `$FA00` et `cold_win` avant `$FD00`, et affiche les marges.
-
+et `put_nl` si `put_on`, l'entrée du BDOS si `put_pend`, `put_end` si `WIN_PUT` et `put_on` ou
+`put_lost`, une banque par `win_call`. `./build.sh` contrôle que PUT finit avant `$FA00` et
+`cold_win` avant `$FD00` ; `tools/mkbnk.py`, que la banque IMG tient dans la fenêtre ; les deux
+affichent les marges.
 
 Mesurer par module et par routine avec `build/cpa_sys.sym`. Les plus gros postes : `fs.s`,
 `bios.s`, `gfx.s`, `menu.s`, `ccp_disk.s`, `rline.s`, tables, police. La page `$FF00`

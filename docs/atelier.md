@@ -158,7 +158,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 
 | Commande | Rôle |
 |---|---|
-| `./build.sh` | construit `build/cpa.rom`, le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes |
+| `./build.sh` | construit `build/cpa.rom`, le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `CPA.BNK` dans les deux (banques de la fenêtre, découpées par `tools/mkbnk.py`), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes et des banques |
 | `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: ; la fin de la disquette (copie d'un fichier de 640 Ko, blocs au-delà de 255) et le refus d'une disquette sans étiquette du format |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
 | `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |
@@ -237,7 +237,7 @@ Points à connaître :
 ### 4.1 Sûreté des fichiers : `tools/test_fichiers.py`
 
 Chaque scénario part d'une disquette fabriquée par le script avec `mkdisk.py` (système,
-GRAPHER.COM, EDIT.COM, EDIT.CFG, les programmes d'essai `tools/fichiers_tests/t.grx` et
+CPA.BNK, GRAPHER.COM, EDIT.COM, EDIT.CFG, les programmes d'essai `tools/fichiers_tests/t.grx` et
 `e.grx`, l'ancien fichier, et des fichiers de remplissage pour laisser 0 ou 1 bloc libre, ou
 aucune entrée du répertoire), tape la commande dans Oricutron (`ORIC_WARP=1`), puis regarde la
 disquette (`check`, `diff`, contenu du fichier visé) et l'écran (message attendu).
@@ -246,6 +246,7 @@ disquette (`check`, `diff`, contenu du fichier visé) et l'écran (message atten
 |---|---|
 | GRAPHER `SAVE`, `BSAVE` (tableau de 4 800 octets, 3 blocs) | normal (référence du nouveau contenu), disque plein (1 bloc libre) avec ou sans ancien fichier, répertoire plein avec ou sans ancien fichier, fichier R/O, RESET balayé |
 | GRAPHER `BSAVE SCREEN` (1 bloc) | normal, disque plein (aucun bloc libre) avec ou sans ancien fichier, répertoire plein, R/O, RESET balayé |
+| GSAVE du système (`SPLIT`, `GSAVE CIBLE` : image de 5 120 octets, 3 blocs) | normal, disque plein (1 bloc libre) avec ou sans ancien fichier, répertoire plein avec ou sans ancien fichier, fichier R/O, RESET balayé |
 | EDIT (document de 5,4 Ko ; CTRL-S, ou « Enreg. sous » par le menu) | normal, disque plein, répertoire plein, document R/O, sous un nom nouveau, sous depuis un document R/O, sous un fichier existant (question, réponse N, réponse O), sous un fichier R/O, document tronqué (40 Ko) puis CTRL-S, document de 32 760 octets sur le disque mais 31 980 en mémoire (rouvert en entier, CTRL-S), RESET balayé |
 
 Attendu : l'ancien fichier intact ou le nouveau complet ; rien de perdu ni d'abîmé ; pas de

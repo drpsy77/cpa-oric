@@ -76,7 +76,7 @@ err     lda #$FF
 g_tab   .word g_cls-1, g_setpen-1, g_plot-1, g_line-1, g_box-1, g_fbox-1
         .word g_circle-1, g_text-1, g_attr-1, g_point-1, g_mode-1, g_getmode-1
 #ifdef DISK
-        .word g_gsave-1, g_gload-1
+        .word g_gsave_r-1, g_gload_r-1  ; banque IMG (bank.s, img.s)
 #else
         .word g_bad-1, g_bad-1
 g_bad   lda #$FF
@@ -95,137 +95,6 @@ g_getmode
         lda vmode
         rts
 
-#ifdef DISK
-g_gsave
-        lda g_p+1
-        ldy g_p+2
-        jmp img_save
-g_gload
-        lda g_p+1
-        ldy g_p+2
-        jmp img_load
-
-; ---------------------------------------------------------------------
-; Images du mode SPLIT sur disque : 40 enregistrements, $A000-$B3FF
-; ---------------------------------------------------------------------
-; img_prep : FCB A/Y, type IMG par défaut, octets 12-35 à zéro, DMA sauvé
-img_prep
-.(
-        sta img_fcb
-        sty img_fcb+1
-        sta ZP_PTR2
-        sty ZP_PTR2+1
-        ldy #9
-        lda (ZP_PTR2),y
-        cmp #" "
-        bne ext
-        lda #"I"
-        sta (ZP_PTR2),y
-        iny
-        lda #"M"
-        sta (ZP_PTR2),y
-        iny
-        lda #"G"
-        sta (ZP_PTR2),y
-ext     ldy #12
-        lda #0
-z       sta (ZP_PTR2),y
-        iny
-        cpy #36
-        bne z
-        lda dma
-        sta img_dma
-        lda dma+1
-        sta img_dma+1
-        lda #<IMG_BASE
-        sta dma
-        lda #>IMG_BASE
-        sta dma+1
-        lda #40
-        sta img_cnt
-        rts
-.)
-
-img_bdos                        ; fonction X sur le FCB de l'image
-        lda img_fcb
-        ldy img_fcb+1
-        jmp bdos
-
-img_next                        ; enregistrement suivant ; Z=1 si fini
-        clc
-        lda dma
-        adc #128
-        sta dma
-        bcc in1
-        inc dma+1
-in1     dec img_cnt
-        rts
-
-img_end                         ; rend le DMA de l'appelant, A = code
-        pha
-        lda img_dma
-        sta dma
-        lda img_dma+1
-        sta dma+1
-        pla
-        rts
-
-; img_save : A/Y = FCB. A = 0 OK, 2 plein, $FF pas en mode SPLIT
-img_save
-.(
-        ldx vmode
-        bne ok
-        lda #$FF
-        rts
-ok      jsr img_prep
-        ldx #19                 ; remplace un fichier existant
-        jsr img_bdos
-        ldx #22
-        jsr img_bdos
-        cmp #$FF
-        beq full
-loop    ldx #21
-        jsr img_bdos
-        cmp #0
-        bne wfail
-        jsr img_next
-        bne loop
-        ldx #16
-        jsr img_bdos
-        lda #0
-        jmp img_end
-wfail   ldx #16
-        jsr img_bdos
-full    lda #2
-        jmp img_end
-.)
-
-; img_load : A/Y = FCB. A = 0 OK (mode SPLIT), 1 fichier absent
-img_load
-.(
-        jsr img_prep
-        ldx #15
-        jsr img_bdos
-        cmp #$FF
-        bne loop
-        lda #1
-        jmp img_end
-loop    ldx #20
-        jsr img_bdos
-        cmp #0
-        bne done
-        jsr img_next
-        bne loop
-done    lda vmode               ; déjà en SPLIT : on garde la console
-        beq sw
-        lda #ATTR_TEXT50
-        sta IMG_SWITCH
-        bne fin
-sw      jsr video_split
-fin     lda #0
-        jmp img_end
-.)
-#endif
 
 g_mode
 .(

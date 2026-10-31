@@ -262,15 +262,24 @@ byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of a
 Everything on it is **read-only** (R/O): an `ERA *.*` or a name completed with ESC cannot
 erase anything. To replace a command with a new version: `SET COPY.COM RW`, then copy it.
 `DIR` shows the applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER, GRXASM, EDSPRITE,
-ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; the basic
+ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; CPA.BNK
+(parts of the system loaded when they are used, below), the basic
 commands (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO), MEM, POKE, GO, the script
 USBCD.BAT, the eight libraries (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) and EDIT.CFG (changeable) are **hidden** (SYS): `DIRS` shows them.
 
 SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still runs (a file
 renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BAT` files).
 
+**CPA.BNK** holds parts of the system that do not stay in memory: GSAVE, GLOAD and SAVE (at
+the prompt as well as for programs), and a copy of PUT. It is read when they are used, on the
+current drive then on `A:` to `D:`, like a program; the first GSAVE or GLOAD takes a moment
+longer, the next ones nothing. Without it, or if it comes from another version of CP/A, these
+commands answer `CPA.BNK?` (PUT works as long as it has not made room for GSAVE or GLOAD). It
+is on every bootable disk; for a disk made by `DISKCOPY A: B: /S`, also copy `CPA.BNK`
+(`COPY A:CPA.BNK B:`).
+
 **Disks by use.** `build.sh` also makes four bootable disks: each one starts on its own and
-carries its tools (one drive is enough). On each one, the basic commands (TYPE, ERA, REN, SET,
+carries its tools (one drive is enough). On each one, CPA.BNK, the basic commands (TYPE, ERA, REN, SET,
 STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), the USB stick (EXPORT, IMPORT, USBDIR,
 USBMOUNT, the script USBCD.BAT), TERM and XFER are read-only and **hidden** (SYS): `DIR` only
 shows the disk's tool and the working files, `DIRS` shows everything. EDIT is on every disk,
@@ -823,6 +832,9 @@ under the picture. `TEXT` goes back to text mode, and `GCLS` clears the picture.
 mode if needed (the console is not cleared if it is already there). The file is the raw copy of
 `$A000-$B3FF`: 5,120 bytes, colour attributes included. You can thus prepare pictures (with
 LOGO, or a drawing program) and load them again in a game.
+GSAVE first writes `NAME.$$$`, then erases the old `NAME.IMG` and renames: a full disk leaves
+the old picture intact (`Disk full`), a read-only file is refused (`File R/O`). GSAVE, GLOAD
+and SAVE are read from `CPA.BNK` ("CPA.BNK" above).
 
 How it works: as with BASIC's `HIRES`, the last cell of the screen (`$BFDF`) contains the
 attribute `$1E`, which makes the next frame start in high resolution: the whole byte `$A000` is
@@ -856,8 +868,9 @@ as for CP/M's GSX extension):
 | 13 | GLOAD | address of the FCB: loads a picture and switches to SPLIT |
 
 GSAVE and GLOAD (disk version) use the type `.IMG` if the name has none, and return 0 if all is
-well, 1 if the file is missing, 2 if the disk or the directory is full, `$FF` for GSAVE outside
-SPLIT mode. A program that calls GLOAD from text mode must stay below `$A000`.
+well, 1 if the file is missing, 2 if the disk or the directory is full, 3 if the file is
+read-only (GSAVE), `$FF` for GSAVE outside SPLIT mode, and for both without `CPA.BNK`
+(message `CPA.BNK?`). A program that calls GLOAD from text mode must stay below `$A000`.
 
 **Without a program**, you draw with `GRAPHER` and a `.GRX` file (`grapher.md`), and `GSAVE`
 keeps the result. The ROM version keeps one command per primitive at the prompt (`PEN m`,
