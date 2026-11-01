@@ -34,6 +34,7 @@ or decimals (see below).
 | `IF condition [ ... ] [ ... ]` | condition, with an optional "else" list |
 | `TO NAME :A :B` ... `END` | define a procedure (parameters optional) |
 | `STOP` | leave the procedure |
+| `TOPLEVEL` | leave all the running procedures and go back to the `?` prompt, without a message (procedures and variables kept; a running `LOAD` stops, the sound is cut) |
 | `OUTPUT x` | leave the procedure returning x: it becomes a function (see below) |
 | `MAKE "X n`, `:X` | global variable, value of a variable or a parameter |
 | `PRINT n` / `PR`, `PRINT "word`, `PRINT [text]` | print |
@@ -190,7 +191,7 @@ always answer. The space for procedures and texts does not change.
 
 `-5` stuck after a blank is a negative number (`SETXY -50 -30`), whereas `3 - 2` is a
 subtraction. ESC or CTRL-C interrupts a program (you stay in LOGO, procedures and variables
-kept); at the `?` prompt, CTRL-C does nothing. The menu bar (File, Turtle, Help) types the
+kept); the program itself does it with `TOPLEVEL`, without a message; at the `?` prompt, CTRL-C does nothing. The menu bar (File, Turtle, Help) types the
 commands for the user.
 
 Procedures are saved as text (`TO` ... `END`), which can be changed with `EDIT DEMO.LOG`.
@@ -210,7 +211,8 @@ same answers, but its searches are recursive functions (`OUTPUT`) that stop as s
 find, and a word missing from the table is ruled out with a single `MEMBER?` instead of an
 80-turn loop that copies the table: an answer takes 1 to 2 s instead of 15 to 30. Comparing
 the two is a good Logo lesson on the Oric: a `REPEAT` that goes on after finding, and `BF` on
-a long list (a copy at every step), are expensive.
+a long list (a copy at every step), are expensive. Its `GOODBYE` goes back to the LOGO prompt
+(`TOPLEVEL`), the one of `ELIZA` to CP/A (`QUIT`).
 
 The Logo reads the text of the procedures directly; primitive names are found through an
 index by first letter, built at start-up. Lists and calls go through a context stack in
@@ -328,6 +330,10 @@ kept and nothing has to move on return.
 nested `run` loop). So that depth is not limited by the 6502 stack, the part of the stack
 between `savsp` and the top is copied into `spill` (640 bytes). A function that ends without
 OUTPUT, or OUTPUT in a procedure called as a statement, is an error. Depth: about forty levels.
+
+**TOPLEVEL.** It is the end of `error` (`to_top`) without the message: 6502 stack reset to
+`savsp`, contexts, `spill` and the `reset_frames` stacks emptied by `repl`, `LOAD`, `TOGETHER`
+and a definition in progress abandoned, `SILENCE`.
 
 **EDIT.** SAVE, then the state into `LOGO.$$$` (header "LGS1", global variables, heap, zero
 page read back last), then CHAIN to `EDIT NAME.LOG /L`. EDIT's Back chains to

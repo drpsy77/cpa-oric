@@ -162,7 +162,7 @@ run maths 'PUT OUT.TXT LOGO
 ' 4200
 check maths
 
-echo "== fonctions de l'utilisateur : RENDS (environ 3 min)"
+echo "== fonctions de l'utilisateur : RENDS, RETOURPROMPT (environ 3 min)"
 run rends 'PUT OUT.TXT LOGO
 || charge "t12
 |||||||||||||||||||||||||||||||||||||||||| charge "e22
@@ -170,8 +170,11 @@ run rends 'PUT OUT.TXT LOGO
 | charge "e24
 | charge "e25
 | charge "e26
+| charge "t15
+| ecris :i
+| ecris q 2
 | quitte
-' 9000
+' 9600
 check rends
 
 echo "== écran texte : ECRANTEXTE, ECRANMIXTE"

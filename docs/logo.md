@@ -31,6 +31,7 @@ décimaux (voir plus bas).
 | `SI condition [ ... ] [ ... ]` | condition, avec une liste « sinon » facultative |
 | `POUR NOM :A :B` ... `FIN` | définir une procédure (paramètres facultatifs) |
 | `STOP` | sortir de la procédure |
+| `RETOURPROMPT` | sortir de toutes les procédures en cours et revenir au prompt `?`, sans message (procédures et variables gardées ; un `CHARGE` en cours s'arrête, le son est coupé) |
 | `RENDS x` | sortir de la procédure en rendant x : elle devient une fonction (voir plus bas) |
 | `DONNE "X n`, `:X` | variable globale, valeur d'une variable ou d'un paramètre |
 | `ECRIS n` / `EC`, `ECRIS "mot`, `ECRIS [texte]` | afficher |
@@ -190,7 +191,7 @@ pour les procédures et les textes ne change pas.
 
 `-5` collé derrière un blanc est un nombre négatif (`FIXEXY -50 -30`), alors que `3 - 2` est
 une soustraction. ESC ou CTRL-C interrompt un programme (on reste dans LOGO, procédures et
-variables gardées) ; au prompt `?`, CTRL-C ne fait rien. La barre de menus (Fichier, Tortue, Aide) tape
+variables gardées) ; le programme lui-même le fait par `RETOURPROMPT`, sans message ; au prompt `?`, CTRL-C ne fait rien. La barre de menus (Fichier, Tortue, Aide) tape
 les commandes à la place de l'utilisateur.
 
 Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut modifier avec
@@ -212,7 +213,8 @@ des fonctions récursives (`RENDS`) qui s'arrêtent dès qu'elles trouvent, et u
 la table est écarté d'un seul `MEMBRE?` au lieu d'une boucle de 80 tours qui recopie la
 table : une réponse prend 1 à 2 s au lieu de 15 à 30. Comparer les deux est une bonne leçon
 de Logo sur l'Oric : un `REPETE` qui continue après avoir trouvé, et `SP` sur une longue
-liste (une copie à chaque pas), coûtent cher.
+liste (une copie à chaque pas), coûtent cher. Son `AUREVOIR` revient au prompt de LOGO
+(`RETOURPROMPT`), celui d'`ELIZA` à CP/A (`QUITTE`).
 
 Le Logo lit directement le texte des procédures ; les noms des primitives sont retrouvés par
 un index par première lettre, construit au démarrage. Les listes et les appels passent par une pile
@@ -336,6 +338,10 @@ gardée et rien n'est à déplacer au retour.
 partie de la pile entre `savsp` et le sommet est recopiée dans `spill` (640 octets). Une
 fonction qui finit sans RENDS, ou RENDS dans une procédure appelée en instruction, est une
 erreur. Profondeur : une quarantaine de niveaux.
+
+**RETOURPROMPT.** C'est la fin de `error` (`to_top`) sans le message : pile du 6502 remise à
+`savsp`, contextes, `spill` et piles de `reset_frames` vidés par `repl`, `CHARGE`, `ENSEMBLE`
+et définition en cours abandonnés, `SILENCE`.
 
 **EDITE.** SAUVE, puis l'état dans `LOGO.$$$` (en-tête « LGS1 », variables globales, tas,
 page zéro relue en dernier), puis CHAIN sur `EDIT NOM.LOG /L`. Le Retour d'EDIT enchaîne sur

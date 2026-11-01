@@ -346,6 +346,14 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 - Si quelqu'un a un **Oric-1** : `serpent.tap` doit marcher aussi (vecteurs pris en `$0228`
   et `$022B`, d'après la ROM 1.0, jamais essayé).
 
+**LOGO, `RETOURPROMPT`** (`docs/logo.md`) :
+
+- `LOGO ELIZA2`, quelques phrases, puis `AUREVOIR` : le message, puis le prompt `?` de LOGO
+  (pas CP/A) ; `TITRES` montre encore les procédures, `DOCTEUR` relance la conversation ;
+- une procédure qui joue un son sans fin (`SON 0 37 10 0`) puis fait `RETOURPROMPT` : le son
+  s'arrête, comme avec ESC ;
+- la même chose sur `cpa-logo-en.dsk` (`LOGO ELIZA2`, `GOODBYE`, `TOPLEVEL`).
+
 ## À vérifier ailleurs
 
 - **Raspberry Pi Zero, console à distance** (`docs/console-distance.md` § 9.2) : avant le

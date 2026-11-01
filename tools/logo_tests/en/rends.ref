@@ -45,4 +45,15 @@ What to do with the output of VAL
 OUTPUT only in a procedure
 ?  LOAD "E26
 Too many levels
+?  LOAD "T15
+Q defined.
+P defined.
+1
+2
+3
+FIN
+?  PRINT :I
+4
+?  PRINT Q 2
+2
 ?  QUIT

@@ -112,6 +112,8 @@ prims
         .word p_rect
         .asc "REPETE",0
         .word p_repete
+        .asc "RETOURPROMPT",0
+        .word p_retour
         .asc "SI",0
         .word p_si
         .asc "STOP",0

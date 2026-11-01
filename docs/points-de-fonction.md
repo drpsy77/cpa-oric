@@ -467,7 +467,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | LOGO.T23 | FIXECARECRAN | EI | 0 | 3 | F | 3 |
 | LOGO.T24 | CARECRAN | EQ | 0 | 3 | F | 3 |
 | LOGO.T25 | POUR ... FIN : définir une procédure | EI | 1 | 3 | F | 3 |
-| LOGO.T26 | Exécuter une ligne ou une procédure (REPETE, SI, EXECUTE, STOP, RENDS, ATTENDS, ESC) | EI | 3 | 6 | É | 6 |
+| LOGO.T26 | Exécuter une ligne ou une procédure (REPETE, SI, EXECUTE, STOP, RENDS, RETOURPROMPT, ATTENDS, ESC) | EI | 3 | 6 | É | 6 |
 | LOGO.T27 | DONNE | EI | 1 | 2 | F | 3 |
 | LOGO.T28 | TITRES | EQ | 1 | 1 | F | 3 |
 | LOGO.T29 | LISTE "NOM | EQ | 1 | 2 | F | 3 |
