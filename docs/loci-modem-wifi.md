@@ -70,6 +70,11 @@ sans `T`, `P` ou `I`, répond `ERROR`).
       (cd src/pico-extras && git submodule update --init)
       mkdir src/bld && cd src/bld && cmake -G Ninja .. && ninja    # -> wifi_modem.uf2
 
+- **Version pour CP/A** : `tools/pico-modem/wifi_modem-cpa.uf2`, le code de `c65fcd0`
+  avec Nagle gardé (paquets WiFi groupés : la console à distance et l'envoi par XFER
+  n'ont plus d'arrêts de plusieurs secondes, à vérifier) et sans le redémarrage à 1200
+  bauds ; patch et construction : `tools/pico-modem/LISEZMOI.md`.
+
 ## Firmware du LOCI
 
 - **0.3.98 « acia-diag »** (`tools/loci-acia-diag/`) : les sources de la 0.3.1 (dépôt
