@@ -286,6 +286,14 @@ sert avec le port 2324. Choix faits en codant :
 
 Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
 
+- **Journal du démon** : `logs/remote.log` du dépôt (`--log` pour un autre fichier ; 1 Mo,
+  trois anciens gardés, `logs/` hors de git) : au démarrage, version du démon (`VERSION`),
+  commit du dépôt (« remote.py modifié » s'il diffère), Python, machine, arguments et
+  paramètres ; puis les appels, chaque cycle qui change l'écran (touches, durée de
+  l'écho, de la trame `S`, des lignes, demande groupée ou ligne par ligne), les attentes
+  dépassées, les trames refusées (début en hexadécimal), une liaison perdue, et un bilan
+  par minute. Lisible sans console : `GET /journal?n=200`, `GET /version` ; la réponse
+  de `/ecran` porte aussi les compteurs (`stats`).
 - **Démon** : `tools/remote.py serve [--port 2324] [--http 8040] [--lent]` attend
   l'Oric, tient la copie de l'écran, sert l'interface locale. Un nouvel appel de l'Oric
   remplace le précédent. `--lent` : un octet toutes les 25 ms vers l'Oric (essai ;

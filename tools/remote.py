@@ -7,8 +7,12 @@ tient une copie de l'écran de l'Oric, la met à jour en comparant des totaux
 à la fenêtre tkinter (tools/remote_tk.py), à la page web et à la ligne de
 commande ci-dessous.
 
-    remote.py serve [--port 2324] [--http 8040] [--lent]
-        le démon ; --lent : un octet toutes les 25 ms vers l'Oric
+    remote.py serve [--port 2324] [--http 8040] [--lent] [--log FICHIER]
+        le démon ; --lent : un octet toutes les 25 ms vers l'Oric ; journal
+        dans logs/remote.log du dépôt (par défaut ; 1 Mo, trois anciens
+        gardés) : version, commit, paramètres, appels, chaque cycle qui
+        change l'écran (durées), attentes dépassées, trames refusées, et un
+        bilan par minute. Aussi lisible par HTTP : /journal?n=200, /version
     remote.py touches TEXTE        frappe, notation de tools/run_test.sh :
         \\n Entrée, ~ DEL, \\x1b ESC, \\x01-\\x04 flèches G D H B, \\x05 FUNCT,
         \\x1c préfixe CTRL, \\x0f préfixe SHIFT, | pause 3 s, \\x06 démarrage
@@ -25,7 +29,11 @@ Options des commandes : --demon URL (défaut http://localhost:8040).
 Bibliothèque standard seulement (Mac, Raspberry Pi).
 """
 import json
+import logging
+import logging.handlers
 import os
+import platform
+import subprocess
 import queue
 import socket
 import sys
@@ -38,6 +46,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
+VERSION = "2026-11-01.3"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41}
@@ -71,6 +80,7 @@ class Ecran:
         self.liaison = "attente"
         self.hote = ""
         self.t_cycle = None
+        self.stats = {}                 # mesures de la liaison (diagnostic)
         self.cond = threading.Condition()
 
     def _bump(self):
@@ -107,7 +117,7 @@ class Ecran:
             delai = round(time.time() - self.t_cycle, 1) if self.t_cycle else None
             return {"version": self.version, "liaison": self.liaison, "hote": self.hote,
                     "mode": self.mode, "curseur": list(self.curseur), "delai": delai,
-                    "lignes": lig}
+                    "stats": self.stats, "lignes": lig}
 
 
 class Liaison:
@@ -116,6 +126,14 @@ class Liaison:
     def __init__(self, sock, ecran, envois, lent, journal):
         self.sock = sock
         self.ecran = ecran
+        # diagnostic, lu dans /ecran : trames reçues, refusées (longueur ou
+        # total faux : octet perdu), attentes dépassées par type, octets reçus,
+        # dernière suite de lignes (lignes reçues, durée en s), cycles
+        self.st = ecran.stats
+        self.st.clear()
+        self.st.update(trames=0, refusees=0, attentes={"S": 0, "L": 0, "suite": 0},
+                       octets=0, suite=True, derniere_suite=None, cycles=0,
+                       debut=round(time.time()))
         self.envois = envois
         self.lent = lent
         self.log = journal
@@ -123,6 +141,7 @@ class Liaison:
         self.fini = False
         self.t_trame = time.time()
         self.cy = 0
+        self.t_bilan = time.time()
         self.plage = True               # le pilote sait envoyer une suite de lignes
 
     # --- octets ----------------------------------------------------------
@@ -143,6 +162,7 @@ class Liaison:
         if not d:
             raise ConnectionError("liaison coupée par l'Oric")
         self.buf += d
+        self.st["octets"] += len(d)
 
     def trame(self, attendu, n=None, delai=1.0):
         """Attend une trame du type attendu (et de la ligne n) ; les autres
@@ -160,14 +180,19 @@ class Liaison:
                 typ, lg = self.buf[1], self.buf[2]
                 if LONGUEUR.get(typ) != lg:
                     del self.buf[:1]
+                    self.st["refusees"] += 1
                     continue
                 if len(self.buf) < lg + 4:
                     break
                 donnees = bytes(self.buf[3:3 + lg])
                 if (typ + lg + sum(donnees)) & 0xFF != self.buf[3 + lg]:
+                    self.log("trame %s refusée (total faux) : %s..." % (
+                        chr(typ), bytes(self.buf[:12]).hex()))
                     del self.buf[:1]
+                    self.st["refusees"] += 1
                     continue
                 del self.buf[:lg + 4]
+                self.st["trames"] += 1
                 self.t_trame = time.time()
                 if typ == attendu and (n is None or donnees[0] == n):
                     return donnees
@@ -182,7 +207,13 @@ class Liaison:
             d = self.trame(typ, n, delai)
             if d is not None:
                 return d
+            self.st["attentes"][chr(typ)] += 1
+            self.log("attente dépassée : %s%s (%.1f s), %d octets en attente" % (
+                chr(typ), "" if n is None else " %d" % n, delai, len(self.buf)))
             if time.time() - self.t_trame > PERDUE + delai:
+                if self.ecran.liaison != "perdue":
+                    self.log("liaison perdue : pas de trame depuis %.1f s"
+                             % (time.time() - self.t_trame))
                 self.ecran.poser(liaison="perdue")
         return None
 
@@ -192,16 +223,21 @@ class Liaison:
         rien : on revient aux demandes ligne par ligne."""
         self.envoyer([RP_REQ, ord("L"), n | 0x80])
         recu = 0
+        t0 = time.time()
         while True:
             d = self.trame(ord("L"), None, 1.0)
             if d is None or d[0] < n:
+                self.st["attentes"]["suite"] += 1
                 break
             self.ecran.ligne(d[0], d[1:])
             recu += 1
             if d[0] == ROWS - 1:
-                return
+                break
+        self.st["derniere_suite"] = [n, recu, round(time.time() - t0, 2)]
+        self.log("suite L %d+ : %d lignes en %.2f s" % (n, recu, time.time() - t0))
         if recu == 0:
             self.plage = False
+            self.st["suite"] = False
             self.log("pilote sans suite de lignes : une demande par ligne")
 
     def ligne(self, n):
@@ -233,17 +269,22 @@ class Liaison:
             except queue.Empty:
                 break
         self.envoyer(lot)
+        if len(lot) > 8:
+            self.log("touches : %d envoyées d'un coup" % (len(lot) // 2))
         return len(lot) // 2
 
     # --- boucle ----------------------------------------------------------
     def boucle(self):
         attente = 0
         while not self.fini:
-            n = self.touches(attente)
-            if 0 < n <= 4:
+            nt = self.touches(attente)
+            t0 = time.time()
+            if 0 < nt <= 4:
                 self.ligne(self.cy)        # écho rapide : la ligne du curseur
+            t1 = time.time()
             s = self.demande([RP_REQ, ord("S")], ord("S"),
-                             delai=1.0 + (PAR_TOUCHE * n if n > 4 else 0))
+                             delai=1.0 + (PAR_TOUCHE * nt if nt > 4 else 0))
+            t2 = time.time()
             if s is None:
                 attente = 0
                 continue
@@ -260,20 +301,64 @@ class Liaison:
             if (len(changees) >= SUITE and self.plage
                     and ROWS - changees[0] <= 4 * len(changees)):
                 self.suite(changees[0])
+                facon = "suite"
             else:
                 for n in changees:
                     if not self.ligne(n):
                         break
+                facon = "ligne par ligne"
             self.ecran.cycle_fait()
+            self.st["cycles"] += 1
+            if change or nt:
+                self.log("cycle : %s écho %.2f s, S %.2f s, %d lignes %s %.2f s (mode %d)" % (
+                    "%d touches," % nt if nt else "", t1 - t0, t2 - t1, len(changees),
+                    facon, time.time() - t2, mode))
+            if time.time() - self.t_bilan > 60:
+                self.t_bilan = time.time()
+                self.log("bilan : %s" % json.dumps(self.st))
             attente = 0 if change else REPOS
 
 
-def demon(port, http, lent):
+def commit_git():
+    """Commit du dépôt du démon, « modifié » si remote.py diffère du commit."""
+    ici = os.path.dirname(os.path.abspath(__file__))
+    try:
+        c = subprocess.run(["git", "-C", ici, "log", "-1", "--format=%h %ci %s"],
+                           capture_output=True, text=True, timeout=5).stdout.strip()
+        m = subprocess.run(["git", "-C", ici, "status", "--porcelain", "remote.py"],
+                           capture_output=True, text=True, timeout=5).stdout.strip()
+        return (c or "?") + (" (remote.py modifié)" if m else "")
+    except (OSError, subprocess.SubprocessError):
+        return "? (git absent)"
+
+
+def demon(port, http, lent, fichier=None):
     ecran = Ecran()
     envois = queue.Queue()
+    ici = os.path.dirname(os.path.abspath(__file__))
+    fichier = fichier or os.path.join(os.path.dirname(ici), "logs", "remote.log")
+    os.makedirs(os.path.dirname(os.path.abspath(fichier)), exist_ok=True)
+    jl = logging.getLogger("remote")
+    jl.setLevel(logging.INFO)
+    f = logging.handlers.RotatingFileHandler(fichier, maxBytes=1_000_000, backupCount=3,
+                                             encoding="utf-8")
+    f.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+    jl.addHandler(f)
+    e = logging.StreamHandler(sys.stdout)
+    e.setFormatter(logging.Formatter("%(asctime)s %(message)s", "%H:%M:%S"))
+    jl.addHandler(e)
 
     def journal(m):
-        print(time.strftime("%H:%M:%S "), m, flush=True)
+        jl.info(m)
+
+    infos = {"version": VERSION, "commit": commit_git(), "python": platform.python_version(),
+             "machine": "%s (%s)" % (platform.node(), platform.platform()),
+             "pid": os.getpid(), "arguments": sys.argv[1:], "journal": os.path.abspath(fichier),
+             "parametres": {"port": port, "http": http, "lent": lent, "LOT": LOT,
+                            "PAR_TOUCHE": PAR_TOUCHE, "REPOS": REPOS, "PERDUE": PERDUE,
+                            "SUITE": SUITE}}
+    ecran.infos = infos
+    journal("=== démarrage : %s" % json.dumps(infos, ensure_ascii=False))
 
     def servir_oric():
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -294,7 +379,7 @@ def demon(port, http, lent):
                 except OSError:
                     pass
                 fil.join(5)
-            journal("appel de %s" % addr[0])
+            journal("appel de %s:%d" % addr)
             li = Liaison(sock, ecran, envois, lent, journal)
             ecran.poser(hote=addr[0], liaison="active")
 
@@ -330,6 +415,16 @@ def demon(port, http, lent):
                 depuis = int(q.get("depuis", ["0"])[0])
                 attendre = min(float(q.get("attendre", ["0"])[0]), 5.0)
                 self._rep(200, json.dumps(ecran.etat(depuis, attendre)).encode())
+            elif u.path == "/version":
+                self._rep(200, json.dumps(ecran.infos, ensure_ascii=False).encode())
+            elif u.path == "/journal":
+                n = int(q.get("n", ["200"])[0])
+                try:
+                    with open(infos["journal"], encoding="utf-8") as fj:
+                        t = "".join(fj.readlines()[-n:])
+                except OSError as err:
+                    t = "journal illisible : %s\n" % err
+                self._rep(200, t.encode(), "text/plain; charset=utf-8")
             elif u.path == "/":
                 self._rep(200, "<!doctype html><meta charset=utf-8><title>CP/A a distance"
                           "</title><p>CP/A a distance : la page web viendra (lot 4). "
@@ -451,7 +546,8 @@ def main(args):
         if "--http" in args:
             h = int(args[args.index("--http") + 1])
         lent = "--lent" in args
-        return demon(port, h, lent)
+        fichier = args[args.index("--log") + 1] if "--log" in args else None
+        return demon(port, h, lent, fichier)
     if cmd == "touches":
         lot = bytearray()
         for k in codes_touches(args[0] if args else ""):
