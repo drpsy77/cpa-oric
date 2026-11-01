@@ -384,7 +384,8 @@ Sur Oric Atmos + LOCI, version disquette :
   firmware du Pico à Nagle gardé) : `REMOTE SIMON`, écran tenu à jour, écho 0,25 à
   0,33 s, 22 à 27 lignes en 1,5 à 1,8 s, `VER` sur un écran plein en 3,1 à 3,6 s ; plus
   de trame refusée, une seule réponse en retard en ~3 min (avant le firmware : arrêts de
-  1,5 à 3 s en pleine trame) ;
+  1,5 à 3 s en pleine trame) ; remesuré après un redémarrage (25 `VER`) : écho et trame
+  `S` à 0,2 s de médiane, environ un échange sur dix retardé de 1 à 2 s (WiFi) ;
 - XFER (1er novembre 2026) : `XFER E` de 7 774 octets en moins de 10 s depuis que `ac_txw`
   attend l'émetteur 5 s (27 s avant) ; `XFER ... @MAC` compose et transfère (premier appel
   avec `ERROR`, corrigé depuis, ci-dessus) ;
