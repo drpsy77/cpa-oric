@@ -261,10 +261,9 @@ revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
   (`TERM`, `AT` : `OK`) ;
 - `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`).
 
-**Firmware du Pico pour CP/A** (`tools/pico-modem/LISEZMOI.md`, Nagle gardé) : après
-l'avoir flashé, `REMOTE SIMON` ; Claude remesure `VER` (avant : 3,4 à 4,5 s, arrêts de
-1,5 à 3 s en pleine trame dans `logs/remote.log`) ; puis `XFER E` de 7,8 Ko (avant :
-moins de 10 s) ; `TERM` vers un BBS reste réactif.
+**Firmware du Pico pour CP/A** (`tools/pico-modem/LISEZMOI.md`, Nagle gardé ; console à
+distance mesurée, voir « Vérifié ») : `XFER E` de 7,8 Ko (avant : moins de 10 s) ; `TERM`
+vers un BBS reste réactif.
 
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
@@ -373,6 +372,11 @@ Sur Oric Atmos + LOCI, version disquette :
   texte (identiques), d'un gros `.COM` vers B: (il se lance), `/T` (fins de ligne,
   tabulations), ESC pendant une réception (rien d'écrit, ancien fichier intact), XFER sans
   liaison (`Pas de reponse du serveur`), plusieurs XFER de suite sans repasser par TERM ;
+- Console à distance (1er novembre 2026, démon sur simon, Pi Zero ; nouveau pilote et
+  firmware du Pico à Nagle gardé) : `REMOTE SIMON`, écran tenu à jour, écho 0,25 à
+  0,33 s, 22 à 27 lignes en 1,5 à 1,8 s, `VER` sur un écran plein en 3,1 à 3,6 s ; plus
+  de trame refusée, une seule réponse en retard en ~3 min (avant le firmware : arrêts de
+  1,5 à 3 s en pleine trame) ;
 - XFER (1er novembre 2026) : `XFER E` de 7 774 octets en moins de 10 s depuis que `ac_txw`
   attend l'émetteur 5 s (27 s avant) ; `XFER ... @MAC` compose et transfère (premier appel
   avec `ERROR`, corrigé depuis, ci-dessus) ;

@@ -220,6 +220,17 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
      (`tools/remote_tk.py`) marche avec le démon. À essayer sur le vrai Oric
      (`essais-materiel.md`). Reste le lot 4 : la page web (navigateur, téléphone).
+     **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
+     (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
+     plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
+     gardé). Claude joint simon par le lien avec le Mac de Pierre : il tape, lit l'écran
+     (`/ecran`), le journal (`/journal`) et la version (`/version`) ; vérification du
+     pilote chargé : `DEBUG TYPE`, `D DD91`. Mesures : écho 0,25 à 0,33 s ; 22 à 27
+     lignes en 1,5 à 1,8 s (~750 octets/s) ; `VER` sur un écran plein 3,1 à 3,6 s.
+     Suite prévue : (1) la trame `S` met 1,1 à 1,5 s juste après une commande (0,2 s au
+     repos) : à comprendre ; (2) `tools/essai_oric.py`, essais du vrai Oric pilotés par
+     Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (3) XFER avec le
+     nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (4) la page web.
      Avec ce lot, l'appel du modem est plus sûr : CR et réponses en retard jetés avant
      `AT` (le premier `XFER @MAC` répondait `ERROR`), et `xfer_server.py` accepte un
      nouvel appel à tout moment (une connexion morte le bloquait).
