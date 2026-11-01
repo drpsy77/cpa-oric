@@ -121,6 +121,7 @@ VOC = [
     ("f", "f_videp",   "VIDE?",                       "EMPTY?"),
     ("f", "f_xcor",    "XCOR",                        "XCOR"),
     ("f", "f_ycor",    "YCOR",                        "YCOR"),
+    ("p", "p_retour",  "RETOURPROMPT",                "TOPLEVEL"),
 ]
 # fin de procédure (pas une primitive : reconnue après POUR)
 FIN = ("FIN", "END")

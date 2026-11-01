@@ -1,6 +1,6 @@
 ; lgtr_tab.s : vocabulaires de LOGO numérotés, pour LOGOTR.COM
 ; Généré par tools/gen_logo_voc.py — ne pas éditer à la main.
-TR_N    = 96          ; primitives (numéros 1 à TR_N ; TR_N + 1 : FIN / END)
+TR_N    = 97          ; primitives (numéros 1 à TR_N ; TR_N + 1 : FIN / END)
 ; tr_fr : nom, 0, numéro, rang du nom (0 : long, 1 : abréviation...)
 tr_fr
         .asc "AVANCE",0,1,0
@@ -118,7 +118,8 @@ tr_fr
         .asc "VIDE?",0,94,0
         .asc "XCOR",0,95,0
         .asc "YCOR",0,96,0
-        .asc "FIN",0,97,0
+        .asc "RETOURPROMPT",0,97,0
+        .asc "FIN",0,98,0
         .byt 0
 ; tr_en : nom, 0, numéro, rang du nom (0 : long, 1 : abréviation...)
 tr_en
@@ -245,7 +246,8 @@ tr_en
         .asc "EMPTY?",0,94,0
         .asc "XCOR",0,95,0
         .asc "YCOR",0,96,0
-        .asc "END",0,97,0
+        .asc "TOPLEVEL",0,97,0
+        .asc "END",0,98,0
         .byt 0
 TR_POUR = 40          ; POUR / TO : le mot suivant est un nom de procédure
 TR_FR_DP = 31        ; nom à double sens : numéro de l'instruction (0 : aucun)
@@ -261,3 +263,4 @@ tr_kind
         .byt 0,0,0,0,0,0,0,0,128,128,128,128,128,128,128,128
         .byt 128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128
         .byt 128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128
+        .byt 0

@@ -311,7 +311,8 @@ er1     lda ernum               ; numéro à afficher (CHARGE : ligne)
         sta ernum
         jsr put_num
 er1b    jsr crlf
-        lda defmode             ; définition en cours abandonnée
+; to_top : retour au prompt sans message (RETOURPROMPT ; fin de error)
+to_top  lda defmode             ; définition en cours abandonnée
         beq er2
         lda #0
         sta defmode
@@ -3499,6 +3500,10 @@ p_pour  lda #<e_pour
 p_quitte
         jsr turtle_hide
         jmp WBOOT
+
+; RETOURPROMPT : quitte toutes les procédures en cours et revient au
+;   prompt, sans message (comme ESC, procédures et variables gardées)
+p_retour = to_top
 
 ; ECRANTEXTE : écran texte de 26 lignes, sans image ni tortue (les
 ;   primitives de la tortue y donnent une erreur) ; l'image reste en

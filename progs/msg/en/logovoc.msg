@@ -152,6 +152,8 @@ prims
         .word p_sonf
         .asc "TYPE",0
         .word p_tape
+        .asc "TOPLEVEL",0
+        .word p_retour
         .asc "WAIT",0
         .word p_attends
         .asc "WAITSOUND",0

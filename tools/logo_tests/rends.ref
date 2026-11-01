@@ -45,4 +45,15 @@ Que faire de ce que rend VAL
 RENDS seulement dans une procedure
 ?  CHARGE "E26
 Trop de niveaux
+?  CHARGE "T15
+Q defini.
+P defini.
+1
+2
+3
+FIN
+?  ECRIS :I
+4
+?  ECRIS Q 2
+2
 ?  QUITTE
