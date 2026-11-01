@@ -161,7 +161,12 @@ def e2(d):
     touches([17])           # ^Q
     check(attendre("A>", 20), "edit : retour au prompt")
     touches("type essai.txt" + N)
-    check(attendre(lignes[-1], 60), "type : derniere ligne")
+    fin = time.time() + 90             # pages : une espace à chaque pause
+    while time.time() < fin and lignes[-1] not in texte():
+        if "Suite" in texte():
+            touches(" ")
+        time.sleep(1)
+    check(lignes[-1] in texte(), "type : derniere ligne")
     time.sleep(2)
 r = essai("edit", CLES, 4500, e2)
 if r:

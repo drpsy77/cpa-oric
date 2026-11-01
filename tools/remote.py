@@ -46,6 +46,9 @@ PAR_TOUCHE = 0.1        # délai de réponse en plus par touche envoyée : la
                         # demande attend que le programme les ait lues
 REPOS = 0.5             # cycle au repos
 PERDUE = 5.0            # sans trame valide : liaison perdue
+SUITE = 3               # à partir de 3 lignes changées (et au moins un quart
+                        # de celles qui suivent la première) : une seule
+                        # demande pour les lignes de la première à la 27
 
 
 def fletcher(octets):
@@ -120,6 +123,7 @@ class Liaison:
         self.fini = False
         self.t_trame = time.time()
         self.cy = 0
+        self.plage = True               # le pilote sait envoyer une suite de lignes
 
     # --- octets ----------------------------------------------------------
     def envoyer(self, octets):
@@ -182,6 +186,24 @@ class Liaison:
                 self.ecran.poser(liaison="perdue")
         return None
 
+    def suite(self, n):
+        """Lignes n à 27 en une demande ($FD "L" n+$80) : une trame L chacune,
+        sans aller-retour entre elles. Un pilote qui ne le sait pas ne répond
+        rien : on revient aux demandes ligne par ligne."""
+        self.envoyer([RP_REQ, ord("L"), n | 0x80])
+        recu = 0
+        while True:
+            d = self.trame(ord("L"), None, 1.0)
+            if d is None or d[0] < n:
+                break
+            self.ecran.ligne(d[0], d[1:])
+            recu += 1
+            if d[0] == ROWS - 1:
+                return
+        if recu == 0:
+            self.plage = False
+            self.log("pilote sans suite de lignes : une demande par ligne")
+
     def ligne(self, n):
         d = self.demande([RP_REQ, ord("L"), n], ord("L"), n)
         if d is not None:
@@ -229,15 +251,19 @@ class Liaison:
             mode, cx, cy, actif = s[0], s[1], s[2], bool(s[3])
             self.cy = cy if cy < ROWS else 0
             self.ecran.poser(mode=mode, curseur=[cx, cy, actif])
-            change = False
+            changees = []
             if mode & 0x7F != 2:
                 debut = 16 if mode & 0x7F == 1 else 0   # SPLIT : lignes de texte
-                for n in range(debut, ROWS):
-                    t = (s[4 + 2 * n], s[5 + 2 * n])
-                    if fletcher(self.ecran.lignes[n]) != t:
-                        change = True
-                        if not self.ligne(n):
-                            break
+                changees = [n for n in range(debut, ROWS)
+                            if fletcher(self.ecran.lignes[n]) != (s[4 + 2 * n], s[5 + 2 * n])]
+            change = bool(changees)
+            if (len(changees) >= SUITE and self.plage
+                    and ROWS - changees[0] <= 4 * len(changees)):
+                self.suite(changees[0])
+            else:
+                for n in changees:
+                    if not self.ligne(n):
+                        break
             self.ecran.cycle_fait()
             attente = 0 if change else REPOS
 

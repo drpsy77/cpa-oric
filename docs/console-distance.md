@@ -102,7 +102,7 @@ ignoré. Ainsi `NO CARRIER` n'arrive jamais à l'Oric comme une frappe.
 |---|---|
 | `$FE k` | touche de code `k` (0-255), rangée dans le tampon du clavier ; codes du contrat (`architecture.md` § 2, « Codes du clavier » ; FUNCT = `$80`) |
 | `$FD 'S'` | demande des totaux (réponse `S`) |
-| `$FD 'L' n` | demande de la ligne `n` (0-27) (réponse `L`) |
+| `$FD 'L' n` | demande de la ligne `n` (0-27) (réponse `L`) ; `n + $80` : les lignes `n` à 27, une trame `L` chacune, à la suite, sans autre demande (le Mac s'en sert à partir de 3 lignes changées) |
 | `$FD 'B'` | démarrage à chaud, comme le bouton RESET (essais : programme bloqué qui garde les interruptions) |
 
 - Une touche n'est lue de l'ACIA que s'il y a de la place dans le tampon du clavier
@@ -139,7 +139,7 @@ une trame refusée est redemandée.
 |---|---|
 | lecture | jusqu'à 4 octets reçus ; le premier sans attendre, les suivants après une attente de ~1,2 ms au plus (un vrai 6551, celui d'Oricutron, n'en présente qu'un par milliseconde ; le LOCI en garde 32, tout de suite lisibles) |
 | totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon |
-| émission | jusqu'à 8 octets (`SR_TXMAX`), chacun après une attente de l'émetteur libre de ~1,2 ms au plus (`SR_WAIT`) ; émetteur occupé : la suite à l'IRQ suivante |
+| émission | jusqu'à 24 octets (`SR_TXMAX`), tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms (`SR_BUDG`) ; émetteur occupé : la suite à l'IRQ suivante. Un émetteur libre tout de suite (LOCI ?) envoie 24 octets par IRQ presque sans attente ; un vrai 6551 (Oricutron), ~6 |
 
 Mesuré dans Oricutron (9600 bauds, émetteur libre au bout de ~1 ms) : 8 octets par IRQ,
 soit la trame `S` (64 octets) en 8 IRQ (0,16 s), une trame `L` (45 octets) en 6 ; pendant
@@ -172,9 +172,10 @@ relance le service). `REMOTE OFF` coupe et raccroche.
 | fonction 117 (`sr_call`) | 76 |
 | PUNCH, READER (fonctions 4 et 3) | 72 |
 | voyant (`draw_flags`, table `sr_flg`), aiguillage du BDOS, appel dans l'IRQ (moins les anciennes entrées vides de PUNCH et READER) | 25 |
-| **total** | **622** |
+| ajouts : suite de lignes (`L n+$80`), attente de l'émetteur comptée sur l'IRQ (`sr_bud`) | 38 |
+| **total** | **660** |
 
-Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD20`) : octet bas du port, état (console
+Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`) : octet bas du port, état (console
 active, liaison perdue), préfixe reçu, trame en cours, position, ligne demandée, ligne
 lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH.
 Effacées au démarrage à froid seulement. La ligne est lue par une instruction `LDA

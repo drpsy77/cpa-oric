@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F574` en français (`$F548` en anglais), **marge 84
-octets** jusqu'à `$F5C8` (le pilote série, option `SERIE`, en prend 622), où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F59A` en français (`$F56E` en anglais), **marge 46
+octets** jusqu'à `$F5C8` (le pilote série, option `SERIE`, en prend 660), où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
@@ -213,8 +213,8 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      EDIT). Elle demande le pilote dans le BIOS : elle doit survivre aux programmes.
    - **Console à distance** (`docs/console-distance.md`, schéma animé
      `docs/console-distance.html`) : fait (lot 3, 01/11/2026). Pilote résident
-     (`src/serial.s`, 622 octets avec ses crochets : plus que les 500 prévus ; marge du
-     système 84 octets), fonction 117 du BDOS, PUNCH / READER définis (ajouts au contrat),
+     (`src/serial.s`, 660 octets avec ses crochets : plus que les 500 prévus ; marge du
+     système 46 octets), fonction 117 du BDOS, PUNCH / READER définis (ajouts au contrat),
      `REMOTE.COM`, refus de TERM et XFER pendant la console, démon `tools/remote.py` (écho
      rapide, texte collé au rythme du programme, ligne de commande `touches`, `coller`,
      `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
@@ -474,8 +474,8 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 84 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
-octets ; variables du BDOS : `$FD21-$FD57` libres, 55 octets). Fait : police rangée sur 5
+**Système** (marge 46 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
+octets ; variables du BDOS : `$FD22-$FD57` libres, 54 octets). Fait : police rangée sur 5
 octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
 
 | Piste | Gain estimé | Prix |
@@ -508,7 +508,7 @@ démarrage à froid (test de la RAM, `AUTO.BAT`) chargés avec le système (576 
 résidents rendus) ; lot 2, banque IMG (GSAVE, GLOAD, SAVE) lue dans `CPA.BNK` quand elle
 sert, PUT rechargé de `CPA.BNK`, prêt de la fenêtre pendant un PUT, GSAVE par `NOM.$$$` (69
 octets rendus : le chargeur, `win_call` et les points d'entrée font ~370 octets, coût fixe ;
-chaque banque suivante rend presque toute sa taille). Le pilote série (622 octets, § 2
+chaque banque suivante rend presque toute sa taille). Le pilote série (660 octets, § 2
 point 4 : console à distance) a pris la marge ; les menus (fonction phare) restent
 résidents.
 
