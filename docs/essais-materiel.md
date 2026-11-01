@@ -240,21 +240,53 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
   (`docs/etat.md` § 2 point 6).
 
-**HOSTS et appel du modem** (TERM, XFER ; essayés seulement dans Oricutron) : corriger
-l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer `xfer_server.py` sur le Mac, puis :
+**HOSTS et appel du modem** (TERM, XFER) : le premier `XFER ... @MAC` répondait `ERROR` (la liaison s'ouvrait quand même) et
+un serveur qui n'était pas relancé ne répondait plus : corrigés (`docs/console-distance.md`
+§ 8 : CR et réponses en retard jetés avant `AT` ; serveur qui accepte un nouvel appel), à
+revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
+`xfer_server.py` sur le Mac, **sans le relancer entre les essais**, puis :
 
-- `XFER E LETTRE.TXT @MAC` sans passer par TERM : `Appel de 192.168.1.x:2323...`,
+- `XFER E LETTRE.TXT @MAC` juste après le démarrage : `Appel de 192.168.1.x:2323...`,
   `CONNECT`, transfert ; puis `XFER R COPIE.TXT lettre.txt` sans `@` (liaison gardée) ;
-- `XFER R C2.TXT lettre.txt @MAC` sur cette liaison restée ouverte : quelques secondes de
+- le même après un bouton RESET (liaison restée ouverte côté Mac), et après avoir éteint
+  et rallumé l'Oric : `CONNECT` et transfert, sans relancer le serveur (il écrit
+  `nouvel appel : la connexion précédente est fermée`) ;
+- `TERM`, taper `xyz` sans RETURN, CTRL-Q, puis `XFER E LETTRE.TXT @MAC` : `CONNECT`, pas
+  `ERROR` ;
+- `XFER R C2.TXT lettre.txt @MAC` sur une liaison restée ouverte : quelques secondes de
   plus (`+++`, `ATH0`), puis un nouvel appel qui marche ;
 - `TERM PASLA` (nom inconnu du DNS) : réponse du modem (`NO CARRIER` ?) puis retour au
   prompt ; `TERM IPINFO.IO:80` : `CONNECT` ;
 - ESC pendant `Appel de...` : `Appel abandonne (ESC)`, le modem reste utilisable
   (`TERM`, `AT` : `OK`) ;
-- `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`) ;
-- `XFER E` du même fichier de 7 774 octets (27 s avant que XFER attende l'émetteur 5 s au
-  lieu de 0,3 s) : temps, pauses ; le serveur affiche maintenant chaque bloc redemandé
-  (`bloc n : ... octets sur 132, redemande`).
+- `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`).
+
+**Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
+`docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
+`python3 tools/remote_tk.py` ; dans `HOSTS`, `mac` sans port (2324 par défaut pour REMOTE) :
+
+- `REMOTE MAC` : `CONNECT`, `Console a distance active (voyant R)`, voyant `R` en colonne
+  36 ; la fenêtre montre l'écran de l'Oric (barre de menus comprise) ; `REMOTE` : état ;
+- délai de l'écho : une touche tapée dans la fenêtre paraît-elle en ~0,15 s ? Un `DIR`
+  tapé dans la fenêtre : temps pour que tout l'écran soit à jour (mesuré dans Oricutron :
+  la trame `S` part en 0,16 s, une ligne en 0,12 s) ; l'émetteur du LOCI est-il libre tout
+  de suite ou au rythme de 9600 bauds ?
+- le clavier de l'Oric et celui du Mac en même temps ; les flèches, CTRL, F1 (FUNCT) depuis
+  la fenêtre ; un menu ouvert par FUNCT sur l'Oric vu sur le Mac ;
+- un texte de plusieurs Ko collé (F9, ou `remote.py coller texte.txt`) dans `EDIT
+  NOTE.TXT`, puis `^S` : `TYPE NOTE.TXT` le montre en entier, sans perte (dans Oricutron :
+  2 Ko en ~40 s) ;
+- EDIT, CMDER, HEX, GRAPHER en SPLIT (lignes 16 à 27), un programme en HIRES plein écran
+  (« Ecran graphique ») ; ASM d'un gros source pendant que le Mac regarde : temps de
+  l'assemblage comparé à sans console ;
+- bouton RESET avec la console active : retour au prompt, console toujours active (voyant
+  `R`) ; F5 dans la fenêtre (démarrage à chaud) pendant CMDER : de même ;
+- Pico débranché pendant que le Mac rafraîchit l'écran : au bout de 5 s, voyant `r`,
+  l'Oric continue ; Pico rebranché, `REMOTE MAC` : de nouveau `R` ;
+- démon arrêté puis relancé sur le Mac : `REMOTE MAC` de nouveau, sans RESET ;
+- `TERM` et `XFER` pendant la console : `Console a distance : REMOTE OFF` ; `REMOTE OFF` :
+  `Console a distance coupee`, voyant éteint, puis `XFER ... @MAC` marche ;
+- `REMOTE MAC` dans `AUTO.BAT` : au démarrage à froid, l'Oric appelle le Mac de lui-même.
 
 **XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
 du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
@@ -333,6 +365,9 @@ Sur Oric Atmos + LOCI, version disquette :
   texte (identiques), d'un gros `.COM` vers B: (il se lance), `/T` (fins de ligne,
   tabulations), ESC pendant une réception (rien d'écrit, ancien fichier intact), XFER sans
   liaison (`Pas de reponse du serveur`), plusieurs XFER de suite sans repasser par TERM ;
+- XFER (1er novembre 2026) : `XFER E` de 7 774 octets en moins de 10 s depuis que `ac_txw`
+  attend l'émetteur 5 s (27 s avant) ; `XFER ... @MAC` compose et transfère (premier appel
+  avec `ERROR`, corrigé depuis, ci-dessus) ;
 - démarrage, menus, EDIT, PUT, DIR, GTEST, LOGO, STAT, MEM, POKE, GO, DO ;
 - historique des lignes (flèche haut) au prompt et dans LOGO, ← → dans LOGO ; complétion des
   noms par ESC ;

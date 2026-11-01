@@ -223,7 +223,7 @@ Même interface sur le Microdisc d'origine, le Cumulus, le LOCI et Oricutron.
 
 | Adresse | Usage |
 |---|---|
-| `$0380-$0383` | ACIA 6551 émulée (port série ; modem WiFi, voir `docs/loci-modem-wifi.md` ; le firmware répond aussi en `$0340`) ; pas encore utilisée par CP/A (entrées PUNCH et READER du BIOS réservées) |
+| `$0380-$0383` | ACIA 6551 émulée (port série ; modem WiFi, voir `docs/loci-modem-wifi.md` ; le firmware répond aussi en `$0340`) ; utilisée par TERM, XFER, REMOTE et le pilote série du système (PUNCH, READER, console à distance : `src/serial.s`) |
 | `$03A0-$03BF` | MIA : interface du Picocomputer 6502 (registres de `loci-rom/src/include/loci.h`) |
 
 Registres de la MIA utilisés par CP/A :

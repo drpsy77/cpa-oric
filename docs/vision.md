@@ -62,6 +62,11 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
 Une idée entre dans la suite prévue (`docs/etat.md` § 2) si elle sert l'un des points 1 à 3
 sans trahir les points 4 et 5. Ce qui ne sert aucun des trois attend, ou n'est pas fait.
 
+Les menus déroulants et la complétion (noms de fichiers et commandes, option `CPLCMD`) sont
+les fonctions phares : ce sont elles qui donnent sa souplesse à l'Oric, et la raison de CP/A
+face à SEDORIC. On ne les retire ni ne les allège pour gagner de la place : la place se
+cherche ailleurs.
+
 ## Questions ouvertes
 
 - Au-delà de son auteur : CP/A est-il proposé à la communauté Oric (langue des messages et

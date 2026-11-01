@@ -210,10 +210,17 @@ ac_t0   .byt 0                  ; compteur 50 Hz au départ
 ;             (ac_host), compose et attend CONNECT (20 s au plus, ESC pour
 ;             renoncer). C=0 : liaison ouverte ; C=1 : échec, message
 ;             affiché. Si le modem ne répond pas à AT (liaison restée
-;             ouverte), +++ et ATH0 d'abord.
+;             ouverte), +++ et ATH0 d'abord. Un OK reçu après ATDT est
+;             une réponse en retard : sauté.
 ;    ac_host  la recherche seule : adresse en ac_wrk+AC_ADR (terminée par
 ;             0 ; + ou = en tête : telnet), port en ac_wrk+AC_PRT
 ;    ac_esc   C=1 si ESC a été tapé
+;    ac_busy  C=1 (message affiché) si la console à distance est active :
+;             TERM et XFER liraient l'ACIA à sa place
+;    ac_ser   fonction 117 du BDOS avec le bloc ac_blk (op, p1)
+;    ac_hang  raccroche (+++ si la liaison est ouverte, puis ATH0)
+;    ac_at    AT, après avoir vidé la ligne de commande du modem (CR) et
+;             les réponses en retard : Z=1 si OK
 ;
 ;  HOSTS : fichier texte, une ligne « nom adresse[:port] » par hôte ; une
 ;  ligne qui commence par « ; » ou un blanc est ignorée. Nom : 15
@@ -237,25 +244,14 @@ ac_dial
         beq dial
         cmp #4
         beq jesc
-        ldy #60                 ; liaison restée ouverte : +++, ATH0
-        jsr ac_wait
-        lda #<ac_spl
-        ldy #>ac_spl
-        jsr ac_say
-        ldy #60
-        jsr ac_wait
-        lda #<ac_sath
-        ldy #>ac_sath
-        jsr ac_say
-        ldx #4
-        jsr ac_resp
+        jsr ac_hpl              ; liaison restée ouverte : +++, ATH0
         jsr ac_at
         beq dial
         cmp #4
         beq jesc
 mute    lda #<ac_mmut
         ldy #>ac_mmut
-        bne fail
+        jmp fail
 jesc    jmp esc
 dial    lda #<ac_mcal           ; « Appel de adresse:port... »
         ldy #>ac_mcal
@@ -285,8 +281,10 @@ d1      inc ac_dst
         jsr ac_show
         lda #13
         jsr ac_put
-        ldx #40                 ; 20 s
+d2      ldx #40                 ; 20 s
         jsr ac_resp
+        cmp #0                  ; OK : réponse en retard d'une commande
+        beq d2                  ;   précédente, sautée
         cmp #3
         beq mute
         cmp #4
@@ -319,9 +317,32 @@ f2      sec
         rts
 .)
 
-; ac_at : envoie AT, attend la réponse 1 s ; Z=1 si OK, sinon A = code de
-;   ac_resp
+; ac_hang : raccroche : ATH0, précédé de +++ si le modem ne répond pas à
+;   AT (liaison ouverte). ac_hpl : +++ et ATH0 sans essayer AT.
+ac_hang
+        jsr ac_at
+        beq ac_h0
+ac_hpl  ldy #60                 ; une seconde de silence avant et après +++
+        jsr ac_wait
+        lda #<ac_spl
+        ldy #>ac_spl
+        jsr ac_say
+        ldy #60
+        jsr ac_wait
+ac_h0   lda #<ac_sath
+        ldy #>ac_sath
+        jsr ac_say
+        ldx #4
+        jmp ac_resp
+
+; ac_at : vide la ligne de commande du modem (un reste, octets partis
+;   pendant une liaison coupée, ferait répondre ERROR) et ce qui attend
+;   (réponses en retard), puis envoie AT et attend la réponse 1 s ; Z=1 si
+;   OK, sinon A = code de ac_resp
 ac_at
+        lda #13
+        jsr ac_put
+        jsr ac_purge
         lda #<ac_sat
         ldy #>ac_sat
         jsr ac_say
@@ -329,6 +350,19 @@ ac_at
         jsr ac_resp
         cmp #0
         rts
+
+; ac_purge : jette ce qui arrive, jusqu'à 0,2 s de silence (255 octets au
+;   plus)
+ac_purge
+.(
+        ldx #0
+p       ldy #10
+        jsr ac_getw
+        bcc r
+        dex
+        bne p
+r       rts
+.)
 
 ; ac_resp : lit les lignes du modem pendant X demi-secondes au plus ;
 ;   A = 0 OK, 1 CONNECT, 2 échec (NO CARRIER, NO DIALTONE, ERROR, BUSY),
@@ -699,6 +733,35 @@ ac_low
         ora #$20
 r       rts
 .)
+
+; ac_busy : C=1 et message si la console à distance est active
+ac_busy
+.(
+        lda #SE_STATE
+        sta ac_blk
+        jsr ac_ser
+        cmp #$FF                ; pas de pilote série
+        beq no
+        and #2
+        beq no
+        lda #<ac_mrem
+        ldy #>ac_mrem
+        ldx #F_PRINT
+        jsr BDOS
+        sec
+        rts
+no      clc
+        rts
+.)
+
+; ac_ser : fonction 117 du BDOS, bloc ac_blk (op, p1 ; le BDOS ne lit pas
+;   plus loin)
+ac_ser
+        lda #<ac_blk
+        ldy #>ac_blk
+        ldx #F_SERIAL
+        jmp BDOS
+ac_blk  .byt 0,0
 
 ac_sat  .asc "AT",13,0
 ac_sath .asc "ATH0",13,0

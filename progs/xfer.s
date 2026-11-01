@@ -37,7 +37,8 @@
 ;
 ;  Port : bibliothèque acia_inc.s (LOCI en $0380, Oricutron en $031C). Le
 ;  réglage de l'ACIA n'est refait que s'il a changé (la liaison ouverte
-;  par TERM n'est pas touchée).
+;  par TERM n'est pas touchée). Refusé pendant la console à distance
+;  (REMOTE) : elle a le port.
 ; =====================================================================
 
 #include "cpa.inc"
@@ -66,7 +67,10 @@ hostx   = $20           ; position de « @hote » dans TAIL+1 ($FF : aucun)
         *= $0500
 start
 .(
-        lda #0
+        jsr ac_busy             ; console à distance active : refus
+        bcc go
+        rts
+go      lda #0
         sta text
         sta w3
         lda #$FF

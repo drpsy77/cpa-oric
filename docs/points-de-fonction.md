@@ -14,7 +14,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 <!-- synthese:debut -->
 | Composant | ILF | EIF | EI | EO | EQ | **PF IFPUG** | Algorithmes | **Total** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 38 | 5 | 174 | 36 | 72 | **325** | 72 | **397** |
+| Système et commandes | 45 | 5 | 183 | 48 | 78 | **359** | 75 | **434** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
 | GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 5 | 34 | 18 | 9 | **94** | 21 | **115** |
+| USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *435* | *110* | *111* | ***876*** | *221* | ***1097*** |
+| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *221* | ***1101*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 29 | 122 | 18 | **191** | 46 | **237** |
-| **Total** | **220** | **82** | **665** | **324** | **207** | **1498** | **355** | **1853** |
+| Outillage PC | 7 | 15 | 36 | 126 | 18 | **202** | 47 | **249** |
+| **Total** | **227** | **82** | **685** | **340** | **213** | **1547** | **359** | **1906** |
 
-Points ajustés (indicatif, § 9) : 1 498 × 1,05 ≈ 1 573.
+Points ajustés (indicatif, § 9) : 1 547 × 1,05 ≈ 1 624.
 
-Nombre de fonctions comptées : 31 ILF, 16 EIF, 211 EI, 79 EO, 69 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 217 EI, 83 EO, 71 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -84,7 +84,7 @@ Interprétation pour CP/A :
   algorithmes. Deux primitives au même traitement (AV et RE) font une transaction.
 - **Non comptés** : la navigation (flèches, pages, menus déroulants : leurs articles tapent
   des commandes déjà comptées), les messages d'erreur, les réglages techniques (fonction 26,
-  `SETTRK`...), PUNCH et READER (réservées au réseau).
+  `SETTRK`...).
 
 ### 2.2 Points d'algorithmes
 
@@ -149,6 +149,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.D04 | Image du mode SPLIT (en mémoire, fichiers `.IMG`) | ILF | 1 | 3 | F | 7 |
 | SYS.D05 | État des voix du son (note, volume, durée, enveloppe, mélangeur) | ILF | 2 | 8 | F | 7 |
 | SYS.D06 | Scripts `.BAT` (écrits par EDIT) | EIF | 1 | 3 | F | 5 |
+| SYS.D07 | État du port série et de la console à distance (port, console active, liaison perdue) | ILF | 1 | 3 | F | 7 |
 
 **Commandes (prompt, menus, touches)**
 
@@ -262,6 +263,14 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.T97 | BOOT, WBOOT (= SYS.T36, SYS.T37) | — | — | — | — | 0 |
 | SYS.T98 | MENUBAR : barre de menus d'un programme (codes `$81`...) | EQ | 0 | 5 | F | 3 |
 | SYS.T99 | AUTO.BAT : script lancé au démarrage à froid s'il est sur A: | EI | 1 | 1 | F | 3 |
+| SYS.T100 | 117 op 0 : état du port et de la console | EQ | 1 | 3 | F | 3 |
+| SYS.T101 | 117 op 1 à 3 : poser le port, console active ou coupée (voyant) | EI | 1 | 3 | F | 3 |
+| SYS.T102 | PUNCH (fonction 4) : octet envoyé au port, attente bornée | EO | 1 | 2 | F | 4 |
+| SYS.T103 | READER (fonction 3) : octet du port ; `^Z` sans port, pendant la console ou sur une touche | EQ | 1 | 2 | F | 3 |
+| SYS.T104 | Console à distance : touches du Mac rangées dans le tampon du clavier (s'il a de la place) | EI | 1 | 2 | F | 3 |
+| SYS.T105 | Console à distance : trame `S` (mode, curseur, totaux des 28 lignes) | EO | 1 | 5 | F | 4 |
+| SYS.T106 | Console à distance : trame `L` (une ligne, case du curseur rétablie) | EO | 1 | 3 | F | 4 |
+| SYS.T107 | Console à distance : démarrage à chaud demandé par le Mac | EI | 1 | 1 | F | 3 |
 
 **Algorithmes**
 
@@ -296,6 +305,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A27 | VSYNC : calage du timer de l'IRQ sur le balayage vidéo | `vsync.s` | 3 |
 | SYS.A28 | ERA, REN, SET, TYPE, MEM, POKE, GO : contrôles, décodage des paramètres | `progs/` | 1 |
 | SYS.A29 | Fenêtre : code chargé avec le système hors de la partie résidente (PUT, démarrage à froid), crochets résidents, contenu lu avant l'effacement | `win.s`, `put.s`, `bios.s` | 1 |
+| SYS.A31 | Console à distance : service sous l'IRQ (préfixes, lecture bornée par la place du tampon du clavier, émission bornée par IRQ, abandon au bout de 5 s), trames calculées au fil de l'émission sans tampon (Fletcher par ligne, case du curseur rétablie), ligne lue par une instruction dont l'adresse est posée | `serial.s` | 3 |
 | SYS.A30 | Banques de la fenêtre : chargeur de CPA.BNK (signature, lecture directe par morceaux sans toucher au tampon de PUT), appel d'une routine de banque, prêt de la fenêtre pendant un PUT ; banque assemblée avec le système et découpée par `mkbnk.py` | `bank.s`, `img.s`, `tools/mkbnk.py` | 3 |
 
 ## 4. Applications
@@ -578,7 +588,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | VOIR.A03 | HIRES.INC : segment et cercle | `hires.inc` | 3 |
 | VOIR.A04 | HIRES.INC : écran texte au programme (LORES), texte, attributs, chargement et sauvegarde | `hires.inc` | 1 |
 
-### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, XFER, MKTAP)
+### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, XFER, REMOTE, MKTAP)
 
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
@@ -602,7 +612,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.T13 | XFER E : envoi d'un fichier (nom distant, `/T`, absent, refus du serveur) | EO | 1 | 5 | F | 4 |
 | USB.T14 | USBDIR /C (USBCD) : changer de répertoire courant (répertoire vérifié, `0:CPA.CWD`, écrit en retour ; sans chemin : CMDER) | EI | 1 | 3 | F | 3 |
 | USB.T15 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 (numéros, ordre, minuscules, avertissement au-delà de 78 caractères, refus) | EO | 2 | 8 | M | 5 |
-| USB.T16 | TERM `hote`, XFER `@hote` : appel du modem par un nom (`HOSTS`, port du programme ou tapé, telnet, `+++` et `ATH0` sur une liaison restée ouverte, réponse du modem, ESC) | EI | 2 | 7 | M | 4 |
+| USB.T16 | TERM `hote`, XFER `@hote` : appel du modem par un nom (`HOSTS`, port du programme ou tapé, telnet, `+++` et `ATH0` sur une liaison restée ouverte, réponse du modem, ESC) ; refus pendant la console à distance | EI | 2 | 8 | M | 4 |
+| USB.T17 | REMOTE : appel et activation de la console à distance, `/N`, `OFF` (raccrocher), état | EI | 2 | 5 | M | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -616,7 +627,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | USB.A08 | Changement d'image sans commande vers un lecteur vide (A: en service, lecteurs relus, lecteur courant rendu) ; image déjà montée (getcwd + nom du menu) | `lmnt_inc.s` | 3 |
 | USB.A09 | XMODEM : blocs numérotés (modulo 256), CRC-16 bit à bit ou somme, NAK et reprises, bloc répété ignoré, délais, annulation | `xfer.s` | 3 |
 | USB.A10 | Codage BASIC de la ROM 1.1 suivi pas à pas (`TokeniseLine`, `Txt2Int`), table des mots-clés, liens des lignes | `mktap.s` | 3 |
-| USB.A11 | Dialogue Hayes : lignes du modem reconnues à leurs deux premières lettres (écho sauté), échappement `+++` encadré de silences, délais au compteur 50 Hz | `acia_inc.s` | 1 |
+| USB.A11 | Dialogue Hayes : lignes du modem reconnues à leurs deux premières lettres (écho sauté), échappement `+++` encadré de silences, délais au compteur 50 Hz ; ligne de commande vidée et réponses en retard jetées avant `AT` | `acia_inc.s` | 1 |
 
 ### 4.8 ASM
 
@@ -801,9 +812,12 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T40 | `test_fdc.py` : pilote disque face à un contrôleur qui ne répond plus | EO | 1 | 3 | F | 4 |
 | OUT.T41 | `grx_colig.py` : `.GRX` passé de (ligne, colonne) à (colonne, ligne) | EO | 1 | 2 | F | 4 |
 | OUT.T42 | `test_oric.sh` : GRXASM `/O`, ASM `/T`, `.TAP` chargés sous BASIC 1.1 (`build/tap/`) | EO | 2 | 3 | F | 4 |
-| OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte et accents en ASCII, noms, erreurs simulées) | EI | 2 | 6 | M | 4 |
+| OUT.T43 | `xfer_server.py` : serveur de fichiers de XFER (GET, PUT, texte et accents en ASCII, noms, erreurs simulées ; un nouvel appel remplace la connexion en cours) | EI | 2 | 6 | M | 4 |
 | OUT.T44 | `test_xfer.sh` : XFER de bout en bout dans Oricutron (modem simulé, serveur) | EO | 2 | 4 | F | 4 |
 | OUT.T45 | `test_bas.py` : codage des `.BAS` contre la ROM BASIC 1.1 dans le 6502 simulé | EO | 1 | 3 | F | 4 |
+| OUT.T46 | `remote.py serve` : démon de la console à distance (copie de l'écran, écho rapide, touches au rythme du programme, interface HTTP, nouvel appel qui remplace le précédent) | EI | 2 | 8 | M | 4 |
+| OUT.T47 | `remote.py touches`, `coller`, `ecran`, `attendre` : ligne de commande du démon | EI | 1 | 4 | F | 3 |
+| OUT.T48 | `test_remote.sh` : console à distance de bout en bout dans Oricutron (écran du démon contre le vidage) | EO | 2 | 4 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -825,13 +839,14 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.A16 | Lecture tolérante des images, cohérence des fichiers (extents, blocs), blocs libres écrits, comparaison de deux images | `mkdisk.py` | 3 |
 | OUT.A17 | Scénarios d'enregistrement : disquettes remplies, RESET balayé (fenêtre d'écriture, puis trame par trame) | `test_fichiers.py` | 3 |
 | OUT.A18 | ROM BASIC 1.1 exécutée depuis sa saisie (`CHRGET` recopiée, arrêt avant l'insertion de la ligne), lignes tirées au hasard | `test_bas.py` | 1 |
+| OUT.A19 | Console à distance côté Mac : trames retrouvées dans le flux (début, longueur, total ; réponses en retard jetées), lignes changées trouvées par les totaux de Fletcher, délai de réponse selon les touches envoyées | `remote.py` | 1 |
 
 ## 7. Mesures
 
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 68 | 11 682 | 1 337 | 556 | 1 631 | 10 % | 37 603 | 36 | 116 |
+| Système et commandes | 69 | 12 039 | 1 395 | 569 | 1 647 | 10 % | 38 353 | 34 | 107 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
 | LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
@@ -839,18 +854,18 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 30 | 6 313 | 651 | 246 | 0 | 9 % | 13 467 | 67 | 143 |
+| USB | 33 | 6 550 | 696 | 260 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 179 | 9 141 | 1 165 | 608 | 0 | 11 % | — | 48 | — |
-| **Total** | 372 | 75 200 | 6 353 | 3 011 | 2 547 | 8 % | 159 830 | 50 | 107 |
+| Outillage PC | 185 | 10 385 | 1 357 | 773 | 0 | 12 % | — | 51 | — |
+| **Total** | 382 | 77 038 | 6 648 | 3 203 | 2 563 | 8 % | 160 580 | 50 | 104 |
 
-Octets du système : code résident 13 062 (`$C000-$F306`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 13 684 (`$C000-$F574`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 614 | 84 | 5,0 | 94 |
+| Système et commandes | 1 691 | 85 | 4,7 | 95 |
 | EDIT | 96 | 20 | 1,3 | 13 |
 | GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
 | LOGO | 311 | 63 | 1,6 | 20 |
@@ -858,20 +873,20 @@ Octets du système : code résident 13 062 (`$C000-$F306`), page `$FF00` 240, 
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 4 |
 | VOIR | 78 | — | 4,1 | 11 |
-| USB | 80 | 13 | 0,9 | 24 |
+| USB | 80 | 13 | 0,8 | 26 |
 | ASM | 62 | 10 | 6,9 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 26 |
-| Outillage PC | 346 | — | 1,8 | 134 |
-| Transverse (projet) | 2 597 | — | — | 96 |
-| Traduction anglaise (docs/en) | 2 888 | — | — | 45 |
-| **Total** | 9 499 | 320 | 6,3 | 227 |
+| Outillage PC | 349 | — | 1,7 | 136 |
+| Transverse (projet) | 2 691 | — | — | 98 |
+| Traduction anglaise (docs/en) | 2 950 | — | — | 46 |
+| **Total** | 9 735 | 321 | 6,3 | 229 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 227 commits du 2026-10-04 au 2026-10-31.
+Historique : 229 commits du 2026-10-04 au 2026-11-01.
 
-Réutilisation : 55 886 lignes de code écrites dans `progs/`, 65 009 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,16 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 56 102 lignes de code écrites dans `progs/`, 66 292 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -941,6 +956,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-31 | MKTAP .BAS | 0.9 | 1 489 | 351 | 1 840 | 223 | MKTAP : programme BASIC en texte (`.BAS`) codé comme la ROM 1.1, en `$0501`, `/R` ; `test_bas.py` (codage contre la ROM dans le 6502 simulé) ; `.BAS` en texte pour `mkdisk.py` |
 | 2026-10-31 | fenêtre, lot 2 | 0.9 | 1 489 | 354 | 1 843 | 224 | banques de la fenêtre : `CPA.BNK` (PUT, IMG), chargeur, prêt pendant un PUT ; GSAVE, GLOAD, SAVE en banque ; GSAVE par `NOM.$$$`, fichier protégé refusé ; `tools/mkbnk.py` |
 | 2026-11-01 | HOSTS | 0.9 | 1 498 | 355 | 1 853 | 227 | fichier `HOSTS` et appel du modem par les programmes (`ac_dial`, `ac_host` d'`acia_inc.s`) : `TERM hote`, `XFER ... @hote` ; `test_xfer.sh` sans TERM, en deux passes |
+| 2026-11-01 | console à distance, lot 3 | 0.9 | 1 547 | 359 | 1 906 | 230 | pilote série résident (`serial.s`), fonction 117, PUNCH, READER ; `REMOTE.COM` ; démon `remote.py` ; `test_remote.sh` ; appel du modem plus sûr (CR, réponses en retard jetées), `xfer_server.py` qui accepte un nouvel appel |
 
 ## 11. Comparaisons
 
@@ -956,11 +972,11 @@ d'équivalent.
 <!-- comparaison:debut -->
 | Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Système, commandes, utilitaires de fichiers | 325 | 72 | 397 | 261 | 41 | 302 | 1,3 |
+| Système, commandes, utilitaires de fichiers | 359 | 75 | 434 | 261 | 41 | 302 | 1,4 |
 | Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
 | Assembleur (ASM / ASM et LOAD) | 9 | 12 | 21 | 13 | 13 | 26 | 0,8 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **483** | **115** | **598** | **396** | **78** | **474** | **1,3** |
+| **Total** | **517** | **118** | **635** | **396** | **78** | **474** | **1,3** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

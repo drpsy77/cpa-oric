@@ -1,4 +1,4 @@
-# Pilote série et console à distance (spécification de travail)
+# Pilote série et console à distance
 
 But : un Mac (ou le Pi) **tape et lit à la place du clavier et de l'écran** d'un vrai Oric,
 par le modem WiFi du LOCI (`docs/loci-modem-wifi.md`). Usages : piloter les essais sur le
@@ -6,11 +6,11 @@ vrai Oric comme `tools/run_test.sh` le fait dans Oricutron, coller un texte dans
 travailler sur l'Oric depuis la fenêtre du Mac ou le navigateur d'un téléphone. La
 console à distance doit survivre aux programmes : elle est dans le BIOS.
 
-Rien n'est codé côté Oric ni dans le démon. Côté client, la fenêtre tkinter, son rendu
-de l'écran et un faux démon d'essai sont faits (§ 9.2, § 9.3). Ce document suit le plan d'une spécification (`architecture.md` § 7) :
-ce qui est décidé, puis les questions ouvertes ; il deviendra la référence une fois livré.
-Le travail commence par le fichier `HOSTS` et l'appel du modem par les programmes (§ 8),
-dont TERM, XFER et REMOTE se servent.
+Fait : le pilote résident (`src/serial.s`, option `SERIE`), la fonction 117, PUNCH et
+READER, `REMOTE.COM`, le démon `tools/remote.py` et sa ligne de commande, la fenêtre
+tkinter (§ 9.2), le faux démon (§ 9.3) ; essayés dans Oricutron (`tools/test_remote.sh`).
+Reste la page web (lot 4, § 10). Mode d'emploi : `docs/manuel.md`, « Console à distance :
+REMOTE ».
 
 ## 1. Principe
 
@@ -35,9 +35,10 @@ dont TERM, XFER et REMOTE se servent.
 ## 2. Ligne et réglages
 
 - Port : celui de `acia_inc.s` (LOCI `$0380`, Oricutron `$031C`), 9600 bauds 8N1, DTR,
-  sans interruption de l'ACIA, accès par `LDA` / `STA` absolus seulement. Les trois
-  routines de registre du pilote (`LDA $0381` / `LDA $0380` / `STA $0380`, suivies de
-  `RTS`) sont dans la RAM overlay ; leur octet bas est posé par la fonction 117 (§ 6).
+  sans interruption de l'ACIA, réglé par REMOTE ; accès par `LDA` / `STA` absolus
+  seulement. Les trois routines de registre du pilote (`sr_rsta`, `sr_rdat`, `sr_wdat` :
+  `LDA $0381` / `LDA $0380` / `STA $0380`, suivies de `RTS`) sont dans la RAM overlay ;
+  leur octet bas est posé par la fonction 117 (§ 6).
 - Appel : **l'Oric appelle le Mac** (`ATDT-hôte:port`, nom pris dans `HOSTS`, § 8). Le
   Mac ne peut pas réveiller l'Oric : il faudrait des travaux dans le firmware du LOCI.
   Port du démon **2324** (2323 reste à `xfer_server.py`). Dans Oricutron, `serial =
@@ -120,26 +121,32 @@ une trame refusée est redemandée.
 
 | Type | Données |
 |---|---|
-| `'S'` (60 octets) | mode (0 texte, 1 SPLIT, 2 écran au programme : HIRES plein, bit 7 = `SCR_PROG`), colonne et ligne du curseur, curseur actif, puis 28 totaux de Fletcher sur 16 bits (`s1 += octet ; s2 += s1`, 8 bits chacun), un par ligne de `$BB80` |
+| `'S'` (60 octets) | mode (0 texte, 1 SPLIT, 2 HIRES plein écran ; bit 7 = `SCR_PROG`, écran texte au programme), colonne et ligne du curseur, curseur actif, puis 28 totaux de Fletcher (`s1 += octet ; s2 += s1`, 8 bits chacun, `s1` envoyé d'abord), un par ligne de `$BB80` |
 | `'L'` (41 octets) | numéro de ligne, puis ses 40 octets tels quels (attributs et bit 7 compris) |
 
 - **Le curseur ne compte pas** : quand il est inversé à l'écran (`cur_vis`), sa case est
   lue rétablie (bit 7 inversé de nouveau) pour les totaux comme pour les lignes. Sans cela
   le clignotement changerait un total toutes les 0,4 s. Le Mac dessine son propre curseur
   d'après la trame `S`.
-- En HIRES plein écran, les totaux valent 0 et le Mac affiche « écran graphique ».
+- En HIRES plein écran (mode 2), le Mac ne demande pas de lignes et affiche « Ecran
+  graphique » ; en SPLIT (mode 1), il ne compare que les lignes 16 à 27.
+- Le mode 2 est reconnu comme `hires_on` du BIOS : mode texte pour le système, attribut
+  `$1E` dans la dernière case de l'écran.
 
-### Budget sous l'IRQ (à régler après mesure, § 10)
+### Budget sous l'IRQ
 
 | Tâche | Par trame de 1/50 s |
 |---|---|
-| lecture | jusqu'à 4 octets reçus (le LOCI en garde 32) |
-| totaux | 4 lignes (~2 ms) : la trame `S` part en 7 trames d'IRQ, ~0,15 s |
-| émission | jusqu'à 8 octets, chacun après une attente de l'émetteur libre de ~1,2 ms au plus ; émetteur occupé : la suite à l'IRQ suivante |
+| lecture | jusqu'à 4 octets reçus ; le premier sans attendre, les suivants après une attente de ~1,2 ms au plus (un vrai 6551, celui d'Oricutron, n'en présente qu'un par milliseconde ; le LOCI en garde 32, tout de suite lisibles) |
+| totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon |
+| émission | jusqu'à 8 octets (`SR_TXMAX`), chacun après une attente de l'émetteur libre de ~1,2 ms au plus (`SR_WAIT`) ; émetteur occupé : la suite à l'IRQ suivante |
 
-Débit attendu à 9600 bauds : écran entier (28 lignes) en ~1,5 s ; une ligne changée en
-moins de 0,1 s après la trame `S`. Au repos, le Mac demande `S` toutes les 0,5 s ; juste
-après une touche, tout de suite.
+Mesuré dans Oricutron (9600 bauds, émetteur libre au bout de ~1 ms) : 8 octets par IRQ,
+soit la trame `S` (64 octets) en 8 IRQ (0,16 s), une trame `L` (45 octets) en 6 ; pendant
+une réponse, le service prend ~10 ms sur 20, le programme continue plus lentement. Un texte
+collé de 2 Ko arrive dans EDIT en ~40 s (~55 touches par seconde). Au repos, le Mac demande
+`S` toutes les 0,5 s ; juste après une touche, tout de suite. Sur le LOCI : à mesurer
+(`essais-materiel.md`).
 
 ### Liaison perdue
 
@@ -152,38 +159,46 @@ relance le service). `REMOTE OFF` coupe et raccroche.
 
 ## 5. Côté Oric : ce qui est résident
 
-| Partie | Octets estimés |
-|---|---:|
-| crochet dans l'IRQ, lecture (préfixes, place dans le tampon, touche rangée par `kb_push`, tiré de `kb_scan`) | 70 |
-| service : totaux (curseur rétabli), ligne, trame et total, émission bornée | 160 |
-| PUNCH, READER, fonctions 3 et 4 du BDOS | 30 |
-| fonction 117 du BDOS (§ 6) | 40 |
-| voyant `R` / `r` (`draw_flags`) et démarrage à chaud par `$FD 'B'` | 25 |
-| **total** | **~325** |
+`src/serial.s`, inclus avec l'option de construction `SERIE` (présente par défaut,
+`build.sh`) :
 
-Les estimations passées ont souvent doublé : prévoir jusqu'à **500** sur les 706 octets de
-marge. Variables (~14 octets) dans `$FD13-$FD57` : état (port posé, console active, liaison
-perdue), préfixe reçu, demande en cours, ligne et position, `s1`, `s2`, total de la trame,
-compteur d'attente de l'émetteur, octet bas du port. Pointeur de ligne : `ZP_IRQP` (déjà
-pris par `cur_toggle` sous l'IRQ ; les deux ne se recouvrent pas). Les adresses de lignes
-viennent de `line_lo` / `line_hi` (page `$FF00`).
+| Partie | Octets |
+|---|---:|
+| `sr_irq` : appelé par l'IRQ après `snd_tick` ; lecture (préfixes, place dans le tampon du clavier, touche rangée par `kb_push` de `kb_scan`), émission bornée, liaison perdue | 132 |
+| `sr_rx` : préfixes et demandes ; `$FD 'B'` | 77 |
+| `sr_next` : octet suivant de la trame (en-tête, données, total) | 148 |
+| `sr_fl`, `sr_line`, `sr_byte`, `sr_lda` : totaux et lecture d'une ligne, case du curseur rétablie | 80 |
+| registres (`sr_rsta`, `sr_rdat`, `sr_wdat`) | 12 |
+| fonction 117 (`sr_call`) | 76 |
+| PUNCH, READER (fonctions 4 et 3) | 72 |
+| voyant (`draw_flags`, table `sr_flg`), aiguillage du BDOS, appel dans l'IRQ (moins les anciennes entrées vides de PUNCH et READER) | 25 |
+| **total** | **622** |
+
+Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD20`) : octet bas du port, état (console
+active, liaison perdue), préfixe reçu, trame en cours, position, ligne demandée, ligne
+lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH.
+Effacées au démarrage à froid seulement. La ligne est lue par une instruction `LDA
+abs,Y` dont l'adresse est posée (`sr_lda`, RAM overlay) : pas de pointeur en page zéro.
+Les adresses de lignes viennent de `line_lo` / `line_hi` (page `$FF00`).
 
 Pas dans une banque de la fenêtre : le service tourne à chaque IRQ, et la fenêtre sert à
-PUT et IMG. Option de construction `SERIE` (lot 3 des banques, `etat.md` § 3), présente par
-défaut.
+PUT et IMG.
 
-- **PUNCH** (`$C012`, BDOS 4) : envoie A au port, attente de l'émetteur bornée à 5 s ;
-  C = 1 si l'octet n'est pas parti, ou si aucun port n'est posé.
+- **PUNCH** (`$C012`, BDOS 4) : envoie A au port, attente de l'émetteur bornée à 5 s
+  (compteur 50 Hz : interruptions permises) ; rend A = 0 et C = 0 si l'octet est parti,
+  A = `$FF` et C = 1 sinon, ou si aucun port n'est posé.
 - **READER** (`$C015`, BDOS 3) : attend un octet du port ; rend `$1A` (^Z) tout de suite
   si aucun port n'est posé ou si la console à distance est active (le flux est à elle),
   et dès qu'une touche est tapée sur l'Oric (la touche reste dans le tampon).
 - Le pilote survit au démarrage à chaud (variables en RAM overlay, réglage de l'ACIA
   intact) ; le démarrage à froid l'éteint. `AUTO.BAT` peut contenir `REMOTE hôte:port` :
   l'Oric se met de lui-même à disposition du Mac.
+- `$FD 'B'` fait `JMP wboot` depuis l'IRQ (pile remise, matériel et console remis en ordre,
+  retour au CCP), sans le message `*RESET* at`.
 
 ## 6. Contrat : ce qui s'ajoute
 
-Accordé par Pierre (ajouts seulement, rien ne bouge) :
+Ajouts seulement, rien ne bouge (`architecture.md` § 2) :
 
 - PUNCH et READER, réservées au port série, reçoivent leur définition (§ 5) ; les
   fonctions 3 et 4 du BDOS les appellent.
@@ -196,15 +211,19 @@ Accordé par Pierre (ajouts seulement, rien ne bouge) :
 | 2 | console à distance active |
 | 3 | console à distance coupée |
 
-  La version ROM rend `$FF` (règle du contrat). `progs/cpa.inc` : `F_SERIAL = 117` et
-  les numéros d'op.
-- Constantes du protocole (`$FD`, `$FE`, `$FF`, types) dans `progs/cpa.inc`, pour TERM,
-  XFER et tout programme qui voudrait parler au démon.
+  Op 1 à 3 effacent aussi le préfixe et la trame en cours. La version ROM, et une
+  construction sans `SERIE`, rendent `$FF` (règle du contrat). `progs/cpa.inc` :
+  `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`.
+- Constantes du protocole dans `progs/cpa.inc` : `RP_REQ` (`$FD`), `RP_KEY` (`$FE`),
+  `RP_FRM` (`$FF`), `RP_PORT` (2324).
 
 ## 7. REMOTE.COM
 
-Trouve et règle l'ACIA (`ac_find`, `ac_setup`), compose par `ac_dial` (§ 8 : nom pris
-dans `HOSTS`, port 2324 par défaut), pose le port et lève le drapeau par la fonction 117.
+`progs/remote.s` (1 966 octets, un bloc ; 1 918 en anglais). Coupe la console si elle est
+active, trouve et règle l'ACIA (`ac_find`, `ac_setup`), compose par `ac_dial` (§ 8 : nom
+pris dans `HOSTS`, port 2324 par défaut), pose le port et lève le drapeau par la fonction
+117. `REMOTE /N` ne règle l'ACIA que si elle ne l'est pas (comme XFER). `REMOTE OFF` :
+fonction 117 op 3, puis `ac_hang` (`AT`, sinon `+++` ; puis `ATH0`).
 
     REMOTE hote        compose et active (hote : nom de HOSTS,
                        adresse IP ou nom DNS ; :port facultatif)
@@ -212,59 +231,78 @@ dans `HOSTS`, port 2324 par défaut), pose le port et lève le drapeau par la fo
     REMOTE OFF         coupe, puis +++ et ATH
     REMOTE             etat
 
-Maquettes (37 colonnes au plus, sans accents ; anglais sur `cpa-en.dsk`) :
+Écrans (37 colonnes au plus, sans accents ; anglais sur `cpa-en.dsk`) :
 
     A>REMOTE MAC
-    Modem du LOCI ($0380)
-    Appel de mac (192.168.1.20:2324)...
+    Modem du LOCI (ACIA 0380)
+    Appel de 192.168.1.20:2324...
+    CONNECT
     Console a distance active (voyant R)
-    A>
-
     A>REMOTE
     Console a distance : active
-    Port : LOCI ($0380)
-    A>
+    Port : LOCI (ACIA 0380)
+    A>REMOTE OFF
+    Console a distance coupee
 
-    A>REMOTE MAC
-    Appel de mac (192.168.1.20:2324)...
-    Pas de reponse (NO CARRIER)
-    A>
-
+- Un appel raté donne la réponse du modem (`NO CARRIER`, `BUSY`...) ou `Pas de reponse
+  du modem` ; la console reste coupée. Sans pilote série (construction sans `SERIE`) :
+  `Pas de pilote serie dans le systeme`.
 - TERM et XFER refusent de partir quand la console est active (ils liraient l'ACIA à sa
-  place) : `Console a distance active : REMOTE OFF`.
-- Taille estimée : ~1,5 Ko (un bloc), la composition et `HOSTS` compris.
+  place) : `Console a distance : REMOTE OFF` (`ac_busy` d'`acia_inc.s`).
+- REMOTE est sur toutes les disquettes amorçables (caché sur les disquettes par usage,
+  comme TERM et XFER).
 
 ## 8. `HOSTS` et appel du modem (TERM, XFER, REMOTE)
 
-Fait (lot 1). Mode d'emploi : `docs/manuel.md`, « Les hôtes : HOSTS », « Terminal série »
-et « Transfert de fichiers » (`TERM mac`, `XFER R fic @mac`). Mise en œuvre :
-`progs/acia_inc.s`, `ac_host` (recherche dans `HOSTS`) et `ac_dial` (appel), messages
-dans `acia.msg` ; REMOTE s'en servira avec le port 2324. Choix faits en codant :
+Mode d'emploi : `docs/manuel.md`, « Les hôtes : HOSTS », « Terminal série » et
+« Transfert de fichiers » (`TERM mac`, `XFER R fic @mac`). Mise en œuvre :
+`progs/acia_inc.s`, `ac_host` (recherche dans `HOSTS`), `ac_dial` (appel), `ac_hang`
+(raccrocher), `ac_busy` (refus pendant la console), messages dans `acia.msg` ; REMOTE s'en
+sert avec le port 2324. Choix faits en codant :
 
 - XFER prend l'hôte en dernier, précédé de `@` : le CCP range le deuxième mot dans FCB2,
   qui est le fichier.
 - `HOSTS` est cherché sur le lecteur courant, puis sur A: seulement (un lecteur vide d'un
   vrai Microdisc coûte plusieurs secondes) ; chaque disquette amorçable en porte un.
-- Raccrocher : `ATH0` (le modem d'Oricutron refuse `ATH`) ; `ac_hang` viendra avec
-  `REMOTE OFF`.
+- Raccrocher : `ATH0` (le modem d'Oricutron refuse `ATH`).
 - Dans Oricutron, le numéro part sans signe de mode (`ATDT127.0.0.1:port`).
-- TERM passe à 1 893 octets (un bloc), XFER à 3 065 (deux blocs).
+- Avant `AT`, `ac_at` envoie un CR seul, puis jette ce qui arrive jusqu'à 0,2 s de
+  silence (`ac_purge`). Le CR vide la ligne de commande du modem : des octets partis
+  pendant une liaison coupée (XMODEM, frappe dans TERM) s'y accumulent, et `AT` y aurait
+  donné `ERROR` ; en mode commande, une ligne vide ne donne aucune réponse sur le Pico W
+  (une ligne vide sur Oricutron), et sur une liaison ouverte, un CR seul est ignoré par
+  `xfer_server.py` et par le démon. Ce qu'on jette, ce sont les réponses en retard (un
+  `NO CARRIER` laissé par un serveur arrêté, l'`OK` de `ATH0`...), qui décalaient les
+  réponses d'une commande. Après `ATDT`, un `OK` est encore sauté.
+- `xfer_server.py` et `remote.py` acceptent un nouvel appel à tout moment : il remplace la
+  connexion en cours. Un Oric (ou un LOCI) disparu sans raccrocher laissait sinon le
+  serveur attendre sans fin sur une connexion morte ; le nouvel appel aboutissait
+  (`CONNECT` : le système du Mac accepte la connexion) mais le serveur ne le servait pas.
+  Sondes TCP (keepalive) en plus.
+- TERM : 2 007 octets (un bloc), XFER : 3 179 (deux blocs).
 
 ## 9. Côté Mac : `tools/remote.py`
 
 Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
 
 - **Démon** : `tools/remote.py serve [--port 2324] [--http 8040] [--lent]` attend
-  l'Oric, tient la copie de l'écran, sert la page et l'interface locale. `--lent` : un
-  octet toutes les 25 ms vers l'Oric, pour Oricutron (son 6551 perd un octet si l'Oric
-  tarde) ; inutile avec le LOCI.
+  l'Oric, tient la copie de l'écran, sert l'interface locale. Un nouvel appel de l'Oric
+  remplace le précédent. `--lent` : un octet toutes les 25 ms vers l'Oric (essai ;
+  inutile avec le LOCI comme avec Oricutron, dont le modem garde ce qui arrive).
+- **Touches** : celles qui attendent partent d'un coup (1 024 au plus), chacune `$FE k` ;
+  le pilote ne les lit que si le tampon du clavier a de la place, c'est donc le programme
+  de l'Oric qui donne le rythme. La demande `S` qui suit attend 1 s, plus 0,1 s par touche
+  envoyée au-delà de 4. L'écho rapide (ligne du curseur) ne suit qu'un envoi de 4
+  touches au plus (une frappe, pas un texte collé). Liaison perdue : 5 s sans trame
+  valide (plus le délai de la demande).
 - **Ligne de commande** (parle au démon) : `remote.py touches $'DIR\n'` (même notation
   que `run_test.sh` : `\n`, `~` DEL, `\x01-\x04` flèches, `\x05` FUNCT, `\x1c` CTRL,
   `\x0f` SHIFT, `|` pause, `\x06` démarrage à chaud par `$FD 'B'`), `remote.py ecran`
   (texte comme `tools/screen.py`), `remote.py attendre 'A>' [secondes]` (attend qu'un texte
   paraisse sur l'écran). Avec eux, un script d'essai sur le vrai Oric s'écrit comme ceux
   d'Oricutron.
-- **Page web** (`http://localhost:8040`, ou l'adresse du Mac depuis le téléphone) :
+- **Page web** (lot 4 ; pour l'instant, `GET /` renvoie une page qui le dit)
+  (`http://localhost:8040`, ou l'adresse du Mac depuis le téléphone) :
   écran 40 x 28 dessiné avec la police de CP/A (lue dans `src/font.s` par le démon) et
   les attributs (encre, papier, police secondaire, clignotement) ; touches du navigateur
   traduites ; bouton « Coller » : un texte du presse-papiers du Mac (copié dans
@@ -389,29 +427,22 @@ fenêtre s'arrête sur une erreur, elle est relancée.
 
 ## 10. Lots
 
-1. **`HOSTS` et appel du modem** (§ 8) : fait ; à essayer sur le vrai Oric
-   (`essais-materiel.md`).
-2. **Mesures, sans code** (Pierre, sur le vrai Oric, avant le lot 3) : temps de `XFER`
-   sur un fichier de 40 Ko (débit réel LOCI, Pico W, Mac).
-3. **Pilote, REMOTE et démon** : tout ce qui fait la console à distance, dans les deux
-   sens. Résident (§ 5), fonction 117, PUNCH / READER, REMOTE.COM, refus de TERM et XFER
-   pendant la console, `remote.py` (démon, écho rapide, ligne de commande),
-   `tools/test_remote.sh` dans Oricutron : l'écran tenu par le démon doit être celui du
-   vidage mémoire (`screen.py`), après DIR, EDIT (texte de 2 Ko collé, puis relu par
-   TYPE), CMDER, un menu FUNCT, GRAPHER en SPLIT ; démon tué au milieu d'une réponse ;
-   `$FD 'B'`.
+1. **`HOSTS` et appel du modem** (§ 8) : fait.
+2. **Mesures** (sur le vrai Oric) : XFER de 7,8 Ko reçu en 5 à 10 s ; envoyé en moins de
+   10 s depuis que `ac_txw` attend 5 s.
+3. **Pilote, REMOTE et démon** : fait. `tools/test_remote.sh` (Oricutron, temps réel,
+   ~6 min) : l'écran tenu par le démon est celui du vidage mémoire après DIR et un menu
+   FUNCT, EDIT (2 Ko collés, `^S`, `^Q`, puis TYPE ; fichier identique au texte), CMDER,
+   GRAPHER en SPLIT, `$FD 'B'` pendant CMDER (console toujours active), démon tué au
+   milieu d'une réponse (l'Oric continue, puis rappelle un nouveau démon) ; refus de
+   TERM et XFER, `REMOTE`, `REMOTE OFF`. Ce qu'Oricutron ne montre pas : le voyant `r`
+   (son modem accepte toujours l'octet émis).
 4. **Page web** : la fenêtre (rendu fidèle, police et attributs), le clavier, Coller,
    le téléphone. Elle ne fait qu'afficher et envoyer ce que le démon du lot 3 sait déjà
    faire. La fenêtre tkinter (§ 9.2) est faite : elle marche avec le démon du lot 3
    sans changement, s'il suit le § 9.1.
 
-À vérifier sur le vrai Oric (à reporter dans `essais-materiel.md` au fil des lots) :
-`HOSTS` et l'appel par XFER et TERM (lot 1) ; l'émetteur du LOCI libre tout de suite ou au
-rythme de 9600 bauds (budget d'émission), le délai réel de l'écho, un texte collé de
-plusieurs Ko dans EDIT sans perte, le bouton RESET et un démarrage à chaud avec la console
-active, Pico débranché pendant une réponse (voyant `r`, Oric qui continue) (lot 3). Sur le
-Pi Zero : la fenêtre tkinter en plein écran (§ 9.2), sa vitesse (un écran entier se
-redessine en ~0,04 s sur un PC, sans doute vers 1 s sur un Pi Zero), son clavier.
+À vérifier sur le vrai Oric : `essais-materiel.md` (console à distance).
 
 ## 11. Questions ouvertes
 

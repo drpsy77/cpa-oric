@@ -8,16 +8,19 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F306` en français (`$F2DA` en anglais), **marge 706
-octets** jusqu'à `$F5C8` (949 sans l'option `CPLCMD`), où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F574` en français (`$F548` en anglais), **marge 84
+octets** jusqu'à `$F5C8` (le pilote série, option `SERIE`, en prend 622), où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
 tampon, marge 565 (`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
 l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 
-- console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a` et `P`, couleurs
-  et pagination (`PAPER`, `INK`, `PAGE`) ;
+- console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a`, `P` et `R`/`r`,
+  couleurs et pagination (`PAPER`, `INK`, `PAGE`) ;
+- port série et console à distance (`src/serial.s`, option `SERIE`) : service sous l'IRQ
+  de 50 Hz, le Mac tape et lit l'écran par le modem du LOCI (`REMOTE`, démon
+  `tools/remote.py`) ; PUNCH, READER, fonction 117 (`docs/console-distance.md`) ;
 - clavier : CTRL-H à CTRL-K distincts des flèches (28-31), CTRL-ESPACE (0), SHIFT et CTRL
   avec les flèches (`$F0-$F7`) ; mêmes touches dans EDIT, HEX, CMDER et la ligne de commande
   (`docs/manuel.md`, « Les mêmes touches partout ») ;
@@ -45,15 +48,16 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 708 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 836 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 1 893 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
-| XFER | 3 065 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| TERM | 2 007 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| XFER | 3 179 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| REMOTE | 1 966 | console à distance : appelle le démon du Mac (`HOSTS`, port 2324), active, coupe, état | `manuel.md`, `console-distance.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -69,14 +73,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-406 Ko libres), `cpa-anim.dsk` (la démonstration, 364 Ko libres), `cpa-logo.dsk` (LOGO seul,
-520 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 370 Ko libres), `cpa-notes.dsk` (écrire, 568 Ko libres) ; `CPA.BNK` (1 408 octets,
+400 Ko libres), `cpa-anim.dsk` (la démonstration, 358 Ko libres), `cpa-logo.dsk` (LOGO seul,
+514 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 364 Ko libres), `cpa-notes.dsk` (écrire, 562 Ko libres) ; `CPA.BNK` (1 408 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 489 points de fonction IFPUG et 354 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 547 points de fonction IFPUG et 359 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -95,8 +99,8 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 (25/10/2026) ; la clé USB depuis CP/A, niveau 1, en trois lots (27-28/10/2026,
 `docs/usb.md`) ; les programmes BASIC en texte (`.BAS`) codés par MKTAP (28/10/2026). Suite
 du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde son ordre.
-En cours : le pilote série du BIOS et la console à distance (point 4), spécifiés
-(`docs/console-distance.md`), en quatre lots ; d'abord le fichier `HOSTS`.
+Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4), lots 1 à 3
+(`docs/console-distance.md`) ; reste le lot 4, la page web.
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -207,17 +211,18 @@ En cours : le pilote série du BIOS et la console à distance (point 4), spécif
    - Décidé par Pierre : **console à distance** (le Mac tape et lit à la place du clavier et
      de l'écran : essais sur le vrai Oric pilotés comme `tools/run_test.sh`, texte collé dans
      EDIT). Elle demande le pilote dans le BIOS : elle doit survivre aux programmes.
-   - **Prochain développement : pilote série du BIOS et console à distance**
-     (`docs/console-distance.md`, schéma animé `docs/console-distance.html`). Décidé par
-     Pierre : fonction 117 du BDOS et définition de PUNCH / READER (ajouts au contrat),
-     commande `REMOTE`, l'Oric appelle toujours (le Mac ne peut pas le réveiller sans
-     travaux dans le LOCI). Lots : (1) fichier `HOSTS` et appel du modem par TERM et XFER
-     (`acia_inc.s`) : fait ; (2) mesure du débit par XFER sur le vrai Oric ; (3) pilote résident
-     (~325 octets estimés, 500 prévus), REMOTE.COM, démon `tools/remote.py` avec écho
-     rapide ; (4) page web. Fait d'avance : la fenêtre tkinter pour le petit écran d'un
-     Raspberry Pi Zero (`tools/remote_tk.py`, rendu `tools/oric_ecran.py`, faux démon
-     `tools/faux_demon.py` ; § 9.1 à 9.3), essayée sur la mire et des vidages
-     d'Oricutron, pas encore sur le Pi Zero.
+   - **Console à distance** (`docs/console-distance.md`, schéma animé
+     `docs/console-distance.html`) : fait (lot 3, 01/11/2026). Pilote résident
+     (`src/serial.s`, 622 octets avec ses crochets : plus que les 500 prévus ; marge du
+     système 84 octets), fonction 117 du BDOS, PUNCH / READER définis (ajouts au contrat),
+     `REMOTE.COM`, refus de TERM et XFER pendant la console, démon `tools/remote.py` (écho
+     rapide, texte collé au rythme du programme, ligne de commande `touches`, `coller`,
+     `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
+     (`tools/remote_tk.py`) marche avec le démon. À essayer sur le vrai Oric
+     (`essais-materiel.md`). Reste le lot 4 : la page web (navigateur, téléphone).
+     Avec ce lot, l'appel du modem est plus sûr : CR et réponses en retard jetés avant
+     `AT` (le premier `XFER @MAC` répondait `ERROR`), et `xfer_server.py` accepte un
+     nouvel appel à tout moment (une connexion morte le bloquait).
    - Aussi : passerelle
    vers Claude sur le Pi 400 (serveur TCP : appel de l'API, accents translittérés, lignes de
    38 colonnes, historique gardé côté Pi).
@@ -469,18 +474,18 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 706 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
-octets ; variables du BDOS : `$FD13-$FD57` libres, 69 octets). Fait : police rangée sur 5
+**Système** (marge 84 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
+octets ; variables du BDOS : `$FD21-$FD57` libres, 55 octets). Fait : police rangée sur 5
 octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
 
 | Piste | Gain estimé | Prix |
 |---|---:|---|
 | H : masque de point sans la table `g_xbit` (240 octets) ; en dernier recours, variante A | A ~185, B ~215 | mesuré (ci-dessous) : A 5 à 8 % plus lent, B 9 à 14 % |
 | Code répété (`g_box`/`g_line`, `go`/`f_delete`) | < 400 | coût des `JSR` |
-| Option `CPLCMD` retirée (complétion des commandes) | 243 | perte de la fonction |
 | Autre banque de la fenêtre (une commande ou une fonction rare : 576 octets au plus) | sa taille, moins ~6 par point d'entrée | un accès à `CPA.BNK` au premier usage |
 
-Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier.
+Écartés : commandes graphiques du CCP en `.COM` (scripts ralentis), compression du clavier ;
+toucher aux menus ou à la complétion (`CPLCMD`), fonctions phares (`docs/vision.md`).
 
 **Piste H mesurée** (6502 simulé, appels par la fonction 115, images identiques ; temps
 actuels à 1 MHz) : A garde `g_xcol` et ajoute une table de 40 multiples de 6 et une de 6
@@ -503,8 +508,8 @@ démarrage à froid (test de la RAM, `AUTO.BAT`) chargés avec le système (576 
 résidents rendus) ; lot 2, banque IMG (GSAVE, GLOAD, SAVE) lue dans `CPA.BNK` quand elle
 sert, PUT rechargé de `CPA.BNK`, prêt de la fenêtre pendant un PUT, GSAVE par `NOM.$$$` (69
 octets rendus : le chargeur, `win_call` et les points d'entrée font ~370 octets, coût fixe ;
-chaque banque suivante rend presque toute sa taille). La place sert d'abord au pilote série
-(~300 octets, § 2 point 4 : console à distance) ; les menus (fonction phare) restent
+chaque banque suivante rend presque toute sa taille). Le pilote série (622 octets, § 2
+point 4 : console à distance) a pris la marge ; les menus (fonction phare) restent
 résidents.
 
 Pas dans la fenêtre : la complétion des commandes (un chargement à chaque ESC) ; les
@@ -526,7 +531,7 @@ multiple de 2 048) :
   octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
   ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 708) prend 7 blocs, 1 628 octets libres dans le dernier (12 535 en anglais, 7
+  blocs, 1 844 octets libres dans le dernier. HELP (12 836) prend 7 blocs, 1 500 octets libres dans le dernier (12 660 en anglais, 7
   blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)

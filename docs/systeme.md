@@ -36,8 +36,13 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   d'un article et celle de l'article sélectionné viennent de `m_colors` (8 octets, page
   `$FF00`, `src/menu_col.s`), indexée par `cur_paper` (`draw_item`). Textes de la barre du
   système et des messages de la console : `src/msg/fr/sys.msg` ou `src/msg/en/sys.msg`.
-- **Voyants** (barre de menus) : colonne 37 `A`/`a` (majuscules), colonne 38 `P`
-  (imprimante) ; colonnes 35-36 libres (réseau plus tard). `draw_flags`.
+- **Voyants** (barre de menus) : colonne 36 `R`/`r` (console à distance active, liaison
+  perdue ; option `SERIE`), colonne 37 `A`/`a` (majuscules), colonne 38 `P` (imprimante) ;
+  colonne 35 libre. `draw_flags`.
+- **Port série et console à distance** (`src/serial.s`, option `SERIE`) : service sous
+  l'IRQ de 50 Hz (`sr_irq`, après `snd_tick`), qui lit les touches et demandes du démon du
+  Mac et répond par trames ; PUNCH, READER, fonction 117. Détail, protocole et place :
+  `docs/console-distance.md` (§ 4, § 5).
 - `PAPER`, `INK` (attributs de tête de chaque ligne de la console, `apply_colors`, même
   couleur permise) et `PAGE ON/OFF` (`page_on`) sont des commandes internes, donc aussi
   dans la ROM ; réglages gardés jusqu'au démarrage à froid.

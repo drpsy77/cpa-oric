@@ -750,7 +750,7 @@ ligne par hôte :
 - Nom : 15 caractères au plus, majuscules et minuscules confondues. Une ligne qui commence
   par `;` ou par un blanc est ignorée.
 - Port : celui de la ligne (`mac 192.168.1.20:2400`), sinon celui du programme : TERM 23,
-  XFER 2323 (le serveur `xfer_server.py`), REMOTE 2324 (la console à distance, à venir).
+  XFER 2323 (le serveur `xfer_server.py`), REMOTE 2324 (la console à distance).
   Un même nom sert donc à tous. `MAC:2400` sur la ligne de commande force le port.
 - `+` ou `=` devant l'adresse : telnet simulé ou vrai (pour un BBS) ; sans signe, des
   octets bruts (`ATDT-`), ce que veulent XFER et la console à distance.
@@ -758,9 +758,12 @@ ligne par hôte :
   a un (caché, modifiable), avec les deux lignes d'exemple, à corriger.
 - Un nom absent de `HOSTS` (ou sans fichier) part tel quel au modem : une adresse IP ou un
   nom DNS (`TERM ipinfo.io:80`).
-- L'appel : `AT`, puis `ATDT-adresse:port`, et `CONNECT` attendu 20 s au plus (ESC pour
-  renoncer). Si le modem ne répond pas à `AT`, la liaison est sans doute restée ouverte :
-  `+++` et `ATH0` d'abord (quelques secondes de plus). Messages : `Appel de
+- L'appel : un RETURN seul (il vide la ligne de commande du modem : des caractères partis
+  pendant une liaison coupée lui feraient répondre `ERROR`), ce qui attend du modem est
+  jeté (réponses en retard), puis `AT`, puis `ATDT-adresse:port`, et `CONNECT` attendu 20 s
+  au plus (ESC pour renoncer ; un `OK` en retard est sauté). Si le modem ne répond pas à
+  `AT`, la liaison est sans doute restée ouverte : `+++` et `ATH0` d'abord (quelques
+  secondes de plus). Messages : `Appel de
   adresse:port...`, puis la réponse du modem (`CONNECT`, `NO CARRIER`, `BUSY`...), ou `Pas
   de reponse du modem`, `Appel abandonne (ESC)`.
 
@@ -808,8 +811,68 @@ La liaison peut aussi s'ouvrir à la main par TERM (`ATDT-192.168.1.20:2323`, pu
   avec un chemin), `Pas de reponse du serveur` (liaison non établie : ajouter `@hote`), `Pas de modem (DSR)` ; ceux de l'appel sont dans « Les hôtes : HOSTS ».
 - XFER ne refait pas le réglage du port s'il est déjà fait : la liaison ouverte par TERM
   reste en place. Le serveur affiche chaque transfert dans son terminal.
+- Le serveur sert un appel à la fois ; un nouvel appel remplace la connexion en cours
+  (l'Oric a pu disparaître sans raccrocher : RESET, LOCI éteint, WiFi perdu).
+- TERM et XFER refusent de partir pendant la console à distance (ils liraient le port à sa
+  place) : `Console a distance : REMOTE OFF`.
 - Dans Oricutron (`serial = 'modem'`) : `XFER E LETTRE.TXT @127.0.0.1`, ou une ligne
   `oric 127.0.0.1` dans `HOSTS`.
+
+## Console à distance : REMOTE
+
+Le Mac (ou un Raspberry Pi) tape et lit à la place du clavier et de l'écran de l'Oric, par
+le modem WiFi du LOCI : piloter des essais sur le vrai Oric, coller dans EDIT un texte copié
+sur le Mac, travailler sur l'Oric depuis une fenêtre du Mac ou le petit écran d'un Pi Zero.
+Sur le Mac tourne le démon `tools/remote.py` ; l'Oric l'appelle par `REMOTE` :
+
+    python3 tools/remote.py serve        (port 2324 pour l'Oric, 8040 pour les fenêtres)
+
+    A>REMOTE MAC
+    Modem du LOCI (ACIA 0380)
+    Appel de 192.168.1.20:2324...
+    CONNECT
+    Console a distance active (voyant R)
+
+| Commande | Effet |
+|---|---|
+| `REMOTE hote` | compose (nom de `HOSTS`, adresse IP ou nom DNS ; port 2324 par défaut, `:port` pour un autre) et active la console |
+| `REMOTE /N` | active sans composer (liaison ouverte à la main par TERM) |
+| `REMOTE OFF` | coupe la console, puis raccroche |
+| `REMOTE` | état : `active`, `coupee` ou `liaison perdue`, et le port |
+
+Le voyant `R` (colonne 36 de la barre de menus) dit que la console est active, `r` que
+l'Oric n'a pas pu répondre pendant 5 s (modem débranché) : la console reste active et
+repart à la demande suivante du Mac.
+
+Sur le Mac :
+
+    python3 tools/remote_tk.py                       fenêtre (écran de l'Oric, clavier)
+    python3 tools/remote.py touches $'DIR\n'          tape (notation de run_test.sh)
+    python3 tools/remote.py coller lettre.txt        un texte, comme une frappe
+    python3 tools/remote.py ecran                    l'écran en texte
+    python3 tools/remote.py attendre 'A>' 20         attend un texte à l'écran
+
+- Le service tourne dans le système, sous l'interruption de 50 Hz : il marche avec tous les
+  programmes (EDIT, CMDER, HEX, ASM, LOGO...), survit au démarrage à chaud, et s'éteint au
+  démarrage à froid. `REMOTE MAC` dans `AUTO.BAT` met l'Oric à la disposition du Mac dès
+  le démarrage.
+- Le clavier de l'Oric reste actif : les deux claviers remplissent le même tampon.
+- Tout le mode texte est vu, ligne d'état et menus compris ; en SPLIT, les lignes de texte
+  seulement ; en HIRES plein écran, la fenêtre dit « Ecran graphique ».
+- Un texte collé (`remote.py coller`, F9 de la fenêtre) arrive comme une frappe très
+  rapide, au rythme où le programme lit : rien ne se perd (une touche n'est lue du modem
+  que si le tampon du clavier a de la place). Accents retirés, fins de ligne en CR. Dans
+  EDIT : ouvrir le fichier, coller, `^S`.
+- F5 dans la fenêtre (ou `\x06` dans `remote.py touches`) fait un démarrage à chaud, comme
+  le bouton RESET : pour un programme bloqué qui garde les interruptions.
+- L'Oric ne parle que pour répondre au Mac : sans démon, il se tait. Le démon accepte un
+  nouvel appel à tout moment (il remplace le précédent).
+- Dans Oricutron (`serial = 'modem'`) : `REMOTE 127.0.0.1`, ou une ligne `oric 127.0.0.1`
+  dans `HOSTS`. Fonctionnement et protocole : `docs/console-distance.md`.
+
+Les programmes peuvent se servir du port série par le BIOS : PUNCH (`$C012`, fonction 4)
+envoie un octet, READER (`$C015`, fonction 3) en attend un ; la fonction 117 pose le port
+et donne l'état de la console (« Appel du BDOS »).
 
 ## Démarrage et reprise après plantage
 
@@ -1383,6 +1446,8 @@ ordinaires. C'est ce que fait l'éditeur.
 | 0 | démarrage à chaud | 15 | ouvrir (A=$FF si absent) |
 | 1 | lire un caractère avec écho | 16 | fermer |
 | 2 | écrire le caractère A | 17 / 18 | chercher premier / suivant (entrée de 32 octets copiée au DMA) |
+| 3 | octet du port série -> A (READER ; `$1A` sans port) | | |
+| 4 | envoyer A au port série (PUNCH : A = 0 parti, `$FF` non) | | |
 | 5 | imprimer le caractère A (Centronics) | | |
 | 6 | E/S directe (`$FF` lire, `$FE` état) | 19 | effacer (jokers) |
 | 9 | chaîne terminée par `$` | 20 | lecture séquentielle (0 OK, 1 fin) |
@@ -1396,6 +1461,7 @@ ordinaires. C'est ce que fait l'éditeur.
 | 13 | réinitialiser les disques | 24 / 25 | lecteurs lus (bit 0 = A:) / lecteur courant (0 = A:) |
 | 14 | lecteur courant <- A (0-3 ; `$FF` si absent) | 26 | adresse DMA (enregistrements de 128 octets) |
 | | | 47 | CHAIN : A/Y = ligne de commande (0 à la fin) ; ne revient pas |
+| | | 117 | port série et console à distance : bloc `[op, p1]` (ci-dessous) |
 
 Le FCB a le format CP/M 2.2 sur 36 octets ; son octet 0 est le lecteur (0 = lecteur courant,
 1 = A: ... 4 = D:). Un lecteur absent ou illisible fait échouer la fonction (`$FF`).
@@ -1409,6 +1475,15 @@ ligne finale est imprimée (pas les retouches). Sans imprimante branchée, rien 
 l'attente de l'accusé de réception est limitée à 2 ms environ par caractère. Dans Oricutron,
 ce qui est imprimé s'ajoute au fichier `printer_out.txt` de son dossier (imprimante activée
 par défaut). EDIT, qui dessine son écran directement, n'est pas copié.
+
+**Port série.** La fonction 117 (bloc `[op, p1..p5]` comme 115 et 116 ; `F_SERIAL` et
+`SE_...` dans `cpa.inc`) : op 0 rend l'état dans A (bit 0 port posé, bit 1 console à
+distance active, bit 2 liaison perdue) et l'octet bas du port dans X ; op 1 pose le port
+(p1 : `$80` LOCI, `$1C` Oricutron, 0 aucun) ; op 2 et 3 activent et coupent la console à
+distance. Le port se trouve et se règle comme dans `progs/acia_inc.s` (REMOTE s'en sert).
+Une fois le port posé, la fonction 4 envoie un octet (attente de l'émetteur 5 s au plus) et
+la fonction 3 en attend un (`$1A` si une touche est tapée sur l'Oric, ou si la console à
+distance a le port). Sans pilote série (version ROM), la fonction 117 rend `$FF`.
 
 **Enchaîner deux programmes.** La fonction 47 (comme celle de CP/M 3) termine le programme
 et fait exécuter une ligne par le CCP, comme si on l'avait tapée : elle s'affiche après `A>`

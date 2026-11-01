@@ -18,7 +18,10 @@
 #   - seconde passe en temps réel (le +++ du modem compte en secondes
 #     vraies), sans HOSTS : adresse tapée (@127.0.0.1:port), nouvel appel
 #     sur une liaison restée ouverte (+++, ATH0), TERM vers un hôte
-#     inconnu (BUSY).
+#     inconnu (BUSY) ; le premier appel trouve des caractères laissés dans
+#     la ligne de commande du modem (tapés dans TERM, sans RETURN), et un
+#     serveur occupé par une connexion morte (un client muet ouvert avant :
+#     le nouvel appel la remplace).
 #   tools/test_xfer.sh
 set -e
 cd "$(dirname "$0")/.."
@@ -62,13 +65,17 @@ python3 tools/mkdisk.py era "$T/a.dsk" HOSTS > /dev/null
 python3 tools/xfer_server.py --port $PORT --dir "$T/srv" > "$T/srv2.log" 2>&1 &
 SRV=$!
 sleep 1
-K="xfer r h.txt readme.txt \0172127.0.0.1:$PORT\n||||"
+python3 -c "import socket,time; s=socket.create_connection(('127.0.0.1',$PORT)); time.sleep(150)" &
+MUET=$!
+sleep 1
+K="term\n|xyz\034q|"
+K="${K}xfer r h.txt readme.txt \0172127.0.0.1:$PORT\n||||"
 K="${K}xfer r h2.txt readme.txt \0172127.0.0.1:$PORT\n||||||||"
 K="${K}term pasla\n|||||"
 KEYS=$(printf "$K")
 DSK="$T/a.dsk" ORIC_KEYS_AT=400 ORIC_CFG="serial = 'modem'" \
-  tools/run_test.sh "$KEYS" 3800 "$T/p" >/dev/null 2>&1 || true
-kill $SRV 2>/dev/null || true
+  tools/run_test.sh "$KEYS" 4100 "$T/p" >/dev/null 2>&1 || true
+kill $SRV $MUET 2>/dev/null || true
 python3 tools/screen.py "$T/p.mem" > "$T/screen2.txt" 2>/dev/null || true
 rc=0
 python3 - "$T" "$R" <<'E' || rc=1
@@ -112,7 +119,8 @@ check("Annule (ESC)" in screen and get(T + "/o.b.dsk", "STOP.BIN") is None
       and get(T + "/o.b.dsk", "STOP.$$$") is None, "ESC : rien d'ecrit")
 check("connexion de" in open(T + "/srv.log").read() and rd(srv + "readme.txt") is not None,
       "@ORIC : appel par HOSTS (premier transfert, sans TERM)")
-check(get(T + "/p.dsk", "H.TXT") == readme, "@adresse:port : appel sans HOSTS")
+check(get(T + "/p.dsk", "H.TXT") == readme, "@adresse:port : appel sans HOSTS, malgre "
+      "un reste dans la ligne de commande du modem et une connexion morte sur le serveur")
 check(get(T + "/p.dsk", "H2.TXT") == readme, "nouvel appel sur une liaison ouverte (+++, ATH0)")
 check("Appel de pasla:23" in screen2 and "BUSY" in screen2, "TERM : hote inconnu")
 log = open(T + "/srv.log").read()

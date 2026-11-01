@@ -73,6 +73,9 @@ bios_table
 #include "gfx.s"
 #include "ccp_gfx.s"
 #include "snd.s"
+#ifdef SERIE
+#include "serial.s"
+#endif
 #ifdef DISK
 #include "disk.s"
 #include "fs.s"
