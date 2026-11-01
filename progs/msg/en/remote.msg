@@ -1,0 +1,16 @@
+; remote.msg : messages of REMOTE.COM (English) ; the French ones are in
+; progs/msg/fr/remote.msg, same labels. Included by progs/remote.s.
+m_loci  .asc "LOCI modem (ACIA 0380)",13,10,"$"
+m_oric  .asc "Oricutron modem (ACIA 031C)",13,10,"$"
+m_on    .asc "Remote console on (R light)",13,10,"$"
+m_off   .asc "Remote console off",13,10,"$"
+m_st    .asc "Remote console: $"
+m_act   .asc "on",13,10,"$"
+m_cut   .asc "off",13,10,"$"
+m_lost  .asc "link lost",13,10,"$"
+m_port  .asc "Port: $"
+m_ploci .asc "LOCI (ACIA 0380)",13,10,"$"
+m_poric .asc "Oricutron (ACIA 031C)",13,10,"$"
+m_pnone .asc "none",13,10,"$"
+m_nodrv .asc "No serial driver in the system",13,10,"$"
+m_use   .asc "REMOTE host, REMOTE /N, REMOTE OFF",13,10,"$"

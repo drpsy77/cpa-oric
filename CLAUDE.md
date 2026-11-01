@@ -12,6 +12,9 @@ documentation : `docs/architecture.md` § 7.
   (Remote Control) : réponses concises, en français, pas de longues sorties de terminal.
 - Tout ce qui se construit reste dans le dépôt (`~/Projets/cpa-oric` sur le Pi,
   `~/Documents/GitHub/cpa-oric` sur le Mac).
+- **Ne jamais proposer de retirer ou d'alléger les menus déroulants ni la complétion**
+  (option `CPLCMD` comprise) : ce sont les fonctions phares (`docs/vision.md`) ; la place
+  se cherche ailleurs.
 - **Aucune action système** (sudo, apt, /etc, services, installation hors du projet) sans
   confirmation de Pierre que sa sauvegarde est faite. S'il manque un outil système : donner
   la commande, Pierre la lance.

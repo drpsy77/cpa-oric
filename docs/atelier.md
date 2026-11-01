@@ -166,6 +166,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `tools/run_test.sh TOUCHES TRAME SORTIE` | émulateur piloté : frappe, vidage, capture |
 | `python3 tools/screen.py SORTIE.mem` | écran texte du vidage |
 | `python3 tools/oric_ecran.py SORTIE.mem IMAGE.png` | écran du vidage dessiné comme l'ULA (police de CP/A, attributs), pour la console à distance (`docs/console-distance.md` § 9) |
+| `tools/test_remote.sh [scenario...]` | console à distance dans Oricutron, en temps réel (~6 min) : le démon `tools/remote.py` tape par son interface HTTP, puis son écran est comparé au vidage (`dir_menu`, `edit`, `cmder`, `split`, `reset`, `tue`, `off`) |
+| `python3 tools/remote.py serve`, puis `touches`, `ecran`, `attendre` | la console à distance (`docs/console-distance.md` § 9) : piloter le vrai Oric comme `run_test.sh` pilote Oricutron |
 | `python3 tools/run_com.py DOSSIER PROG.COM args` | `.COM` dans un 6502 simulé (BDOS minimal) |
 | `python3 tools/mkdisk.py ls IMAGE` | contenu d'une disquette |
 | `python3 tools/mkdisk.py get IMAGE NOM.EXT [local]` | extraire un fichier (ex. un `.ASM` écrit sur l'Oric) |
@@ -220,7 +222,7 @@ Variables utiles :
 | `DSKSWAP=b.dsk` | seconde disquette du lecteur A:, copiée en `SORTIE.swap.dsk` : chaque `\x07` de TOUCHES met l'autre (d'abord celle-ci, puis `DSK`, et ainsi de suite), après avoir enregistré celle qui sort. Pour essayer les copies à un seul lecteur (CMDER) ; laisser au programme le temps d'afficher sa demande avant `\x07` (pauses `\|`), car une touche tapée pendant une copie est prise pour un essai d'ESC |
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
 | `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
-| `DISK_OPTS=""` (pour `build.sh`) | système sans la complétion des commandes par ESC (option `CPLCMD`, ~120 octets résidents) ; par défaut `-DCPLCMD` |
+| `DISK_OPTS` (pour `build.sh`) | options du système disque, par défaut `-DCPLCMD -DSERIE` : complétion des commandes (243 octets) et pilote série (622 octets). Elles font partie de CP/A ; les retirer ne sert qu'à des essais |
 | `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR, CMDER ; plusieurs clés : `usb1` à `usb8`) ; sans elle, ces commandes répondent `LOCI absent` |
 | `ORIC_WARP=1` | émulateur sans attente du temps réel (même résultat, bien plus vite) |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |

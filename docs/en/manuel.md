@@ -727,7 +727,7 @@ is a text, editable in EDIT (`EDIT HOSTS`) or on the Mac, one line per host:
 - Name: 15 characters at most, upper and lower case alike. A line that starts with `;` or
   a blank is ignored.
 - Port: the one on the line (`mac 192.168.1.20:2400`), otherwise the program's: TERM 23,
-  XFER 2323 (the `xfer_server.py` server), REMOTE 2324 (the remote console, coming). So one
+  XFER 2323 (the `xfer_server.py` server), REMOTE 2324 (the remote console). So one
   name serves them all. `MAC:2400` on the command line forces the port.
 - `+` or `=` before the address: simulated or real telnet (for a BBS); without a sign, raw
   bytes (`ATDT-`), as XFER and the remote console want.
@@ -735,9 +735,11 @@ is a text, editable in EDIT (`EDIT HOSTS`) or on the Mac, one line per host:
   (hidden, writable), with the two example lines, to be corrected.
 - A name missing from `HOSTS` (or with no file) goes to the modem as it is: an IP address
   or a DNS name (`TERM ipinfo.io:80`).
-- The call: `AT`, then `ATDT-address:port`, and `CONNECT` awaited 20 s at most (ESC to give
-  up). If the modem does not answer `AT`, the link has probably stayed open: `+++` and
-  `ATH0` first (a few seconds more). Messages: `Calling address:port...`, then the modem's
+- The call: a lone RETURN (it empties the modem's command line: characters sent while a
+  link was down would make it answer `ERROR`), what waits from the modem is thrown away
+  (late answers), then `AT`, then `ATDT-address:port`, and `CONNECT` awaited 20 s at most
+  (ESC to give up; a late `OK` is skipped). If the modem does not answer `AT`, the link has
+  probably stayed open: `+++` and `ATH0` first (a few seconds more). Messages: `Calling address:port...`, then the modem's
   answer (`CONNECT`, `NO CARRIER`, `BUSY`...), or `No answer from the modem`, `Call
   cancelled (ESC)`.
 
@@ -785,8 +787,67 @@ The link can also be opened by hand with TERM (`ATDT-192.168.1.20:2323`, then CT
   `No modem (DSR)`; those of the call are in "Hosts: HOSTS".
 - XFER does not set the port up again if it already is: the link opened by TERM stays in
   place. The server shows each transfer in its terminal.
+- The server serves one call at a time; a new call replaces the connection in progress
+  (the Oric may have gone without hanging up: RESET, LOCI switched off, WiFi lost).
+- TERM and XFER refuse to start while the remote console is on (they would read the port
+  in its place): `Remote console on: REMOTE OFF`.
 - In Oricutron (`serial = 'modem'`): `XFER S LETTER.TXT @127.0.0.1`, or a line
   `oric 127.0.0.1` in `HOSTS`.
+
+## Remote console: REMOTE
+
+The Mac (or a Raspberry Pi) types and reads in place of the Oric's keyboard and screen,
+over the LOCI's WiFi modem: driving tests on the real Oric, pasting into EDIT a text copied
+on the Mac, working on the Oric from a window on the Mac or from a Pi Zero's small screen.
+The daemon `tools/remote.py` runs on the Mac; the Oric calls it with `REMOTE`:
+
+    python3 tools/remote.py serve        (port 2324 for the Oric, 8040 for the windows)
+
+    A>REMOTE MAC
+    LOCI modem (ACIA 0380)
+    Calling 192.168.1.20:2324...
+    CONNECT
+    Remote console on (R light)
+
+| Command | Effect |
+|---|---|
+| `REMOTE host` | dials (name from `HOSTS`, IP address or DNS name; port 2324 by default, `:port` for another) and turns the console on |
+| `REMOTE /N` | turns it on without dialling (link opened by hand with TERM) |
+| `REMOTE OFF` | turns the console off, then hangs up |
+| `REMOTE` | state: `on`, `off` or `link lost`, and the port |
+
+The `R` light (column 36 of the menu bar) says the console is on, `r` that the Oric could
+not answer for 5 s (modem unplugged): the console stays on and starts again at the Mac's
+next request.
+
+On the Mac:
+
+    python3 tools/remote_tk.py                       window (the Oric's screen, keyboard)
+    python3 tools/remote.py touches $'DIR\n'          types (run_test.sh notation)
+    python3 tools/remote.py coller letter.txt        a text, as typing
+    python3 tools/remote.py ecran                    the screen as text
+    python3 tools/remote.py attendre 'A>' 20         waits for a text on the screen
+
+- The service runs in the system, under the 50 Hz interrupt: it works with every program
+  (EDIT, CMDER, HEX, ASM, LOGO...), survives a warm start, and goes off at cold start.
+  `REMOTE MAC` in `AUTO.BAT` puts the Oric at the Mac's disposal as soon as it starts.
+- The Oric's keyboard stays active: both keyboards fill the same buffer.
+- The whole text mode is seen, status line and menus included; in SPLIT, the text lines
+  only; in full-screen HIRES, the window says "Ecran graphique".
+- A pasted text (`remote.py coller`, F9 in the window) arrives as very fast typing, at the
+  pace the program reads: nothing is lost (a key is read from the modem only if the
+  keyboard buffer has room). Accents removed, line ends as CR. In EDIT: open the file,
+  paste, `^S`.
+- F5 in the window (or `\x06` in `remote.py touches`) makes a warm start, like the RESET
+  button: for a stuck program that keeps the interrupts.
+- The Oric speaks only to answer the Mac: with no daemon, it keeps quiet. The daemon accepts
+  a new call at any time (it replaces the previous one).
+- In Oricutron (`serial = 'modem'`): `REMOTE 127.0.0.1`, or a line `oric 127.0.0.1` in
+  `HOSTS`. How it works, protocol: `docs/console-distance.md` (French).
+
+Programs can use the serial port through the BIOS: PUNCH (`$C012`, function 4) sends a
+byte, READER (`$C015`, function 3) waits for one; function 117 sets the port and gives the
+console's state ("Calling the BDOS").
 
 ## Start-up and recovery after a crash
 
@@ -1344,6 +1405,8 @@ is what the editor does.
 | 0 | warm start | 15 | open (A=$FF if missing) |
 | 1 | read a character with echo | 16 | close |
 | 2 | write character A | 17 / 18 | search first / next (32-byte entry copied to the DMA) |
+| 3 | serial port byte -> A (READER; `$1A` with no port) | | |
+| 4 | send A to the serial port (PUNCH: A = 0 sent, `$FF` not) | | |
 | 5 | print character A (Centronics) | | |
 | 6 | direct I/O (`$FF` read, `$FE` status) | 19 | erase (wildcards) |
 | 9 | string ending with `$` | 20 | sequential read (0 OK, 1 end) |
@@ -1357,6 +1420,7 @@ is what the editor does.
 | 13 | reset the disks | 24 / 25 | drives read (bit 0 = A:) / current drive (0 = A:) |
 | 14 | current drive <- A (0-3; `$FF` if missing) | 26 | DMA address (128-byte records) |
 | | | 47 | CHAIN: A/Y = command line (0 at the end); does not return |
+| | | 117 | serial port and remote console: block `[op, p1]` (below) |
 
 The FCB has the CP/M 2.2 format on 36 bytes; its byte 0 is the drive (0 = current drive, 1 =
 A: ... 4 = D:). A missing or unreadable drive makes the function fail (`$FF`).
@@ -1370,6 +1434,15 @@ corrections). Without a printer plugged in, nothing hangs: the wait for the ackn
 limited to about 2 ms per character. In Oricutron, what is printed is added to the file
 `printer_out.txt` in its folder (printer enabled by default). EDIT, which draws its screen
 directly, is not copied.
+
+**Serial port.** Function 117 (block `[op, p1..p5]` like 115 and 116; `F_SERIAL` and
+`SE_...` in `cpa.inc`): op 0 returns the state in A (bit 0 port set, bit 1 remote console
+on, bit 2 link lost) and the port's low byte in X; op 1 sets the port (p1: `$80` LOCI,
+`$1C` Oricutron, 0 none); ops 2 and 3 turn the remote console on and off. The port is found
+and set up as in `progs/acia_inc.s` (REMOTE uses it). Once the port is set, function 4
+sends a byte (waits for the transmitter 5 s at most) and function 3 waits for one (`$1A` if
+a key is typed on the Oric, or if the remote console has the port). With no serial driver
+(ROM version), function 117 returns `$FF`.
 
 **Chaining two programs.** Function 47 (like CP/M 3's) ends the program and has the CCP run a
 line, as if it had been typed: it is shown after `A>` and then run, before the next line of a

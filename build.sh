@@ -24,10 +24,13 @@ python3 tools/gen_font.py src/font.s
 python3 tools/gen_tables.py src/tables.s
 python3 tools/gen_logo_voc.py > /dev/null   # vocabulaire de LOGO (fr, en) et table de LOGOTR
 
-# Options du système disque. CPLCMD : ESC complète aussi le premier mot
-# par les commandes internes et les .COM / .BAT (~120 octets résidents) ;
-# DISK_OPTS="" ./build.sh pour s'en passer.
-DISK_OPTS=${DISK_OPTS--DCPLCMD}
+# Options du système disque (elles font partie de CP/A : docs/vision.md).
+# CPLCMD : ESC complète aussi le premier mot par les commandes internes et
+# les .COM / .BAT (243 octets résidents) ;
+# SERIE : pilote série et console à distance (src/serial.s, fonction 117,
+# PUNCH, READER ; 622 octets résidents).
+# DISK_OPTS="..." ./build.sh pour un essai sans l'une d'elles.
+DISK_OPTS=${DISK_OPTS--DCPLCMD -DSERIE}
 # Système : textes (barre de menus, messages de la console) pris dans
 # src/msg/fr ou src/msg/en ; disque en deux langues (cpa_sys.bin,
 # cpa_sys_en.bin pour cpa-en.dsk) ; la ROM, projet à part, en français.
@@ -145,13 +148,13 @@ disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/ed
   --ro --dir $SYS_VISIBLES
 
 # Disquettes par usage : chacune démarre seule et porte ses outils. Les
-# commandes de base, la clé USB, TERM et XFER y sont protégées et cachées
+# commandes de base, la clé USB, TERM, XFER et REMOTE y sont protégées et cachées
 # (SYS), EDIT.CFG et HOSTS modifiables et cachés, EDIT et l'outil de la disquette
 # protégés et visibles, les exemples modifiables (ASM HELLO réécrit
 # HELLO.COM, LOGO réécrit DEMO.LOG).
 BASE="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
-  $P/TERM.COM $P/XFER.COM $P/CMDER.COM files/usbcd.bat"
+  $P/TERM.COM $P/XFER.COM $P/REMOTE.COM $P/CMDER.COM files/usbcd.bat"
 theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
   disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg files/hosts \
     --ro --dir $P/EDIT.COM $3 --rw $5

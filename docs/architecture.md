@@ -14,7 +14,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 
 | Couche | Rôle | Où | Profil |
 |---|---|---|---|
-| BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque | `src/bios.s`, `src/disk.s` | commun (disque : `-DDISK`) |
+| BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque, port série et console à distance | `src/bios.s`, `src/disk.s`, `src/serial.s` | commun (disque : `-DDISK` ; série : `-DSERIE`, version disquette) |
 | BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
 | CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/PUT/DO… : disque (TYPE, ERA, REN : `.COM` ; commandes de dessin : GRAPHER.COM, ROM seulement au prompt) |
 | Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
@@ -43,8 +43,13 @@ disquette qu'il vient de formater) ; SETSEC prend un secteur logique de 0 à 2 7
 
 Les entrées existantes ne bougent jamais ; une nouvelle entrée s'ajoute à la fin (`$C030`…).
 LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 attendu 2 ms au
-plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER sont réservées au port série
-(réseau, version disquette).
+plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER : port série
+(version disquette, option `SERIE` ; port posé par la fonction 117). PUNCH envoie A,
+attend l'émetteur libre 5 s au plus et rend A = 0, C = 0 (parti) ou A = `$FF`, C = 1 (pas
+parti, ou aucun port). READER attend un octet et le rend dans A ; `$1A` (^Z) tout de suite
+si aucun port n'est posé ou si la console à distance est active, et dès qu'une touche est
+tapée (elle reste dans le tampon). Sans pilote série : PUNCH ne fait rien, READER rend
+`$1A`.
 
 ### Codes du clavier (CONIN, fonctions 1, 6, 10)
 
@@ -75,14 +80,15 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 | N° | Fonction | Versions |
 |---|---|---|
-| 0-12 | console et système, comme CP/M 2.2 (la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus | les deux |
+| 0-12 | console et système, comme CP/M 2.2 (la 3 et la 4 : READER et PUNCH du BIOS ; la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus | les deux |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) ; les entrées du répertoire rendues par 17 et 18 sont celles du format de la disquette (§ 2, « Disquette ») | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
 | 26 | adresse DMA | les deux |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
 | 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
 | 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-8 (7 SYNC : départ simultané des voix, 8 MIXER : son et bruit d'une voix) | les deux |
+| 117 | port série et console à distance : bloc `[op, p1..p5]` ; op 0 état -> A (bit 0 port posé, bit 1 console active, bit 2 liaison perdue), X = octet bas du port ; op 1 pose le port (p1 = octet bas : `$80` LOCI, `$1C` Oricutron, 0 aucun) ; op 2 console active (`$FF` sans port) ; op 3 coupée (`docs/console-distance.md`) | disque (option `SERIE`) ; la ROM renvoie `$FF` |
 
-Numéros libres pour l'avenir : 37-46, 48-114 et 117 et suivants. Une fonction ajoutée existe dans les
+Numéros libres pour l'avenir : 37-46, 48-114 et 118 et suivants. Une fonction ajoutée existe dans les
 deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
 
 ### Disquette
@@ -111,7 +117,7 @@ format.
 | `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
 | `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
 | `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F5C8` au plus (`SYS_END` ; fin réelle : `rom_end`, affichée par `./build.sh`), puis cartes d'allocation des 4 lecteurs (`ALV`, `$F5C8-$F66F`), tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (une banque à la fois en `$F7C0-$F9FF` : PUT, chargé avec le système, ou IMG, lue dans `CPA.BNK` quand elle sert ; tampon de PUT `$FA00` ; démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (`$FD00-$FD03` : bloc et compte du BDOS, `$FD04-$FD12` : banques, `$FD13-$FD57` libres, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDF9-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F5C8` au plus (`SYS_END` ; fin réelle : `rom_end`, affichée par `./build.sh`), puis cartes d'allocation des 4 lecteurs (`ALV`, `$F5C8-$F66F`), tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (une banque à la fois en `$F7C0-$F9FF` : PUT, chargé avec le système, ou IMG, lue dans `CPA.BNK` quand elle sert ; tampon de PUT `$FA00` ; démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (`$FD00-$FD03` : bloc et compte du BDOS, `$FD04-$FD12` : banques, `$FD13-$FD20` : pilote série, `$FD21-$FD57` libres, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDF9-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
 
 ## 4. Construire et tester
 
@@ -134,6 +140,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/test_bas.py        # .BAS : codage de mktap.py == ROM 1.1 (6502 simulé)
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
+    tools/test_remote.sh             # console à distance : pilote, REMOTE, remote.py (~6 min)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
 
 - `build.sh` refuse un système disque qui dépasse `SYS_END` (`$F5C8`), une fenêtre qui déborde (PUT après
@@ -157,6 +164,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s` | en plus : `tools/test_mktap.sh` (lance aussi `tools/test_bas.py`) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | en plus : `tools/test_xfer.sh` (~4 min) ; pour TERM, essai Oricutron en boucle (`serial = 'loopback'`) |
+| `src/serial.s`, REMOTE.COM, `tools/remote.py`, la fonction 117, PUNCH, READER | en plus : `tools/test_remote.sh` (~6 min) et `tools/test_xfer.sh` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, `tools/test_oric.sh`, essai Oricutron des exemples `.GRX` (dessin) |
 | EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |

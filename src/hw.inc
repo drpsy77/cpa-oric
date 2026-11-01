@@ -161,7 +161,21 @@ fs_b1       = $FD01
 fs_c0       = $FD02     ; blocs libres comptés (2 octets : fs_c0, fs_c1)
 fs_c1       = $FD03
                         ; $FD04-$FD12 : banques (bk_..., img_f, plus bas)
-                        ; $FD13-$FD57 : libres
+sr_port     = $FD13     ; pilote série (serial.s) : octet bas du port, 0 : aucun
+sr_st       = $FD14     ;   bit 1 console à distance active, bit 2 liaison perdue
+sr_pfx      = $FD15     ;   préfixe reçu : 0, $FD, $FE, ou "L" (n° de ligne attendu)
+sr_req      = $FD16     ;   trame en cours : 0, "S" ou "L"
+sr_i        = $FD17     ;   position dans la trame
+sr_n        = $FD18     ;   ligne demandée (trame L)
+sr_l        = $FD19     ;   ligne lue (curseur rétabli)
+sr_s1       = $FD1A     ;   total de Fletcher : s1, s2
+sr_s2       = $FD1B
+sr_sum      = $FD1C     ;   total de la trame
+sr_wt       = $FD1D     ;   IRQ de suite sans émission possible
+sr_len      = $FD1E     ;   longueur de la trame en cours
+sr_cnt      = $FD1F     ;   octets restants dans l'IRQ
+sr_t0       = $FD20     ;   PUNCH : départ du délai
+                        ; $FD21-$FD57 : libres
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C

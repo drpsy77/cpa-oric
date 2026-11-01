@@ -326,6 +326,9 @@ irq_handler
 irq_t1
         jsr kb_scan
         jsr snd_tick            ; fin des notes minutées
+#ifdef SERIE
+        jsr sr_irq              ; console à distance (serial.s)
+#endif
 
         dec blink_cnt
         bne irq_end
@@ -587,8 +590,9 @@ ctl2    sta ZP_IRQ
         sta caps
         jmp draw_flags
 
-push    ldx kb_head
-        lda ZP_IRQ
+push    lda ZP_IRQ
+&kb_push                        ; touche A dans le tampon (aussi : serial.s)
+        ldx kb_head
         sta kb_buf,x
         inx
         txa
@@ -674,12 +678,15 @@ ack     sta VIA_IFR             ; (A = 2 : efface l'indicateur)
         pla
         tax
         pla
+        rts
 .)
+#ifndef SERIE                   ; avec le pilote série : serial.s
 bios_punch
         rts
 bios_reader
         lda #$1A                ; ^Z = fin de fichier
         rts
+#endif
 #ifndef DISK
 bios_setdma                     ; version disque : bios_dskbuf (disk.s)
         sta dma
@@ -945,6 +952,7 @@ draw_status
 ; draw_flags : voyants au bout de la barre (couleur : attribut de la
 ; colonne 34). Colonne 37 : A = majuscules verrouillées, a = minuscules ;
 ; colonne 38 : P = copie de la console à l'imprimante (CTRL-P), sinon espace
+; colonne 36 (option SERIE) : R = console à distance active, r = liaison perdue
 draw_flags                      ; (appelée aussi depuis l'IRQ : CTRL-T)
 .(
         jsr hires_on            ; HIRES plein écran : rien à dessiner
@@ -962,6 +970,15 @@ lc      ldy #37
         lda #"P"
 np      iny
         sta (ZP_BAR),y
+#ifdef SERIE
+        lda sr_st               ; colonne 36 : R = console à distance
+        lsr                     ; active, r = liaison perdue
+        and #3
+        tay
+        lda sr_flg,y
+        ldy #36
+        sta (ZP_BAR),y
+#endif
 r       rts
 .)
 

@@ -22,6 +22,8 @@
 ;             vérifier les écritures quand les lectures de l'ACIA sont
 ;             fausses (TERM /B, puis ATDT vers nc sur le Mac).
 ;
+;  Refusé pendant la console à distance (REMOTE) : elle a le port.
+;
 ;  Port, réglage et accès aux registres : bibliothèque acia_inc.s
 ;  (LOCI en $0380, Oricutron en $031C ; 9600 bauds 8N1 ; LDA / STA
 ;  absolus seulement). Le LOCI transmet la vitesse au modem USB : jamais
@@ -57,7 +59,10 @@ hostx   = $1A           ; position de l'hôte dans TAIL+1 ($FF : aucun)
         *= $0500
 start
 .(
-        lda PAGE_ON
+        jsr ac_busy             ; console à distance active : refus
+        bcc go
+        rts
+go      lda PAGE_ON
         sta savpg
         lda #0
         sta PAGE_ON

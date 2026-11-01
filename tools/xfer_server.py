@@ -23,13 +23,16 @@ Noms : sans chemin (ni « / » ni « .. ») ; RECV cherche sans tenir compte
 des majuscules ; SEND écrit le nom en minuscules s'il a été tapé tout en
 majuscules (l'Oric démarre en majuscules), tel quel sinon, en remplaçant
 un fichier du même nom. Un client à la fois ; une connexion sert autant de commandes
-qu'on veut.
+qu'on veut. Un nouvel appel remplace la connexion en cours : l'Oric (ou le
+modem) a pu disparaître sans raccrocher (RESET, LOCI éteint, WiFi perdu), et
+le serveur attendrait sinon sans fin sur une connexion morte.
 """
 
 import argparse
 import os
 import socket
 import sys
+import threading
 import time
 import unicodedata
 
@@ -345,20 +348,48 @@ def main():
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind(("", args.port))
-    srv.listen(1)
+    srv.listen(4)
     log("XFER : port %d, dossier %s" % (args.port, folder))
-    while True:
-        conn, addr = srv.accept()
-        log("connexion de %s" % addr[0])
+    current = [None, None]                  # connexion servie, son fil
+
+    def run(conn):
         try:
             serve(conn, folder, log, args.fautes)
         except (ConnectionError, OSError) as e:
             log("fin de la connexion (%s)" % e)
         finally:
             conn.close()
+
+    while True:
+        conn, addr = srv.accept()
+        keepalive(conn)
+        old, th = current
+        if old is not None and th.is_alive():
+            log("nouvel appel : la connexion précédente est fermée")
+            try:
+                old.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            th.join(5)
+        log("connexion de %s" % addr[0])
+        th = threading.Thread(target=run, args=(conn,), daemon=True)
+        current[:] = [conn, th]
+        th.start()
         if args.once:
+            th.join()
             break
 
+
+def keepalive(sock):
+    """Sonde TCP : une connexion morte (modem éteint) finit par être vue."""
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    for opt, val in (("TCP_KEEPIDLE", 30), ("TCP_KEEPALIVE", 30),
+                     ("TCP_KEEPINTVL", 10), ("TCP_KEEPCNT", 3)):
+        if hasattr(socket, opt):
+            try:
+                sock.setsockopt(socket.IPPROTO_TCP, getattr(socket, opt), val)
+            except OSError:
+                pass
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -21,8 +21,14 @@ bd_np
         bne bd_snd
         jmp gfx_call
 bd_snd  cpx #SND_FUNC
-        bne bd_ch
+        bne bd_sr
         jmp snd_call
+bd_sr
+#ifdef SERIE
+        cpx #SER_FUNC           ; série et console à distance (serial.s)
+        bne bd_ch
+        jmp sr_call
+#endif
 bd_ch   cpx #CHAIN_FUNC
         beq f_chain
 bd_std  cpx #BDOS_NFUNC
@@ -68,8 +74,12 @@ bdos_tab
         .word f_wboot-1         ; 0  réinitialisation système
         .word f_conin-1         ; 1  lecture console avec écho
         .word f_conout-1        ; 2  écriture console
-        .word f_reader-1        ; 3  lecteur auxiliaire
+        .word f_reader-1        ; 3  lecteur auxiliaire (port série)
+#ifdef SERIE
+        .word bios_punch-1      ; 4  perforateur auxiliaire (port série)
+#else
         .word f_none-1          ; 4  perforateur auxiliaire
+#endif
         .word bios_list-1       ; 5  imprimante (A = caractère)
         .word f_dirio-1         ; 6  E/S console directe
         .word f_none-1          ; 7  (octet IOBYTE)

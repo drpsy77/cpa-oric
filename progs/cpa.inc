@@ -118,6 +118,20 @@ S_TONE      = 6         ; voix, période lo, hi, vol, durée
 S_SYNC      = 7         ; mode : 0 préparation, 1 départ simultané, 2 abandon
 S_MIXER     = 8         ; voix, son (0/1), bruit (0/1)
 
+; Port série et console à distance (fonction 117 du BDOS, version disquette
+; ; la ROM rend $FF) : X = F_SERIAL, A/Y = bloc [op, p1..p5]
+F_SERIAL    = 117
+SE_STATE    = 0         ; -> A : bit 0 port posé, bit 1 console active,
+                        ;   bit 2 liaison perdue ; X = octet bas du port
+SE_PORT     = 1         ; p1 = octet bas du port ($80 LOCI, $1C Oricutron ; 0 : aucun)
+SE_ON       = 2         ; console à distance active ($FF sans port)
+SE_OFF      = 3         ; console à distance coupée
+; Protocole de la console à distance (docs/console-distance.md § 4)
+RP_REQ      = $FD       ; Mac -> Oric : $FD "S", $FD "L" n, $FD "B"
+RP_KEY      = $FE       ; Mac -> Oric : $FE k, touche k
+RP_FRM      = $FF       ; Oric -> Mac : $FF type longueur données total
+RP_PORT     = 2324      ; port du démon (tools/remote.py)
+
 ; Script DO en cours (version disquette, pour XDO.COM) : ces zones du
 ; système gardent l'état du script entre deux lignes
 SCR_ON      = $02AF     ; 1 = script en cours
