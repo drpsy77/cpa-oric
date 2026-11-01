@@ -267,6 +267,9 @@ revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
 
 - `REMOTE MAC` : `CONNECT`, `Console a distance active (voyant R)`, voyant `R` en colonne
   36 ; la fenêtre montre l'écran de l'Oric (barre de menus comprise) ; `REMOTE` : état ;
+- vitesse, mesurée le 1er novembre avant l'accélération : écho 0,26 à 0,68 s, écran entier
+  (`VER`) en 5,4 s, une ligne toutes les ~0,19 s. Avec la suite de lignes et l'émission
+  par budget : refaire la mesure (Claude peut la faire lui-même par le démon de simon) ;
 - délai de l'écho : une touche tapée dans la fenêtre paraît-elle en ~0,15 s ? Un `DIR`
   tapé dans la fenêtre : temps pour que tout l'écran soit à jour (mesuré dans Oricutron :
   la trame `S` part en 0,16 s, une ligne en 0,12 s) ; l'émetteur du LOCI est-il libre tout

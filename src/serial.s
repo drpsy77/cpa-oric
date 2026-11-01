@@ -24,8 +24,11 @@
 ; =====================================================================
 
 SER_FUNC = 117
-SR_TXMAX = 8                    ; octets émis par IRQ au plus
-SR_WAIT  = 48                   ; attente d'un registre : ~1,2 ms
+SR_TXMAX = 24                   ; octets émis par IRQ au plus
+SR_WAIT  = 48                   ; attente d'un octet reçu : ~1,2 ms
+SR_BUDG  = 200                  ; attente de l'émetteur par IRQ, en tout : ~6 ms
+                                ;   (LOCI : émetteur libre tout de suite ?
+                                ;   un vrai 6551 : un octet par ms)
 
 ; ---------------------------------------------------------------------
 ; sr_irq : appelé à 50 Hz par l'IRQ ; ne fait rien si la console est coupée
@@ -34,8 +37,9 @@ sr_irq
 .(
         lda sr_st
         and #2
-        beq r
-        lda #4                  ; réception : 4 octets au plus
+        bne go
+        rts
+go      lda #4                  ; réception : 4 octets au plus
         sta sr_cnt
 rx      lda sr_pfx              ; une touche n'est lue que si le tampon
         cmp #$FE                ; du clavier a de la place (sinon elle
@@ -65,12 +69,13 @@ tx      lda sr_req              ; émission de la trame en cours
         beq r
         lda #SR_TXMAX
         sta sr_cnt
-t1      ldx #SR_WAIT
-t2      jsr sr_rsta
+        lda #SR_BUDG
+        sta sr_bud
+t1      jsr sr_rsta
         and #$10
         bne t3
-        dex
-        bne t2
+        dec sr_bud
+        bne t1
         inc sr_wt               ; émetteur occupé : la suite à l'IRQ
         lda sr_wt               ; suivante ; 5 s sans rien : réponse
         cmp #250                ; abandonnée, liaison perdue (voyant r)
@@ -102,13 +107,15 @@ sr_rx
         beq key
         cpx #$FD
         beq cmd
-        cmp #28                 ; "L" n
+        pha                     ; "L" n ; n + $80 : les lignes n à 27
+        and #$7F                ;   à la suite, une trame chacune
+        cmp #28
+        pla
         bcs r
         sta sr_n
         lda #"L"
 req     sta sr_req              ; nouvelle demande (remplace la précédente)
         sty sr_i                ; (Y = 0)
-        sty sr_sum
         sty sr_wt
         lda #2                  ; liaison retrouvée
         sta sr_st
@@ -137,6 +144,8 @@ sr_next
         lda #$FF                ; début de trame (hors du total)
         dex
         bpl n1
+        inx
+        stx sr_sum
         rts
 n1      lda sr_req
         dex
@@ -155,14 +164,37 @@ n2      sty sr_len
         beq s
         dex                     ; trame L : n, puis les 40 octets
         bpl l1
-        ldx sr_n
-        jsr sr_line
         lda sr_n
+        and #$7F
+        tax
+        jsr sr_line
+        txa
         bpl add
 l1      txa
         tay
         jsr sr_byte
         jmp add
+sum     lda sr_req                ; fin de trame ; L n+$80 : ligne suivante
+        cmp #"L"
+        bne end
+        lda sr_n
+        bpl end
+        cmp #$80+27
+        bcs end
+        inc sr_n
+        lda #0
+        sta sr_i
+        beq sm
+end     lda #0
+        sta sr_req
+sm      lda sr_sum
+        rts
+add     pha
+        clc
+        adc sr_sum
+        sta sr_sum
+        pla
+        rts
 s       dex                     ; trame S : mode, curseur, 28 totaux
         bpl s1
         ldy vmode               ; mode : 0 texte, 1 SPLIT, 2 HIRES plein ;
@@ -195,16 +227,6 @@ tot     txa                     ; (C=1) ligne (X-3)/2 ; impair : s2
         bcc add                 ; (C=0)
 t2      lda sr_s2
         bcs add
-sum     lda #0                  ; fin de trame
-        sta sr_req
-        lda sr_sum
-        rts
-add     pha
-        clc
-        adc sr_sum
-        sta sr_sum
-        pla
-        rts
 .)
 
 ; sr_fl : totaux de Fletcher de la ligne X -> sr_s1, sr_s2 (C=0)
