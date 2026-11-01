@@ -178,7 +178,14 @@ class Fenetre:
         racine.bind("<F5>", lambda ev: self.reset())
         racine.bind("<F9>", lambda ev: self.coller())
         if opts["plein_ecran"]:
+            # sans gestionnaire de fenêtres (X lancé seul, tools/pizero_ecran.sh),
+            # -fullscreen ne fait rien : la taille de l'écran est posée aussi
+            racine.geometry("%dx%d+0+0" % (racine.winfo_screenwidth(),
+                                           racine.winfo_screenheight()))
             racine.attributes("-fullscreen", True)
+            racine.configure(cursor="none")
+            self.toile.configure(cursor="none")
+            racine.after(200, racine.focus_force)
         else:
             racine.geometry("%dx%d" % (LARG * 2, HAUT * 2 + 50))
 

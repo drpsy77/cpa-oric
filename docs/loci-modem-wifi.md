@@ -183,6 +183,14 @@ Les tampons sont donc dans le LOCI, le Pico et la pile TCP, pas dans l'Oric : le
 de CP/A travaille par scrutation. Ce n'est vrai que du LOCI : un vrai 6551 (Oricutron en
 `$031C`, carte série) n'a qu'un octet de réception et le perd si on tarde.
 
+Dans l'autre sens (de l'Oric vers le Mac), le Pico W retient parfois l'envoi : le LOCI ne
+vide plus le registre d'émission de l'ACIA pendant plusieurs dixièmes de seconde, par à-coups
+(constaté avec XFER : 7 774 octets envoyés en 27 s, pauses tous les 8 à 12 blocs ; la
+réception du même fichier prend 5 à 10 s, sans pause). Les accusés retardés du Mac n'y sont
+pour rien (essayé). Un programme doit donc attendre l'émetteur libre plusieurs secondes avant
+de conclure que le modem est absent : `ac_txw` d'`acia_inc.s` attend 5 s (il attendait
+0,3 s et perdait des octets, d'où des blocs redemandés et les pauses).
+
 Fins de ligne : le modem, en mode commande, prend CR (ou LF) comme fin de commande ; `nc` sur
 le Mac envoie LF seul et attend LF. TERM affiche CR, LF seul et CR LF comme un passage à la
 ligne ; vers `nc`, `TERM /E /L` (RETURN envoie CR LF).

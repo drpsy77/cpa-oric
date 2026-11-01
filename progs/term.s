@@ -299,7 +299,7 @@ out
         jmp BDOS
 
 ; txwait : attend que l'émetteur soit libre (ac_txw) ; C=1 s'il ne l'est
-;   pas après ~0,3 s. /B : pas de lecture de l'état, pause fixe d'environ
+;   pas après 5 s. /B : pas de lecture de l'état, pause fixe d'environ
 ;   3 ms, C=0.
 txwait
 .(
