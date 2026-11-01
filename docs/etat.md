@@ -227,10 +227,17 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      (`/ecran`), le journal (`/journal`) et la version (`/version`) ; vérification du
      pilote chargé : `DEBUG TYPE`, `D DD91`. Mesures : écho 0,25 à 0,33 s ; 22 à 27
      lignes en 1,5 à 1,8 s (~750 octets/s) ; `VER` sur un écran plein 3,1 à 3,6 s.
-     Suite prévue : (1) la trame `S` met 1,1 à 1,5 s juste après une commande (0,2 s au
-     repos) : à comprendre ; (2) `tools/essai_oric.py`, essais du vrai Oric pilotés par
-     Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (3) XFER avec le
-     nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (4) la page web.
+     Trame `S` lente après une commande (1,1 à 1,5 s, mesuré le 01/11 à 23 h 12) : pas
+     reproduite après un redémarrage de l'Oric et un nouvel appel (01/11, 23 h 30 ; 25
+     `VER` et 30 touches sans effet) : écho et `S` à 0,2 s de médiane, après une commande
+     comme au repos. Le pilote ne fait rien de long après une commande (`VER` : deux
+     lignes ; ni disque ni attente dans le CCP et la lecture de ligne). Reste, sans lien
+     avec les commandes, environ un échange sur dix retardé de 1 à 2 s : signature d'un
+     paquet perdu sur le WiFi et renvoyé par la pile TCP du Pico (lwIP, délai de renvoi
+     d'une seconde au moins) ; à regarder seulement si cela gêne (réglage du firmware).
+     Suite prévue : (1) `tools/essai_oric.py`, essais du vrai Oric pilotés par
+     Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (2) XFER avec le
+     nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (3) la page web.
      Avec ce lot, l'appel du modem est plus sûr : CR et réponses en retard jetés avant
      `AT` (le premier `XFER @MAC` répondait `ERROR`), et `xfer_server.py` accepte un
      nouvel appel à tout moment (une connexion morte le bloquait).
