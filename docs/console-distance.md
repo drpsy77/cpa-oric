@@ -303,7 +303,12 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
   de l'Oric qui donne le rythme. La demande `S` qui suit attend 1 s, plus 0,1 s par touche
   envoyée au-delà de 4. L'écho rapide (ligne du curseur) ne suit qu'un envoi de 4
   touches au plus (une frappe, pas un texte collé). Liaison perdue : 5 s sans trame
-  valide (plus le délai de la demande).
+  valide (plus le délai de la demande). Délai d'une réponse : 3 s (`DELAI`) avant de la
+  redemander : le modem WiFi retient parfois l'envoi plus d'une seconde (vu sur le vrai
+  Oric), et une demande répétée trop tôt fait recommencer la trame en cours sur l'Oric.
+  La demande groupée n'est abandonnée qu'après 3 suites sans réponse. Sous Linux, le
+  démon acquitte chaque réception tout de suite (`TCP_QUICKACK`) : le modem n'attend
+  pas l'acquit retardé avant d'envoyer la suite.
 - **Ligne de commande** (parle au démon) : `remote.py touches $'DIR\n'` (même notation
   que `run_test.sh` : `\n`, `~` DEL, `\x01-\x04` flèches, `\x05` FUNCT, `\x1c` CTRL,
   `\x0f` SHIFT, `|` pause, `\x06` démarrage à chaud par `$FD 'B'`), `remote.py ecran`

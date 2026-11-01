@@ -46,7 +46,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-01.3"        # changée à chaque modification du démon
+VERSION = "2026-11-01.4"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41}
@@ -55,6 +55,11 @@ PAR_TOUCHE = 0.1        # délai de réponse en plus par touche envoyée : la
                         # demande attend que le programme les ait lues
 REPOS = 0.5             # cycle au repos
 PERDUE = 5.0            # sans trame valide : liaison perdue
+DELAI = 3.0             # attente d'une réponse avant de la redemander : le
+                        # modem WiFi retient parfois l'envoi plus d'une seconde,
+                        # et une demande répétée trop tôt fait recommencer la
+                        # trame en cours sur l'Oric (elle la remplace)
+ECHECS_SUITE = 3        # suites sans réponse avant de demander ligne par ligne
 SUITE = 3               # à partir de 3 lignes changées (et au moins un quart
                         # de celles qui suivent la première) : une seule
                         # demande pour les lignes de la première à la 27
@@ -143,6 +148,7 @@ class Liaison:
         self.cy = 0
         self.t_bilan = time.time()
         self.plage = True               # le pilote sait envoyer une suite de lignes
+        self.echecs_suite = 0
 
     # --- octets ----------------------------------------------------------
     def envoyer(self, octets):
@@ -157,6 +163,10 @@ class Liaison:
         self.sock.settimeout(max(delai, 0.01))
         try:
             d = self.sock.recv(4096)
+            if hasattr(socket, "TCP_QUICKACK"):     # Linux : acquitter tout de
+                self.sock.setsockopt(socket.IPPROTO_TCP,  # suite (sinon le modem,
+                                     socket.TCP_QUICKACK, 1)  # qui attend l'acquit,
+                                                      # retient ses envois)
         except socket.timeout:
             return
         if not d:
@@ -164,7 +174,7 @@ class Liaison:
         self.buf += d
         self.st["octets"] += len(d)
 
-    def trame(self, attendu, n=None, delai=1.0):
+    def trame(self, attendu, n=None, delai=DELAI):
         """Attend une trame du type attendu (et de la ligne n) ; les autres
         (réponses en retard, messages du modem, trames abîmées) sont jetées."""
         fin = time.time() + delai
@@ -201,7 +211,7 @@ class Liaison:
                 return None
             self._lire(reste)
 
-    def demande(self, msg, typ, n=None, essais=3, delai=1.0):
+    def demande(self, msg, typ, n=None, essais=3, delai=DELAI):
         for _ in range(essais):
             self.envoyer(msg)
             d = self.trame(typ, n, delai)
@@ -225,7 +235,7 @@ class Liaison:
         recu = 0
         t0 = time.time()
         while True:
-            d = self.trame(ord("L"), None, 1.0)
+            d = self.trame(ord("L"), None, DELAI)
             if d is None or d[0] < n:
                 self.st["attentes"]["suite"] += 1
                 break
@@ -235,7 +245,8 @@ class Liaison:
                 break
         self.st["derniere_suite"] = [n, recu, round(time.time() - t0, 2)]
         self.log("suite L %d+ : %d lignes en %.2f s" % (n, recu, time.time() - t0))
-        if recu == 0:
+        self.echecs_suite = 0 if recu else self.echecs_suite + 1
+        if self.echecs_suite >= ECHECS_SUITE:
             self.plage = False
             self.st["suite"] = False
             self.log("pilote sans suite de lignes : une demande par ligne")
@@ -283,7 +294,7 @@ class Liaison:
                 self.ligne(self.cy)        # écho rapide : la ligne du curseur
             t1 = time.time()
             s = self.demande([RP_REQ, ord("S")], ord("S"),
-                             delai=1.0 + (PAR_TOUCHE * nt if nt > 4 else 0))
+                             delai=DELAI + (PAR_TOUCHE * nt if nt > 4 else 0))
             t2 = time.time()
             if s is None:
                 attente = 0
@@ -355,7 +366,7 @@ def demon(port, http, lent, fichier=None):
              "machine": "%s (%s)" % (platform.node(), platform.platform()),
              "pid": os.getpid(), "arguments": sys.argv[1:], "journal": os.path.abspath(fichier),
              "parametres": {"port": port, "http": http, "lent": lent, "LOT": LOT,
-                            "PAR_TOUCHE": PAR_TOUCHE, "REPOS": REPOS, "PERDUE": PERDUE,
+                            "PAR_TOUCHE": PAR_TOUCHE, "REPOS": REPOS, "PERDUE": PERDUE, "DELAI": DELAI, "ECHECS_SUITE": ECHECS_SUITE,
                             "SUITE": SUITE}}
     ecran.infos = infos
     journal("=== démarrage : %s" % json.dumps(infos, ensure_ascii=False))
