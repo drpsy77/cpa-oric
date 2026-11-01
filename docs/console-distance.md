@@ -143,8 +143,10 @@ après une touche, tout de suite.
 
 ### Liaison perdue
 
-Le pilote ne parle que pour répondre : sans Mac, il se tait. Si l'émetteur reste occupé
-2 s pendant une réponse (modem débranché : le LOCI ne vide plus le registre), la réponse
+Le pilote ne parle que pour répondre : sans Mac, il se tait. Le Pico W retient parfois
+l'envoi plusieurs dixièmes de seconde (`loci-modem-wifi.md`, « Contrôle de flux ») : le
+service reprend simplement à l'IRQ suivante. Si l'émetteur reste occupé 5 s pendant une
+réponse (modem débranché : le LOCI ne vide plus le registre), la réponse
 est abandonnée et le voyant passe à `r` ; la console reste active (une nouvelle demande
 relance le service). `REMOTE OFF` coupe et raccroche.
 
@@ -170,7 +172,7 @@ Pas dans une banque de la fenêtre : le service tourne à chaque IRQ, et la fen�
 PUT et IMG. Option de construction `SERIE` (lot 3 des banques, `etat.md` § 3), présente par
 défaut.
 
-- **PUNCH** (`$C012`, BDOS 4) : envoie A au port, attente de l'émetteur bornée à ~0,3 s ;
+- **PUNCH** (`$C012`, BDOS 4) : envoie A au port, attente de l'émetteur bornée à 5 s ;
   C = 1 si l'octet n'est pas parti, ou si aucun port n'est posé.
 - **READER** (`$C015`, BDOS 3) : attend un octet du port ; rend `$1A` (^Z) tout de suite
   si aucun port n'est posé ou si la console à distance est active (le flux est à elle),
@@ -246,7 +248,7 @@ dans `acia.msg` ; REMOTE s'en servira avec le port 2324. Choix faits en codant :
 - Raccrocher : `ATH0` (le modem d'Oricutron refuse `ATH`) ; `ac_hang` viendra avec
   `REMOTE OFF`.
 - Dans Oricutron, le numéro part sans signe de mode (`ATDT127.0.0.1:port`).
-- TERM passe à 1 890 octets (un bloc), XFER à 3 062 (deux blocs).
+- TERM passe à 1 893 octets (un bloc), XFER à 3 065 (deux blocs).
 
 ## 9. Côté Mac : `tools/remote.py`
 
@@ -358,6 +360,32 @@ vidages d'Oricutron passés à tour de rôle ; il affiche les touches reçues.
 
 `python3 tools/oric_ecran.py VIDAGE.mem SORTIE.png` dessine un vidage avec le même
 rendu, pour le comparer à la capture d'Oricutron (`SORTIE.png` de `run_test.sh`).
+
+### 9.4 Le Pi Zero en écran de l'Oric : `tools/pizero_ecran.sh`
+
+Lance le serveur X sur la console texte où il est tapé (tty1), sans bureau ni
+gestionnaire de fenêtres, avec la fenêtre du § 9.2 en plein écran, sans pointeur de la
+souris ni mise en veille de l'écran. F10 dans la fenêtre : retour à la console ; si la
+fenêtre s'arrête sur une erreur, elle est relancée.
+
+    DEMON=http://192.168.1.20:8040 tools/pizero_ecran.sh   # démon sur le Mac
+    FAUX=1 tools/pizero_ecran.sh                           # mire, sans Oric
+
+- Variables : `DEMON` (défaut `http://localhost:8040`), `FAUX=1` (lance aussi
+  `faux_demon.py` sur le Pi Zero, arguments dans `FAUX_ARGS`), `OPTIONS` (options de
+  `remote_tk.py`, défaut `--sans-boutons`) ; d'autres options peuvent suivre la commande.
+- À lancer depuis la console elle-même, pas par ssh (le serveur X prend le terminal
+  courant).
+- Paquets, sur Raspberry Pi OS Lite : `sudo apt install --no-install-recommends
+  xserver-xorg xinit x11-xserver-utils python3-tk fonts-dejavu-core`.
+- Au démarrage : connexion automatique sur la console (`raspi-config`, System Options,
+  Boot / Auto Login, Console Autologin), puis à la fin de `~/.bash_profile` :
+
+        if [ "$(tty)" = /dev/tty1 ] && [ -z "$DISPLAY" ]; then
+          ~/cpa-oric/tools/pizero_ecran.sh
+        fi
+
+  Une connexion par ssh n'est pas touchée (elle n'est pas sur tty1).
 
 ## 10. Lots
 

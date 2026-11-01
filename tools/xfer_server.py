@@ -192,6 +192,8 @@ def recv_xmodem(link, log, faults=False):
         ok = (len(pkt) == 132 and pkt[0] ^ pkt[1] == 0xFF
               and crc16(pkt[2:130]) == (pkt[130] << 8 | pkt[131]))
         if not ok:
+            log("bloc %d : %s, redemande" % (expected, "CRC faux" if len(pkt) == 132
+                else "%d octets sur 132" % len(pkt)))
             link.purge()
             errors += 1
             if errors >= 10:

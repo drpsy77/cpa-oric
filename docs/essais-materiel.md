@@ -251,7 +251,10 @@ l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer `xfer_server.py` sur le M
   prompt ; `TERM IPINFO.IO:80` : `CONNECT` ;
 - ESC pendant `Appel de...` : `Appel abandonne (ESC)`, le modem reste utilisable
   (`TERM`, `AT` : `OK`) ;
-- `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`).
+- `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`) ;
+- `XFER E` du même fichier de 7 774 octets (27 s avant que XFER attende l'émetteur 5 s au
+  lieu de 0,3 s) : temps, pauses ; le serveur affiche maintenant chaque bloc redemandé
+  (`bloc n : ... octets sur 132, redemande`).
 
 **XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
 du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
@@ -310,7 +313,9 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
   `tools/remote_tk.py --plein-ecran --sans-boutons --demon http://...` sur le Pi Zero :
   taille de l'écran de l'Oric, lettres nettes, clignotement, frappe (dont flèches,
   CTRL, F1), temps pour redessiner tout l'écran (passer d'un vidage à l'autre avec
-  `--periode 3`) ; avec `--etirer` aussi.
+  `--periode 3`) ; avec `--etirer` aussi. Puis `FAUX=1 tools/pizero_ecran.sh` depuis la
+  console tty1 (§ 9.4) : X démarre, la mire occupe l'écran, F10 rend la console ; et
+  le lancement au démarrage par `~/.bash_profile`.
 
 - **Clock Signal** (simule la rotation et le chargement de tête) : premier accès après plus
   de 3 s. Ses images ne sont pas fiables après écriture : en réécrivant une piste dans le

@@ -52,8 +52,8 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
 | MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
-| TERM | 1 890 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
-| XFER | 3 062 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| TERM | 1 893 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
+| XFER | 3 065 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
@@ -193,7 +193,10 @@ En cours : le pilote série du BIOS et la console à distance (point 4), spécif
    `nom adresse[:port]` par hôte, sur chaque disquette amorçable, caché et modifiable) et
    l'appel du modem par les programmes (`ac_dial` d'`acia_inc.s` : `AT`, sinon `+++` et
    `ATH0`, puis `ATDT-adresse:port`) : `TERM mac`, `XFER R fic @mac` ; essayé dans
-   Oricutron (`tools/test_xfer.sh`), à essayer sur le vrai Oric. Décidé, pas encore fait :
+   Oricutron (`tools/test_xfer.sh`), à essayer sur le vrai Oric. Mesure sur le vrai Oric
+   (01/11/2026) : réception de 7,8 Ko en 5 à 10 s ; envoi en 27 s, par à-coups : le Pico W
+   retient l'envoi par moments, et `ac_txw` abandonnait au bout de 0,3 s (octet perdu, bloc
+   redemandé) ; il attend maintenant 5 s, à remesurer. Décidé, pas encore fait :
    plusieurs fichiers (jokers).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
      a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la

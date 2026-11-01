@@ -29,8 +29,10 @@
 ;    ac_get    octet reçu ? C=1 : oui, dans A ; C=0 : rien
 ;    ac_getw   attend un octet au plus Y cinquantièmes de seconde
 ;              (compteur 50 Hz) : C=1 reçu dans A, C=0 rien
-;    ac_txw    attend l'émetteur libre au plus ~0,3 s : C=1 s'il ne l'est
-;              pas (modem débranché : le LOCI ne vide plus le registre)
+;    ac_txw    attend l'émetteur libre au plus 5 s : C=1 s'il ne l'est
+;              pas (modem débranché : le LOCI ne vide plus le registre).
+;              Le Pico W retient parfois l'envoi plusieurs dixièmes de
+;              seconde : une attente plus courte perdait des octets.
 ;    ac_put    envoie A (gardé) : C=1 si l'émetteur ne s'est pas libéré
 ;    ac_rdat, ac_rsta, ac_rcmd, ac_rctl : lecture des registres (données,
 ;              état, commande, contrôle) ; ac_wdat... : écriture. Gardent
@@ -112,20 +114,23 @@ w       jsr ac_get
 r       rts
 .)
 
-; ac_txw : C=0 quand l'émetteur est libre, C=1 au bout de ~0,3 s
+; ac_txw : C=0 quand l'émetteur est libre, C=1 au bout de 5 s (compteur
+;   50 Hz : interruptions permises)
 ac_txw
 .(
-        lda #0
+        jsr ac_rsta
+        and #$10
+        bne ok
+        lda SYS_TICKS
         sta ac_cnt
-        lda #$40
-        sta ac_cnt+1
 w       jsr ac_rsta
         and #$10
         bne ok
-        dec ac_cnt
-        bne w
-        dec ac_cnt+1
-        bne w
+        lda SYS_TICKS
+        sec
+        sbc ac_cnt
+        cmp #250
+        bcc w
         sec
         rts
 ok      clc
@@ -189,7 +194,7 @@ no      sec
         rts
 .)
 
-ac_cnt  .byt 0,0                ; compteur d'attente de ac_txw
+ac_cnt  .byt 0                  ; compteur 50 Hz au départ de ac_txw
 ac_tmo  .byt 0                  ; délai de ac_getw
 ac_t0   .byt 0                  ; compteur 50 Hz au départ
 
