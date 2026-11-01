@@ -261,6 +261,11 @@ revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
   (`TERM`, `AT` : `OK`) ;
 - `ATH0` accepté par le Pico (sinon `ATH` à mettre dans `acia_inc.s`).
 
+**Firmware du Pico pour CP/A** (`tools/pico-modem/LISEZMOI.md`, Nagle gardé) : après
+l'avoir flashé, `REMOTE SIMON` ; Claude remesure `VER` (avant : 3,4 à 4,5 s, arrêts de
+1,5 à 3 s en pleine trame dans `logs/remote.log`) ; puis `XFER E` de 7,8 Ko (avant :
+moins de 10 s) ; `TERM` vers un BBS reste réactif.
+
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
 `python3 tools/remote_tk.py` ; dans `HOSTS`, `mac` sans port (2324 par défaut pour REMOTE) :

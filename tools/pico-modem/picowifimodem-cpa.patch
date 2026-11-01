@@ -1,0 +1,39 @@
+diff --git a/src/tcp_support.h b/src/tcp_support.h
+index 3e55d6f..be5ecf7 100644
+--- a/src/tcp_support.h
++++ b/src/tcp_support.h
+@@ -396,7 +396,8 @@ TCP_CLIENT_T *tcpConnect(TCP_CLIENT_T *client, const char *host, int portNum, bo
+    altcp_sent(client->pcb, tcpSent);
+    altcp_poll(client->pcb, tcpPoll, 2);
+    altcp_err( client->pcb, tcpClientErr);
+-   altcp_nagle_disable(client->pcb);  // disable Nalge algorithm by default
++   // CP/A (LOCI) : Nagle garde, les octets arrives un a un par l'USB partent
++   // groupes (sinon un paquet WiFi par octet : file pleine, pertes, arrets)
+ 
+    client->rxBuffLen = 0;
+    client->rxBuffHead = 0;
+@@ -633,7 +634,8 @@ TCP_CLIENT_T *serverGetClient(TCP_SERVER_T *server, TCP_CLIENT_T *client) {
+    altcp_sent(client->pcb, tcpSent);
+    altcp_poll(client->pcb, tcpPoll, 2);
+    altcp_recv(client->pcb, tcpRecv);
+-   altcp_nagle_disable(client->pcb);  // disable Nalge algorithm by default
++   // CP/A (LOCI) : Nagle garde, les octets arrives un a un par l'USB partent
++   // groupes (sinon un paquet WiFi par octet : file pleine, pertes, arrets)
+ 
+    client->connected = true;
+    client->connectFinished = true;
+diff --git a/src/usb_cdc.c b/src/usb_cdc.c
+index f4ad1a5..72c333b 100644
+--- a/src/usb_cdc.c
++++ b/src/usb_cdc.c
+@@ -101,8 +101,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts){
+ // the physical button. Standard Arduino/Pico convention.
+ void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* p_line_coding){
+     (void)itf;
+-    if( p_line_coding->bit_rate == 1200 ){
+-        reset_usb_boot(0, 0);
+-    }
++    (void)p_line_coding;    // CP/A (LOCI) : pas de BOOTSEL a 1200 bauds (le LOCI
++                            // transmet la vitesse ecrite par l'Oric)
+ }
+ 
