@@ -280,11 +280,13 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 (un fichier renommé `.SYS` ne serait plus une commande : le CCP ne lance que `.COM` et `.BAT`).
 
 **CPA.BNK** porte des parties du système qui ne restent pas en mémoire : GSAVE, GLOAD et SAVE
-(au prompt comme pour les programmes), et une copie de PUT. Il est lu quand elles servent, sur
-le lecteur courant puis sur `A:` à `D:`, comme un programme ; le premier GSAVE ou GLOAD prend
-un instant de plus, les suivants rien. Sans lui, ou s'il vient d'une autre version de CP/A,
-ces commandes répondent `CPA.BNK?` (PUT marche tant qu'il n'a pas laissé la place à GSAVE ou
-GLOAD). Il est sur toutes les disquettes amorçables ; pour une disquette faite par
+(au prompt comme pour les programmes), les tracés du mode SPLIT (points, traits, rectangles,
+cercles, texte, attributs : ceux de LOGO et des programmes qui dessinent par le système) et
+une copie de PUT. Il est lu quand elles servent, sur le lecteur courant puis sur `A:` à `D:`,
+comme un programme ; le premier GSAVE, GLOAD ou tracé prend un instant de plus, les suivants
+rien. Sans lui, ou s'il vient d'une autre version de CP/A, ces commandes répondent `CPA.BNK?`
+(une fois, puis les tracés ne dessinent plus jusqu'au prochain passage en SPLIT ; PUT marche
+tant qu'il n'a pas laissé la place à GSAVE, GLOAD ou un tracé). Il est sur toutes les disquettes amorçables ; pour une disquette faite par
 `DISKCOPY A: B: /S`, copier aussi `CPA.BNK` (`COPY A:CPA.BNK B:`).
 
 **Disquettes par usage.** `build.sh` fabrique aussi quatre disquettes amorçables : chacune
@@ -341,7 +343,7 @@ disquette de projet en `B:`, et `B:` comme lecteur courant. Depuis `B>`, `EDIT`,
 D: ; tout ce qui est produit (`.ASM`, `.COM`, `.SYM`, fichiers de données) va sur `B:`, et
 `DIR` ne montre que le travail en cours. Avec un seul lecteur, on démarre sur la disquette
 d'usage et l'on travaille sur une copie (DISKCOPY) plutôt que sur l'original. Il reste
-environ 408 Ko sur `cpa.dsk`.
+environ 398 Ko sur `cpa.dsk`.
 
 Touches : CTRL-T bascule les majuscules (voyant `A`, ou `a` pour les minuscules, au bout de
 la barre de menus), CTRL-C sur une ligne vide du prompt fait un démarrage à
@@ -414,7 +416,9 @@ veut pas de pause met `$02A3` à 0 (variable publique, remise à 1 au démarrage
 `PUT RAPPORT.TXT ASM PROG` exécutent la commande (interne ou programme `.COM`) normalement, et
 tout ce qu'elle affiche est aussi écrit dans le fichier, au format texte CP/M (`^Z` à la fin).
 On peut ensuite le relire avec `TYPE` ou le modifier avec `EDIT`. Pendant un PUT, la pause en fin
-d'écran est suspendue. Les lignes de DIR, qui remplissent l'écran, reçoivent leur fin de ligne
+d'écran est suspendue, et les tracés du mode SPLIT faits par le système (LOGO, programmes en
+assembleur) ne dessinent rien : ils occupent la place de PUT. GRAPHER, qui dessine lui-même,
+n'est pas concerné. Les lignes de DIR, qui remplissent l'écran, reçoivent leur fin de ligne
 dans le fichier.
 
 Comment ça marche : `conout` range aussi chaque caractère dans un tampon de 768 octets. Écrire

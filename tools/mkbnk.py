@@ -4,15 +4,16 @@
   python3 tools/mkbnk.py ASSEMBLE.bin SYMBOLES.sym SYSTEME.bin CPA.BNK
 
 ASSEMBLE.bin : sortie de xa pour src/cpa.s (-DDISK) : l'image de 16 Ko
-($C000-$FFFF), suivie de la banque IMG (src/img.s, assemblée pour la
-fenêtre, *= WIN). Écrit :
+($C000-$FFFF), suivie des banques IMG (src/img.s) et GFX (src/gfx_draw.s),
+assemblées pour la fenêtre (*= WIN). Écrit :
   SYSTEME.bin  les 16 Ko, signature posée en bnk_sig ;
-  CPA.BNK      enregistrement 0 : signature (2 octets) ; la banque de bit b
-               de win_id en 5b-4 à 5b : la fenêtre entière (WIN à WIN_END,
-               576 octets), bourrée : PUT (copie de l'image), puis IMG.
-Signature : CRC-16 (CCITT) de l'image (bnk_sig à 0) et de la banque IMG,
+  CPA.BNK      enregistrement 0 : signature (2 octets) ; PUT (copie de
+               l'image) en 1-5 et IMG en 6-10 : la fenêtre WIN-WIN_END
+               (576 octets), bourrée ; GFX en 11-19 : WIN-GFX_END (1 088
+               octets), bourrée (bk_first, bk_endh de src/bank.s).
+Signature : CRC-16 (CCITT) de l'image (bnk_sig à 0) et des banques IMG et GFX,
 jamais 0 : une banque faite pour un autre système est refusée par le
-chargeur (src/bank.s). Contrôle : la banque IMG s'arrête avant WIN_END (PUT : build.sh).
+chargeur (src/bank.s). Contrôle : IMG s'arrête avant WIN_END, GFX avant GFX_END (PUT : build.sh).
 """
 import sys
 
@@ -48,32 +49,38 @@ def main(argv):
         return 1
     tout = bytearray(open(argv[1], "rb").read())
     sym = symboles(argv[2])
-    if len(tout) <= TAILLE:
-        raise SystemExit("mkbnk : pas de banque IMG après l'image (%d octets)" % len(tout))
-    image, img = tout[:TAILLE], bytes(tout[TAILLE:])
-    img_seul = img
-    win, fin = sym["WIN"], sym["WIN_END"]
-    if sym["img_bank"] != win or sym["img_bank_end"] - win != len(img):
-        raise SystemExit("mkbnk : banque IMG mal placée")
+    win, fin, gfin = sym["WIN"], sym["WIN_END"], sym["GFX_END"]
+    image = tout[:TAILLE]
+    li = sym["img_bank_end"] - win
+    lg = sym["gfx_bank_end"] - win
+    if sym["img_bank"] != win or sym["gfx_bank"] != win \
+            or len(tout) != TAILLE + li + lg:
+        raise SystemExit("mkbnk : banques IMG et GFX mal placées après l'image")
+    img_seul = bytes(tout[TAILLE:TAILLE + li])
+    gfx_seul = bytes(tout[TAILLE + li:])
     taille = fin - win                      # 576 : la fenêtre entière
-    if len(img) > taille:
-        raise SystemExit("mkbnk : banque IMG trop longue (%d octets, %d au plus)"
-                         % (len(img), taille))
+    if li > taille:
+        raise SystemExit("mkbnk : banque IMG trop longue (%d octets, %d au plus)" % (li, taille))
+    if lg > gfin - win:
+        raise SystemExit("mkbnk : banque GFX trop longue (%d octets, %d au plus)"
+                         % (lg, gfin - win))
     put = bytes(image[win - BASE:fin - BASE])   # PUT, PUT_SAVE, bourrage
-    img = img + b"\xFF" * (taille - len(img))
+    img = img_seul + b"\xFF" * (taille - li)
+    gfx = gfx_seul + b"\xFF" * (gfin - win - lg)
     sig = sym["bnk_sig"] - BASE
     image[sig:sig + 2] = b"\0\0"
-    s = crc16(bytes(image) + img) or 1
+    s = crc16(bytes(image) + img + gfx) or 1
     image[sig:sig + 2] = bytes((s & 0xFF, s >> 8))
     bnk = bytearray(bytes((s & 0xFF, s >> 8)) + bytes(126))
-    for bit, b in ((WIN_PUT, put), (WIN_IMG, img)):     # bit b : 5b-4 à 5b
-        assert len(bnk) == (5 * bit - 4) * 128
-        bnk += b + bytes(5 * 128 - len(b))
+    for premier, nrec, b in ((1, 5, put), (6, 5, img), (11, 9, gfx)):   # bk_first (bank.s)
+        assert len(bnk) == premier * 128 and len(b) <= nrec * 128
+        bnk += b + bytes(nrec * 128 - len(b))
     open(argv[3], "wb").write(bytes(image))
     open(argv[4], "wb").write(bnk)
-    print("CPA.BNK : signature %04X ; PUT %d octets (marge %d), IMG %d (marge %d) ; %d octets"
+    print("CPA.BNK : signature %04X ; PUT %d octets (marge %d), IMG %d (marge %d), "
+          "GFX %d (marge %d) ; %d octets"
           % (s, sym["PUT_SAVE"] - win, fin - sym["win_put_end"],
-             len(img_seul), taille - len(img_seul), len(bnk)))
+             li, taille - li, lg, gfin - win - lg, len(bnk)))
     return 0
 
 

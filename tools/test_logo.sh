@@ -61,6 +61,21 @@ run() {
   python3 tools/mkdisk.py get "$T/$1.dsk" OUT.TXT "$T/$1.raw" >/dev/null 2>&1 || : > "$T/$1.raw"
   tr -d '\r\032' < "$T/$1.raw" > "$T/$1.out"
 }
+# runp NOM TOUCHES TRAMES : comme run, mais la sortie de LOGO est recueillie
+# par l'imprimante (CTRL-P au prompt, printer_out.txt d'Oricutron) : pour les
+# scénarios qui dessinent, car pendant un PUT les tracés du SPLIT ne dessinent
+# pas (la banque GFX prend la place de PUT, docs/systeme.md § 6). TOUCHES
+# commence par « LOGO » : la ligne de commande imprimée et le prompt de la fin
+# sont retirés.
+runp() {
+  K="$2"
+  if [ "$LANGUE" = en ]; then K=$(python3 tools/logo_en.py "$2"; echo x); K=${K%x}; fi
+  rm -f tools/oricutron/printer_out.txt
+  DSK="$T/test.dsk" ORIC_KEYS_AT=400 tools/run_test.sh "$(printf '\034p')$K" "$3" "$T/$1" >/dev/null
+  tr -d '\r\032' < tools/oricutron/printer_out.txt 2>/dev/null | sed '1d;$ { /^[A-D]>$/d; }' > "$T/$1.out"
+  [ -n "$(tail -c1 "$T/$1.out")" ] && echo >> "$T/$1.out"
+  true
+}
 # check NOM : compare la sortie texte à $D/NOM.ref
 check() {
   if [ -n "$REF" ]; then cp "$T/$1.out" "$R/$1.ref"; echo "référence écrite : $1"
@@ -251,7 +266,7 @@ if [ "$(sed -n 's/^carre //p' "$T/images")" != "$(sed -n 's/^carre_t //p' "$T/im
 then echo "DIFFERENT : image changée par l'écran texte"; ko=$((ko+1))
 else echo "identiques : image avant et après l'écran texte"; fi
 echo "== dessin : POINT TRAIT RECTANGLE PAVE CERCLE ETIQUETTE FIXECOULEUR ALLUME?"
-run dessin2 'PUT OUT.TXT LOGO
+runp dessin2 'LOGO
 || charge "t14
 |||| cercle 200
 | fixecouleur 10

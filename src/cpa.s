@@ -71,6 +71,9 @@ bios_table
 #include "ccp.s"
 #include "menu.s"
 #include "gfx.s"
+#ifndef DISK
+#include "gfx_draw.s"
+#endif
 #include "ccp_gfx.s"
 #include "snd.s"
 #ifdef SERIE
@@ -132,4 +135,11 @@ ff_end
 img_bank
 #include "img.s"
 img_bank_end
+
+; Banque GFX (gfx_draw.s) : primitives de tracé du SPLIT, à la suite de la
+; banque IMG ; elle déborde sur le tampon de PUT (jusqu'à GFX_END).
+        *= WIN
+gfx_bank
+#include "gfx_draw.s"
+gfx_bank_end
 #endif

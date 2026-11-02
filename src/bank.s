@@ -3,21 +3,23 @@
 ;           appel d'une routine de banque
 ;
 ;  La fenêtre $F7C0-$F9FF reçoit une banque à la fois : PUT (dans
-;  l'image du système, et dans CPA.BNK pour être rechargé) ou IMG
-;  (img.s : GSAVE, GLOAD, SAVE, chargée de CPA.BNK quand elle sert).
+;  l'image du système, et dans CPA.BNK pour être rechargé), IMG
+;  (img.s : GSAVE, GLOAD, SAVE) ou GFX (gfx_draw.s : tracés du SPLIT),
+;  chargées de CPA.BNK quand elles servent.
 ;  win_id dit laquelle est là (0 : aucune, après un chargement manqué).
 ;  CPA.BNK est cherché comme un programme (lecteur courant ou du script,
 ;  puis A: à D:) ; sa signature doit être celle du système (bnk_sig,
 ;  posée par tools/mkbnk.py) : une banque d'une autre version est refusée.
 ;
 ;  Format de CPA.BNK (enregistrements de 128 octets) : enregistrement 0 =
-;  signature (2 octets) ; la banque de bit b de win_id occupe les 5
-;  enregistrements 5b-4 à 5b (PUT : 1-5, IMG : 6-10), soit la fenêtre
-;  entière WIN-WIN_END (576 octets) et un demi-enregistrement de bourrage.
+;  signature (2 octets) ; PUT en 1-5 et IMG en 6-10 (la fenêtre WIN-WIN_END,
+;  576 octets, et un demi-enregistrement de bourrage) ; GFX en 11-19
+;  (WIN-GFX_END, 1 088 octets : elle recouvre le début du tampon de PUT,
+;  d'où son refus pendant un PUT, gfx.s). Tables bk_first, bk_endh.
 ;  Chaque enregistrement est lu dans BNK_BUF (fin du tampon de PUT :
 ;  pendant un prêt, ce qui reste à écrire du tampon, moins de 128 octets,
 ;  est en tête), puis recopié dans la fenêtre, sans rien écrire au-delà
-;  de WIN_END.
+;  de la fin de la banque.
 ; =====================================================================
 
 bnk_sig .word 0                 ; signature du système (tools/mkbnk.py)
@@ -130,11 +132,8 @@ op      lda #<BNK_BUF
         lda BNK_BUF+1
         cmp bnk_sig+1
         bne bad
-        lda bk_id2              ; banque de bit b : enregistrements 5b-4...
-        asl
-        asl
-        adc bk_id2              ; (C=0)
-        sbc #4-1                ; (C=0 : -4)
+        ldx bk_id2              ; premier enregistrement de la banque
+        lda bk_first-1,x
         sta bk_rec
         lda #0                  ; la fenêtre change
         sta win_id
@@ -150,10 +149,11 @@ rec     lda bk_rec
         lda bk_dst+1
         sta ZP_PTR2+1
         sec                     ; octets à copier : 128, ou ce qui reste
-        lda #<WIN_END           ; jusqu'à WIN_END
-        sbc bk_dst
+        lda #0                  ; jusqu'à la fin de la banque (début de
+        sbc bk_dst              ; page : bk_endh)
         tax
-        lda #>WIN_END
+        ldy bk_id2
+        lda bk_endh-1,y
         sbc bk_dst+1
         bne n128
         cpx #128
@@ -205,6 +205,11 @@ bk_read
         cmp #0
         rts
 .)
+
+; par banque (bit de win_id : 1 PUT, 2 IMG, 4 GFX ; 3 inutilisé) :
+; premier enregistrement dans CPA.BNK, page de fin dans la fenêtre
+bk_first .byt 1, 6, 0, 11
+bk_endh  .byt >WIN_END, >WIN_END, 0, >GFX_END
 
 bnk_name
         .byt 0
