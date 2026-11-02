@@ -147,6 +147,10 @@ cadence : les 9600 bauds ne sont qu'un réglage transmis au modem).
 | totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon | idem |
 | émission | 24 octets au plus, tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms ; émetteur occupé : la suite à l'IRQ suivante | 64 octets au plus (une trame `S` entière), attente ~7,5 ms au plus |
 
+Mesuré sur le vrai Oric (LOCI, Pico au firmware de `tools/pico-modem/`, démon sur le Mac) :
+27 lignes en 0,4 s, soit ~3 Ko/s, le plafond de 64 octets par IRQ (1,0 s avec ceux du 6551) ;
+écho 0,21 s ; `VER` sur un écran plein 0,8 à 0,9 s.
+
 Les plafonds se changent sans reconstruire (essais) : `DEBUG`, puis `M FD23 rx at tx bu` ;
 ils reviennent à la table au prochain `REMOTE`.
 

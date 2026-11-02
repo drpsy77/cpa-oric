@@ -237,8 +237,13 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      paquet perdu sur le WiFi et renvoyé par la pile TCP du Pico (lwIP, délai de renvoi
      d'une seconde au moins) ; à regarder seulement si cela gêne (réglage du firmware).
      Plafonds du pilote par IRQ selon le port (02/11/2026, 37 octets résidents) :
-     LOCI 16 octets reçus, 64 émis (6551 : 4 et 24, comme avant) ; à mesurer sur le vrai
-     Oric, réglables par `DEBUG` (`docs/console-distance.md` § 4).
+     LOCI 16 octets reçus, 64 émis (6551 : 4 et 24, comme avant), réglables par `DEBUG`
+     (`docs/console-distance.md` § 4). Avec le firmware du Pico corrigé (il lisait un octet
+     de l'USB par tour de boucle : ~650 octets/s au plus vers le WiFi), mesuré sur le vrai
+     Oric, démon sur le Mac : écho 0,21 s, 27 lignes en 0,4 s (~3 Ko/s, le plafond de 64
+     octets par IRQ ; 1,0 s avec les anciens plafonds), `VER` sur un écran plein 0,8 à
+     0,9 s (3,1 à 3,6 s avant). simon (Pi Zero en WiFi, ping 50 ms et pointes à 150 ms)
+     donne les à-coups, pas le débit.
      Suite prévue : (1) `tools/essai_oric.py`, essais du vrai Oric pilotés par
      Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (2) XFER avec le
      nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (3) la page web.

@@ -277,9 +277,9 @@ revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
 distance mesurée, voir « Vérifié ») : `XFER E` de 7,8 Ko (avant : moins de 10 s) ; `TERM`
 vers un BBS reste réactif.
 
-**Console à distance, plafonds du LOCI** (16 octets reçus, 64 émis par IRQ) : Claude mesure
-par simon (écho, `VER`, écran entier) et règle les plafonds par `DEBUG` ; un texte de quelques
-Ko collé dans EDIT ; ASM d'un gros source pendant que le Mac regarde.
+**Console à distance, plafonds du LOCI** : un texte de quelques Ko collé dans EDIT ; ASM d'un
+gros source pendant que le Mac regarde (temps comparé à sans console) ; `XFER E` de 7,8 Ko
+avec le nouveau firmware du Pico.
 
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
@@ -391,6 +391,10 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 ## Vérifié
 
 Sur Oric Atmos + LOCI, version disquette :
+
+- Console à distance, plafonds du LOCI et firmware du Pico qui lit tout l'USB (2 novembre
+  2026, démon sur le Mac) : écho 0,21 s, 27 lignes en 0,4 s (1,0 s avec les plafonds du
+  6551), `VER` sur un écran plein en 0,8 à 0,9 s ; plafonds changés par `DEBUG` à distance ;
 
 - Banque GFX (2 novembre 2026) : `GTEST` en 2,3 à 2,5 s, chargement de `GTEST.COM` et de la
   banque compris, après un `PUT` comme la première fois : le changement de banque ne se sent
