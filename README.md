@@ -113,6 +113,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
 | `docs/systeme.md` | how the system works inside |
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
+| `docs/carte-memoire.html` | visual map of the resident system, `$C000-$FFFF` (made by `tools/carte_memoire.py`; in French) |
 | `docs/etat.md` | project status, what comes next, space reserves |
 | `docs/projet-rom.md` | the ROM version |
 | `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (`GRXASM /O`, `ORIC.INC`), routines for BASIC later (specification) |

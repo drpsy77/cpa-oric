@@ -114,6 +114,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
 | `docs/systeme.md` | fonctionnement interne du système |
 | `docs/memoire-pages-2-3.md` | variables des pages 2 et 3 |
+| `docs/carte-memoire.html` | carte visuelle du système résident, `$C000-$FFFF` (faite par `tools/carte_memoire.py`) |
 | `docs/etat.md` | état du projet, suite prévue, réserves de place |
 | `docs/projet-rom.md` | la version ROM |
 | `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP` (MKTAP), jeux GRAPHER autonomes (`GRXASM /O`, `ORIC.INC`), routines pour le BASIC plus tard (spécification) |
