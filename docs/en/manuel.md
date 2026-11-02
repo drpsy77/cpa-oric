@@ -832,6 +832,7 @@ On the Mac:
     python3 tools/remote.py coller letter.txt        a text, as typing
     python3 tools/remote.py ecran                    the screen as text
     python3 tools/remote.py attendre 'A>' 20         waits for a text on the screen
+    python3 tools/vitrine.py                         CP/A shown in a loop (demonstration)
 
 - The service runs in the system, under the 50 Hz interrupt: it works with every program
   (EDIT, CMDER, HEX, ASM, LOGO...), survives a warm start, and goes off at cold start.
@@ -842,6 +843,13 @@ On the Mac:
   key), arrows and RETURN, `^C`, Clavier (the phone's keyboard), Coller (paste), RESET (two
   presses). On the computer: F1 FUNCT; Cmd-V on the Mac (elsewhere the Coller button, as Ctrl-V goes to the Oric)
   sends the clipboard.
+- **Showcase** (`tools/vitrine.py`, `docs/console-distance.md` § 9.5, in French): with
+  nobody at the keyboard, CP/A shows itself in a loop (commands, completion, help, menus,
+  EDIT, CMDER, DEBUG, USBDIR, colour tiles and a clock in LORES), scenes and pauses drawn
+  at random; it stops for two minutes as soon as someone types from the page or the
+  window. With `remote.py serve --spectateurs address`, visitors coming from that address
+  (a gateway publishing the page on the Internet, § 9.6) watch without being able to
+  type.
 - The whole text mode is seen, status line and menus included; in SPLIT, the text lines
   only; in full-screen HIRES, the window says "Ecran graphique".
 - A pasted text (`remote.py coller`, F9 in the window) arrives as very fast typing, at the

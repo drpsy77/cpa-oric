@@ -26,13 +26,13 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *221* | ***1101*** |
-| Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 39 | 130 | 18 | **209** | 47 | **256** |
-| **Total** | **227** | **82** | **688** | **344** | **213** | **1554** | **359** | **1913** |
+| Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
+| Outillage PC | 7 | 15 | 39 | 134 | 21 | **216** | 47 | **263** |
+| **Total** | **227** | **82** | **688** | **356** | **216** | **1569** | **360** | **1929** |
 
-Points ajustés (indicatif, § 9) : 1 554 × 1,05 ≈ 1 632.
+Points ajustés (indicatif, § 9) : 1 569 × 1,05 ≈ 1 647.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 84 EO, 71 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 87 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -746,6 +746,8 @@ service qu'ELIZA, mais c'est un autre programme : compté à part.
 | EX.T23 | TRASINUS.LOG : courbe du sinus | EO | 0 | 5 | F | 4 |
 | EX.T24 | TRASINXX.LOG : courbe de x sin x | EO | 0 | 5 | F | 4 |
 | EX.T25 | DEMO.BAT : démonstration enchaînée | EO | 1 | 1 | F | 4 |
+| EX.T26 | MOSAIQUE.GRX : tableaux de tuiles de couleur en LORES (vitrine) | EO | 0 | 1 | F | 4 |
+| EX.T27 | HORLOGE.GRX : l'heure tapée, en grands chiffres de couleur (vitrine) | EO | 0 | 2 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -759,6 +761,7 @@ service qu'ELIZA, mais c'est un autre programme : compté à part.
 | EX.A08 | Traceurs : repère, échelle, pas | `tra*.log` | 1 |
 | EX.A09 | ARBRE récursif, spirales | `demo.log` | 1 |
 | EX.A10 | GTEST, DESSIN, MOTIFS : figures | `gtest.s`, `*.grx` | 1 |
+| EX.A11 | HORLOGE : chiffres dessinés par rangées (motif de 3 points -> chaîne d'attributs) ; MOSAIQUE : cadres, rayures et bandes animés par rotation | `tools/vitrine/*.grx` | 1 |
 
 ## 6. Outillage PC
 
@@ -820,6 +823,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T48 | `test_remote.sh` : console à distance de bout en bout dans Oricutron (écran du démon contre le vidage) | EO | 2 | 4 | F | 4 |
 | OUT.T49 | `remote.html` : page web de la console à distance, écran (police de CP/A, attributs, curseur, clignotement, SPLIT, HIRES), état de la liaison | EO | 1 | 9 | F | 4 |
 | OUT.T50 | `remote.html` : clavier de l'ordinateur et du téléphone, boutons (FUNCT, CTRL, SHIFT, flèches), Coller, RESET | EI | 1 | 8 | F | 3 |
+| OUT.T51 | `vitrine.py` : CP/A montré en boucle (scènes au hasard, frappe humaine, programmes écrits dans EDIT s'ils manquent, reprise, pause quand quelqu'un tape) | EO | 1 | 10 | F | 4 |
+| OUT.T52 | `remote.py --spectateurs` : clients en lecture seule (page, refus des envois, du journal et de la version) | EQ | 1 | 4 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -848,47 +853,47 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 69 | 12 039 | 1 395 | 569 | 1 647 | 10 % | 38 353 | 34 | 107 |
+| Système et commandes | 70 | 12 117 | 1 422 | 571 | 1 650 | 11 % | 37 524 | 34 | 105 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
-| LOGO | 12 | 9 489 | 622 | 318 | 841 | 6 % | 18 964 | 49 | 98 |
+| LOGO | 12 | 9 490 | 625 | 319 | 848 | 6 % | 18 979 | 49 | 98 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 33 | 6 550 | 696 | 260 | 0 | 10 % | 13 467 | 67 | 137 |
+| USB | 33 | 6 550 | 699 | 260 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 185 | 10 385 | 1 357 | 773 | 0 | 12 % | — | 51 | — |
-| **Total** | 382 | 77 038 | 6 648 | 3 203 | 2 563 | 8 % | 160 580 | 50 | 104 |
+| Outillage PC | 188 | 11 078 | 1 457 | 840 | 0 | 12 % | — | 51 | — |
+| **Total** | 386 | 77 810 | 6 781 | 3 273 | 2 573 | 8 % | 159 766 | 50 | 102 |
 
-Octets du système : code résident 13 684 (`$C000-$F574`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 12 820 (`$C000-$F214`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 691 | 85 | 4,7 | 95 |
-| EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
-| LOGO | 311 | 63 | 1,6 | 20 |
-| CMDER | 235 | 26 | 2,6 | 18 |
-| HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 140 | 13 | 2,1 | 4 |
-| VOIR | 78 | — | 4,1 | 11 |
-| USB | 80 | 13 | 0,8 | 26 |
-| ASM | 62 | 10 | 6,9 | 6 |
-| DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 26 |
-| Outillage PC | 349 | — | 1,7 | 136 |
-| Transverse (projet) | 2 691 | — | — | 98 |
-| Traduction anglaise (docs/en) | 2 950 | — | — | 46 |
-| **Total** | 9 735 | 321 | 6,3 | 229 |
+| Système et commandes | 1 724 | 85 | 4,8 | 2 |
+| EDIT | 96 | 20 | 1,3 | 1 |
+| GRAPHER + GRXASM | 978 | 70 | 4,2 | 1 |
+| LOGO | 316 | 64 | 1,6 | 1 |
+| CMDER | 235 | 26 | 2,6 | 1 |
+| HEX | 34 | 9 | 1,8 | 1 |
+| EDSPRITE | 140 | 13 | 2,1 | 1 |
+| VOIR | 78 | — | 4,1 | 1 |
+| USB | 80 | 13 | 0,8 | 1 |
+| ASM | 62 | 10 | 6,9 | 1 |
+| DEBUG | 40 | 12 | 0,5 | 1 |
+| Exemples | 0 | — | 0,0 | 1 |
+| Outillage PC | 349 | — | 1,6 | 2 |
+| Transverse (projet) | 2 807 | — | — | 2 |
+| Traduction anglaise (docs/en) | 2 973 | — | — | 2 |
+| **Total** | 9 912 | 322 | 6,3 | 2 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 229 commits du 2026-10-04 au 2026-11-01.
+Historique : 2 commits du 2026-11-02 au 2026-11-02.
 
-Réutilisation : 56 102 lignes de code écrites dans `progs/`, 66 292 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 56 106 lignes de code écrites dans `progs/`, 66 296 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -960,6 +965,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-01 | HOSTS | 0.9 | 1 498 | 355 | 1 853 | 227 | fichier `HOSTS` et appel du modem par les programmes (`ac_dial`, `ac_host` d'`acia_inc.s`) : `TERM hote`, `XFER ... @hote` ; `test_xfer.sh` sans TERM, en deux passes |
 | 2026-11-01 | console à distance, lot 3 | 0.9 | 1 547 | 359 | 1 906 | 230 | pilote série résident (`serial.s`), fonction 117, PUNCH, READER ; `REMOTE.COM` ; démon `remote.py` ; `test_remote.sh` ; appel du modem plus sûr (CR, réponses en retard jetées), `xfer_server.py` qui accepte un nouvel appel |
 | 2026-11-02 | console à distance, lot 4 | 0.9 | 1 554 | 359 | 1 913 | 244 | page web (`tools/remote.html`, servie par le démon) : écran, clavier de l'ordinateur et du téléphone, Coller, RESET ; plafonds du pilote par port ; firmware du Pico |
+| 2026-11-02 | vitrine | 0.9 | 1 569 | 360 | 1 929 | 245 | `tools/vitrine.py` (CP/A montré en boucle, scènes au hasard) ; `MOSAIQUE.GRX`, `HORLOGE.GRX` en LORES ; spectateurs en lecture seule (`--spectateurs`), page sous un chemin (passerelle) |
 
 ## 11. Comparaisons
 

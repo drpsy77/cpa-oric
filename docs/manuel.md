@@ -856,6 +856,7 @@ Sur le Mac :
     python3 tools/remote.py coller lettre.txt        un texte, comme une frappe
     python3 tools/remote.py ecran                    l'écran en texte
     python3 tools/remote.py attendre 'A>' 20         attend un texte à l'écran
+    python3 tools/vitrine.py                         CP/A montré en boucle (démonstration)
 
 - Le service tourne dans le système, sous l'interruption de 50 Hz : il marche avec tous les
   programmes (EDIT, CMDER, HEX, ASM, LOGO...), survit au démarrage à chaud, et s'éteint au
@@ -867,6 +868,12 @@ Sur le Mac :
   la touche suivante), flèches et RETURN, `^C`, Clavier (celui du téléphone), Coller, RESET (deux
   appuis). Sur l'ordinateur : F1 FUNCT ; Cmd-V sur le Mac (ailleurs le bouton Coller, Ctrl-V partant à l'Oric)
   envoie le presse-papiers.
+- **Vitrine** (`tools/vitrine.py`, `docs/console-distance.md` § 9.5) : sans personne, CP/A
+  se montre en boucle (commandes, complétion, aide, menus, EDIT, CMDER, DEBUG, USBDIR,
+  tuiles de couleur et horloge en LORES), scènes et pauses tirées au hasard ; elle
+  s'arrête deux minutes dès qu'on tape depuis la page ou la fenêtre. Avec
+  `remote.py serve --spectateurs adresse`, les visiteurs venus de cette adresse (une
+  passerelle qui publie la page sur Internet, § 9.6) regardent sans pouvoir taper.
 - Tout le mode texte est vu, ligne d'état et menus compris ; en SPLIT, les lignes de texte
   seulement ; en HIRES plein écran, la fenêtre dit « Ecran graphique ».
 - Un texte collé (`remote.py coller`, F9 de la fenêtre) arrive comme une frappe très

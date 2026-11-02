@@ -81,7 +81,7 @@ caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 554 points de fonction IFPUG et 359 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 569 points de fonction IFPUG et 360 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -225,8 +225,14 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
      (`tools/remote_tk.py`) marche avec le démon. Fait (lot 4, 02/11/2026) : la page
      web (`tools/remote.html`, servie par le démon sur `GET /` : ordinateur et
-     téléphone ; rendu identique à la fenêtre, clavier, Coller, RESET), essayée avec le
-     faux démon ; à essayer sur le vrai Oric (`essais-materiel.md`).
+     téléphone ; rendu identique à la fenêtre, clavier, bouton RETURN, Coller, RESET),
+     essayée avec le faux démon et sur le vrai Oric (démon du Mac). Fait aussi
+     (02/11/2026) : la **vitrine** (`tools/vitrine.py`, `docs/console-distance.md`
+     § 9.5 : CP/A montré en boucle, scènes au hasard, `MOSAIQUE.GRX` et `HORLOGE.GRX`
+     en LORES, pause quand quelqu'un tape) et les **spectateurs** (`--spectateurs` :
+     lecture seule pour une passerelle qui publie la page, § 9.6 : Apache sur le VPS de
+     Pierre, WireGuard jusqu'à la maison) ; essayés dans Oricutron. À installer par
+     Pierre : WireGuard et Apache (actions système).
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
