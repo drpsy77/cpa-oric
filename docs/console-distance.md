@@ -8,8 +8,9 @@ console à distance doit survivre aux programmes : elle est dans le BIOS.
 
 Fait : le pilote résident (`src/serial.s`, option `SERIE`), la fonction 117, PUNCH et
 READER, `REMOTE.COM`, le démon `tools/remote.py` et sa ligne de commande, la page web
-(§ 9), la fenêtre tkinter (§ 9.2), le faux démon (§ 9.3) ; essayés dans Oricutron
-(`tools/test_remote.sh`), la page avec le faux démon. Mode d'emploi : `docs/manuel.md`, « Console à distance :
+(§ 9), la fenêtre tkinter (§ 9.2), le faux démon (§ 9.3), la vitrine (§ 9.5) et la
+publication sur Internet par une passerelle, en lecture seule (§ 9.6) ; essayés dans
+Oricutron (`tools/test_remote.sh`), la page avec le faux démon. Mode d'emploi : `docs/manuel.md`, « Console à distance :
 REMOTE ».
 
 ## 1. Principe
@@ -307,9 +308,11 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
   dépassées, les trames refusées (début en hexadécimal), une liaison perdue, et un bilan
   par minute. Lisible sans console : `GET /journal?n=200`, `GET /version` ; la réponse
   de `/ecran` porte aussi les compteurs (`stats`).
-- **Démon** : `tools/remote.py serve [--port 2324] [--http 8040] [--lent]` attend
-  l'Oric, tient la copie de l'écran, sert l'interface locale. Un nouvel appel de l'Oric
-  remplace le précédent. `--lent` : un octet toutes les 25 ms vers l'Oric (essai ;
+- **Démon** : `tools/remote.py serve [--port 2324] [--http 8040] [--lent]
+  [--spectateurs ADRESSES]` attend l'Oric, tient la copie de l'écran, sert l'interface
+  locale. Un nouvel appel de l'Oric remplace le précédent. `--spectateurs` (adresses ou
+  réseaux, séparés par des virgules : `10.8.0.1`, `192.168.2.0/24`) : les clients venus
+  de là regardent seulement (§ 9.6). `--lent` : un octet toutes les 25 ms vers l'Oric (essai ;
   inutile avec le LOCI comme avec Oricutron, dont le modem garde ce qui arrive).
 - **Touches** : celles qui attendent partent d'un coup (1 024 au plus), chacune `$FE k` ;
   le pilote ne les lit que si le tampon du clavier a de la place, c'est donc le programme
@@ -331,7 +334,9 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
 - **Page web** (`tools/remote.html`, servie par le démon sur `GET /` :
   `http://localhost:8040` sur la machine du démon, `http://adresse:8040` depuis un
   téléphone ou un autre ordinateur ; `?demon=http://adresse:8040` : parler à un autre
-  démon que celui qui sert la page). Un seul fichier, sans bibliothèque, à garder à côté
+  démon que celui qui sert la page). Ses requêtes ont des adresses relatives
+  (`ecran`, `touches`...) : derrière une passerelle, la page marche sous un chemin
+  (`https://site/cpa/`, avec la barre finale). Un seul fichier, sans bibliothèque, à garder à côté
   d'`oric_ecran.py` ; le démon y insère la police de CP/A (`page_web()`, lue dans
   `src/font.s`). Fichier ou police absents : réponse 500 qui le dit.
 
@@ -376,6 +381,9 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
     ne se perd.
   - RESET : deux appuis à moins de 3 s (`Sur ?`), puis `POST /reset` (démarrage à
     chaud).
+  - Spectateur (`"lecture_seule": true` dans la réponse de `/ecran`, ou un envoi
+    refusé par 403) : ni boutons ni clavier, « en direct, lecture seule » dans la
+    ligne d'état.
 
 ### 9.1 Interface locale du démon
 
@@ -389,6 +397,12 @@ web, la fenêtre tkinter et la ligne de commande s'en servent toutes.
 | `POST /coller` | corps : texte UTF-8 ; accents retirés comme XFER `/T`, fins de ligne en CR, tabulation 29, puis comme `/touches` ; 204 |
 | `POST /reset` | `$FD 'B'` (démarrage à chaud) ; 204 |
 | `GET /` | la page web (`tools/remote.html`, police insérée) |
+| `GET /version`, `GET /journal?n=N` | version et paramètres du démon ; les N dernières lignes du journal |
+
+Un spectateur (`--spectateurs`) reçoit 403 pour les `POST`, `/version` et `/journal` ;
+sa réponse de `/ecran` n'a ni `stats` ni `humain`, mais `"lecture_seule": true`. Un
+`POST` sans l'en-tête `X-Vitrine` (page, fenêtre, ligne de commande) note l'heure d'une
+frappe humaine : la vitrine se met en pause (§ 9.5).
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
@@ -401,6 +415,8 @@ web, la fenêtre tkinter et la ligne de commande s'en servent toutes.
   réponse de l'Oric) ; `delai` : âge en secondes du dernier cycle complet.
 - `mode`, `curseur` (colonne, ligne, actif) : ceux de la trame `S` ; `lignes` : les
   40 octets de chaque ligne en hexadécimal, tels que la trame `L`.
+- `humain` : secondes depuis la dernière frappe qui ne vient pas de la vitrine (`null` :
+  aucune) ; `stats` : compteurs de la liaison (diagnostic).
 
 ### 9.2 Fenêtre tkinter : `tools/remote_tk.py` (Raspberry Pi Zero, Mac, Pi 400)
 
@@ -476,6 +492,69 @@ fenêtre s'arrête sur une erreur, elle est relancée.
 
   Une connexion par ssh n'est pas touchée (elle n'est pas sur tty1).
 
+### 9.5 Vitrine : `tools/vitrine.py`
+
+CP/A montré en boucle, sans personne, pour les spectateurs de la page (§ 9.6) : la
+vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
+
+    python3 tools/vitrine.py [--demon URL] [--humain S] [--scenes a,b,...] [--une]
+    python3 tools/vitrine.py --liste
+
+- **Scènes**, tirées au hasard (pondérées, jamais deux fois la même de suite), avec une
+  pause de 3 à 15 s entre deux : `heure` (HORLOGE), `mosaique` (MOSAIQUE), `dir` (DIR,
+  DIRS, STAT), `completion` (TAB sur la commande puis sur le nom, TYPE), `type`, `aide`
+  (HELP et une rubrique), `menus` (FUNCT : barre, menus déroulés, parfois Version),
+  `usb` (USBDIR, `USBDIR /S`, USBMOUNT), `debug` (`DEBUG MEM` : `L C000`, `D BB80`,
+  l'écran vu par lui-même...), `edit` (un `.GRX` parcouru, une recherche, sortie sans
+  rien changer), `cmder` (déplacements, tris, infos), `echo` (l'heure au prompt),
+  `divers` (VER, MEM, CLS). Frappe de 5 à 12 touches par seconde, avec des hésitations ;
+  pauses de fin d'écran (`-- Suite`) passées après un temps de lecture.
+- **Deux programmes GRAPHER** en mode texte (LORES), dans `tools/vitrine/` :
+  `MOSAIQUE.GRX n` (n tableaux tirés au hasard : pluie de couleurs, cadres concentriques
+  qui tournent, rayures qui défilent par `ROTH`, damier, bandes par `ROTV` ; chaque case
+  est un attribut de papier, donc une tuile de couleur ; ~13 s par tableau) et
+  `HORLOGE.GRX n` (l'heure en grands chiffres de couleur pendant n secondes ; l'Oric
+  n'a pas d'horloge : le programme demande l'heure, la vitrine la tape. Chiffres
+  dessinés par rangées : une chaîne d'attributs par motif de 3 points, écrite par
+  `PRINT` ; une seconde dure `DELAY 16` plus ~0,68 s de dessin, mesuré dans Oricutron :
+  ~2 s de retard par minute). Au premier passage, la vitrine les écrit sur la disquette
+  s'ils manquent (`DIR *.GRX`), dans EDIT, à la vue de tous : texte collé, `^S`, `^Q`.
+  Rien d'autre n'est écrit ; aucune scène n'efface ni ne modifie de fichier.
+- **Reprise** : chaque scène part du prompt, ligne vide ; sinon ESC, `^Q`, `^C`,
+  RETURN, et en dernier recours le démarrage à chaud (`/reset`). Liaison pas active :
+  attente. Démon injoignable : nouvel essai toutes les 10 s.
+- **Quelqu'un tape** (page, fenêtre, ligne de commande ; tout `POST` sans l'en-tête
+  `X-Vitrine`) : la scène s'arrête et la vitrine attend `--humain` secondes (120) sans
+  frappe avant de reprendre. Une frappe sur le clavier de l'Oric lui-même ne se voit pas :
+  arrêter la vitrine (CTRL-C) pour s'en servir.
+- La vitrine lit l'heure de la machine où elle tourne (Mac, simon) : celle de Paris.
+
+### 9.6 Publier sur Internet : passerelle, lecture seule
+
+Le démon n'a ni authentification ni chiffrement (réseau de la maison). Pour montrer
+l'Oric à d'autres (un forum), une passerelle sur un serveur public (VPS) sert la page en
+HTTPS et ne laisse passer que la lecture ; la box n'ouvre aucun port.
+
+    navigateur --HTTPS--> Apache (VPS) --WireGuard--> démon (simon ou Mac) :8040 --> Oric
+
+- **Tunnel** : WireGuard entre le VPS (`10.8.0.1`) et la machine du démon (`10.8.0.2`),
+  ouvert par la maison (`PersistentKeepalive = 25`) : aucune redirection de port sur la
+  box. À défaut, un tunnel SSH inversé (`autossh -R 8040:localhost:8040 vps`).
+- **Démon** : `remote.py serve --spectateurs 10.8.0.1` : tout ce qui arrive du tunnel
+  est en lecture seule (§ 9.1), quel que soit le réglage d'Apache.
+- **Apache** (`mod_proxy`, `mod_proxy_http`, certificat Let's Encrypt) :
+
+        RedirectMatch ^/cpa$ /cpa/
+        ProxyPass        /cpa/ http://10.8.0.2:8040/ timeout=30
+        ProxyPassReverse /cpa/ http://10.8.0.2:8040/
+
+  `timeout=30` laisse passer l'attente longue de `/ecran` (5 s). La barre finale compte :
+  les adresses de la page sont relatives.
+- **Vitrine** (§ 9.5) sur la machine du démon, pour que les spectateurs voient quelque
+  chose bouger. Disquette de démonstration plutôt que de travail dans le lecteur.
+- Pour laisser taper quelqu'un de confiance plus tard : un second chemin protégé par mot
+  de passe, qui arrive au démon par une autre adresse que celle des spectateurs.
+
 ## 10. Lots
 
 1. **`HOSTS` et appel du modem** (§ 8) : fait.
@@ -492,6 +571,9 @@ fenêtre s'arrête sur une erreur, elle est relancée.
    et Coller essayés avec le faux démon (navigateur d'ordinateur et de téléphone
    simulés), page servie par le démon. Elle ne fait qu'afficher et envoyer ce que le
    démon du lot 3 sait déjà faire.
+5. **Vitrine et spectateurs** (§ 9.5, § 9.6) : fait. Chaque scène jouée dans Oricutron
+   par un démon local (programmes écrits dans EDIT identiques à l'octet près) ;
+   spectateurs refusés (403) et page en lecture seule.
 
 À vérifier sur le vrai Oric : `essais-materiel.md` (console à distance).
 

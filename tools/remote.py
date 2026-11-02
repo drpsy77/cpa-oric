@@ -8,11 +8,15 @@ tient une copie de l'écran de l'Oric, la met à jour en comparant des totaux
 servie sur GET /) et à la ligne de commande ci-dessous.
 
     remote.py serve [--port 2324] [--http 8040] [--lent] [--log FICHIER]
+                    [--spectateurs ADRESSES]
         le démon ; --lent : un octet toutes les 25 ms vers l'Oric ; journal
         dans logs/remote.log du dépôt (par défaut ; 1 Mo, trois anciens
         gardés) : version, commit, paramètres, appels, chaque cycle qui
         change l'écran (durées), attentes dépassées, trames refusées, et un
-        bilan par minute. Aussi lisible par HTTP : /journal?n=200, /version
+        bilan par minute. Aussi lisible par HTTP : /journal?n=200, /version.
+        --spectateurs 10.8.0.1,192.168.2.0/24 : ces clients (la passerelle
+        qui publie la page sur Internet) ne font que regarder : touches,
+        coller, reset, journal et version refusés (403)
     remote.py touches TEXTE        frappe, notation de tools/run_test.sh :
         \\n Entrée, ~ DEL, \\x1b ESC, \\x01-\\x04 flèches G D H B, \\x05 FUNCT,
         \\x1c préfixe CTRL, \\x0f préfixe SHIFT, | pause 3 s, \\x06 démarrage
@@ -28,6 +32,7 @@ Options des commandes : --demon URL (défaut http://localhost:8040).
 
 Bibliothèque standard seulement (Mac, Raspberry Pi).
 """
+import ipaddress
 import json
 import logging
 import logging.handlers
@@ -46,7 +51,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-02.2"        # changée à chaque modification du démon
+VERSION = "2026-11-02.3"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41}
@@ -85,6 +90,7 @@ class Ecran:
         self.liaison = "attente"
         self.hote = ""
         self.t_cycle = None
+        self.t_humain = None            # dernière touche venue d'ailleurs que la vitrine
         self.stats = {}                 # mesures de la liaison (diagnostic)
         self.cond = threading.Condition()
 
@@ -119,10 +125,12 @@ class Ecran:
                 self.cond.wait(attendre)
             lig = {str(n): bytes(self.lignes[n]).hex() for n in range(ROWS)
                    if depuis == 0 or self.vlig[n] > depuis}
-            delai = round(time.time() - self.t_cycle, 1) if self.t_cycle else None
+            maintenant = time.time()
+            delai = round(maintenant - self.t_cycle, 1) if self.t_cycle else None
+            humain = round(maintenant - self.t_humain, 1) if self.t_humain else None
             return {"version": self.version, "liaison": self.liaison, "hote": self.hote,
                     "mode": self.mode, "curseur": list(self.curseur), "delai": delai,
-                    "stats": self.stats, "lignes": lig}
+                    "humain": humain, "stats": self.stats, "lignes": lig}
 
 
 class Liaison:
@@ -343,7 +351,7 @@ def commit_git():
         return "? (git absent)"
 
 
-def demon(port, http, lent, fichier=None):
+def demon(port, http, lent, fichier=None, spectateurs=()):
     ecran = Ecran()
     envois = queue.Queue()
     ici = os.path.dirname(os.path.abspath(__file__))
@@ -367,7 +375,7 @@ def demon(port, http, lent, fichier=None):
              "pid": os.getpid(), "arguments": sys.argv[1:], "journal": os.path.abspath(fichier),
              "parametres": {"port": port, "http": http, "lent": lent, "LOT": LOT,
                             "PAR_TOUCHE": PAR_TOUCHE, "REPOS": REPOS, "PERDUE": PERDUE, "DELAI": DELAI, "ECHECS_SUITE": ECHECS_SUITE,
-                            "SUITE": SUITE}}
+                            "SUITE": SUITE, "spectateurs": [str(r) for r in spectateurs]}}
     ecran.infos = infos
     journal("=== démarrage : %s" % json.dumps(infos, ensure_ascii=False))
 
@@ -411,6 +419,15 @@ def demon(port, http, lent, fichier=None):
         def log_message(self, *a):
             pass
 
+        def _spectateur(self):
+            try:
+                ip = ipaddress.ip_address(self.client_address[0])
+            except ValueError:
+                return False
+            if ip.version == 6 and ip.ipv4_mapped:
+                ip = ip.ipv4_mapped
+            return any(ip in r for r in spectateurs)
+
         def _rep(self, code, corps=b"", type_="application/json"):
             self.send_response(code)
             self.send_header("Content-Type", type_)
@@ -425,7 +442,13 @@ def demon(port, http, lent, fichier=None):
             if u.path == "/ecran":
                 depuis = int(q.get("depuis", ["0"])[0])
                 attendre = min(float(q.get("attendre", ["0"])[0]), 5.0)
-                self._rep(200, json.dumps(ecran.etat(depuis, attendre)).encode())
+                e = ecran.etat(depuis, attendre)
+                if self._spectateur():
+                    del e["stats"], e["humain"]
+                    e["lecture_seule"] = True
+                self._rep(200, json.dumps(e).encode())
+            elif u.path in ("/version", "/journal") and self._spectateur():
+                self._rep(403, b"lecture seule\n", "text/plain")
             elif u.path == "/version":
                 self._rep(200, json.dumps(ecran.infos, ensure_ascii=False).encode())
             elif u.path == "/journal":
@@ -449,6 +472,11 @@ def demon(port, http, lent, fichier=None):
             n = int(self.headers.get("Content-Length", "0"))
             corps = self.rfile.read(n)
             u = urlparse(self.path).path
+            if self._spectateur():
+                self._rep(403, b"lecture seule\n", "text/plain")
+                return
+            if u in ("/touches", "/coller", "/reset") and not self.headers.get("X-Vitrine"):
+                ecran.t_humain = time.time()
             if u == "/touches":
                 codes = corps
             elif u == "/coller":
@@ -559,7 +587,11 @@ def main(args):
             h = int(args[args.index("--http") + 1])
         lent = "--lent" in args
         fichier = args[args.index("--log") + 1] if "--log" in args else None
-        return demon(port, h, lent, fichier)
+        spect = []
+        if "--spectateurs" in args:
+            for a in args[args.index("--spectateurs") + 1].split(","):
+                spect.append(ipaddress.ip_network(a.strip(), strict=False))
+        return demon(port, h, lent, fichier, spect)
     if cmd == "touches":
         lot = bytearray()
         for k in codes_touches(args[0] if args else ""):

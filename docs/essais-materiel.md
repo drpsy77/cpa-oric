@@ -283,12 +283,20 @@ avec le nouveau firmware du Pico.
 
 **Console à distance, page web** (`docs/console-distance.md` § 9 ; simon à mettre à
 jour d'abord : `tools/remote.html`, `remote.py`, `oric_ecran.py` ; `/version` doit dire
-`2026-11-02.2`) : `http://10.0.0.39:8040` sur le Mac puis sur le téléphone. Écran
+`2026-11-02.3`) : `http://10.0.0.39:8040` sur le Mac puis sur le téléphone. Écran
 identique à celui de l'Oric (couleurs de la barre de menus, curseur) ; frappe, flèches,
 CTRL et SHIFT (boutons et clavier), F1 et bouton FUNCT (menu ouvert, choisi aux
 flèches et validé par le bouton RETURN) ; Clavier du téléphone (lettres, Retour, effacement ; la page reste lisible
 au-dessus du clavier) ; Coller dans `EDIT NOTE.TXT` (Cmd-V sur le Mac ; zone de collage
 sur le téléphone), puis `^S` et `TYPE NOTE.TXT` ; RESET (deux appuis) pendant CMDER.
+
+**Console à distance, vitrine** (`docs/console-distance.md` § 9.5 ; démon `2026-11-02.3`) :
+`python3 tools/vitrine.py` sur la machine du démon, une disquette de démonstration en A:.
+Chaque scène une fois (`--une`) : HORLOGE à l'heure (et au bout d'une minute), MOSAIQUE
+(couleurs, défilements), USBDIR (le LOCI, pas vu dans Oricutron), le reste comme dans
+Oricutron ; puis en boucle une heure : jamais bloquée, retour au prompt après chaque
+scène. Une touche depuis la page : pause de 2 min. Les spectateurs, après installation
+de la passerelle (§ 9.6) : page en lecture seule depuis l'extérieur.
 
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis

@@ -1,0 +1,99 @@
+; MOSAIQUE.GRX : tuiles de couleur en LORES, sans touche (vitrine de
+; la console a distance, tools/vitrine.py). Chaque case est un
+; attribut de papier (16 a 23) : elle prend sa couleur. Les tableaux
+; sont tires au hasard.
+;   GRAPHER MOSAIQUE n      n tableaux, puis retour au prompt
+LORES
+N = $1
+REPEAT N
+  P = RND(5)
+  IF P = 0
+    CALL PLUIE
+  ENDIF
+  IF P = 1
+    CALL CADRES
+  ENDIF
+  IF P = 2
+    CALL RAYURES
+  ENDIF
+  IF P = 3
+    CALL DAMIER
+  ENDIF
+  IF P = 4
+    CALL BANDES
+  ENDIF
+  CALL TITRE
+NEXT
+END
+
+SUB PLUIE
+  CLS
+  REPEAT 700
+    CHAR RND(40) RND(28) (16+RND(8))
+  NEXT
+ENDSUB
+
+SUB CADRES
+  FOR O 0 13
+    FOR K 0 13
+      A = 17+((K+O)%7)
+      LOCATE K K
+      SPC (40-2*K) A
+      LOCATE K (27-K)
+      SPC (40-2*K) A
+      LOCATE K K
+      SPCV (28-2*K) A
+      LOCATE (39-K) K
+      SPCV (28-2*K) A
+    NEXT
+  NEXT
+ENDSUB
+
+SUB RAYURES
+  FOR L 0 27
+    LOCATE 0 L
+    FOR J 0 19
+      SPC 2 (17+((J+L/2)%7))
+    NEXT
+  NEXT
+  REPEAT 80
+    ROTH 1
+  NEXT
+ENDSUB
+
+SUB DAMIER
+  C = 17+RND(7)
+  D = 17+(C-16+RND(6))%7        ; une autre couleur que C
+  FOR L 0 27
+    LOCATE 0 L
+    FOR J 0 9
+      IF (J+L/4)%2
+        SPC 4 C
+      ELSE
+        SPC 4 D
+      ENDIF
+    NEXT
+  NEXT
+  REPEAT 28
+    ROTV 1
+    ROTH -1
+  NEXT
+ENDSUB
+
+SUB BANDES
+  FOR L 0 27
+    LOCATE 0 L
+    SPC 40 (17+(L/2)%7)
+  NEXT
+  REPEAT 56
+    ROTV -1
+  NEXT
+ENDSUB
+
+SUB TITRE
+  LOCATE 7 13
+  SPC 26 16
+  LOCATE 8 13
+  PRINT "CP/A sur Oric : en direct"
+  DELAY 100
+ENDSUB
