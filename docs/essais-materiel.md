@@ -85,8 +85,6 @@ HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avan
 **Fenêtre, lot 4 : banque GFX, tracés du SPLIT** (`docs/systeme.md` § 6 ; sur
 `cpa-exemples.dsk`, puis `cpa-logo.dsk` et une jumelle anglaise) :
 
-- `GTEST` : l'image habituelle ; dire combien de temps prend le premier (lecture de `CPA.BNK`
-  sur le LOCI), puis un deuxième `GTEST` ;
 - `GSAVE T`, puis `GTEST` : le tracé recharge la banque (un instant), image juste ;
 - `PUT G.TXT GTEST` : rien n'est dessiné, `TYPE G.TXT` montre `Image dessinee.` ; puis `GTEST`
   dessine de nouveau ;
@@ -389,6 +387,11 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 ## Vérifié
 
 Sur Oric Atmos + LOCI, version disquette :
+
+- Banque GFX (2 novembre 2026) : `GTEST` en 2,3 à 2,5 s, chargement de `GTEST.COM` et de la
+  banque compris, après un `PUT` comme la première fois : le changement de banque ne se sent
+  pas ; `PUT COPIE.TXT TYPE JEU.GRX` en ~9 s. Un vrai Microdisc ajouterait ses temps de
+  déplacement de la tête ;
 
 - XFER (30 octobre 2026, avec `tools/xfer_server.py` sur le Mac) : envoi et réception d'un
   texte (identiques), d'un gros `.COM` vers B: (il se lance), `/T` (fins de ligne,
