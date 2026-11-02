@@ -1,3 +1,27 @@
+diff --git a/src/support.h b/src/support.h
+index 5b2ebf3..e72a0e1 100644
+--- a/src/support.h
++++ b/src/support.h
+@@ -92,13 +92,14 @@ void sendSerialData() {
+    // in telnet mode, we might have to escape every single char,
+    // so don't use more than half the buffer
+    size_t maxBufSize = (sessionTelnetType != NO_TELNET) ? TX_BUF_SIZE / 2 : TX_BUF_SIZE;
+-   size_t len = ser_is_readable(ser0);
+-   if( len > maxBufSize) {
+-      len = maxBufSize;
+-   }
++   // CP/A (LOCI) : lit tout ce qui attend (ser_is_readable ne rend que
++   // vrai ou faux : un seul octet par tour de boucle limitait l'envoi
++   // vers le WiFi a ~650 octets/s)
++   size_t len = 0;
+    uint8_t *p = txBuf;
+-   for( size_t i = 0; i < len; ++i ) {
++   while( len < maxBufSize && ser_is_readable(ser0) ) {
+       *p++ = ser_getc(ser0);
++      ++len;
+    }
+ 
+    uint32_t serialInterval = millis() - lastSerialData;
 diff --git a/src/tcp_support.h b/src/tcp_support.h
 index 3e55d6f..be5ecf7 100644
 --- a/src/tcp_support.h
