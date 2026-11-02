@@ -11,6 +11,9 @@ commit `c65fcd0`, avec `picowifimodem-cpa.patch` :
   partent ensemble dans le suivant. Le démon `tools/remote.py` acquitte tout de suite
   (`TCP_QUICKACK`), ce qui garde l'attente courte. Vise la console à distance et
   l'envoi par XFER.
+- **Tout ce qui attend sur l'USB est lu d'un coup** (`sendSerialData`, `src/support.h`) :
+  l'original lisait un seul octet par tour de boucle (`ser_is_readable` ne rend que vrai ou
+  faux), soit ~650 octets/s au plus de l'Oric vers le WiFi, quel que soit le reste.
 - **Pas de redémarrage en mode BOOTSEL à 1200 bauds** (`tud_cdc_line_coding_cb` vidé,
   `src/usb_cdc.c`) : le LOCI transmet au Pico la vitesse que l'Oric écrit dans l'ACIA
   (`docs/loci-modem-wifi.md`, « Firmware du Pico »).

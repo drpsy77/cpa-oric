@@ -72,8 +72,9 @@ sans `T`, `P` ou `I`, répond `ERROR`).
 
 - **Version pour CP/A** : `tools/pico-modem/wifi_modem-cpa.uf2`, le code de `c65fcd0`
   avec Nagle gardé (paquets WiFi groupés : la console à distance et l'envoi par XFER
-  n'ont plus d'arrêts de plusieurs secondes, à vérifier) et sans le redémarrage à 1200
-  bauds ; patch et construction : `tools/pico-modem/LISEZMOI.md`.
+  n'ont plus d'arrêts de plusieurs secondes), la lecture de tout ce qui attend sur l'USB
+  (l'original lisait un octet par tour de boucle : ~650 octets/s au plus de l'Oric vers le
+  WiFi) et sans le redémarrage à 1200 bauds ; patch et construction : `tools/pico-modem/LISEZMOI.md`.
 
 ## Firmware du LOCI
 
