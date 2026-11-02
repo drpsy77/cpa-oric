@@ -202,7 +202,11 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
    (01/11/2026) : réception de 7,8 Ko en 5 à 10 s ; envoi en 27 s, par à-coups : le Pico W
    retient l'envoi par moments, et `ac_txw` abandonnait au bout de 0,3 s (octet perdu, bloc
    redemandé) ; il attend maintenant 5 s, à remesurer. Décidé, pas encore fait :
-   plusieurs fichiers (jokers).
+   plusieurs fichiers (jokers). Possible, pas demandé (le débit actuel suffit à Pierre) :
+   **XMODEM-1K** (blocs de 1 Ko, en-tête STX, option « K » de la ligne de commande du
+   serveur pour rester compatible, CRC par table de 512 octets construite au démarrage ;
+   tout dans `XFER.COM` et `xfer_server.py`, rien de résident ; tampon de 1 Ko après la fin
+   du programme ; ~8 fois moins d'allers-retours).
    - **Le tampon est hors de l'Oric** : le LOCI ne remplit son tampon de 32 octets que s'il
      a de la place, le Pico W attend que l'USB accepte avant d'écrire et ne rouvre la
      fenêtre TCP que quand son tampon se vide (`docs/loci-modem-wifi.md`, « Contrôle de
@@ -244,9 +248,15 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      octets par IRQ ; 1,0 s avec les anciens plafonds), `VER` sur un écran plein 0,8 à
      0,9 s (3,1 à 3,6 s avant). simon (Pi Zero en WiFi, ping 50 ms et pointes à 150 ms)
      donne les à-coups, pas le débit.
-     Suite prévue : (1) `tools/essai_oric.py`, essais du vrai Oric pilotés par
-     Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (2) XFER avec le
-     nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (3) la page web.
+     Suite prévue (ordre fixé par Pierre, 02/11/2026) : (1) **la page web** (lot 4,
+     `docs/console-distance.md` § 9 et § 10 : écran de l'Oric dans un navigateur, Mac et
+     téléphone, rendu fidèle, clavier, Coller ; elle ne fait qu'afficher et envoyer ce que
+     le démon sait déjà faire, interface du § 9.1 ; le rendu de `tools/oric_ecran.py` et
+     de `remote_tk.py` sert de référence) ; (2) `tools/essai_oric.py`, essais du vrai Oric
+     pilotés par Claude (batterie tirée de `essais-materiel.md`).
+     Pour mesurer ou essayer sur le vrai Oric : démon sur le Mac de Pierre
+     (`python3 tools/remote.py serve`, `REMOTE MAC` ; `10.0.0.7:8040` sur son réseau, joint
+     par le lien avec son Mac) ou sur simon (`10.0.0.39:8040`).
      Avec ce lot, l'appel du modem est plus sûr : CR et réponses en retard jetés avant
      `AT` (le premier `XFER @MAC` répondait `ERROR`), et `xfer_server.py` accepte un
      nouvel appel à tout moment (une connexion morte le bloquait).
