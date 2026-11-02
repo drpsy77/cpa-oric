@@ -3,7 +3,7 @@
 
 Partagé par la console à distance (docs/console-distance.md) : le client
 tkinter (tools/remote_tk.py), le faux démon d'essai (tools/faux_demon.py),
-et plus tard le démon tools/remote.py (police de la page web).
+le démon tools/remote.py (page web, tools/remote.html : page_web()).
 Python 3, bibliothèque standard seulement.
 
     python3 tools/oric_ecran.py VIDAGE.mem SORTIE.png [--echelle N]
@@ -51,6 +51,17 @@ def charger_police(chemin=None):
             bits = (bits << 8) | o
         police.append([((bits >> (35 - 5 * r)) & 0x1F) << 1 for r in range(8)])
     return police
+
+
+def page_web():
+    """La page web de la console à distance (remote.html, à côté de ce
+    fichier), police de CP/A insérée à la place du marqueur : servie sur
+    GET / par le démon et par le faux démon. OSError si un fichier manque."""
+    import json
+    ici = os.path.dirname(os.path.abspath(__file__))
+    html = open(os.path.join(ici, "remote.html"), encoding="utf-8").read()
+    police = json.dumps(charger_police(), separators=(",", ":"))
+    return html.replace("/*POLICE*/[]", police, 1).encode("utf-8")
 
 
 def rendre_ligne(police, octets, num, clign_eteint=False):

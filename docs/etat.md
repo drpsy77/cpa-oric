@@ -81,7 +81,7 @@ caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 547 points de fonction IFPUG et 359 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 554 points de fonction IFPUG et 359 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -101,7 +101,7 @@ Ordre fixé d'après `docs/vision.md` : créer, développer et compiler, publier
 `docs/usb.md`) ; les programmes BASIC en texte (`.BAS`) codés par MKTAP (28/10/2026). Suite
 du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde son ordre.
 Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4), lots 1 à 3
-(`docs/console-distance.md`) ; reste le lot 4, la page web.
+et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
 
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
@@ -223,8 +223,10 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      `REMOTE.COM`, refus de TERM et XFER pendant la console, démon `tools/remote.py` (écho
      rapide, texte collé au rythme du programme, ligne de commande `touches`, `coller`,
      `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
-     (`tools/remote_tk.py`) marche avec le démon. À essayer sur le vrai Oric
-     (`essais-materiel.md`). Reste le lot 4 : la page web (navigateur, téléphone).
+     (`tools/remote_tk.py`) marche avec le démon. Fait (lot 4, 02/11/2026) : la page
+     web (`tools/remote.html`, servie par le démon sur `GET /` : ordinateur et
+     téléphone ; rendu identique à la fenêtre, clavier, Coller, RESET), essayée avec le
+     faux démon ; à essayer sur le vrai Oric (`essais-materiel.md`).
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
@@ -248,12 +250,8 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      octets par IRQ ; 1,0 s avec les anciens plafonds), `VER` sur un écran plein 0,8 à
      0,9 s (3,1 à 3,6 s avant). simon (Pi Zero en WiFi, ping 50 ms et pointes à 150 ms)
      donne les à-coups, pas le débit.
-     Suite prévue (ordre fixé par Pierre, 02/11/2026) : (1) **la page web** (lot 4,
-     `docs/console-distance.md` § 9 et § 10 : écran de l'Oric dans un navigateur, Mac et
-     téléphone, rendu fidèle, clavier, Coller ; elle ne fait qu'afficher et envoyer ce que
-     le démon sait déjà faire, interface du § 9.1 ; le rendu de `tools/oric_ecran.py` et
-     de `remote_tk.py` sert de référence) ; (2) `tools/essai_oric.py`, essais du vrai Oric
-     pilotés par Claude (batterie tirée de `essais-materiel.md`).
+     Suite prévue (ordre fixé par Pierre, 02/11/2026) : `tools/essai_oric.py`, essais
+     du vrai Oric pilotés par Claude (batterie tirée de `essais-materiel.md`).
      Pour mesurer ou essayer sur le vrai Oric : démon sur le Mac de Pierre
      (`python3 tools/remote.py serve`, `REMOTE MAC` ; `10.0.0.7:8040` sur son réseau, joint
      par le lien avec son Mac) ou sur simon (`10.0.0.39:8040`).

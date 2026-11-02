@@ -4,8 +4,8 @@
 L'Oric appelle le démon par son modem (REMOTE hote, port 2324) ; le démon
 tient une copie de l'écran de l'Oric, la met à jour en comparant des totaux
 (docs/console-distance.md § 3, 4), et sert une interface HTTP locale (§ 9.1)
-à la fenêtre tkinter (tools/remote_tk.py), à la page web et à la ligne de
-commande ci-dessous.
+à la fenêtre tkinter (tools/remote_tk.py), à la page web (tools/remote.html,
+servie sur GET /) et à la ligne de commande ci-dessous.
 
     remote.py serve [--port 2324] [--http 8040] [--lent] [--log FICHIER]
         le démon ; --lent : un octet toutes les 25 ms vers l'Oric ; journal
@@ -46,7 +46,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-01.4"        # changée à chaque modification du démon
+VERSION = "2026-11-02.2"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41}
@@ -436,11 +436,12 @@ def demon(port, http, lent, fichier=None):
                 except OSError as err:
                     t = "journal illisible : %s\n" % err
                 self._rep(200, t.encode(), "text/plain; charset=utf-8")
-            elif u.path == "/":
-                self._rep(200, "<!doctype html><meta charset=utf-8><title>CP/A a distance"
-                          "</title><p>CP/A a distance : la page web viendra (lot 4). "
-                          "En attendant : tools/remote_tk.py, ou /ecran.".encode(),
-                          "text/html; charset=utf-8")
+            elif u.path in ("/", "/index.html"):
+                try:
+                    self._rep(200, oe.page_web(), "text/html; charset=utf-8")
+                except (OSError, ValueError) as err:
+                    self._rep(500, ("page web impossible : %s\n" % err).encode(),
+                              "text/plain; charset=utf-8")
             else:
                 self._rep(404, b"inconnu\n", "text/plain")
 

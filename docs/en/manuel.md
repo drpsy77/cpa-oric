@@ -826,6 +826,7 @@ next request.
 
 On the Mac:
 
+    http://localhost:8040                            web page (browser, phone)
     python3 tools/remote_tk.py                       window (the Oric's screen, keyboard)
     python3 tools/remote.py touches $'DIR\n'          types (run_test.sh notation)
     python3 tools/remote.py coller letter.txt        a text, as typing
@@ -836,6 +837,11 @@ On the Mac:
   (EDIT, CMDER, HEX, ASM, LOGO...), survives a warm start, and goes off at cold start.
   `REMOTE MAC` in `AUTO.BAT` puts the Oric at the Mac's disposal as soon as it starts.
 - The Oric's keyboard stays active: both keyboards fill the same buffer.
+- The web page is served by the daemon (`python3 tools/remote.py serve`): from a phone,
+  `http://daemon-address:8040`. Buttons FUNCT, ESC, TAB, CTRL and SHIFT (for the next
+  key), arrows and RETURN, `^C`, Clavier (the phone's keyboard), Coller (paste), RESET (two
+  presses). On the computer: F1 FUNCT; Cmd-V on the Mac (elsewhere the Coller button, as Ctrl-V goes to the Oric)
+  sends the clipboard.
 - The whole text mode is seen, status line and menus included; in SPLIT, the text lines
   only; in full-screen HIRES, the window says "Ecran graphique".
 - A pasted text (`remote.py coller`, F9 in the window) arrives as very fast typing, at the

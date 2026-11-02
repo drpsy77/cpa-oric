@@ -155,6 +155,12 @@ def servir(ecran, port):
                 depuis = int(q.get("depuis", ["0"])[0])
                 attendre = min(float(q.get("attendre", ["0"])[0]), 5.0)
                 self._rep(200, json.dumps(ecran.etat(depuis, attendre)).encode())
+            elif u.path in ("/", "/index.html"):
+                try:
+                    self._rep(200, oe.page_web(), "text/html; charset=utf-8")
+                except (OSError, ValueError) as err:
+                    self._rep(500, ("page web impossible : %s\n" % err).encode(),
+                              "text/plain; charset=utf-8")
             else:
                 self._rep(404, b"inconnu\n", "text/plain")
 
@@ -180,7 +186,7 @@ def servir(ecran, port):
 
     srv = ThreadingHTTPServer(("", port), H)
     srv.daemon_threads = True
-    print("faux demon : http://localhost:%d/ecran" % port, flush=True)
+    print("faux demon : http://localhost:%d/" % port, flush=True)
     srv.serve_forever()
 
 

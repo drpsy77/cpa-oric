@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#16161a">
+<title>CP/A a distance</title>
+<!--
+  Console à distance de CP/A : la page web (docs/console-distance.md § 9).
+  Servie par tools/remote.py (et tools/faux_demon.py) sur GET /, la police de
+  CP/A insérée à la place du marqueur POLICE ci-dessous (src/font.s, dépliée
+  par tools/oric_ecran.py). Elle ne parle qu'à l'interface du démon (§ 9.1) :
+  GET /ecran en attente longue, POST /touches, /coller, /reset.
+  ?demon=http://adresse:8040 : parler à un autre démon que celui qui sert la page.
+-->
+<style>
+:root {
+  --fond: #16161a; --barre: #232329; --bouton: #34343c; --bouton-actif: #5a5a68;
+  --texte: #e8e8ee; --pale: #9a9aa8; --vert: #3ddc6a; --rouge: #ff5a5a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--fond); color: var(--texte);
+  font: 14px/1.3 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+body { display: flex; flex-direction: column; overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#etat { display: flex; gap: 14px; align-items: baseline; padding: 6px 12px; background: var(--barre);
+  white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+#etat b { font-weight: 600; }
+#hote { color: var(--pale); overflow: hidden; text-overflow: ellipsis; }
+#voyant { font: 700 15px ui-monospace, Menlo, monospace; padding: 0 6px; border-radius: 3px;
+  background: #444; color: #ccc; }
+#voyant.R { background: var(--vert); color: #000; }
+#voyant.r { background: var(--rouge); color: #000; }
+#delai { margin-left: auto; color: var(--pale); }
+#cadre { flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: 6px; }
+#ecran { image-rendering: pixelated; image-rendering: crisp-edges; background: #000;
+  box-shadow: 0 0 0 1px #000, 0 4px 24px rgba(0,0,0,.6); touch-action: manipulation; }
+#cadre.focus #ecran { box-shadow: 0 0 0 2px #5b8cff, 0 4px 24px rgba(0,0,0,.6); }
+#message { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: rgba(20,20,26,.92); border: 1px solid #555; border-radius: 6px; padding: 10px 16px;
+  text-align: center; white-space: pre-line; pointer-events: none; }
+#message:empty { display: none; }
+#saisie { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; opacity: 0; border: 0;
+  padding: 0; resize: none; font-size: 16px; }
+#boutons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 6px 8px 8px;
+  background: var(--barre); }
+#boutons .groupe { display: flex; gap: 6px; }
+button { font: 600 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--texte);
+  background: var(--bouton); border: 0; border-radius: 6px; padding: 9px 11px; min-width: 42px;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none; cursor: pointer; }
+button:active, button.actif { background: var(--bouton-actif); }
+button.actif { box-shadow: inset 0 0 0 2px #5b8cff; }
+#reset.confirmer { background: #a33; }
+#collage { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none;
+  align-items: center; justify-content: center; padding: 16px; }
+#collage.ouvert { display: flex; }
+#collage div { background: var(--barre); border-radius: 8px; padding: 12px; width: min(560px, 100%);
+  display: flex; flex-direction: column; gap: 8px; }
+#collage textarea { width: 100%; height: 40vh; font: 14px ui-monospace, Menlo, monospace;
+  background: #111; color: var(--texte); border: 1px solid #444; border-radius: 4px; padding: 6px; }
+#collage p { margin: 0; color: var(--pale); }
+#collage .actions { display: flex; gap: 8px; justify-content: flex-end; }
+@media (max-width: 520px) { button { padding: 9px 8px; min-width: 36px; font-size: 12px; }
+  #etat { gap: 8px; font-size: 12px; } }
+</style>
+</head>
+<body>
+<header id="etat">
+  <b>CP/A a distance</b><span id="hote"></span><span id="voyant">-</span><span id="delai"></span>
+</header>
+<main id="cadre"><canvas id="ecran" width="240" height="224"></canvas><div id="message"></div></main>
+<textarea id="saisie" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+  aria-label="Clavier de l'Oric"></textarea>
+<nav id="boutons">
+  <span class="groupe">
+    <button data-code="128" title="FUNCT : menus (F1)">FUNCT</button>
+    <button data-code="27" title="ESC">ESC</button>
+    <button data-code="29" title="TAB : completion">TAB</button>
+    <button id="ctrl" title="CTRL pour la touche suivante">CTRL</button>
+    <button id="shift" title="SHIFT pour la fleche suivante">SHIFT</button>
+  </span>
+  <span class="groupe">
+    <button data-fleche="0" title="Gauche">&#9664;</button>
+    <button data-fleche="3" title="Haut">&#9650;</button>
+    <button data-fleche="2" title="Bas">&#9660;</button>
+    <button data-fleche="1" title="Droite">&#9654;</button>
+    <button data-code="13" title="RETURN : valide (menus, ligne de commande)">RETURN</button>
+  </span>
+  <span class="groupe">
+    <button data-code="3" title="CTRL-C">^C</button>
+    <button id="clavier" title="Clavier du telephone">Clavier</button>
+    <button id="coller" title="Coller un texte (Cmd-V)">Coller</button>
+    <button id="reset" title="Demarrage a chaud (deux appuis)">RESET</button>
+  </span>
+</nav>
+<div id="collage"><div>
+  <p>Coller ici le texte a envoyer a l'Oric (accents retires, fins de ligne en RETURN) :</p>
+  <textarea id="texte-collage"></textarea>
+  <div class="actions"><button id="annuler">Annuler</button><button id="envoyer">Envoyer</button></div>
+</div></div>
+<script>
+"use strict";
+// Police de CP/A : 128 glyphes de 8 rangées de 6 points (bit 5 = point de gauche).
+const POLICE = /*POLICE*/[];
+const COLS = 40, ROWS = 28, LARG = 240, HAUT = 224;
+const RVB = [[0,0,0],[255,0,0],[0,255,0],[255,255,0],[0,0,255],[255,0,255],[0,255,255],[255,255,255]];
+const CLIGN = 320;                       // demi-période du clignotement (ms)
+const FUNCT = 0x80;
+const params = new URLSearchParams(location.search);
+const BASE = (params.get("demon") || "").replace(/\/$/, "");
+
+const toile = document.getElementById("ecran");
+const ctx = toile.getContext("2d");
+const image = ctx.createImageData(LARG, HAUT);
+const cadre = document.getElementById("cadre");
+const saisie = document.getElementById("saisie");
+const $ = id => document.getElementById(id);
+
+let lignes = Array.from({length: ROWS}, () => new Uint8Array(COLS).fill(32));
+let curseur = [0, 0, false], mode = 0, liaison = "?", hote = "", delai = null, recu = 0;
+let eteint = false, injoignable = "";
+const mods = {ctrl: false, shift: false};
+
+// --- rendu : règles de l'ULA en mode texte (comme tools/oric_ecran.py) --------
+function rendreLigne(n) {
+  const graphique = mode & 0x7F;
+  const y0 = n * 8, d = image.data;
+  const point = (x, y, c) => { const i = ((y0 + y) * LARG + x) * 4, v = RVB[c];
+    d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = 255; };
+  if (graphique === 2 || (graphique === 1 && n < 16)) {      // image : non transmise
+    for (let y = 0; y < 8; y++) for (let x = 0; x < LARG; x++)
+      point(x, y, (graphique === 1 || n % 2 === 0) && y % 2 === 0 && x % 2 === 0 ? 4 : 0);
+    return;
+  }
+  let l = lignes[n];
+  if (curseur[2] && curseur[1] === n && curseur[0] < COLS && !eteint) {
+    l = l.slice(); l[curseur[0]] ^= 0x80;
+  }
+  let encre = 7, papier = 0, double = false, clign = false;
+  for (let col = 0; col < COLS; col++) {
+    const b = l[col], c = b & 0x7F, inv = b & 0x80 ? 7 : 0, x0 = col * 6;
+    if (c < 32) {                                            // attribut
+      if (c < 8) encre = c;
+      else if (c < 16) { double = !!(c & 1); clign = !!(c & 4); }
+      else if (c < 24) papier = c - 16;
+      const fond = papier ^ inv;
+      for (let y = 0; y < 8; y++) for (let k = 0; k < 6; k++) point(x0 + k, y, fond);
+      continue;
+    }
+    const fond = papier ^ inv;
+    const av = clign && eteint ? fond : encre ^ inv;
+    const g = POLICE[c] || [0, 0x3F, 0x21, 0x21, 0x21, 0x21, 0x3F, 0];
+    for (let y = 0; y < 8; y++) {
+      const v = double ? g[(y + 8 * (n & 1)) >> 1] : g[y];
+      for (let k = 0; k < 6; k++) point(x0 + k, y, v & (0x20 >> k) ? av : fond);
+    }
+  }
+}
+
+function dessiner(nums) {
+  for (const n of nums) rendreLigne(n);
+  if (nums.length) ctx.putImageData(image, 0, 0);
+}
+
+function aClignotement(l) {
+  for (const b of l) { const c = b & 0x7F; if (c >= 8 && c < 16 && (c & 4)) return true; }
+  return false;
+}
+
+setInterval(() => {
+  eteint = !eteint;
+  const nums = [];
+  for (let n = 0; n < ROWS; n++) if (aClignotement(lignes[n])) nums.push(n);
+  if (curseur[2] && curseur[1] < ROWS && !nums.includes(curseur[1])) nums.push(curseur[1]);
+  dessiner(nums);
+}, CLIGN);
+
+// Échelle : entière quand elle tient (lettres nettes), sinon la plus grande possible.
+function ajuster() {
+  const w = cadre.clientWidth - 12, h = cadre.clientHeight - 12;
+  let e = Math.min(w / LARG, h / HAUT);
+  if (e >= 2) e = Math.floor(e);
+  e = Math.max(e, 0.5);
+  toile.style.width = Math.round(LARG * e) + "px";
+  toile.style.height = Math.round(HAUT * e) + "px";
+}
+addEventListener("resize", ajuster);
+new ResizeObserver(ajuster).observe(cadre);
+
+// --- état ------------------------------------------------------------------
+function afficherEtat() {
+  const v = {active: "R", perdue: "r"}[liaison] || "-";
+  $("voyant").textContent = v;
+  $("voyant").className = v;
+  $("hote").textContent = hote || "";
+  const age = delai == null ? null : delai + (Date.now() - recu) / 1000;
+  $("delai").textContent = age == null ? "" : age.toFixed(1).replace(".", ",") + " s";
+  let m = injoignable;
+  if (!m) m = {attente: "En attente de l'appel de l'Oric\n(REMOTE hote sur l'Oric)",
+               perdue: "Liaison perdue"}[liaison] || "";
+  if (!injoignable && (mode & 0x7F) === 2) m = "Ecran graphique (HIRES)";
+  $("message").textContent = m;
+}
+setInterval(afficherEtat, 500);
+
+function appliquer(e) {
+  const nums = new Set();
+  for (const [k, h] of Object.entries(e.lignes || {})) {
+    const n = +k, b = new Uint8Array(COLS);
+    for (let i = 0; i < COLS; i++) b[i] = parseInt(h.substr(2 * i, 2), 16);
+    if (b.some((x, i) => x !== lignes[n][i])) { lignes[n] = b; nums.add(n); }
+  }
+  const ancien = curseur, ancienMode = mode;
+  curseur = e.curseur; mode = e.mode; liaison = e.liaison; hote = e.hote || "";
+  delai = e.delai; recu = Date.now();
+  if (mode !== ancienMode) for (let n = 0; n < ROWS; n++) nums.add(n);
+  if (ancien[0] !== curseur[0] || ancien[1] !== curseur[1])
+    for (const n of [ancien[1], curseur[1]]) if (n < ROWS) nums.add(n);
+  dessiner([...nums]);
+  afficherEtat();
+}
+
+// Attente longue : le démon répond dès qu'une version plus récente paraît.
+async function lire() {
+  let version = 0;
+  for (;;) {
+    const arret = new AbortController(), t = setTimeout(() => arret.abort(), 12000);
+    try {
+      const r = await fetch(BASE + "/ecran?depuis=" + version + "&attendre=5",
+                            {cache: "no-store", signal: arret.signal});
+      const e = await r.json();
+      clearTimeout(t);
+      if (e.version < version) { version = 0; continue; }     // démon relancé
+      version = e.version;
+      injoignable = "";
+      appliquer(e);
+    } catch (err) {
+      clearTimeout(t);
+      version = 0;
+      injoignable = "Demon injoignable\n" + (BASE || location.host);
+      afficherEtat();
+      await new Promise(f => setTimeout(f, 2000));
+    }
+  }
+}
+
+// --- envois, dans l'ordre ---------------------------------------------------
+let chaine = Promise.resolve(), lot = [];
+function poster(chemin, corps) {
+  chaine = chaine.then(() => fetch(BASE + chemin, {method: "POST", body: corps}))
+                 .catch(err => { injoignable = "Envoi impossible\n" + err; afficherEtat(); });
+}
+function touches(codes) {                // regroupées : une frappe rapide part d'un coup
+  if (!lot.length) queueMicrotask(() => { poster("/touches", new Uint8Array(lot)); lot = []; });
+  lot.push(...codes);
+}
+function texte(t) {                      // accents retirés par le démon (comme XFER /T)
+  if (lot.length) { poster("/touches", new Uint8Array(lot)); lot = []; }
+  poster("/coller", t);
+}
+function relacherMods() {
+  mods.ctrl = mods.shift = false;
+  $("ctrl").classList.remove("actif"); $("shift").classList.remove("actif");
+}
+
+// --- clavier ----------------------------------------------------------------
+const FLECHES = {ArrowLeft: 0, ArrowRight: 1, ArrowDown: 2, ArrowUp: 3};
+const SIMPLES = {Enter: 13, Escape: 27, Backspace: 0x7F, Delete: 0x7F, Tab: 29, F1: FUNCT};
+
+function fleche(f, ctrl, shift) { return (ctrl ? 0xF4 : shift ? 0xF0 : 0x08) + f; }
+
+function codeCtrl(ch) {                  // CTRL + caractère -> code du contrat
+  if (/^[a-z]$/i.test(ch)) { const n = ch.toUpperCase().charCodeAt(0) - 64;
+    return n >= 8 && n <= 11 ? n + 20 : n; }          // CTRL-H..K : 28-31
+  if (ch === " " || ch === "@") return 0;
+  if (ch === "[") return 27;
+  return null;
+}
+
+// Un caractère tapé : code direct, CTRL collant, ou texte à passer en ASCII.
+function caractere(ch, ctrl) {
+  if (ctrl) { const k = codeCtrl(ch); if (k != null) touches([k]); relacherMods(); return; }
+  const c = ch.charCodeAt(0);
+  if (ch.length === 1 && c >= 32 && c < 127) touches([c]);
+  else texte(ch);
+  relacherMods();
+}
+
+document.addEventListener("keydown", e => {
+  if ($("collage").classList.contains("ouvert")) return;
+  if (e.isComposing || e.keyCode === 229) return;   // clavier virtuel : voir beforeinput
+  if (e.metaKey) return;                            // Cmd-V, Cmd-R... au navigateur
+  const k = e.key, ctrl = e.ctrlKey || mods.ctrl, shift = e.shiftKey || mods.shift;
+  let code = null;
+  if (k in FLECHES) code = fleche(FLECHES[k], ctrl, shift);
+  else if (k in SIMPLES) code = SIMPLES[k];
+  else if (k.length === 1 || [...k].length === 1) {
+    e.preventDefault(); caractere(k, ctrl); return;
+  }
+  if (code == null) return;
+  e.preventDefault();
+  touches([code]);
+  relacherMods();
+});
+
+// Clavier du téléphone : rien n'entre dans la zone de saisie, tout part à l'Oric.
+saisie.addEventListener("beforeinput", e => {
+  e.preventDefault();
+  const t = e.inputType;
+  if (t === "insertLineBreak" || t === "insertParagraph") { touches([13]); relacherMods(); }
+  else if (t.startsWith("deleteContent")) { touches([0x7F]); relacherMods(); }
+  else if (e.data) {
+    if ([...e.data].length === 1) caractere(e.data, mods.ctrl);
+    else texte(e.data);
+  }
+});
+saisie.addEventListener("input", () => { saisie.value = ""; });
+
+document.addEventListener("paste", e => {
+  if ($("collage").classList.contains("ouvert")) return;
+  const t = e.clipboardData && e.clipboardData.getData("text");
+  if (t) { e.preventDefault(); texte(t); }
+});
+
+const tactile = matchMedia("(pointer: coarse)").matches;
+function prendreFocus() { saisie.focus({preventScroll: true}); }
+saisie.addEventListener("focus", () => cadre.classList.add("focus"));
+saisie.addEventListener("blur", () => cadre.classList.remove("focus"));
+cadre.addEventListener("click", prendreFocus);
+if (!tactile) { prendreFocus(); addEventListener("focus", prendreFocus); }
+
+// --- boutons ----------------------------------------------------------------
+// pointerdown sans défaut : le bouton ne prend pas le focus (le clavier du
+// téléphone reste ouvert, la frappe continue d'aller à l'Oric).
+for (const b of document.querySelectorAll("#boutons button"))
+  b.addEventListener("pointerdown", e => e.preventDefault());
+
+for (const b of document.querySelectorAll("[data-code]"))
+  b.addEventListener("click", () => { touches([+b.dataset.code]); relacherMods(); });
+for (const b of document.querySelectorAll("[data-fleche]"))
+  b.addEventListener("click", () => { touches([fleche(+b.dataset.fleche, mods.ctrl, mods.shift)]);
+    relacherMods(); });
+for (const nom of ["ctrl", "shift"])
+  $(nom).addEventListener("click", () => { mods[nom] = !mods[nom];
+    $(nom).classList.toggle("actif", mods[nom]); });
+$("clavier").addEventListener("click", () => {
+  if (document.activeElement === saisie && tactile) saisie.blur(); else prendreFocus(); });
+
+let attenteReset = null;
+$("reset").addEventListener("click", () => {
+  const b = $("reset");
+  if (attenteReset) {
+    clearTimeout(attenteReset); attenteReset = null;
+    b.classList.remove("confirmer"); b.textContent = "RESET";
+    if (lot.length) { poster("/touches", new Uint8Array(lot)); lot = []; }
+    poster("/reset", "");
+    return;
+  }
+  b.classList.add("confirmer"); b.textContent = "Sur ?";
+  attenteReset = setTimeout(() => { attenteReset = null; b.classList.remove("confirmer");
+    b.textContent = "RESET"; }, 3000);
+});
+
+function ouvrirCollage() {
+  $("collage").classList.add("ouvert");
+  $("texte-collage").value = "";
+  $("texte-collage").focus();
+}
+function fermerCollage() { $("collage").classList.remove("ouvert"); if (!tactile) prendreFocus(); }
+$("coller").addEventListener("click", async () => {
+  // Presse-papiers lu directement quand le navigateur le permet (localhost,
+  // https) ; sinon (téléphone en http), une zone où coller le texte.
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.readText) throw 0;
+    const t = await navigator.clipboard.readText();
+    if (t) { texte(t); return; }
+  } catch (e) { /* rien : zone de collage */ }
+  ouvrirCollage();
+});
+$("annuler").addEventListener("click", fermerCollage);
+$("envoyer").addEventListener("click", () => {
+  const t = $("texte-collage").value;
+  fermerCollage();
+  if (t) texte(t);
+});
+$("collage").addEventListener("keydown", e => { if (e.key === "Escape") fermerCollage(); });
+
+ajuster();
+dessiner([...Array(ROWS).keys()]);
+afficherEtat();
+lire();
+</script>
+</body>
+</html>
