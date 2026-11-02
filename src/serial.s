@@ -24,11 +24,13 @@
 ; =====================================================================
 
 SER_FUNC = 117
-SR_TXMAX = 24                   ; octets émis par IRQ au plus
-SR_WAIT  = 48                   ; attente d'un octet reçu : ~1,2 ms
-SR_BUDG  = 200                  ; attente de l'émetteur par IRQ, en tout : ~6 ms
-                                ;   (LOCI : émetteur libre tout de suite ?
-                                ;   un vrai 6551 : un octet par ms)
+; Plafonds par IRQ (sr_rxn, sr_rxw, sr_txn, sr_bdg), posés avec le port
+; (table sr_par) : un vrai 6551 (Oricutron, carte série) n'a qu'un octet
+; reçu et émet un octet par milliseconde ; le LOCI garde 32 octets reçus,
+; tout de suite lisibles, et prend un octet émis dès que l'USB l'accepte.
+;   sr_rxn : octets reçus au plus ; sr_rxw : attente de chacun après le
+;   premier (pas de 25 µs environ) ; sr_txn : octets émis au plus ;
+;   sr_bdg : attente de l'émetteur, comptée sur toute l'IRQ (pas de 30 µs)
 
 ; ---------------------------------------------------------------------
 ; sr_irq : appelé à 50 Hz par l'IRQ ; ne fait rien si la console est coupée
@@ -39,7 +41,7 @@ sr_irq
         and #2
         bne go
         rts
-go      lda #4                  ; réception : 4 octets au plus
+go      lda sr_rxn              ; réception : sr_rxn octets au plus
         sta sr_cnt
 rx      lda sr_pfx              ; une touche n'est lue que si le tampon
         cmp #$FE                ; du clavier a de la place (sinon elle
@@ -51,10 +53,10 @@ rx      lda sr_pfx              ; une touche n'est lue que si le tampon
         cmp kb_tail
         beq tx
 rx1     ldx #1                  ; premier octet : sans attendre ; les
-        lda sr_cnt              ; suivants : ~1 ms (un vrai 6551 n'en
-        cmp #4                  ; présente qu'un à la fois)
+        lda sr_cnt              ; suivants : sr_rxw (un vrai 6551 n'en
+        cmp sr_rxn              ; présente qu'un à la fois)
         beq rx2
-        ldx #SR_WAIT
+        ldx sr_rxw
 rx2     jsr sr_rsta
         and #$08
         bne rx3
@@ -67,9 +69,9 @@ rx3     jsr sr_rdat
         bne rx
 tx      lda sr_req              ; émission de la trame en cours
         beq r
-        lda #SR_TXMAX
+        lda sr_txn
         sta sr_cnt
-        lda #SR_BUDG
+        lda sr_bdg
         sta sr_bud
 t1      jsr sr_rsta
         and #$10
@@ -307,6 +309,18 @@ sr_call
         bne o23
         iny
         lda (ZP_PTR),y          ; p1
+        ldx #3                  ; plafonds : 6551, ou LOCI ($80)
+        cmp #$80
+        bne pa
+        ldx #7
+pa      ldy #3
+pl      lda sr_par,x
+        sta sr_rxn,y
+        dex
+        dey
+        bpl pl
+        ldy #1
+        lda (ZP_PTR),y
         sta sr_port
         sta sr_rdat+1
         sta sr_wdat+1
@@ -388,6 +402,10 @@ w       jsr const
 eof     lda #$1A
         rts
 .)
+
+; plafonds par IRQ : sr_rxn, sr_rxw, sr_txn, sr_bdg (6551, puis LOCI)
+sr_par  .byt 4, 48, 24, 200
+        .byt 16, 8, 64, 250
 
 ; voyant de la console à distance (draw_flags, colonne 36)
 sr_flg  .asc " R r"

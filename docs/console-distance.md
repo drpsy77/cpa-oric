@@ -135,11 +135,20 @@ une trame refusée est redemandée.
 
 ### Budget sous l'IRQ
 
-| Tâche | Par trame de 1/50 s |
-|---|---|
-| lecture | jusqu'à 4 octets reçus ; le premier sans attendre, les suivants après une attente de ~1,2 ms au plus (un vrai 6551, celui d'Oricutron, n'en présente qu'un par milliseconde ; le LOCI en garde 32, tout de suite lisibles) |
-| totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon |
-| émission | jusqu'à 24 octets (`SR_TXMAX`), tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms (`SR_BUDG`) ; émetteur occupé : la suite à l'IRQ suivante. Un émetteur libre tout de suite (LOCI ?) envoie 24 octets par IRQ presque sans attente ; un vrai 6551 (Oricutron), ~6 |
+Plafonds posés avec le port (fonction 117, op 1 ; table `sr_par` de `src/serial.s`, variables
+`sr_rxn`, `sr_rxw`, `sr_txn`, `sr_bdg` en `$FD23-$FD26`) : un vrai 6551 (Oricutron, carte
+série) n'a qu'un octet reçu et émet au rythme de la ligne ; le LOCI garde 32 octets reçus, tout
+de suite lisibles, et prend un octet émis dès que l'USB l'accepte (son ACIA émulée n'a pas de
+cadence : les 9600 bauds ne sont qu'un réglage transmis au modem).
+
+| Tâche | Par trame de 1/50 s : 6551 | LOCI (`$80`) |
+|---|---|---|
+| lecture | 4 octets au plus ; le premier sans attendre, les suivants après ~1,2 ms au plus | 16 octets au plus (8 touches) ; attente des suivants ~0,2 ms |
+| totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon | idem |
+| émission | 24 octets au plus, tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms ; émetteur occupé : la suite à l'IRQ suivante | 64 octets au plus (une trame `S` entière), attente ~7,5 ms au plus |
+
+Les plafonds se changent sans reconstruire (essais) : `DEBUG`, puis `M FD23 rx at tx bu` ;
+ils reviennent à la table au prochain `REMOTE`.
 
 Mesuré dans Oricutron (9600 bauds, émetteur libre au bout de ~1 ms) : 8 octets par IRQ,
 soit la trame `S` (64 octets) en 8 IRQ (0,16 s), une trame `L` (45 octets) en 6 ; pendant

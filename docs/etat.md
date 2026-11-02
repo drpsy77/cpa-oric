@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F1EE` en français (`$F1C2` en anglais), **marge 985
-octets** (1 029 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F213` en français (`$F1E7` en anglais), **marge 948
+octets** (992 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -236,6 +236,9 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
      avec les commandes, environ un échange sur dix retardé de 1 à 2 s : signature d'un
      paquet perdu sur le WiFi et renvoyé par la pile TCP du Pico (lwIP, délai de renvoi
      d'une seconde au moins) ; à regarder seulement si cela gêne (réglage du firmware).
+     Plafonds du pilote par IRQ selon le port (02/11/2026, 37 octets résidents) :
+     LOCI 16 octets reçus, 64 émis (6551 : 4 et 24, comme avant) ; à mesurer sur le vrai
+     Oric, réglables par `DEBUG` (`docs/console-distance.md` § 4).
      Suite prévue : (1) `tools/essai_oric.py`, essais du vrai Oric pilotés par
      Claude à travers simon (batterie tirée de `essais-materiel.md`) ; (2) XFER avec le
      nouveau firmware du Pico (envoi de 7,8 Ko : moins de 10 s avant) ; (3) la page web.
@@ -493,8 +496,8 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 985 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
-`$FF00` : 10 octets ; variables du BDOS : `$FD23-$FD57` libres, 53 octets). Fait : les tracés
+**Système** (marge 948 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+`$FF00` : 10 octets ; variables du BDOS : `$FD27-$FD57` libres, 49 octets). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
 `g_xbit`). Fait : police rangée sur 5
 octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
