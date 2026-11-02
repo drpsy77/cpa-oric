@@ -7,9 +7,9 @@ travailler sur l'Oric depuis la fenêtre du Mac ou le navigateur d'un téléphon
 console à distance doit survivre aux programmes : elle est dans le BIOS.
 
 Fait : le pilote résident (`src/serial.s`, option `SERIE`), la fonction 117, PUNCH et
-READER, `REMOTE.COM`, le démon `tools/remote.py` et sa ligne de commande, la fenêtre
-tkinter (§ 9.2), le faux démon (§ 9.3) ; essayés dans Oricutron (`tools/test_remote.sh`).
-Reste la page web (lot 4, § 10). Mode d'emploi : `docs/manuel.md`, « Console à distance :
+READER, `REMOTE.COM`, le démon `tools/remote.py` et sa ligne de commande, la page web
+(§ 9), la fenêtre tkinter (§ 9.2), le faux démon (§ 9.3) ; essayés dans Oricutron
+(`tools/test_remote.sh`), la page avec le faux démon. Mode d'emploi : `docs/manuel.md`, « Console à distance :
 REMOTE ».
 
 ## 1. Principe
@@ -328,30 +328,54 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
   (texte comme `tools/screen.py`), `remote.py attendre 'A>' [secondes]` (attend qu'un texte
   paraisse sur l'écran). Avec eux, un script d'essai sur le vrai Oric s'écrit comme ceux
   d'Oricutron.
-- **Page web** (lot 4 ; pour l'instant, `GET /` renvoie une page qui le dit)
-  (`http://localhost:8040`, ou l'adresse du Mac depuis le téléphone) :
-  écran 40 x 28 dessiné avec la police de CP/A (lue dans `src/font.s` par le démon) et
-  les attributs (encre, papier, police secondaire, clignotement) ; touches du navigateur
-  traduites ; bouton « Coller » : un texte du presse-papiers du Mac (copié dans
-  n'importe quelle application) part vers l'Oric comme une suite de touches, accents
-  retirés comme XFER `/T`, fins de ligne en CR. Le programme de l'Oric le reçoit comme une
-  frappe très rapide : dans EDIT, on ouvre un fichier, on colle, on enregistre (un texte
-  du Mac passe ainsi sur l'Oric sans XFER). Le contrôle de flux (§ 4) fait qu'aucune
-  touche ne se perd, quel que soit le rythme d'EDIT.
+- **Page web** (`tools/remote.html`, servie par le démon sur `GET /` :
+  `http://localhost:8040` sur la machine du démon, `http://adresse:8040` depuis un
+  téléphone ou un autre ordinateur ; `?demon=http://adresse:8040` : parler à un autre
+  démon que celui qui sert la page). Un seul fichier, sans bibliothèque, à garder à côté
+  d'`oric_ecran.py` ; le démon y insère la police de CP/A (`page_web()`, lue dans
+  `src/font.s`). Fichier ou police absents : réponse 500 qui le dit.
 
-        +------------------------------------------+
-        | CP/A a distance   192.168.1.30   R  0,4 s |
-        +------------------------------------------+
-        |                                          |
-        |        ecran 40 x 28 (police Oric)       |
-        |                                          |
-        +------------------------------------------+
-        | [FUNCT] [CTRL-C] [ESC] [RESET]  [Coller] |
-        +------------------------------------------+
+        +-------------------------------------------------+
+        | CP/A a distance   10.0.0.2   R             0,4 s |
+        +-------------------------------------------------+
+        |                                                 |
+        |        ecran 40 x 28 (police de CP/A)           |
+        |                                                 |
+        +-------------------------------------------------+
+        | FUNCT ESC TAB CTRL SHIFT   < ^ v >  RETURN      |
+        | ^C  Clavier  Coller  RESET                      |
+        +-------------------------------------------------+
 
-  Touches : flèches `$08-$0B`, avec SHIFT `$F0-$F3`, avec CTRL `$F4-$F7` ; Ctrl + lettre
-  1-26 (H à K : 28-31) ; Tab 29 ; Retour arrière et Suppr `$7F` ; Entrée 13 ; Échap 27 ;
-  FUNCT : F1 (et le bouton, pour le téléphone).
+  - Rendu : celui d'`oric_ecran.py` (§ 9.2), refait en JavaScript, identique au point
+    près (vérifié sur la mire du faux démon) ; curseur et clignotement à 0,32 s ; en
+    SPLIT, lignes 0 à 15 hachurées ; en HIRES plein écran, « Ecran graphique ».
+    Échelle entière quand elle tient (lettres nettes), sinon la plus grande possible.
+  - Ligne d'état : hôte (l'Oric), voyant (`R` active, `r` perdue, `-` attente), âge du
+    dernier cycle complet. Messages sur l'écran : attente de l'appel, liaison perdue,
+    démon injoignable (nouvel essai toutes les 2 s).
+  - Lecture : `GET /ecran` en attente longue (5 s), seules les lignes changées. Envois
+    dans l'ordre, une frappe rapide regroupée en un seul `POST /touches`.
+  - Clavier de l'ordinateur : flèches `$08-$0B`, avec SHIFT `$F0-$F3`, avec CTRL
+    `$F4-$F7` ; Ctrl + lettre 1-26 (H à K : 28-31), Ctrl-Espace et Ctrl-@ 0, Ctrl-[ 27 ;
+    Tab 29 ; Retour arrière et Suppr `$7F` ; Entrée 13 ; Échap 27 ; F1 FUNCT. Un
+    caractère accentué part par `/coller` (accents retirés par le démon). Cmd (Mac) est
+    laissé au navigateur : Cmd-V colle le presse-papiers vers l'Oric, Cmd-R recharge.
+    Certaines combinaisons Ctrl sont gardées par le navigateur (Ctrl-W, Ctrl-T, Ctrl-N
+    dans Chrome) : le bouton CTRL puis la lettre les remplace.
+  - Téléphone : le bouton Clavier ouvre le clavier du téléphone (une zone de saisie
+    invisible : rien n'y reste, chaque caractère part à l'Oric, Retour 13, effacement
+    `$7F`) ; la page se tient dans la partie visible, écran en haut, boutons au-dessus du
+    clavier. Les boutons ne prennent pas le focus : le clavier reste ouvert. CTRL et
+    SHIFT valent pour la touche suivante (lettre ou flèche) ; RETURN à côté des flèches :
+    un menu se parcourt et se valide sans le clavier du téléphone.
+  - Coller : le presse-papiers est lu directement quand le navigateur le permet
+    (`localhost`) ; sinon (téléphone en http), une zone où coller le texte, puis
+    Envoyer. Le texte part par `/coller` (accents retirés comme XFER `/T`, fins de ligne
+    en CR) : dans EDIT, on ouvre un fichier, on colle, on enregistre (un texte du Mac
+    passe ainsi sur l'Oric sans XFER) ; le contrôle de flux (§ 4) fait qu'aucune touche
+    ne se perd.
+  - RESET : deux appuis à moins de 3 s (`Sur ?`), puis `POST /reset` (démarrage à
+    chaud).
 
 ### 9.1 Interface locale du démon
 
@@ -364,7 +388,7 @@ web, la fenêtre tkinter et la ligne de commande s'en servent toutes.
 | `POST /touches` | corps : octets bruts, codes du contrat (FUNCT `$80`), envoyés `$FE k` dans l'ordre ; 204 |
 | `POST /coller` | corps : texte UTF-8 ; accents retirés comme XFER `/T`, fins de ligne en CR, tabulation 29, puis comme `/touches` ; 204 |
 | `POST /reset` | `$FD 'B'` (démarrage à chaud) ; 204 |
-| `GET /` | la page web |
+| `GET /` | la page web (`tools/remote.html`, police insérée) |
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
@@ -416,7 +440,7 @@ Sur le Pi Zero (Raspberry Pi OS avec bureau) : `sudo apt install python3-tk` si
 
 ### 9.3 Essais sans Oric : `tools/faux_demon.py`
 
-Sert l'interface du § 9.1 comme le fera le démon, avec une mire (couleurs, inverse,
+Sert l'interface du § 9.1 (page web comprise) comme le démon, avec une mire (couleurs, inverse,
 double hauteur, clignotement, police entière, invite `A>` qui affiche la frappe) ou des
 vidages d'Oricutron passés à tour de rôle ; il affiche les touches reçues.
 
@@ -464,10 +488,10 @@ fenêtre s'arrête sur une erreur, elle est relancée.
    milieu d'une réponse (l'Oric continue, puis rappelle un nouveau démon) ; refus de
    TERM et XFER, `REMOTE`, `REMOTE OFF`. Ce qu'Oricutron ne montre pas : le voyant `r`
    (son modem accepte toujours l'octet émis).
-4. **Page web** : la fenêtre (rendu fidèle, police et attributs), le clavier, Coller,
-   le téléphone. Elle ne fait qu'afficher et envoyer ce que le démon du lot 3 sait déjà
-   faire. La fenêtre tkinter (§ 9.2) est faite : elle marche avec le démon du lot 3
-   sans changement, s'il suit le § 9.1.
+4. **Page web** (§ 9) : fait. Rendu comparé point par point à `oric_ecran.py`, touches
+   et Coller essayés avec le faux démon (navigateur d'ordinateur et de téléphone
+   simulés), page servie par le démon. Elle ne fait qu'afficher et envoyer ce que le
+   démon du lot 3 sait déjà faire.
 
 À vérifier sur le vrai Oric : `essais-materiel.md` (console à distance).
 

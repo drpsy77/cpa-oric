@@ -27,12 +27,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *221* | ***1101*** |
 | Exemples | 7 | 10 | 27 | 56 | 6 | **106** | 16 | **122** |
-| Outillage PC | 7 | 15 | 36 | 126 | 18 | **202** | 47 | **249** |
-| **Total** | **227** | **82** | **685** | **340** | **213** | **1547** | **359** | **1906** |
+| Outillage PC | 7 | 15 | 39 | 130 | 18 | **209** | 47 | **256** |
+| **Total** | **227** | **82** | **688** | **344** | **213** | **1554** | **359** | **1913** |
 
-Points ajustés (indicatif, § 9) : 1 547 × 1,05 ≈ 1 624.
+Points ajustés (indicatif, § 9) : 1 554 × 1,05 ≈ 1 632.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 217 EI, 83 EO, 71 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 84 EO, 71 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -818,6 +818,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T46 | `remote.py serve` : démon de la console à distance (copie de l'écran, écho rapide, touches au rythme du programme, interface HTTP, nouvel appel qui remplace le précédent) | EI | 2 | 8 | M | 4 |
 | OUT.T47 | `remote.py touches`, `coller`, `ecran`, `attendre` : ligne de commande du démon | EI | 1 | 4 | F | 3 |
 | OUT.T48 | `test_remote.sh` : console à distance de bout en bout dans Oricutron (écran du démon contre le vidage) | EO | 2 | 4 | F | 4 |
+| OUT.T49 | `remote.html` : page web de la console à distance, écran (police de CP/A, attributs, curseur, clignotement, SPLIT, HIRES), état de la liaison | EO | 1 | 9 | F | 4 |
+| OUT.T50 | `remote.html` : clavier de l'ordinateur et du téléphone, boutons (FUNCT, CTRL, SHIFT, flèches), Coller, RESET | EI | 1 | 8 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -957,6 +959,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-10-31 | fenêtre, lot 2 | 0.9 | 1 489 | 354 | 1 843 | 224 | banques de la fenêtre : `CPA.BNK` (PUT, IMG), chargeur, prêt pendant un PUT ; GSAVE, GLOAD, SAVE en banque ; GSAVE par `NOM.$$$`, fichier protégé refusé ; `tools/mkbnk.py` |
 | 2026-11-01 | HOSTS | 0.9 | 1 498 | 355 | 1 853 | 227 | fichier `HOSTS` et appel du modem par les programmes (`ac_dial`, `ac_host` d'`acia_inc.s`) : `TERM hote`, `XFER ... @hote` ; `test_xfer.sh` sans TERM, en deux passes |
 | 2026-11-01 | console à distance, lot 3 | 0.9 | 1 547 | 359 | 1 906 | 230 | pilote série résident (`serial.s`), fonction 117, PUNCH, READER ; `REMOTE.COM` ; démon `remote.py` ; `test_remote.sh` ; appel du modem plus sûr (CR, réponses en retard jetées), `xfer_server.py` qui accepte un nouvel appel |
+| 2026-11-02 | console à distance, lot 4 | 0.9 | 1 554 | 359 | 1 913 | 244 | page web (`tools/remote.html`, servie par le démon) : écran, clavier de l'ordinateur et du téléphone, Coller, RESET ; plafonds du pilote par port ; firmware du Pico |
 
 ## 11. Comparaisons
 

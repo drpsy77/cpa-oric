@@ -850,6 +850,7 @@ repart à la demande suivante du Mac.
 
 Sur le Mac :
 
+    http://localhost:8040                            page web (navigateur, téléphone)
     python3 tools/remote_tk.py                       fenêtre (écran de l'Oric, clavier)
     python3 tools/remote.py touches $'DIR\n'          tape (notation de run_test.sh)
     python3 tools/remote.py coller lettre.txt        un texte, comme une frappe
@@ -861,6 +862,11 @@ Sur le Mac :
   démarrage à froid. `REMOTE MAC` dans `AUTO.BAT` met l'Oric à la disposition du Mac dès
   le démarrage.
 - Le clavier de l'Oric reste actif : les deux claviers remplissent le même tampon.
+- La page web est servie par le démon (`python3 tools/remote.py serve`) : depuis un
+  téléphone, `http://adresse-du-demon:8040`. Boutons FUNCT, ESC, TAB, CTRL et SHIFT (pour
+  la touche suivante), flèches et RETURN, `^C`, Clavier (celui du téléphone), Coller, RESET (deux
+  appuis). Sur l'ordinateur : F1 FUNCT ; Cmd-V sur le Mac (ailleurs le bouton Coller, Ctrl-V partant à l'Oric)
+  envoie le presse-papiers.
 - Tout le mode texte est vu, ligne d'état et menus compris ; en SPLIT, les lignes de texte
   seulement ; en HIRES plein écran, la fenêtre dit « Ecran graphique ».
 - Un texte collé (`remote.py coller`, F9 de la fenêtre) arrive comme une frappe très

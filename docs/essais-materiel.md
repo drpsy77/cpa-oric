@@ -281,6 +281,15 @@ vers un BBS reste réactif.
 gros source pendant que le Mac regarde (temps comparé à sans console) ; `XFER E` de 7,8 Ko
 avec le nouveau firmware du Pico.
 
+**Console à distance, page web** (`docs/console-distance.md` § 9 ; simon à mettre à
+jour d'abord : `tools/remote.html`, `remote.py`, `oric_ecran.py` ; `/version` doit dire
+`2026-11-02.2`) : `http://10.0.0.39:8040` sur le Mac puis sur le téléphone. Écran
+identique à celui de l'Oric (couleurs de la barre de menus, curseur) ; frappe, flèches,
+CTRL et SHIFT (boutons et clavier), F1 et bouton FUNCT (menu ouvert, choisi aux
+flèches et validé par le bouton RETURN) ; Clavier du téléphone (lettres, Retour, effacement ; la page reste lisible
+au-dessus du clavier) ; Coller dans `EDIT NOTE.TXT` (Cmd-V sur le Mac ; zone de collage
+sur le téléphone), puis `^S` et `TYPE NOTE.TXT` ; RESET (deux appuis) pendant CMDER.
+
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
 `python3 tools/remote_tk.py` ; dans `HOSTS`, `mac` sans port (2324 par défaut pour REMOTE) :
