@@ -177,7 +177,11 @@ sr_cnt      = $FD1F     ;   octets restants dans l'IRQ
 sr_t0       = $FD20     ;   PUNCH : départ du délai
 sr_bud      = $FD21     ;   attente de l'émetteur restante dans l'IRQ
 gfx_ko      = $FD22     ; <> 0 : banque GFX introuvable, plus cherchée avant un MODE (gfx.s)
-                        ; $FD23-$FD57 : libres
+sr_rxn      = $FD23     ; pilote série : octets reçus par IRQ au plus
+sr_rxw      = $FD24     ;   attente de chacun après le premier
+sr_txn      = $FD25     ;   octets émis par IRQ au plus
+sr_bdg      = $FD26     ;   attente de l'émetteur par IRQ (posés avec le port)
+                        ; $FD27-$FD57 : libres
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C

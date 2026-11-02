@@ -277,6 +277,10 @@ revérifier. Corriger l'adresse de `mac` dans `HOSTS` (`EDIT HOSTS`), lancer
 distance mesurée, voir « Vérifié ») : `XFER E` de 7,8 Ko (avant : moins de 10 s) ; `TERM`
 vers un BBS reste réactif.
 
+**Console à distance, plafonds du LOCI** (16 octets reçus, 64 émis par IRQ) : Claude mesure
+par simon (écho, `VER`, écran entier) et règle les plafonds par `DEBUG` ; un texte de quelques
+Ko collé dans EDIT ; ASM d'un gros source pendant que le Mac regarde.
+
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
 `python3 tools/remote_tk.py` ; dans `HOSTS`, `mac` sans port (2324 par défaut pour REMOTE) :
