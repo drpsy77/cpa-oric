@@ -22,7 +22,7 @@ MODULES = {
     "rline.s":    ("ccp", "lecture de ligne (BDOS 10) : édition, historique, complétion"),
     "ccp.s":      ("ccp", "CCP : prompt, table et commandes internes"),
     "menu.s":     ("menu", "menus déroulants (FUNCT), barre du prompt, voyants"),
-    "gfx.s":      ("bdos", "graphisme du SPLIT (BDOS 115)"),
+    "gfx.s":      ("bdos", "graphisme du SPLIT (BDOS 115) : modes, aiguillage ; tracés en banque GFX"),
     "ccp_gfx.s":  ("ccp", "commandes de dessin du CCP"),
     "snd.s":      ("bdos", "son AY-3-8912 (BDOS 116)"),
     "serial.s":   ("bios", "pilote série, console à distance (BDOS 117, PUNCH, READER)"),
@@ -32,7 +32,7 @@ MODULES = {
     "put.s":      ("ccp", "PUT : partie résidente (la suite est dans la fenêtre)"),
     "bank.s":     ("ccp", "chargeur des banques de la fenêtre (CPA.BNK)"),
     "script.s":   ("ccp", "scripts .BAT (DO, $1-$9, AUTO.BAT)"),
-    "tables.s":   ("data", "tables du graphisme (g_xcol, g_xbit)"),
+    "tables.s":   ("data", "tables des tracés du SPLIT (g_xcol, g_xbit)"),
     "font.s":     ("data", "police, 5 octets par caractère (dépliée par font_init)"),
 }
 BIOS_PARTIES = [  # (début du commentaire dans bios.s, nom)
@@ -116,8 +116,9 @@ def zones(et):
         (E["scr_par"], E["scr_par"] + 80, "work", "scr_par", "paramètres $1-$9 du script"),
         (E["scr_par"] + 80, E["WIN"], "free", "libre", ""),
         (E["WIN"], E["win_put_end"], "win", "fenêtre : banque PUT",
-         "chargée avec le système ; ou IMG (GSAVE, GLOAD, SAVE), lue dans CPA.BNK, jusqu'à %04X"
-         % E["img_bank_end"]),
+         "chargée avec le système ; ou IMG (GSAVE, GLOAD, SAVE), jusqu'à %04X ; ou GFX "
+         "(tracés du SPLIT), jusqu'à %04X sur le tampon de PUT ; lues dans CPA.BNK"
+         % (E["img_bank_end"] - 1, E["gfx_bank_end"] - 1)),
         (E["win_put_end"], E["PUTBUF"], "free", "marge de PUT", ""),
         (E["PUTBUF"], E["PUTBUF"] + 768, "win", "tampon de PUT",
          "768 octets ; au démarrage à froid, le code de ce démarrage (%04X-%04X) ; "

@@ -284,9 +284,9 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A06 | Complétion des noms et des commandes (préfixe commun, lecteurs parcourus, liste des possibles) | `rline.s` | 3 |
 | SYS.A07 | Recherche des programmes et des scripts sur les lecteurs (lecteurs lus, sans réponse, LOCI) | `ccp_disk.s` | 3 |
 | SYS.A08 | Menus déroulants : dessin, sauvegarde et retour de l'écran, articles qui tapent une commande | `menu.s` | 3 |
-| SYS.A09 | Segment (Bresenham) dans l'image SPLIT | `gfx.s` | 3 |
-| SYS.A10 | Cercle | `gfx.s` | 3 |
-| SYS.A11 | Rectangles, texte dans l'image, attributs, test d'un point | `gfx.s` | 1 |
+| SYS.A09 | Segment (Bresenham) dans l'image SPLIT | `gfx_draw.s` | 3 |
+| SYS.A10 | Cercle | `gfx_draw.s` | 3 |
+| SYS.A11 | Rectangles, texte dans l'image, attributs, test d'un point | `gfx_draw.s` | 1 |
 | SYS.A12 | Son AY : notes en périodes, durées sous IRQ, enveloppe, départ simultané | `snd.s` | 3 |
 | SYS.A13 | Scripts : lecture ligne à ligne, remplacement de `$1`-`$9` | `script.s` | 1 |
 | SYS.A14 | PUT : sortie en tampon, écrite hors affichage, état du système de fichiers sauvé et rendu | `put.s`, `win.s` | 3 |
@@ -306,7 +306,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.A28 | ERA, REN, SET, TYPE, MEM, POKE, GO : contrôles, décodage des paramètres | `progs/` | 1 |
 | SYS.A29 | Fenêtre : code chargé avec le système hors de la partie résidente (PUT, démarrage à froid), crochets résidents, contenu lu avant l'effacement | `win.s`, `put.s`, `bios.s` | 1 |
 | SYS.A31 | Console à distance : service sous l'IRQ (préfixes, lecture bornée par la place du tampon du clavier, émission bornée par IRQ, abandon au bout de 5 s), trames calculées au fil de l'émission sans tampon (Fletcher par ligne, case du curseur rétablie), ligne lue par une instruction dont l'adresse est posée | `serial.s` | 3 |
-| SYS.A30 | Banques de la fenêtre : chargeur de CPA.BNK (signature, lecture directe par morceaux sans toucher au tampon de PUT), appel d'une routine de banque, prêt de la fenêtre pendant un PUT ; banque assemblée avec le système et découpée par `mkbnk.py` | `bank.s`, `img.s`, `tools/mkbnk.py` | 3 |
+| SYS.A30 | Banques de la fenêtre : chargeur de CPA.BNK (signature, lecture directe par morceaux sans toucher au tampon de PUT), appel d'une routine de banque, prêt de la fenêtre pendant un PUT ; banques (IMG, GFX) assemblées avec le système et découpées par `mkbnk.py` | `bank.s`, `img.s`, `gfx.s`, `tools/mkbnk.py` | 3 |
 
 ## 4. Applications
 

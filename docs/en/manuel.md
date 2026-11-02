@@ -271,10 +271,13 @@ SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still r
 renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BAT` files).
 
 **CPA.BNK** holds parts of the system that do not stay in memory: GSAVE, GLOAD and SAVE (at
-the prompt as well as for programs), and a copy of PUT. It is read when they are used, on the
-current drive then on `A:` to `D:`, like a program; the first GSAVE or GLOAD takes a moment
-longer, the next ones nothing. Without it, or if it comes from another version of CP/A, these
-commands answer `CPA.BNK?` (PUT works as long as it has not made room for GSAVE or GLOAD). It
+the prompt as well as for programs), the SPLIT mode drawing primitives (points, lines,
+rectangles, circles, text, attributes: those of LOGO and of programs that draw through the
+system) and a copy of PUT. It is read when they are used, on the current drive then on `A:` to
+`D:`, like a program; the first GSAVE, GLOAD or drawing takes a moment longer, the next ones
+nothing. Without it, or if it comes from another version of CP/A, these commands answer
+`CPA.BNK?` (once, then drawings draw nothing until the next switch to SPLIT; PUT works as long
+as it has not made room for GSAVE, GLOAD or a drawing). It
 is on every bootable disk; for a disk made by `DISKCOPY A: B: /S`, also copy `CPA.BNK`
 (`COPY A:CPA.BNK B:`).
 
@@ -329,7 +332,7 @@ found on `A:` (LOGO, with `cpa-logo-en.dsk` in `A:`), and so are the libraries (
 GRXASM look for on the project's drive, then on A: to D:; everything produced (`.ASM`,
 `.COM`, `.SYM`, data files) goes to `B:`, and `DIR` only shows the work in progress.
 With a single drive, boot the disk for the task and work on a copy (DISKCOPY) rather than on
-the original. About 408 KB are left on `cpa-en.dsk`.
+the original. About 398 KB are left on `cpa-en.dsk`.
 
 Keys: CTRL-T toggles upper case (indicator `A`, or `a` for lower case, at the end of the menu
 bar), CTRL-C on an empty line at the prompt does a warm start. The RESET button returns to the
@@ -401,7 +404,8 @@ want the pause sets `$02A3` to 0 (public variable, reset to 1 at cold start).
 `PUT RAPPORT.TXT ASM PROG` run the command (built-in or `.COM` program) normally, and everything
 it displays is also written into the file, in CP/M text format (`^Z` at the end). You can then
 read it again with `TYPE` or change it with `EDIT`. During a PUT, the end-of-screen pause is
-suspended. DIR lines, which fill the screen, get their line ending in the file.
+suspended, and SPLIT mode drawings made by the system (LOGO, assembly programs) draw nothing:
+they take PUT's place. GRAPHER, which draws by itself, is not affected. DIR lines, which fill the screen, get their line ending in the file.
 
 How it works: `conout` also stores each character in a 768-byte buffer. Writing to the disk
 in the middle of a display would be dangerous (the display can happen in the middle of a BDOS

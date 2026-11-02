@@ -8,12 +8,13 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F59A` en français (`$F56E` en anglais), **marge 46
-octets** jusqu'à `$F5C8` (le pilote série, option `SERIE`, en prend 660), où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F1EE` en français (`$F1C2` en anglais), **marge 985
+octets** (1 029 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
-banque à la fois avant le tampon de PUT de 768 octets : PUT (marge 2 octets) ou IMG (GSAVE,
-GLOAD, SAVE, lue dans `CPA.BNK` quand elle sert ; marge 4) ; code du démarrage à froid dans le
-tampon, marge 565 (`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
+banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
+GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
+997 octets jusqu'à `$FBFF`, marge 91 : pas de tracé pendant un PUT) ; code du démarrage à
+froid dans le tampon, marge 565 (`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
 l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 
 - console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a`, `P` et `R`/`r`,
@@ -73,9 +74,9 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-400 Ko libres), `cpa-anim.dsk` (la démonstration, 358 Ko libres), `cpa-logo.dsk` (LOGO seul,
-514 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 364 Ko libres), `cpa-notes.dsk` (écrire, 562 Ko libres) ; `CPA.BNK` (1 408 octets,
+398 Ko libres), `cpa-anim.dsk` (la démonstration, 356 Ko libres), `cpa-logo.dsk` (LOGO seul,
+512 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 362 Ko libres), `cpa-notes.dsk` (écrire, 560 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
@@ -214,7 +215,7 @@ Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4)
    - **Console à distance** (`docs/console-distance.md`, schéma animé
      `docs/console-distance.html`) : fait (lot 3, 01/11/2026). Pilote résident
      (`src/serial.s`, 660 octets avec ses crochets : plus que les 500 prévus ; marge du
-     système 46 octets), fonction 117 du BDOS, PUNCH / READER définis (ajouts au contrat),
+     système alors 46 octets), fonction 117 du BDOS, PUNCH / READER définis (ajouts au contrat),
      `REMOTE.COM`, refus de TERM et XFER pendant la console, démon `tools/remote.py` (écho
      rapide, texte collé au rythme du programme, ligne de commande `touches`, `coller`,
      `ecran`, `attendre`), `tools/test_remote.sh` (Oricutron) ; la fenêtre tkinter
@@ -492,8 +493,10 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 46 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG ; page `$FF00` : 10
-octets ; variables du BDOS : `$FD22-$FD57` libres, 54 octets). Fait : police rangée sur 5
+**Système** (marge 985 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+`$FF00` : 10 octets ; variables du BDOS : `$FD23-$FD57` libres, 53 octets). Fait : les tracés
+du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
+`g_xbit`). Fait : police rangée sur 5
 octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).
 
 | Piste | Gain estimé | Prix |
@@ -528,11 +531,14 @@ sert, PUT rechargé de `CPA.BNK`, prêt de la fenêtre pendant un PUT, GSAVE par
 octets rendus : le chargeur, `win_call` et les points d'entrée font ~370 octets, coût fixe ;
 chaque banque suivante rend presque toute sa taille). Le pilote série (660 octets, § 2
 point 4 : console à distance) a pris la marge ; les menus (fonction phare) restent
-résidents.
+résidents. Lot 4 : banque GFX, les tracés du SPLIT (BDOS 115 op 2 à 9, 997 octets) ; elle
+déborde sur le tampon de PUT (jusqu'à `$FBFF`), donc pas de tracé pendant un PUT (LOGO sous
+PUT ne dessine pas ; GRAPHER dessine par `hires.inc`, pas concerné) ; chargée au premier
+tracé, puis de nouveau après GSAVE, GLOAD ou PUT ; `CPA.BNK` passe à 2 blocs (2 560 octets),
+2 Ko de moins sur chaque disquette amorçable.
 
-Pas dans la fenêtre : la complétion des commandes (un chargement à chaque ESC) ; les
-fonctions graphiques (BDOS 115 sauf 12-13, ~1,7 Ko, appelées sans cesse ; `PUT LOG.TXT
-GRAPHER DEMO` doit continuer de marcher) ; `hw_init` et `font_init`, qui servent aussi au
+Pas dans la fenêtre : la complétion des commandes (un chargement à chaque ESC) ; MODE,
+GETMODE, PEN et GCLS de la fonction 115 (le démarrage à chaud et IMG s'en servent) ; `hw_init` et `font_init`, qui servent aussi au
 démarrage à chaud et à `crash_screen` ; `msg_banner` (VER).
 
 Décidé, pas encore fait (lot 3) : options résident / en banque / absent, d'abord par `-D`
@@ -561,7 +567,7 @@ multiple de 2 048) :
   français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
   octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
   compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 408 Ko (408 sur `cpa-en.dsk`) ; le
+- usage à deux disquettes : sur `cpa.dsk` il reste 398 Ko (398 sur `cpa-en.dsk`) ; le
   travail va de préférence sur une disquette de projet en B: (658 Ko), GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - répertoire : 127 fichiers au plus par disquette (entrée 0 : l'étiquette ; un fichier en

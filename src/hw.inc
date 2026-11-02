@@ -176,7 +176,8 @@ sr_len      = $FD1E     ;   longueur de la trame en cours
 sr_cnt      = $FD1F     ;   octets restants dans l'IRQ
 sr_t0       = $FD20     ;   PUNCH : départ du délai
 sr_bud      = $FD21     ;   attente de l'émetteur restante dans l'IRQ
-                        ; $FD22-$FD57 : libres
+gfx_ko      = $FD22     ; <> 0 : banque GFX introuvable, plus cherchée avant un MODE (gfx.s)
+                        ; $FD23-$FD57 : libres
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C
@@ -347,8 +348,10 @@ PUTMAX      = 768       ;   code du démarrage à froid dans l'image
 win_id      = $FDF8     ; contenu de la fenêtre :
 WIN_PUT     = $01       ;   PUT
 WIN_IMG     = $02       ;   IMG (img.s : GSAVE, GLOAD, SAVE)
+WIN_GFX     = $04       ;   GFX (gfx_draw.s : tracés du SPLIT), sans PUT
 WIN_COLD    = $80       ;   code du démarrage à froid (cold.s)
 WIN_END     = PUTBUF    ; une banque s'arrête avant le tampon de PUT
+GFX_END     = $FC00     ; la banque GFX, avant BNK_BUF (tampon de PUT recouvert)
 BNK_BUF     = $FC80     ; chargeur (bank.s) : enregistrement lu, dans la fin
                         ;   du tampon de PUT (libre pendant un prêt)
 BNK_FCB     = $FDB0     ; FCB de CPA.BNK, puis de NOM.$$$ (GSAVE) : CCP_FCB2

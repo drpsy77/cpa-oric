@@ -82,6 +82,20 @@ HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avan
 - RESET pendant le premier `GSAVE` (pendant la lecture de `CPA.BNK`) : retour au prompt, puis
   `GSAVE T` et `PUT L.TXT DIR` marchent.
 
+**Fenêtre, lot 4 : banque GFX, tracés du SPLIT** (`docs/systeme.md` § 6 ; sur
+`cpa-exemples.dsk`, puis `cpa-logo.dsk` et une jumelle anglaise) :
+
+- `GTEST` : l'image habituelle ; dire combien de temps prend le premier (lecture de `CPA.BNK`
+  sur le LOCI), puis un deuxième `GTEST` ;
+- `GSAVE T`, puis `GTEST` : le tracé recharge la banque (un instant), image juste ;
+- `PUT G.TXT GTEST` : rien n'est dessiné, `TYPE G.TXT` montre `Image dessinee.` ; puis `GTEST`
+  dessine de nouveau ;
+- LOGO : `LOGO DEMO` puis `DEMO`, quelques `AV`, `CERCLE`, `ALLUME?` ; `SAUVEIMAGE`, puis
+  continuer à dessiner ;
+- disquette sans `CPA.BNK` (sur une copie) : `GTEST` répond `CPA.BNK?` une seule fois ;
+- RESET pendant le premier tracé (lecture de `CPA.BNK`) : retour au prompt, puis `GTEST` et
+  `PUT L.TXT DIR` marchent.
+
 **Après la correction du pilote** (un contrôleur qui ne répond plus donne une erreur disque,
 plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en anglais, sur une
 **copie** de disquette :
