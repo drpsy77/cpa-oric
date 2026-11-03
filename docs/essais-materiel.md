@@ -298,6 +298,14 @@ Oricutron ; puis en boucle une heure : jamais bloquée, retour au prompt après 
 scène. Une touche depuis la page : pause de 2 min. Les spectateurs, après installation
 de la passerelle (§ 9.6) : page en lecture seule depuis l'extérieur.
 
+**Console à distance, passerelle** (`docs/console-distance.md` § 9.6 ; démon
+`2026-11-03.1` sur simon) : `tools/passerelle.py --vps NOM`, puis les étapes de
+`logs/passerelle/LISEZMOI.txt`. Depuis le VPS : `ping 10.77.0.2`, `curl` de `/ecran`
+(`lecture_seule`), `POST /touches` en 403. Depuis le téléphone en 4G (hors du WiFi) :
+`https://NOM/cpa/` montre l'Oric, sans boutons, « en direct, lecture seule - 1 en
+ligne » ; la page de la maison (`http://10.0.0.39:8040`) dit « 1 spect. » et garde le
+clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
+
 **Console à distance** (`docs/manuel.md`, « Console à distance : REMOTE » ;
 `docs/console-distance.md`). Sur le Mac : `python3 tools/remote.py serve`, puis
 `python3 tools/remote_tk.py` ; dans `HOSTS`, `mac` sans port (2324 par défaut pour REMOTE) :

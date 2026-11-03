@@ -873,7 +873,8 @@ Sur le Mac :
   tuiles de couleur et horloge en LORES), scènes et pauses tirées au hasard ; elle
   s'arrête deux minutes dès qu'on tape depuis la page ou la fenêtre. Avec
   `remote.py serve --spectateurs adresse`, les visiteurs venus de cette adresse (une
-  passerelle qui publie la page sur Internet, § 9.6) regardent sans pouvoir taper.
+  passerelle qui publie la page sur Internet, § 9.6) regardent sans pouvoir taper ;
+  `tools/passerelle.py` prépare les fichiers de cette passerelle (WireGuard, Apache).
 - Tout le mode texte est vu, ligne d'état et menus compris ; en SPLIT, les lignes de texte
   seulement ; en HIRES plein écran, la fenêtre dit « Ecran graphique ».
 - Un texte collé (`remote.py coller`, F9 de la fenêtre) arrive comme une frappe très

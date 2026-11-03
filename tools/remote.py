@@ -8,15 +8,17 @@ tient une copie de l'écran de l'Oric, la met à jour en comparant des totaux
 servie sur GET /) et à la ligne de commande ci-dessous.
 
     remote.py serve [--port 2324] [--http 8040] [--lent] [--log FICHIER]
-                    [--spectateurs ADRESSES]
+                    [--spectateurs ADRESSES] [--max-spectateurs N]
         le démon ; --lent : un octet toutes les 25 ms vers l'Oric ; journal
         dans logs/remote.log du dépôt (par défaut ; 1 Mo, trois anciens
         gardés) : version, commit, paramètres, appels, chaque cycle qui
         change l'écran (durées), attentes dépassées, trames refusées, et un
         bilan par minute. Aussi lisible par HTTP : /journal?n=200, /version.
-        --spectateurs 10.8.0.1,192.168.2.0/24 : ces clients (la passerelle
+        --spectateurs 10.77.0.1,192.168.2.0/24 : ces clients (la passerelle
         qui publie la page sur Internet) ne font que regarder : touches,
-        coller, reset, journal et version refusés (403)
+        coller, reset, journal et version refusés (403), appel de l'Oric
+        refusé ; chacun compté par son adresse réelle (X-Forwarded-For de la
+        passerelle) ; au-delà de --max-spectateurs (défaut 40), réponse 503
     remote.py touches TEXTE        frappe, notation de tools/run_test.sh :
         \\n Entrée, ~ DEL, \\x1b ESC, \\x01-\\x04 flèches G D H B, \\x05 FUNCT,
         \\x1c préfixe CTRL, \\x0f préfixe SHIFT, | pause 3 s, \\x06 démarrage
@@ -51,7 +53,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-02.3"        # changée à chaque modification du démon
+VERSION = "2026-11-03.1"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41}
@@ -351,7 +353,40 @@ def commit_git():
         return "? (git absent)"
 
 
-def demon(port, http, lent, fichier=None, spectateurs=()):
+class Public:
+    """Spectateurs vus depuis moins de PRESENCE s (une attente longue de la
+    page dure 5 s), comptés par leur adresse réelle."""
+    PRESENCE = 20
+
+    def __init__(self, maxi, journal):
+        self.maxi, self.journal = maxi, journal
+        self.vus = {}
+        self.verrou = threading.Lock()
+
+    def _purger(self, maintenant):
+        for qui in [q for q, t in self.vus.items() if maintenant - t > self.PRESENCE]:
+            del self.vus[qui]
+            self.journal("spectateur parti : %s (%d en ligne)" % (qui, len(self.vus)))
+
+    def present(self, qui):
+        """Note qui ; False si la salle est pleine (nouveau venu refusé)."""
+        with self.verrou:
+            maintenant = time.time()
+            self._purger(maintenant)
+            if qui not in self.vus:
+                if len(self.vus) >= self.maxi:
+                    return False
+                self.journal("spectateur : %s (%d en ligne)" % (qui, len(self.vus) + 1))
+            self.vus[qui] = maintenant
+            return True
+
+    def nombre(self):
+        with self.verrou:
+            self._purger(time.time())
+            return len(self.vus)
+
+
+def demon(port, http, lent, fichier=None, spectateurs=(), max_spect=40):
     ecran = Ecran()
     envois = queue.Queue()
     ici = os.path.dirname(os.path.abspath(__file__))
@@ -375,9 +410,21 @@ def demon(port, http, lent, fichier=None, spectateurs=()):
              "pid": os.getpid(), "arguments": sys.argv[1:], "journal": os.path.abspath(fichier),
              "parametres": {"port": port, "http": http, "lent": lent, "LOT": LOT,
                             "PAR_TOUCHE": PAR_TOUCHE, "REPOS": REPOS, "PERDUE": PERDUE, "DELAI": DELAI, "ECHECS_SUITE": ECHECS_SUITE,
-                            "SUITE": SUITE, "spectateurs": [str(r) for r in spectateurs]}}
+                            "SUITE": SUITE, "spectateurs": [str(r) for r in spectateurs],
+                            "max_spectateurs": max_spect}}
     ecran.infos = infos
     journal("=== démarrage : %s" % json.dumps(infos, ensure_ascii=False))
+
+    public = Public(max_spect, journal)
+
+    def de_passerelle(adresse):
+        try:
+            ip = ipaddress.ip_address(adresse)
+        except ValueError:
+            return False
+        if ip.version == 6 and ip.ipv4_mapped:
+            ip = ip.ipv4_mapped
+        return any(ip in r for r in spectateurs)
 
     def servir_oric():
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -387,6 +434,10 @@ def demon(port, http, lent, fichier=None, spectateurs=()):
         courant = [None, None]
         while True:
             sock, addr = srv.accept()
+            if de_passerelle(addr[0]):          # seul l'Oric appelle, jamais Internet
+                journal("appel refusé de %s:%d (spectateurs)" % addr[:2])
+                sock.close()
+                continue
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             ancien, fil = courant
@@ -420,13 +471,13 @@ def demon(port, http, lent, fichier=None, spectateurs=()):
             pass
 
         def _spectateur(self):
-            try:
-                ip = ipaddress.ip_address(self.client_address[0])
-            except ValueError:
-                return False
-            if ip.version == 6 and ip.ipv4_mapped:
-                ip = ip.ipv4_mapped
-            return any(ip in r for r in spectateurs)
+            return de_passerelle(self.client_address[0])
+
+        def _qui(self):
+            """Adresse réelle du spectateur : la première de X-Forwarded-For
+            (posée par Apache), sinon celle de la connexion."""
+            x = self.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            return x or self.client_address[0]
 
         def _rep(self, code, corps=b"", type_="application/json"):
             self.send_response(code)
@@ -442,8 +493,13 @@ def demon(port, http, lent, fichier=None, spectateurs=()):
             if u.path == "/ecran":
                 depuis = int(q.get("depuis", ["0"])[0])
                 attendre = min(float(q.get("attendre", ["0"])[0]), 5.0)
+                spect = self._spectateur()
+                if spect and not public.present(self._qui()):
+                    self._rep(503, b"complet\n", "text/plain")
+                    return
                 e = ecran.etat(depuis, attendre)
-                if self._spectateur():
+                e["spectateurs"] = public.nombre()
+                if spect:
                     del e["stats"], e["humain"]
                     e["lecture_seule"] = True
                 self._rep(200, json.dumps(e).encode())
@@ -591,7 +647,8 @@ def main(args):
         if "--spectateurs" in args:
             for a in args[args.index("--spectateurs") + 1].split(","):
                 spect.append(ipaddress.ip_network(a.strip(), strict=False))
-        return demon(port, h, lent, fichier, spect)
+        maxi = int(args[args.index("--max-spectateurs") + 1]) if "--max-spectateurs" in args else 40
+        return demon(port, h, lent, fichier, spect, maxi)
     if cmd == "touches":
         lot = bytearray()
         for k in codes_touches(args[0] if args else ""):

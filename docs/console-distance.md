@@ -309,9 +309,9 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
   par minute. Lisible sans console : `GET /journal?n=200`, `GET /version` ; la réponse
   de `/ecran` porte aussi les compteurs (`stats`).
 - **Démon** : `tools/remote.py serve [--port 2324] [--http 8040] [--lent]
-  [--spectateurs ADRESSES]` attend l'Oric, tient la copie de l'écran, sert l'interface
+  [--spectateurs ADRESSES] [--max-spectateurs N]` attend l'Oric, tient la copie de l'écran, sert l'interface
   locale. Un nouvel appel de l'Oric remplace le précédent. `--spectateurs` (adresses ou
-  réseaux, séparés par des virgules : `10.8.0.1`, `192.168.2.0/24`) : les clients venus
+  réseaux, séparés par des virgules : `10.77.0.1`, `192.168.2.0/24`) : les clients venus
   de là regardent seulement (§ 9.6). `--lent` : un octet toutes les 25 ms vers l'Oric (essai ;
   inutile avec le LOCI comme avec Oricutron, dont le modem garde ce qui arrive).
 - **Touches** : celles qui attendent partent d'un coup (1 024 au plus), chacune `$FE k` ;
@@ -400,7 +400,12 @@ web, la fenêtre tkinter et la ligne de commande s'en servent toutes.
 | `GET /version`, `GET /journal?n=N` | version et paramètres du démon ; les N dernières lignes du journal |
 
 Un spectateur (`--spectateurs`) reçoit 403 pour les `POST`, `/version` et `/journal` ;
-sa réponse de `/ecran` n'a ni `stats` ni `humain`, mais `"lecture_seule": true`. Un
+sa réponse de `/ecran` n'a ni `stats` ni `humain`, mais `"lecture_seule": true`. Il est
+compté par son adresse réelle (la première de `X-Forwarded-For`, posée par Apache)
+pendant 20 s après sa dernière demande ; au-delà de `--max-spectateurs` (40), un
+nouveau venu reçoit 503 (la page réessaie 30 s plus tard). `spectateurs` (dans toutes
+les réponses de `/ecran`) : le nombre en ligne, affiché sur la ligne d'état de la page.
+Un appel du port de l'Oric (2324) venu d'une adresse de spectateur est refusé. Un
 `POST` sans l'en-tête `X-Vitrine` (page, fenêtre, ligne de commande) note l'heure d'une
 frappe humaine : la vitrine se met en pause (§ 9.5).
 
@@ -535,23 +540,43 @@ Le démon n'a ni authentification ni chiffrement (réseau de la maison). Pour mo
 l'Oric à d'autres (un forum), une passerelle sur un serveur public (VPS) sert la page en
 HTTPS et ne laisse passer que la lecture ; la box n'ouvre aucun port.
 
-    navigateur --HTTPS--> Apache (VPS) --WireGuard--> démon (simon ou Mac) :8040 --> Oric
+    navigateur --HTTPS--> Apache (VPS) --WireGuard--> démon (simon) :8040 --> Oric
 
-- **Tunnel** : WireGuard entre le VPS (`10.8.0.1`) et la machine du démon (`10.8.0.2`),
-  ouvert par la maison (`PersistentKeepalive = 25`) : aucune redirection de port sur la
-  box. À défaut, un tunnel SSH inversé (`autossh -R 8040:localhost:8040 vps`).
-- **Démon** : `remote.py serve --spectateurs 10.8.0.1` : tout ce qui arrive du tunnel
-  est en lecture seule (§ 9.1), quel que soit le réglage d'Apache.
-- **Apache** (`mod_proxy`, `mod_proxy_http`, certificat Let's Encrypt) :
+    python3 tools/passerelle.py --vps NOM [--chemin /cpa/] [--reseau 10.77.0]
+                                [--utilisateur pi] [--depot /home/pi/cpa-oric]
+
+écrit dans `logs/passerelle/` (pas versionné : les clés ne quittent pas la machine) les
+fichiers à copier et `LISEZMOI.txt`, les commandes dans l'ordre. Clés WireGuard calculées
+par le script (X25519, RFC 7748, vérifiées contre `wg pubkey`), gardées dans
+`cles.json` : relancer le script ne les change pas.
+
+- **Tunnel** : WireGuard entre le VPS (`10.77.0.1`) et la machine du démon
+  (`10.77.0.2`), avec une clé partagée en plus, ouvert par la maison
+  (`PersistentKeepalive = 25`) : aucune redirection de port sur la box ; le VPS écoute
+  en UDP 51820. `10.77.0` plutôt que `10.8.0`, pris par OpenVPN par défaut.
+- **Démon** (`cpa-remote.service`) : `remote.py serve --spectateurs 10.77.0.1` : tout
+  ce qui arrive du tunnel est en lecture seule (§ 9.1), quel que soit le réglage
+  d'Apache, et ne peut pas se faire passer pour l'Oric.
+- **Vitrine** (`cpa-vitrine.service`, § 9.5) sur la même machine, pour que les
+  spectateurs voient quelque chose bouger. Disquette de démonstration en A:.
+- **Apache** (`mod_proxy`, `mod_proxy_http`, certificat déjà en place sur le VPS),
+  `cpa-oric.conf` inclus dans le `VirtualHost` HTTPS :
 
         RedirectMatch ^/cpa$ /cpa/
-        ProxyPass        /cpa/ http://10.8.0.2:8040/ timeout=30
-        ProxyPassReverse /cpa/ http://10.8.0.2:8040/
+        <Location /cpa/>
+            ProxyPass http://10.77.0.2:8040/ timeout=30 retry=5
+            ProxyPassReverse http://10.77.0.2:8040/
+            <LimitExcept GET HEAD>
+                Require all denied
+            </LimitExcept>
+        </Location>
+        <LocationMatch "^/cpa/(journal|version)">
+            Require all denied
+        </LocationMatch>
 
   `timeout=30` laisse passer l'attente longue de `/ecran` (5 s). La barre finale compte :
-  les adresses de la page sont relatives.
-- **Vitrine** (§ 9.5) sur la machine du démon, pour que les spectateurs voient quelque
-  chose bouger. Disquette de démonstration plutôt que de travail dans le lecteur.
+  les adresses de la page sont relatives. Essayé dans un Apache 2.4 local : page,
+  redirection, 403 sur `POST` et `/journal`, 503 au-delà du plafond, page sans boutons.
 - Pour laisser taper quelqu'un de confiance plus tard : un second chemin protégé par mot
   de passe, qui arrive au démon par une autre adresse que celle des spectateurs.
 
