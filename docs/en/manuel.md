@@ -849,7 +849,7 @@ On the Mac:
   at random; it stops for two minutes as soon as someone types from the page or the
   window. With `remote.py serve --spectateurs address`, visitors coming from that address
   (a gateway publishing the page on the Internet, § 9.6) watch without being able to
-  type.
+  type; `tools/passerelle.py` prepares the files for that gateway (WireGuard, Apache).
 - The whole text mode is seen, status line and menus included; in SPLIT, the text lines
   only; in full-screen HIRES, the window says "Ecran graphique".
 - A pasted text (`remote.py coller`, F9 in the window) arrives as very fast typing, at the

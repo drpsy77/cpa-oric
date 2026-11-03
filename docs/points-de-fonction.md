@@ -27,12 +27,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *221* | ***1101*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
-| Outillage PC | 7 | 15 | 39 | 134 | 21 | **216** | 47 | **263** |
-| **Total** | **227** | **82** | **688** | **356** | **216** | **1569** | **360** | **1929** |
+| Outillage PC | 7 | 15 | 39 | 138 | 21 | **220** | 48 | **268** |
+| **Total** | **227** | **82** | **688** | **360** | **216** | **1573** | **361** | **1934** |
 
-Points ajustés (indicatif, § 9) : 1 569 × 1,05 ≈ 1 647.
+Points ajustés (indicatif, § 9) : 1 573 × 1,05 ≈ 1 652.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 87 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 88 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -824,7 +824,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T49 | `remote.html` : page web de la console à distance, écran (police de CP/A, attributs, curseur, clignotement, SPLIT, HIRES), état de la liaison | EO | 1 | 9 | F | 4 |
 | OUT.T50 | `remote.html` : clavier de l'ordinateur et du téléphone, boutons (FUNCT, CTRL, SHIFT, flèches), Coller, RESET | EI | 1 | 8 | F | 3 |
 | OUT.T51 | `vitrine.py` : CP/A montré en boucle (scènes au hasard, frappe humaine, programmes écrits dans EDIT s'ils manquent, reprise, pause quand quelqu'un tape) | EO | 1 | 10 | F | 4 |
-| OUT.T52 | `remote.py --spectateurs` : clients en lecture seule (page, refus des envois, du journal et de la version) | EQ | 1 | 4 | F | 3 |
+| OUT.T52 | `remote.py --spectateurs` : clients en lecture seule (page, refus des envois, du journal, de la version et de l'appel de l'Oric), spectateurs comptés par leur adresse réelle, plafond (503) | EQ | 1 | 7 | F | 3 |
+| OUT.T53 | `passerelle.py` : fichiers de la passerelle (WireGuard du VPS et de la maison, Apache en lecture seule, services du démon et de la vitrine, mode d'emploi), clés gardées | EO | 1 | 9 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -847,6 +848,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.A17 | Scénarios d'enregistrement : disquettes remplies, RESET balayé (fenêtre d'écriture, puis trame par trame) | `test_fichiers.py` | 3 |
 | OUT.A18 | ROM BASIC 1.1 exécutée depuis sa saisie (`CHRGET` recopiée, arrêt avant l'insertion de la ligne), lignes tirées au hasard | `test_bas.py` | 1 |
 | OUT.A19 | Console à distance côté Mac : trames retrouvées dans le flux (début, longueur, total ; réponses en retard jetées), lignes changées trouvées par les totaux de Fletcher, délai de réponse selon les touches envoyées | `remote.py` | 1 |
+| OUT.A20 | Clés WireGuard : X25519 (échelle de Montgomery, RFC 7748), vérifiée par le vecteur de la RFC | `passerelle.py` | 1 |
 
 ## 7. Mesures
 
@@ -865,33 +867,33 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 188 | 11 078 | 1 457 | 840 | 0 | 12 % | — | 51 | — |
-| **Total** | 386 | 77 810 | 6 781 | 3 273 | 2 573 | 8 % | 159 766 | 50 | 102 |
+| Outillage PC | 189 | 11 240 | 1 562 | 888 | 0 | 12 % | — | 51 | — |
+| **Total** | 387 | 77 972 | 6 886 | 3 321 | 2 573 | 8 % | 159 766 | 50 | 102 |
 
 Octets du système : code résident 12 820 (`$C000-$F214`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 724 | 85 | 4,8 | 2 |
-| EDIT | 96 | 20 | 1,3 | 1 |
-| GRAPHER + GRXASM | 978 | 70 | 4,2 | 1 |
-| LOGO | 316 | 64 | 1,6 | 1 |
-| CMDER | 235 | 26 | 2,6 | 1 |
-| HEX | 34 | 9 | 1,8 | 1 |
-| EDSPRITE | 140 | 13 | 2,1 | 1 |
-| VOIR | 78 | — | 4,1 | 1 |
-| USB | 80 | 13 | 0,8 | 1 |
-| ASM | 62 | 10 | 6,9 | 1 |
-| DEBUG | 40 | 12 | 0,5 | 1 |
-| Exemples | 0 | — | 0,0 | 1 |
-| Outillage PC | 349 | — | 1,6 | 2 |
-| Transverse (projet) | 2 807 | — | — | 2 |
-| Traduction anglaise (docs/en) | 2 973 | — | — | 2 |
-| **Total** | 9 912 | 322 | 6,3 | 2 |
+| Système et commandes | 1 724 | 85 | 4,8 | 102 |
+| EDIT | 96 | 20 | 1,3 | 13 |
+| GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
+| LOGO | 316 | 64 | 1,6 | 21 |
+| CMDER | 235 | 26 | 2,6 | 18 |
+| HEX | 34 | 9 | 1,8 | 4 |
+| EDSPRITE | 140 | 13 | 2,1 | 4 |
+| VOIR | 78 | — | 4,1 | 11 |
+| USB | 80 | 13 | 0,8 | 27 |
+| ASM | 62 | 10 | 6,9 | 6 |
+| DEBUG | 40 | 12 | 0,5 | 2 |
+| Exemples | 0 | — | 0,0 | 27 |
+| Outillage PC | 349 | — | 1,6 | 145 |
+| Transverse (projet) | 2 811 | — | — | 112 |
+| Traduction anglaise (docs/en) | 2 973 | — | — | 51 |
+| **Total** | 9 916 | 322 | 6,3 | 247 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 2 commits du 2026-11-02 au 2026-11-02.
+Historique : 247 commits du 2026-10-04 au 2026-11-02.
 
 Réutilisation : 56 106 lignes de code écrites dans `progs/`, 66 296 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
@@ -966,6 +968,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-01 | console à distance, lot 3 | 0.9 | 1 547 | 359 | 1 906 | 230 | pilote série résident (`serial.s`), fonction 117, PUNCH, READER ; `REMOTE.COM` ; démon `remote.py` ; `test_remote.sh` ; appel du modem plus sûr (CR, réponses en retard jetées), `xfer_server.py` qui accepte un nouvel appel |
 | 2026-11-02 | console à distance, lot 4 | 0.9 | 1 554 | 359 | 1 913 | 244 | page web (`tools/remote.html`, servie par le démon) : écran, clavier de l'ordinateur et du téléphone, Coller, RESET ; plafonds du pilote par port ; firmware du Pico |
 | 2026-11-02 | vitrine | 0.9 | 1 569 | 360 | 1 929 | 245 | `tools/vitrine.py` (CP/A montré en boucle, scènes au hasard) ; `MOSAIQUE.GRX`, `HORLOGE.GRX` en LORES ; spectateurs en lecture seule (`--spectateurs`), page sous un chemin (passerelle) |
+| 2026-11-03 | passerelle | 0.9 | 1 573 | 361 | 1 934 | 248 | `tools/passerelle.py` (WireGuard, Apache en lecture seule, services du démon et de la vitrine ; clés X25519 calculées) ; spectateurs comptés et plafonnés, appel de l'Oric refusé depuis la passerelle |
 
 ## 11. Comparaisons
 

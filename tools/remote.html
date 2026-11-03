@@ -127,6 +127,7 @@ const $ = id => document.getElementById(id);
 let lectureSeule = false;
 let lignes = Array.from({length: ROWS}, () => new Uint8Array(COLS).fill(32));
 let curseur = [0, 0, false], mode = 0, liaison = "?", hote = "", delai = null, recu = 0;
+let enLigne = 0;                         // spectateurs en ligne (passerelle)
 let eteint = false, injoignable = "";
 const mods = {ctrl: false, shift: false};
 
@@ -209,7 +210,8 @@ function afficherEtat() {
   const v = {active: "R", perdue: "r"}[liaison] || "-";
   $("voyant").textContent = v;
   $("voyant").className = v;
-  $("hote").textContent = lectureSeule ? "en direct, lecture seule" : hote || "";
+  const salle = enLigne ? " - " + enLigne + (lectureSeule ? " en ligne" : " spect.") : "";
+  $("hote").textContent = (lectureSeule ? "en direct, lecture seule" : hote || "") + salle;
   const age = delai == null ? null : delai + (Date.now() - recu) / 1000;
   $("delai").textContent = age == null ? "" : age.toFixed(1).replace(".", ",") + " s";
   let m = injoignable;
@@ -230,7 +232,7 @@ function appliquer(e) {
   const ancien = curseur, ancienMode = mode;
   if (e.lecture_seule) passerSpectateur();
   curseur = e.curseur; mode = e.mode; liaison = e.liaison; hote = e.hote || "";
-  delai = e.delai; recu = Date.now();
+  delai = e.delai; recu = Date.now(); enLigne = e.spectateurs || 0;
   if (mode !== ancienMode) for (let n = 0; n < ROWS; n++) nums.add(n);
   if (ancien[0] !== curseur[0] || ancien[1] !== curseur[1])
     for (const n of [ancien[1], curseur[1]]) if (n < ROWS) nums.add(n);
@@ -246,6 +248,13 @@ async function lire() {
     try {
       const r = await fetch(BASE + "ecran?depuis=" + version + "&attendre=5",
                             {cache: "no-store", signal: arret.signal});
+      if (r.status === 503) {              // trop de spectateurs : plus tard
+        clearTimeout(t);
+        injoignable = "Trop de spectateurs\npour l'instant :\nnouvel essai dans 30 s";
+        afficherEtat();
+        await new Promise(f => setTimeout(f, 30000));
+        continue;
+      }
       const e = await r.json();
       clearTimeout(t);
       if (e.version < version) { version = 0; continue; }     // démon relancé
