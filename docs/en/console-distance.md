@@ -395,9 +395,17 @@ Python 3 standard library only (nothing to install on the Mac).
     much, otherwise sprites look stretched vertically (as in Oricutron). Two-step
     enlargement: dots repeated up to a whole number of screen pixels per Oric line
     (letters sharp vertically), then width adjusted with smoothing (at most one
-    softened pixel per edge). `?pixels=carres`: square dots, as before. Integer scale
+    softened pixel per edge). Integer scale
     when it fits, in physical pixels (`devicePixelRatio`), otherwise the largest
     possible.
+  - **Affichage** (display; button in the status line, spectators included: nothing
+    goes to the Oric): Points `Tele` (1.23, above) or `Carres` (square, as in
+    Oricutron); Couleurs `Tele` (TV) or `Pures` (00/FF). TV colours measured on a photo
+    of a TV plugged into a real Oric, white balance brought back to white: red
+    `EA2819`, green `79D671`, yellow `FDDE53`, blue `1A74E0`, magenta `E191E6`, cyan
+    `74FFFF` (pure black and white). Default TV and TV; the choice is kept by the
+    browser (`localStorage`); `?pixels=tele|carres`, `?couleurs=tele|pures` in the
+    address force it (direct link).
   - Status line: host (the Oric), light (`R` on, `r` lost, `-` waiting), age of the last
     full cycle. Messages on the screen: waiting for the call, link lost, daemon
     unreachable (new try every 2 s).
@@ -473,6 +481,7 @@ next to the Oric or elsewhere in the house. Python 3 and tkinter only.
 
     python3 tools/remote_tk.py [--demon URL] [--plein-ecran] [--etirer]
                                [--echelle E] [--sans-boutons] [--mem DUMP.mem]
+                               [--pixels tele|carres] [--couleurs tele|pures]
 
 - `--demon`: the daemon to reach (default `http://localhost:8040`). The daemon can run on
   the Pi Zero itself (the Oric calls it: `pizero 192.168.1.40` in `HOSTS`, then
@@ -481,7 +490,9 @@ next to the Oric or elsewhere in the house. Python 3 and tkinter only.
   instance 8 x 10 dots instead of 6 x 8 on a 480 x 320 screen): all cells grow the same
   way, first doubling the spacing column and the empty bottom row, so that the letters
   stay sharp. `--etirer` (stretch) fills the space without keeping the proportions;
-  `--echelle` forces the scale.
+  `--echelle` forces the scale (of the rows). Dots and colours as on the page:
+  `--pixels tele` (default, cells 1.23 times wider) or `carres`, `--couleurs tele`
+  (default) or `pures`.
 - Rendering: that of the ULA (`tools/oric_ecran.py`): ink, paper, inverse, double height,
   blinking (attributes 8-15: bit 0 alternate set, bit 1 double height, bit 2 blinking;
   checked against Oricutron on the EDSPRITE screen); in text mode, the standard and alternate sets as the Oric has them in memory
@@ -496,7 +507,8 @@ next to the Oric or elsewhere in the house. Python 3 and tkinter only.
 - Status line: host, light (`R` on, `r` lost, `-` waiting), age of the last cycle.
   Daemon unreachable or Oric not called yet: a message on the screen; the client tries
   again by itself every 2 s.
-- `--mem`: shows a dump from `tools/run_test.sh`, without a daemon.
+- `--mem`: shows a dump from `tools/run_test.sh`, without a daemon (the dump's font
+  included, in text mode).
 
 On the Pi Zero (Raspberry Pi OS with desktop): `sudo apt install python3-tk` if
 `python3 -c "import tkinter"` fails; the repository (or only `tools/remote_tk.py`,
