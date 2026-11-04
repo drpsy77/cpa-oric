@@ -870,7 +870,9 @@ Sur le Mac :
   envoie le presse-papiers.
 - **Vitrine** (`tools/vitrine.py`, `docs/console-distance.md` § 9.5) : sans personne, CP/A
   se montre en boucle (commandes, complétion, aide, menus, EDIT, CMDER, DEBUG, USBDIR,
-  tuiles de couleur et horloge en LORES), scènes et pauses tirées au hasard ; elle
+  EDSPRITE sur `DUN.SPR`, tuiles de couleur et horloge en LORES) : une scène de
+  spectacle, deux commandes, et ainsi de suite, sans temps mort ; française ou anglaise
+  selon le système ; elle
   s'arrête deux minutes dès qu'on tape depuis la page ou la fenêtre. Avec
   `remote.py serve --spectateurs adresse`, les visiteurs venus de cette adresse (une
   passerelle qui publie la page sur Internet, § 9.6) regardent sans pouvoir taper ;

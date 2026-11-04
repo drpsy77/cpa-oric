@@ -137,6 +137,8 @@ ASM_EX="$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # commandes de base, MEM/POKE/GO, les bibliothèques, EDIT.CFG et HOSTS
 # (modifiables) ;
 # DIR montre les applications, et un nouveau programme y apparaît de lui-même.
+# DUN.SPR (modifiable) : des tuiles pour EDSPRITE (vitrine de la console à
+# distance, tools/vitrine.py).
 SYS_CACHES="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/MEM.COM $P/POKE.COM $P/GO.COM files/usbcd.bat"
 SYS_AILLEURS="$P/LOGO.COM $P/LOGOTR.COM $P/HELLO.COM $P/GTEST.COM"
@@ -145,7 +147,7 @@ for f in $P/*.COM files/readme.txt; do
   case " $(echo $SYS_CACHES $SYS_AILLEURS) " in *" $f "*) ;; *) SYS_VISIBLES="$SYS_VISIBLES $f" ;; esac
 done
 disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/edit.cfg files/hosts \
-  --ro --dir $SYS_VISIBLES
+  --ro --dir $SYS_VISIBLES --rw files/dun.spr
 
 # Disquettes par usage : chacune démarre seule et porte ses outils. Les
 # commandes de base, la clé USB, TERM, XFER et REMOTE y sont protégées et cachées

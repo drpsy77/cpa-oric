@@ -3,27 +3,34 @@
 
 Tape sur l'Oric par le démon (tools/remote.py, interface du § 9.1 de
 docs/console-distance.md), comme quelqu'un qui s'en servirait : commandes,
-complétion, aide, menus FUNCT, EDIT sur un programme GRAPHER, CMDER, DEBUG,
+complétion, aide, menus FUNCT, EDIT sur un programme GRAPHER, EDSPRITE sur
+DUN.SPR (ou un autre .SPR de la disquette), CMDER, DEBUG,
 USBDIR, et deux programmes en mode texte (LORES) : MOSAIQUE (tuiles de
 couleur) et HORLOGE (l'heure, tapée par la vitrine : l'Oric n'a pas
-d'horloge). Les scènes et les pauses sont tirées au hasard, la frappe a un
-rythme humain : les spectateurs de la page web voient un Oric en direct,
-pas une vidéo.
+d'horloge). Rythme : une scène de spectacle (HORLOGE, MOSAIQUE, EDIT,
+DEBUG, CMDER, EDSPRITE), puis deux commandes au prompt, et ainsi de suite, moins
+d'une seconde entre deux ; scènes tirées au hasard dans chaque groupe, la
+frappe a un rythme humain : les spectateurs de la page web voient un Oric
+en direct, pas une vidéo.
 
     python3 tools/vitrine.py [--demon URL] [--humain S] [--scenes a,b,...]
-                             [--une] [--liste]
+                             [--langue fr|en] [--une] [--liste]
 
     --demon URL    le démon (défaut http://localhost:8040)
     --humain S     pause tant que quelqu'un d'autre a tapé depuis moins de
                    S secondes (défaut 120 ; page web, fenêtre, ligne de
                    commande : tout ce qui n'est pas la vitrine)
     --scenes ...   seulement ces scènes (noms : --liste)
+    --langue L     langue du système de l'Oric (défaut : reconnue par la
+                   barre des menus, Systeme ou System)
     --une          chaque scène une fois, dans l'ordre, puis fin (essai)
 
 Sur l'Oric : CP/A au prompt, console à distance active (REMOTE hote), sur
 une disquette où l'on peut écrire : la vitrine y écrit MOSAIQUE.GRX et
-HORLOGE.GRX (dans EDIT, à la vue de tous) s'ils manquent. Rien d'autre
-n'est écrit ; aucune scène n'efface ni ne modifie de fichier.
+HORLOGE.GRX (dans EDIT, à la vue de tous) s'ils manquent. CMDER efface
+parfois l'un des deux (filtre sur son nom, DEL, O) ; la scène de spectacle
+suivante le retape dans EDIT, puis le lance. Rien d'autre n'est écrit,
+effacé ni modifié.
 Bibliothèque standard seulement (Mac, Raspberry Pi).
 """
 import json
@@ -37,8 +44,24 @@ import urllib.request
 ICI = os.path.dirname(os.path.abspath(__file__))
 RET, ESC, TAB, FUNCT, DEL = 13, 27, 29, 0x80, 0x7F
 G, D, B, H = 8, 9, 10, 11                       # flèches
-SH_B, SH_H, CT_B, CT_H = 0xF2, 0xF3, 0xF6, 0xF7  # SHIFT et CTRL avec les flèches
-CTRL = {c: ord(c) - 64 for c in "ACDEFOQSWXZ"}
+SH_D, SH_B, SH_H, CT_B, CT_H = 0xF1, 0xF2, 0xF3, 0xF6, 0xF7  # SHIFT et CTRL, flèches
+CTRL = {c: ord(c) - 64 for c in "ACDEFOQSVWXZ"}
+CTRL["H"] = 28                                  # ^H, ^I, ^J, ^K : 28-31 (contrat)
+PROGRAMMES = ("MOSAIQUE", "HORLOGE")
+# Textes de l'Oric que la vitrine lit ou tape, selon la langue du système
+# (cpa.dsk, cpa-en.dsk) ; reconnue au démarrage par la barre des menus.
+TEXTES = {
+    "fr": {"barre": "Systeme", "suite": "-- Suite", "edit_nouveau": "Nouveau",
+           "edit_titre": "Fichier", "cmder": "ESC fin", "filtre": "Filtre",
+           "effacer": "Effacer", "on": "(O/N)", "oui": "O", "quitter": "Quitter (O/N)",
+           "aide": ["", "touches", "edit", "cmder", "usb", "prog", "edsprite"],
+           "echo": ["echo Il est %d h %02d a Paris", "echo %dh%02d : l'Oric est en direct"]},
+    "en": {"barre": "System", "suite": "-- More", "edit_nouveau": "New file",
+           "edit_titre": "File", "cmder": "ESC quit", "filtre": "Filter",
+           "effacer": "Erase", "on": "(Y/N)", "oui": "Y", "quitter": "Quit (Y/N)",
+           "aide": ["", "keys", "edit", "cmder", "usb", "prog", "edsprite"],
+           "echo": ["echo It is %d:%02d in Paris", "echo %d:%02d - live from an Oric"]},
+}
 
 
 class Humain(Exception):
@@ -46,10 +69,14 @@ class Humain(Exception):
 
 
 class Vitrine:
-    def __init__(self, url, humain):
+    def __init__(self, url, humain, langue=None):
         self.url = url.rstrip("/")
         self.humain = humain
         self.e = None
+        self.manquants = set()          # programmes absents de la disquette
+        self.sprites = []               # fichiers .SPR de la disquette
+        self.langue = langue            # None : reconnue au démarrage
+        self.t = TEXTES[langue or "fr"]
 
     # --- démon ---------------------------------------------------------------
     def _http(self, chemin, corps=None):
@@ -109,10 +136,10 @@ class Vitrine:
             t = "\n".join(li)
             if callable(cible) and cible(li) or not callable(cible) and cible in t:
                 return True
-            if suite and "-- Suite" in t:
-                time.sleep(random.uniform(1.5, 3.5))   # le temps de lire
+            if suite and self.t["suite"] in t:
+                time.sleep(random.uniform(0.8, 1.6))   # le temps de lire
                 self.envoyer([32])
-            time.sleep(0.4)
+            time.sleep(0.25)
         return False
 
     def ligne_curseur(self):
@@ -143,7 +170,7 @@ class Vitrine:
         self.taper(texte)
         return self.attendre_prompt(delai)
 
-    def pause(self, a=2.0, b=6.0):
+    def pause(self, a=0.3, b=1.0):
         fin = time.time() + random.uniform(a, b)
         while time.time() < fin:
             self.etat()                 # Humain si quelqu'un tape
@@ -158,32 +185,60 @@ class Vitrine:
         return set(n + "." + x for n, x in re.findall(r"([A-Z0-9_$-]{1,8}) *\.([A-Z0-9_$]{1,3})", t))
 
     def preparer(self):
-        """Écrit les programmes de la vitrine sur la disquette s'ils manquent,
-        dans EDIT, à la vue de tous."""
+        """Langue du système (barre des menus, sauf --langue) ; note les
+        programmes de la vitrine absents de la disquette : la première scène
+        qui s'en sert les écrit."""
         self.retour_prompt()
+        if self.langue is None:
+            barre = self.lignes()[0]
+            self.t = TEXTES["fr" if TEXTES["fr"]["barre"] in barre else
+                            "en" if TEXTES["en"]["barre"] in barre else "fr"]
+            print(time.strftime("%H:%M:%S"), "langue :",
+                  [k for k, v in TEXTES.items() if v is self.t][0], flush=True)
         presents = self.fichiers("*.grx")
-        for nom in ("MOSAIQUE", "HORLOGE"):
-            if nom + ".GRX" in presents:
-                continue
-            texte = open(os.path.join(ICI, "vitrine", nom.lower() + ".grx"), encoding="ascii").read()
-            self.taper("edit %s.grx" % nom.lower())
-            self.attendre(lambda li: "Nouveau" in li[27] or "Fichier" in li[0], 30, suite=False)
-            time.sleep(2)
-            self.coller(texte)
-            dernier = [l for l in texte.splitlines() if l.strip()][-1].strip()[:20]
-            self.attendre(dernier, 300, suite=False)
-            time.sleep(2)
-            self.touche(CTRL["S"], apres=4)
-            self.touche(CTRL["Q"], apres=1)
-            self.attendre_prompt(30)
+        self.manquants = set(n for n in PROGRAMMES if n + ".GRX" not in presents)
+        self.sprites = sorted(n for n in self.fichiers("*.spr") if n.endswith(".SPR"))
+
+    def retaper(self, nom):
+        """Écrit le programme nom (MOSAIQUE, HORLOGE) dans EDIT, à la vue de
+        tous : texte collé, ^S, ^Q."""
+        texte = open(os.path.join(ICI, "vitrine", nom.lower() + ".grx"), encoding="ascii").read()
+        self.taper("edit %s.grx" % nom.lower())
+        self.attendre(lambda li: self.t["edit_nouveau"] in li[27] or self.t["edit_titre"] in li[0],
+                      30, suite=False)
+        time.sleep(1)
+        self.coller(texte)
+        dernier = [l for l in texte.splitlines() if l.strip()][-1].strip()[:20]
+        self.attendre(dernier, 300, suite=False)
+        time.sleep(1)
+        self.touche(CTRL["S"], apres=3)
+        self.touche(CTRL["Q"], apres=1)
+        if self.attendre_prompt(30):
+            self.manquants.discard(nom)
+            return True
+        return False
+
+    def present(self, nom):
+        """Le programme nom est sur la disquette ; sinon il est retapé."""
+        if nom in self.manquants:
+            if not self.retaper(nom):
+                return False
+            self.retour_prompt()
+        return True
+
+    def programmes(self):
+        """Fichiers .GRX de la vitrine présents sur la disquette."""
+        return [n.lower() + ".grx" for n in PROGRAMMES if n not in self.manquants]
 
     # --- scènes ----------------------------------------------------------------------
     def s_heure(self):
         """HORLOGE : l'heure en grands chiffres, tapée par la vitrine."""
-        self.taper("grapher horloge %d" % random.randint(20, 35))
+        if not self.present("HORLOGE"):
+            return
+        self.taper("grapher horloge %d" % random.randint(15, 25))
         if not self.attendre("Heure ?", 40, suite=False):
             return
-        time.sleep(random.uniform(0.5, 1.5))
+        time.sleep(random.uniform(0.3, 0.8))
         t = time.localtime(time.time() + 1.5)       # frappe et lecture des trois nombres
         for v in (t.tm_hour, t.tm_min, t.tm_sec):
             self.envoyer([ord(c) for c in "%02d" % v] + [RET])
@@ -193,12 +248,13 @@ class Vitrine:
     def s_echo_heure(self):
         """L'heure au prompt, par ECHO."""
         t = time.localtime()
-        self.commande(random.choice(["echo Il est %d h %02d a Paris",
-                                     "echo %dh%02d : l'Oric est en direct"]) % (t.tm_hour, t.tm_min))
+        self.commande(random.choice(self.t["echo"]) % (t.tm_hour, t.tm_min))
 
     def s_mosaique(self):
         """MOSAIQUE : tuiles de couleur en LORES."""
-        self.taper("grapher mosaique %d" % random.randint(2, 4))
+        if not self.present("MOSAIQUE"):
+            return
+        self.taper("grapher mosaique %d" % random.randint(2, 3))
         self.attendre_prompt(150)
 
     def s_dir(self):
@@ -227,11 +283,11 @@ class Vitrine:
 
     def s_type(self):
         """TYPE d'un programme ou d'un texte."""
-        self.commande("type " + random.choice(["mosaique.grx", "horloge.grx", "readme.txt"]), 90)
+        self.commande("type " + random.choice(self.programmes() + ["readme.txt"]), 90)
 
     def s_aide(self):
         """HELP, une rubrique."""
-        self.commande("help " + random.choice(["", "touches", "edit", "cmder", "usb", "prog"]), 90)
+        self.commande("help " + random.choice(self.t["aide"]), 90)
 
     def s_menus(self):
         """Menus FUNCT : la barre, les menus déroulés, puis Version."""
@@ -263,62 +319,161 @@ class Vitrine:
         for cmd in random.sample(["l c000", "d bb80", "l 0500", "l e000", "? bb80", "r",
                                   "d 0200"], 3):
             self.taper(cmd)
-            time.sleep(random.uniform(3, 5))
+            time.sleep(random.uniform(1.5, 2.5))
         self.taper("q")
         self.attendre_prompt(20)
 
     def s_edit(self):
         """EDIT sur un programme GRAPHER : on le parcourt, on cherche, on quitte
         sans rien changer."""
-        nom = random.choice(["mosaique.grx", "horloge.grx"])
+        noms = self.programmes()
+        if not noms:
+            return self.present(random.choice(PROGRAMMES))
+        nom = random.choice(noms)
         self.taper("edit " + nom)
         if not self.attendre(nom.upper(), 30, suite=False):
             return self.retour_prompt()
-        time.sleep(2)
+        time.sleep(1)
         for _ in range(random.randint(4, 10)):
             self.touche(B, apres=0.3)
         for _ in range(random.randint(1, 3)):
             self.touche(SH_B, apres=1.5)
         for _ in range(random.randint(3, 8)):
             self.touche(D, apres=0.15)
-        self.touche(CT_H, apres=1.5)
-        self.touche(CTRL["F"], apres=1.0)           # chercher
+        self.touche(CT_H, apres=1.0)
+        self.touche(CTRL["F"], apres=0.8)           # chercher
         self.taper(random.choice(["SUB", "LOCATE", "PRINT"]))
-        time.sleep(2)
+        time.sleep(1.2)
         if random.random() < 0.5:
-            self.touche(7, apres=1.5)               # ^G : suivant
-        time.sleep(2)
-        self.touche(CTRL["Q"], apres=1.5)
+            self.touche(7, apres=1.2)               # ^G : suivant
+        time.sleep(1)
+        self.touche(CTRL["Q"], apres=1.0)
         if not self.attendre_prompt(5):             # une question : ne pas enregistrer
             self.touche(ord("N"), apres=1.0)
             self.retour_prompt()
 
-    def s_cmder(self):
-        """CMDER : le gestionnaire de fichiers, tris, déplacements."""
-        self.taper("cmder")
-        if not self.attendre("ESC fin", 30, suite=False):
+    def s_edsprite(self):
+        """EDSPRITE sur DUN.SPR (sinon un autre .SPR) : grille, codes, copie du
+        sprite retournée (miroir horizontal), décor, animation ; on quitte sans
+        enregistrer : la scène se rejoue à l'identique."""
+        if not self.sprites:
+            return self.s_edit()
+        nom = "DUN.SPR" if "DUN.SPR" in self.sprites else random.choice(self.sprites)
+        self.taper("edsprite " + nom[:-4].lower())
+        if not self.attendre(nom, 30, suite=False):
             return self.retour_prompt()
-        time.sleep(2)
-        for _ in range(random.randint(3, 8)):
+        time.sleep(1)
+        for _ in range(random.randint(6, 12)):      # le curseur dans la grille
+            self.touche(random.choice([D, D, B, B, G, H, SH_D, SH_B]), apres=0.2)
+        self.touche(CTRL["H"], apres=2.0)           # codes hexadécimaux
+        self.touche(CTRL["H"], apres=0.8)           # et retour à la liste
+        self.touche(TAB, apres=0.8)                 # la liste des sprites
+        self.touche(CTRL["C"], apres=0.6)           # copier le sprite
+        self.touche(CTRL["V"], apres=1.2)           # coller : la copie, après lui
+        self.touche(RET, apres=0.8)                 # sa grille
+        self.menu(3, 1)                             # Dessin, Miroir horizontal
+        time.sleep(1.5)
+        self.menu(4, 1)                             # Vue, Décor (au suivant)
+        self.menu(4, 2)                             # Vue, Animer
+        time.sleep(random.uniform(2.5, 4))
+        self.touche(ESC, apres=0.8)                 # une touche arrête
+        self.touche(CTRL["Q"], apres=1.0)
+        if not self.attendre_prompt(3):             # « Fichier modifie. Quitter (O/N) ? »
+            if self.attendre(lambda li: any(self.t["quitter"] in l for l in li), 3, suite=False):
+                self.touche(ord(self.t["oui"]), apres=1.0)  # sans enregistrer
+            else:
+                self.touche(ESC, apres=0.5)
+            if not self.attendre_prompt(5):
+                self.retour_prompt()
+
+    def menu(self, rang_menu, rang):
+        """Menu FUNCT n° rang_menu (0 le premier), article rang (0 le premier)."""
+        self.touche(FUNCT, apres=0.8)
+        for _ in range(rang_menu):
+            self.touche(D, apres=0.3)
+        self.touche(B, apres=0.6)                   # déroulé, sur le premier article
+        for _ in range(rang):
             self.touche(B, apres=0.4)
-        self.touche(random.choice([ord("2"), ord("3"), ord("4")]), apres=2.0)
+        self.touche(RET, apres=1.2)
+
+    def s_cmder(self):
+        """CMDER : le gestionnaire de fichiers, tris, déplacements ; efface
+        parfois MOSAIQUE.GRX ou HORLOGE.GRX (retapé ensuite dans EDIT)."""
+        self.taper("cmder")
+        if not self.attendre(self.t["cmder"], 30, suite=False):
+            return self.retour_prompt()
+        time.sleep(1)
+        for _ in range(random.randint(3, 8)):
+            self.touche(B, apres=0.3)
+        self.touche(random.choice([ord("2"), ord("3"), ord("4")]), apres=1.5)
         for _ in range(random.randint(2, 6)):
-            self.touche(random.choice([B, B, H]), apres=0.5)
-        self.touche(ord("?"), apres=3.0)            # infos du fichier (ligne d'état)
-        self.touche(9 if random.random() < 0.5 else B, apres=1.0)
-        time.sleep(2)
-        self.touche(ESC, apres=1.0)
+            self.touche(random.choice([B, B, H]), apres=0.4)
+        self.touche(ord("?"), apres=2.0)            # infos du fichier (ligne d'état)
+        if not self.manquants and random.random() < 0.6:
+            self.effacer(random.choice(PROGRAMMES))
+        else:
+            self.touche(9 if random.random() < 0.5 else B, apres=1.0)
+            time.sleep(1)
+        self.touche(ESC, apres=0.8)
         self.attendre_prompt(15)
+
+    def filtre(self, motif):
+        """CMDER : filtre de la colonne active (/ ; le filtre actuel, proposé,
+        effacé par DEL ; motif vide : sans filtre)."""
+        self.touche(ord("/"), apres=0.8)
+        if not self.attendre(self.t["filtre"], 5, suite=False):
+            return False
+        for _ in range(14):                         # NOM.EXT avec lecteur : 14 au plus
+            self.envoyer([DEL])
+            time.sleep(0.05)
+        time.sleep(0.4)
+        self.taper(motif)
+        time.sleep(1)
+        return True
+
+    def effacer(self, nom):
+        """CMDER : filtre sur nom.GRX, DEL, O ; puis sans filtre.
+        On ne répond O que si la question nomme bien ce fichier."""
+        fichier = nom + ".GRX"
+        if not self.filtre(fichier.lower()):
+            return
+        if self.attendre(lambda li: any(nom in l for l in li[2:24]), 5, suite=False):
+            self.touche(DEL, apres=1.0)
+            if self.attendre(lambda li: any(self.t["effacer"] in l and nom in l and self.t["on"] in l
+                                            for l in li), 5, suite=False):
+                time.sleep(0.8)
+                self.touche(ord(self.t["oui"]), apres=1.5)
+                self.manquants.add(nom)
+            else:
+                self.touche(ESC, apres=0.5)
+        self.filtre("")
 
     def s_divers(self):
         """VER, MEM, CLS."""
         self.commande(random.choice(["ver", "mem", "cls", "ver"]))
 
-    SCENES = {"heure": (s_heure, 3), "echo": (s_echo_heure, 1), "mosaique": (s_mosaique, 3),
-              "dir": (s_dir, 2), "completion": (s_completion, 2), "type": (s_type, 1),
-              "aide": (s_aide, 1), "menus": (s_menus, 2), "usb": (s_usb, 1),
-              "debug": (s_debug, 1), "edit": (s_edit, 2), "cmder": (s_cmder, 2),
-              "divers": (s_divers, 1)}
+    # scènes : (fonction, poids, spectacle) ; une de spectacle, puis deux
+    # commandes au prompt, et ainsi de suite
+    SCENES = {"heure": (s_heure, 3, True), "mosaique": (s_mosaique, 3, True),
+              "edit": (s_edit, 2, True), "debug": (s_debug, 1, True),
+              "cmder": (s_cmder, 2, True), "edsprite": (s_edsprite, 2, True),
+              "dir": (s_dir, 2, False), "completion": (s_completion, 2, False),
+              "type": (s_type, 1, False), "aide": (s_aide, 1, False),
+              "menus": (s_menus, 2, False), "usb": (s_usb, 2, False),
+              "echo": (s_echo_heure, 1, False), "divers": (s_divers, 2, False)}
+    COMMANDES_PAR_SPECTACLE = 2
+
+    def suivante(self, noms, rang, precedente):
+        """Scène du rang donné : spectacle au rang 0, 3, 6... ; un programme
+        effacé par CMDER passe en premier (il est retapé, puis lancé)."""
+        spectacle = rang % (self.COMMANDES_PAR_SPECTACLE + 1) == 0
+        groupe = [n for n in noms if self.SCENES[n][2] == spectacle] or list(noms)
+        if spectacle:
+            for nom, scene in (("MOSAIQUE", "mosaique"), ("HORLOGE", "heure")):
+                if nom in self.manquants and scene in groupe and scene != precedente:
+                    return scene
+        choix = [n for n in groupe if n != precedente] or groupe
+        return random.choices(choix, [self.SCENES[n][1] for n in choix])[0]
 
     def jouer(self, nom):
         f = self.SCENES[nom][0]
@@ -331,6 +486,7 @@ class Vitrine:
     def boucle(self, noms, une=False):
         prepare = False
         precedente = None
+        rang = 0
         file = list(noms) if une else []
         while True:
             try:
@@ -347,11 +503,11 @@ class Vitrine:
                         return 0
                     nom = file.pop(0)
                 else:
-                    choix = [n for n in noms if n != precedente]
-                    nom = random.choices(choix, [self.SCENES[n][1] for n in choix])[0]
+                    nom = self.suivante(noms, rang, precedente)
+                    rang += 1
                 precedente = nom
                 self.jouer(nom)
-                self.pause(3, 15)
+                self.pause()
             except Humain:
                 print(time.strftime("%H:%M:%S"), "quelqu'un tape : pause", flush=True)
                 time.sleep(10)
@@ -362,6 +518,7 @@ class Vitrine:
 
 def main(args):
     url, humain, noms, une = "http://localhost:8040", 120.0, list(Vitrine.SCENES), False
+    langue = None
     i = 0
     while i < len(args):
         a = args[i]
@@ -374,11 +531,17 @@ def main(args):
         elif a == "--scenes":
             noms = args[i + 1].split(",")
             i += 1
+        elif a == "--langue":
+            langue = args[i + 1]
+            i += 1
+            if langue not in TEXTES:
+                print("langue : fr ou en")
+                return 1
         elif a == "--une":
             une = True
         elif a == "--liste":
-            for n, (f, p) in Vitrine.SCENES.items():
-                print("%-11s %s" % (n, f.__doc__.split("\n")[0]))
+            for n, (f, p, sp) in Vitrine.SCENES.items():
+                print("%-11s %s %s" % (n, "*" if sp else " ", f.__doc__.split("\n")[0]))
             return 0
         else:
             print(__doc__)
@@ -389,7 +552,7 @@ def main(args):
             print("scene inconnue : %s (--liste)" % n)
             return 1
     try:
-        return Vitrine(url, humain).boucle(noms, une)
+        return Vitrine(url, humain, langue).boucle(noms, une)
     except KeyboardInterrupt:
         return 0
 

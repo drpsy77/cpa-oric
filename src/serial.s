@@ -11,13 +11,17 @@
 ;  le pilote lit ce qu'envoie le démon du Mac (tools/remote.py) et ne
 ;  répond qu'aux demandes. Mac -> Oric : $FE k (touche k rangée dans le
 ;  tampon du clavier, lue seulement s'il y a de la place), $FD "S"
-;  (totaux), $FD "L" n (ligne n), $FD "B" (démarrage à chaud) ; tout
-;  autre octet est ignoré (messages du modem). Oric -> Mac :
+;  (totaux), $FD "L" n (ligne n), $FD "C" n (totaux des lignes n à n+7),
+;  $FD "B" (démarrage à chaud) ; tout autre octet est ignoré (messages
+;  du modem). Lignes 0-27 : l'écran ($BB80) ; 28-75 : la police du mode
+;  texte, 40 octets chacune à partir de $B400 (caractères redéfinis).
+;  Oric -> Mac :
 ;      $FF type longueur données total
 ;  (total : somme sur 8 bits de type, longueur et données) ;
 ;  "S" : mode, colonne et ligne du curseur, curseur actif, puis les 28
 ;  totaux de Fletcher (s1, puis s2) des lignes de l'écran ; "L" : n, puis
-;  les 40 octets de la ligne. La case du curseur est lue rétablie.
+;  les 40 octets de la ligne ; "C" : les totaux des 8 lignes demandées.
+;  La case du curseur est lue rétablie.
 ;
 ;  Variables : sr_port... (hw.inc, $FD13-$FD1F), effacées au démarrage à
 ;  froid seulement : le pilote survit au démarrage à chaud.
@@ -109,13 +113,13 @@ sr_rx
         beq key
         cpx #$FD
         beq cmd
-        pha                     ; "L" n ; n + $80 : les lignes n à 27
-        and #$7F                ;   à la suite, une trame chacune
-        cmp #28
+        pha                     ; "L" n, "C" n ; L n + $80 : les lignes
+        and #$7F                ;   n à 27 (n à 75 dans la police) à la
+        cmp #76                 ;   suite, une trame chacune
         pla
         bcs r
         sta sr_n
-        lda #"L"
+        txa                     ; "L" ou "C"
 req     sta sr_req              ; nouvelle demande (remplace la précédente)
         sty sr_i                ; (Y = 0)
         sty sr_wt
@@ -132,6 +136,8 @@ key     jmp kb_push             ; touche (place vérifiée par sr_irq)
 cmd     cmp #"S"
         beq req
         cmp #"L"
+        beq pfx
+        cmp #"C"
         beq pfx
         cmp #"B"                ; démarrage à chaud
         bne r
@@ -152,8 +158,11 @@ sr_next
 n1      lda sr_req
         dex
         bmi add                 ; type
-        ldy #60                 ; longueur : S 60, L 41
+        ldy #60                 ; longueur : S 60, C 16, L 41
         cmp #"S"
+        beq n2
+        ldy #16
+        cmp #"C"
         beq n2
         ldy #41
 n2      sty sr_len
@@ -164,6 +173,8 @@ n2      sty sr_len
         beq sum
         cmp #60
         beq s
+        cmp #16
+        beq c
         dex                     ; trame L : n, puis les 40 octets
         bpl l1
         lda sr_n
@@ -182,6 +193,8 @@ sum     lda sr_req                ; fin de trame ; L n+$80 : ligne suivante
         lda sr_n
         bpl end
         cmp #$80+27
+        beq end
+        cmp #$80+75
         bcs end
         inc sr_n
         lda #0
@@ -219,9 +232,14 @@ s1      cpx #3
         inx
 s2      lda cur_x,x
         jmp add
+c       txa                     ; trame C : ligne n + X/2 ; impair : s2
+        clc
+        adc sr_n
+        adc sr_n
+        bcc t0                  ; (toujours)
 tot     txa                     ; (C=1) ligne (X-3)/2 ; impair : s2
         sbc #3
-        lsr
+t0      lsr
         bcs t2
         tax
         jsr sr_fl
@@ -253,14 +271,36 @@ l       jsr sr_byte
         rts
 .)
 
-; sr_line : la ligne X de l'écran sera lue par sr_byte
+; sr_line : la ligne X sera lue par sr_byte (garde X) : 0-27 l'écran,
+;   28-75 la police ($B400 + 40 * (X - 28))
 sr_line
+.(
         stx sr_l
+        cpx #28
+        bcs p
         lda line_lo,x
         sta sr_lda+1
         lda line_hi,x
         sta sr_lda+2
         rts
+p       lda #<$B400
+        sta sr_lda+1
+        lda #>$B400
+        sta sr_lda+2
+        txa
+        sbc #28                 ; (C=1)
+        tay
+        beq r
+l       clc
+        lda sr_lda+1
+        adc #40
+        sta sr_lda+1
+        bcc n
+        inc sr_lda+2
+n       dey
+        bne l
+r       rts
+.)
 
 ; sr_byte : octet Y de la ligne -> A, case du curseur rétablie (garde Y)
 sr_byte

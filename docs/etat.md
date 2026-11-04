@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F213` en français (`$F1E7` en anglais), **marge 948
-octets** (992 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F254` en français (`$F228` en anglais), **marge 883
+octets** (927 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -21,7 +21,8 @@ l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
   couleurs et pagination (`PAPER`, `INK`, `PAGE`) ;
 - port série et console à distance (`src/serial.s`, option `SERIE`) : service sous l'IRQ
   de 50 Hz, le Mac tape et lit l'écran par le modem du LOCI (`REMOTE`, démon
-  `tools/remote.py`) ; PUNCH, READER, fonction 117 (`docs/console-distance.md`) ;
+  `tools/remote.py`), caractères redéfinis compris (police du mode texte : sprites,
+  tuiles, EDSPRITE) ; PUNCH, READER, fonction 117 (`docs/console-distance.md`) ;
 - clavier : CTRL-H à CTRL-K distincts des flèches (28-31), CTRL-ESPACE (0), SHIFT et CTRL
   avec les flèches (`$F0-$F7`) ; mêmes touches dans EDIT, HEX, CMDER et la ligne de commande
   (`docs/manuel.md`, « Les mêmes touches partout ») ;
@@ -242,6 +243,13 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      `10.77.0.2`. Les comptes diffèrent d'une machine à l'autre : `User=` et chemins des
      services à vérifier sur la machine du démon. Un ancien démon resté lancé (simon,
      ou à la main sur le Pi 400) prend l'Oric ou les ports : un seul démon à la fois.
+     Fait (04/11/2026) : **police transmise** (`$FD 'C' n`, lignes 28-75 du pilote =
+     `$B400-$BB7F`, § 4 « Police » de `console-distance.md` ; pilote +65 octets, démon
+     `2026-11-04.1`) : sprites, tuiles et EDSPRITE vus par la page et la fenêtre ; essai
+     `sprites` de `tools/test_remote.sh`. **Vitrine plus vive** : une scène de spectacle
+     (HORLOGE, MOSAIQUE, EDIT, DEBUG, CMDER, EDSPRITE sur `DUN.SPR`), deux commandes,
+     et ainsi de suite, moins d'une seconde entre deux ; CMDER efface parfois un des deux
+     `.GRX`, retapé ensuite dans EDIT.
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
@@ -524,7 +532,7 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 948 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+**Système** (marge 883 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
 `$FF00` : 10 octets ; variables du BDOS : `$FD27-$FD57` libres, 49 octets). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
 `g_xbit`). Fait : police rangée sur 5

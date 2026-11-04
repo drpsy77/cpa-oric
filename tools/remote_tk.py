@@ -139,7 +139,9 @@ class Fenetre:
     def __init__(self, racine, opts):
         self.r = racine
         self.opts = opts
-        self.police = oe.charger_police()
+        self.police_cpa = oe.charger_police()
+        self.police, self.alt = self.police_cpa, None
+        self.memoire = [None] * 48              # police envoyée par l'Oric
         self.lignes = [bytes(COLS)] * ROWS
         self.mode = 0
         self.curseur = [0, 0, False]
@@ -265,7 +267,9 @@ class Fenetre:
                 if actif and n == cy and cx < COLS and not self.eteint:
                     l = bytearray(l)
                     l[cx] ^= 0x80
-                rangs = oe.rendre_ligne(self.police, l, n, self.eteint)
+                alt = self.alt if graphique == 0 else None
+                rangs = oe.rendre_ligne(self.police if graphique == 0 else self.police_cpa,
+                                        l, n, self.eteint, alt)
             donnees = [self._rang(rangs[r]) for r in self.rangs_sortie]
             if donnees:
                 self.img.put(" ".join(donnees), to=(0, self.y0[n]))
@@ -302,6 +306,14 @@ class Fenetre:
             if b != self.lignes[n]:
                 self.lignes[n] = b
                 nums.add(n)
+        pol = e.get("police", {})
+        for k, h in pol.items():
+            self.memoire[int(k)] = bytes.fromhex(h)
+        if pol or nums & {0, 1, 2, 3} and any(self.memoire):
+            ancien = (self.police, self.alt)
+            self.police, self.alt = oe.polices(self.police_cpa, self.memoire, self.lignes)
+            if (self.police, self.alt) != ancien:
+                nums = set(range(ROWS))
         self.curseur = list(e["curseur"])
         self.mode = e["mode"]
         self.liaison = e["liaison"]

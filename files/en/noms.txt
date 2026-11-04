@@ -39,3 +39,4 @@ files/hosts                 HOSTS
 files/readme.txt            README.TXT
 build/src/HELLO.ASM         HELLO.ASM
 build/src/GTEST.ASM         GTEST.ASM
+files/dun.spr               DUN.SPR

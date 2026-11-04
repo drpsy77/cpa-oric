@@ -845,8 +845,9 @@ On the Mac:
   sends the clipboard.
 - **Showcase** (`tools/vitrine.py`, `docs/console-distance.md` § 9.5, in French): with
   nobody at the keyboard, CP/A shows itself in a loop (commands, completion, help, menus,
-  EDIT, CMDER, DEBUG, USBDIR, colour tiles and a clock in LORES), scenes and pauses drawn
-  at random; it stops for two minutes as soon as someone types from the page or the
+  EDIT, CMDER, DEBUG, USBDIR, EDSPRITE on `DUN.SPR`, colour tiles and a clock in LORES):
+  one showpiece, two commands, and so on, with no dead time; English or French to match
+  the system; it stops for two minutes as soon as someone types from the page or the
   window. With `remote.py serve --spectateurs address`, visitors coming from that address
   (a gateway publishing the page on the Internet, § 9.6) watch without being able to
   type; `tools/passerelle.py` prepares the files for that gateway (WireGuard, Apache).
