@@ -109,6 +109,7 @@ The user documents are in English in `docs/en/`; the others are in French.
 | [`docs/en/grapher.md`](docs/en/grapher.md) | GRAPHER |
 | [`docs/en/cmder.md`](docs/en/cmder.md) | CMDER |
 | [`docs/en/edsprite.md`](docs/en/edsprite.md) | EDSPRITE, the sprite and character editor |
+| [`docs/en/console-distance.md`](docs/en/console-distance.md) | remote console: the Mac types and reads in place of the Oric's keyboard and screen (REMOTE, `tools/remote.py`, protocol, showcase, read-only publishing) |
 | `docs/vision.md` | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
 | `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
 | `docs/systeme.md` | how the system works inside |
@@ -123,7 +124,6 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/etude-stockage.md` | room on the disks: the 80-track format (done), the remaining options (in French) |
 | `docs/usb.md` | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1, in French) |
 | `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |
-| `docs/console-distance.md` | serial driver and remote console: the Mac types and reads in place of the Oric's keyboard and screen (REMOTE, `tools/remote.py`, protocol; in French) |
 
 ## Building
 

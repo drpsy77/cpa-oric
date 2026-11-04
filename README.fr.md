@@ -124,7 +124,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/etude-stockage.md` | place sur les disquettes : le format de 80 pistes (fait), les pistes restantes |
 | `docs/usb.md` | les clés USB du LOCI depuis CP/A : répertoire courant, montage des disquettes et cassettes, duplication, renommage, effacement (référence du niveau 1) |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM, XFER |
-| `docs/console-distance.md` | pilote série et console à distance : le Mac tape et lit à la place du clavier et de l'écran de l'Oric (REMOTE, `tools/remote.py`, protocole) |
+| `docs/console-distance.md` | pilote série et console à distance : le Mac tape et lit à la place du clavier et de l'écran de l'Oric (REMOTE, `tools/remote.py`, protocole ; en anglais : `docs/en/console-distance.md`) |
 
 ## Construire
 

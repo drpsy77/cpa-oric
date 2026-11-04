@@ -843,7 +843,7 @@ On the Mac:
   key), arrows and RETURN, `^C`, Clavier (the phone's keyboard), Coller (paste), RESET (two
   presses). On the computer: F1 FUNCT; Cmd-V on the Mac (elsewhere the Coller button, as Ctrl-V goes to the Oric)
   sends the clipboard.
-- **Showcase** (`tools/vitrine.py`, `docs/console-distance.md` § 9.5, in French): with
+- **Showcase** (`tools/vitrine.py`, `docs/en/console-distance.md` § 9.5): with
   nobody at the keyboard, CP/A shows itself in a loop (commands, completion, help, menus,
   EDIT, CMDER, DEBUG, USBDIR, EDSPRITE on `DUN.SPR`, colour tiles and a clock in LORES):
   one showpiece, two commands, and so on, with no dead time; English or French to match
@@ -862,7 +862,7 @@ On the Mac:
 - The Oric speaks only to answer the Mac: with no daemon, it keeps quiet. The daemon accepts
   a new call at any time (it replaces the previous one).
 - In Oricutron (`serial = 'modem'`): `REMOTE 127.0.0.1`, or a line `oric 127.0.0.1` in
-  `HOSTS`. How it works, protocol: `docs/console-distance.md` (French).
+  `HOSTS`. How it works, protocol: `docs/en/console-distance.md`.
 
 Programs can use the serial port through the BIOS: PUNCH (`$C012`, function 4) sends a
 byte, READER (`$C015`, function 3) waits for one; function 117 sets the port and gives the
