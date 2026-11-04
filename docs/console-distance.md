@@ -482,7 +482,8 @@ côté de l'Oric ou ailleurs dans la maison. Python 3 et tkinter seulement.
   la rangée vide du bas, pour que les lettres restent nettes. `--etirer` remplit la
   place sans garder les proportions ; `--echelle` impose l'échelle.
 - Rendu : celui de l'ULA (`tools/oric_ecran.py`) : encre, papier, inverse, double
-  hauteur, clignotement ; en mode texte, les jeux standard et secondaire tels que l'Oric
+  hauteur, clignotement (attributs 8-15 : bit 0 jeu secondaire, bit 1 double hauteur,
+  bit 2 clignotement ; vérifié contre Oricutron sur l'écran d'EDSPRITE) ; en mode texte, les jeux standard et secondaire tels que l'Oric
   les a en mémoire (police envoyée par le démon, § 4 « Police » : sprites, tuiles,
   EDSPRITE ; `polices()`), la police de CP/A (`src/font.s`) pour ce qui n'est pas encore
   reçu et pour les lignes de texte du SPLIT. La page web fait de même (rendu comparé

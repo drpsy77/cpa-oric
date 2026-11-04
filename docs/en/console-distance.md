@@ -483,7 +483,8 @@ next to the Oric or elsewhere in the house. Python 3 and tkinter only.
   stay sharp. `--etirer` (stretch) fills the space without keeping the proportions;
   `--echelle` forces the scale.
 - Rendering: that of the ULA (`tools/oric_ecran.py`): ink, paper, inverse, double height,
-  blinking; in text mode, the standard and alternate sets as the Oric has them in memory
+  blinking (attributes 8-15: bit 0 alternate set, bit 1 double height, bit 2 blinking;
+  checked against Oricutron on the EDSPRITE screen); in text mode, the standard and alternate sets as the Oric has them in memory
   (font sent by the daemon, § 4 "Font": sprites, tiles, EDSPRITE; `polices()`), CP/A's
   font (`src/font.s`) for what has not been received yet and for SPLIT's text rows. The
   web page does the same (rendering compared dot by dot). Blinking cursor drawn from the

@@ -55,7 +55,7 @@ def mire():
     ecrire(6, 24, "fixe")
     for n in (8, 9):
         l[n][2] = 1 + 2      # encre jaune
-        l[n][3] = 9          # double hauteur
+        l[n][3] = 10         # double hauteur (bit 1 ; bit 0 : jeu secondaire)
         ecrire(n, 4, "DOUBLE HAUTEUR")
     ecrire(11, 2, "Police :")
     for k in range(96):
