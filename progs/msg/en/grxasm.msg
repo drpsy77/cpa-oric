@@ -14,6 +14,8 @@ m_done  .asc ".ASM written: ASM ",0
 m_nodim .asc "array not dimensioned",0
 m_noinc .asc " missing (library)",0
 m_names .asc "Too many names (libraries)",0
+m_blib  .asc " unreadable (library)",0
+h_lib   .asc "; libraries: GRX.LIB, precompiled; ASM takes the useful routines from it",13,10,0
 m_use   .asc "GRXASM NAME [/C|/O] [p1..p9]: turns",13,10
         .asc "NAME.GRX into NAME.ASM (for ASM);",13,10
         .asc "/C: then ASM, NAME.COM only",13,10

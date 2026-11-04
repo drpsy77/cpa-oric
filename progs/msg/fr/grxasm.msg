@@ -14,6 +14,8 @@ m_done  .asc ".ASM ecrit : ASM ",0
 m_nodim .asc "tableau non dimensionne",0
 m_noinc .asc " absente (bibliotheque)",0
 m_names .asc "Trop de noms (bibliotheques)",0
+m_blib  .asc " illisible (bibliotheque)",0
+h_lib   .asc "; bibliotheques : GRX.LIB, precompilees ; ASM y prend les routines utiles",13,10,0
 m_use   .asc "GRXASM NOM [/C|/O] [p1..p9] : traduit",13,10
         .asc "NOM.GRX en NOM.ASM (pour ASM) ;",13,10
         .asc "/C : puis ASM, NOM.COM seul",13,10

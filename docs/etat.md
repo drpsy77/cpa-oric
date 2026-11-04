@@ -50,7 +50,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 836 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 12 922 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
@@ -64,12 +64,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
 | EDSPRITE | 8 967 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) | `edsprite.md` |
-| ASM | 6 140 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: | `manuel.md` |
+| ASM | 7 322 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: ; `#lib` : routines de `GRX.LIB` reliées | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 979 | Logo (français, ou anglais sur les disquettes anglaises : 18 770) : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | LOGOTR | 4 429 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
-| GRAPHER, GRXASM | 17 769, 16 264 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
+| GRAPHER, GRXASM | 17 769, 17 002 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques, prises précompilées dans `GRX.LIB` quand elle est là) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -131,24 +131,19 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      `GRXASM /O`, `snd.s` (~600 octets) rejoint le socle `ORIC.INC` (`docs/oric-basic.md`
      § 4 ; aujourd'hui un bip seulement). Place : GRAPHER a 663 octets libres dans son
      dernier bloc (§ 3).
-   - **Bibliothèques compilées** (idée de Pierre, 25/10/2026 ; backlog, pas prioritaire :
-     sur le LOCI, la traduction est longue mais ne gêne pas). Mesure dans le 6502 simulé,
-     `GRXASM SERPENT /O` : 12,9 s de calcul, 729 enregistrements lus (716 pour les quatre
-     bibliothèques, lues deux fois en entier : relevé des dépendances, puis recopie) et 239
-     écrits ; `ASM` : 17,9 s, 478 lus (le `.ASM` deux fois), 41 écrits. Le `.ASM` fait
-     30 Ko, dont 21 Ko de texte recopié des bibliothèques pour 3,6 Ko de code. Piste : les
-     bibliothèques compilées par `build.sh` (xa, sur le PC) avec, pour chaque routine, ses
-     dépendances et ses adresses à reloger (cible = routine + décalage ; octet haut seul :
-     garder l'octet bas pour la retenue ; symboles du programme : `O_FILES`, `h_end`,
-     `s_hst`...) ; GRXASM ne lit qu'un index et n'écrit que le code du programme ; ASM
-     ajoute les routines relogées à la même place qu'aujourd'hui, donc un `.COM` / `.TAP`
-     identique à l'octet près (les tests actuels restent l'oracle ; un relogeur Python pour
-     xa). Gains estimés : ~4 fois moins d'enregistrements, ~3 fois moins de calcul, ~50 Ko
-     de moins sur chaque disquette qui porte GRXASM ; aussi pour l'assembleur écrit à la
-     main. Prix : outil de construction, ASM d'un ou deux blocs de plus, `.ASM` qui ne
-     contient plus les bibliothèques. Première étape possible : l'index des dépendances
-     seul (plus de première lecture). À minuter d'abord sur l'Oric (traduction, puis
-     assemblage) : le partage entre calcul et accès au LOCI n'est pas connu.
+   - Fait (04/11/2026) : **bibliothèques précompilées** (`GRX.LIB`, `docs/grapher.md` § 12
+     et § 15). `tools/mk_lib.py` (lancé par `build.sh`) assemble les sept bibliothèques des
+     programmes traduits, routine par routine, avec leurs relogements ; GRXASM, s'il trouve
+     `GRX.LIB`, n'y lit que les besoins et les noms et termine `NOM.ASM` par une ligne
+     `#lib "GRX.LIB",...` qu'ASM relie. Même `.COM` / `.TAP`, octet par octet, que par les
+     `.INC` (`tools/test_lib.sh` : tous les tests de GRAPHER et les exemples, CP/A et `/O`).
+     Mesuré dans le 6502 simulé (instructions) : GRXASM 2 à 5 fois moins (`CARTE` : 2,2
+     millions au lieu de 5,9 ; `LO_TILE` : 1,3 au lieu de 4,8), ASM 2 à 2,5 fois moins
+     (`CARTE` : 3,7 au lieu de 8,9) ; `NOM.ASM` ne contient plus que le programme.
+     `GRX.LIB` fait 32 Ko (les sept `.INC` : 70 Ko) ; les `.INC` restent sur les disquettes
+     (choix de Pierre : repli quand `GRX.LIB` manque, et pour l'assembleur écrit à la main).
+     Prix : ASM +1,2 Ko (toujours 4 blocs), GRXASM +0,7 Ko (9 blocs au lieu de 8), 36 Ko de
+     moins sur chaque disquette qui porte GRXASM. À minuter sur l'Oric (§ essais).
 3. **Publier vers l'Oric de base** (`docs/oric-basic.md`) : `MKTAP.COM` et `tools/mktap.py`
    faits (`.TAP` à plusieurs blocs, démarrage automatique, chargeur BASIC tokenisé quand il y
    a plusieurs blocs ; essayés sous BASIC 1.1 dans Oricutron, `tools/test_mktap.sh`).
@@ -591,11 +586,12 @@ multiple de 2 048) :
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
 - GRAPHER (17 769 octets) prend 9 blocs, 663 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (16 264) prend 8 blocs, 120
-  octets libres dans le dernier (le texte d'un `.GRX` à traduire va de `$4E6F` à `$9CE0`,
-  ~20 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (17 002) prend 9 blocs, 1 430
+  octets libres dans le dernier (16 930 en anglais ; le texte d'un `.GRX` à traduire va de
+  `$5151` à `$9CE0`, ~19,3 Ko : 738 octets de moins depuis la lecture de `GRX.LIB`) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier. HELP (12 836) prend 7 blocs, 1 500 octets libres dans le dernier (12 660 en anglais, 7
+  blocs, 1 844 octets libres dans le dernier ; GRX.LIB (32 176, 32 117 en anglais) prend
+  16 blocs, 592 octets libres dans le dernier. HELP (12 922) prend 7 blocs, 1 414 octets libres dans le dernier (12 737 en anglais, 7
   blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)
@@ -604,10 +600,9 @@ multiple de 2 048) :
   que de gratter des octets ;
 - EDIT (8 704 octets) prend 5 blocs, 1 536 octets libres dans le dernier (tampon de texte
   aligné sur une page ; en anglais, 243 octets de code avant la page suivante, 71 en
-  français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (6 140) est à 4
-  octets du bloc suivant, 80 en anglais (6 064) : un message français de plus doit être
-  compensé ;
-- usage à deux disquettes : sur `cpa.dsk` il reste 398 Ko (398 sur `cpa-en.dsk`) ; le
+  français). HEX : 47 octets avant le bloc suivant (143 en anglais) ; ASM (7 322) prend 4
+  blocs, 870 octets libres dans le dernier (957 en anglais, 7 235) ;
+- usage à deux disquettes : sur `cpa.dsk` il reste 360 Ko (360 sur `cpa-en.dsk`) ; le
   travail va de préférence sur une disquette de projet en B: (658 Ko), GRXASM `/C` ne
   laisse que le `.COM`, ASM n'écrit le `.SYM` que sur demande (`/S`) ;
 - répertoire : 127 fichiers au plus par disquette (entrée 0 : l'étiquette ; un fichier en

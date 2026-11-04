@@ -133,6 +133,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM: calculations, loops, errors (no emulator)
     LANGUE=en tools/test_grapher.sh  # the same in English, against the translated references
     tools/test_inc.sh                # slimmed-down disk libraries == originals
+    tools/test_lib.sh                # GRX.LIB (precompiled): same translated programs as through the .INCs
     tools/test_exemples_en.sh        # translated .GRX examples: same code as the originals
     python3 tools/test_fp.py         # decimals (progs/fp_inc.s) against an exact calculation
     python3 tools/test_anim.py       # .HIZ pictures and .ANI animations (h_unz, VOIR)
@@ -166,6 +167,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | `fp_inc.s` | in addition: `python3 tools/test_fp.py` |
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s` | in addition: `tools/test_mktap.sh` (also runs `tools/test_bas.py`) |
 | ASM.COM (`/T` option) | in addition: `tools/test_oric.sh` |
+| ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, a library of translated programs | in addition: `tools/test_lib.sh` (~30 min; names as arguments for a targeted run) |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | in addition: `tools/test_xfer.sh` (~4 min); for TERM, Oricutron trial in loopback (`serial = 'loopback'`) |
 | `src/serial.s`, REMOTE.COM, `tools/remote.py`, function 117, PUNCH, READER | in addition: `tools/test_remote.sh` (~6 min) and `tools/test_xfer.sh` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | in addition: `tools/test_grapher.sh` (and `LANGUE=en` if a message changes), `tools/test_inc.sh`, `tools/test_oric.sh`, Oricutron trial of the `.GRX` examples (drawing) |
@@ -252,6 +254,9 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
   only the routines that are needed (`docs/en/grapher.md` § 12, § 15). Source annotations,
   kept by `strip_inc.py` for `mark_inc.py`: `;[` ... `;]` (interpreter checks,
   removed from the copies), `;>a b` and `;&nom` (needs and lines of `ORIC.INC`).
+  `tools/mk_lib.py` then precompiles them into `GRX.LIB` (same disks): GRXASM takes it
+  when it finds it and ends `NAME.ASM` with `#lib "GRX.LIB",...`, which ASM links (same
+  bytes as through the `.INC`s, `tools/test_lib.sh`).
 - Git: one commit per delivery, message in French, tested beforehand. The repository is published on
   GitHub (https://github.com/drpsy77/cpa-oric).
 

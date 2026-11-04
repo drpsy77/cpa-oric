@@ -1304,6 +1304,7 @@ LOGO and ASM itself give exactly the same bytes as with `xa`.
 | Data | `.byt` / `.byte` / `.asc` (numbers and strings `"..."`), `.word`, `.dsb n[,value]` |
 | Blocks | `.(` ... `.)`: labels defined inside are local to the block |
 | Include | `#include "CPA.INC"` (one level), looked for on the source's drive, then on the drives already read from A: to D: |
+| Precompiled library | `#lib "GRX.LIB",SSBB...` (written by GRXASM, one per source, looked for like an `#include`): the chosen routines of `GRX.LIB` are linked at this point and their symbols defined (`docs/en/grapher.md` § 12); xa does not know it |
 | Comment | `;` to the end of the line |
 
 Expressions: decimal numbers, `$hex`, `%binary`, characters `"A"` or `'A'`, `*` (address of the

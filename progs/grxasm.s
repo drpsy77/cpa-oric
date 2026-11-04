@@ -5020,7 +5020,10 @@ z       sta (kp),y
         sta kep
         lda #>KEDG
         sta kep+1
-        lda #0                  ; lecture des marques
+        jsr kb_lib              ; GRX.LIB, sinon les .INC
+        bcs txt
+        rts
+txt     lda #0                  ; lecture des marques
         jsr kl_run
         jsr kl_clos
         lda #1                  ; recopie
@@ -5043,6 +5046,281 @@ nx      inc kli
         bne l
         rts
 .)
+
+; kb_lib : bibliothèques précompilées GRX.LIB (tools/mk_lib.py), cherchée
+;   comme les .INC. Présente : marques des routines (toujours gardées,
+;   nommées par la traduction, besoins), fermeture (kl_clos), puis la ligne
+;   « #lib "GRX.LIB",SSBB... » (bibliothèques lues, routines gardées : ASM
+;   les relie) ; C=0. Absente : C=1, les .INC servent.
+kb_lib
+.(
+        ldx #10
+n       lda kbnm,x
+        sta ifcb+1,x
+        dex
+        bpl n
+        jsr kl_find
+        bcc ok
+        rts                     ; (C=1)
+ok      lda #128
+        sta ipos
+        jsr kb_b                ; « GL », version 1
+        cmp #"G"
+        bne bad
+        jsr kb_b
+        cmp #"L"
+        bne bad
+        jsr kb_b
+        cmp #1
+        bne bad
+        jsr kb_w                ; longueur du répertoire
+        jsr kb_b
+        cmp #7
+        beq go
+bad     jsr to_text             ; « GRX.LIB illisible »
+        jsr kl_pnm
+        lda #<m_blib
+        ldy #>m_blib
+        jmp stop_msg
+go      ldx #0                  ; premières routines, nombres (KBS)
+s       stx kli
+        jsr kb_b
+        ldx kli
+        sta KBS,x
+        inx
+        cpx #28
+        bne s
+        lda #0                  ; besoins, bibliothèque par bibliothèque
+        sta kli
+sc      ldx kli
+        cpx #7
+        beq scd
+        txa
+        asl
+        asl
+        tax
+        lda KBS,x
+        sta cur
+        lda KBS+1,x
+        sta cur+1
+        lda KBS+2,x
+        sta kbn
+        lda KBS+3,x
+        sta kbn+1
+        jsr kb_en
+        sta kbe
+r       lda kbn
+        ora kbn+1
+        beq rn
+        inc cur
+        bne r1
+        inc cur+1
+r1      jsr kb_b                ; drapeau : toujours gardée
+        and kbe
+        and #1
+        beq r2
+        jsr kmark
+r2      jsr kb_b                ; besoins : une arête chacun
+        sta kbd
+d       lda kbd
+        beq dn
+        jsr kb_b
+        sta gv
+        jsr kb_b
+        sta gv+1
+        lda kbe
+        beq d1
+        jsr kedge
+d1      dec kbd
+        jmp d
+dn      lda kbn
+        bne dn1
+        dec kbn+1
+dn1     dec kbn
+        jmp r
+rn      inc kli
+        jmp sc
+scd     jsr kb_w                ; fragments : 5 octets chacun, sautés
+f       lda gv
+        ora gv+1
+        beq fd
+        ldx #5
+f1      jsr kb_b
+        dex
+        bne f1
+        lda gv
+        bne f2
+        dec gv+1
+f2      dec gv
+        jmp f
+fd      jsr kb_b                ; noms externes : sautés
+        sta kbd
+e       lda kbd
+        beq ed
+e1      jsr kb_b
+        bne e1
+        dec kbd
+        jmp e
+ed      jsr kb_w                ; symboles : les noms des routines
+        lda gv
+        sta kbn
+        lda gv+1
+        sta kbn+1
+y       lda kbn
+        ora kbn+1
+        beq yd
+        ldx #0                  ; nom -> ktok (15 caractères au plus)
+        stx kbad
+y1      jsr kb_b
+        sta ktok,x
+        beq y2
+        inx
+        cpx #16
+        bcc y1
+        dex
+        inc kbad
+        bne y1
+y2      jsr kb_b                ; drapeaux
+        sta kbd
+        jsr kb_w                ; routine
+        lda gv
+        sta cur
+        lda gv+1
+        sta cur+1
+        jsr kb_w                ; valeur
+        lda kbd
+        and #1
+        beq y3
+        jsr kb_w                ; fragment
+y3      lda kbd
+        and #2
+        beq yn
+        lda kbad
+        bne yn
+        lda kbd
+        lsr
+        lsr
+        lsr
+        lsr
+        and #7
+        sta kli
+        jsr kb_en
+        beq yn
+        jsr kr_find
+        bcs yn
+        jsr kmark
+yn      lda kbn
+        bne yn1
+        dec kbn+1
+yn1     dec kbn
+        jmp y
+yd      jsr kl_clos
+        lda #<h_lib             ; commentaire, puis la ligne #lib
+        ldy #>h_lib
+        jsr os
+        lda #<s_lib
+        ldy #>s_lib
+        jsr os
+        lda #0                  ; SS : bibliothèques lues
+        sta kbd
+        ldx #6
+m       stx kli
+        jsr kb_en
+        cmp #1                  ; C=1 : lue
+        rol kbd
+        ldx kli
+        dex
+        bpl m
+        lda kbd
+        jsr ohexd
+        clc                     ; nombre de routines : dernière + 1
+        lda KBS+24
+        adc KBS+26
+        sta kbn
+        lda KBS+25
+        adc KBS+27
+        sta kbn+1
+        lda #0
+        sta cur
+        sta cur+1
+b       lda #0                  ; octets des marques, routine 0 d'abord
+        sta kbd
+        ldx #0
+b1      stx kli
+        jsr kmk_cur
+        cmp #1                  ; C=1 : gardée
+        ror kbd
+        inc cur
+        bne b2
+        inc cur+1
+b2      ldx kli
+        inx
+        cpx #8
+        bne b1
+        lda kbd
+        jsr ohexd
+        lda kbn                 ; jusqu'à la dernière routine
+        cmp cur
+        lda kbn+1
+        sbc cur+1
+        bcs b
+        jsr ocrlf
+        clc
+        rts
+.)
+
+; kb_en : A = 1 (Z=0) si la bibliothèque kli est lue (klfl), sinon 0
+kb_en
+.(
+        ldy kli
+        ldx klfl,y
+        beq y
+        lda 0,x
+        beq r
+y       lda #1
+r       rts
+.)
+
+; kb_w : mot suivant de GRX.LIB -> gv ; kb_b : octet suivant -> A (Z selon
+;   A), garde X et Y ; fin du fichier : « illisible »
+kb_w    jsr kb_b
+        sta gv
+        jsr kb_b
+        sta gv+1
+        rts
+kb_b
+.(
+        sty kby
+        ldy ipos
+        bpl g
+        stx kcx                 ; enregistrement suivant
+        ldx #F_SETDMA
+        lda #<ibuf
+        ldy #>ibuf
+        jsr BDOS
+        ldx #F_READ
+        lda #<ifcb
+        ldy #>ifcb
+        jsr BDOS
+        ldx kcx
+        cmp #0
+        beq g0
+        jsr to_text
+        jsr kl_pnm
+        lda #<m_blib
+        ldy #>m_blib
+        jmp stop_msg
+g0      tay
+g       lda ibuf,y
+        iny
+        sty ipos
+        ldy kby
+        cmp #0
+        rts
+.)
+
+kbnm    .asc "GRX     LIB"
+s_lib   .asc "#lib ",34,"GRX.LIB",34,",",0
 
 ; kl_find : ouvre la bibliothèque ifcb sur le lecteur du .GRX, sinon sur
 ;   un lecteur déjà lu (fonction 24) de A: à D: (la disquette système).
@@ -5653,3 +5931,8 @@ ptext   = lbuf+LMAX+1   ; texte du fichier, jusqu'à PTOP
 KMK     = ptext         ; fin de la traduction : marques des routines
 KMAXR   = 1024          ;   (une par numéro)
 KEDG    = KMK+KMAXR     ;   puis les arêtes (4 octets : de, vers)
+KBS     = rawbuf        ; kb_lib : premières routines, nombres (7 x 4)
+kbn     = rawbuf+28     ;   compte (2 octets)
+kbe     = rawbuf+30     ;   bibliothèque lue
+kbd     = rawbuf+31
+kby     = rawbuf+32

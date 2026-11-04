@@ -107,6 +107,11 @@ done
 # marques ;@ des routines : GRXASM n'en recopie que les utiles (tools/mark_inc.py)
 python3 tools/mark_inc.py build/src
 python3 tools/mark_inc.py build/src-en > /dev/null
+# GRX.LIB : les sept bibliothèques précompilées (tools/mk_lib.py) ; GRXASM
+# la prend si elle est là (ASM relie ses routines, octet pour octet comme
+# depuis les .INC, contrôlé contre xa), sinon il recopie les .INC
+XA="$XA" python3 tools/mk_lib.py build/src --verifie || exit 1
+XA="$XA" python3 tools/mk_lib.py build/src-en --verifie > /dev/null || exit 1
 
 # Chaque disquette existe en français et en anglais : « disque IMAGE IMAGE_EN
 # arguments de mkdisk » fait les deux. L'anglaise a le système, les programmes
@@ -125,7 +130,7 @@ disque() {   # disque IMAGE IMAGE_EN [--ro|--rw|--sys|--dir|fichiers]...
 }
 
 P=build/progs
-INCS="build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC build/src/ORIC.INC"
+INCS="build/src/CPA.INC build/src/HIRES.INC build/src/GRX.INC build/src/ANIM.INC build/src/ARR.INC build/src/FIL.INC build/src/SPR.INC build/src/ORIC.INC build/src/GRX.LIB"
 GRX_EX="files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx files/fleches.grx
   files/serpent.grx files/scores.grx files/sprites.grx files/heros.spr files/carte.grx
   files/tuiles.spr files/defile.grx files/rotscrol.grx files/JEU.GRX"

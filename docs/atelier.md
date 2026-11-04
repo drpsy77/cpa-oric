@@ -182,6 +182,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
 | `python3 tools/mkspr.py SOURCE.txt SORTIE.SPR` | fichier `.SPR` (sprites ou tuiles de GRAPHER) d'après un dessin en texte (`#` allumé, `o` caché, `.` transparent ; exemple : `tools/spr/tuiles.txt`) |
 | `tools/test_inc.sh` | les bibliothèques allégées de la disquette s'assemblent comme les originaux ; marquées (`mark_inc.py`) et avec leurs messages, les programmes traduits, qui en recopient les routines utiles, s'assemblent (xa et ASM.COM) |
+| `tools/test_lib.sh [NOM...]` | `GRX.LIB` (bibliothèques précompilées par `tools/mk_lib.py`) : chaque programme de `tools/grapher_tests` et chaque exemple, traduit avec et sans `/O`, donne par `#lib` (ASM.COM) les octets que donnent les `.INC` (xa) ; affiche les instructions de GRXASM et d'ASM (~30 min ; `LANGUE=en`) |
+| `python3 tools/mk_lib.py DOSSIER [--verifie]` | précompile les bibliothèques marquées de DOSSIER en `GRX.LIB` (lancé par `build.sh`) ; `--verifie` : lien complet == xa, CP/A et `/O` |
 | `LANGUE=en tools/test_grapher.sh` | GRAPHER et GRXASM anglais (`build/progs-en`, `build/src-en`) contre les références françaises traduites par les fichiers de messages (`tools/msg_fr_en.py`) |
 | `tools/setup_clk.sh` | installe le banc Clock Signal dans `tools/clk/` (une fois, long) |
 | `tools/build_clk_mac.sh` | sur le Mac, avec Xcode : Clock Signal à quatre lecteurs dans `tools/clk-mac/` |

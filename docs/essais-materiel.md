@@ -9,6 +9,19 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Bibliothèques précompilées** (`GRX.LIB`, `docs/grapher.md` § 12) :
+
+- sur `cpa-exemples.dsk` : `GRXASM CARTE` puis `ASM CARTE`, chronométrés ; `CARTE.ASM`
+  finit par une ligne `#lib "GRX.LIB",...` (`TYPE CARTE.ASM`) ; `CARTE` se lance et se
+  joue comme avant. Puis sur une copie de la disquette sans `GRX.LIB` (`SET GRX.LIB RW`,
+  `ERA GRX.LIB`) : même chaîne, plus longue, même `CARTE.COM` (`STAT`, taille) — c'est
+  le gain réel sur le LOCI (dans le 6502 simulé : GRXASM 2,6 fois, ASM 2,4 fois moins
+  d'instructions pour `CARTE`) ;
+- usage à deux disquettes : `cpa.dsk` en A:, un `.GRX` sur `cpa-projet.dsk` en B:,
+  `GRXASM B:NOM /C` : `GRX.LIB` est trouvée sur A: (par GRXASM puis par ASM) ;
+- `GRXASM SERPENT /O` (`ASM` lancé seul) : le `.TAP` se charge par `CLOAD""` sous BASIC
+  1.1 et le jeu marche comme avant.
+
 **Disquettes de 80 pistes** (2 faces, images de 1 Mo ; `docs/systeme.md` § 3) :
 
 - démarrage sur `cpa.dsk` et sur chaque disquette du coffret : le LOCI monte-t-il une image
