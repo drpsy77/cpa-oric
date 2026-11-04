@@ -18,6 +18,7 @@ e_phase   .asc "Phase error",0
 e_org     .asc "Address",0
 e_fwd     .asc "Forward reference too complex",0
 e_big     .asc "Code too big",0
+e_lib     .asc "Bad library",0
 
 m_usage   .asc "Usage : ASM NAME [/S] [/E] [/T]",13,10
           .asc " NAME.ASM -> NAME.COM ; /S : NAME.SYM",13,10

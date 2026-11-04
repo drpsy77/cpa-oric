@@ -674,7 +674,18 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   (§ 15). These files are looked for on the
   drive of the `.GRX`, then on the drives already read from A: to D: (system disk in A:,
   project in B:); otherwise: `GRX.INC missing (library)`. ASM then only
-  needs `CPA.INC`, looked for the same way. For MAP, `NAME.ASM` is 46 KB: `/C` only leaves
+  needs `CPA.INC`, looked for the same way. **Precompiled libraries**: if `GRX.LIB` is found
+  (looked for like the `.INC`s, before them), GRXASM opens no `.INC`: it reads the needs and
+  names of the routines in `GRX.LIB`, chooses the same ones, and ends `NAME.ASM` with a single
+  line `#lib "GRX.LIB",SSBB...` (libraries read, routines kept) instead of their lines. ASM
+  takes the already assembled bytes of these routines from it and links them at that point:
+  the `.COM` (the `.TAP` with `/O`) is the same, byte for byte. `GRX.LIB` (32 KB) holds the
+  seven libraries; `NAME.ASM` becomes short (the program only), translating and assembling
+  are two to five times faster depending on the size of the program (instructions run,
+  measured in the simulated 6502: `MAP`, GRXASM 2.2 million instead of 5.9, ASM 3.7 instead
+  of 8.9; a small test program, GRXASM 4 to 5 times fewer). Without `GRX.LIB`, everything
+  goes through the `.INC`s as before; they stay on the same disks. Such a `NAME.ASM` no longer assembles with xa
+  (which does not know `#lib`). For MAP, `NAME.ASM` is 46 KB: `/C` only leaves
   `NAME.COM` (8 KB). They are, with GRXASM, on the complete disk, the Assembler disk and the
   Animations disk (not on the Logo disk, which has no ASM).
 - Size of a translated `.COM`: 1.4 KB for `SKETCH`, 1.7 KB for `DRAWING`, 2.2 KB for `PATTERNS`,
@@ -867,6 +878,33 @@ reads then removes:
 - `;&name` ... `;&` (`ORIC.INC`): the lines belong to routine `name`, without being a need
   of the routine they are in: the entries of the table `o_ftab` (function, address) are only
   copied with their routine.
+
+**Precompiled libraries** (`GRX.LIB`): `tools/mk_lib.py` (run by `build.sh` after
+`mark_inc.py`, in `build/src` and `build/src-en`) assembles the seven marked libraries, in
+the order and with the lines GRXASM would copy, with an assembler of ASM's subset that keeps
+for each byte the expression it comes from. The lines are grouped into fragments
+(consecutive lines of the same routine of the same library; routine 0: the lines always
+copied); a byte that depends on a label becomes a relocation (word, low byte, high byte,
+relative branch; to a fragment + offset, or to an external name). The constants of
+`CPA.INC` are copied as numbers, except those `ORIC.INC` defines otherwise (`BDOS`,
+`B_CONIN`, `B_CONST`: labels with `/O`), and `O_FILES`, written by GRXASM: these names are
+looked up at link time. The tool assembles twice (CP/A with `CPA.INC`, `/O` with `ORIC.INC`)
+and refuses code that differs between the two outside `ORIC.INC`; with `--verifie` it checks
+that linking all the routines gives xa's bytes in both cases. Format (at the top of
+`tools/mk_lib.py`): GRXASM's directory (first routine and count per library, then each
+routine's flag and needs), fragment table (library, routine, size), external names, global
+symbols (name, flags including "routine name", routine, value or fragment + offset), then
+each fragment's code (runs of plain bytes and relocations). GRXASM (`kb_lib`, before
+`kl_run`) reads the directory and the symbols: it marks the "always" routines and those
+whose name was recorded, adds the edges, closes (`kl_clos`), then writes the `#lib` line. ASM
+(`lib_dir`) skips the directory; in pass 1 it computes the address of each kept fragment (a
+2-byte table per fragment, taken below `outlim`) and defines the symbols of the kept
+routines; in pass 2 it resolves the external names, checks the symbols (phase error
+otherwise) and writes the relocated bytes. A relocation to a fragment not kept gives
+"Unknown symbol", a truncated file or one of another format "Bad library".
+`tools/test_lib.sh` translates every program of `tools/grapher_tests` and every example,
+with and without `/O`, through the `.INC`s (assembled by xa) and through `GRX.LIB`
+(assembled by ASM.COM), and compares the bytes.
 
 **Two dimensions**: the program writes (column, line); `ARR.INC` keeps in memory and in the
 descriptor the order (lines, columns): `r_dim2` and `r_ea2` (hence `r_get2`) swap `r_i` and

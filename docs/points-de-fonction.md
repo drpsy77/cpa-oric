@@ -16,23 +16,23 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 183 | 48 | 78 | **359** | 75 | **434** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
-| GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 56 | **290** |
+| GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 57 | **291** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
-| ASM | 0 | 5 | 0 | 4 | 0 | **9** | 12 | **21** |
+| ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *221* | ***1101*** |
+| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *225* | ***1105*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
-| Outillage PC | 7 | 15 | 39 | 138 | 21 | **220** | 48 | **268** |
-| **Total** | **227** | **82** | **688** | **360** | **216** | **1573** | **361** | **1934** |
+| Outillage PC | 7 | 15 | 39 | 146 | 21 | **228** | 53 | **281** |
+| **Total** | **227** | **82** | **688** | **368** | **216** | **1581** | **370** | **1951** |
 
-Points ajustés (indicatif, § 9) : 1 573 × 1,05 ≈ 1 652.
+Points ajustés (indicatif, § 9) : 1 581 × 1,05 ≈ 1 660.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 88 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 90 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -433,6 +433,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A14 | `/A`, `/C` : passage à GRXASM, puis à ASM, par CHAIN ; bibliothèques cherchées sur le lecteur du `.GRX`, puis sur les lecteurs lus | `grapher.s`, `grxasm.s` | 1 |
 | GRA.A15 | Tuiles : une table par place dans la tuile, carte traduite par morceaux (avant, dans, après la carte), instructions modifiées par ligne, coordonnées sans division | `spr.inc` | 5 |
 | GRA.A16 | Oric seul : socle sans la ROM (vecteurs pris où la ROM les envoie, clavier, console, BDOS réduit à table d'entrées gardées avec leur routine, fichiers recopiés dans le programme, retour au texte), en-tête du `.TAP` dans la source | `oric.inc`, `grxasm.s` | 5 |
+| GRA.A17 | GRXASM : bibliothèques précompilées (`GRX.LIB` : besoins et noms lus, ligne `#lib`), repli sur les `.INC` | `grxasm.s` | 1 |
 
 ### 4.3 LOGO
 
@@ -642,6 +643,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | ASM.A02 | Évaluateur d'expressions (priorités, `<` `>`, unaires, `*`) | `asm.s` | 3 |
 | ASM.A03 | Table des symboles, blocs locaux `.(` `.)` | `asm.s` | 3 |
 | ASM.A04 | Directives (`.byt`, `.asc`, `.word`, `.dsb`, second `*=`), inclusion (lecteur de la source, puis lecteurs lus) | `asm.s` | 1 |
+| ASM.A05 | Édition de liens `#lib` : fragments gardés, symboles des routines, relogements (mot, octet bas ou haut, branchement), noms externes | `asm.s` | 3 |
 
 ### 4.9 DEBUG
 
@@ -826,6 +828,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T51 | `vitrine.py` : CP/A montré en boucle (scènes au hasard, frappe humaine, programmes écrits dans EDIT s'ils manquent, reprise, pause quand quelqu'un tape) | EO | 1 | 10 | F | 4 |
 | OUT.T52 | `remote.py --spectateurs` : clients en lecture seule (page, refus des envois, du journal, de la version et de l'appel de l'Oric), spectateurs comptés par leur adresse réelle, plafond (503) | EQ | 1 | 7 | F | 3 |
 | OUT.T53 | `passerelle.py` : fichiers de la passerelle (WireGuard du VPS et de la maison, Apache en lecture seule, services du démon et de la vitrine, mode d'emploi), clés gardées | EO | 1 | 9 | F | 4 |
+| OUT.T54 | `mk_lib.py` : bibliothèques précompilées `GRX.LIB` (`--verifie` : lien complet == xa, CP/A et `/O`) | EO | 2 | 4 | F | 4 |
+| OUT.T55 | `test_lib.sh` : programmes traduits par `GRX.LIB` (ASM.COM) == par les `.INC` (xa) | EO | 2 | 3 | F | 4 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -849,53 +853,54 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.A18 | ROM BASIC 1.1 exécutée depuis sa saisie (`CHRGET` recopiée, arrêt avant l'insertion de la ligne), lignes tirées au hasard | `test_bas.py` | 1 |
 | OUT.A19 | Console à distance côté Mac : trames retrouvées dans le flux (début, longueur, total ; réponses en retard jetées), lignes changées trouvées par les totaux de Fletcher, délai de réponse selon les touches envoyées | `remote.py` | 1 |
 | OUT.A20 | Clés WireGuard : X25519 (échelle de Montgomery, RFC 7748), vérifiée par le vecteur de la RFC | `passerelle.py` | 1 |
+| OUT.A21 | Assembleur du sous-ensemble d'ASM qui garde l'origine de chaque octet : fragments, relogements, deux contextes (CP/A, `/O`) comparés | `mk_lib.py` | 5 |
 
 ## 7. Mesures
 
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 117 | 1 422 | 571 | 1 650 | 11 % | 37 524 | 34 | 105 |
+| Système et commandes | 70 | 12 152 | 1 427 | 571 | 1 656 | 11 % | 37 640 | 34 | 105 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
-| GRAPHER + GRXASM | 23 | 14 264 | 1 194 | 460 | 0 | 8 % | 34 033 | 61 | 145 |
+| GRAPHER + GRXASM | 23 | 14 539 | 1 202 | 464 | 0 | 8 % | 34 771 | 62 | 149 |
 | LOGO | 12 | 9 490 | 625 | 319 | 848 | 6 % | 18 979 | 49 | 98 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 33 | 6 550 | 699 | 260 | 0 | 10 % | 13 467 | 67 | 137 |
-| ASM | 4 | 2 481 | 133 | 77 | 70 | 5 % | 6 140 | 276 | 682 |
+| ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
-| Exemples | 33 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 189 | 11 240 | 1 562 | 888 | 0 | 12 % | — | 51 | — |
-| **Total** | 387 | 77 972 | 6 886 | 3 321 | 2 573 | 8 % | 159 766 | 50 | 102 |
+| Exemples | 34 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
+| Outillage PC | 191 | 12 384 | 1 721 | 983 | 0 | 12 % | — | 54 | — |
+| **Total** | 390 | 79 986 | 7 078 | 3 429 | 2 579 | 8 % | 161 802 | 51 | 102 |
 
-Octets du système : code résident 12 820 (`$C000-$F214`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 559 octets.
+Octets du système : code résident 12 885 (`$C000-$F255`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 724 | 85 | 4,8 | 102 |
+| Système et commandes | 1 732 | 85 | 4,8 | 104 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 978 | 70 | 4,2 | 41 |
+| GRAPHER + GRXASM | 1 017 | 70 | 4,3 | 41 |
 | LOGO | 316 | 64 | 1,6 | 21 |
 | CMDER | 235 | 26 | 2,6 | 18 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 4 |
 | VOIR | 78 | — | 4,1 | 11 |
 | USB | 80 | 13 | 0,8 | 27 |
-| ASM | 62 | 10 | 6,9 | 6 |
+| ASM | 63 | 11 | 7,0 | 6 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 27 |
-| Outillage PC | 349 | — | 1,6 | 145 |
-| Transverse (projet) | 2 811 | — | — | 112 |
-| Traduction anglaise (docs/en) | 2 973 | — | — | 51 |
-| **Total** | 9 916 | 322 | 6,3 | 247 |
+| Exemples | 0 | — | 0,0 | 28 |
+| Outillage PC | 351 | — | 1,5 | 152 |
+| Transverse (projet) | 2 857 | — | — | 116 |
+| Traduction anglaise (docs/en) | 3 012 | — | — | 54 |
+| **Total** | 10 051 | 323 | 6,4 | 259 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 247 commits du 2026-10-04 au 2026-11-02.
+Historique : 259 commits du 2026-10-04 au 2026-11-04.
 
-Réutilisation : 56 106 lignes de code écrites dans `progs/`, 66 296 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 56 935 lignes de code écrites dans `progs/`, 67 125 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -969,6 +974,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-02 | console à distance, lot 4 | 0.9 | 1 554 | 359 | 1 913 | 244 | page web (`tools/remote.html`, servie par le démon) : écran, clavier de l'ordinateur et du téléphone, Coller, RESET ; plafonds du pilote par port ; firmware du Pico |
 | 2026-11-02 | vitrine | 0.9 | 1 569 | 360 | 1 929 | 245 | `tools/vitrine.py` (CP/A montré en boucle, scènes au hasard) ; `MOSAIQUE.GRX`, `HORLOGE.GRX` en LORES ; spectateurs en lecture seule (`--spectateurs`), page sous un chemin (passerelle) |
 | 2026-11-03 | passerelle | 0.9 | 1 573 | 361 | 1 934 | 248 | `tools/passerelle.py` (WireGuard, Apache en lecture seule, services du démon et de la vitrine ; clés X25519 calculées) ; spectateurs comptés et plafonnés, appel de l'Oric refusé depuis la passerelle |
+| 2026-11-04 | GRX.LIB | 0.9 | 1 581 | 370 | 1 951 | 260 | bibliothèques des programmes traduits précompilées (`tools/mk_lib.py`, `GRX.LIB`) ; ASM : directive `#lib` (édition de liens) ; GRXASM : `GRX.LIB` lue si présente, sinon les `.INC` ; `tools/test_lib.sh` |
 
 ## 11. Comparaisons
 
@@ -986,9 +992,9 @@ d'équivalent.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Système, commandes, utilitaires de fichiers | 359 | 75 | 434 | 261 | 41 | 302 | 1,4 |
 | Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
-| Assembleur (ASM / ASM et LOAD) | 9 | 12 | 21 | 13 | 13 | 26 | 0,8 |
+| Assembleur (ASM / ASM et LOAD) | 9 | 15 | 24 | 13 | 13 | 26 | 0,9 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **517** | **118** | **635** | **396** | **78** | **474** | **1,3** |
+| **Total** | **517** | **121** | **638** | **396** | **78** | **474** | **1,3** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

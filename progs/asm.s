@@ -19,6 +19,8 @@
 ;    .dsb n[,v]  n octets valant v (0 par défaut)
 ;    .( et .)    bloc : les étiquettes définies dedans y sont locales
 ;    #include "FICHIER"   (un niveau)
+;    #lib "FICHIER",SSBB...  bibliothèques précompilées (GRX.LIB de
+;                GRXASM) : routines choisies, liées à cet endroit
 ;    ; commentaire
 ;  Expressions : nombres décimaux, $hexa, %binaire, "c" ou 'c',
 ;    * (adresse courante), symboles, ( ), + - * / & | ^ << >>,
@@ -83,6 +85,7 @@ E_PHASE = 13
 E_ORG   = 14
 E_FWD   = 15
 E_BIG   = 16
+E_LIB   = 17
 
 ; --- page zéro ---
 lp      = $10           ; position dans la ligne
@@ -140,6 +143,8 @@ gop_c   = $5E
 wx      = $60
 rp      = $61
 wy      = $62
+lp1     = $64           ; #lib : pointeurs
+lp2     = $66
 inq     = $5F
 
         *= $0500
@@ -235,6 +240,7 @@ clb     sta bk_lo,x
         sta errs+1
         sta nsyms
         sta nsyms+1
+        sta ltab+1              ; #lib : tables pas encore prises
         lda #<fcb_src           ; le fichier source existe-t-il ?
         ldy #>fcb_src
         jsr open_fcb
@@ -1043,7 +1049,18 @@ go      lda val                 ; comme xa : le code suivant est mis à la
 preproc
 .(
         jsr nextc
-        ldx #0                  ; le mot doit être « include »
+        ldx #0                  ; le mot doit être « include » ou « lib »
+        stx lislib
+        lda #7
+        sta lend
+        jsr peek
+        ora #$20
+        cmp #"l"
+        bne cmpw
+        ldx #7
+        lda #10
+        sta lend
+        inc lislib
 cmpw    jsr peek
         ora #$20
         cmp w_include,x
@@ -1052,7 +1069,7 @@ cmpw    jsr peek
 inc_ok
         jsr nextc
         inx
-        cpx #7
+        cpx lend
         bne cmpw
         lda #$22
         jsr expect
@@ -1090,7 +1107,10 @@ ex      jsr peek
         inx
         bne ex
 endn    jsr nextc
-        jsr endline
+        lda lislib
+        beq ninc
+        jmp lib_dir
+ninc    jsr endline
         lda cur
         beq one
         lda #E_INCNEST
@@ -1115,6 +1135,556 @@ ok      lda #1
         rts
 bad     lda #E_DIR
         jmp error
+.)
+
+; ---------------------------------------------------------------------
+; #lib "GRX.LIB",SSBB... : bibliothèques précompilées (tools/mk_lib.py)
+; ---------------------------------------------------------------------
+; Écrite par GRXASM à la place des routines recopiées. SS, BB... :
+;   octets en hexadécimal ; SS : bibliothèques lues (bit n : la n-ième) ;
+;   puis bit n de l'octet n/8 : la routine n est gardée (0 : les lignes
+;   toujours recopiées d'une bibliothèque lue). Le fichier est cherché
+;   comme un #include. Passe 1 : adresses des fragments gardés, leurs
+;   symboles ; passe 2 : symboles vérifiés, octets relogés. Une seule
+;   directive #lib par source (tables prises sous outlim).
+LSELN   = 129
+
+lib_dir
+.(
+        lda cur
+        beq l0
+        lda #E_INCNEST
+        jmp error
+l0      lda #","
+        jsr expect
+        ldx #0
+        txa
+z       sta lsel,x
+        inx
+        cpx #LSELN
+        bne z
+        ldx #0
+h       jsr peek
+        jsr is_end
+        beq hd
+        jsr lhex
+        bcs bad
+        asl
+        asl
+        asl
+        asl
+        sta lsel,x
+        jsr peek
+        jsr lhex
+        bcs bad
+        ora lsel,x
+        sta lsel,x
+        inx
+        cpx #LSELN
+        bne h
+        jsr endline
+hd      lda #<fcb_inc
+        ldy #>fcb_inc
+        jsr open_fcb
+        cmp #$FF
+        bne op
+        jsr inc_alt             ; ailleurs : lecteurs déjà lus, A: à D:
+        bcc op
+        lda #E_INCNF
+        jmp error
+bad     lda #E_LIB
+        jmp error
+op      lda #$80
+        sta ridx+1
+        jsr lgb                 ; « GL », version 1
+        cmp #"G"
+        bne bad
+        jsr lgb
+        cmp #"L"
+        bne bad
+        jsr lgb
+        cmp #1
+        bne bad
+        jsr lgw                 ; répertoire de GRXASM : sauté
+sk      lda lx
+        ora lx+1
+        beq sk2
+        jsr lgb
+        lda lx
+        bne sk1
+        dec lx+1
+sk1     dec lx
+        jmp sk
+sk2     jsr lgw                 ; fragments
+        lda lx
+        sta lnf
+        sta lcnt
+        lda lx+1
+        sta lnf+1
+        sta lcnt+1
+        lda ltab+1              ; tables : la première fois
+        bne tb1
+        sec                     ; lext = outlim - 512
+        lda outlim
+        sta lext
+        lda outlim+1
+        sbc #2
+        sta lext+1
+        lda lnf                 ; ltab = lext - 2 * fragments
+        asl
+        sta t0
+        lda lnf+1
+        rol
+        sta t0+1
+        sec
+        lda lext
+        sbc t0
+        sta ltab
+        sta outlim
+        lda lext+1
+        sbc t0+1
+        sta ltab+1
+        sta outlim+1
+        lda symtop+1            ; place : une page au-dessus des symboles
+        clc
+        adc #1
+        cmp outlim+1
+        bcc tb1
+        lda #<m_symfull
+        ldy #>m_symfull
+        jsr puts
+        jmp WBOOT
+tb1     lda ltab
+        sta lp1
+        lda ltab+1
+        sta lp1+1
+        lda pc
+        sta lnpc
+        lda pc+1
+        sta lnpc+1
+fl      lda lcnt                ; adresse de chaque fragment gardé
+        ora lcnt+1
+        beq fd
+        jsr lgb
+        sta lsec
+        jsr lgw
+        jsr lkeep
+        php
+        jsr lgw
+        plp
+        ldy #0
+        bcc nk
+        lda lnpc
+        sta (lp1),y
+        iny
+        lda lnpc+1
+        sta (lp1),y
+        clc
+        lda lnpc
+        adc lx
+        sta lnpc
+        lda lnpc+1
+        adc lx+1
+        sta lnpc+1
+        jmp nx
+nk      tya
+        sta (lp1),y
+        iny
+        sta (lp1),y
+nx      jsr lp1n
+        jsr ldec
+        jmp fl
+fd      jsr lgb                 ; noms externes : valeurs en passe 2
+        sta lne
+        sta lcnt
+        lda lext
+        sta lp2
+        lda lext+1
+        sta lp2+1
+el      lda lcnt
+        beq ed
+        jsr lname
+        lda pass
+        cmp #2
+        bne en
+        jsr lookup
+        lda #0                  ; absent : 0, signalé s'il sert
+        sta val
+        sta val+1
+        bcs es
+        ldy #S_VAL
+        lda (sym),y
+        sta val
+        iny
+        lda (sym),y
+        sta val+1
+es      ldy #0
+        lda val
+        sta (lp2),y
+        iny
+        lda val+1
+        sta (lp2),y
+en      clc
+        lda lp2
+        adc #2
+        sta lp2
+        bcc en1
+        inc lp2+1
+en1     dec lcnt
+        jmp el
+ed      jsr lgw                 ; symboles des routines gardées
+        lda lx
+        sta lcnt
+        lda lx+1
+        sta lcnt+1
+sl      lda lcnt
+        ora lcnt+1
+        beq sd
+        jsr lname
+        jsr lgb
+        sta lfl
+        lsr
+        lsr
+        lsr
+        lsr
+        and #7
+        sta lsec
+        jsr lgw                 ; routine
+        jsr lkeep
+        php
+        jsr lgw                 ; valeur, ou décalage dans le fragment
+        lda lx
+        sta val
+        lda lx+1
+        sta val+1
+        lda lfl
+        and #1
+        beq nl
+        jsr lgw                 ; étiquette : + adresse du fragment
+        jsr lfrag
+        clc
+        ldy #0
+        lda (lp2),y
+        adc val
+        sta val
+        iny
+        lda (lp2),y
+        adc val+1
+        sta val+1
+nl      plp
+        bcc snx
+        lda #<lnam
+        sta lbl
+        lda #>lnam
+        sta lbl+1
+        lda nmlen
+        sta lbllen
+        lda lfl
+        and #1
+        eor #1
+        sta isequ
+        lda #1
+        sta eknown
+        jsr define
+snx     jsr ldec
+        jmp sl
+sd      lda pass
+        cmp #2
+        beq code
+        lda lnpc                ; passe 1 : place des fragments gardés
+        cmp pc
+        bne p1
+        lda lnpc+1
+        cmp pc+1
+        beq p3
+p1      lda orgset
+        bne p2
+        lda pc
+        sta org
+        lda pc+1
+        sta org+1
+        lda #1
+        sta orgset
+p2      sec
+        lda lnpc
+        sbc pc
+        tax
+        lda lnpc+1
+        sbc pc+1
+        tay
+        clc
+        txa
+        adc ocnt
+        sta ocnt
+        tya
+        adc ocnt+1
+        sta ocnt+1
+        lda lnpc
+        sta pc
+        lda lnpc+1
+        sta pc+1
+p3      rts
+code    lda ltab                ; passe 2 : octets des fragments gardés
+        sta lp1
+        lda ltab+1
+        sta lp1+1
+        lda lnf
+        sta lcnt
+        lda lnf+1
+        sta lcnt+1
+cl      lda lcnt
+        ora lcnt+1
+        bne c0
+        rts
+c0      ldy #0
+        lda (lp1),y
+        sta lbase
+        iny
+        lda (lp1),y
+        sta lbase+1             ; 0 : fragment pas gardé
+it      jsr lgb
+        beq cnx                 ; 0 : fin du fragment
+        bmi rl
+        sta lc                  ; octets tels quels
+li      jsr lgb
+        ldx lbase+1
+        beq li1
+        jsr emit
+li1     dec lc
+        bne li
+        beq it
+cnx     jsr lp1n
+        jsr ldec
+        jmp cl
+rl      sta lc                  ; relogement
+        and #4
+        beq rf
+        jsr lgb                 ; nom externe numéro A
+        sta lx
+        lda #0
+        sta lx+1
+        lda lext
+        sta lp2
+        lda lext+1
+        sta lp2+1
+        jsr lfrg2
+        jmp rv
+rf      jsr lgw                 ; fragment
+        jsr lfrag
+rv      ldy #0
+        lda (lp2),y
+        sta val
+        iny
+        lda (lp2),y
+        sta val+1
+        lda val+1               ; 0 : fragment pas gardé (routine oubliée)
+        bne ra                  ;   ou nom externe absent
+        lda lbase+1
+        beq ra
+        lda #E_UNDEF
+        jsr report
+ra      lda lc                  ; + décalage
+        and #8
+        beq rg
+        jsr lgw
+        clc
+        lda val
+        adc lx
+        sta val
+        lda val+1
+        adc lx+1
+        sta val+1
+rg      lda lbase+1
+        bne rg1
+        jmp it
+rg1
+        lda lc
+        and #3
+        beq rw
+        cmp #1
+        beq rlo
+        cmp #2
+        beq rhi
+        sec                     ; branchement : val - (pc + 1)
+        lda val
+        sbc pc
+        tax
+        lda val+1
+        sbc pc+1
+        tay
+        txa
+        bne rb1
+        dey
+rb1     dex
+        txa
+        cpy #0
+        beq rb2
+        cpy #$FF
+        bne rbf
+        cmp #$80
+        bcs rb3
+rbf     lda #E_BRANCH
+        jsr report
+        lda #0
+        beq rb3
+rb2     cmp #$80
+        bcs rbf
+rb3     jsr emit
+        jmp it
+rw      lda val
+        jsr emit
+rhi     lda val+1
+        jsr emit
+        jmp it
+rlo     lda val
+        jsr emit
+        jmp it
+.)
+
+; lfrag : lp2 = ltab + 2 * lx ; lfrg2 : lp2 += 2 * lx
+lfrag   lda ltab
+        sta lp2
+        lda ltab+1
+        sta lp2+1
+lfrg2   lda lx
+        asl
+        tax
+        lda lx+1
+        rol
+        tay
+        txa
+        clc
+        adc lp2
+        sta lp2
+        tya
+        adc lp2+1
+        sta lp2+1
+        rts
+
+; lp1n : lp1 += 2 ; ldec : lcnt - 1
+lp1n    clc
+        lda lp1
+        adc #2
+        sta lp1
+        bcc lp1r
+        inc lp1+1
+lp1r    rts
+ldec    lda lcnt
+        bne ld1
+        dec lcnt+1
+ld1     dec lcnt
+        rts
+
+; lkeep : C=1 si la routine lx de la bibliothèque lsec est gardée
+lkeep
+.(
+        lda lsel
+        ldx lsec
+        beq k2
+k1      lsr
+        dex
+        bne k1
+k2      lsr
+        bcc r
+        lda lx
+        ora lx+1
+        beq r                   ; routine 0 (C=1)
+        lda lx+1
+        sta t0
+        lda lx
+        lsr t0
+        ror
+        lsr t0
+        ror
+        lsr t0
+        ror
+        tax
+        lda lx
+        and #7
+        tay
+        iny
+        lda lsel+1,x
+k3      lsr
+        dey
+        bne k3
+r       rts
+.)
+
+; lhex : chiffre hexadécimal en lp -> A (lp après lui) ; C=1 : pas un chiffre
+lhex
+.(
+        jsr upcase
+        sec
+        sbc #"0"
+        cmp #10
+        bcc ok
+        sbc #7
+        cmp #10
+        bcc no
+        cmp #16
+        bcs no
+ok      pha
+        jsr nextc
+        pla
+        clc
+        rts
+no      sec
+        rts
+.)
+
+; lname : nom terminé par 0 -> lnam, nmptr, nmlen
+lname
+.(
+        ldy #0
+l       jsr lgb
+        beq e
+        sta lnam,y
+        iny
+        cpy #32
+        bne l
+        lda #E_LIB
+        jmp error
+e       sty nmlen
+        lda #<lnam
+        sta nmptr
+        lda #>lnam
+        sta nmptr+1
+        rts
+.)
+
+; lgw : mot suivant de la bibliothèque -> lx
+lgw     jsr lgb
+        sta lx
+        jsr lgb
+        sta lx+1
+        rts
+
+; lgb : octet suivant de la bibliothèque (fcb_inc, recb1) -> A, Z selon A ;
+;   garde Y ; fin du fichier : erreur
+lgb
+.(
+        ldx ridx+1
+        bpl g
+        sty lgy
+        ldx #F_SETDMA
+        lda #<recb1
+        ldy #>recb1
+        jsr BDOS
+        ldx #F_READ
+        lda #<fcb_inc
+        ldy #>fcb_inc
+        jsr BDOS
+        ldy lgy
+        cmp #0
+        beq g0
+        lda #E_LIB
+        jmp error
+g0      tax
+g       lda recb1,x
+        inx
+        stx ridx+1
+        cmp #0
+        rts
 .)
 
 upcase
@@ -2570,7 +3140,7 @@ d_hi    .byt >10000,>1000,>100,>10
 #include "asm_tab.s"
 
 hexdigits .asc "0123456789ABCDEF"
-w_include .asc "include"
+w_include .asc "include","lib"
 
 ; état des deux fichiers (0 = source, 1 = fichier inclus)
 ridx    .byt $80,$80
@@ -2584,7 +3154,7 @@ rb_hi   .byt >recb0,>recb1
 
 err_tab .word e_syn, e_undef, e_dup, e_mode, e_range, e_branch, e_mnem
         .word e_dir, e_p1, e_incnf, e_incnest, e_block, e_div, e_phase
-        .word e_org, e_fwd, e_big
+        .word e_org, e_fwd, e_big, e_lib
 
 #include "asm.msg"            ; messages (progs/msg/fr, en)
 opt_s     .byt 0            ; /S : NOM.SYM écrit
@@ -2610,4 +3180,21 @@ sstk_lo = fcb_out+36
 sstk_hi = sstk_lo+MAXSCOPE
 dword   = sstk_hi+MAXSCOPE
 obuf    = dword+8           ; enregistrement écrit (NOM.COM, NOM.SYM)
-SYMBASE = obuf+128
+lsel    = obuf+128          ; #lib : bibliothèques lues, routines gardées
+lnam    = lsel+LSELN        ; #lib : nom lu dans la bibliothèque
+lv      = lnam+32           ; #lib : variables (ci-dessous)
+SYMBASE = lv+24
+lislib  = lv                ; #lib plutôt que #include
+lend    = lv+1
+ltab    = lv+2              ; table des fragments (2 octets : adresse, 0 : pas
+lext    = lv+4              ;   gardé), valeurs des noms externes : prises
+lnf     = lv+6              ;   sous outlim à la première passe
+lcnt    = lv+8
+lx      = lv+10
+lnpc    = lv+12
+lbase   = lv+14
+lsec    = lv+16
+lfl     = lv+17
+lc      = lv+18
+lgy     = lv+19
+lne     = lv+20

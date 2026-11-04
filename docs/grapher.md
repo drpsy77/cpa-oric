@@ -693,6 +693,18 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   l'interpréteur n'y sont pas : les copies de la disquette en sont privées (§ 15). Ces fichiers sont cherchés sur le lecteur du `.GRX`, puis sur les
   lecteurs déjà lus de A: à D: (la disquette système en A:, le projet en B:) ; sinon :
   `GRX.INC absente (bibliotheque)`. ASM n'a ensuite besoin que de `CPA.INC`, cherché de même.
+- **Bibliothèques précompilées.** Si `GRX.LIB` est trouvée (cherchée comme les `.INC`, avant
+  eux), GRXASM n'ouvre aucun `.INC` : il lit dans `GRX.LIB` les besoins et les noms des
+  routines, choisit les mêmes, et termine `NOM.ASM` par une seule ligne
+  `#lib "GRX.LIB",SSBB...` (bibliothèques lues, routines gardées) au lieu de leurs lignes.
+  ASM y prend les octets déjà assemblés de ces routines et les relie à cet endroit : le
+  `.COM` (le `.TAP` avec `/O`) est le même, octet par octet. `GRX.LIB` (32 Ko) contient les
+  sept bibliothèques ; `NOM.ASM` devient court (le programme seul), la traduction et
+  l'assemblage vont deux à cinq fois plus vite selon la taille du programme (instructions
+  exécutées, mesurées dans le 6502 simulé : `CARTE`, GRXASM 2,2 millions au lieu de 5,9,
+  ASM 3,7 au lieu de 8,9 ; un petit programme de test, GRXASM 4 à 5 fois moins). Sans
+  `GRX.LIB`, tout se passe comme avant par les `.INC`, qui restent sur les mêmes
+  disquettes. Un tel `NOM.ASM` ne s'assemble plus par xa (qui ne connaît pas `#lib`).
   Pour CARTE, `NOM.ASM` fait 46 Ko : `/C` ne laisse que `NOM.COM` (8 Ko). Ils sont,
   avec GRXASM, sur la disquette complète, la disquette Assembleur et la disquette
   Animations (pas sur la disquette Logo, qui n'a pas ASM).
@@ -897,6 +909,34 @@ retire :
 - `;&nom` ... `;&` (`ORIC.INC`) : les lignes appartiennent à la routine `nom`, sans en être
   un besoin de la routine où elles sont : les entrées de la table `o_ftab` (fonction,
   adresse) ne sont recopiées qu'avec leur routine.
+
+**Bibliothèques précompilées** (`GRX.LIB`) : `tools/mk_lib.py` (lancé par `build.sh` après
+`mark_inc.py`, dans `build/src` et `build/src-en`) assemble les sept bibliothèques marquées,
+dans l'ordre et avec les lignes que GRXASM recopierait, par un assembleur du sous-ensemble
+d'ASM qui garde pour chaque octet l'expression d'où il vient. Les lignes sont groupées en
+fragments (lignes consécutives d'une même routine d'une même bibliothèque ; routine 0 : les
+lignes toujours recopiées) ; un octet qui dépend d'une étiquette devient un relogement
+(mot, octet bas, octet haut, branchement relatif ; vers un fragment + décalage, ou vers un nom
+externe). Les constantes de `CPA.INC` sont recopiées comme des nombres, sauf celles
+qu'`ORIC.INC` définit autrement (`BDOS`, `B_CONIN`, `B_CONST` : des étiquettes avec `/O`), et
+`O_FILES`, écrit par GRXASM : ces noms sont cherchés au moment du lien. L'outil assemble
+deux fois (CP/A avec `CPA.INC`, `/O` avec `ORIC.INC`) et refuse un code qui diffère entre
+les deux hors d'`ORIC.INC` ; il vérifie, avec `--verifie`, que le lien de toutes les
+routines donne les octets de xa dans les deux cas. Format (en tête du fichier
+`tools/mk_lib.py`) : répertoire de GRXASM (premières routines et nombre par bibliothèque,
+puis drapeau et besoins de chaque routine), table des fragments (bibliothèque, routine,
+taille), noms externes, symboles globaux (nom, drapeaux dont « nom de routine », routine,
+valeur ou fragment + décalage), puis le code de chaque fragment (suites d'octets tels quels
+et relogements). GRXASM (`kb_lib`, avant `kl_run`) lit le répertoire et les symboles : il
+marque les routines « toujours », celles dont un nom a été relevé, ajoute les arêtes, ferme
+(`kl_clos`), puis écrit la ligne `#lib`. ASM (`lib_dir`) saute le répertoire ; en passe 1,
+il calcule l'adresse de chaque fragment gardé (table de 2 octets par fragment, prise sous
+`outlim`) et définit les symboles des routines gardées ; en passe 2, il résout les noms
+externes, vérifie les symboles (erreur de phase sinon) et écrit les octets relogés. Un
+fragment non gardé visé par un relogement donne « Symbole inconnu », un fichier tronqué ou
+d'un autre format « Bibliotheque illisible ». `tools/test_lib.sh` traduit chaque programme
+de `tools/grapher_tests` et chaque exemple, avec et sans `/O`, par les `.INC` (assemblé par
+xa) et par `GRX.LIB` (assemblé par ASM.COM), et compare les octets.
 
 **Deux dimensions** : le programme écrit (colonne, ligne) ; `ARR.INC` garde en mémoire et dans
 le descripteur l'ordre (lignes, colonnes) : `r_dim2` et `r_ea2` (donc `r_get2`) échangent

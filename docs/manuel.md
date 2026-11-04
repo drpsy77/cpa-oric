@@ -1343,6 +1343,7 @@ COPY, GTEST, HEX, EDIT, LOGO et ASM lui-même donnent exactement les mêmes octe
 | Données | `.byt` / `.byte` / `.asc` (nombres et chaînes `"..."`), `.word`, `.dsb n[,valeur]` |
 | Blocs | `.(` ... `.)` : les étiquettes définies dedans sont locales au bloc |
 | Inclusion | `#include "CPA.INC"` (un niveau), cherché sur le lecteur de la source, puis sur les lecteurs déjà lus de A: à D: |
+| Bibliothèque précompilée | `#lib "GRX.LIB",SSBB...` (écrite par GRXASM, une par source, cherchée comme un `#include`) : les routines choisies de `GRX.LIB` sont reliées à cet endroit, leurs symboles définis (`docs/grapher.md` § 12) ; xa ne la connaît pas |
 | Commentaire | `;` jusqu'à la fin de la ligne |
 
 Expressions : nombres décimaux, `$hexa`, `%binaire`, caractères `"A"` ou `'A'`, `*` (adresse de

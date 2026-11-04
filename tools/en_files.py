@@ -10,7 +10,8 @@
                              de la française (noms traduits), mêmes attributs
 
   build/progs/X.COM  -> build/progs-en/X.COM (messages anglais)
-  build/src/X.INC    -> build/src-en/X.INC (bibliothèques, messages anglais)
+  build/src/X.INC    -> build/src-en/X.INC (bibliothèques, messages anglais ;
+                        de même GRX.LIB, précompilée)
   files/..., build/src/X.ASM (exemples) -> d'après files/en/noms.txt :
                         files/en/<nom anglais en minuscules>=NOM.EXT, ou le
                         fichier français s'il n'y a rien à traduire (images,
@@ -42,7 +43,7 @@ def anglais(f, t):
         return f
     if f.startswith("build/progs/"):
         return "build/progs-en/" + f[len("build/progs/"):]
-    if f.startswith("build/src/") and f.endswith(".INC"):
+    if f.startswith("build/src/") and (f.endswith(".INC") or f.endswith(".LIB")):
         return "build/src-en/" + f[len("build/src/"):]
     if f not in t:
         sys.exit("en_files : %s n'a pas de nom anglais (files/en/noms.txt)" % f)

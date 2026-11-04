@@ -18,6 +18,7 @@ e_phase   .asc "Erreur de phase",0
 e_org     .asc "Adresse",0
 e_fwd     .asc "Reference en avant trop complexe",0
 e_big     .asc "Code trop gros",0
+e_lib     .asc "Bibliotheque illisible",0
 
 m_usage   .asc "Usage : ASM NOM [/S] [/E] [/T]",13,10
           .asc " NOM.ASM -> NOM.COM ; /S : NOM.SYM",13,10
