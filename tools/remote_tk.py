@@ -15,6 +15,9 @@ pour un Pi Zero et son petit écran. Python 3 et tkinter seulement.
     --echelle E       échelle imposée (1, 2, 1.5...) ; sinon la plus grande
                       qui tient (entière à partir de 2)
     --sans-boutons    pas de barre de boutons (touches : F1 FUNCT, F5 RESET)
+    --pixels P        tele (défaut : points 1,23 fois plus larges que hauts,
+                      comme sur un téléviseur PAL) ou carres
+    --couleurs C      tele (défaut : couleurs d'un téléviseur) ou pures (00/FF)
 
 Touches : comme le clavier de l'Oric (flèches, avec SHIFT ou CTRL ; CTRL +
 lettre ; Entrée, Échap, Retour arrière, Tab) ; F1 FUNCT ; F5 démarrage à
@@ -139,6 +142,8 @@ class Fenetre:
     def __init__(self, racine, opts):
         self.r = racine
         self.opts = opts
+        self.hex = oe.HEX if opts["couleurs"] == "pures" else oe.HEX_TELE
+        self.par = 1 if opts["pixels"] == "carres" else oe.PAR_TELE
         self.police_cpa = oe.charger_police()
         self.police, self.alt = self.police_cpa, None
         self.memoire = [None] * 48              # police envoyée par l'Oric
@@ -189,14 +194,17 @@ class Fenetre:
             self.toile.configure(cursor="none")
             racine.after(200, racine.focus_force)
         else:
-            racine.geometry("%dx%d" % (LARG * 2, HAUT * 2 + 50))
+            racine.geometry("%dx%d" % (round(LARG * 2 * self.par), HAUT * 2 + 50))
 
         self.demon = None
         if opts["mem"]:
-            e = oe.ecran_depuis_vidage(open(opts["mem"], "rb").read())
+            mem = open(opts["mem"], "rb").read()
+            e = oe.ecran_depuis_vidage(mem)
             self.appliquer({"version": 1, "liaison": "vidage", "hote": opts["mem"],
                             "mode": e["mode"], "curseur": e["curseur"], "delai": 0,
-                            "lignes": {str(n): l.hex() for n, l in enumerate(e["lignes"])}})
+                            "lignes": {str(n): l.hex() for n, l in enumerate(e["lignes"])},
+                            "police": {} if e["mode"] & 0x7F else    # police du mode texte
+                            {str(k): mem[0xB400 + 40 * k:0xB428 + 40 * k].hex() for k in range(48)}})
         else:
             self.demon = Demon(opts["demon"])
             self.r.after(20, self.relever)
@@ -209,13 +217,15 @@ class Fenetre:
         # Taille d'une case (cw x ch points), la même pour toutes : une
         # échelle non entière ne déforme pas les lettres d'une ligne à l'autre
         if self.opts["echelle"]:
-            ex = ey = self.opts["echelle"]
+            ey = self.opts["echelle"]
+            ex = ey * self.par
         else:
             ex, ey = w / LARG, h / HAUT
-            if not self.opts["etirer"]:
-                ex = ey = min(ex, ey)
-                if ex >= 2:
-                    ex = ey = int(ex)
+            if not self.opts["etirer"]:          # forme du téléviseur gardée
+                ey = min(ex / self.par, ey)
+                if ey >= 2:
+                    ey = int(ey)
+                ex = ey * self.par
         cw, ch = max(1, int(6 * ex)), max(1, int(8 * ey))
         if self.echelle == (cw * COLS, ch * ROWS):
             return
@@ -245,7 +255,7 @@ class Fenetre:
         s = self.cache.get(cle)
         if s is None:
             reps = self.reps
-            s = "{" + " ".join(oe.HEX[p] for i, p in enumerate(rang) for _ in range(reps[i])) + "}"
+            s = "{" + " ".join(self.hex[p] for i, p in enumerate(rang) for _ in range(reps[i])) + "}"
             if len(self.cache) > 4000:
                 self.cache = {}
             self.cache[cle] = s
@@ -374,11 +384,12 @@ class Fenetre:
 
 def main(args):
     opts = {"demon": "http://localhost:8040", "mem": None, "plein_ecran": False,
-            "etirer": False, "echelle": None, "sans_boutons": False}
+            "etirer": False, "echelle": None, "sans_boutons": False,
+            "pixels": "tele", "couleurs": "tele"}
     i = 0
     while i < len(args):
         a = args[i]
-        if a in ("--demon", "--mem", "--echelle"):
+        if a in ("--demon", "--mem", "--echelle", "--pixels", "--couleurs"):
             v = args[i + 1]
             opts[a[2:]] = float(v) if a == "--echelle" else v
             i += 2

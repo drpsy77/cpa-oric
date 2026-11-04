@@ -31,12 +31,21 @@ body { display: flex; flex-direction: column; overflow: hidden;
 #etat { display: flex; gap: 14px; align-items: baseline; padding: 6px 12px; background: var(--barre);
   white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
 #etat b { font-weight: 600; }
-#hote { color: var(--pale); overflow: hidden; text-overflow: ellipsis; }
+#hote { color: var(--pale); overflow: hidden; text-overflow: ellipsis; min-width: 0; flex-shrink: 1; }
+#etat b, #voyant, #delai { flex-shrink: 0; }
 #voyant { font: 700 15px ui-monospace, Menlo, monospace; padding: 0 6px; border-radius: 3px;
   background: #444; color: #ccc; }
 #voyant.R { background: var(--vert); color: #000; }
 #voyant.r { background: var(--rouge); color: #000; }
 #delai { margin-left: auto; color: var(--pale); }
+#vue { flex-shrink: 0; font-size: 12px; padding: 2px 8px; min-width: 0; background: var(--bouton); color: var(--pale); }
+#reglages { position: absolute; right: 8px; top: 34px; z-index: 5; display: none; flex-direction: column;
+  gap: 8px; background: var(--barre); border: 1px solid #444; border-radius: 8px; padding: 10px 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.6); }
+#reglages.ouvert { display: flex; }
+#reglages div { display: flex; align-items: center; gap: 6px; }
+#reglages span { width: 70px; color: var(--pale); }
+#reglages button { padding: 5px 10px; min-width: 0; font-size: 12px; }
 #cadre { flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
   min-height: 0; padding: 6px; }
 #ecran { image-rendering: pixelated; image-rendering: crisp-edges; background: #000;
@@ -75,7 +84,12 @@ body.spectateur #boutons, body.spectateur #saisie { display: none; }
 <body>
 <header id="etat">
   <b>CP/A a distance</b><span id="hote"></span><span id="voyant">-</span><span id="delai"></span>
+  <button id="vue" title="Affichage : forme des points, couleurs">Affichage</button>
 </header>
+<div id="reglages">
+  <div><span>Points</span><button data-r="pixels" data-v="tele" title="1,23 fois plus larges que hauts, comme sur un televiseur PAL">Tele</button><button data-r="pixels" data-v="carres" title="Points carres, comme Oricutron">Carres</button></div>
+  <div><span>Couleurs</span><button data-r="couleurs" data-v="tele" title="Telles qu'un televiseur les rend">Tele</button><button data-r="couleurs" data-v="pures" title="Rouge, vert, bleu a 00 ou FF">Pures</button></div>
+</div>
 <main id="cadre"><canvas id="ecran" width="240" height="224"></canvas><div id="message"></div></main>
 <textarea id="saisie" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
   aria-label="Clavier de l'Oric"></textarea>
@@ -110,11 +124,27 @@ body.spectateur #boutons, body.spectateur #saisie { display: none; }
 "use strict";
 // Police de CP/A : 128 glyphes de 8 rangées de 6 points (bit 5 = point de gauche).
 const POLICE = /*POLICE*/[];
+const params = new URLSearchParams(location.search);
 const COLS = 40, ROWS = 28, LARG = 240, HAUT = 224;
-const RVB = [[0,0,0],[255,0,0],[0,255,0],[255,255,0],[0,0,255],[255,0,255],[0,255,255],[255,255,255]];
+// Couleurs de l'Oric (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc).
+// PURES : le signal (00 ou FF) ; TELE : mesurées sur la photo d'un téléviseur
+// branché sur un vrai Oric (balance ramenée au blanc) : vert, jaune, magenta plus
+// doux, rouge très vif.
+const PURES = [[0,0,0],[255,0,0],[0,255,0],[255,255,0],[0,0,255],[255,0,255],[0,255,255],[255,255,255]];
+const TELE = [[0,0,0],[0xEA,0x28,0x19],[0x79,0xD6,0x71],[0xFD,0xDE,0x53],[0x1A,0x74,0xE0],
+              [0xE1,0x91,0xE6],[0x74,0xFF,0xFF],[255,255,255]];
+// Réglages d'affichage, propres à chaque navigateur (rien ne part vers l'Oric) :
+// ?pixels=tele|carres et ?couleurs=tele|pures, sinon le dernier choix, sinon Tele.
+const reglages = {pixels: "tele", couleurs: "tele"};
+for (const k of Object.keys(reglages)) {
+  let v = null;
+  try { v = localStorage.getItem("cpa." + k); } catch (e) {}
+  v = params.get(k) || v;
+  if (v) reglages[k] = v;
+}
+let RVB = reglages.couleurs === "pures" ? PURES : TELE;
 const CLIGN = 320;                       // demi-période du clignotement (ms)
 const FUNCT = 0x80;
-const params = new URLSearchParams(location.search);
 const BASE = params.get("demon") ? params.get("demon").replace(/\/$/, "") + "/" : "";
 
 const toile = document.getElementById("ecran");
@@ -128,8 +158,8 @@ const image = ctx.createImageData(LARG, HAUT);
 const etape = document.createElement("canvas"), cetape = etape.getContext("2d");
 // Forme des points : sur un téléviseur PAL, un point de l'Oric (240 par ligne
 // à 6 MHz) est ~1,23 fois plus large que haut (14,75 MHz / 6 MHz / 2) ; des
-// points carrés (Oricutron) étirent l'image en hauteur. ?pixels=carres : carrés.
-const PAR = params.get("pixels") === "carres" ? 1 : 1.23;
+// points carrés (Oricutron) étirent l'image en hauteur. Réglage Points : Tele, Carres.
+let PAR = reglages.pixels === "carres" ? 1 : 1.23;
 let echelleY = 1;                         // points de l'écran par ligne de l'Oric
 const cadre = document.getElementById("cadre");
 const saisie = document.getElementById("saisie");
@@ -492,8 +522,28 @@ $("envoyer").addEventListener("click", () => {
 });
 $("collage").addEventListener("keydown", e => { if (e.key === "Escape") fermerCollage(); });
 
-ajuster();
-dessiner([...Array(ROWS).keys()]);
+// --- réglages d'affichage (bouton Affichage) ------------------------------------
+function appliquerReglages() {
+  RVB = reglages.couleurs === "pures" ? PURES : TELE;
+  PAR = reglages.pixels === "carres" ? 1 : 1.23;
+  for (const b of document.querySelectorAll("#reglages button"))
+    b.classList.toggle("actif", reglages[b.dataset.r] === b.dataset.v);
+  dessiner([...Array(ROWS).keys()]);
+  ajuster();
+}
+$("vue").addEventListener("click", e => { e.stopPropagation(); $("reglages").classList.toggle("ouvert"); });
+for (const b of document.querySelectorAll("#reglages button"))
+  b.addEventListener("click", e => {
+    e.stopPropagation();
+    reglages[b.dataset.r] = b.dataset.v;
+    try { localStorage.setItem("cpa." + b.dataset.r, b.dataset.v); } catch (err) {}
+    appliquerReglages();
+  });
+document.addEventListener("click", e => {
+  if (!$("reglages").contains(e.target)) $("reglages").classList.remove("ouvert");
+});
+
+appliquerReglages();
 afficherEtat();
 lire();
 </script>

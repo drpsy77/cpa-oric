@@ -28,6 +28,15 @@ SCREEN = 0xBB80
 RVB = [(0, 0, 0), (255, 0, 0), (0, 255, 0), (255, 255, 0),
        (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255)]
 HEX = ["#%02x%02x%02x" % c for c in RVB]
+# Telles qu'un téléviseur les rend : mesurées sur la photo d'un téléviseur
+# branché sur un vrai Oric, balance ramenée au blanc (vert, jaune, magenta plus
+# doux, rouge très vif). La page web a la même table (TELE, tools/remote.html).
+RVB_TELE = [(0, 0, 0), (0xEA, 0x28, 0x19), (0x79, 0xD6, 0x71), (0xFD, 0xDE, 0x53),
+            (0x1A, 0x74, 0xE0), (0xE1, 0x91, 0xE6), (0x74, 0xFF, 0xFF), (255, 255, 255)]
+HEX_TELE = ["#%02x%02x%02x" % c for c in RVB_TELE]
+# Un point de l'Oric sur un téléviseur PAL : ~1,23 fois plus large que haut
+# (14,75 MHz, points carrés en PAL, / 6 MHz / 2 trames)
+PAR_TELE = 1.23
 
 DEPOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

@@ -391,9 +391,17 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
     paraissent étirés en hauteur (comme dans Oricutron). Agrandissement en deux temps :
     points répétés jusqu'à un nombre entier de points de l'écran par ligne de l'Oric
     (lettres nettes en hauteur), puis largeur ajustée en lissant (au plus un point
-    adouci par bord). `?pixels=carres` : points carrés, comme avant. Échelle entière
+    adouci par bord). Échelle entière
     quand elle tient, en pixels physiques (`devicePixelRatio`), sinon la plus grande
     possible.
+  - **Affichage** (bouton de la ligne d'état, aussi pour les spectateurs : rien ne part
+    vers l'Oric) : Points `Tele` (1,23, ci-dessus) ou `Carres` (comme Oricutron) ;
+    Couleurs `Tele` ou `Pures` (00/FF). Couleurs Tele mesurées sur la photo d'un
+    téléviseur branché sur un vrai Oric, balance ramenée au blanc : rouge `EA2819`, vert
+    `79D671`, jaune `FDDE53`, bleu `1A74E0`, magenta `E191E6`, cyan `74FFFF` (noir et
+    blanc purs). Par défaut Tele et Tele ; le choix est gardé par le navigateur
+    (`localStorage`) ; `?pixels=tele|carres`, `?couleurs=tele|pures` dans l'adresse
+    l'imposent (lien direct).
   - Ligne d'état : hôte (l'Oric), voyant (`R` active, `r` perdue, `-` attente), âge du
     dernier cycle complet. Messages sur l'écran : attente de l'appel, liaison perdue,
     démon injoignable (nouvel essai toutes les 2 s).
@@ -472,6 +480,7 @@ côté de l'Oric ou ailleurs dans la maison. Python 3 et tkinter seulement.
 
     python3 tools/remote_tk.py [--demon URL] [--plein-ecran] [--etirer]
                                [--echelle E] [--sans-boutons] [--mem VIDAGE.mem]
+                               [--pixels tele|carres] [--couleurs tele|pures]
 
 - `--demon` : le démon à joindre (défaut `http://localhost:8040`). Le démon peut tourner
   sur le Pi Zero lui-même (l'Oric l'appelle : `pizero 192.168.1.40` dans `HOSTS`, puis
@@ -480,7 +489,9 @@ côté de l'Oric ou ailleurs dans la maison. Python 3 et tkinter seulement.
   fixe (par exemple 8 x 10 points au lieu de 6 x 8 sur un écran de 480 x 320) : toutes
   les cases grandissent de la même façon, en doublant d'abord la colonne d'espacement et
   la rangée vide du bas, pour que les lettres restent nettes. `--etirer` remplit la
-  place sans garder les proportions ; `--echelle` impose l'échelle.
+  place sans garder les proportions ; `--echelle` impose l'échelle (des lignes). Points
+  et couleurs comme la page : `--pixels tele` (défaut, cases 1,23 fois plus larges)
+  ou `carres`, `--couleurs tele` (défaut) ou `pures`.
 - Rendu : celui de l'ULA (`tools/oric_ecran.py`) : encre, papier, inverse, double
   hauteur, clignotement (attributs 8-15 : bit 0 jeu secondaire, bit 1 double hauteur,
   bit 2 clignotement ; vérifié contre Oricutron sur l'écran d'EDSPRITE) ; en mode texte, les jeux standard et secondaire tels que l'Oric
@@ -496,7 +507,8 @@ côté de l'Oric ou ailleurs dans la maison. Python 3 et tkinter seulement.
 - Ligne d'état : hôte, voyant (`R` active, `r` perdue, `-` attente), âge du dernier
   cycle. Démon injoignable ou Oric pas encore appelé : un message sur l'écran ; le
   client réessaie seul toutes les 2 s.
-- `--mem` : montre un vidage de `tools/run_test.sh`, sans démon.
+- `--mem` : montre un vidage de `tools/run_test.sh`, sans démon (police du vidage
+  comprise, en mode texte).
 
 Sur le Pi Zero (Raspberry Pi OS avec bureau) : `sudo apt install python3-tk` si
 `python3 -c "import tkinter"` échoue ; le dépôt (ou seulement `tools/remote_tk.py`,
