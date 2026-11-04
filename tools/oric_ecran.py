@@ -91,7 +91,7 @@ def rendre_ligne(police, octets, num, clign_eteint=False, alt=None):
 
     Chaque ligne repart en encre 7, papier 0, sans attribut. Un octet de code
     0-31 (bit 7 ôté) est un attribut : 0-7 encre, 8-15 jeu de caractères
-    (bit 0 double hauteur, bit 1 jeu secondaire, bit 2 clignotement), 16-23
+    (bit 0 jeu secondaire, bit 1 double hauteur, bit 2 clignotement), 16-23
     papier, 24-31 mode vidéo (sans effet ici) ; sa case est dessinée en papier.
     Bit 7 : vidéo inverse (encre et papier complémentés). Le jeu secondaire
     est dessiné avec alt (polices()) ; sans alt, avec la police normale (CP/A
@@ -107,8 +107,8 @@ def rendre_ligne(police, octets, num, clign_eteint=False, alt=None):
             if c < 8:
                 encre = c
             elif c < 16:
-                double, clign = bool(c & 1), bool(c & 4)
-                jeu = alt if alt is not None and c & 2 else police
+                double, clign = bool(c & 2), bool(c & 4)
+                jeu = alt if alt is not None and c & 1 else police
             elif c < 24:
                 papier = c - 16
             fond = papier ^ inv

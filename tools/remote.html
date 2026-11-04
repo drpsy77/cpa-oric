@@ -168,7 +168,7 @@ function rendreLigne(n) {
     const b = l[col], c = b & 0x7F, inv = b & 0x80 ? 7 : 0, x0 = col * 6;
     if (c < 32) {                                            // attribut
       if (c < 8) encre = c;
-      else if (c < 16) { double = !!(c & 1); clign = !!(c & 4); jeu = c & 2 ? alt : std; }
+      else if (c < 16) { double = !!(c & 2); clign = !!(c & 4); jeu = c & 1 ? alt : std; }  // ULA : bit 0 jeu secondaire, bit 1 double hauteur, bit 2 clignotement
       else if (c < 24) papier = c - 16;
       const fond = papier ^ inv;
       for (let y = 0; y < 8; y++) for (let k = 0; k < 6; k++) point(x0 + k, y, fond);
