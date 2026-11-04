@@ -234,10 +234,14 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      Pierre, WireGuard jusqu'à la maison) ; essayés dans Oricutron. Fait (03/11/2026) :
      `tools/passerelle.py` prépare les fichiers de la passerelle (WireGuard des deux
      côtés, clés comprises ; Apache en lecture seule ; services du démon et de la
-     vitrine sur simon) ; spectateurs comptés (ligne d'état de la page) et plafonnés
-     (503 au-delà de 40) ; appel de l'Oric refusé depuis le tunnel. Apache essayé en
-     local ; à installer par Pierre : WireGuard et Apache (actions système,
-     `logs/passerelle/LISEZMOI.txt`).
+     vitrine) ; spectateurs comptés (ligne d'état de la page) et plafonnés
+     (503 au-delà de 40) ; appel de l'Oric refusé depuis le tunnel. **En service**
+     (03/11/2026, installé par Pierre) : `https://cycleamen.fr/cpa/` (VPS de Pierre,
+     Apache, `cpa-oric.conf` dans `conf-enabled/`) ; démon et vitrine en services
+     systemd sur le **Pi 400** (pas simon : temps de réponse), tunnel `10.77.0.1` ↔
+     `10.77.0.2`. Les comptes diffèrent d'une machine à l'autre : `User=` et chemins des
+     services à vérifier sur la machine du démon. Un ancien démon resté lancé (simon,
+     ou à la main sur le Pi 400) prend l'Oric ou les ports : un seul démon à la fois.
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
