@@ -249,12 +249,23 @@ class Vitrine:
         self.taper("grapher %s %d" % (self.nom("HORLOGE").lower(), random.randint(15, 25)))
         if not self.attendre(self.t["heure"], 40, suite=False):
             return
-        time.sleep(random.uniform(0.3, 0.8))
-        t = time.localtime(time.time() + 1.5)       # frappe et lecture des trois nombres
-        for v in (t.tm_hour, t.tm_min, t.tm_sec):
-            self.envoyer([ord(c) for c in "%02d" % v] + [RET])
-            time.sleep(0.3)
+        t = time.localtime()
+        # trois INPUT sur la ligne 2, colonnes 10, 15 et 18 : chacun attendu
+        # (case en vidéo inverse) avant d'y taper, comme quelqu'un qui regarde
+        # l'écran ; une frappe arrivée avant l'INPUT peut le dérouter
+        for col, quoi in ((10, "h"), (15, "m"), (18, "s")):
+            if not self.attendre(lambda li: self.octet(2, col) & 0x80, 10, suite=False):
+                break                               # la reprise ramènera au prompt
+            time.sleep(random.uniform(0.2, 0.5))
+            if quoi == "s":                         # au moment de la taper
+                t = time.localtime(time.time() + 0.5)
+            v = {"h": t.tm_hour, "m": t.tm_min, "s": t.tm_sec}[quoi]
+            self.taper("%02d" % v)
         self.attendre_prompt(60)
+
+    def octet(self, n, col):
+        """Octet de la ligne n, colonne col, du dernier état lu."""
+        return bytes.fromhex(self.e["lignes"][str(n)])[col]
 
     def s_echo_heure(self):
         """L'heure au prompt, par ECHO."""
@@ -301,7 +312,7 @@ class Vitrine:
         self.commande("help " + random.choice(self.t["aide"]), 90)
 
     def s_menus(self):
-        """Menus FUNCT : la barre, les menus déroulés, puis Version."""
+        """Menus FUNCT : la barre, les menus déroulés, refermés."""
         for _ in range(random.randint(2, 3)):
             self.touche(FUNCT, apres=1.2)           # la barre
             for _ in range(random.randint(0, 3)):
@@ -311,10 +322,8 @@ class Vitrine:
                 self.touche(B, apres=0.7)
             time.sleep(1)
             self.touche(ESC, apres=1.0)             # fermé
-        if random.random() < 0.6:                   # Systeme, Version
-            self.touche(FUNCT, apres=1.0)
-            self.touche(B, apres=1.0)
-            self.touche(RET, apres=1.0)
+        # (pas de RETURN dans un menu : la barre se rouvre sur le dernier menu
+        # vu, et le premier article d'Ecran est Mode SPLIT)
         self.retour_prompt()
 
     def s_usb(self):
@@ -491,6 +500,10 @@ class Vitrine:
     def jouer(self, nom):
         f = self.SCENES[nom][0]
         print(time.strftime("%H:%M:%S"), nom, flush=True)
+        if self.etat()["mode"] & 0x7F:      # SPLIT ou HIRES restés d'avant : texte
+            self.retour_prompt()
+            self.taper("text")
+            self.attendre(lambda li: not self.e["mode"] & 0x7F, 15, suite=False)
         if not self.retour_prompt():
             print("   pas de prompt", flush=True)
             return
