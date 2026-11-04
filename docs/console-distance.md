@@ -545,7 +545,8 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   CMDER passe en tête de la scène de spectacle suivante.
 - **Scènes** : `heure` (HORLOGE), `mosaique` (MOSAIQUE), `dir` (DIR,
   DIRS, STAT), `completion` (TAB sur la commande puis sur le nom, TYPE), `type`, `aide`
-  (HELP et une rubrique), `menus` (FUNCT : barre, menus déroulés, parfois Version),
+  (HELP et une rubrique), `menus` (FUNCT : barre, menus déroulés, refermés par ESC : jamais RETURN, la barre se
+  rouvre sur le dernier menu vu et le premier article d'Ecran est Mode SPLIT),
   `usb` (USBDIR, `USBDIR /S`, USBMOUNT), `debug` (`DEBUG MEM` : `L C000`, `D BB80`,
   l'écran vu par lui-même...), `edit` (un `.GRX` parcouru, une recherche, sortie sans
   rien changer), `cmder` (déplacements, tris, infos ; six fois sur dix, si les deux
@@ -578,7 +579,8 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   d'ECHO, programmes : `MOSAIC.GRX` et `CLOCK.GRX` en anglais, `tools/vitrine/en/`, mêmes
   dessins, textes et commentaires traduits). Essayé dans Oricutron sur les deux
   disquettes.
-- **Reprise** : chaque scène part du prompt, ligne vide ; sinon ESC, `^Q`, `^C`,
+- **Reprise** : chaque scène part du prompt, ligne vide, en mode texte (`TEXT` tapé si
+  l'Oric est resté en SPLIT ou en HIRES) ; sinon ESC, `^Q`, `^C`,
   RETURN, et en dernier recours le démarrage à chaud (`/reset`). Liaison pas active :
   attente. Démon injoignable : nouvel essai toutes les 10 s.
 - **Quelqu'un tape** (page, fenêtre, ligne de commande ; tout `POST` sans l'en-tête
