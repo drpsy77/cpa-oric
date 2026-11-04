@@ -127,12 +127,12 @@ const POLICE = /*POLICE*/[];
 const params = new URLSearchParams(location.search);
 const COLS = 40, ROWS = 28, LARG = 240, HAUT = 224;
 // Couleurs de l'Oric (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc).
-// PURES : le signal (00 ou FF) ; TELE : mesurées sur la photo d'un téléviseur
-// branché sur un vrai Oric (balance ramenée au blanc) : vert, jaune, magenta plus
-// doux, rouge très vif.
+// PURES : le signal (00 ou FF) ; TELE : comme sur le téléviseur de Pierre
+// branché sur un vrai Oric : vives, vert plus sombre, jaune doré, bleu moins
+// violet (réglées d'après une photo, puis à l'œil).
 const PURES = [[0,0,0],[255,0,0],[0,255,0],[255,255,0],[0,0,255],[255,0,255],[0,255,255],[255,255,255]];
-const TELE = [[0,0,0],[0xEA,0x28,0x19],[0x79,0xD6,0x71],[0xFD,0xDE,0x53],[0x1A,0x74,0xE0],
-              [0xE1,0x91,0xE6],[0x74,0xFF,0xFF],[255,255,255]];
+const TELE = [[0,0,0],[0xFF,0x2A,0x1A],[0x2E,0xC2,0x2E],[0xFD,0xDE,0x53],
+              [0x0A,0x3C,0xFF],[0xEE,0x22,0xEE],[0x18,0xE8,0xE8],[255,255,255]];
 // Réglages d'affichage, propres à chaque navigateur (rien ne part vers l'Oric) :
 // ?pixels=tele|carres et ?couleurs=tele|pures, sinon le dernier choix, sinon Tele.
 const reglages = {pixels: "tele", couleurs: "tele"};

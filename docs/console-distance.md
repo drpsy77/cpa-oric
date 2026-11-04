@@ -396,10 +396,10 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
     possible.
   - **Affichage** (bouton de la ligne d'état, aussi pour les spectateurs : rien ne part
     vers l'Oric) : Points `Tele` (1,23, ci-dessus) ou `Carres` (comme Oricutron) ;
-    Couleurs `Tele` ou `Pures` (00/FF). Couleurs Tele mesurées sur la photo d'un
-    téléviseur branché sur un vrai Oric, balance ramenée au blanc : rouge `EA2819`, vert
-    `79D671`, jaune `FDDE53`, bleu `1A74E0`, magenta `E191E6`, cyan `74FFFF` (noir et
-    blanc purs). Par défaut Tele et Tele ; le choix est gardé par le navigateur
+    Couleurs `Tele` ou `Pures` (00/FF). Couleurs Tele, comme sur un téléviseur branché
+    sur un vrai Oric (d'après une photo, puis réglées à l'œil : vives, vert plus sombre,
+    jaune doré) : rouge `FF2A1A`, vert `2EC22E`, jaune `FDDE53`, bleu `0A3CFF`, magenta `EE22EE`, cyan `18E8E8`
+    (noir et blanc purs). Par défaut Tele et Tele ; le choix est gardé par le navigateur
     (`localStorage`) ; `?pixels=tele|carres`, `?couleurs=tele|pures` dans l'adresse
     l'imposent (lien direct).
   - Ligne d'état : hôte (l'Oric), voyant (`R` active, `r` perdue, `-` attente), âge du

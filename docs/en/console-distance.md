@@ -400,10 +400,10 @@ Python 3 standard library only (nothing to install on the Mac).
     possible.
   - **Affichage** (display; button in the status line, spectators included: nothing
     goes to the Oric): Points `Tele` (1.23, above) or `Carres` (square, as in
-    Oricutron); Couleurs `Tele` (TV) or `Pures` (00/FF). TV colours measured on a photo
-    of a TV plugged into a real Oric, white balance brought back to white: red
-    `EA2819`, green `79D671`, yellow `FDDE53`, blue `1A74E0`, magenta `E191E6`, cyan
-    `74FFFF` (pure black and white). Default TV and TV; the choice is kept by the
+    Oricutron); Couleurs `Tele` (TV) or `Pures` (00/FF). TV colours, as on a TV plugged
+    into a real Oric (from a photo, then adjusted by eye: vivid, darker green, golden
+    yellow): red `FF2A1A`, green `2EC22E`, yellow `FDDE53`, blue `0A3CFF`, magenta `EE22EE`, cyan `18E8E8`
+    (pure black and white). Default TV and TV; the choice is kept by the
     browser (`localStorage`); `?pixels=tele|carres`, `?couleurs=tele|pures` in the
     address force it (direct link).
   - Status line: host (the Oric), light (`R` on, `r` lost, `-` waiting), age of the last
