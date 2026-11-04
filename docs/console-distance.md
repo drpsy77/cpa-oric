@@ -385,7 +385,15 @@ Python 3 de la bibliothèque standard seulement (rien à installer sur le Mac).
   - Rendu : celui d'`oric_ecran.py` (§ 9.2), refait en JavaScript, identique au point
     près (vérifié sur la mire du faux démon) ; curseur et clignotement à 0,32 s ; en
     SPLIT, lignes 0 à 15 hachurées ; en HIRES plein écran, « Ecran graphique ».
-    Échelle entière quand elle tient (lettres nettes), sinon la plus grande possible.
+    **Forme du téléviseur** : sur un téléviseur PAL, un point de l'Oric (240 par ligne à
+    6 MHz) est ~1,23 fois plus large que haut (14,75 MHz, fréquence des points carrés
+    en PAL, / 6 MHz / 2 trames) ; la page élargit l'image d'autant, sinon les sprites
+    paraissent étirés en hauteur (comme dans Oricutron). Agrandissement en deux temps :
+    points répétés jusqu'à un nombre entier de points de l'écran par ligne de l'Oric
+    (lettres nettes en hauteur), puis largeur ajustée en lissant (au plus un point
+    adouci par bord). `?pixels=carres` : points carrés, comme avant. Échelle entière
+    quand elle tient, en pixels physiques (`devicePixelRatio`), sinon la plus grande
+    possible.
   - Ligne d'état : hôte (l'Oric), voyant (`R` active, `r` perdue, `-` attente), âge du
     dernier cycle complet. Messages sur l'écran : attente de l'appel, liaison perdue,
     démon injoignable (nouvel essai toutes les 2 s).
