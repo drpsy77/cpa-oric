@@ -7,19 +7,19 @@
 <style>
 :root{
   --bg:#f6f5f1; --panel:#ffffff; --ink:#1d1d1b; --muted:#6b6a64; --line:#d8d6cf;
-  --oric:#e8eef8; --loci:#efe9f7; --pico:#e7f4ec; --net:#f3f1e6; --mac:#f8ece6;
-  --down:#c2410c; --up:#1d4ed8; --local:#6b7280; --hl:#f59e0b; --bad:#dc2626; --ok:#15803d;
+  --oric:#e8eef8; --loci:#efe9f7; --pico:#e7f4ec; --net:#f3f1e6; --pc:#f8ece6; --gw:#e9f2f3;
+  --down:#c2410c; --up:#1d4ed8; --local:#6b7280; --web:#7c3aed; --hl:#f59e0b; --bad:#dc2626; --ok:#15803d;
   --scr-bg:#000; --scr-fg:#f2f2f2;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#17171a; --panel:#212126; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3a40;
-  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --mac:#3a2620;
-  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
+  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --pc:#3a2620; --gw:#1c2e30;
+  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --web:#a78bfa; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
 }}
 :root[data-theme="dark"]{
   --bg:#17171a; --panel:#212126; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3a40;
-  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --mac:#3a2620;
-  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
+  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --pc:#3a2620; --gw:#1c2e30;
+  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --web:#a78bfa; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -29,17 +29,21 @@ h2{font-size:1.15rem;margin:1.4em 0 .5em}
 p{margin:.4em 0}
 .sub{color:var(--muted)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card.gw{border:2px dashed var(--web);background:var(--gw)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.tw{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
 th{color:var(--muted);font-weight:600}
+td.n{text-align:right;white-space:nowrap}
 code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
 .controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:5px 10px;cursor:pointer}
 button.on{background:var(--ink);color:var(--panel)}
 button:disabled{opacity:.45;cursor:default}
-#diagram{width:100%;height:auto;display:block}
+.dia{overflow-x:auto}
+#diagram{width:100%;min-width:760px;height:auto;display:block}
 svg text{fill:var(--ink)}
 .node rect{stroke:var(--line);stroke-width:1.2;fill:var(--panel)}
 .node.active rect{stroke:var(--hl);stroke-width:3}
@@ -48,9 +52,11 @@ svg text{fill:var(--ink)}
 .node .s{font-size:10.5px;fill:var(--muted)}
 .badge{font-size:11px;font-weight:700;fill:var(--bad)}
 .grp{stroke:var(--line);stroke-width:1}
+.grp.dash{stroke:var(--web);stroke-width:2;stroke-dasharray:7 5}
 .grpt{font-size:14px;font-weight:700}
 .cable{stroke:var(--line);stroke-width:2;fill:none}
 .cable.net{stroke-dasharray:5 4}
+.cable.web{stroke:var(--web);stroke-dasharray:5 4;opacity:.6}
 #msg{min-height:3.2em;font-size:.98rem}
 #msg b{color:var(--hl)}
 .legend span{display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:.88rem}
@@ -69,28 +75,53 @@ svg text{fill:var(--ink)}
 .scrh{font-weight:600;margin:0 0 4px}
 #log{max-height:260px;overflow:auto;font-size:.86rem}
 #log div{border-bottom:1px solid var(--line);padding:3px 0}
-.dn{color:var(--down);font-weight:700}.upc{color:var(--up);font-weight:700}.lc{color:var(--local);font-weight:700}
+.dn{color:var(--down);font-weight:700}.upc{color:var(--up);font-weight:700}.lc{color:var(--local);font-weight:700}.wc{color:var(--web);font-weight:700}
 pre.algo{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:.85rem}
-.key{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:.85em}
 </style>
 </head>
 <body>
 <main>
 <h1>Console à distance de CP/A</h1>
-<p class="sub">Le Mac (ou le navigateur d'un téléphone) tape et lit à la place du clavier et de l'écran du vrai Oric, par le LOCI et son modem WiFi. Spécification : <code>docs/console-distance.md</code>. Rien n'est codé.</p>
+<p class="sub">Un ordinateur distant (ou le navigateur d'un téléphone) tape et lit à la place du clavier et de l'écran du vrai Oric, par le LOCI et son modem WiFi. Fait, essayé dans Oricutron et sur le vrai Oric. Spécification : <code>docs/console-distance.md</code> ; mode d'emploi : <code>docs/manuel.md</code>, « Console à distance : REMOTE ».</p>
 
 <h2>Réponses courtes</h2>
 <div class="grid2">
 <div class="card">
-<p><b>Qui a la main ?</b> Pour l'écran, le <b>Mac mène</b> : c'est lui qui demande, l'Oric ne fait que répondre. L'Oric n'envoie jamais rien de lui-même.</p>
-<p><b>Qui trouve les lignes changées ?</b> Le <b>Mac</b>. Il garde une copie des 28 lignes et calcule lui-même leurs totaux. Il demande ceux de l'Oric (<code>S</code>), compare les deux séries, puis redemande une à une les lignes qui diffèrent (<code>L n</code>). L'Oric ne retient rien de ce qu'il a envoyé.</p>
-<p><b>Quand ?</b> Dès qu'une touche est partie, le Mac demande la ligne du curseur (<b>écho rapide</b>, 0,1 à 0,15 s). Ensuite, un cycle complet ; puis toutes les 0,5 s au repos, et de nouveau tout de suite tant qu'un cycle trouve des lignes changées.</p>
-<p><b>Pas d'écho local</b> : une touche tapée sur le Mac ne s'y affiche pas d'elle-même. Elle part à l'Oric, dont le programme décide quoi afficher, et le Mac montre ce que l'Oric a affiché, comme telnet ou ssh. Que la touche vienne du Mac ou du clavier de l'Oric, le Mac voit simplement l'écran de l'Oric.</p>
+<p><b>Qui a la main ?</b> Pour l'écran, <b>l'ordinateur distant mène</b> : son démon (<code>tools/remote.py</code>) demande, l'Oric ne fait que répondre. L'Oric n'envoie jamais rien de lui-même : sans démon, il se tait.</p>
+<p><b>Qui trouve les lignes changées ?</b> Le <b>démon</b>. Il garde une copie des 28 lignes (et de la police) et calcule lui-même leurs totaux. Il demande ceux de l'Oric (<code>S</code>), compare, puis demande les lignes qui diffèrent : une à une (<code>L n</code>), ou d'un coup à partir de 3 (<code>L n+$80</code> : les lignes n à 27 à la suite). L'Oric ne retient rien de ce qu'il a envoyé.</p>
+<p><b>Quand ?</b> Après une frappe (4 touches au plus), le démon demande d'abord la ligne du curseur (<b>écho rapide</b>, 0,21 s mesurés), puis un cycle complet. Au repos, un cycle toutes les 0,5 s ; tout de suite tant qu'un cycle trouve des changements.</p>
+<p><b>Pas d'écho local</b> : une touche tapée sur l'ordinateur ou le téléphone ne s'y affiche pas d'elle-même. Elle part à l'Oric, dont le programme décide quoi afficher, et la page montre ce que l'Oric a affiché, comme telnet ou ssh. Touche du téléphone ou du clavier de l'Oric : la page voit simplement l'écran de l'Oric.</p>
 </div>
 <div class="card">
-<p><b>Bidirectionnel ?</b> La liaison TCP reste ouverte dans les deux sens tant que la console est active. <span class="dn">Mac → Oric</span> : des touches et des demandes, quand il veut. <span class="upc">Oric → Mac</span> : uniquement des réponses (trames <code>S</code> et <code>L</code>).</p>
-<p><b>Fidélité</b> : la copie contient les <b>octets exacts</b> de <code>SCREEN</code>, attributs compris (encre, papier, police secondaire, clignotement, double hauteur). La page les dessine avec la police de CP/A, selon les mêmes règles que l'ULA. Le Mac dessine le curseur d'après la trame <code>S</code>.</p>
-<p><b>Limites</b> : un état qui ne dure pas jusqu'au cycle suivant n'est jamais vu (seul l'état final arrive). Le HIRES plein écran n'est pas transmis, et en SPLIT seules les lignes 16 à 27 le sont.</p>
+<p><b>Bidirectionnel ?</b> La liaison TCP reste ouverte dans les deux sens tant que la console est active. <span class="dn">Ordinateur → Oric</span> : des touches et des demandes, quand il veut. <span class="upc">Oric → Ordinateur</span> : uniquement des réponses (trames <code>S</code>, <code>L</code>, <code>C</code>).</p>
+<p><b>Fidélité</b> : la copie contient les <b>octets exacts</b> de <code>SCREEN</code>, attributs compris, et en mode texte la <b>police elle-même</b> (<code>$B400-$BB7F</code>) : sprites, tuiles et grille d'EDSPRITE apparaissent tels quels. La page dessine selon les règles de l'ULA, points 1,23 fois plus larges que hauts comme sur un téléviseur PAL, et le curseur d'après la trame <code>S</code>.</p>
+<p><b>Rien ne se perd</b> : une touche n'est lue que s'il y a de la place dans le tampon du clavier ; sinon elle attend au LOCI, au Pico, puis dans TCP. Un texte de plusieurs Ko collé dans EDIT arrive au rythme d'EDIT.</p>
+<p><b>Limites</b> : un état plus bref qu'un cycle n'est jamais vu (seul l'état final arrive). Le HIRES plein écran n'est pas transmis ; en SPLIT, seules les lignes 16 à 27.</p>
+</div>
+</div>
+
+<h2>Optimisations et mesures sur le vrai Oric</h2>
+<div class="grid2">
+<div class="card tw">
+<table>
+<tr><th>Mesure (LOCI, Pico W, démon sur un ordinateur de la maison)</th><th class="n">Premiers essais</th><th class="n">Maintenant</th></tr>
+<tr><td>Écho d'une touche</td><td class="n">0,25 à 0,33 s</td><td class="n"><b>0,21 s</b></td></tr>
+<tr><td>Écran entier (27 lignes)</td><td class="n">1,5 à 1,8 s</td><td class="n"><b>0,4 s</b> (~3 Ko/s)</td></tr>
+<tr><td><code>VER</code> sur un écran plein</td><td class="n">3,1 à 3,6 s</td><td class="n"><b>0,8 à 0,9 s</b></td></tr>
+</table>
+<p class="sub">Reste environ un échange sur dix retardé de 1 à 2 s : un paquet perdu sur le WiFi, renvoyé par la pile TCP du Pico.</p>
+</div>
+<div class="card">
+<p><b>Ce qui a changé :</b></p>
+<ul style="margin:.3em 0;padding-left:1.2em">
+<li><b>Firmware du Pico</b> : il lit tout ce qui attend sur l'USB (un octet par tour de boucle le limitait à ~650 octets/s).</li>
+<li><b>Plafonds par IRQ selon le port</b> : LOCI 16 octets reçus et 64 émis (une trame <code>S</code> entière par IRQ) ; un vrai 6551 garde 4 et 24. Réglables par <code>DEBUG</code> en <code>$FD23-$FD26</code>.</li>
+<li><b>Totaux calculés au fil de l'émission</b> (~0,6 ms par ligne) : pas de tampon.</li>
+<li><b>Demande groupée</b> <code>L n+$80</code> : un seul aller-retour pour un écran qui défile.</li>
+<li><b>Écho rapide</b> réservé aux frappes (4 touches au plus), pas aux textes collés.</li>
+<li><b>Délais du démon</b> : 3 s avant de redemander (le modem retient parfois l'envoi plus d'une seconde), acquit TCP immédiat sous Linux.</li>
+<li><b>Page web en attente longue</b> : elle ne scrute pas, le démon répond dès qu'une ligne change, avec les seules lignes changées.</li>
+</ul>
 </div>
 </div>
 
@@ -102,53 +133,87 @@ pre.algo{background:var(--panel);border:1px solid var(--line);border-radius:8px;
   <button id="step">Étape suivante</button>
   <button id="restart">↺ Recommencer</button>
   <label class="sub">vitesse <input id="speed" type="range" min="0.4" max="3" step="0.1" value="1"></label>
-  <span class="legend"><span><i class="dot" style="background:var(--down)"></i>Mac → Oric</span><span><i class="dot" style="background:var(--up)"></i>Oric → Mac</span><span><i class="dot" style="background:var(--local)"></i>dans une machine</span></span>
+  <span class="legend"><span><i class="dot" style="background:var(--down)"></i>Ordinateur → Oric</span><span><i class="dot" style="background:var(--up)"></i>Oric → Ordinateur</span><span><i class="dot" style="background:var(--local)"></i>dans une machine</span><span><i class="dot" style="background:var(--web)"></i>Internet (lecture seule)</span></span>
 </div>
 <div id="msg" class="card"></div>
-<svg id="diagram" viewBox="0 0 1200 600" aria-label="Schéma Oric, LOCI, Pico W, WiFi, Mac"></svg>
+<div class="dia"><svg id="diagram" viewBox="0 0 1200 770" aria-label="Schéma : Oric, LOCI, Pico W, WiFi, ordinateur distant, passerelle vers le Web"></svg></div>
+</div>
+
+<h2>Passerelle vers le Web</h2>
+<div class="card gw">
+<p>Pour montrer l'Oric à d'autres (un forum), un <b>serveur public</b> sert la page en HTTPS et ne laisse passer que la lecture. Il joint le démon par un <b>tunnel chiffré</b> (WireGuard) ouvert depuis la maison : la box n'ouvre aucun port.</p>
+<p><code>spectateur --HTTPS--&gt; serveur public (Apache) --tunnel--&gt; démon :8040 --&gt; Oric</code></p>
+<ul style="margin:.3em 0;padding-left:1.2em">
+<li><b>Lecture seule, deux fois</b> : le serveur refuse tout sauf <code>GET</code> et <code>HEAD</code>, ainsi que <code>/journal</code> et <code>/version</code> ; le démon traite tout ce qui arrive du tunnel en spectateur (403 sur les envois), quel que soit le réglage du serveur.</li>
+<li>Un appel « de l'Oric » venu du tunnel est refusé : personne ne peut se faire passer pour lui.</li>
+<li>Spectateurs comptés (affichés sur la ligne d'état de la page) et plafonnés à 40 (503 au-delà, la page réessaie).</li>
+<li>La <b>vitrine</b> (<code>tools/vitrine.py</code>), sur la machine du démon, tape sur l'Oric comme quelqu'un qui s'en servirait, pour que les spectateurs voient CP/A bouger ; elle se met en pause 2 minutes dès qu'une personne tape depuis la maison.</li>
+</ul>
+<p class="sub">Adresses, noms et clés ne sont pas dans ce schéma : <code>tools/passerelle.py</code> les écrit dans <code>logs/passerelle/</code>, hors de git.</p>
 </div>
 
 <h2>Les deux écrans</h2>
-<p class="sub">À gauche, ce que contient <code>SCREEN</code> sur l'Oric ; à droite, la copie du Mac. Colonne de droite : le total de Fletcher de la ligne. Pointillé orange : la ligne diffère réellement, mais le Mac ne le sait pas encore. Rouge : le Mac le sait (totaux comparés), la ligne est à demander. Vert : la ligne vient d'arriver.</p>
+<p class="sub">À gauche, ce que contient <code>SCREEN</code> sur l'Oric ; à droite, la copie tenue par le démon et dessinée par la page. Colonne de droite : le total de Fletcher de la ligne. Pointillé orange : la ligne diffère réellement, mais le démon ne le sait pas encore. Rouge : il le sait (totaux comparés), la ligne est à demander. Vert : la ligne vient d'arriver.</p>
 <div class="screens">
   <div><p class="scrh">Oric : SCREEN $BB80 (vu par l'ULA)</p><div class="scr" id="scrOric"></div></div>
-  <div><p class="scrh">Mac : copie tenue par remote.py (dessinée par la page)</p><div class="scr" id="scrMac"></div></div>
+  <div><p class="scrh">Ordinateur distant : copie de remote.py</p><div class="scr" id="scrCopie"></div></div>
 </div>
 
 <h2>Messages échangés</h2>
 <div class="card" id="log"></div>
 
-<h2>La boucle du Mac (remote.py)</h2>
-<pre class="algo">copie[0..27]   = 28 lignes de 40 octets (vide au départ)
+<h2>La boucle du démon (remote.py)</h2>
+<pre class="algo">copie[0..27]  = 28 lignes de 40 octets ; police[0..47] = 48 lignes de 40 octets ($B400-$BB7F)
 boucle :
-    si des touches attendent :
-        les envoyer                     ($FE k pour chacune)
-        écho rapide : envoyer $FD 'L' cy (ligne du curseur, connue par la dernière trame S)
-                      copie[cy] = les 40 octets reçus
-    envoyer $FD 'S' ; attendre la trame S (1 s au plus, sinon la redemander)
-    pour n de 0 à 27 :
-        si total_recu[n] != fletcher(copie[n]) :
-            envoyer $FD 'L' n ; attendre la trame L ; copie[n] = ses 40 octets
-    si au moins une ligne a changé : recommencer tout de suite
+    touches en attente (1 024 au plus) : les envoyer, $FE k pour chacune
+        4 touches au plus (une frappe, pas un texte collé) :
+            écho rapide : $FD 'L' cy (ligne du curseur, d'après la dernière trame S) -> copie[cy]
+    $FD 'S' ; attendre la trame S (3 s, plus 0,1 s par touche au-delà de 4 ; sinon la redemander ;
+              5 s sans trame valide : liaison perdue)
+    changées = lignes n dont le total reçu != fletcher(copie[n])
+               (HIRES plein écran : aucune ; SPLIT : 16 à 27 seulement)
+    3 changées ou plus, et au moins le quart des lignes de n0 à 27 :
+        $FD 'L' (n0+$80) : les lignes n0 à 27 arrivent à la suite, sans autre demande
+    sinon, pour chacune : $FD 'L' n -> copie[n]
+    en mode texte, la police :
+        la première fois : $FD 'L' (28+$80), ses 48 lignes à la suite
+        ensuite : $FD 'C' n sur les tranches chaudes (changées depuis moins de 10 s)
+                  et deux autres à tour de rôle ; tranche changée : ses lignes par L
+    quelque chose a changé : recommencer tout de suite
     sinon : attendre 0,5 s, ou la prochaine touche
-la page web lit la copie toutes les 0,1 s (GET /ecran) et redessine</pre>
+la page attend GET /ecran (attente longue, 5 s au plus) et ne reçoit que les lignes changées</pre>
 
 <h2>Côté Oric : commandes, fonctions, routines</h2>
-<div class="card">
+<div class="card tw">
 <table>
 <tr><th>Élément</th><th>Rôle</th><th>Quand</th></tr>
-<tr><td><code>REMOTE hote:port</code> (.COM)</td><td>trouve et règle l'ACIA (<code>ac_find</code>, <code>ac_setup</code>), compose (<code>ac_dial</code> : <code>AT</code>, <code>ATDT-hote:port</code>, attend <code>CONNECT</code>), puis BDOS 117 op 1 et op 2</td><td>une fois, à la main ou dans <code>AUTO.BAT</code></td></tr>
-<tr><td><code>REMOTE OFF</code> / <code>REMOTE</code> / <code>REMOTE /N</code></td><td>coupe la console (BDOS 117 op 3), puis <code>+++</code> et <code>ATH</code> / affiche l'état / active sans composer</td><td>à la demande</td></tr>
-<tr><td>BDOS 117 « série »</td><td>op 0 : état ; op 1 : pose le port (<code>$80</code> pour le LOCI, <code>$1C</code> pour Oricutron) ; op 2 : console active ; op 3 : console coupée</td><td>appelée par REMOTE (ajout au contrat, à accorder)</td></tr>
+<tr><td><code>REMOTE hote[:port]</code> (.COM)</td><td>trouve et règle l'ACIA (<code>ac_find</code>, <code>ac_setup</code>), cherche l'hôte dans <code>HOSTS</code>, compose (<code>ac_dial</code> : réponses en retard jetées, <code>AT</code>, <code>ATDT-adresse:port</code>, attend <code>CONNECT</code>), puis BDOS 117 op 1 et op 2</td><td>une fois, à la main ou dans <code>AUTO.BAT</code></td></tr>
+<tr><td><code>REMOTE OFF</code> / <code>REMOTE</code> / <code>REMOTE /N</code></td><td>coupe la console (BDOS 117 op 3), puis <code>+++</code> et <code>ATH0</code> / affiche l'état / active sans composer</td><td>à la demande</td></tr>
+<tr><td>BDOS 117 « série »</td><td>op 0 : état ; op 1 : pose le port (<code>$80</code> LOCI, <code>$1C</code> Oricutron) et ses plafonds par IRQ ; op 2 : console active ; op 3 : console coupée</td><td>appelée par REMOTE (ajout au contrat)</td></tr>
 <tr><td>BDOS 3 et 4 → READER / PUNCH (<code>$C015</code>, <code>$C012</code>)</td><td>accès direct au port pour un programme ; READER rend ^Z si la console est active</td><td>console coupée</td></tr>
-<tr><td>Service sous l'IRQ de 50 Hz (BIOS)</td><td>lit jusqu'à 4 octets reçus, range les touches par <code>kb_push</code>, calcule les totaux (4 lignes par trame d'IRQ), émet jusqu'à 8 octets par trame d'IRQ</td><td>50 fois par seconde, sauf interruptions coupées (disque)</td></tr>
-<tr><td>CONST, CONIN, BDOS 1, 6, 10, 11</td><td><b>inchangés</b> : ils lisent <code>kb_buf</code>, où touches du Mac et de l'Oric se mêlent</td><td>quand le programme lit le clavier</td></tr>
-<tr><td>CONOUT, BDOS 2, 9, et écritures directes dans <code>SCREEN</code></td><td><b>inchangés</b> : le pilote lit l'écran, il n'intercepte pas l'affichage</td><td>—</td></tr>
-<tr><td><code>draw_flags</code></td><td>voyant <code>R</code> (console active) ou <code>r</code> (dernière réponse abandonnée) à côté de <code>A</code> et <code>P</code></td><td>à chaque changement d'état</td></tr>
+<tr><td>Service sous l'IRQ de 50 Hz (BIOS, <code>src/serial.s</code>)</td><td>lit jusqu'à 16 octets (LOCI ; 4 sur un 6551) tant que <code>kb_buf</code> a de la place, range les touches par <code>kb_push</code> ; répond à <code>S</code>, <code>L n</code>, <code>L n+$80</code>, <code>C n</code>, <code>B</code> ; émet jusqu'à 64 octets (LOCI ; 24 sur un 6551), chaque total calculé quand vient son tour</td><td>50 fois par seconde, sauf interruptions coupées (disque)</td></tr>
+<tr><td>CONST, CONIN, BDOS 1, 6, 10, 11</td><td><b>inchangés</b> : ils lisent <code>kb_buf</code>, où touches distantes et touches de l'Oric se mêlent</td><td>quand le programme lit le clavier</td></tr>
+<tr><td>CONOUT, BDOS 2, 9, et écritures directes dans <code>SCREEN</code></td><td><b>inchangés</b> : le pilote lit l'écran et la police, il n'intercepte pas l'affichage</td><td>—</td></tr>
+<tr><td><code>draw_flags</code></td><td>voyant <code>R</code> (console active) ou <code>r</code> (réponse abandonnée : émetteur occupé 5 s) à côté de <code>A</code> et <code>P</code></td><td>à chaque changement d'état</td></tr>
 <tr><td>TERM, XFER</td><td>refusent de partir quand la console est active : ils liraient l'ACIA à sa place</td><td>au lancement</td></tr>
 </table>
+<p class="sub">Résident : 660 octets, plus 65 pour la police (option de construction <code>SERIE</code>).</p>
 </div>
-<p class="sub" style="margin-top:14px">Octets : <code>$FE k</code> touche · <code>$FD 'S'</code> demande des totaux · <code>$FD 'L' n</code> demande de la ligne n · <code>$FD 'B'</code> démarrage à chaud · réponses <code>$FF type longueur données total</code>. Le modem n'envoie que de l'ASCII : un octet qui ne suit pas <code>$FD</code> ou <code>$FE</code> est ignoré (<code>NO CARRIER</code> n'est jamais pris pour une frappe).</p>
+
+<h2>Côté ordinateur distant</h2>
+<div class="card tw">
+<table>
+<tr><th>Élément</th><th>Rôle</th></tr>
+<tr><td><code>remote.py serve</code></td><td>le démon : attend l'appel de l'Oric (TCP 2324), tient la copie, sert l'interface locale (HTTP 8040) ; journal <code>logs/remote.log</code>. Python 3 seul, sur un Mac, un PC ou un Raspberry Pi ; un seul démon à la fois</td></tr>
+<tr><td>page web (<code>tools/remote.html</code>, <code>GET /</code>)</td><td>écran 40 × 28 au rendu de l'ULA ; Affichage : points Télé ou Carrés, couleurs Télé ou Pures ; clavier de l'ordinateur ou du téléphone, CTRL, SHIFT, FUNCT, RETURN, Coller, RESET (deux appuis)</td></tr>
+<tr><td><code>/ecran</code>, <code>/touches</code>, <code>/coller</code>, <code>/reset</code></td><td>l'interface locale : lecture en attente longue (lignes changées seulement) ; touches ; texte collé (accents retirés, fins de ligne en CR) ; démarrage à chaud</td></tr>
+<tr><td><code>remote_tk.py</code></td><td>la même chose en fenêtre tkinter, pour le petit écran d'un Raspberry Pi Zero posé à côté de l'Oric</td></tr>
+<tr><td><code>remote.py touches / ecran / attendre</code></td><td>scripts d'essai sur le vrai Oric, écrits comme ceux d'Oricutron</td></tr>
+<tr><td><code>vitrine.py</code></td><td>CP/A montré en boucle pour les spectateurs (scènes au hasard, HORLOGE, MOSAIQUE, EDSPRITE…), français ou anglais selon le système</td></tr>
+<tr><td><code>faux_demon.py</code></td><td>essais de la page et de la fenêtre sans Oric (mire, vidages d'Oricutron)</td></tr>
+</table>
+</div>
+<p class="sub" style="margin-top:14px">Octets : <code>$FE k</code> touche · <code>$FD 'S'</code> demande des totaux · <code>$FD 'L' n</code> ligne n (0-27 écran, 28-75 police) · <code>$FD 'L' n+$80</code> lignes n et suivantes, à la suite · <code>$FD 'C' n</code> totaux des lignes de police n à n+7 · <code>$FD 'B'</code> démarrage à chaud · réponses <code>$FF type longueur données total</code>. Le modem n'envoie que de l'ASCII : un octet qui ne suit pas <code>$FD</code> ou <code>$FE</code> est ignoré (<code>NO CARRIER</code> n'est jamais pris pour une frappe).</p>
 </main>
 
 <script>
@@ -159,51 +224,59 @@ const G = [
   {x:500,y:30,w:150,h:560,t:"LOCI",c:"--loci"},
   {x:668,y:30,w:150,h:560,t:"Pico W (modem)",c:"--pico"},
   {x:836,y:30,w:78,h:560,t:"Réseau",c:"--net"},
-  {x:930,y:30,w:260,h:560,t:"Mac",c:"--mac"},
+  {x:930,y:30,w:260,h:560,t:"Ordinateur distant",c:"--pc"},
+  {x:500,y:610,w:690,h:150,t:"Passerelle vers le Web (lecture seule)",c:"--gw",dash:true},
 ];
 const N = {
-  remote:{x:24,y:62,w:212,h:58,t:"REMOTE.COM",s:"ac_find · ac_setup · ac_dial\n→ BDOS 117"},
-  prog:{x:24,y:134,w:212,h:50,t:"Programme",s:"CCP (A>), EDIT, CMDER, LOGO…"},
+  remote:{x:24,y:62,w:212,h:58,t:"REMOTE.COM",s:"HOSTS · ac_find · ac_setup\nac_dial → BDOS 117"},
+  prog:{x:24,y:134,w:212,h:50,t:"Programme",s:"CCP (A>), EDIT, CMDER, EDSPRITE…"},
   bdos:{x:24,y:198,w:212,h:62,t:"BDOS ($0203)",s:"1·6·10·11 clavier · 2·9 écran\n3·4 READER/PUNCH · 117 série"},
   bios:{x:24,y:274,w:212,h:50,t:"BIOS ($C000)",s:"CONST/CONIN · CONOUT · disque"},
   kbbuf:{x:24,y:338,w:212,h:46,t:"kb_buf ($0230)",s:"16 touches en attente"},
   clavier:{x:24,y:398,w:212,h:46,t:"Clavier de l'Oric",s:"matrice lue par kb_scan"},
-  vars:{x:24,y:458,w:212,h:58,t:"Variables du pilote",s:"$FD13… état, préfixe, demande,\nligne, s1/s2, attente"},
-  irq:{x:252,y:62,w:214,h:110,t:"IRQ 50 Hz (BIOS)",s:"kb_scan\nréception : ≤ 4 octets\ntotaux : 4 lignes par trame\némission : ≤ 8 octets\nvoyant R / r"},
+  vars:{x:24,y:458,w:212,h:72,t:"Variables du pilote",s:"$FD13… état, préfixe, demande,\nligne, s1/s2, attente\n$FD23-$FD26 : plafonds par IRQ"},
+  irq:{x:252,y:62,w:214,h:110,t:"IRQ 50 Hz (BIOS)",s:"kb_scan, puis service série\nlecture : ≤ 16 octets (LOCI)\némission : ≤ 64 octets (LOCI)\ntotaux au fil de l'émission\nvoyant R / r"},
   acia_r:{x:252,y:188,w:214,h:50,t:"Registres du port",s:"LDA $0381 · LDA/STA $0380"},
-  screen:{x:252,y:254,w:214,h:50,t:"SCREEN ($BB80)",s:"28 × 40 octets, attributs compris"},
-  ula:{x:252,y:320,w:214,h:44,t:"ULA",s:"lit SCREEN 50 fois par seconde"},
-  tv:{x:252,y:380,w:214,h:64,t:"Écran de l'Oric",s:"téléviseur ou moniteur"},
+  screen:{x:252,y:254,w:214,h:46,t:"SCREEN ($BB80)",s:"lignes 0-27, attributs compris"},
+  police:{x:252,y:310,w:214,h:46,t:"Police ($B400-$BB7F)",s:"lignes 28-75 du pilote"},
+  ula:{x:252,y:366,w:214,h:44,t:"ULA",s:"lit SCREEN et la police, 50 Hz"},
+  tv:{x:252,y:420,w:214,h:50,t:"Écran de l'Oric",s:"téléviseur ou moniteur"},
   l_acia:{x:512,y:188,w:126,h:56,t:"ACIA 6551",s:"émulée en\n$0380-$0383"},
   l_buf:{x:512,y:264,w:126,h:50,t:"Tampon",s:"réception, 32 o"},
   l_usb:{x:512,y:334,w:126,h:50,t:"Hôte USB",s:"(et disquettes)"},
-  p_cdc:{x:680,y:334,w:126,h:50,t:"USB CDC",s:"port série"},
+  p_cdc:{x:680,y:334,w:126,h:50,t:"USB CDC",s:"lit tout ce qui attend"},
   p_at:{x:680,y:264,w:126,h:50,t:"Modem Hayes",s:"AT, ATDT-hôte"},
   p_tcp:{x:680,y:188,w:126,h:56,t:"Client TCP",s:"fenêtre =\ncontrôle de flux"},
   n_wifi:{x:844,y:188,w:62,h:56,t:"WiFi",s:"box"},
-  d_tcp:{x:942,y:188,w:236,h:50,t:"remote.py · TCP :2324",s:"reçoit l'appel de l'Oric"},
-  d_core:{x:942,y:62,w:236,h:110,t:"remote.py · boucle",s:"copie des 28 lignes\ntotaux de la copie\ndemandes S puis L n\nfile des touches"},
-  d_http:{x:942,y:254,w:236,h:50,t:"remote.py · HTTP :8040",s:"/ecran · /touches · /reset"},
-  b_page:{x:942,y:320,w:236,h:62,t:"Navigateur (Mac, téléphone)",s:"canevas 40×28, police Oric\nclavier traduit, coller"},
-  cli:{x:942,y:398,w:236,h:50,t:"remote.py touches / ecran",s:"/ attendre : scripts d'essai"},
-  macscr:{x:942,y:464,w:236,h:56,t:"Écran du Mac",s:"fenêtre du navigateur"},
+  d_core:{x:942,y:62,w:236,h:110,t:"remote.py · boucle",s:"copie de l'écran et de la police\ntotaux de la copie\nS · L n · L n+$80 · C n\nfile des touches"},
+  d_tcp:{x:942,y:188,w:236,h:50,t:"remote.py · TCP :2324",s:"attend l'appel de l'Oric"},
+  d_http:{x:942,y:254,w:236,h:50,t:"remote.py · HTTP :8040",s:"/ecran · /touches · /coller · /reset"},
+  b_page:{x:942,y:320,w:236,h:62,t:"Navigateur (ordinateur, téléphone)",s:"écran 40×28, rendu de l'ULA\nclavier, Coller, RESET"},
+  cli:{x:942,y:396,w:236,h:46,t:"remote.py touches / ecran",s:"/ attendre : scripts d'essai"},
+  ecr:{x:942,y:454,w:236,h:46,t:"Écran de l'ordinateur",s:"ou du téléphone"},
+  vitrine:{x:942,y:512,w:236,h:62,t:"vitrine.py",s:"CP/A montré en boucle\npause si quelqu'un tape"},
+  spect:{x:516,y:660,w:196,h:72,t:"Spectateurs",s:"navigateurs sur Internet\nlecture seule\n40 au plus"},
+  vps:{x:740,y:660,w:210,h:72,t:"Serveur public",s:"Apache, HTTPS\nGET et HEAD seulement\n/journal et /version refusés"},
+  tun:{x:974,y:660,w:204,h:72,t:"Tunnel chiffré",s:"WireGuard, ouvert\ndepuis la maison :\naucun port sur la box"},
 };
 const CABLES = [
   ["remote","bdos"],["prog","bdos"],["bdos","bios"],["bios","kbbuf"],["kbbuf","irq"],["clavier","irq"],
-  ["irq","acia_r"],["irq","vars"],["irq","screen"],["prog","screen"],["screen","ula"],["ula","tv"],
+  ["irq","acia_r"],["irq","vars"],["irq","screen"],["irq","police"],["prog","screen"],["screen","ula"],["police","ula"],["ula","tv"],
   ["acia_r","l_acia"],["l_acia","l_buf"],["l_buf","l_usb"],["l_usb","p_cdc"],["p_cdc","p_at"],["p_at","p_tcp"],
   ["p_tcp","n_wifi","net"],["n_wifi","d_tcp","net"],["d_tcp","d_core"],["d_core","d_http"],["d_http","b_page"],
-  ["d_http","cli"],["b_page","macscr"],
+  ["d_http","cli"],["b_page","ecr"],["d_http","vitrine"],
+  ["spect","vps","web"],["vps","tun","web"],["tun","d_http","web"],
 ];
 const DOWN = ["d_core","d_tcp","n_wifi","p_tcp","p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","irq"];
 const UP = ["irq","acia_r","l_acia","l_usb","p_cdc","p_at","p_tcp","n_wifi","d_tcp","d_core"];
+const PAGE = ["d_core","d_http","b_page","ecr"];
 
 const svg = document.getElementById("diagram");
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); (parent||svg).appendChild(e); return e; }
 const C = id => ({x:N[id].x+N[id].w/2, y:N[id].y+N[id].h/2});
-for(const g of G){ el("rect",{x:g.x,y:g.y,width:g.w,height:g.h,rx:12,class:"grp",style:`fill:var(${g.c})`}); const t=el("text",{x:g.x+10,y:g.y+20,class:"grpt"}); t.textContent=g.t; }
-for(const [a,b,k] of CABLES){ const p=C(a),q=C(b); el("line",{x1:p.x,y1:p.y,x2:q.x,y2:q.y,class:"cable"+(k?" net":"")}); }
+for(const g of G){ el("rect",{x:g.x,y:g.y,width:g.w,height:g.h,rx:12,class:"grp"+(g.dash?" dash":""),style:`fill:var(${g.c})`}); const t=el("text",{x:g.x+10,y:g.y+20,class:"grpt"}); t.textContent=g.t; }
+for(const [a,b,k] of CABLES){ const p=C(a),q=C(b); el("line",{x1:p.x,y1:p.y,x2:q.x,y2:q.y,class:"cable"+(k?" "+k:"")}); }
 const nodeEl={}, badgeEl={};
 for(const id in N){ const n=N[id]; const g=el("g",{class:"node"}); el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:7},g);
   const t=el("text",{x:n.x+8,y:n.y+16,class:"t"},g); t.textContent=n.t;
@@ -221,32 +294,34 @@ const pad = s => (s+" ".repeat(W)).slice(0,W);
 function bar(r){ return pad(pad(" Systeme Fichiers Ecran Clavier").slice(0,37)+"A "+(r||" ")); }
 const fletcher = s => { let a=0,b=0; for(const ch of s){ a=(a+ch.charCodeAt(0))&255; b=(b+a)&255; } return (b<<8)|a; };
 const hx = (v,d=2) => v.toString(16).toUpperCase().padStart(d,"0");
-let oric=[], mac=[], recv=null, known=new Set(), fresh=new Set();
+let oric=[], copie=[], known=new Set(), fresh=new Set();
 function blank(){ return Array.from({length:28},()=>pad("")); }
 function setLines(arr, obj){ for(const k in obj) arr[k]=pad(obj[k]); }
-function stateConnected(){ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); mac=oric.slice(); recv=null; known.clear(); fresh.clear(); }
+function stateConnected(){ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); copie=oric.slice(); known.clear(); fresh.clear(); }
 function renderScreens(){
-  const draw=(id,arr,isMac)=>{ const box=document.getElementById(id); box.innerHTML="";
+  const draw=(id,arr,isCopy)=>{ const box=document.getElementById(id); box.innerHTML="";
     arr.forEach((line,i)=>{ const r=document.createElement("div"); r.className="row";
       if(i===0) r.classList.add("bar");
-      if(isMac){ if(fresh.has(i)) r.classList.add("fresh"); else if(known.has(i)) r.classList.add("known"); else if(line!==oric[i]) r.classList.add("stale"); }
-      const sum = isMac ? fletcher(line) : fletcher(line);
-      r.innerHTML=`<span class="n">${i}</span><span class="c"></span><span class="k">${hx(sum,4)}</span>`;
+      if(isCopy){ if(fresh.has(i)) r.classList.add("fresh"); else if(known.has(i)) r.classList.add("known"); else if(line!==oric[i]) r.classList.add("stale"); }
+      r.innerHTML=`<span class="n">${i}</span><span class="c"></span><span class="k">${hx(fletcher(line),4)}</span>`;
       r.querySelector(".c").textContent=line; box.appendChild(r); }); };
-  draw("scrOric",oric,false); draw("scrMac",mac,true);
+  draw("scrOric",oric,false); draw("scrCopie",copie,true);
 }
 
 // ---------- moteur ----------
-let speed=1, mode="step", runId=0, waiter=null, badges={};
+const COL={down:"--down",up:"--up",local:"--local",web:"--web"};
+const ARR={down:["dn","Ordinateur → Oric"],up:["upc","Oric → Ordinateur"],local:["lc","local"],web:["wc","Internet"]};
+let speed=1, mode="step", runId=0, waiter=null;
 const sleep = ms => new Promise(r=>setTimeout(r,ms/speed));
 function gate(){ if(mode==="play") return sleep(650); return new Promise(r=>{ waiter=r; }); }
 document.getElementById("speed").oninput=e=>speed=+e.target.value;
 function setActive(ids){ for(const id in nodeEl) nodeEl[id].classList.toggle("active", ids.includes(id)); }
 function setOff(ids){ for(const id in nodeEl) nodeEl[id].classList.toggle("off", ids.includes(id)); }
-function setBadges(b){ badges=b||{}; for(const id in badgeEl) badgeEl[id].textContent=badges[id]||""; }
+function setBadges(b){ b=b||{}; for(const id in badgeEl) badgeEl[id].textContent=b[id]||""; }
 const logBox=document.getElementById("log");
-function log(c,b,m){ const d=document.createElement("div"); const cls=c==="down"?"dn":c==="up"?"upc":"lc"; const ar=c==="down"?"Mac → Oric":c==="up"?"Oric → Mac":"local";
-  d.innerHTML=`<span class="${cls}">${ar}</span> ${b?`<code>${b}</code> — `:""}<span></span>`; d.lastChild.textContent=m; logBox.prepend(d); }
+function log(c,b,m){ const d=document.createElement("div"); const [cls,ar]=ARR[c]||ARR.local;
+  d.innerHTML=`<span class="${cls}">${ar}</span> ${b?`<code></code> — `:""}<span></span>`;
+  if(b) d.querySelector("code").textContent=b; d.lastChild.textContent=m; logBox.prepend(d); }
 async function move(route,color,label,my){
   pkt.style.display=""; pktC.setAttribute("style",`fill:var(${color})`); pktT.textContent=label||"";
   const tw = Math.max(20,(label||"").length*6.7+10); pktBg.setAttribute("width",tw); pktBg.style.display=label?"":"none";
@@ -266,7 +341,7 @@ async function run(steps){
     setActive([...(s.hl||[]),...(s.r?[s.r[0],s.r[s.r.length-1]]:[])]);
     if(s.off!==undefined) setOff(s.off);
     if(s.badge!==undefined) setBadges(s.badge);
-    if(s.r) { log(s.c,s.b,s.m); await move(s.r, s.c==="down"?"--down":s.c==="up"?"--up":"--local", s.b, my); }
+    if(s.r) { log(s.c,s.b,s.m); await move(s.r, COL[s.c]||"--local", s.b, my); }
     else log("local","",s.m);
     if(my!==runId) return;
     if(s.act) s.act(); renderScreens();
@@ -284,88 +359,136 @@ function cycle(again){
   return [
     {hl:["d_core"], m: again ? "Des lignes ont changé : le démon redemande les totaux tout de suite (l'écran bouge peut-être encore)." : "Le démon lance un cycle : c'est lui qui mène. Il envoie la demande de totaux."},
     {r:DOWN,c:"down",b:"FD 53",m:"Demande « S » (totaux des 28 lignes)."},
-    {hl:["irq","screen","vars"],m:"À l'IRQ suivante, la demande est notée. Le service lit SCREEN et calcule 4 lignes par trame de 1/50 s (Fletcher 16 bits, case du curseur rétablie) : 7 trames, environ 0,15 s. Le programme en cours continue."},
-    {r:UP,c:"up",b:"FF 53 3C 00 cx cy 01 [56 o] tt",m:"Trame S : mode, curseur, 28 totaux. Le démon vérifie la longueur et le total de la trame.",
-     act:()=>{ recv=oric.map(fletcher); known=new Set(); recv.forEach((v,n)=>{ if(v!==fletcher(mac[n])) known.add(n); }); }},
+    {hl:["irq","screen","vars"],m:"À l'IRQ suivante, la demande est notée. Le service émet la trame au fil des IRQ : avec le LOCI, jusqu'à 64 octets par trame de 1/50 s, soit la trame S entière d'un coup. Chaque total (Fletcher 16 bits, case du curseur rétablie) est calculé quand vient son tour d'être émis, ~0,6 ms par ligne : pas de tampon. Le programme en cours continue."},
+    {r:UP,c:"up",b:"FF 53 3C mode cx cy act [56 o] tt",m:"Trame S : mode, curseur, 28 totaux. Le démon vérifie la longueur et le total de la trame.",
+     act:()=>{ known=new Set(); oric.forEach((l,n)=>{ if(fletcher(l)!==fletcher(copie[n])) known.add(n); }); }},
     {expand:()=>{ const d=[...known];
-      if(!d.length) return [{hl:["d_core"],m:"Les 28 totaux reçus sont égaux à ceux de la copie : rien à demander. Prochain cycle dans 0,5 s, ou 0,1 s après une touche."},
-        {r:["d_core","d_http","b_page","macscr"],c:"local",b:"GET /ecran",m:"La page lit la copie toutes les 0,1 s et ne redessine que les lignes changées."}];
-      const out=[{hl:["d_core"],m:`Le démon compare les totaux reçus à ceux de sa copie : ${d.length>1?"lignes":"ligne"} ${d.join(", ")} ${d.length>1?"différentes":"différente"}. Il les demande une à une.`}];
-      for(const n of d){ out.push({r:DOWN,c:"down",b:`FD 4C ${hx(n)}`,m:`Demande « L ${n} ».`});
-        out.push({r:UP,c:"up",b:lineBytes(n),m:`Trame L : les 40 octets de la ligne ${n}, attributs compris. La copie du Mac est mise à jour.`,
-          act:()=>{ mac[n]=oric[n]; known.delete(n); fresh.add(n); }}); }
+      if(!d.length) return [{hl:["d_core"],m:"Les 28 totaux reçus sont égaux à ceux de la copie : rien à demander. En mode texte, le démon vérifie aussi quelques tranches de la police (trames C, scénario « Caractères redéfinis »). Prochain cycle dans 0,5 s, ou dès la prochaine touche."}];
+      const out=[];
+      if(d.length>=3 && 28-d[0] <= 4*d.length){
+        const n0=d[0], k=28-n0;
+        out.push({hl:["d_core"],m:`${d.length} lignes ont changé, à partir de la ligne ${n0} : une seule demande groupée suffit. L'Oric enverra les lignes ${n0} à 27 à la suite, sans attendre de demande entre elles.`});
+        out.push({r:DOWN,c:"down",b:`FD 4C ${hx(0x80+n0)}`,m:`Demande « L ${n0}+$80 » (lignes ${n0} à 27).`});
+        out.push({r:UP,c:"up",b:`FF 4C 29 ${hx(n0)} … ×${k}`,m:`${k} trames L à la suite, 64 octets par IRQ : sur le vrai Oric, 27 lignes en 0,4 s (~3 Ko/s), au lieu d'un aller-retour WiFi par ligne.`,
+          act:()=>{ for(let n=n0;n<28;n++){ copie[n]=oric[n]; known.delete(n); fresh.add(n); } }});
+      } else {
+        out.push({hl:["d_core"],m:`Le démon compare les totaux reçus à ceux de sa copie : ${d.length>1?"lignes":"ligne"} ${d.join(", ")} ${d.length>1?"différentes":"différente"}. Moins de 3, ou trop dispersées : il les demande une à une.`});
+        for(const n of d){ out.push({r:DOWN,c:"down",b:`FD 4C ${hx(n)}`,m:`Demande « L ${n} ».`});
+          out.push({r:UP,c:"up",b:lineBytes(n),m:`Trame L : les 40 octets de la ligne ${n}, attributs compris. La copie est mise à jour.`,
+            act:()=>{ copie[n]=oric[n]; known.delete(n); fresh.add(n); }}); }
+      }
+      out.push({r:PAGE,c:"local",b:"GET /ecran (attente longue)",m:"La page attendait déjà sa réponse (attente longue, 5 s au plus) : le démon répond dès la copie changée, avec les seules lignes changées, et la page les redessine. Pas de scrutation."});
       out.push({expand:()=>cycle(true)}); return out; }},
   ];
 }
 
 // ---------- scénarios ----------
 const S = {
-"Mise en route": ()=>{ oric=blank(); oric[0]=bar(" "); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); mac=blank().map(()=>pad("")); recv=null; known.clear();
+"Mise en route": ()=>{ oric=blank(); oric[0]=bar(" "); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); copie=blank(); known.clear(); fresh.clear();
   return [
-  {hl:["clavier","kbbuf","prog"],m:"Sur l'Oric, on tape REMOTE MAC (ou la ligne est dans AUTO.BAT). C'est toujours l'Oric qui ouvre la liaison.",act:()=>setLines(oric,{3:"A>REMOTE MAC"})},
-  {hl:["remote","bdos"],m:"REMOTE cherche « mac » dans le fichier HOSTS (fonctions 15 et 20 du BDOS) : ligne « mac 192.168.1.20 », sans port, donc le port de REMOTE, 2324."},
-  {hl:["remote","acia_r","l_acia"],m:"REMOTE.COM : ac_find lit $03B0 (le LOCI répond : port $0380), ac_setup règle l'ACIA à 9600 bauds 8N1, DTR actif, sans interruption.",act:()=>setLines(oric,{4:"Modem du LOCI ($0380)"})},
-  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"AT\\r",m:"ac_dial parle au modem en mode commande."},
+  {hl:["clavier","kbbuf","prog"],m:"Sur l'Oric, on tape REMOTE PC (ou la ligne est dans AUTO.BAT). C'est toujours l'Oric qui ouvre la liaison : l'ordinateur ne peut pas le réveiller.",act:()=>setLines(oric,{3:"A>REMOTE PC"})},
+  {hl:["remote","bdos"],m:"REMOTE cherche « pc » dans le fichier HOSTS (fonctions 15 et 20 du BDOS) : ligne « pc 192.168.1.20 » (exemple), sans port, donc celui de REMOTE, 2324."},
+  {hl:["remote","acia_r","l_acia"],m:"REMOTE.COM : ac_find lit $03B0 (le LOCI répond : port $0380), ac_setup règle l'ACIA à 9600 bauds 8N1, DTR actif, sans interruption.",act:()=>setLines(oric,{4:"Modem du LOCI (ACIA 0380)"})},
+  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"\\r",m:"ac_dial envoie d'abord un CR seul et jette ce qui arrive jusqu'à 0,2 s de silence : les réponses en retard (un NO CARRIER resté là) ne décalent plus celles de la suite."},
+  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"AT\\r",m:"Puis il parle au modem en mode commande."},
   {r:["p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","remote"],c:"local",b:"OK",m:"Le modem répond."},
-  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"ATDT-192.168.1.20:2324\\r",m:"Composition par ac_dial : le « - » donne des octets bruts, sans telnet.",act:()=>setLines(oric,{5:"Appel de mac (192.168.1.20:2324)..."})},
-  {r:["p_at","p_tcp","n_wifi","d_tcp"],c:"down",b:"connexion TCP",m:"Le Pico W ouvre une connexion TCP vers le démon, qui l'attend sur le port 2324."},
-  {r:["p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","remote"],c:"local",b:"CONNECT",m:"Le modem passe en mode données : la liaison est ouverte dans les deux sens."},
-  {hl:["remote","bdos","vars","irq"],m:"REMOTE appelle la fonction 117 du BDOS : op 1 (port $80), puis op 2 (console active). Le service de l'IRQ démarre ; voyant R.",
-   act:()=>{ oric[0]=bar("R"); setLines(oric,{6:"Console a distance active (voyant R)",7:"A>"}); }},
-  {hl:["d_core"],m:"Le démon voit arriver l'Oric. Sa copie est vide : il fait un premier cycle, qui ramène toutes les lignes différentes (environ 1,5 s pour l'écran entier)."},
-  ...cycle(false)]; },
+  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"ATDT-192.168.1.20:2324\\r",m:"Composition : le « - » donne des octets bruts, sans telnet.",act:()=>setLines(oric,{5:"Appel de 192.168.1.20:2324..."})},
+  {r:["p_at","p_tcp","n_wifi","d_tcp"],c:"down",b:"connexion TCP",m:"Le Pico W ouvre une connexion TCP vers le démon, qui l'attend sur le port 2324. Un nouvel appel remplace toujours l'ancien : un Oric éteint sans raccrocher ne bloque rien."},
+  {r:["p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","remote"],c:"local",b:"CONNECT",m:"Le modem passe en mode données : la liaison est ouverte dans les deux sens.",act:()=>setLines(oric,{6:"CONNECT"})},
+  {hl:["remote","bdos","vars","irq"],m:"REMOTE appelle la fonction 117 du BDOS : op 1 (port $80, et les plafonds du LOCI : 16 octets lus, 64 émis par IRQ), puis op 2 (console active). Le service de l'IRQ démarre ; voyant R.",
+   act:()=>{ oric[0]=bar("R"); setLines(oric,{7:"Console a distance active (voyant R)",8:"A>"}); }},
+  {hl:["d_core"],m:"Le démon voit arriver l'Oric. Sa copie est vide : le premier cycle ramène toutes les lignes différentes."},
+  ...cycle(false),
+  {r:DOWN,c:"down",b:"FD 4C 9C",m:"Première trame S en mode texte : le démon lit aussi toute la police, d'une seule demande groupée « L 28+$80 » (lignes de police 28 à 75, $B400-$BB7F)."},
+  {r:UP,c:"up",b:"FF 4C 29 1C … ×48",m:"48 trames L à la suite. La page dessine maintenant avec les caractères que l'Oric a vraiment en mémoire, sprites et tuiles compris. Un ancien pilote, qui ne répond pas, garde la police de CP/A."},
+  ]; },
 
-"Touche tapée sur le Mac": ()=>{ stateConnected(); return [
-  {hl:["b_page","macscr"],m:"Dans le navigateur, on tape DIR puis Entrée. La page traduit les touches en codes de CP/A (Entrée → 13, flèches → $08-$0B…)."},
-  {r:["b_page","d_http","d_core"],c:"local",b:"POST /touches",m:"Les touches vont dans la file du démon."},
+"Touche tapée à distance": ()=>{ stateConnected(); return [
+  {hl:["b_page","ecr"],m:"Dans le navigateur de l'ordinateur ou du téléphone, on tape DIR puis Entrée. La page traduit les touches en codes de CP/A (Entrée → 13, flèches → $08-$0B, F1 → FUNCT…) et regroupe une frappe rapide en un seul envoi."},
+  {r:["b_page","d_http","d_core"],c:"local",b:"POST /touches",m:"Les touches vont dans la file du démon. Cet envoi note aussi une frappe humaine : la vitrine, si elle tourne, se met en pause."},
   {r:DOWN,c:"down",b:"FE 44 FE 49 FE 52 FE 0D",m:"Chaque touche part précédée de $FE. L'Oric ignore tout octet qui ne suit pas $FD ou $FE (messages du modem)."},
-  {hl:["irq","kbbuf"],m:"À l'IRQ suivante : 4 octets lus au plus par trame. Le préfixe $FE est retenu, puis le code est rangé dans kb_buf par kb_push, comme une touche de l'Oric. Seulement s'il y a de la place : sinon l'octet reste au LOCI."},
+  {hl:["irq","kbbuf"],m:"À l'IRQ suivante : jusqu'à 16 octets lus (8 touches), seulement tant que kb_buf a de la place ; sinon ils restent au LOCI. Chaque code est rangé par kb_push, comme une touche de l'Oric."},
   {r:["kbbuf","bios","bdos","prog"],c:"local",b:"CONIN",m:"Le CCP lit sa ligne par la fonction 10 du BDOS, qui prend les touches par CONIN. Rien n'a changé dans ces routines."},
-  {r:["prog","screen"],c:"local",b:"CONOUT",m:"Le CCP affiche la ligne, puis le répertoire. SCREEN change ; la copie du Mac est maintenant périmée, mais le Mac ne le sait pas encore (pointillé).",
+  {r:["prog","screen"],c:"local",b:"CONOUT",m:"Le CCP affiche la ligne, puis le répertoire. SCREEN change ; la copie est maintenant périmée, mais le démon ne le sait pas encore (pointillé).",
    act:()=>setLines(oric,{3:"A>DIR",4:"A: HELP     COM : EDIT     COM",5:"A: CMDER    COM : ASM      COM",6:"A: REMOTE   COM : README   TXT",7:"",8:"A>"})},
-  {r:DOWN,c:"down",b:"FD 4C 03",m:"Écho rapide : dès les touches parties, le démon demande la ligne du curseur (ligne 3, connue par la dernière trame S), presque toujours celle qui change."},
-  {r:UP,c:"up",b:"FF 4C 29 03 41 3E 44 … tt",m:"La ligne 3 revient : « A>DIR » s'affiche sur le Mac environ 0,1 à 0,15 s après la frappe. Le reste de l'écran (le répertoire) n'est pas encore là.",act:()=>{ mac[3]=oric[3]; fresh.add(3); }},
+  {r:DOWN,c:"down",b:"FD 4C 03",m:"Écho rapide (4 touches au plus : une frappe, pas un texte collé) : le démon demande la ligne du curseur, ligne 3 d'après la dernière trame S, presque toujours celle qui change."},
+  {r:UP,c:"up",b:"FF 4C 29 03 41 3E 44 … tt",m:"La ligne 3 revient : « A>DIR » s'affiche environ 0,21 s après la frappe (mesuré sur le vrai Oric). Le répertoire n'est pas encore là.",act:()=>{ copie[3]=oric[3]; fresh.add(3); }},
+  {r:PAGE,c:"local",b:"GET /ecran",m:"La page, en attente longue, reçoit la ligne 3 tout de suite."},
   {hl:["d_core"],m:"Puis le cycle complet, pour tout ce qui a pu changer ailleurs : défilement, répertoire, menus, ligne d'état."},
   ...cycle(false)]; },
 
 "Touche tapée sur l'Oric": ()=>{ stateConnected(); return [
   {r:["clavier","irq","kbbuf"],c:"local",b:"kb_scan",m:"Sur l'Oric, on tape VER puis RETURN. Le clavier de l'Oric reste actif : kb_scan range les touches dans le même tampon."},
-  {r:["kbbuf","bios","bdos","prog","screen"],c:"local",b:"CONIN → CONOUT",m:"Le CCP exécute VER : SCREEN change. Rien ne part vers le Mac, l'Oric ne parle jamais de lui-même.",
+  {r:["kbbuf","bios","bdos","prog","screen"],c:"local",b:"CONIN → CONOUT",m:"Le CCP exécute VER : SCREEN change. Rien ne part vers l'ordinateur : l'Oric ne parle jamais de lui-même.",
    act:()=>setLines(oric,{3:"A>VER",4:"CP/A 0.9 disquette",5:"A>"})},
-  {hl:["d_core"],m:"Le Mac découvre le changement à son cycle suivant, au plus 0,5 s plus tard."},
+  {hl:["d_core"],m:"Le démon découvre le changement à son cycle suivant, au plus 0,5 s plus tard."},
   ...cycle(false)]; },
 
-"Texte collé (contrôle de flux)": ()=>{ oric=blank(); oric[0]=pad(" Fichier Edition Recherche          A R"); setLines(oric,{1:"NOTES.TXT"}); mac=oric.slice(); known.clear(); recv=null;
+"Écran qui défile (demande groupée)": ()=>{ stateConnected();
+  const t=["CP/A - Lisez-moi","","Systeme a la CP/M pour Oric Atmos,","charge depuis la disquette dans la","RAM overlay. Les commandes :","","  DIR, TYPE, EDIT, CMDER, ASM, LOGO,","  HELP, REMOTE, XFER, TERM, USBDIR...","","Tapez HELP pour l'aide en ligne."];
+  return [
+  {hl:["b_page"],m:"À distance, on tape TYPE README.TXT puis Entrée : 16 touches."},
+  {r:DOWN,c:"down",b:"FE 54 FE 59 … FE 0D",m:"Les 16 touches partent d'un coup. Plus de 4 : pas d'écho rapide, et la demande S suivante attend un peu plus (3 s + 0,1 s par touche au-delà de 4), le temps que l'Oric les lise."},
+  {r:["kbbuf","bios","bdos","prog","screen"],c:"local",b:"CONIN → CONOUT",m:"TYPE remplit l'écran, qui défile : presque toutes les lignes changent.",
+   act:()=>{ for(let n=1;n<28;n++) oric[n]=pad(t[(n+3)%t.length]); oric[27]=pad("A>"); }},
+  ...cycle(false)]; },
+
+"Caractères redéfinis (police)": ()=>{ stateConnected(); setLines(oric,{3:"A>EDSPRITE DUN",5:"  Grille         Reel",7:"  ########       xyz{|"}); copie=oric.slice(); return [
+  {hl:["prog","police"],m:"EDSPRITE dessine un sprite : il change les caractères 120 à 124 du jeu standard, dans la police ($B400-$BB7F). Les codes de SCREEN ne changent pas : seuls les dessins des caractères changent."},
+  {hl:["d_core"],m:"Cycle du démon : la trame S ne montre aucune ligne d'écran changée. En mode texte, il vérifie alors des tranches de la police : celles changées depuis moins de 10 s (sprite animé) à chaque cycle, plus deux autres à tour de rôle ; toute la police en 1,5 s au repos."},
+  {r:DOWN,c:"down",b:"FD 43 32",m:"Demande « C 50 » : totaux des lignes de police 50 à 57 (une tranche de 8 lignes de 40 octets, soit 40 caractères)."},
+  {hl:["irq","police"],m:"Sous l'IRQ, le pilote calcule 8 totaux (320 octets lus), sans aucune variable en plus."},
+  {r:UP,c:"up",b:"FF 43 10 [16 o] tt",m:"Trame C : 8 totaux de Fletcher. Le démon les compare à ceux de sa copie de la police : la ligne 52 diffère (caractères 120 à 124)."},
+  {r:DOWN,c:"down",b:"FD 4C 34",m:"Demande « L 52 » : la même trame que pour une ligne d'écran."},
+  {r:UP,c:"up",b:"FF 4C 29 34 … tt",m:"Les 40 octets de la ligne de police 52 (cinq caractères, jamais coupés). La tranche devient « chaude » : elle sera vérifiée à chaque cycle pendant 10 s."},
+  {r:PAGE,c:"local",b:"GET /ecran (police)",m:"La réponse de /ecran porte la police changée : la page et la fenêtre tkinter redessinent les cases qui utilisent ces caractères. Le sprite apparaît tel que sur l'Oric. En HIRES et en SPLIT, $B400 est dans l'image : la police n'est pas demandée."},
+  ]; },
+
+"Texte collé (contrôle de flux)": ()=>{ oric=blank(); oric[0]=pad(" Fichier Edition Recherche          A R"); setLines(oric,{1:"NOTES.TXT"}); copie=oric.slice(); known.clear(); fresh.clear();
   const txt=["Liste des essais sur le vrai Oric :","- debit du LOCI a 9600 bauds","- texte colle de plusieurs Ko","- RESET avec la console active","- Pico debranche en cours"];
   return [
-  {hl:["b_page","macscr"],m:"Sur l'Oric, EDIT est ouvert sur NOTES.TXT (on le voit dans la fenêtre du Mac). Sur le Mac, on a copié 2 Ko de texte dans une autre application (TextEdit, une page web…). Dans la page de la console, on clique « Coller » : le texte du presse-papiers du Mac va partir vers l'Oric comme une suite de touches, accents retirés, fins de ligne en CR."},
-  {r:["b_page","d_http","d_core"],c:"local",b:"POST /touches (2 048)",m:"Le démon met les 2 048 touches dans sa file et les envoie sans attendre. Rien n'est affiché sur le Mac à ce moment : c'est EDIT, sur l'Oric, qui insérera le texte, et le Mac le verra en relisant l'écran."},
-  {r:DOWN,c:"down",b:"FE 4C FE 69 FE 73 …",m:"Le flux arrive à l'Oric."},
+  {hl:["b_page","ecr"],m:"Sur l'Oric, EDIT est ouvert sur NOTES.TXT (on le voit dans la page). Sur l'ordinateur, on a copié 2 Ko de texte dans une autre application. Dans la page, Coller (Cmd-V ou Ctrl-V ; sur le téléphone, une zone où coller, puis Envoyer)."},
+  {r:["b_page","d_http","d_core"],c:"local",b:"POST /coller (2 Ko)",m:"Le démon retire les accents (comme XFER /T), met les fins de ligne en CR, puis envoie les touches, 1 024 au plus d'un coup. Rien n'est affiché à distance à ce moment : c'est EDIT, sur l'Oric, qui insérera le texte."},
+  {r:DOWN,c:"down",b:"FE 4C FE 69 FE 73 …",m:"Le flux arrive à l'Oric. Pas d'écho rapide : ce n'est pas une frappe."},
   {hl:["irq","kbbuf","prog"],badge:{kbbuf:"plein 16/16"},m:"EDIT insère moins vite qu'il ne reçoit : kb_buf se remplit (16 touches). L'IRQ cesse alors de lire l'ACIA.",act:()=>setLines(oric,{3:txt[0]})},
   {hl:["l_buf","l_acia"],badge:{kbbuf:"plein 16/16",l_buf:"plein 32/32"},m:"Le tampon du LOCI se remplit (32 octets). Le LOCI ne lit plus le modem USB."},
-  {hl:["p_cdc","p_tcp","n_wifi","d_tcp"],badge:{kbbuf:"plein",l_buf:"plein",p_cdc:"attend",p_tcp:"fenêtre 0",d_tcp:"bloqué"},m:"Le Pico W attend que l'USB accepte. Sa pile TCP ne rend plus la fenêtre, et le démon reste bloqué sur l'envoi. Les tampons sont hors de l'Oric : rien ne se perd. Le démon ne demande pas S pendant ce temps : une demande attendrait derrière les touches."},
-  {r:["kbbuf","bios","prog","screen"],c:"local",b:"CONIN",m:"EDIT prend les touches, comme si on les tapait très vite, et les insère dans son texte (c'est son tampon de texte qui grossit, pas un presse-papiers). kb_buf se vide, l'IRQ relit l'ACIA, le LOCI relit l'USB, la fenêtre TCP se rouvre : le flux reprend au rythme d'EDIT.",
+  {hl:["p_cdc","p_tcp","n_wifi","d_tcp"],badge:{kbbuf:"plein",l_buf:"plein",p_cdc:"attend",p_tcp:"fenêtre 0",d_tcp:"bloqué"},m:"Le Pico W attend que l'USB accepte. Sa pile TCP ne rend plus la fenêtre, et le démon reste bloqué sur l'envoi. Les tampons sont hors de l'Oric : rien ne se perd."},
+  {r:["kbbuf","bios","prog","screen"],c:"local",b:"CONIN",m:"EDIT prend les touches, comme si on les tapait très vite, et les insère dans son texte. kb_buf se vide, l'IRQ relit l'ACIA, le LOCI relit l'USB, la fenêtre TCP se rouvre : le flux reprend au rythme d'EDIT.",
    badge:{}, act:()=>setLines(oric,{3:txt[0],4:txt[1],5:txt[2],6:txt[3],7:txt[4]})},
-  {hl:["d_core"],m:"Pendant le collage, chaque paquet de touches parties est suivi d'un écho rapide et d'un cycle : les lignes apparaissent sur le Mac par paquets. Une fois le texte inséré, on l'enregistre dans EDIT : le texte du Mac est devenu un fichier de l'Oric, sans XFER."},
+  {hl:["d_core"],m:"Après chaque paquet de touches parties, un cycle (la demande S attend 3 s, plus 0,1 s par touche au-delà de 4) : les lignes apparaissent par paquets. Une fois le texte inséré, on l'enregistre dans EDIT : le texte de l'ordinateur est devenu un fichier de l'Oric, sans XFER."},
   ...cycle(false)]; },
 
 "Accès disque (interruptions coupées)": ()=>{ stateConnected(); return [
   {hl:["prog","bdos","bios"],off:["irq"],badge:{irq:"coupée (SEI)"},m:"Un programme lit la disquette : le BIOS coupe les interruptions pendant le transfert d'un secteur. Le service série ne tourne plus.",act:()=>setLines(oric,{3:"A>TYPE README.TXT"})},
   {r:["d_core","d_tcp","n_wifi","p_tcp","p_at","p_cdc","l_usb","l_buf"],c:"down",b:"FD 53",m:"Le démon demande S. La demande attend dans le tampon du LOCI.",badge:{irq:"coupée (SEI)",l_buf:"FD 53 en attente"}},
-  {hl:["d_core"],m:"Pas de réponse en 1 s : le démon redemande. La nouvelle demande remplace l'ancienne, rien ne s'embrouille."},
-  {hl:["irq"],off:[],badge:{},m:"Le transfert est fini, les interruptions reviennent. L'IRQ suivante lit la demande ; le cycle continue normalement.",act:()=>setLines(oric,{4:"CP/A - Lisez-moi",5:"Tapez HELP pour l'aide.",6:"A>"})},
+  {hl:["irq"],off:[],badge:{},m:"Le transfert est fini, les interruptions reviennent. L'IRQ suivante lit la demande ; le cycle continue normalement. Si rien n'était venu en 3 s, le démon aurait redemandé : une nouvelle demande remplace l'ancienne, rien ne s'embrouille.",act:()=>setLines(oric,{4:"CP/A - Lisez-moi",5:"Tapez HELP pour l'aide.",6:"A>"})},
   ...cycle(false).slice(2)]; },
 
-"RESET à distance, liaison perdue": ()=>{ stateConnected(); setLines(oric,{3:"A>LOGO",4:"(programme bloque, IRQ actives)"}); mac=oric.slice(); return [
-  {hl:["b_page"],m:"Un programme est bloqué sur l'Oric. Dans la page, on clique RESET (ou \\x06 dans un script d'essai)."},
+"RESET à distance, liaison perdue": ()=>{ stateConnected(); setLines(oric,{3:"A>LOGO",4:"(programme bloque, IRQ actives)"}); copie=oric.slice(); return [
+  {hl:["b_page"],m:"Un programme est bloqué sur l'Oric. Dans la page, on appuie deux fois sur RESET en moins de 3 s (« Sur ? »), ou \\x06 dans un script d'essai."},
   {r:["b_page","d_http","d_core"],c:"local",b:"POST /reset",m:"Le démon envoie la demande de démarrage à chaud."},
   {r:DOWN,c:"down",b:"FD 42",m:"Demande « B »."},
-  {hl:["irq","bios","screen"],m:"Sous l'IRQ : démarrage à chaud, comme le bouton RESET. Le pilote survit (variables en RAM overlay, ACIA déjà réglée) : la console reste active.",
-   act:()=>{ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"*RESET* at 5A10",3:"A>"}); }},
+  {hl:["irq","bios","screen"],m:"Sous l'IRQ : démarrage à chaud, comme le bouton RESET, sans le message *RESET* at. Le pilote survit (variables en RAM overlay, ACIA déjà réglée) : la console reste active.",
+   act:()=>{ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); }},
   ...cycle(false),
-  {hl:["p_cdc","l_usb"],m:"Autre cas : on débranche le Pico pendant une trame L. Le LOCI ne vide plus le registre d'émission."},
-  {r:["irq","acia_r","l_acia"],c:"up",b:"FF 4C 29 …",m:"L'émission bloque à l'ACIA."},
-  {hl:["irq","vars","tv"],m:"Émetteur toujours occupé au bout de 2 s : la réponse est abandonnée, le voyant passe à r. L'Oric continue ; la console reste active, et une nouvelle demande relancera le service. REMOTE OFF coupe et raccroche.",act:()=>{ oric[0]=bar("r"); }},
+  {hl:["p_cdc","l_usb"],off:["p_cdc","p_at","p_tcp"],m:"Autre cas : on débranche le Pico pendant une trame L. Le LOCI ne vide plus le registre d'émission."},
+  {r:["irq","acia_r","l_acia"],c:"up",b:"FF 4C 29 …",m:"L'émission bloque à l'ACIA. Le service reprend simplement à chaque IRQ ; le programme continue."},
+  {hl:["irq","vars","tv"],m:"Émetteur toujours occupé au bout de 5 s : la réponse est abandonnée, le voyant passe à r. La console reste active : une nouvelle demande relancera le service. REMOTE OFF coupe et raccroche.",act:()=>{ oric[0]=bar("r"); }},
+  {hl:["d_core","b_page"],m:"Côté démon : 5 s sans trame valide, la liaison est « perdue » ; la page l'affiche sur l'écran et réessaie seule. Quand l'Oric rappelle, le nouvel appel remplace l'ancien."},
+  ]; },
+
+"Spectateurs (passerelle vers le Web)": ()=>{ stateConnected(); return [
+  {hl:["vitrine","d_http"],m:"Sur la machine du démon, la vitrine tourne : elle tape sur l'Oric comme quelqu'un qui s'en servirait (HORLOGE, MOSAIQUE, EDIT, CMDER, EDSPRITE, commandes au prompt), pour que les spectateurs voient CP/A bouger."},
+  {r:["vitrine","d_http","d_core"],c:"local",b:"POST /touches (X-Vitrine)",m:"Ses envois portent l'en-tête X-Vitrine : le démon ne les compte pas comme une frappe humaine."},
+  {r:DOWN,c:"down",b:"FE 48 FE 4F …",m:"Les touches partent à l'Oric comme les autres.",act:()=>setLines(oric,{3:"A>HORLOGE",5:"  ##  ##     ##  ###",6:"   #  # #  #  #  # #",7:"  ##  ##     ##  ###"})},
+  ...cycle(false),
+  {r:["spect","vps"],c:"web",b:"GET /cpa/ecran (HTTPS)",m:"Un spectateur ouvre la page sur Internet. Son navigateur demande l'écran au serveur public, en HTTPS."},
+  {r:["vps","tun","d_http"],c:"web",b:"GET /ecran",m:"Le serveur public transmet par le tunnel chiffré. Ce tunnel est ouvert depuis la maison : aucun port n'est ouvert sur la box."},
+  {hl:["d_http","d_core"],m:"Tout ce qui arrive du tunnel est spectateur : le démon le compte (40 au plus, 503 au-delà) et répond sans compteurs ni journal, avec « lecture_seule »."},
+  {r:["d_http","tun","vps","spect"],c:"web",b:"200 lignes changées",m:"Le spectateur voit l'écran de l'Oric en direct, avec le nombre de spectateurs sur la ligne d'état. La page n'a ni boutons ni clavier."},
+  {r:["spect","vps"],c:"web",b:"POST /cpa/touches",m:"Un spectateur essaie quand même d'envoyer des touches à la main…"},
+  {hl:["vps"],badge:{vps:"403"},m:"Refusé par le serveur public : seuls GET et HEAD passent. Même s'il laissait passer, le démon refuserait aussi (403) : la lecture seule est assurée deux fois. /journal et /version sont refusés de même."},
+  {hl:["b_page","d_core","vitrine"],badge:{},m:"À la maison, quelqu'un tape dans la page : la vitrine s'arrête et attend 2 minutes sans frappe avant de reprendre. Les spectateurs voient alors la vraie séance."},
   ]; },
 };
 const box=document.getElementById("scenarios"); let current=null;
