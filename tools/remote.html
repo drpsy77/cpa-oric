@@ -118,8 +118,19 @@ const params = new URLSearchParams(location.search);
 const BASE = params.get("demon") ? params.get("demon").replace(/\/$/, "") + "/" : "";
 
 const toile = document.getElementById("ecran");
-const ctx = toile.getContext("2d");
+const vue = toile.getContext("2d");
+// L'image de l'Oric (240 x 224) est faite dans une toile hors de la page, puis
+// agrandie dans la toile visible (afficher()).
+const source = document.createElement("canvas");
+source.width = LARG; source.height = HAUT;
+const ctx = source.getContext("2d");
 const image = ctx.createImageData(LARG, HAUT);
+const etape = document.createElement("canvas"), cetape = etape.getContext("2d");
+// Forme des points : sur un téléviseur PAL, un point de l'Oric (240 par ligne
+// à 6 MHz) est ~1,23 fois plus large que haut (14,75 MHz / 6 MHz / 2) ; des
+// points carrés (Oricutron) étirent l'image en hauteur. ?pixels=carres : carrés.
+const PAR = params.get("pixels") === "carres" ? 1 : 1.23;
+let echelleY = 1;                         // points de l'écran par ligne de l'Oric
 const cadre = document.getElementById("cadre");
 const saisie = document.getElementById("saisie");
 const $ = id => document.getElementById(id);
@@ -193,7 +204,7 @@ function polices() {
 
 function dessiner(nums) {
   for (const n of nums) rendreLigne(n);
-  if (nums.length) ctx.putImageData(image, 0, 0);
+  if (nums.length) { ctx.putImageData(image, 0, 0); afficher(); }
 }
 
 function aClignotement(l) {
@@ -209,14 +220,39 @@ setInterval(() => {
   dessiner(nums);
 }, CLIGN);
 
-// Échelle : entière quand elle tient (lettres nettes), sinon la plus grande possible.
+// Agrandissement en deux temps : points répétés (sans flou) jusqu'à un nombre
+// entier de points de l'écran par point de l'Oric, puis en largeur seulement,
+// lissé, jusqu'à la forme du téléviseur (PAR) : verticalement net, au plus un
+// point de l'écran adouci par bord en largeur, comme sur une télé.
+function afficher() {
+  const W = toile.width, H = toile.height;
+  if (PAR === 1 && W === LARG * echelleY) {
+    vue.imageSmoothingEnabled = false;
+    vue.drawImage(source, 0, 0, W, H);
+    return;
+  }
+  const kx = Math.ceil(echelleY * PAR);
+  if (etape.width !== LARG * kx || etape.height !== H) { etape.width = LARG * kx; etape.height = H; }
+  cetape.imageSmoothingEnabled = false;
+  cetape.drawImage(source, 0, 0, etape.width, H);
+  vue.imageSmoothingEnabled = true;
+  vue.imageSmoothingQuality = "high";
+  vue.drawImage(etape, 0, 0, W, H);
+}
+
+// Échelle : nombre entier de points de l'écran (pixels physiques) par ligne de
+// l'Oric quand elle tient (lettres nettes), sinon la plus grande possible.
 function ajuster() {
-  const w = cadre.clientWidth - 12, h = cadre.clientHeight - 12;
-  let e = Math.min(w / LARG, h / HAUT);
-  if (e >= 2) e = Math.floor(e);
-  e = Math.max(e, 0.5);
-  toile.style.width = Math.round(LARG * e) + "px";
-  toile.style.height = Math.round(HAUT * e) + "px";
+  const dpr = window.devicePixelRatio || 1;
+  const w = (cadre.clientWidth - 12) * dpr, h = (cadre.clientHeight - 12) * dpr;
+  let e = Math.min(w / (LARG * PAR), h / HAUT);
+  if (e >= 1) e = Math.floor(e);
+  echelleY = Math.max(e, 0.5);
+  const H = Math.round(HAUT * echelleY), W = Math.round(LARG * echelleY * PAR);
+  if (toile.width !== W || toile.height !== H) { toile.width = W; toile.height = H; }
+  toile.style.width = W / dpr + "px";
+  toile.style.height = H / dpr + "px";
+  afficher();
 }
 addEventListener("resize", ajuster);
 // Téléphone : le clavier virtuel réduit la partie visible ; la page s'y tient

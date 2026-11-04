@@ -389,8 +389,15 @@ Python 3 standard library only (nothing to install on the Mac).
   - Rendering: that of `oric_ecran.py` (§ 9.2), redone in JavaScript, identical to the
     dot (checked on the fake daemon's test card, and with redefined characters against
     an Oricutron memory dump); cursor and blinking at 0.32 s; in SPLIT, rows 0 to 15
-    hatched; in full-screen HIRES, "Ecran graphique". Integer scale when it fits (sharp
-    letters), otherwise the largest possible.
+    hatched; in full-screen HIRES, "Ecran graphique". **TV shape**: on a PAL TV, an
+    Oric dot (240 per line at 6 MHz) is ~1.23 times wider than tall (14.75 MHz, the
+    PAL square-pixel rate, / 6 MHz / 2 fields); the page widens the picture by that
+    much, otherwise sprites look stretched vertically (as in Oricutron). Two-step
+    enlargement: dots repeated up to a whole number of screen pixels per Oric line
+    (letters sharp vertically), then width adjusted with smoothing (at most one
+    softened pixel per edge). `?pixels=carres`: square dots, as before. Integer scale
+    when it fits, in physical pixels (`devicePixelRatio`), otherwise the largest
+    possible.
   - Status line: host (the Oric), light (`R` on, `r` lost, `-` waiting), age of the last
     full cycle. Messages on the screen: waiting for the call, link lost, daemon
     unreachable (new try every 2 s).
