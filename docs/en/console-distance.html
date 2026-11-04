@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CP/A Remote Console</title>
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1d1d1b; --muted:#6b6a64; --line:#d8d6cf;
+  --oric:#e8eef8; --loci:#efe9f7; --pico:#e7f4ec; --net:#f3f1e6; --mac:#f8ece6;
+  --down:#c2410c; --up:#1d4ed8; --local:#6b7280; --hl:#f59e0b; --bad:#dc2626; --ok:#15803d;
+  --scr-bg:#000; --scr-fg:#f2f2f2;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17171a; --panel:#212126; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3a40;
+  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --mac:#3a2620;
+  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
+}}
+:root[data-theme="dark"]{
+  --bg:#17171a; --panel:#212126; --ink:#ecebe6; --muted:#a3a29b; --line:#3a3a40;
+  --oric:#1f2a3d; --loci:#2b2338; --pico:#1e3127; --net:#2f2d22; --mac:#3a2620;
+  --down:#fb923c; --up:#60a5fa; --local:#9ca3af; --hl:#fbbf24; --bad:#f87171; --ok:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1240px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:.2em 0}
+h2{font-size:1.15rem;margin:1.4em 0 .5em}
+p{margin:.4em 0}
+.sub{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+.controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:7px;padding:5px 10px;cursor:pointer}
+button.on{background:var(--ink);color:var(--panel)}
+button:disabled{opacity:.45;cursor:default}
+#diagram{width:100%;height:auto;display:block}
+svg text{fill:var(--ink)}
+.node rect{stroke:var(--line);stroke-width:1.2;fill:var(--panel)}
+.node.active rect{stroke:var(--hl);stroke-width:3}
+.node.off rect{opacity:.35}
+.node .t{font-size:12.5px;font-weight:700}
+.node .s{font-size:10.5px;fill:var(--muted)}
+.badge{font-size:11px;font-weight:700;fill:var(--bad)}
+.grp{stroke:var(--line);stroke-width:1}
+.grpt{font-size:14px;font-weight:700}
+.cable{stroke:var(--line);stroke-width:2;fill:none}
+.cable.net{stroke-dasharray:5 4}
+#msg{min-height:3.2em;font-size:.98rem}
+#msg b{color:var(--hl)}
+.legend span{display:inline-flex;align-items:center;gap:5px;margin-right:14px;font-size:.88rem}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.screens{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.screens{grid-template-columns:1fr}}
+.scr{background:var(--scr-bg);border-radius:8px;padding:8px;overflow-x:auto}
+.row{display:flex;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:15px;white-space:pre;color:var(--scr-fg)}
+.row .n{color:#777;width:2.2em;flex:none;text-align:right;padding-right:6px}
+.row .c{flex:none}
+.row .k{color:#888;padding-left:8px;flex:none}
+.row.stale .c{outline:1px dashed #d97706}
+.row.known .c{background:#7f1d1d}
+.row.fresh .c{background:#14532d}
+.row.bar .c{background:#1e3a8a}
+.scrh{font-weight:600;margin:0 0 4px}
+#log{max-height:260px;overflow:auto;font-size:.86rem}
+#log div{border-bottom:1px solid var(--line);padding:3px 0}
+.dn{color:var(--down);font-weight:700}.upc{color:var(--up);font-weight:700}.lc{color:var(--local);font-weight:700}
+pre.algo{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:.85rem}
+.key{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:.85em}
+</style>
+</head>
+<body>
+<main>
+<h1>CP/A remote console</h1>
+<p class="sub">The Mac (or a phone's browser) types and reads in place of the real Oric's keyboard and screen, through the LOCI and its WiFi modem. Specification: <code>docs/en/console-distance.md</code>. Nothing is coded.</p>
+
+<h2>Short answers</h2>
+<div class="grid2">
+<div class="card">
+<p><b>Who leads?</b> For the screen, <b>the Mac leads</b>: it asks, the Oric only answers. The Oric never sends anything unasked.</p>
+<p><b>Who finds the changed rows?</b> The <b>Mac</b>. It keeps a copy of the 28 rows and computes their checksums itself. It asks for the Oric's (<code>S</code>), compares both series, then asks one by one for the rows that differ (<code>L n</code>). The Oric remembers nothing of what it has sent.</p>
+<p><b>When?</b> As soon as a key has gone, the Mac asks for the cursor row (<b>fast echo</b>, 0.1 to 0.15 s). Then a full cycle; then every 0.5 s when idle, and again at once as long as a cycle finds changed rows.</p>
+<p><b>No local echo</b>: a key typed on the Mac is not displayed there by itself. It goes to the Oric, whose program decides what to display, and the Mac shows what the Oric displayed, like telnet or ssh. Whether the key comes from the Mac or from the Oric's keyboard, the Mac simply sees the Oric's screen.</p>
+</div>
+<div class="card">
+<p><b>Both ways?</b> The TCP connection stays open both ways as long as the console is on. <span class="dn">Mac → Oric</span>: keys and requests, whenever it wants. <span class="upc">Oric → Mac</span>: only answers (<code>S</code> and <code>L</code> frames).</p>
+<p><b>Faithfulness</b>: the copy holds the <b>exact bytes</b> of <code>SCREEN</code>, attributes included (ink, paper, alternate font, blinking, double height). The page draws them with CP/A's font, following the same rules as the ULA. The Mac draws the cursor from the <code>S</code> frame.</p>
+<p><b>Limits</b>: a state that does not last until the next cycle is never seen (only the final state arrives). Full-screen HIRES is not sent, and in SPLIT only rows 16 to 27 are.</p>
+</div>
+</div>
+
+<h2>Architecture and flow</h2>
+<div class="card">
+<div class="controls" id="scenarios"></div>
+<div class="controls">
+  <button id="play">▶ Play</button>
+  <button id="step">Next step</button>
+  <button id="restart">↺ Restart</button>
+  <label class="sub">speed <input id="speed" type="range" min="0.4" max="3" step="0.1" value="1"></label>
+  <span class="legend"><span><i class="dot" style="background:var(--down)"></i>Mac → Oric</span><span><i class="dot" style="background:var(--up)"></i>Oric → Mac</span><span><i class="dot" style="background:var(--local)"></i>inside one machine</span></span>
+</div>
+<div id="msg" class="card"></div>
+<svg id="diagram" viewBox="0 0 1200 600" aria-label="Diagram of the Oric, LOCI, Pico W, WiFi, Mac"></svg>
+</div>
+
+<h2>The two screens</h2>
+<p class="sub">On the left, what <code>SCREEN</code> holds on the Oric; on the right, the Mac's copy. Right-hand column: the row's Fletcher checksum. Orange dotted outline: the row really differs, but the Mac does not know yet. Red: the Mac knows (checksums compared), the row is to be asked for. Green: the row has just arrived.</p>
+<div class="screens">
+  <div><p class="scrh">Oric: SCREEN $BB80 (as seen by the ULA)</p><div class="scr" id="scrOric"></div></div>
+  <div><p class="scrh">Mac: copy kept by remote.py (drawn by the page)</p><div class="scr" id="scrMac"></div></div>
+</div>
+
+<h2>Messages exchanged</h2>
+<div class="card" id="log"></div>
+
+<h2>The Mac's loop (remote.py)</h2>
+<pre class="algo">copy[0..27]    = 28 rows of 40 bytes (empty at start)
+loop:
+    if keys are waiting:
+        send them                       ($FE k for each)
+        fast echo: send $FD 'L' cy (cursor row, from the last S frame)
+                   copy[cy] = the 40 bytes received
+    send $FD 'S'; wait for the S frame (1 s at most, otherwise ask again)
+    for n from 0 to 27:
+        if received_checksum[n] != fletcher(copy[n]):
+            send $FD 'L' n; wait for the L frame; copy[n] = its 40 bytes
+    if at least one row has changed: start again at once
+    otherwise: wait 0.5 s, or the next key
+the web page reads the copy every 0.1 s (GET /ecran) and redraws</pre>
+
+<h2>Oric side: commands, functions, routines</h2>
+<div class="card">
+<table>
+<tr><th>Item</th><th>Role</th><th>When</th></tr>
+<tr><td><code>REMOTE host:port</code> (.COM)</td><td>finds and sets the ACIA (<code>ac_find</code>, <code>ac_setup</code>), dials (<code>ac_dial</code>: <code>AT</code>, <code>ATDT-host:port</code>, waits for <code>CONNECT</code>), then BDOS 117 op 1 and op 2</td><td>once, by hand or in <code>AUTO.BAT</code></td></tr>
+<tr><td><code>REMOTE OFF</code> / <code>REMOTE</code> / <code>REMOTE /N</code></td><td>turns the console off (BDOS 117 op 3), then <code>+++</code> and <code>ATH</code> / shows the state / turns on without dialling</td><td>on request</td></tr>
+<tr><td>BDOS 117 "serial"</td><td>op 0: state; op 1: sets the port (<code>$80</code> for the LOCI, <code>$1C</code> for Oricutron); op 2: console on; op 3: console off</td><td>called by REMOTE (addition to the contract, to be agreed)</td></tr>
+<tr><td>BDOS 3 and 4 → READER / PUNCH (<code>$C015</code>, <code>$C012</code>)</td><td>direct access to the port for a program; READER returns ^Z if the console is on</td><td>console off</td></tr>
+<tr><td>Service under the 50 Hz IRQ (BIOS)</td><td>reads up to 4 received bytes, stores the keys through <code>kb_push</code>, computes the checksums (4 rows per IRQ frame), sends up to 8 bytes per IRQ frame</td><td>50 times a second, except while interrupts are disabled (disk)</td></tr>
+<tr><td>CONST, CONIN, BDOS 1, 6, 10, 11</td><td><b>unchanged</b>: they read <code>kb_buf</code>, where keys from the Mac and from the Oric mix</td><td>when the program reads the keyboard</td></tr>
+<tr><td>CONOUT, BDOS 2, 9, and direct writes into <code>SCREEN</code></td><td><b>unchanged</b>: the driver reads the screen, it does not intercept the display</td><td>—</td></tr>
+<tr><td><code>draw_flags</code></td><td>light <code>R</code> (console on) or <code>r</code> (last answer dropped) next to <code>A</code> and <code>P</code></td><td>at each change of state</td></tr>
+<tr><td>TERM, XFER</td><td>refuse to start while the console is on: they would read the ACIA in its place</td><td>at start-up</td></tr>
+</table>
+</div>
+<p class="sub" style="margin-top:14px">Bytes: <code>$FE k</code> key · <code>$FD 'S'</code> checksum request · <code>$FD 'L' n</code> request for row n · <code>$FD 'B'</code> warm start · answers <code>$FF type length data checksum</code>. The modem only sends ASCII: a byte that does not follow <code>$FD</code> or <code>$FE</code> is ignored (<code>NO CARRIER</code> is never taken for typing).</p>
+</main>
+
+<script>
+"use strict";
+// ---------- components ----------
+const G = [
+  {x:10,y:30,w:470,h:560,t:"Oric Atmos — CP/A (overlay RAM)",c:"--oric"},
+  {x:500,y:30,w:150,h:560,t:"LOCI",c:"--loci"},
+  {x:668,y:30,w:150,h:560,t:"Pico W (modem)",c:"--pico"},
+  {x:836,y:30,w:78,h:560,t:"Network",c:"--net"},
+  {x:930,y:30,w:260,h:560,t:"Mac",c:"--mac"},
+];
+const N = {
+  remote:{x:24,y:62,w:212,h:58,t:"REMOTE.COM",s:"ac_find · ac_setup · ac_dial\n→ BDOS 117"},
+  prog:{x:24,y:134,w:212,h:50,t:"Program",s:"CCP (A>), EDIT, CMDER, LOGO…"},
+  bdos:{x:24,y:198,w:212,h:62,t:"BDOS ($0203)",s:"1·6·10·11 keyboard · 2·9 screen\n3·4 READER/PUNCH · 117 serial"},
+  bios:{x:24,y:274,w:212,h:50,t:"BIOS ($C000)",s:"CONST/CONIN · CONOUT · disk"},
+  kbbuf:{x:24,y:338,w:212,h:46,t:"kb_buf ($0230)",s:"16 keys waiting"},
+  clavier:{x:24,y:398,w:212,h:46,t:"Oric keyboard",s:"matrix read by kb_scan"},
+  vars:{x:24,y:458,w:212,h:58,t:"Driver variables",s:"$FD13… state, prefix, request,\nrow, s1/s2, wait"},
+  irq:{x:252,y:62,w:214,h:110,t:"50 Hz IRQ (BIOS)",s:"kb_scan\nreceive: ≤ 4 bytes\nchecksums: 4 rows per frame\nsend: ≤ 8 bytes\nlight R / r"},
+  acia_r:{x:252,y:188,w:214,h:50,t:"Port registers",s:"LDA $0381 · LDA/STA $0380"},
+  screen:{x:252,y:254,w:214,h:50,t:"SCREEN ($BB80)",s:"28 × 40 bytes, attributes included"},
+  ula:{x:252,y:320,w:214,h:44,t:"ULA",s:"reads SCREEN 50 times a second"},
+  tv:{x:252,y:380,w:214,h:64,t:"Oric screen",s:"TV set or monitor"},
+  l_acia:{x:512,y:188,w:126,h:56,t:"ACIA 6551",s:"emulated at\n$0380-$0383"},
+  l_buf:{x:512,y:264,w:126,h:50,t:"Buffer",s:"receive, 32 bytes"},
+  l_usb:{x:512,y:334,w:126,h:50,t:"USB host",s:"(and floppies)"},
+  p_cdc:{x:680,y:334,w:126,h:50,t:"USB CDC",s:"serial port"},
+  p_at:{x:680,y:264,w:126,h:50,t:"Hayes modem",s:"AT, ATDT-host"},
+  p_tcp:{x:680,y:188,w:126,h:56,t:"TCP client",s:"window =\nflow control"},
+  n_wifi:{x:844,y:188,w:62,h:56,t:"WiFi",s:"router"},
+  d_tcp:{x:942,y:188,w:236,h:50,t:"remote.py · TCP :2324",s:"takes the Oric's call"},
+  d_core:{x:942,y:62,w:236,h:110,t:"remote.py · loop",s:"copy of the 28 rows\nchecksums of the copy\nrequests S then L n\nkey queue"},
+  d_http:{x:942,y:254,w:236,h:50,t:"remote.py · HTTP :8040",s:"/ecran · /touches · /reset"},
+  b_page:{x:942,y:320,w:236,h:62,t:"Browser (Mac, phone)",s:"40×28 canvas, Oric font\ntranslated keyboard, paste"},
+  cli:{x:942,y:398,w:236,h:50,t:"remote.py touches / ecran",s:"/ attendre: test scripts"},
+  macscr:{x:942,y:464,w:236,h:56,t:"Mac screen",s:"browser window"},
+};
+const CABLES = [
+  ["remote","bdos"],["prog","bdos"],["bdos","bios"],["bios","kbbuf"],["kbbuf","irq"],["clavier","irq"],
+  ["irq","acia_r"],["irq","vars"],["irq","screen"],["prog","screen"],["screen","ula"],["ula","tv"],
+  ["acia_r","l_acia"],["l_acia","l_buf"],["l_buf","l_usb"],["l_usb","p_cdc"],["p_cdc","p_at"],["p_at","p_tcp"],
+  ["p_tcp","n_wifi","net"],["n_wifi","d_tcp","net"],["d_tcp","d_core"],["d_core","d_http"],["d_http","b_page"],
+  ["d_http","cli"],["b_page","macscr"],
+];
+const DOWN = ["d_core","d_tcp","n_wifi","p_tcp","p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","irq"];
+const UP = ["irq","acia_r","l_acia","l_usb","p_cdc","p_at","p_tcp","n_wifi","d_tcp","d_core"];
+
+const svg = document.getElementById("diagram");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); (parent||svg).appendChild(e); return e; }
+const C = id => ({x:N[id].x+N[id].w/2, y:N[id].y+N[id].h/2});
+for(const g of G){ el("rect",{x:g.x,y:g.y,width:g.w,height:g.h,rx:12,class:"grp",style:`fill:var(${g.c})`}); const t=el("text",{x:g.x+10,y:g.y+20,class:"grpt"}); t.textContent=g.t; }
+for(const [a,b,k] of CABLES){ const p=C(a),q=C(b); el("line",{x1:p.x,y1:p.y,x2:q.x,y2:q.y,class:"cable"+(k?" net":"")}); }
+const nodeEl={}, badgeEl={};
+for(const id in N){ const n=N[id]; const g=el("g",{class:"node"}); el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:7},g);
+  const t=el("text",{x:n.x+8,y:n.y+16,class:"t"},g); t.textContent=n.t;
+  n.s.split("\n").forEach((l,i)=>{ const s=el("text",{x:n.x+8,y:n.y+30+i*13,class:"s"},g); s.textContent=l; });
+  const b=el("text",{x:n.x+n.w-6,y:n.y+16,class:"badge","text-anchor":"end"},g);
+  nodeEl[id]=g; badgeEl[id]=b; }
+const pkt = el("g",{style:"display:none"});
+const pktC = el("circle",{r:8,cx:0,cy:0},pkt);
+const pktBg = el("rect",{x:10,y:-11,height:18,rx:4,style:"fill:var(--panel);stroke:var(--line)"},pkt);
+const pktT = el("text",{x:15,y:2,style:"font:11px ui-monospace,Menlo,monospace"},pkt);
+
+// ---------- screens ----------
+const W=40;
+const pad = s => (s+" ".repeat(W)).slice(0,W);
+function bar(r){ return pad(pad(" System Files Screen Keyboard").slice(0,37)+"A "+(r||" ")); }
+const fletcher = s => { let a=0,b=0; for(const ch of s){ a=(a+ch.charCodeAt(0))&255; b=(b+a)&255; } return (b<<8)|a; };
+const hx = (v,d=2) => v.toString(16).toUpperCase().padStart(d,"0");
+let oric=[], mac=[], recv=null, known=new Set(), fresh=new Set();
+function blank(){ return Array.from({length:28},()=>pad("")); }
+function setLines(arr, obj){ for(const k in obj) arr[k]=pad(obj[k]); }
+function stateConnected(){ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); mac=oric.slice(); recv=null; known.clear(); fresh.clear(); }
+function renderScreens(){
+  const draw=(id,arr,isMac)=>{ const box=document.getElementById(id); box.innerHTML="";
+    arr.forEach((line,i)=>{ const r=document.createElement("div"); r.className="row";
+      if(i===0) r.classList.add("bar");
+      if(isMac){ if(fresh.has(i)) r.classList.add("fresh"); else if(known.has(i)) r.classList.add("known"); else if(line!==oric[i]) r.classList.add("stale"); }
+      const sum = isMac ? fletcher(line) : fletcher(line);
+      r.innerHTML=`<span class="n">${i}</span><span class="c"></span><span class="k">${hx(sum,4)}</span>`;
+      r.querySelector(".c").textContent=line; box.appendChild(r); }); };
+  draw("scrOric",oric,false); draw("scrMac",mac,true);
+}
+
+// ---------- engine ----------
+let speed=1, mode="step", runId=0, waiter=null, badges={};
+const sleep = ms => new Promise(r=>setTimeout(r,ms/speed));
+function gate(){ if(mode==="play") return sleep(650); return new Promise(r=>{ waiter=r; }); }
+document.getElementById("speed").oninput=e=>speed=+e.target.value;
+function setActive(ids){ for(const id in nodeEl) nodeEl[id].classList.toggle("active", ids.includes(id)); }
+function setOff(ids){ for(const id in nodeEl) nodeEl[id].classList.toggle("off", ids.includes(id)); }
+function setBadges(b){ badges=b||{}; for(const id in badgeEl) badgeEl[id].textContent=badges[id]||""; }
+const logBox=document.getElementById("log");
+function log(c,b,m){ const d=document.createElement("div"); const cls=c==="down"?"dn":c==="up"?"upc":"lc"; const ar=c==="down"?"Mac → Oric":c==="up"?"Oric → Mac":"local";
+  d.innerHTML=`<span class="${cls}">${ar}</span> ${b?`<code>${b}</code> — `:""}<span></span>`; d.lastChild.textContent=m; logBox.prepend(d); }
+async function move(route,color,label,my){
+  pkt.style.display=""; pktC.setAttribute("style",`fill:var(${color})`); pktT.textContent=label||"";
+  const tw = Math.max(20,(label||"").length*6.7+10); pktBg.setAttribute("width",tw); pktBg.style.display=label?"":"none";
+  for(let i=0;i<route.length-1;i++){ const a=C(route[i]), b=C(route[i+1]); const dur=330/speed; const t0=performance.now();
+    await new Promise(res=>{ function f(t){ if(my!==runId) return res(); let k=Math.min(1,(t-t0)/dur);
+      const x=a.x+(b.x-a.x)*k, y=a.y+(b.y-a.y)*k; const flip = x>820 ? -tw-20 : 0;
+      pkt.setAttribute("transform",`translate(${x},${y})`); pktBg.setAttribute("x",10+flip); pktT.setAttribute("x",15+flip);
+      if(k<1) requestAnimationFrame(f); else res(); } requestAnimationFrame(f); }); if(my!==runId) return; }
+  pkt.style.display="none";
+}
+const msgBox=document.getElementById("msg");
+async function run(steps){
+  const my=++runId; logBox.innerHTML=""; const q=steps.slice(); let i=0;
+  while(q.length){ if(my!==runId) return; const s=q.shift();
+    if(s.expand){ q.unshift(...s.expand()); continue; }
+    i++; msgBox.innerHTML=`<b>${i}.</b> `; const sp=document.createElement("span"); sp.textContent=s.m; msgBox.appendChild(sp);
+    setActive([...(s.hl||[]),...(s.r?[s.r[0],s.r[s.r.length-1]]:[])]);
+    if(s.off!==undefined) setOff(s.off);
+    if(s.badge!==undefined) setBadges(s.badge);
+    if(s.r) { log(s.c,s.b,s.m); await move(s.r, s.c==="down"?"--down":s.c==="up"?"--up":"--local", s.b, my); }
+    else log("local","",s.m);
+    if(my!==runId) return;
+    if(s.act) s.act(); renderScreens();
+    await gate(); fresh.clear(); renderScreens();
+  }
+  if(my===runId){ msgBox.innerHTML="<b>End of the scenario.</b> Pick another one, or restart."; setActive([]); }
+}
+document.getElementById("step").onclick=()=>{ if(waiter){ const w=waiter; waiter=null; w(); } };
+const playB=document.getElementById("play");
+playB.onclick=()=>{ mode = mode==="play"?"step":"play"; playB.classList.toggle("on",mode==="play"); playB.textContent= mode==="play"?"❚❚ Pause":"▶ Play"; if(mode==="play" && waiter){ const w=waiter; waiter=null; w(); } };
+
+// ---------- refresh cycle ----------
+function lineBytes(n){ const s=oric[n]; return `FF 4C 29 ${hx(n)} ${[...s.slice(0,3)].map(c=>hx(c.charCodeAt(0))).join(" ")} … tt`; }
+function cycle(again){
+  return [
+    {hl:["d_core"], m: again ? "Rows have changed: the daemon asks for the checksums again at once (the screen may still be moving)." : "The daemon starts a cycle: it is the one that leads. It sends the checksum request."},
+    {r:DOWN,c:"down",b:"FD 53",m:"Request \"S\" (checksums of the 28 rows)."},
+    {hl:["irq","screen","vars"],m:"At the next IRQ, the request is noted. The service reads SCREEN and computes 4 rows per 1/50 s frame (16-bit Fletcher, cursor cell restored): 7 frames, about 0.15 s. The running program carries on."},
+    {r:UP,c:"up",b:"FF 53 3C 00 cx cy 01 [56 bytes] tt",m:"S frame: mode, cursor, 28 checksums. The daemon checks the frame's length and checksum.",
+     act:()=>{ recv=oric.map(fletcher); known=new Set(); recv.forEach((v,n)=>{ if(v!==fletcher(mac[n])) known.add(n); }); }},
+    {expand:()=>{ const d=[...known];
+      if(!d.length) return [{hl:["d_core"],m:"The 28 checksums received equal those of the copy: nothing to ask for. Next cycle in 0.5 s, or 0.1 s after a key."},
+        {r:["d_core","d_http","b_page","macscr"],c:"local",b:"GET /ecran",m:"The page reads the copy every 0.1 s and only redraws the changed rows."}];
+      const out=[{hl:["d_core"],m:`The daemon compares the checksums received with those of its copy: ${d.length>1?"rows":"row"} ${d.join(", ")} ${d.length>1?"differ":"differs"}. It asks for them one by one.`}];
+      for(const n of d){ out.push({r:DOWN,c:"down",b:`FD 4C ${hx(n)}`,m:`Request "L ${n}".`});
+        out.push({r:UP,c:"up",b:lineBytes(n),m:`L frame: the 40 bytes of row ${n}, attributes included. The Mac's copy is updated.`,
+          act:()=>{ mac[n]=oric[n]; known.delete(n); fresh.add(n); }}); }
+      out.push({expand:()=>cycle(true)}); return out; }},
+  ];
+}
+
+// ---------- scenarios ----------
+const S = {
+"Start-up": ()=>{ oric=blank(); oric[0]=bar(" "); setLines(oric,{1:"CP/A 0.9  Oric Atmos + LOCI",3:"A>"}); mac=blank().map(()=>pad("")); recv=null; known.clear();
+  return [
+  {hl:["clavier","kbbuf","prog"],m:"On the Oric, type REMOTE MAC (or the line is in AUTO.BAT). It is always the Oric that opens the link.",act:()=>setLines(oric,{3:"A>REMOTE MAC"})},
+  {hl:["remote","bdos"],m:"REMOTE looks up \"mac\" in the HOSTS file (BDOS functions 15 and 20): line \"mac 192.168.1.20\", no port, so REMOTE's port, 2324."},
+  {hl:["remote","acia_r","l_acia"],m:"REMOTE.COM: ac_find reads $03B0 (the LOCI answers: port $0380), ac_setup sets the ACIA to 9600 baud 8N1, DTR on, no interrupt.",act:()=>setLines(oric,{4:"LOCI modem (ACIA 0380)"})},
+  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"AT\\r",m:"ac_dial talks to the modem in command mode."},
+  {r:["p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","remote"],c:"local",b:"OK",m:"The modem answers."},
+  {r:["remote","acia_r","l_acia","l_usb","p_cdc","p_at"],c:"local",b:"ATDT-192.168.1.20:2324\\r",m:"Dialling by ac_dial: the \"-\" gives raw bytes, no telnet.",act:()=>setLines(oric,{5:"Calling mac (192.168.1.20:2324)..."})},
+  {r:["p_at","p_tcp","n_wifi","d_tcp"],c:"down",b:"TCP connection",m:"The Pico W opens a TCP connection to the daemon, which is waiting for it on port 2324."},
+  {r:["p_at","p_cdc","l_usb","l_buf","l_acia","acia_r","remote"],c:"local",b:"CONNECT",m:"The modem switches to data mode: the link is open both ways."},
+  {hl:["remote","bdos","vars","irq"],m:"REMOTE calls BDOS function 117: op 1 (port $80), then op 2 (console on). The IRQ service starts; light R.",
+   act:()=>{ oric[0]=bar("R"); setLines(oric,{6:"Remote console on (R light)",7:"A>"}); }},
+  {hl:["d_core"],m:"The daemon sees the Oric arrive. Its copy is empty: it does a first cycle, which brings back all the differing rows (about 1.5 s for the whole screen)."},
+  ...cycle(false)]; },
+
+"Key typed on the Mac": ()=>{ stateConnected(); return [
+  {hl:["b_page","macscr"],m:"In the browser, type DIR then Enter. The page translates the keys into CP/A codes (Enter → 13, arrows → $08-$0B…)."},
+  {r:["b_page","d_http","d_core"],c:"local",b:"POST /touches",m:"The keys go into the daemon's queue."},
+  {r:DOWN,c:"down",b:"FE 44 FE 49 FE 52 FE 0D",m:"Each key goes out preceded by $FE. The Oric ignores any byte that does not follow $FD or $FE (modem messages)."},
+  {hl:["irq","kbbuf"],m:"At the next IRQ: 4 bytes read at most per frame. The $FE prefix is remembered, then the code is stored in kb_buf by kb_push, like a key of the Oric. Only if there is room: otherwise the byte stays in the LOCI."},
+  {r:["kbbuf","bios","bdos","prog"],c:"local",b:"CONIN",m:"The CCP reads its line through BDOS function 10, which takes the keys through CONIN. Nothing has changed in these routines."},
+  {r:["prog","screen"],c:"local",b:"CONOUT",m:"The CCP displays the line, then the directory. SCREEN changes; the Mac's copy is now out of date, but the Mac does not know yet (dotted outline).",
+   act:()=>setLines(oric,{3:"A>DIR",4:"A: HELP     COM : EDIT     COM",5:"A: CMDER    COM : ASM      COM",6:"A: REMOTE   COM : README   TXT",7:"",8:"A>"})},
+  {r:DOWN,c:"down",b:"FD 4C 03",m:"Fast echo: as soon as the keys have gone, the daemon asks for the cursor row (row 3, known from the last S frame), almost always the one that changes."},
+  {r:UP,c:"up",b:"FF 4C 29 03 41 3E 44 … tt",m:"Row 3 comes back: \"A>DIR\" appears on the Mac about 0.1 to 0.15 s after typing. The rest of the screen (the directory) is not there yet.",act:()=>{ mac[3]=oric[3]; fresh.add(3); }},
+  {hl:["d_core"],m:"Then the full cycle, for everything that may have changed elsewhere: scrolling, directory, menus, status line."},
+  ...cycle(false)]; },
+
+"Key typed on the Oric": ()=>{ stateConnected(); return [
+  {r:["clavier","irq","kbbuf"],c:"local",b:"kb_scan",m:"On the Oric, type VER then RETURN. The Oric's keyboard stays active: kb_scan stores the keys in the same buffer."},
+  {r:["kbbuf","bios","bdos","prog","screen"],c:"local",b:"CONIN → CONOUT",m:"The CCP runs VER: SCREEN changes. Nothing goes to the Mac, the Oric never speaks unasked.",
+   act:()=>setLines(oric,{3:"A>VER",4:"CP/A 0.9 - Control Program for Atmos",5:"A>"})},
+  {hl:["d_core"],m:"The Mac discovers the change at its next cycle, at most 0.5 s later."},
+  ...cycle(false)]; },
+
+"Pasted text (flow control)": ()=>{ oric=blank(); oric[0]=pad(" File Edit Search                   A R"); setLines(oric,{1:"NOTES.TXT"}); mac=oric.slice(); known.clear(); recv=null;
+  const txt=["Tests to run on the real Oric:","- LOCI throughput at 9600 baud","- pasted text of several KB","- RESET with the console on","- Pico unplugged midway"];
+  return [
+  {hl:["b_page","macscr"],m:"On the Oric, EDIT is open on NOTES.TXT (it can be seen in the Mac's window). On the Mac, 2 KB of text have been copied in another application (TextEdit, a web page…). In the console page, click \"Paste\": the text in the Mac's clipboard will go to the Oric as a series of keys, accents removed, line ends as CR."},
+  {r:["b_page","d_http","d_core"],c:"local",b:"POST /touches (2,048)",m:"The daemon puts the 2,048 keys into its queue and sends them without waiting. Nothing is displayed on the Mac at this point: it is EDIT, on the Oric, that will insert the text, and the Mac will see it by reading the screen again."},
+  {r:DOWN,c:"down",b:"FE 54 FE 65 FE 73 …",m:"The stream reaches the Oric."},
+  {hl:["irq","kbbuf","prog"],badge:{kbbuf:"full 16/16"},m:"EDIT inserts more slowly than it receives: kb_buf fills up (16 keys). The IRQ then stops reading the ACIA.",act:()=>setLines(oric,{3:txt[0]})},
+  {hl:["l_buf","l_acia"],badge:{kbbuf:"full 16/16",l_buf:"full 32/32"},m:"The LOCI's buffer fills up (32 bytes). The LOCI no longer reads the USB modem."},
+  {hl:["p_cdc","p_tcp","n_wifi","d_tcp"],badge:{kbbuf:"full",l_buf:"full",p_cdc:"waiting",p_tcp:"window 0",d_tcp:"blocked"},m:"The Pico W waits for the USB to accept. Its TCP stack no longer reopens the window, and the daemon stays blocked on sending. The buffers are outside the Oric: nothing is lost. The daemon does not ask for S meanwhile: a request would wait behind the keys."},
+  {r:["kbbuf","bios","prog","screen"],c:"local",b:"CONIN",m:"EDIT takes the keys, as if they were typed very fast, and inserts them into its text (it is its text buffer that grows, not a clipboard). kb_buf empties, the IRQ reads the ACIA again, the LOCI reads the USB again, the TCP window reopens: the stream resumes at EDIT's pace.",
+   badge:{}, act:()=>setLines(oric,{3:txt[0],4:txt[1],5:txt[2],6:txt[3],7:txt[4]})},
+  {hl:["d_core"],m:"During the paste, each batch of keys sent is followed by a fast echo and a cycle: the rows appear on the Mac in batches. Once the text is inserted, save it in EDIT: the Mac's text has become a file on the Oric, without XFER."},
+  ...cycle(false)]; },
+
+"Disk access (interrupts disabled)": ()=>{ stateConnected(); return [
+  {hl:["prog","bdos","bios"],off:["irq"],badge:{irq:"disabled (SEI)"},m:"A program reads the floppy: the BIOS disables interrupts while a sector is transferred. The serial service no longer runs.",act:()=>setLines(oric,{3:"A>TYPE README.TXT"})},
+  {r:["d_core","d_tcp","n_wifi","p_tcp","p_at","p_cdc","l_usb","l_buf"],c:"down",b:"FD 53",m:"The daemon asks for S. The request waits in the LOCI's buffer.",badge:{irq:"disabled (SEI)",l_buf:"FD 53 waiting"}},
+  {hl:["d_core"],m:"No answer within 1 s: the daemon asks again. The new request replaces the old one, nothing gets mixed up."},
+  {hl:["irq"],off:[],badge:{},m:"The transfer is over, interrupts come back. The next IRQ reads the request; the cycle goes on normally.",act:()=>setLines(oric,{4:"CP/A 0.9 - QUICK REFERENCE",5:"--------------------------",6:"A>"})},
+  ...cycle(false).slice(2)]; },
+
+"Remote RESET, link lost": ()=>{ stateConnected(); setLines(oric,{3:"A>LOGO",4:"(program stuck, IRQs on)"}); mac=oric.slice(); return [
+  {hl:["b_page"],m:"A program is stuck on the Oric. In the page, click RESET (or \\x06 in a test script)."},
+  {r:["b_page","d_http","d_core"],c:"local",b:"POST /reset",m:"The daemon sends the warm start request."},
+  {r:DOWN,c:"down",b:"FD 42",m:"Request \"B\"."},
+  {hl:["irq","bios","screen"],m:"Under the IRQ: warm start, like the RESET button. The driver survives (variables in overlay RAM, ACIA already set): the console stays on.",
+   act:()=>{ oric=blank(); oric[0]=bar("R"); setLines(oric,{1:"*RESET* at 5A10",3:"A>"}); }},
+  ...cycle(false),
+  {hl:["p_cdc","l_usb"],m:"Another case: the Pico is unplugged during an L frame. The LOCI no longer empties the transmit register."},
+  {r:["irq","acia_r","l_acia"],c:"up",b:"FF 4C 29 …",m:"Sending blocks at the ACIA."},
+  {hl:["irq","vars","tv"],m:"Transmitter still busy after 2 s: the answer is dropped, the light turns to r. The Oric carries on; the console stays on, and a new request will restart the service. REMOTE OFF turns it off and hangs up.",act:()=>{ oric[0]=bar("r"); }},
+  ]; },
+};
+const box=document.getElementById("scenarios"); let current=null;
+function start(name){ current=name; [...box.children].forEach(b=>b.classList.toggle("on",b.textContent===name)); setBadges({}); setOff([]); const steps=S[name](); renderScreens(); run(steps); }
+for(const k in S){ const b=document.createElement("button"); b.textContent=k; b.onclick=()=>{ if(waiter){waiter=null;} start(k); }; box.appendChild(b); }
+document.getElementById("restart").onclick=()=>{ waiter=null; start(current); };
+start("Start-up");
+</script>
+</body>
+</html>

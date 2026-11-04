@@ -61,7 +61,7 @@ Two variants are built from the same sources:
   arrows, CTRL-X/C/V), printer, graphics and sound.
 - File and disk commands that work with one drive or several (COPY, FORMAT, DISKCOPY...),
   and **CMDER**, a full-screen two-panel file manager.
-- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), USBMOUNT to mount disk and tape images (and start BASIC on a tape), **TERM**, a serial terminal for a WiFi modem on the LOCI, and **XFER**, file transfer over that modem (XMODEM) with a small server for the Mac or a Raspberry Pi, `tools/xfer_server.py` (`docs/loci-modem-wifi.md`); both dial by name thanks to a `HOSTS` file (`TERM MAC`, `XFER R FILE.TXT @MAC`); and **REMOTE**, the remote console: the Mac types and reads the Oric's screen, whatever the program, through a system driver and the `tools/remote.py` daemon, in a browser (computer or phone) or a window (`REMOTE MAC`); a showcase (`tools/vitrine.py`) shows CP/A in a loop to read-only spectators.
+- File exchange with the LOCI's USB stick (EXPORT, IMPORT, USBDIR, CMDER), with CP/A's own current directory on the stick and all its devices (several sticks, the LOCI's internal memory), USBMOUNT to mount disk and tape images (and start BASIC on a tape), **TERM**, a serial terminal for a WiFi modem on the LOCI, and **XFER**, file transfer over that modem (XMODEM) with a small server for the Mac or a Raspberry Pi, `tools/xfer_server.py` (`docs/en/loci-modem-wifi.md`); both dial by name thanks to a `HOSTS` file (`TERM MAC`, `XFER R FILE.TXT @MAC`); and **REMOTE**, the remote console: the Mac types and reads the Oric's screen, whatever the program, through a system driver and the `tools/remote.py` daemon, in a browser (computer or phone) or a window (`REMOTE MAC`); a showcase (`tools/vitrine.py`) shows CP/A in a loop to read-only spectators.
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step), and **MKTAP**,
   which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""` (machine code, data,
@@ -86,7 +86,7 @@ is the first thing you notice. It comes from the design:
 
 - **a memory contract**: the system lives in the overlay RAM, outside the program space;
   every program is loaded at `$0500` and talks to the system through the BDOS and the
-  documented page 2 variables (`docs/architecture.md`);
+  documented page 2 variables (`docs/en/architecture.md`);
 - **a warm start after every program**: text screen and console are put back, even after a
   full-screen HIRES picture or a game in text mode;
 - **recovery**: free memory is left filled with `$00` (`BRK`), so a program that runs astray
@@ -100,7 +100,7 @@ is the first thing you notice. It comes from the design:
 
 ## Documentation
 
-The user documents are in English in `docs/en/`; the others are in French.
+The user documents, the vision, the architecture, the USB stick, the WiFi modem and the remote console are in English in `docs/en/`; the others are in French.
 
 | Document | Contents |
 |---|---|
@@ -109,9 +109,9 @@ The user documents are in English in `docs/en/`; the others are in French.
 | [`docs/en/grapher.md`](docs/en/grapher.md) | GRAPHER |
 | [`docs/en/cmder.md`](docs/en/cmder.md) | CMDER |
 | [`docs/en/edsprite.md`](docs/en/edsprite.md) | EDSPRITE, the sprite and character editor |
-| [`docs/en/console-distance.md`](docs/en/console-distance.md) | remote console: the Mac types and reads in place of the Oric's keyboard and screen (REMOTE, `tools/remote.py`, protocol, showcase, read-only publishing) |
-| `docs/vision.md` | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
-| `docs/architecture.md` | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
+| [`docs/en/console-distance.md`](docs/en/console-distance.md) | remote console: the Mac types and reads in place of the Oric's keyboard and screen (REMOTE, `tools/remote.py`, protocol, showcase, read-only publishing; animated diagram: `docs/en/console-distance.html`) |
+| [`docs/en/vision.md`](docs/en/vision.md) | what CP/A is for, who it is for, principles, what it is not, version 1.0 |
+| [`docs/en/architecture.md`](docs/en/architecture.md) | layers, interface contract (BIOS, BDOS, page 2), memory map, conventions |
 | `docs/systeme.md` | how the system works inside |
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/carte-memoire.html` | visual map of the resident system, `$C000-$FFFF` (made by `tools/carte_memoire.py`; in French) |
@@ -122,8 +122,8 @@ The user documents are in English in `docs/en/`; the others are in French.
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
 | `docs/etude-stockage.md` | room on the disks: the 80-track format (done), the remaining options (in French) |
-| `docs/usb.md` | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1, in French) |
-| `docs/loci-modem-wifi.md` | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |
+| [`docs/en/usb.md`](docs/en/usb.md) | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1) |
+| [`docs/en/loci-modem-wifi.md`](docs/en/loci-modem-wifi.md) | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |
 
 ## Building
 

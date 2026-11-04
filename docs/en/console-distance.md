@@ -55,8 +55,8 @@ read-only publishing on the Internet through a gateway (§ 9.6); tried in Oricut
 
 ## 3. Who leads
 
-Animated diagram, scenarios and both screens side by side: `docs/console-distance.html`
-(to open in a browser; in French).
+Animated diagram, scenarios and both screens side by side: `docs/en/console-distance.html`
+(to open in a browser).
 
 | What | Who decides | When |
 |---|---|---|
