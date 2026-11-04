@@ -53,10 +53,21 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-03.1"        # changée à chaque modification du démon
+VERSION = "2026-11-04.1"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
-LONGUEUR = {ord("S"): 60, ord("L"): 41}
+LONGUEUR = {ord("S"): 60, ord("L"): 41, ord("C"): 16}
+# Police du mode texte ($B400-$BB7F, caractères redéfinis par un programme) :
+# lignes 28 à 75 du pilote, 40 octets chacune (cinq caractères) ; k = n - 28.
+NPOL, PREM_POL = 48, 28
+# tranches de 8 lignes demandées par $FD "C" n (n = PREM_POL + k) : celles où
+# sont les caractères 32-127 du jeu standard (k 6-25) et 32-111 du secondaire
+# (k 32-47) ; les autres (attributs 0-31) ne se dessinent pas
+TRANCHES = (6, 14, 22, 32, 40)
+CHAUDE = 10.0           # une tranche changée depuis moins de CHAUDE s est
+                        # relue à chaque cycle (sprites animés) ; les autres,
+                        # FROIDES par cycle, à tour de rôle
+FROIDES = 2
 LOT = 1024              # touches envoyées d'un coup au plus (texte collé)
 PAR_TOUCHE = 0.1        # délai de réponse en plus par touche envoyée : la
                         # demande attend que le programme les ait lues
@@ -86,6 +97,8 @@ class Ecran:
     def __init__(self):
         self.lignes = [bytearray(COLS) for _ in range(ROWS)]
         self.vlig = [1] * ROWS
+        self.police = [None] * NPOL     # inconnue tant que l'Oric ne l'a pas envoyée
+        self.vpol = [0] * NPOL
         self.version = 1
         self.curseur = [0, 0, False]
         self.mode = 0
@@ -107,6 +120,13 @@ class Ecran:
                 self._bump()
                 self.vlig[n] = self.version
 
+    def ligne_police(self, k, octets):
+        with self.cond:
+            if self.police[k] != octets:
+                self.police[k] = bytearray(octets)
+                self._bump()
+                self.vpol[k] = self.version
+
     def poser(self, mode=None, curseur=None, liaison=None, hote=None):
         with self.cond:
             change = False
@@ -127,12 +147,14 @@ class Ecran:
                 self.cond.wait(attendre)
             lig = {str(n): bytes(self.lignes[n]).hex() for n in range(ROWS)
                    if depuis == 0 or self.vlig[n] > depuis}
+            pol = {str(k): bytes(self.police[k]).hex() for k in range(NPOL)
+                   if self.police[k] is not None and (depuis == 0 or self.vpol[k] > depuis)}
             maintenant = time.time()
             delai = round(maintenant - self.t_cycle, 1) if self.t_cycle else None
             humain = round(maintenant - self.t_humain, 1) if self.t_humain else None
             return {"version": self.version, "liaison": self.liaison, "hote": self.hote,
                     "mode": self.mode, "curseur": list(self.curseur), "delai": delai,
-                    "humain": humain, "stats": self.stats, "lignes": lig}
+                    "humain": humain, "stats": self.stats, "lignes": lig, "police": pol}
 
 
 class Liaison:
@@ -146,7 +168,7 @@ class Liaison:
         # dernière suite de lignes (lignes reçues, durée en s), cycles
         self.st = ecran.stats
         self.st.clear()
-        self.st.update(trames=0, refusees=0, attentes={"S": 0, "L": 0, "suite": 0},
+        self.st.update(trames=0, refusees=0, attentes={"S": 0, "L": 0, "C": 0, "suite": 0},
                        octets=0, suite=True, derniere_suite=None, cycles=0,
                        debut=round(time.time()))
         self.envois = envois
@@ -159,6 +181,10 @@ class Liaison:
         self.t_bilan = time.time()
         self.plage = True               # le pilote sait envoyer une suite de lignes
         self.echecs_suite = 0
+        self.pol = None                 # police : None à lire en entier, True suivie,
+                                        # False pilote qui ne la sait pas envoyer
+        self.chaudes = {}               # tranche -> heure du dernier changement
+        self.tour = 0                   # prochaine tranche froide
 
     # --- octets ----------------------------------------------------------
     def envoyer(self, octets):
@@ -237,10 +263,18 @@ class Liaison:
                 self.ecran.poser(liaison="perdue")
         return None
 
+    def recu_ligne(self, n, octets):
+        if n < ROWS:
+            self.ecran.ligne(n, octets)
+        else:
+            self.ecran.ligne_police(n - PREM_POL, octets)
+
     def suite(self, n):
         """Lignes n à 27 en une demande ($FD "L" n+$80) : une trame L chacune,
-        sans aller-retour entre elles. Un pilote qui ne le sait pas ne répond
-        rien : on revient aux demandes ligne par ligne."""
+        sans aller-retour entre elles ; dans la police (n >= 28), n à 75. Un
+        pilote qui ne le sait pas ne répond rien : on revient aux demandes
+        ligne par ligne. Rend le nombre de lignes reçues."""
+        derniere = ROWS - 1 if n < ROWS else PREM_POL + NPOL - 1
         self.envoyer([RP_REQ, ord("L"), n | 0x80])
         recu = 0
         t0 = time.time()
@@ -249,23 +283,80 @@ class Liaison:
             if d is None or d[0] < n:
                 self.st["attentes"]["suite"] += 1
                 break
-            self.ecran.ligne(d[0], d[1:])
+            self.recu_ligne(d[0], d[1:])
             recu += 1
-            if d[0] == ROWS - 1:
+            if d[0] == derniere:
                 break
         self.st["derniere_suite"] = [n, recu, round(time.time() - t0, 2)]
         self.log("suite L %d+ : %d lignes en %.2f s" % (n, recu, time.time() - t0))
+        if n >= ROWS:
+            return recu
         self.echecs_suite = 0 if recu else self.echecs_suite + 1
         if self.echecs_suite >= ECHECS_SUITE:
             self.plage = False
             self.st["suite"] = False
             self.log("pilote sans suite de lignes : une demande par ligne")
+        return recu
 
     def ligne(self, n):
         d = self.demande([RP_REQ, ord("L"), n], ord("L"), n)
         if d is not None:
-            self.ecran.ligne(n, d[1:])
+            self.recu_ligne(n, d[1:])
         return d is not None
+
+    # --- police : caractères redéfinis (mode texte seulement) -------------
+    def police(self, tout=False):
+        """Suit la police du mode texte. Première fois : lue en entier (une
+        suite L 28+$80) ; un pilote qui ne répond pas ne la sait pas envoyer
+        (police abandonnée pour cette liaison). Ensuite, totaux par tranches
+        ($FD "C" n) : les chaudes à chaque cycle, une froide à tour de rôle
+        (toutes si tout). Rend le nombre de lignes changées."""
+        if self.pol is False:
+            return 0
+        if self.pol is None:
+            t0 = time.time()
+            recu = self.suite(PREM_POL)
+            if recu == 0:
+                self.pol = False
+                self.st["police"] = False
+                self.log("pilote sans police : caractères redéfinis non suivis")
+                return 0
+            for k in range(NPOL):                   # trous : ligne par ligne
+                if self.ecran.police[k] is None and not self.ligne(PREM_POL + k):
+                    return 0
+            self.pol = True
+            self.st["police"] = True
+            self.log("police lue : %d lignes en suite, %.2f s" % (recu, time.time() - t0))
+            return 0
+        maintenant = time.time()
+        if tout:
+            choix = list(TRANCHES)
+        else:
+            choix = [t for t in TRANCHES if maintenant - self.chaudes.get(t, 0) < CHAUDE]
+            froides = [t for t in TRANCHES if t not in choix]
+            for _ in range(min(FROIDES, len(froides))):
+                choix.append(froides[self.tour % len(froides)])
+                froides.remove(choix[-1])
+                self.tour += 1
+        changees = []
+        for t in choix:
+            d = self.demande([RP_REQ, ord("C"), PREM_POL + t], ord("C"), essais=2)
+            if d is None:
+                return len(changees)
+            for i in range(8):
+                k = t + i
+                if k < NPOL and (self.ecran.police[k] is None or
+                                 fletcher(self.ecran.police[k]) != (d[2 * i], d[2 * i + 1])):
+                    changees.append(k)
+            if any(t <= k < t + 8 for k in changees):
+                self.chaudes[t] = maintenant
+        if len(changees) >= SUITE and self.plage:
+            self.suite(PREM_POL + changees[0])
+        else:
+            for k in changees:
+                if not self.ligne(PREM_POL + k):
+                    break
+        return len(changees)
 
     # --- touches ---------------------------------------------------------
     def touches(self, attente):
@@ -311,6 +402,7 @@ class Liaison:
                 continue
             self.ecran.poser(liaison="active")
             mode, cx, cy, actif = s[0], s[1], s[2], bool(s[3])
+            texte_avant = self.ecran.mode & 0x7F == 0
             self.cy = cy if cy < ROWS else 0
             self.ecran.poser(mode=mode, curseur=[cx, cy, actif])
             changees = []
@@ -328,6 +420,13 @@ class Liaison:
                     if not self.ligne(n):
                         break
                 facon = "ligne par ligne"
+            npol = 0
+            if mode & 0x7F == 0:              # police : en mode texte (en HIRES et
+                t3 = time.time()               # SPLIT, $B400 est dans l'image)
+                npol = self.police(tout=not texte_avant)
+                if npol:
+                    change = True
+                    self.log("police : %d lignes changées en %.2f s" % (npol, time.time() - t3))
             self.ecran.cycle_fait()
             self.st["cycles"] += 1
             if change or nt:

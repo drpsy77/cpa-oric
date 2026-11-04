@@ -27,6 +27,10 @@ REMOTE ».
 - **Tout le mode texte est vu**, quel que soit le programme : EDIT, CMDER, HEX, les menus
   et la ligne d'état écrivent directement dans `SCREEN` ; le pilote lit l'écran lui-même.
   Pas le HIRES plein écran ; en SPLIT, seules les lignes de texte (16 à 27).
+- **Les caractères redéfinis aussi** (sprites et tuiles de GRAPHER, grille d'EDSPRITE) : en
+  mode texte, le Mac suit la police elle-même (`$B400-$BB7F`), découpée en 48 lignes de
+  40 octets (cinq caractères) numérotées 28 à 75 à la suite de celles de l'écran, avec les
+  mêmes totaux et les mêmes trames (§ 4, « Police »).
 - **Le service tourne sous l'IRQ de 50 Hz** : il marche pendant un calcul, pendant ASM ou
   LOGO, avec un programme qui ne lit pas le clavier par le BDOS. Il s'arrête quand les
   interruptions sont coupées (accès disque) : le LOCI, le Pico et TCP gardent ce qui arrive
@@ -104,6 +108,7 @@ ignoré. Ainsi `NO CARRIER` n'arrive jamais à l'Oric comme une frappe.
 | `$FE k` | touche de code `k` (0-255), rangée dans le tampon du clavier ; codes du contrat (`architecture.md` § 2, « Codes du clavier » ; FUNCT = `$80`) |
 | `$FD 'S'` | demande des totaux (réponse `S`) |
 | `$FD 'L' n` | demande de la ligne `n` (0-27) (réponse `L`) ; `n + $80` : les lignes `n` à 27, une trame `L` chacune, à la suite, sans autre demande (le Mac s'en sert à partir de 3 lignes changées) |
+| `$FD 'C' n` | totaux des lignes de police `n` à `n+7` (28 ≤ `n` ≤ 68) (réponse `C`) |
 | `$FD 'B'` | démarrage à chaud, comme le bouton RESET (essais : programme bloqué qui garde les interruptions) |
 
 - Une touche n'est lue de l'ACIA que s'il y a de la place dans le tampon du clavier
@@ -124,6 +129,7 @@ une trame refusée est redemandée.
 |---|---|
 | `'S'` (60 octets) | mode (0 texte, 1 SPLIT, 2 HIRES plein écran ; bit 7 = `SCR_PROG`, écran texte au programme), colonne et ligne du curseur, curseur actif, puis 28 totaux de Fletcher (`s1 += octet ; s2 += s1`, 8 bits chacun, `s1` envoyé d'abord), un par ligne de `$BB80` |
 | `'L'` (41 octets) | numéro de ligne, puis ses 40 octets tels quels (attributs et bit 7 compris) |
+| `'C'` (16 octets) | les totaux de Fletcher (`s1`, `s2`) des 8 lignes de police demandées |
 
 - **Le curseur ne compte pas** : quand il est inversé à l'écran (`cur_vis`), sa case est
   lue rétablie (bit 7 inversé de nouveau) pour les totaux comme pour les lignes. Sans cela
@@ -133,6 +139,28 @@ une trame refusée est redemandée.
   graphique » ; en SPLIT (mode 1), il ne compare que les lignes 16 à 27.
 - Le mode 2 est reconnu comme `hires_on` du BIOS : mode texte pour le système, attribut
   `$1E` dans la dernière case de l'écran.
+
+### Police (caractères redéfinis)
+
+Ligne `n` de 28 à 75 : les 40 octets en `$B400 + 40 × (n − 28)` ; `L n` et la suite
+`L n+$80` (jusqu'à 75) marchent comme pour l'écran. Un caractère prend 8 octets : une
+ligne en contient cinq exactement, un caractère n'est jamais coupé. Utiles : 6 à 25
+(caractères 32-127 du jeu standard) et 32 à 47 (32-111 du jeu secondaire ; 112-127 sont
+dans les lignes 0-3 de l'écran, comme pour l'ULA) ; les autres portent les codes 0-31
+(attributs), jamais dessinés.
+
+- **Seulement en mode texte** : en HIRES et en SPLIT, `$B400` est dans l'image (la police
+  du SPLIT est en `$9800`) ; le Mac n'en demande rien, et dessine les lignes de texte du
+  SPLIT avec la police de CP/A.
+- **Le Mac** : à la première trame `S` en mode texte de chaque appel, il lit les 48
+  lignes (`L 28+$80`, 1,8 s dans Oricutron) ; un pilote qui ne répond pas ne connaît pas
+  la police (ancien pilote) : elle n'est plus demandée pendant cet appel. Ensuite, à
+  chaque cycle (au repos toutes les 0,5 s), des trames `C` sur les cinq tranches utiles
+  (28+6, 28+14, 28+22, 28+32, 28+40) : chaque tranche qui a changé depuis moins de 10 s
+  (sprite animé) à chaque cycle, plus deux autres à tour de rôle (toute la police en
+  1,5 s au repos, plus vite quand l'écran change : les cycles s'enchaînent) ; toutes au retour en mode texte. Lignes changées : `L`, ou une suite.
+- **Coût côté Oric** : une trame `C` calcule 8 totaux (320 octets lus) ; aucune variable
+  en plus. Pilote : +65 octets.
 
 ### Budget sous l'IRQ
 
@@ -411,7 +439,8 @@ frappe humaine : la vitrine se met en pause (§ 9.5).
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
-     "lignes": {"19": "1007413e444952...", ...}}
+     "lignes": {"19": "1007413e444952...", ...},
+     "police": {"22": "0c1e3f3f1e0c0000...", ...}}
 
 - `version` croît à chaque changement (ligne, curseur, mode, liaison). Une version plus
   petite que celle du client veut dire que le démon a redémarré : le client redemande
@@ -419,7 +448,9 @@ frappe humaine : la vitrine se met en pause (§ 9.5).
 - `liaison` : `attente` (l'Oric n'a pas encore appelé), `active`, `perdue` (plus de
   réponse de l'Oric) ; `delai` : âge en secondes du dernier cycle complet.
 - `mode`, `curseur` (colonne, ligne, actif) : ceux de la trame `S` ; `lignes` : les
-  40 octets de chaque ligne en hexadécimal, tels que la trame `L`.
+  40 octets de chaque ligne en hexadécimal, tels que la trame `L` ; `police` : de même,
+  les lignes de police reçues (clé `k` de 0 à 47, ligne `28 + k` du pilote, octets en
+  `$B400 + 40 × k`) changées depuis `V`, absente tant que rien n'est reçu.
 - `humain` : secondes depuis la dernière frappe qui ne vient pas de la vitrine (`null` :
   aucune) ; `stats` : compteurs de la liaison (diagnostic).
 
@@ -439,10 +470,12 @@ côté de l'Oric ou ailleurs dans la maison. Python 3 et tkinter seulement.
   les cases grandissent de la même façon, en doublant d'abord la colonne d'espacement et
   la rangée vide du bas, pour que les lettres restent nettes. `--etirer` remplit la
   place sans garder les proportions ; `--echelle` impose l'échelle.
-- Rendu : celui de l'ULA (`tools/oric_ecran.py`) : police de CP/A lue dans `src/font.s`,
-  encre, papier, inverse, double hauteur, clignotement ; le jeu secondaire est dessiné
-  avec la police normale (CP/A ne l'initialise pas) ; les caractères redéfinis par un
-  programme (sprites et tuiles de GRAPHER) ne sont pas vus. Curseur clignotant dessiné
+- Rendu : celui de l'ULA (`tools/oric_ecran.py`) : encre, papier, inverse, double
+  hauteur, clignotement ; en mode texte, les jeux standard et secondaire tels que l'Oric
+  les a en mémoire (police envoyée par le démon, § 4 « Police » : sprites, tuiles,
+  EDSPRITE ; `polices()`), la police de CP/A (`src/font.s`) pour ce qui n'est pas encore
+  reçu et pour les lignes de texte du SPLIT. La page web fait de même (rendu comparé
+  point par point). Curseur clignotant dessiné
   d'après la trame `S`. En SPLIT, les lignes 0 à 15 sont hachurées ; en HIRES plein
   écran, « Ecran graphique ». Seules les lignes changées sont redessinées.
 - Touches : celles de la page web ; F1 FUNCT, F5 démarrage à chaud, F9 coller le
@@ -505,26 +538,44 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
     python3 tools/vitrine.py [--demon URL] [--humain S] [--scenes a,b,...] [--une]
     python3 tools/vitrine.py --liste
 
-- **Scènes**, tirées au hasard (pondérées, jamais deux fois la même de suite), avec une
-  pause de 3 à 15 s entre deux : `heure` (HORLOGE), `mosaique` (MOSAIQUE), `dir` (DIR,
+- **Rythme** : une scène de spectacle (`heure`, `mosaique`, `edit`, `debug`, `cmder`,
+  `edsprite` ; marquées `*` par `--liste`), puis deux commandes au prompt, et ainsi de
+  suite ; dans chaque groupe, tirage au hasard pondéré, jamais deux fois la même de
+  suite ; moins d'une seconde entre deux scènes (0,3 à 1 s). Un programme effacé par
+  CMDER passe en tête de la scène de spectacle suivante.
+- **Scènes** : `heure` (HORLOGE), `mosaique` (MOSAIQUE), `dir` (DIR,
   DIRS, STAT), `completion` (TAB sur la commande puis sur le nom, TYPE), `type`, `aide`
   (HELP et une rubrique), `menus` (FUNCT : barre, menus déroulés, parfois Version),
   `usb` (USBDIR, `USBDIR /S`, USBMOUNT), `debug` (`DEBUG MEM` : `L C000`, `D BB80`,
   l'écran vu par lui-même...), `edit` (un `.GRX` parcouru, une recherche, sortie sans
-  rien changer), `cmder` (déplacements, tris, infos), `echo` (l'heure au prompt),
+  rien changer), `cmder` (déplacements, tris, infos ; six fois sur dix, si les deux
+  programmes sont là, efface l'un d'eux : filtre `/` sur son nom, DEL, `O` seulement si la
+  question nomme ce fichier, puis sans filtre), `edsprite` (EDSPRITE sur `DUN.SPR`,
+  sinon un autre `.SPR` de la disquette, sinon `edit` : curseur dans la grille, codes
+  `^H`, copie du sprite (`^C` `^V` dans la liste) retournée par Dessin/Miroir horizontal,
+  Vue/Décor, Vue/Animer, puis `^Q` et `O` à `Fichier modifie. Quitter (O/N) ?` : rien
+  n'est enregistré, la scène se rejoue à l'identique ; ses caractères redéfinis
+  sont vus par la page, § 4 « Police »), `echo` (l'heure au prompt),
   `divers` (VER, MEM, CLS). Frappe de 5 à 12 touches par seconde, avec des hésitations ;
   pauses de fin d'écran (`-- Suite`) passées après un temps de lecture.
 - **Deux programmes GRAPHER** en mode texte (LORES), dans `tools/vitrine/` :
   `MOSAIQUE.GRX n` (n tableaux tirés au hasard : pluie de couleurs, cadres concentriques
   qui tournent, rayures qui défilent par `ROTH`, damier, bandes par `ROTV` ; chaque case
   est un attribut de papier, donc une tuile de couleur ; ~13 s par tableau) et
-  `HORLOGE.GRX n` (l'heure en grands chiffres de couleur pendant n secondes ; l'Oric
+  `HORLOGE.GRX n` (l'heure en grands chiffres de couleur pendant n secondes, 15 à 25 ;
+  la mosaïque : 2 ou 3 tableaux ; l'Oric
   n'a pas d'horloge : le programme demande l'heure, la vitrine la tape. Chiffres
   dessinés par rangées : une chaîne d'attributs par motif de 3 points, écrite par
   `PRINT` ; une seconde dure `DELAY 16` plus ~0,68 s de dessin, mesuré dans Oricutron :
-  ~2 s de retard par minute). Au premier passage, la vitrine les écrit sur la disquette
-  s'ils manquent (`DIR *.GRX`), dans EDIT, à la vue de tous : texte collé, `^S`, `^Q`.
-  Rien d'autre n'est écrit ; aucune scène n'efface ni ne modifie de fichier.
+  ~2 s de retard par minute). Au démarrage, la vitrine note ceux qui manquent
+  (`DIR *.GRX`, et `DIR *.SPR` pour EDSPRITE) ; la première scène qui s'en sert les écrit
+  dans EDIT, à la vue de tous : texte collé, `^S`, `^Q`, puis les lance. Rien d'autre
+  n'est écrit, effacé ni modifié.
+- **Langue** : la même vitrine pour `cpa.dsk` et `cpa-en.dsk` ; la langue du système est
+  reconnue au démarrage par la barre des menus (`Systeme` ou `System`), `--langue fr|en`
+  la force. Table `TEXTES` de `vitrine.py` : ce que la vitrine lit (`-- Suite` / `-- More`,
+  questions `(O/N)` / `(Y/N)`...) et tape (réponse `O` / `Y`, rubriques de HELP, phrases
+  d'ECHO). Essayé dans Oricutron sur les deux disquettes.
 - **Reprise** : chaque scène part du prompt, ligne vide ; sinon ESC, `^Q`, `^C`,
   RETURN, et en dernier recours le démarrage à chaud (`/reset`). Liaison pas active :
   attente. Démon injoignable : nouvel essai toutes les 10 s.

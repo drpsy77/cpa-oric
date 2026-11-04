@@ -11,6 +11,9 @@
 #     (^Q), puis relu par TYPE ; le fichier de la disquette est le texte ;
 #   - CMDER plein écran ;
 #   - GRAPHER en SPLIT (seules les lignes de texte, 16 à 27, comptent) ;
+#   - GRAPHER en LORES avec deux sprites (caractères redéfinis) : la police
+#     tenue par le démon est celle du vidage ($B400-$BB7F, caractères
+#     32-127 et 32-111 du jeu secondaire), sprites compris ;
 #   - $FD "B" (démarrage à chaud) depuis CMDER : la console reste active
 #     (voyant R), DIR tapé ensuite par le démon ;
 #   - démon tué au milieu d'une réponse : l'Oric continue (DIR tapé sur son
@@ -30,6 +33,31 @@ printf 'SPLIT\nCIRCLE 120 64 40\nLINE 0 0 239 127\n' > "$T/rond.grx"
 python3 tools/mkdisk.py era "$T/a.dsk" HOSTS > /dev/null
 python3 tools/mkdisk.py put "$T/a.dsk" "$T/hosts" HOSTS > /dev/null
 python3 tools/mkdisk.py put "$T/a.dsk" "$T/rond.grx" ROND.GRX > /dev/null
+cat > "$T/sprfix.grx" <<'G'
+DIM S$(112) T(16)
+BLOAD S$ HEROS.SPR
+FOR I 0 15
+  T(I) = 112+I
+NEXT
+LORES
+FOR L 1 27
+  CHAR 0 L 2+(L%2)
+  LOCATE 2 L
+  ECHO ":. . . . :. . . . :. . . . :"
+NEXT
+SPRITES 2
+SPOOL T
+SSHOW 0 S$ 0 10 12
+SSHOW 1 S$ 2 20 5
+WHILE 1
+  K = INKEY
+  IF K > 0
+    END
+  ENDIF
+NEXT
+G
+python3 tools/mkdisk.py put "$T/a.dsk" "$T/sprfix.grx" SPRFIX.GRX > /dev/null
+python3 tools/mkdisk.py put "$T/a.dsk" files/heros.spr HEROS.SPR > /dev/null
 rc=0
 python3 - "$T" "$R" "$PORT" "$HTTP" "$@" <<'E' || rc=1
 import json, os, subprocess, sys, time, urllib.request
@@ -90,7 +118,7 @@ def attendre(cible, delai=30):
 def actif(delai=40):
     return attendre(lambda e: e["liaison"] == "active", delai)
 
-def essai(nom, cles, trames, etapes, split=False, disque=None, comparer=True):
+def essai(nom, cles, trames, etapes, split=False, disque=None, comparer=True, police=False):
     """Lance Oricutron (frappe locale cles), joue etapes() par le démon, puis
     compare l'écran du démon au vidage de la trame trames."""
     if choix and nom not in choix:
@@ -122,6 +150,16 @@ def essai(nom, cles, trames, etapes, split=False, disque=None, comparer=True):
     ok &= check(e["curseur"][:2] == v["curseur"][:2] and (e["mode"] & 0x7F) == (v["mode"] & 0x7F),
                 "%s : curseur %s et mode %d (vidage %s, %d)" % (nom, e["curseur"][:2], e["mode"],
                                                               v["curseur"][:2], v["mode"]))
+    if police:                       # caractères 32-127, et 32-111 du secondaire
+        utiles = [k for k in range(48) if 6 <= k <= 25 or k >= 32]
+        manque = [k for k in utiles if str(k) not in e.get("police", {})]
+        diff = [k for k in utiles if str(k) in e.get("police", {}) and
+                bytes.fromhex(e["police"][str(k)]) != mem[0xB400 + 40 * k:0xB428 + 40 * k]]
+        ok &= check(not manque and not diff, "%s : police du demon == vidage (manque %s, diff %s)"
+                    % (nom, manque, diff))
+        cpa = oe.charger_police()
+        redef = [c for c in range(112, 128) if list(mem[0xB400 + 8 * c:0xB408 + 8 * c]) != cpa[c]]
+        ok &= check(len(redef) >= 2, "%s : caracteres des sprites redefinis (%d)" % (nom, len(redef)))
     if not ok:
         print(texte(e))
         os.system("python3 %s/tools/screen.py %s/%s.mem" % (R, T, nom))
@@ -193,6 +231,15 @@ def e4(d):
     check(attendre("ROND", 20), "split : dir")
     time.sleep(2)
 essai("split", CLES, 1900, e4, split=True)
+
+# 4b. GRAPHER en LORES, deux sprites : caracteres redefinis transmis
+def e4b(d):
+    actif()
+    check(attendre(lambda e: len(e.get("police", {})) == 48, 30), "sprites : police lue au debut")
+    touches("grapher sprfix" + N)
+    check(attendre(lambda e: e["mode"] & 0x80 and ":. . ." in texte(e), 40), "sprites : decor")
+    time.sleep(8)
+essai("sprites", CLES, 2600, e4b, police=True)
 
 # 5. $FD "B" pendant CMDER : demarrage a chaud, console toujours active
 def e5(d):

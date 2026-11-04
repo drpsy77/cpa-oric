@@ -64,7 +64,29 @@ def page_web():
     return html.replace("/*POLICE*/[]", police, 1).encode("utf-8")
 
 
-def rendre_ligne(police, octets, num, clign_eteint=False):
+def polices(police, memoire, lignes):
+    """Jeux standard et secondaire tels que l'ULA les lit : glyphes des
+    caractères 32-127 pris dans la police du mode texte envoyée par l'Oric
+    (memoire : 48 lignes de 40 octets, $B400-$BB7F, None si pas reçue ; une
+    ligne = cinq caractères), le haut du jeu secondaire ($BB80, 112-127)
+    dans les lignes 0-3 de l'écran. Ce qui manque : la police de CP/A.
+    Rend (standard, secondaire), deux listes de 128 glyphes."""
+    std, alt = list(police), list(police)
+    for jeu, base in ((std, 0), (alt, 0x400)):
+        for c in range(32, 128):
+            a = base + 8 * c
+            if a < 1920:
+                l = memoire[a // 40] if memoire else None
+                o = a % 40
+            else:
+                l = lignes[(a - 1920) // 40]
+                o = (a - 1920) % 40
+            if l is not None:
+                jeu[c] = [b & 0x3F for b in l[o:o + 8]]
+    return std, alt
+
+
+def rendre_ligne(police, octets, num, clign_eteint=False, alt=None):
     """Les 8 rangées de 240 points d'une ligne d'écran, selon l'ULA (mode texte).
 
     Chaque ligne repart en encre 7, papier 0, sans attribut. Un octet de code
@@ -72,9 +94,10 @@ def rendre_ligne(police, octets, num, clign_eteint=False):
     (bit 0 double hauteur, bit 1 jeu secondaire, bit 2 clignotement), 16-23
     papier, 24-31 mode vidéo (sans effet ici) ; sa case est dessinée en papier.
     Bit 7 : vidéo inverse (encre et papier complémentés). Le jeu secondaire
-    (en $B800, que CP/A n'initialise pas) est dessiné avec la police normale.
-    num : numéro de la ligne (sa parité choisit la moitié en double hauteur)."""
-    encre, papier, double, clign = 7, 0, False, False
+    est dessiné avec alt (polices()) ; sans alt, avec la police normale (CP/A
+    ne l'initialise pas). num : numéro de la ligne (sa parité choisit la
+    moitié en double hauteur)."""
+    encre, papier, double, clign, jeu = 7, 0, False, False, police
     rangs = [[0] * LARG for _ in range(8)]
     for col in range(COLS):
         b = octets[col]
@@ -85,6 +108,7 @@ def rendre_ligne(police, octets, num, clign_eteint=False):
                 encre = c
             elif c < 16:
                 double, clign = bool(c & 1), bool(c & 4)
+                jeu = alt if alt is not None and c & 2 else police
             elif c < 24:
                 papier = c - 16
             fond = papier ^ inv
@@ -94,7 +118,7 @@ def rendre_ligne(police, octets, num, clign_eteint=False):
         av, fond = encre ^ inv, papier ^ inv
         if clign and clign_eteint:
             av = fond
-        g = police[c]
+        g = jeu[c]
         for r in range(8):
             v = g[((r + 8 * (num & 1)) >> 1)] if double else g[r]
             rang = rangs[r]

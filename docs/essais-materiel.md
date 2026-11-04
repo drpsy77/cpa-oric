@@ -298,6 +298,15 @@ Oricutron ; puis en boucle une heure : jamais bloquée, retour au prompt après 
 scène. Une touche depuis la page : pause de 2 min. Les spectateurs, après installation
 de la passerelle (§ 9.6) : page en lecture seule depuis l'extérieur.
 
+**Console à distance, police et vitrine vive** (`docs/console-distance.md` § 4 « Police »,
+§ 9.5 ; démon `2026-11-04.1`, nouveau `cpa.dsk`, `DUN.SPR` sur la disquette) :
+`GRAPHER SPRITES` (exemples) sur la page : bonhomme et balle dessinés, la balle suit ;
+EDSPRITE DUN : grille, zone « Réel » et Vue/Animer comme sur l'Oric ; dans le journal,
+`police lue : 48 lignes` à l'appel ; vitesse de la balle comparée avec et sans la page
+ouverte (coût des trames `C`). Vitrine : une scène de spectacle toutes les trois au plus,
+pas d'attente de plus d'une seconde ; CMDER efface MOSAIQUE.GRX ou HORLOGE.GRX (la
+question nomme bien le fichier), retapé et lancé à la scène de spectacle suivante.
+
 **Console à distance, passerelle** (`docs/console-distance.md` § 9.6 ; démon
 `2026-11-03.1` sur simon) : `tools/passerelle.py --vps NOM`, puis les étapes de
 `logs/passerelle/LISEZMOI.txt`. Depuis le VPS : `ping 10.77.0.2`, `curl` de `/ecran`
