@@ -1,0 +1,107 @@
+; CLOCK.GRX : the time in big colour digits (LORES), for n seconds
+; (showcase of the remote console, tools/vitrine.py: the time is
+; typed on the keyboard, the Oric has no clock).
+;   GRAPHER CLOCK n         then hours, minutes, seconds (RETURN)
+; A digit: 5 rows of 3 dots; G$ gives the pattern of each row (0-7,
+; bit 2 on the left). P$ (big, 2 cells per dot) and Q$ (small): one
+; string of paper attributes per pattern, written at once by PRINT.
+LORES
+DIM G$(51) P$(7,8) Q$(4,8)
+G$ = "75557262277174771317557117471774757712227575775717"
+T = $1
+Z = 16               ; DELAY per second (drawing takes ~0.68 s: measured)
+B = 20               ; blue paper
+FOR K 0 7
+  W = 4
+  FOR J 0 2
+    A = B
+    C = B
+    IF (K/W)%2
+      A = 19
+      C = 22
+    ENDIF
+    P$(2*J,K) = A
+    P$(2*J+1,K) = A
+    Q$(J,K) = C
+    W = W/2
+  NEXT
+NEXT
+FOR L 0 27
+  LOCATE 0 L
+  SPC 40 B
+NEXT
+LOCATE 2 2
+PRINT "Time ?  "
+INPUT H
+LOCATE 15 2
+INPUT M
+LOCATE 18 2
+INPUT SE
+LOCATE 0 2
+SPC 40 B
+LOCATE 11 2
+PRINT "CP/A - Paris time"
+LOCATE 8 25
+PRINT "The Oric is running live"
+CALL HHMM
+REPEAT T
+  CALL SEC
+  DELAY Z
+  SE = SE+1
+  IF SE > 59
+    SE = 0
+    M = M+1
+    IF M > 59
+      M = 0
+      H = (H+1)%24
+    ENDIF
+    CALL HHMM
+  ENDIF
+NEXT
+END
+
+SUB HHMM
+  V = H/10
+  X = 3
+  CALL BIG
+  V = H%10
+  X = 11
+  CALL BIG
+  V = M/10
+  X = 23
+  CALL BIG
+  V = M%10
+  X = 31
+  CALL BIG
+ENDSUB
+
+SUB BIG
+  FOR R 0 4
+    K = G$(V*5+R)-48
+    LOCATE X (6+2*R)
+    PRINT P$(K)
+    LOCATE X (7+2*R)
+    PRINT P$(K)
+  NEXT
+ENDSUB
+
+SUB SEC
+  A = B
+  IF SE%2 = 0
+    A = 23
+  ENDIF
+  LOCATE 19 8
+  SPC 2 A
+  LOCATE 19 9
+  SPC 2 A
+  LOCATE 19 12
+  SPC 2 A
+  LOCATE 19 13
+  SPC 2 A
+  FOR R 0 4
+    LOCATE 16 (18+R)
+    PRINT Q$(G$(SE/10*5+R)-48)
+    LOCATE 21 (18+R)
+    PRINT Q$(G$(SE%10*5+R)-48)
+  NEXT
+ENDSUB
