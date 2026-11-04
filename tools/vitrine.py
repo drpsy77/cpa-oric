@@ -27,7 +27,8 @@ en direct, pas une vidéo.
 
 Sur l'Oric : CP/A au prompt, console à distance active (REMOTE hote), sur
 une disquette où l'on peut écrire : la vitrine y écrit MOSAIQUE.GRX et
-HORLOGE.GRX (dans EDIT, à la vue de tous) s'ils manquent. CMDER efface
+HORLOGE.GRX (dans EDIT, à la vue de tous) s'ils manquent ; sur un système
+anglais, MOSAIC.GRX et CLOCK.GRX (tools/vitrine/en, textes en anglais). CMDER efface
 parfois l'un des deux (filtre sur son nom, DEL, O) ; la scène de spectacle
 suivante le retape dans EDIT, puis le lance. Rien d'autre n'est écrit,
 effacé ni modifié.
@@ -47,7 +48,7 @@ G, D, B, H = 8, 9, 10, 11                       # flèches
 SH_D, SH_B, SH_H, CT_B, CT_H = 0xF1, 0xF2, 0xF3, 0xF6, 0xF7  # SHIFT et CTRL, flèches
 CTRL = {c: ord(c) - 64 for c in "ACDEFOQSVWXZ"}
 CTRL["H"] = 28                                  # ^H, ^I, ^J, ^K : 28-31 (contrat)
-PROGRAMMES = ("MOSAIQUE", "HORLOGE")
+PROGRAMMES = ("MOSAIQUE", "HORLOGE")    # rôles ; noms sur la disquette : TEXTES
 # Textes de l'Oric que la vitrine lit ou tape, selon la langue du système
 # (cpa.dsk, cpa-en.dsk) ; reconnue au démarrage par la barre des menus.
 TEXTES = {
@@ -55,11 +56,15 @@ TEXTES = {
            "edit_titre": "Fichier", "cmder": "ESC fin", "filtre": "Filtre",
            "effacer": "Effacer", "on": "(O/N)", "oui": "O", "quitter": "Quitter (O/N)",
            "aide": ["", "touches", "edit", "cmder", "usb", "prog", "edsprite"],
+           "noms": {"MOSAIQUE": "MOSAIQUE", "HORLOGE": "HORLOGE"}, "dossier": "vitrine",
+           "heure": "Heure ?",
            "echo": ["echo Il est %d h %02d a Paris", "echo %dh%02d : l'Oric est en direct"]},
     "en": {"barre": "System", "suite": "-- More", "edit_nouveau": "New file",
            "edit_titre": "File", "cmder": "ESC quit", "filtre": "Filter",
            "effacer": "Erase", "on": "(Y/N)", "oui": "Y", "quitter": "Quit (Y/N)",
            "aide": ["", "keys", "edit", "cmder", "usb", "prog", "edsprite"],
+           "noms": {"MOSAIQUE": "MOSAIC", "HORLOGE": "CLOCK"}, "dossier": "vitrine/en",
+           "heure": "Time ?",
            "echo": ["echo It is %d:%02d in Paris", "echo %d:%02d - live from an Oric"]},
 }
 
@@ -196,14 +201,15 @@ class Vitrine:
             print(time.strftime("%H:%M:%S"), "langue :",
                   [k for k, v in TEXTES.items() if v is self.t][0], flush=True)
         presents = self.fichiers("*.grx")
-        self.manquants = set(n for n in PROGRAMMES if n + ".GRX" not in presents)
+        self.manquants = set(n for n in PROGRAMMES if self.nom(n) + ".GRX" not in presents)
         self.sprites = sorted(n for n in self.fichiers("*.spr") if n.endswith(".SPR"))
 
     def retaper(self, nom):
         """Écrit le programme nom (MOSAIQUE, HORLOGE) dans EDIT, à la vue de
         tous : texte collé, ^S, ^Q."""
-        texte = open(os.path.join(ICI, "vitrine", nom.lower() + ".grx"), encoding="ascii").read()
-        self.taper("edit %s.grx" % nom.lower())
+        f = self.nom(nom).lower() + ".grx"
+        texte = open(os.path.join(ICI, self.t["dossier"], f), encoding="ascii").read()
+        self.taper("edit " + f)
         self.attendre(lambda li: self.t["edit_nouveau"] in li[27] or self.t["edit_titre"] in li[0],
                       30, suite=False)
         time.sleep(1)
@@ -228,15 +234,20 @@ class Vitrine:
 
     def programmes(self):
         """Fichiers .GRX de la vitrine présents sur la disquette."""
-        return [n.lower() + ".grx" for n in PROGRAMMES if n not in self.manquants]
+        return [self.nom(n).lower() + ".grx" for n in PROGRAMMES if n not in self.manquants]
+
+    def nom(self, role):
+        """Nom sur la disquette du programme MOSAIQUE ou HORLOGE (selon la
+        langue : MOSAIC, CLOCK en anglais)."""
+        return self.t["noms"][role]
 
     # --- scènes ----------------------------------------------------------------------
     def s_heure(self):
         """HORLOGE : l'heure en grands chiffres, tapée par la vitrine."""
         if not self.present("HORLOGE"):
             return
-        self.taper("grapher horloge %d" % random.randint(15, 25))
-        if not self.attendre("Heure ?", 40, suite=False):
+        self.taper("grapher %s %d" % (self.nom("HORLOGE").lower(), random.randint(15, 25)))
+        if not self.attendre(self.t["heure"], 40, suite=False):
             return
         time.sleep(random.uniform(0.3, 0.8))
         t = time.localtime(time.time() + 1.5)       # frappe et lecture des trois nombres
@@ -254,7 +265,7 @@ class Vitrine:
         """MOSAIQUE : tuiles de couleur en LORES."""
         if not self.present("MOSAIQUE"):
             return
-        self.taper("grapher mosaique %d" % random.randint(2, 3))
+        self.taper("grapher %s %d" % (self.nom("MOSAIQUE").lower(), random.randint(2, 3)))
         self.attendre_prompt(150)
 
     def s_dir(self):
@@ -431,9 +442,11 @@ class Vitrine:
         time.sleep(1)
         return True
 
-    def effacer(self, nom):
-        """CMDER : filtre sur nom.GRX, DEL, O ; puis sans filtre.
-        On ne répond O que si la question nomme bien ce fichier."""
+    def effacer(self, role):
+        """CMDER : filtre sur le .GRX du programme (MOSAIQUE, HORLOGE), DEL,
+        O ; puis sans filtre. On ne répond O que si la question nomme bien ce
+        fichier."""
+        nom = self.nom(role)
         fichier = nom + ".GRX"
         if not self.filtre(fichier.lower()):
             return
@@ -443,7 +456,7 @@ class Vitrine:
                                             for l in li), 5, suite=False):
                 time.sleep(0.8)
                 self.touche(ord(self.t["oui"]), apres=1.5)
-                self.manquants.add(nom)
+                self.manquants.add(role)
             else:
                 self.touche(ESC, apres=0.5)
         self.filtre("")

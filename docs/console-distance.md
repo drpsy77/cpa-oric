@@ -575,7 +575,9 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   reconnue au démarrage par la barre des menus (`Systeme` ou `System`), `--langue fr|en`
   la force. Table `TEXTES` de `vitrine.py` : ce que la vitrine lit (`-- Suite` / `-- More`,
   questions `(O/N)` / `(Y/N)`...) et tape (réponse `O` / `Y`, rubriques de HELP, phrases
-  d'ECHO). Essayé dans Oricutron sur les deux disquettes.
+  d'ECHO, programmes : `MOSAIC.GRX` et `CLOCK.GRX` en anglais, `tools/vitrine/en/`, mêmes
+  dessins, textes et commentaires traduits). Essayé dans Oricutron sur les deux
+  disquettes.
 - **Reprise** : chaque scène part du prompt, ligne vide ; sinon ESC, `^Q`, `^C`,
   RETURN, et en dernier recours le démarrage à chaud (`/reset`). Liaison pas active :
   attente. Démon injoignable : nouvel essai toutes les 10 s.

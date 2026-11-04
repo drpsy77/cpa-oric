@@ -1,0 +1,98 @@
+; MOSAIC.GRX : colour tiles in LORES, no key needed (showcase of the
+; remote console, tools/vitrine.py). Each cell is a paper attribute
+; (16 to 23): it takes its colour. The pictures are drawn at random.
+;   GRAPHER MOSAIC n        n pictures, then back to the prompt
+LORES
+N = $1
+REPEAT N
+  P = RND(5)
+  IF P = 0
+    CALL RAIN
+  ENDIF
+  IF P = 1
+    CALL FRAMES
+  ENDIF
+  IF P = 2
+    CALL STRIPES
+  ENDIF
+  IF P = 3
+    CALL CHECKER
+  ENDIF
+  IF P = 4
+    CALL BANDS
+  ENDIF
+  CALL TITLE
+NEXT
+END
+
+SUB RAIN
+  CLS
+  REPEAT 700
+    CHAR RND(40) RND(28) (16+RND(8))
+  NEXT
+ENDSUB
+
+SUB FRAMES
+  FOR O 0 13
+    FOR K 0 13
+      A = 17+((K+O)%7)
+      LOCATE K K
+      SPC (40-2*K) A
+      LOCATE K (27-K)
+      SPC (40-2*K) A
+      LOCATE K K
+      SPCV (28-2*K) A
+      LOCATE (39-K) K
+      SPCV (28-2*K) A
+    NEXT
+  NEXT
+ENDSUB
+
+SUB STRIPES
+  FOR L 0 27
+    LOCATE 0 L
+    FOR J 0 19
+      SPC 2 (17+((J+L/2)%7))
+    NEXT
+  NEXT
+  REPEAT 80
+    ROTH 1
+  NEXT
+ENDSUB
+
+SUB CHECKER
+  C = 17+RND(7)
+  D = 17+(C-16+RND(6))%7        ; a colour other than C
+  FOR L 0 27
+    LOCATE 0 L
+    FOR J 0 9
+      IF (J+L/4)%2
+        SPC 4 C
+      ELSE
+        SPC 4 D
+      ENDIF
+    NEXT
+  NEXT
+  REPEAT 28
+    ROTV 1
+    ROTH -1
+  NEXT
+ENDSUB
+
+SUB BANDS
+  FOR L 0 27
+    LOCATE 0 L
+    SPC 40 (17+(L/2)%7)
+  NEXT
+  REPEAT 56
+    ROTV -1
+  NEXT
+ENDSUB
+
+SUB TITLE
+  LOCATE 7 13
+  SPC 26 16
+  LOCATE 10 13
+  PRINT "Live: CP/A on an Oric"
+  DELAY 100
+ENDSUB
