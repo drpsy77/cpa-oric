@@ -217,12 +217,15 @@ relance le service). `REMOTE OFF` coupe et raccroche.
 | ajouts : suite de lignes (`L n+$80`), attente de l'émetteur comptée sur l'IRQ (`sr_bud`) | 38 |
 | **total** | **660** |
 
+(Plus 65 octets pour la police, § 4.)
+
 Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`) : octet bas du port, état (console
 active, liaison perdue), préfixe reçu, trame en cours, position, ligne demandée, ligne
 lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH.
 Effacées au démarrage à froid seulement. La ligne est lue par une instruction `LDA
 abs,Y` dont l'adresse est posée (`sr_lda`, RAM overlay) : pas de pointeur en page zéro.
-Les adresses de lignes viennent de `line_lo` / `line_hi` (page `$FF00`).
+Les adresses de lignes viennent de `line_lo` / `line_hi` (page `$FF00`) ; celles des lignes
+de police sont calculées à partir de `$B400`.
 
 Pas dans une banque de la fenêtre : le service tourne à chaque IRQ, et la fenêtre sert à
 PUT et IMG.
@@ -535,7 +538,8 @@ fenêtre s'arrête sur une erreur, elle est relancée.
 CP/A montré en boucle, sans personne, pour les spectateurs de la page (§ 9.6) : la
 vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
 
-    python3 tools/vitrine.py [--demon URL] [--humain S] [--scenes a,b,...] [--une]
+    python3 tools/vitrine.py [--demon URL] [--humain S] [--scenes a,b,...]
+                             [--langue fr|en] [--une]
     python3 tools/vitrine.py --liste
 
 - **Rythme** : une scène de spectacle (`heure`, `mosaique`, `edit`, `debug`, `cmder`,
@@ -565,10 +569,11 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   est un attribut de papier, donc une tuile de couleur ; ~13 s par tableau) et
   `HORLOGE.GRX n` (l'heure en grands chiffres de couleur pendant n secondes, 15 à 25 ;
   la mosaïque : 2 ou 3 tableaux ; l'Oric
-  n'a pas d'horloge : le programme demande l'heure, la vitrine la tape. Chiffres
+  n'a pas d'horloge : le programme demande l'heure, la vitrine la tape case par case,
+  en attendant que chaque saisie soit ouverte, case en vidéo inverse). Chiffres
   dessinés par rangées : une chaîne d'attributs par motif de 3 points, écrite par
   `PRINT` ; une seconde dure `DELAY 16` plus ~0,68 s de dessin, mesuré dans Oricutron :
-  ~2 s de retard par minute). Au démarrage, la vitrine note ceux qui manquent
+  ~2 s de retard par minute. Au démarrage, la vitrine note ceux qui manquent
   (`DIR *.GRX`, et `DIR *.SPR` pour EDSPRITE) ; la première scène qui s'en sert les écrit
   dans EDIT, à la vue de tous : texte collé, `^S`, `^Q`, puis les lance. Rien d'autre
   n'est écrit, effacé ni modifié.
@@ -587,7 +592,7 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   `X-Vitrine`) : la scène s'arrête et la vitrine attend `--humain` secondes (120) sans
   frappe avant de reprendre. Une frappe sur le clavier de l'Oric lui-même ne se voit pas :
   arrêter la vitrine (CTRL-C) pour s'en servir.
-- La vitrine lit l'heure de la machine où elle tourne (Mac, simon) : celle de Paris.
+- La vitrine lit l'heure de la machine où elle tourne (Mac, simon, Pi 400) : celle de Paris.
 
 ### 9.6 Publier sur Internet : passerelle, lecture seule
 
@@ -595,7 +600,7 @@ Le démon n'a ni authentification ni chiffrement (réseau de la maison). Pour mo
 l'Oric à d'autres (un forum), une passerelle sur un serveur public (VPS) sert la page en
 HTTPS et ne laisse passer que la lecture ; la box n'ouvre aucun port.
 
-    navigateur --HTTPS--> Apache (VPS) --WireGuard--> démon (simon) :8040 --> Oric
+    navigateur --HTTPS--> Apache (VPS) --WireGuard--> démon (Pi 400) :8040 --> Oric
 
     python3 tools/passerelle.py --vps NOM [--chemin /cpa/] [--reseau 10.77.0]
                                 [--utilisateur pi] [--depot /home/pi/cpa-oric]
@@ -641,9 +646,10 @@ par le script (X25519, RFC 7748, vérifiées contre `wg pubkey`), gardées dans
 2. **Mesures** (sur le vrai Oric) : XFER de 7,8 Ko reçu en 5 à 10 s ; envoyé en moins de
    10 s depuis que `ac_txw` attend 5 s.
 3. **Pilote, REMOTE et démon** : fait. `tools/test_remote.sh` (Oricutron, temps réel,
-   ~6 min) : l'écran tenu par le démon est celui du vidage mémoire après DIR et un menu
+   ~7 min) : l'écran tenu par le démon est celui du vidage mémoire après DIR et un menu
    FUNCT, EDIT (2 Ko collés, `^S`, `^Q`, puis TYPE ; fichier identique au texte), CMDER,
-   GRAPHER en SPLIT, `$FD 'B'` pendant CMDER (console toujours active), démon tué au
+   GRAPHER en SPLIT, GRAPHER en LORES avec deux sprites (police du démon identique à
+   celle du vidage, sprites compris), `$FD 'B'` pendant CMDER (console toujours active), démon tué au
    milieu d'une réponse (l'Oric continue, puis rappelle un nouveau démon) ; refus de
    TERM et XFER, `REMOTE`, `REMOTE OFF`. Ce qu'Oricutron ne montre pas : le voyant `r`
    (son modem accepte toujours l'octet émis).
@@ -654,6 +660,8 @@ par le script (X25519, RFC 7748, vérifiées contre `wg pubkey`), gardées dans
 5. **Vitrine et spectateurs** (§ 9.5, § 9.6) : fait. Chaque scène jouée dans Oricutron
    par un démon local (programmes écrits dans EDIT identiques à l'octet près) ;
    spectateurs refusés (403) et page en lecture seule.
+6. **Police** (§ 4) : fait. Caractères redéfinis suivis en mode texte ; la page et la
+   fenêtre les dessinent.
 
 À vérifier sur le vrai Oric : `essais-materiel.md` (console à distance).
 
