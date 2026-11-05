@@ -6,6 +6,10 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 
 ## À vérifier sur Oric Atmos + LOCI
 
+Le vrai Oric est arrêté tant que son alimentation n'est pas réglée (`docs/loci-modem-wifi.md`,
+« Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas ces
+essais.
+
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 

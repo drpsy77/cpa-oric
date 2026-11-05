@@ -238,6 +238,11 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      `10.77.0.2`. Les comptes diffèrent d'une machine à l'autre : `User=` et chemins des
      services à vérifier sur la machine du démon. Un ancien démon resté lancé (simon,
      ou à la main sur le Pi 400) prend l'Oric ou les ports : un seul démon à la fois.
+     **Machine appelée** : interchangeable (`docs/console-distance.md` § 1). En service :
+     un émulateur sans système sur Raspberry Pi 3B+ (fondé sur Phosphoric, LOCI émulé,
+     WiFi du Pi), à la place du vrai Oric, arrêté (régulateur 5 V qui chauffe sans hub
+     alimenté, `docs/loci-modem-wifi.md`, « Sans Oric »). Un vrai Oric, un Oric mieux
+     équipé ou un Neo6502 peut reprendre sa place sans rien changer côté Pi 400.
      Fait (04/11/2026) : **police transmise** (`$FD 'C' n`, lignes 28-75 du pilote =
      `$B400-$BB7F`, § 4 « Police » de `console-distance.md` ; pilote +65 octets, démon
      `2026-11-04.1`) : sprites, tuiles et EDSPRITE vus par la page et la fenêtre ; essai
