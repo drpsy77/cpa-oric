@@ -213,6 +213,31 @@ to the stick without going through `mkdisk.py`. In the meantime, the LOCI's stic
 `cpa.dsk`, from which `python3 tools/mkdisk.py get cpa.dsk LETTRE.TXT lettre.txt` extracts a
 file on the Mac.
 
+## Without an Oric: a machine that simulates it
+
+The Oric, LOCI, Pico W chain is only one way of providing CP/A's serial port. What a
+replacement must present to CP/A, nothing more:
+
+- the LOCI's ACIA at `$0380-$0383` (status: bit 3 received, bit 4 transmitter free, bit 6
+  no DSR; nothing sent without DTR; reading the data register consumes the byte), with a
+  receive buffer that only fills when it has room ("Flow control");
+- the LOCI's signature (`$03AF`, `$03B0-$03B7`, tested by `ac_lchk` in `acia_inc.s`),
+  otherwise CP/A looks for the ACIA at `$031C` as in Oricutron; with the signature, the
+  USB stick commands (`USBDIR`, `EXPORT`, `USBMOUNT`...) also call the LOCI's file
+  interface (`$03A0`);
+- a Hayes modem: `AT`, `+++`, `ATH`, `ATDT-host:port`, answers `OK`, `CONNECT`,
+  `NO CARRIER`, `ERROR` (`ac_dial` in `acia_inc.s`, and the driver's automatic redial,
+  `docs/en/console-distance.md` § 4).
+
+On the network side, nothing then tells a replacement from the real Oric: same `HOSTS`,
+same daemon (`tools/remote.py`), same `tools/xfer_server.py`.
+
+In service: a bare-metal emulator on a Raspberry Pi 3B+, based on Phosphoric, which
+emulates the LOCI and uses the Pi's WiFi ("Un Oric dans un RPI ZERO" project); it is the
+showcase's machine (`docs/en/console-distance.md` § 9.6). The real Oric is switched off:
+without a powered hub, the LOCI, the stick and the Pico draw their current from its 5 V
+regulator, which gets too hot ("Power supply").
+
 ## Sources
 
 - PicoWiFiModemUSB: https://github.com/sodiumlb/PicoWiFiModemUSB

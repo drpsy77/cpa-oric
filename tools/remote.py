@@ -53,7 +53,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-05.1"        # changée à chaque modification du démon
+VERSION = "2026-11-05.2"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41, ord("C"): 16}
@@ -409,7 +409,9 @@ class Liaison:
                 attente = 0
                 continue
             self.ecran.poser(liaison="active")
-            mode, cx, cy, actif = s[0], s[1], s[2], bool(s[3])
+            mode, cx, cy, actif = s[0] & 0xBF, s[1], s[2], bool(s[3])
+            if s[0] & 0x40:                 # touche tapée sur le clavier de l'Oric :
+                self.ecran.t_humain = time.time()   # la vitrine s'arrête
             texte_avant = self.ecran.mode & 0x7F == 0
             self.cy = cy if cy < ROWS else 0
             self.ecran.poser(mode=mode, curseur=[cx, cy, actif])
@@ -642,8 +644,19 @@ def demon(port, http, lent, fichier=None, spectateurs=(), max_spect=40):
                 ecran.commenter(" ".join(corps.decode("utf-8", "replace").split())[:160])
                 self._rep(204)
                 return
-            if u in ("/touches", "/coller", "/reset") and not self.headers.get("X-Vitrine"):
+            vitrine = self.headers.get("X-Vitrine")
+            if u in ("/touches", "/coller", "/reset") and not vitrine:
                 ecran.t_humain = time.time()
+            elif u in ("/touches", "/coller", "/reset"):
+                # quelqu'un tape (page, clavier de l'Oric) depuis moins de
+                # X-Vitrine secondes : les touches de la vitrine sont refusées
+                try:
+                    garde = float(vitrine)
+                except ValueError:
+                    garde = 0
+                if ecran.t_humain and time.time() - ecran.t_humain < garde:
+                    self._rep(409, b"quelqu'un tape\n", "text/plain")
+                    return
             if u == "/touches":
                 codes = corps
             elif u == "/coller":

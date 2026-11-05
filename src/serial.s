@@ -45,7 +45,25 @@ sr_irq
         and #2
         bne go
         rts
-go      lda sr_rxn              ; réception : sr_rxn octets au plus
+go      lda sr_rp               ; rappel en cours : lui seul
+        beq si
+        jmp sr_rap
+si      lda sr_num              ; silence : plus rien reçu depuis 512 IRQ
+        beq go2                 ; (10 s ; le démon demande l'état deux
+        inc sr_si               ; fois par seconde) : la ligne est morte,
+        bne go2                 ; rappel (seulement si REMOTE a composé)
+        inc sr_sh
+        lda sr_sh
+        cmp #2
+        bcc go2
+        lda #0
+        sta sr_req
+        sta sr_rp               ; étape 1
+        lda #6                  ; voyant r
+        sta sr_st
+        jsr draw_flags
+        jmp sr_nxt
+go2     lda sr_rxn              ; réception : sr_rxn octets au plus
         sta sr_cnt
 rx      lda sr_pfx              ; une touche n'est lue que si le tampon
         cmp #$FE                ; du clavier a de la place (sinon elle
@@ -55,7 +73,7 @@ rx      lda sr_pfx              ; une touche n'est lue que si le tampon
         txa
         and #KB_MASK
         cmp kb_tail
-        beq tx
+        beq kf
 rx1     ldx #1                  ; premier octet : sans attendre ; les
         lda sr_cnt              ; suivants : sr_rxw (un vrai 6551 n'en
         cmp sr_rxn              ; présente qu'un à la fois)
@@ -68,9 +86,16 @@ rx2     jsr sr_rsta
         bne rx2
         beq tx
 rx3     jsr sr_rdat
+        ldy #0                  ; un octet reçu : la ligne vit
+        sty sr_si
+        sty sr_sh
         jsr sr_rx
         dec sr_cnt
         bne rx
+        beq tx
+kf      ldy #0                  ; une touche attend (tampon du clavier
+        sty sr_si               ; plein) : la ligne vit aussi
+        sty sr_sh
 tx      lda sr_req              ; émission de la trame en cours
         beq r
         lda sr_txn
@@ -223,7 +248,10 @@ m1      lda scr_prog
         tya
         ora #$80
         tay
-m2      tya
+m2      tya                     ; bit 6 : touche tapée sur l'Oric depuis
+        ora sr_kb               ; la trame S précédente
+        ldy #0
+        sty sr_kb
         jmp add
 s1      cpx #3
         bcs tot
@@ -319,6 +347,107 @@ r       rts
 sr_lda  lda SCREEN,y
         rts
 
+; ---------------------------------------------------------------------
+; Rappel automatique : la console est active, REMOTE a composé (sr_num),
+;   et le démon ne demande plus rien depuis 10 s (relancé, liaison
+;   tombée, WiFi perdu) : sous l'IRQ, une étape à la fois (sr_rp, voyant
+;   r), sans jamais bloquer l'Oric :
+;     1 une seconde de silence      5 une seconde (réponses jetées)
+;     2 +++                         6 le numéro (« ATDT-hôte:port », CR)
+;     3 une seconde de silence      7 CONNECT attendu 20 s
+;     4 CR, ATH0, CR (raccroche)    8 30 s, puis l'étape 1
+;   CONNECT : la console reprend (voyant R), le démon redemande l'écran.
+;   REMOTE OFF (fonction 117, op 3) arrête tout.
+; ---------------------------------------------------------------------
+sr_rap
+.(
+        ldx #8                  ; reçu : jeté, sauf le CONNECT attendu
+rx      jsr sr_rsta             ; (étape 7)
+        and #$08
+        beq tx
+        jsr sr_rdat
+        ldy sr_rp
+        cpy #7
+        bne rx1
+        and #$7F
+        ldy sr_mi
+        cmp sr_conn,y
+        beq m1
+        ldy #0
+        cmp #"C"
+        bne m0
+m1      iny
+m0      sty sr_mi
+        cpy #4
+        beq ok
+rx1     dex
+        bne rx
+tx      ldx sr_rp               ; étape d'envoi : un octet par IRQ
+        lda sr_shi-1,x
+        beq wt
+        sta sr_s+2
+        lda sr_slo-1,x
+        sta sr_s+1
+        jsr sr_rsta
+        and #$10
+        beq r
+        ldy sr_mi
+        jsr sr_s
+        beq nx
+        jsr sr_wdat
+        inc sr_mi
+r       rts
+wt      lda sr_tml              ; attente : délai (mot) décompté
+        bne d
+        lda sr_tmh
+        beq nx
+        dec sr_tmh
+d       dec sr_tml
+        rts
+nx      jmp sr_nxt
+ok      lda #0                  ; CONNECT : la console reprend
+        sta sr_rp
+        sta sr_si
+        sta sr_sh
+        sta sr_pfx
+        sta sr_req
+        lda #2
+        sta sr_st
+        jmp draw_flags
+.)
+sr_s    lda $FFFF,y             ; octet Y de la chaîne de l'étape
+        rts
+
+; sr_nxt : étape suivante du rappel (après la 8 : la 1), délai et
+;   position remis
+sr_nxt
+.(
+        ldx sr_rp
+        cpx #8
+        bne n
+        ldx #0
+n       inx
+        stx sr_rp
+        lda sr_dlo-1,x
+        sta sr_tml
+        lda sr_dhi-1,x
+        sta sr_tmh
+        lda #0
+        sta sr_mi
+        rts
+.)
+
+; étapes 1 à 8 : délai en IRQ (attentes), chaîne envoyée (envois)
+sr_dlo  .byt 50, 0, 50, 0, 50, 0, <1000, <1500
+sr_dhi  .byt 0, 0, 0, 0, 0, 0, >1000, >1500
+sr_slo  .byt 0, <sr_cpl, 0, <sr_cath, 0, <sr_num, 0, 0
+sr_shi  .byt 0, >sr_cpl, 0, >sr_cath, 0, >sr_num, 0, 0
+sr_cpl  .asc "+++", 0
+sr_cath .byt 13
+        .asc "ATH0"
+        .byt 13, 0
+sr_conn .asc "CONN"
+
 ; registres de l'ACIA : LDA / STA absolus, octet bas posé par sr_call
 sr_rsta lda $0381
         rts
@@ -334,6 +463,9 @@ sr_wdat sta $0380
 ;   1 pose le port : p1 = octet bas ($80 LOCI, $1C Oricutron ; 0 : aucun,
 ;     console coupée)
 ;   2 console à distance active ($FF sans port) ; 3 coupée
+;   4 numéro à rappeler (p1, p2 : adresse d'une chaîne terminée par 0,
+;     40 caractères au plus : « ATDT-hôte:port », CR) : $FF s'il est trop
+;     long (pas de rappel) ; les op 1 à 3 l'effacent et arrêtent un rappel
 ; ---------------------------------------------------------------------
 sr_call
 .(
@@ -341,10 +473,15 @@ sr_call
         lda (ZP_PTR),y          ; op
         beq stat
         cmp #4
+        beq num
         bcs bad
         sei
         sty sr_pfx
         sty sr_req
+        sty sr_rp
+        sty sr_num
+        sty sr_si
+        sty sr_sh
         lsr                     ; 1 -> 0 ; 2 -> 1, C=0 ; 3 -> 1, C=1
         bne o23
         iny
@@ -387,6 +524,23 @@ s0      ora sr_st
 bad     cli
         lda #$FF
         rts
+num     iny                     ; op 4 : chaîne p1/p2 copiée dans sr_num
+        lda (ZP_PTR),y
+        sta nl+1
+        iny
+        lda (ZP_PTR),y
+        sta nl+2
+        ldy #0
+        sei
+nl      lda $FFFF,y
+        sta sr_num,y
+        beq ok
+        iny
+        cpy #SR_NUML
+        bne nl
+        lda #0                  ; trop long : pas de rappel
+        sta sr_num
+        beq bad
 .)
 
 ; ---------------------------------------------------------------------

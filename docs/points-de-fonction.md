@@ -14,7 +14,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 <!-- synthese:debut -->
 | Composant | ILF | EIF | EI | EO | EQ | **PF IFPUG** | Algorithmes | **Total** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 45 | 5 | 183 | 48 | 78 | **359** | 75 | **434** |
+| Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
 | GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 57 | **291** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
@@ -27,12 +27,12 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
 | *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *225* | ***1105*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
-| Outillage PC | 7 | 15 | 39 | 146 | 21 | **228** | 53 | **281** |
-| **Total** | **227** | **82** | **688** | **368** | **216** | **1581** | **370** | **1951** |
+| Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
+| **Total** | **227** | **82** | **691** | **376** | **216** | **1592** | **370** | **1962** |
 
-Points ajustés (indicatif, § 9) : 1 581 × 1,05 ≈ 1 660.
+Points ajustés (indicatif, § 9) : 1 592 × 1,05 ≈ 1 672.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 218 EI, 90 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 219 EI, 92 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -271,6 +271,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | SYS.T105 | Console à distance : trame `S` (mode, curseur, totaux des 28 lignes) | EO | 1 | 5 | F | 4 |
 | SYS.T106 | Console à distance : trame `L` (une ligne, case du curseur rétablie) | EO | 1 | 3 | F | 4 |
 | SYS.T107 | Console à distance : démarrage à chaud demandé par le Mac | EI | 1 | 1 | F | 3 |
+| SYS.T108 | Console à distance : rappel automatique (117 op 4 ; silence de 10 s, raccrocher, recomposer, réessayer ; voyant) | EI | 1 | 4 | F | 3 |
+| SYS.T109 | Console à distance : touche tapée sur le clavier de l'Oric signalée au Mac (bit 6 de la trame `S`) | EO | 1 | 1 | F | 4 |
 
 **Algorithmes**
 
@@ -825,7 +827,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.T48 | `test_remote.sh` : console à distance de bout en bout dans Oricutron (écran du démon contre le vidage) | EO | 2 | 4 | F | 4 |
 | OUT.T49 | `remote.html` : page web de la console à distance, écran (police de CP/A, attributs, curseur, clignotement, SPLIT, HIRES), état de la liaison | EO | 1 | 9 | F | 4 |
 | OUT.T50 | `remote.html` : clavier de l'ordinateur et du téléphone, boutons (FUNCT, CTRL, SHIFT, flèches), Coller, RESET | EI | 1 | 8 | F | 3 |
-| OUT.T51 | `vitrine.py` : CP/A montré en boucle (scènes au hasard, frappe humaine, programmes écrits dans EDIT s'ils manquent, reprise, pause quand quelqu'un tape) | EO | 1 | 10 | F | 4 |
+| OUT.T51 | `vitrine.py` : CP/A montré en boucle (scènes au hasard, frappe humaine, programmes écrits dans EDIT s'ils manquent, reprise, pause quand quelqu'un tape, au clavier de l'Oric compris) | EO | 1 | 10 | F | 4 |
+| OUT.T56 | `vitrine.py`, `remote.py`, `remote.html` : commentaire de ce qui se passe, à côté du voyant (`/commentaire`, deux langues) | EO | 1 | 3 | F | 4 |
 | OUT.T52 | `remote.py --spectateurs` : clients en lecture seule (page, refus des envois, du journal, de la version et de l'appel de l'Oric), spectateurs comptés par leur adresse réelle, plafond (503) | EQ | 1 | 7 | F | 3 |
 | OUT.T53 | `passerelle.py` : fichiers de la passerelle (WireGuard du VPS et de la maison, Apache en lecture seule, services du démon et de la vitrine, mode d'emploi), clés gardées | EO | 1 | 9 | F | 4 |
 | OUT.T54 | `mk_lib.py` : bibliothèques précompilées `GRX.LIB` (`--verifie` : lien complet == xa, CP/A et `/O`) | EO | 2 | 4 | F | 4 |
@@ -860,7 +863,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 152 | 1 427 | 571 | 1 656 | 11 % | 37 640 | 34 | 105 |
+| Système et commandes | 70 | 12 300 | 1 447 | 574 | 1 659 | 11 % | 37 979 | 34 | 104 |
 | EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
 | GRAPHER + GRXASM | 23 | 14 539 | 1 202 | 464 | 0 | 8 % | 34 771 | 62 | 149 |
 | LOGO | 12 | 9 490 | 625 | 319 | 848 | 6 % | 18 979 | 49 | 98 |
@@ -868,39 +871,39 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
 | VOIR | 7 | 1 481 | 181 | 64 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 33 | 6 550 | 699 | 260 | 0 | 10 % | 13 467 | 67 | 137 |
+| USB | 33 | 6 613 | 706 | 261 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 34 | 1 095 | 77 | 55 | 0 | 7 % | 244 | 10 | 2 |
-| Outillage PC | 191 | 12 384 | 1 721 | 983 | 0 | 12 % | — | 54 | — |
-| **Total** | 390 | 79 986 | 7 078 | 3 429 | 2 579 | 8 % | 161 802 | 51 | 102 |
+| Outillage PC | 191 | 12 594 | 1 735 | 992 | 0 | 12 % | — | 54 | — |
+| **Total** | 390 | 80 407 | 7 119 | 3 442 | 2 582 | 8 % | 162 141 | 51 | 102 |
 
-Octets du système : code résident 12 885 (`$C000-$F255`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
+Octets du système : code résident 13 224 (`$C000-$F3A8`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 732 | 85 | 4,8 | 104 |
+| Système et commandes | 1 739 | 85 | 4,8 | 105 |
 | EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 1 017 | 70 | 4,3 | 41 |
+| GRAPHER + GRXASM | 1 017 | 70 | 4,3 | 42 |
 | LOGO | 316 | 64 | 1,6 | 21 |
 | CMDER | 235 | 26 | 2,6 | 18 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 4 |
 | VOIR | 78 | — | 4,1 | 11 |
 | USB | 80 | 13 | 0,8 | 27 |
-| ASM | 63 | 11 | 7,0 | 6 |
+| ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 28 |
-| Outillage PC | 351 | — | 1,5 | 152 |
-| Transverse (projet) | 2 857 | — | — | 116 |
-| Traduction anglaise (docs/en) | 3 012 | — | — | 54 |
-| **Total** | 10 051 | 323 | 6,4 | 259 |
+| Outillage PC | 351 | — | 1,5 | 154 |
+| Transverse (projet) | 2 897 | — | — | 119 |
+| Traduction anglaise (docs/en) | 3 019 | — | — | 55 |
+| **Total** | 10 105 | 323 | 6,3 | 263 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 259 commits du 2026-10-04 au 2026-11-04.
+Historique : 263 commits du 2026-10-04 au 2026-11-05.
 
-Réutilisation : 56 935 lignes de code écrites dans `progs/`, 67 125 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 56 997 lignes de code écrites dans `progs/`, 67 220 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -975,6 +978,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-02 | vitrine | 0.9 | 1 569 | 360 | 1 929 | 245 | `tools/vitrine.py` (CP/A montré en boucle, scènes au hasard) ; `MOSAIQUE.GRX`, `HORLOGE.GRX` en LORES ; spectateurs en lecture seule (`--spectateurs`), page sous un chemin (passerelle) |
 | 2026-11-03 | passerelle | 0.9 | 1 573 | 361 | 1 934 | 248 | `tools/passerelle.py` (WireGuard, Apache en lecture seule, services du démon et de la vitrine ; clés X25519 calculées) ; spectateurs comptés et plafonnés, appel de l'Oric refusé depuis la passerelle |
 | 2026-11-04 | GRX.LIB | 0.9 | 1 581 | 370 | 1 951 | 260 | bibliothèques des programmes traduits précompilées (`tools/mk_lib.py`, `GRX.LIB`) ; ASM : directive `#lib` (édition de liens) ; GRXASM : `GRX.LIB` lue si présente, sinon les `.INC` ; `tools/test_lib.sh` |
+| 2026-11-05 | rappel automatique | 0.9 | 1 592 | 370 | 1 962 | 264 | console à distance : rappel automatique par le pilote (silence de 10 s, fonction 117 op 4), touche de l'Oric signalée au démon (la vitrine s'arrête) ; vitrine commentée (`/commentaire`) |
 
 ## 11. Comparaisons
 
@@ -990,11 +994,11 @@ d'équivalent.
 <!-- comparaison:debut -->
 | Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Système, commandes, utilitaires de fichiers | 359 | 75 | 434 | 261 | 41 | 302 | 1,4 |
+| Système, commandes, utilitaires de fichiers | 366 | 75 | 441 | 261 | 41 | 302 | 1,5 |
 | Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
 | Assembleur (ASM / ASM et LOAD) | 9 | 15 | 24 | 13 | 13 | 26 | 0,9 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **517** | **121** | **638** | **396** | **78** | **474** | **1,3** |
+| **Total** | **524** | **121** | **645** | **396** | **78** | **474** | **1,4** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

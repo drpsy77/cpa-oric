@@ -40,6 +40,16 @@ read-only publishing on the Internet through a gateway (§ 9.6); tried in Oricut
   interrupts are disabled (disk access): the LOCI, the Pico and TCP keep what arrives
   (`loci-modem-wifi.md`, "Contrôle de flux"); nothing is lost.
 - **The Oric's keyboard stays active**: both sources fill the same buffer.
+- **The machine being called is interchangeable**: the daemon only knows the protocol
+  (§ 4) at the end of a TCP connection, and the Oric only sees a 6551 ACIA and a Hayes
+  modem. Any device that runs CP/A with this serial port takes the real Oric's place
+  without changing anything in the daemon, the showcase or the gateway: an Oric Atmos
+  with a LOCI and the Pico W, Oricutron (`serial = 'modem'`, ACIA at `$031C`), a
+  bare-metal emulator on a Raspberry Pi 3B+ (based on Phosphoric, emulated LOCI, the
+  Pi's WiFi: the showcase's machine, `docs/en/loci-modem-wifi.md`, "Without an Oric"),
+  tomorrow a better-equipped Oric or a board such as the Neo6502. The daemon stays on
+  another machine (the Pi 400, as a systemd service): emulating the machine and driving
+  it are kept apart.
 
 ## 2. Line and settings
 
@@ -132,7 +142,7 @@ frame); a rejected frame is asked for again.
 
 | Type | Data |
 |---|---|
-| `'S'` (60 bytes) | mode (0 text, 1 SPLIT, 2 full-screen HIRES; bit 7 = `SCR_PROG`, text screen owned by the program), cursor column and row, cursor on, then 28 Fletcher checksums (`s1 += byte; s2 += s1`, 8 bits each, `s1` sent first), one per row of `$BB80` |
+| `'S'` (60 bytes) | mode (0 text, 1 SPLIT, 2 full-screen HIRES; bit 7 = `SCR_PROG`, text screen owned by the program; bit 6 = a key was typed on the Oric's keyboard since the previous `S` frame), cursor column and row, cursor on, then 28 Fletcher checksums (`s1 += byte; s2 += s1`, 8 bits each, `s1` sent first), one per row of `$BB80` |
 | `'L'` (41 bytes) | row number, then its 40 bytes as they are (attributes and bit 7 included) |
 | `'C'` (16 bytes) | the Fletcher checksums (`s1`, `s2`) of the 8 font rows asked for |
 
@@ -204,6 +214,32 @@ an answer (modem unplugged: the LOCI no longer empties the register), the answer
 dropped and the light turns to `r`; the console stays on (a new request restarts the
 service). `REMOTE OFF` cuts off and hangs up.
 
+### Automatic redial
+
+The daemon asks for the state at least twice a second. If the driver receives nothing at
+all for 10 s (512 IRQs) while the console is on, the line is dead: daemon restarted, TCP
+connection dropped, WiFi lost, modem reset. The driver then hangs up and redials by
+itself the number dialled by `REMOTE host`, which REMOTE handed to it (function 117, op
+4; nothing after `REMOTE /N`). Everything happens under the IRQ, one step at a time
+(`sr_rap`), never blocking the Oric; the light is `r` meanwhile, and received bytes are
+thrown away. A key waiting in the line while the keyboard buffer is full also counts as
+a sign of life (long paste).
+
+| Step | Effect |
+|---|---|
+| 1 | one second of silence |
+| 2 | `+++` |
+| 3 | one second of silence |
+| 4 | CR, `ATH0`, CR (hangs up; if the link had already dropped, `+++` CR gives `ERROR`, harmless) |
+| 5 | one second, answers thrown away |
+| 6 | the number (`ATDT-host:port`, CR), one byte per IRQ |
+| 7 | `CONNECT` awaited 20 s (`CONN` recognised): the console resumes, `R` light; the daemon asks for the screen again (§ 9: a new call replaces the old one) |
+| 8 | 30 s, then step 1: it tries again as long as nobody answers |
+
+The Oric's keyboard stays with the user throughout the redial; `REMOTE OFF` stops it (op
+3: number cleared), then hangs up. No redial after a cold start either (variables
+cleared).
+
 ## 5. On the Oric: what is resident
 
 `src/serial.s`, included with the `SERIE` build option (on by default, `build.sh`):
@@ -219,14 +255,17 @@ service). `REMOTE OFF` cuts off and hangs up.
 | PUNCH, READER (functions 4 and 3) | 72 |
 | light (`draw_flags`, table `sr_flg`), BDOS dispatch, call in the IRQ (minus the former empty entries of PUNCH and READER) | 25 |
 | additions: run of rows (`L n+$80`), transmitter wait counted over the IRQ (`sr_bud`) | 38 |
-| **total** | **660** |
+| automatic redial (`sr_rap`, `sr_nxt`, steps, silence counted in `sr_irq`, op 4); key typed on the Oric reported (`kb_scan`, `S` frame) | 339 |
+| **total** | **999** |
 
 (Plus 65 bytes for the font, § 4.)
 
 Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`): low byte of the port, state
 (console on, link lost), received prefix, current frame, position, requested row, row
 being read, `s1`, `s2`, checksum, IRQs without sending, length, counter, start of the
-PUNCH delay. Cleared at cold start only. The row is read by an `LDA abs,Y` instruction
+PUNCH delay; `$FD27-$FD56`: key typed on the Oric (`sr_kb`, bit 6 of the `S` frame),
+redial (step, delay, silence, position) and number to redial (`sr_num`, 41 bytes).
+Cleared at cold start only. The row is read by an `LDA abs,Y` instruction
 whose address is set (`sr_lda`, overlay RAM): no zero-page pointer. Row addresses come
 from `line_lo` / `line_hi` (page `$FF00`); font rows are computed from `$B400`.
 
@@ -259,10 +298,12 @@ Additions only, nothing moves (`architecture.md` § 2):
 | 1 | sets the port: p1 = low byte (`$80` LOCI, `$1C` Oricutron; 0: none, console off) |
 | 2 | remote console on |
 | 3 | remote console off |
+| 4 | number to redial if the daemon stays silent for 10 s: p1, p2 = address of a string ended by 0, 40 characters at most (`ATDT-host:port`, CR); `$FF` if it is longer (no redial) |
 
-  Ops 1 to 3 also clear the prefix and the current frame. The ROM version, and a build
+  Ops 1 to 3 also clear the prefix, the current frame and the number, and stop a
+  redial. The ROM version, and a build
   without `SERIE`, return `$FF` (rule of the contract). `progs/cpa.inc`:
-  `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`.
+  `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`, `SE_NUM`.
 - Protocol constants in `progs/cpa.inc`: `RP_REQ` (`$FD`), `RP_KEY` (`$FE`),
   `RP_FRM` (`$FF`), `RP_PORT` (2324).
 
@@ -271,13 +312,16 @@ Additions only, nothing moves (`architecture.md` § 2):
 `progs/remote.s` (1,966 bytes, one block; 1,918 in English). Turns the console off if it
 is on, finds and sets the ACIA (`ac_find`, `ac_setup`), dials with `ac_dial` (§ 8: name
 taken from `HOSTS`, port 2324 by default), sets the port and raises the flag through
-function 117. `REMOTE /N` only sets the ACIA if it is not set already (like XFER).
-`REMOTE OFF`: function 117 op 3, then `ac_hang` (`AT`, otherwise `+++`; then `ATH0`).
+function 117, then hands it the number dialled (op 4: `ATDT`, mode sign except in
+Oricutron, `address:port`, CR) for the automatic redial (§ 4); more than 40 characters:
+`No redial: address too long`. `REMOTE /N` only sets the ACIA if it is not set already
+(like XFER), and gives no number. `REMOTE OFF`: function 117 op 3 (console off, redial
+stopped), then `ac_hang` (`AT`, otherwise `+++`; then `ATH0`).
 
     REMOTE host        dial and turn on (host: name from HOSTS,
                        IP address or DNS name; :port optional)
     REMOTE /N          turn on without dialling (link opened by TERM)
-    REMOTE OFF         turn off, then +++ and ATH
+    REMOTE OFF         turn off (and stop a redial), then +++ and ATH
     REMOTE             state
 
 Screens (37 columns at most, no accents; French on `cpa.dsk`):
@@ -445,6 +489,7 @@ the tkinter window and the command line all use it.
 | `POST /touches` | body: raw bytes, codes of the contract (FUNCT `$80`), sent as `$FE k` in order; 204 |
 | `POST /coller` | body: UTF-8 text; accents removed as by XFER `/T`, line ends as CR, tab as 29, then as `/touches`; 204 |
 | `POST /reset` | `$FD 'B'` (warm start); 204 |
+| `POST /commentaire` | body: one UTF-8 line (160 characters at most, blanks collapsed; empty: none), returned by `/ecran` (`commentaire`); nothing goes to the Oric, the showcase is not paused; 204 |
 | `GET /` | the web page (`tools/remote.html`, font inserted) |
 | `GET /version`, `GET /journal?n=N` | version and parameters of the daemon; the last N lines of the log |
 
@@ -455,10 +500,14 @@ after its last request; beyond `--max-spectateurs` (40), a newcomer gets 503 (th
 tries again 30 s later). `spectateurs` (in every answer to `/ecran`): the number online,
 shown in the page's status line. A call on the Oric's port (2324) coming from a
 spectator address is refused. A `POST` without the `X-Vitrine` header (page, window,
-command line) records the time of human typing: the showcase pauses (§ 9.5).
+command line), like a key typed on the Oric's keyboard (bit 6 of the `S` frame), records
+the time of human typing. The showcase sends `X-Vitrine: S` (its pause, `--humain`): its
+`/touches`, `/coller` and `/reset` are refused (409) while the last human typing is less
+than `S` seconds old; it pauses at once (§ 9.5).
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
+     "commentaire": "DIR: the files on the floppy",
      "lignes": {"19": "1007413e444952...", ...},
      "police": {"22": "0c1e3f3f1e0c0000...", ...}}
 
@@ -471,8 +520,11 @@ command line) records the time of human typing: the showcase pauses (§ 9.5).
   each row in hexadecimal, as in the `L` frame; `police` (font): likewise, the font rows
   received (key `k` from 0 to 47, row `28 + k` of the driver, bytes at `$B400 + 40 × k`)
   changed since `V`, absent as long as nothing has been received.
-- `humain`: seconds since the last typing that does not come from the showcase (`null`:
-  none); `stats`: link counters (diagnostics).
+- `commentaire` (comment): what is going on, set by the showcase (§ 9.5); the page shows
+  it next to the light (under the status line on a narrow screen), while the link is
+  active. Spectators get it too.
+- `humain`: seconds since the last typing that does not come from the showcase (page,
+  window, command line, the Oric's keyboard; `null`: none); `stats`: link counters (diagnostics).
 
 ### 9.2 tkinter window: `tools/remote_tk.py` (Raspberry Pi Zero, Mac, Pi 400)
 
@@ -584,6 +636,13 @@ showcase types on the Oric through the daemon, like someone using it.
   identically; its redefined characters are seen by the page, § 4 "Font"), `echo` (the
   time at the prompt), `divers` (VER, MEM, CLS). Typing at 5 to 12 keys per second, with
   hesitations; end-of-screen pauses (`-- Suite` / `-- More`) passed after a reading time.
+- **Comment** (`POST /commentaire`, § 9.1): each step says what is going on, in the
+  system's language (table `dit` of `TEXTES`), for instance for a program typed again:
+  "EDIT, the text editor: a new file, MOSAIC.GRX", "Pasting the GRAPHER program into the
+  editor", "CTRL-S saves MOSAIC.GRX to the floppy, CTRL-Q leaves the editor", then
+  "GRAPHER runs MOSAIC.GRX: colour tiles in text mode (LORES)"; a command at the prompt,
+  each DEBUG command and the steps of EDSPRITE and CMDER have their own; during a pause:
+  "A visitor has the keyboard". No accents, like the rest of the page.
 - **Two GRAPHER programs** in text mode (LORES), in `tools/vitrine/` (French) and
   `tools/vitrine/en/` (English): `MOSAIQUE.GRX n` / `MOSAIC.GRX n` (n pictures drawn at
   random: rain of colours, concentric frames that turn, stripes that scroll with
@@ -607,10 +666,11 @@ showcase types on the Oric through the daemon, like someone using it.
   if the Oric was left in SPLIT or HIRES); otherwise ESC, `^Q`, `^C`, RETURN, and as a
   last resort the warm start (`/reset`). Link not active: waiting. Daemon unreachable:
   new try every 10 s.
-- **Someone types** (page, window, command line; any `POST` without the `X-Vitrine`
-  header): the scene stops and the showcase waits `--humain` seconds (120) without
-  typing before resuming. Typing on the Oric's own keyboard is not seen: stop the
-  showcase (CTRL-C) to use it.
+- **Someone types** (the Oric's keyboard, page, window, command line; any `POST`
+  without the `X-Vitrine` header): the daemon refuses the showcase's keys at once (409,
+  § 9.1), the scene stops in the middle of its typing, and the showcase waits `--humain`
+  seconds (30) without typing before resuming; the page's comment says so. On the Oric,
+  the first key is enough: `REMOTE OFF` can then be typed calmly.
 - The showcase reads the time of the machine where it runs (Mac, simon, Pi 400): Paris
   time.
 

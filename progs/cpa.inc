@@ -126,6 +126,8 @@ SE_STATE    = 0         ; -> A : bit 0 port posé, bit 1 console active,
 SE_PORT     = 1         ; p1 = octet bas du port ($80 LOCI, $1C Oricutron ; 0 : aucun)
 SE_ON       = 2         ; console à distance active ($FF sans port)
 SE_OFF      = 3         ; console à distance coupée
+SE_NUM      = 4         ; p1, p2 : numéro à rappeler (« ATDT-hôte:port », CR, 0 ;
+                        ;   40 caractères au plus) si le démon se tait 10 s
 ; Protocole de la console à distance (docs/console-distance.md § 4)
 RP_REQ      = $FD       ; Mac -> Oric : $FD "S", $FD "L" n, $FD "B"
 RP_KEY      = $FE       ; Mac -> Oric : $FE k, touche k

@@ -841,12 +841,21 @@ Sur le Mac tourne le démon `tools/remote.py` ; l'Oric l'appelle par `REMOTE` :
 |---|---|
 | `REMOTE hote` | compose (nom de `HOSTS`, adresse IP ou nom DNS ; port 2324 par défaut, `:port` pour un autre) et active la console |
 | `REMOTE /N` | active sans composer (liaison ouverte à la main par TERM) |
-| `REMOTE OFF` | coupe la console, puis raccroche |
+| `REMOTE OFF` | coupe la console (et arrête un rappel en cours), puis raccroche |
 | `REMOTE` | état : `active`, `coupee` ou `liaison perdue`, et le port |
 
 Le voyant `R` (colonne 36 de la barre de menus) dit que la console est active, `r` que
 l'Oric n'a pas pu répondre pendant 5 s (modem débranché) : la console reste active et
 repart à la demande suivante du Mac.
+
+**Rappel automatique** : après `REMOTE hote`, si le Mac ne donne plus signe de vie pendant
+10 s (démon relancé, liaison ou WiFi tombés), l'Oric raccroche et rappelle de lui-même le
+même numéro, toutes les 30 s jusqu'à ce qu'il réponde (voyant `r` pendant ce temps). Rien
+ne bloque : le clavier de l'Oric reste à vous, et `REMOTE OFF` arrête le rappel. Pas de
+rappel après `REMOTE /N`, ni après un démarrage à froid.
+
+Une touche tapée sur le clavier de l'Oric arrête aussitôt la vitrine (`tools/vitrine.py`),
+qui reprend 30 s après la dernière touche.
 
 Sur le Mac :
 
