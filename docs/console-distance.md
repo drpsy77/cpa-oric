@@ -36,6 +36,15 @@ REMOTE ».
   interruptions sont coupées (accès disque) : le LOCI, le Pico et TCP gardent ce qui arrive
   (`loci-modem-wifi.md`, « Contrôle de flux ») ; rien n'est perdu.
 - **Le clavier de l'Oric reste actif** : les deux sources remplissent le même tampon.
+- **La machine appelée est interchangeable** : le démon ne connaît que le protocole (§ 4)
+  au bout d'une connexion TCP, et l'Oric ne voit qu'une ACIA 6551 et un modem Hayes. Tout
+  dispositif qui fait tourner CP/A avec ce port série prend la place du vrai Oric sans
+  rien changer au démon, à la vitrine ni à la passerelle : un Oric Atmos avec un LOCI et
+  le Pico W, Oricutron (`serial = 'modem'`, ACIA en `$031C`), un émulateur sans système
+  sur Raspberry Pi 3B+ (fondé sur Phosphoric, LOCI émulé, WiFi du Pi : la machine de la
+  vitrine, `docs/loci-modem-wifi.md`, « Sans Oric »), demain un Oric mieux équipé ou une
+  carte comme le Neo6502. Le démon reste sur une autre machine (le Pi 400, en service
+  systemd) : l'émulation de la machine et son pilotage sont séparés.
 
 ## 2. Ligne et réglages
 

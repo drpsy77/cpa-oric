@@ -209,6 +209,30 @@ vers la clé sans passer par `mkdisk.py`. En attendant, la clé ou la carte du L
 `cpa.dsk`, d'où `python3 tools/mkdisk.py get cpa.dsk LETTRE.TXT lettre.txt` extrait un
 fichier sur le Mac.
 
+## Sans Oric : une machine qui le simule
+
+La chaîne Oric, LOCI, Pico W n'est qu'une des façons de fournir le port série de CP/A. Ce
+qu'un remplaçant doit présenter à CP/A, rien de plus :
+
+- l'ACIA du LOCI en `$0380-$0383` (état : bit 3 reçu, bit 4 émetteur libre, bit 6 pas
+  de DSR ; rien d'émis sans DTR ; lire le registre de données consomme l'octet), avec un
+  tampon de réception qui ne se remplit que s'il a de la place (« Contrôle de flux ») ;
+- la signature du LOCI (`$03AF`, `$03B0-$03B7`, testée par `ac_lchk` d'`acia_inc.s`),
+  sinon CP/A cherche l'ACIA en `$031C` comme dans Oricutron ; avec la signature, les
+  commandes de la clé USB (`USBDIR`, `EXPORT`, `USBMOUNT`...) appellent aussi
+  l'interface fichiers du LOCI (`$03A0`) ;
+- un modem Hayes : `AT`, `+++`, `ATH`, `ATDT-hôte:port`, réponses `OK`, `CONNECT`,
+  `NO CARRIER`, `ERROR` (`ac_dial` d'`acia_inc.s`).
+
+Côté réseau, rien ne distingue alors un remplaçant du vrai Oric : mêmes `HOSTS`, même démon
+(`tools/remote.py`), même `tools/xfer_server.py`.
+
+En service : un émulateur sans système (bare metal) sur Raspberry Pi 3B+, fondé sur
+Phosphoric, qui émule le LOCI et passe par le WiFi du Pi (projet « Un Oric dans un RPI
+ZERO ») ; c'est la machine de la vitrine (`docs/console-distance.md` § 9.6). Le vrai Oric
+est arrêté : sans hub alimenté, le LOCI, la clé et le Pico tirent leur courant de son
+régulateur 5 V, qui chauffe trop (« Alimentation »).
+
 ## Sources
 
 - PicoWiFiModemUSB : https://github.com/sodiumlb/PicoWiFiModemUSB
