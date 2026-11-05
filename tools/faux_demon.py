@@ -132,7 +132,7 @@ class Ecran:
                    if self.vlig[n] > depuis or depuis == 0}
             return {"version": self.version, "liaison": "active", "hote": "faux demon",
                     "mode": self.mode, "curseur": self.curseur, "delai": 0.1,
-                    "lignes": lig}
+                    "commentaire": getattr(self, "commentaire", ""), "lignes": lig}
 
 
 def servir(ecran, port):
@@ -179,6 +179,12 @@ def servir(ecran, port):
                     ecran.touche(k)
             elif u == "/reset":
                 print("demarrage a chaud ($FD 'B')", flush=True)
+            elif u == "/commentaire":
+                with ecran.cond:
+                    ecran.commentaire = corps.decode("utf-8", "replace").strip()[:160]
+                    ecran.version += 1
+                    ecran.cond.notify_all()
+                print("commentaire :", ecran.commentaire, flush=True)
             else:
                 self._rep(404, b"inconnu\n", "text/plain")
                 return

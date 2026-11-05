@@ -452,6 +452,7 @@ web, la fenêtre tkinter et la ligne de commande s'en servent toutes.
 | `POST /touches` | corps : octets bruts, codes du contrat (FUNCT `$80`), envoyés `$FE k` dans l'ordre ; 204 |
 | `POST /coller` | corps : texte UTF-8 ; accents retirés comme XFER `/T`, fins de ligne en CR, tabulation 29, puis comme `/touches` ; 204 |
 | `POST /reset` | `$FD 'B'` (démarrage à chaud) ; 204 |
+| `POST /commentaire` | corps : une ligne UTF-8 (160 caractères au plus, blancs réduits ; vide : aucun), rendue par `/ecran` (`commentaire`) ; rien ne part vers l'Oric, la vitrine n'est pas mise en pause ; 204 |
 | `GET /` | la page web (`tools/remote.html`, police insérée) |
 | `GET /version`, `GET /journal?n=N` | version et paramètres du démon ; les N dernières lignes du journal |
 
@@ -467,6 +468,7 @@ frappe humaine : la vitrine se met en pause (§ 9.5).
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
+     "commentaire": "DIR : les fichiers de la disquette",
      "lignes": {"19": "1007413e444952...", ...},
      "police": {"22": "0c1e3f3f1e0c0000...", ...}}
 
@@ -479,6 +481,9 @@ frappe humaine : la vitrine se met en pause (§ 9.5).
   40 octets de chaque ligne en hexadécimal, tels que la trame `L` ; `police` : de même,
   les lignes de police reçues (clé `k` de 0 à 47, ligne `28 + k` du pilote, octets en
   `$B400 + 40 × k`) changées depuis `V`, absente tant que rien n'est reçu.
+- `commentaire` : ce qui se passe, posé par la vitrine (§ 9.5) ; la page l'affiche à
+  côté du voyant (sous la ligne d'état sur un écran étroit), tant que la liaison est active.
+  Les spectateurs le reçoivent aussi.
 - `humain` : secondes depuis la dernière frappe qui ne vient pas de la vitrine (`null` :
   aucune) ; `stats` : compteurs de la liaison (diagnostic).
 
@@ -593,6 +598,14 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   sont vus par la page, § 4 « Police »), `echo` (l'heure au prompt),
   `divers` (VER, MEM, CLS). Frappe de 5 à 12 touches par seconde, avec des hésitations ;
   pauses de fin d'écran (`-- Suite`) passées après un temps de lecture.
+- **Commentaire** (`POST /commentaire`, § 9.1) : chaque étape dit ce qui se passe, dans
+  la langue du système (table `dit` de `TEXTES`), par exemple pour un programme retapé :
+  « EDIT, l'editeur de texte : un nouveau fichier, MOSAIQUE.GRX », « On colle le
+  programme GRAPHER dans l'editeur », « CTRL-S enregistre MOSAIQUE.GRX sur la
+  disquette, CTRL-Q quitte l'editeur », puis « GRAPHER execute MOSAIQUE.GRX : des tuiles
+  de couleur en mode texte (LORES) » ; une commande au prompt, chaque commande de DEBUG
+  et les étapes d'EDSPRITE et de CMDER ont le leur ; pendant une pause : « Un visiteur a
+  pris le clavier ». Textes sans accents, comme le reste de la page.
 - **Deux programmes GRAPHER** en mode texte (LORES), dans `tools/vitrine/` :
   `MOSAIQUE.GRX n` (n tableaux tirés au hasard : pluie de couleurs, cadres concentriques
   qui tournent, rayures qui défilent par `ROTH`, damier, bandes par `ROTV` ; chaque case

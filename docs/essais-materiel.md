@@ -422,6 +422,13 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 ## À vérifier ailleurs
 
+- **Vitrine commentée** (`docs/console-distance.md` § 9.5 ; démon `2026-11-05.1`) : sur le
+  Pi 400, redémarrer les services du démon et de la vitrine, puis sur
+  `https://cycleamen.fr/cpa/` : le commentaire suit les étapes (programme retapé dans
+  EDIT, enregistré, lancé ; commandes au prompt ; DEBUG, EDSPRITE, CMDER), en anglais
+  avec `cpa-en.dsk` ; sur un téléphone, il passe sous la ligne d'état ; une frappe sur
+  la page locale affiche « Un visiteur a pris le clavier ».
+
 - **Raspberry Pi Zero, console à distance** (`docs/console-distance.md` § 9.2) : avant le
   démon, avec `tools/faux_demon.py` (mire) sur le Pi Zero ou le Mac, puis
   `tools/remote_tk.py --plein-ecran --sans-boutons --demon http://...` sur le Pi Zero :
