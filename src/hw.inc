@@ -181,7 +181,17 @@ sr_rxn      = $FD23     ; pilote série : octets reçus par IRQ au plus
 sr_rxw      = $FD24     ;   attente de chacun après le premier
 sr_txn      = $FD25     ;   octets émis par IRQ au plus
 sr_bdg      = $FD26     ;   attente de l'émetteur par IRQ (posés avec le port)
-                        ; $FD27-$FD57 : libres
+sr_kb       = $FD27     ; pilote série : $40 si une touche a été tapée sur l'Oric depuis la dernière trame S
+sr_rp       = $FD28     ;   rappel : étape (0 : aucun ; 1-8, serial.s)
+sr_tml      = $FD29     ;   rappel : délai de l'étape en IRQ (mot)
+sr_tmh      = $FD2A
+sr_si       = $FD2B     ;   silence : IRQ sans demande du démon (mot)
+sr_sh       = $FD2C
+sr_mi       = $FD2D     ;   rappel : position dans la chaîne envoyée, ou dans « CONN »
+sr_num      = $FD2E     ;   numéro à rappeler : « ATDT-adresse:port », CR, 0 (41 octets,
+                        ;   jusqu'à $FD56 ; 0 : pas de rappel) ; posé par la fonction 117, op 4
+SR_NUML     = 41
+                        ; $FD57 : libre
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C

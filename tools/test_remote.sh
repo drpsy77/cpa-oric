@@ -272,6 +272,62 @@ def e6(d):
     return d
 essai("tue", CLES + "|" * 6 + "dir\n|remote oric\n", 2800, e6)
 
+# 8. rappel : démon tué puis relancé ; l'Oric rappelle seul (10 s de silence)
+def e8(d):
+    actif()
+    touches("dir" + N)
+    attendre("K free", 20)
+    d.kill()
+    d.wait()
+    time.sleep(3)
+    d = demon()
+    t = time.time()
+    check(attendre(lambda e: e["liaison"] == "active", 60),
+          "rappel : l'Oric rappelle seul (%d s)" % (time.time() - t))
+    time.sleep(2)
+    touches("ver" + N)
+    check(attendre("CP/A 0.9", 20), "rappel : console reprise (VER)")
+    time.sleep(3)
+    return d
+r = essai("rappel", CLES, 3000, e8)
+if r:
+    check(r[0][0xBB80 + 36] == ord("R"), "rappel : voyant R")
+
+# 9. touche tapée sur le clavier de l'Oric : vue par le démon (humain), qui
+#    refuse alors les touches de la vitrine (409)
+def e9(d):
+    actif()
+    check(attendre(lambda e: e.get("humain") is not None and e["humain"] < 3, 40),
+          "clavier : touche de l'Oric vue par le demon")
+    req = urllib.request.Request(URL + "/touches", data=b"x", method="POST",
+                                 headers={"X-Vitrine": "30"})
+    try:
+        urllib.request.urlopen(req, timeout=10)
+        code = 204
+    except urllib.error.HTTPError as err:
+        code = err.code
+    check(code == 409, "clavier : touche de la vitrine refusee (%d)" % code)
+    time.sleep(3)
+essai("clavier", CLES + "|" * 5 + "ver\n", 1700, e9)
+
+# 10. REMOTE OFF tapé sur l'Oric pendant un rappel (démon tué, rappel parti
+#     10 s plus tard, REMOTE OFF vers 46 s) : il s'arrête
+def e10(d):
+    actif()
+    d.kill()
+    d.wait()
+    time.sleep(55)
+    d = demon()                      # l'Oric ne doit plus appeler
+    time.sleep(15)
+    check(etat()["liaison"] == "attente", "rappel_off : plus d'appel apres REMOTE OFF")
+    return d
+r = essai("rappel_off", CLES + "|" * 12 + "remote off\n", 4100, e10, comparer=False)
+if r:
+    t = subprocess.run(["python3", R + "/tools/screen.py", T + "/rappel_off.mem"],
+                       capture_output=True, text=True).stdout
+    check("Console a distance coupee" in t and r[0][0xBB80 + 36] == ord(" "),
+          "rappel_off : console coupee, voyant eteint")
+
 # 7. refus de TERM et XFER pendant la console ; REMOTE ; REMOTE OFF
 def e7(d):
     actif()

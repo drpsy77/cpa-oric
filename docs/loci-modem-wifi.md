@@ -222,7 +222,8 @@ qu'un remplaçant doit présenter à CP/A, rien de plus :
   commandes de la clé USB (`USBDIR`, `EXPORT`, `USBMOUNT`...) appellent aussi
   l'interface fichiers du LOCI (`$03A0`) ;
 - un modem Hayes : `AT`, `+++`, `ATH`, `ATDT-hôte:port`, réponses `OK`, `CONNECT`,
-  `NO CARRIER`, `ERROR` (`ac_dial` d'`acia_inc.s`).
+  `NO CARRIER`, `ERROR` (`ac_dial` d'`acia_inc.s`, et le rappel automatique du pilote,
+  `docs/console-distance.md` § 4).
 
 Côté réseau, rien ne distingue alors un remplaçant du vrai Oric : mêmes `HOSTS`, même démon
 (`tools/remote.py`), même `tools/xfer_server.py`.

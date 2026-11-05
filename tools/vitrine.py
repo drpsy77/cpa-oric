@@ -18,8 +18,9 @@ en direct, pas une vidéo.
 
     --demon URL    le démon (défaut http://localhost:8040)
     --humain S     pause tant que quelqu'un d'autre a tapé depuis moins de
-                   S secondes (défaut 120 ; page web, fenêtre, ligne de
-                   commande : tout ce qui n'est pas la vitrine)
+                   S secondes (défaut 30 ; clavier de l'Oric, page web,
+                   fenêtre, ligne de commande : tout ce qui n'est pas la
+                   vitrine ; ses touches sont alors refusées par le démon)
     --scenes ...   seulement ces scènes (noms : --liste)
     --langue L     langue du système de l'Oric (défaut : reconnue par la
                    barre des menus, Systeme ou System)
@@ -40,6 +41,7 @@ import random
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -180,9 +182,14 @@ class Vitrine:
     def _http(self, chemin, corps=None):
         req = urllib.request.Request(self.url + chemin, data=corps,
                                      method="POST" if corps is not None else "GET",
-                                     headers={"X-Vitrine": "1"})
-        with urllib.request.urlopen(req, timeout=15) as r:
-            return r.read()
+                                     headers={"X-Vitrine": "%g" % self.humain})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                return r.read()
+        except urllib.error.HTTPError as err:
+            if err.code == 409:             # quelqu'un tape : touche refusée
+                raise Humain()
+            raise
 
     def etat(self):
         self.e = json.loads(self._http("/ecran?depuis=0"))
@@ -682,7 +689,7 @@ class Vitrine:
 
 
 def main(args):
-    url, humain, noms, une = "http://localhost:8040", 120.0, list(Vitrine.SCENES), False
+    url, humain, noms, une = "http://localhost:8040", 30.0, list(Vitrine.SCENES), False
     langue = None
     i = 0
     while i < len(args):

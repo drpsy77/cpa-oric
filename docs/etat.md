@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F254` en français (`$F228` en anglais), **marge 883
-octets** (927 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F3A7` en français (`$F37B` en anglais), **marge 544
+octets** (588 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -22,7 +22,9 @@ l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 - port série et console à distance (`src/serial.s`, option `SERIE`) : service sous l'IRQ
   de 50 Hz, le Mac tape et lit l'écran par le modem du LOCI (`REMOTE`, démon
   `tools/remote.py`), caractères redéfinis compris (police du mode texte : sprites,
-  tuiles, EDSPRITE) ; PUNCH, READER, fonction 117 (`docs/console-distance.md`) ;
+  tuiles, EDSPRITE) ; rappel automatique si le démon se tait 10 s (relancé, liaison
+  tombée) ; touche tapée sur l'Oric signalée au démon (la vitrine s'arrête) ; PUNCH,
+  READER, fonction 117 (`docs/console-distance.md`) ;
 - clavier : CTRL-H à CTRL-K distincts des flèches (28-31), CTRL-ESPACE (0), SHIFT et CTRL
   avec les flèches (`$F0-$F7`) ; mêmes touches dans EDIT, HEX, CMDER et la ligne de commande
   (`docs/manuel.md`, « Les mêmes touches partout ») ;
@@ -253,7 +255,14 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      (`MOSAIC.GRX`, `CLOCK.GRX` en anglais).
      **Vitrine commentée** : chaque étape dit ce qui se passe à côté du voyant de la
      page (`POST /commentaire`, démon `2026-11-05.1`, `console-distance.md` § 9.1 et
-     9.5) ; essayée avec le faux démon.
+     9.5) ; essayée avec le faux démon. **Rappel automatique** (`console-distance.md`
+     § 4, démon `2026-11-05.2`) : après `REMOTE hote`, 10 s sans rien recevoir (démon
+     relancé, liaison ou WiFi tombés), le pilote raccroche et recompose sous l'IRQ, toutes
+     les 30 s jusqu'à la réponse ; `REMOTE OFF` l'arrête ; fonction 117 op 4 (ajout au
+     contrat). Une touche tapée sur le clavier de l'Oric est signalée au démon (bit 6 de
+     la trame `S`), qui refuse aussitôt les touches de la vitrine (409) : elle s'arrête,
+     et reprend 30 s après la dernière touche (120 avant). Essayés dans Oricutron
+     (`tools/test_remote.sh` : `rappel`, `clavier`, `rappel_off`).
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle
@@ -536,8 +545,9 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 883 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
-`$FF00` : 10 octets ; variables du BDOS : `$FD27-$FD57` libres, 49 octets). Fait : les tracés
+**Système** (marge 544 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+`$FF00` : 10 octets ; variables du BDOS : `$FD57` libre, 1 octet ; rappel automatique de
+la console à distance : 339 octets résidents et `$FD27-$FD56`). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
 `g_xbit`). Fait : police rangée sur 5
 octets par caractère, dépliée par `font_init` (257 octets rendus, `docs/systeme.md` § 2).

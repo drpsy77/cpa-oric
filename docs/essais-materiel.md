@@ -422,6 +422,20 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 ## À vérifier ailleurs
 
+- **Rappel automatique de la console à distance** (`docs/console-distance.md` § 4 ;
+  démon `2026-11-05.2`), sur l'émulateur du Raspberry Pi 3B+ avec le démon du Pi 400 :
+  nouveau `cpa.dsk`, `REMOTE hote` ; puis `sudo systemctl restart
+  cpa-remote` : voyant `r` une dizaine de secondes plus tard, puis l'Oric rappelle seul
+  (voyant `R`, `appel de` dans le journal), sans rien taper ; démon arrêté
+  (`systemctl stop`) : nouvel essai toutes les 30 s environ, clavier de l'Oric toujours
+  utilisable, `REMOTE OFF` arrête tout. Un long texte collé dans EDIT par la page ne
+  déclenche pas de rappel. Même chose ensuite sur le vrai Oric + LOCI + Pico W.
+- **Vitrine arrêtée par le clavier de l'Oric** : vitrine en marche, une touche tapée sur
+  le clavier de la machine (émulateur ou vrai Oric) : la vitrine s'arrête dans la
+  seconde (« quelqu'un tape : pause » dans son journal, commentaire « Un visiteur a pris
+  le clavier »), `REMOTE OFF` se tape sans mélange, et la vitrine reprend 30 s après la
+  dernière touche.
+
 - **Vitrine commentée** (`docs/console-distance.md` § 9.5 ; démon `2026-11-05.1`) : sur le
   Pi 400, redémarrer les services du démon et de la vitrine, puis sur
   `https://cycleamen.fr/cpa/` : le commentaire suit les étapes (programme retapé dans

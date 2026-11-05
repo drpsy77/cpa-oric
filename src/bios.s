@@ -590,8 +590,13 @@ ctl2    sta ZP_IRQ
         sta caps
         jmp draw_flags
 
-push    lda ZP_IRQ
-&kb_push                        ; touche A dans le tampon (aussi : serial.s)
+push
+#ifdef SERIE
+        ldx #$40                ; touche tapée sur l'Oric : dite au démon
+        stx sr_kb               ; (trame S), qui arrête la vitrine
+#endif
+        lda ZP_IRQ
+&kb_push                       ; touche A dans le tampon (aussi : serial.s)
         ldx kb_head
         sta kb_buf,x
         inx

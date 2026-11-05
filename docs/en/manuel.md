@@ -817,12 +817,21 @@ The daemon `tools/remote.py` runs on the Mac; the Oric calls it with `REMOTE`:
 |---|---|
 | `REMOTE host` | dials (name from `HOSTS`, IP address or DNS name; port 2324 by default, `:port` for another) and turns the console on |
 | `REMOTE /N` | turns it on without dialling (link opened by hand with TERM) |
-| `REMOTE OFF` | turns the console off, then hangs up |
+| `REMOTE OFF` | turns the console off (and stops a redial in progress), then hangs up |
 | `REMOTE` | state: `on`, `off` or `link lost`, and the port |
 
 The `R` light (column 36 of the menu bar) says the console is on, `r` that the Oric could
 not answer for 5 s (modem unplugged): the console stays on and starts again at the Mac's
 next request.
+
+**Automatic redial**: after `REMOTE host`, if the Mac gives no sign of life for 10 s
+(daemon restarted, link or WiFi down), the Oric hangs up and redials the same number by
+itself, every 30 s until it answers (`r` light meanwhile). Nothing blocks: the Oric's
+keyboard stays yours, and `REMOTE OFF` stops the redial. No redial after `REMOTE /N`, nor
+after a cold start.
+
+A key typed on the Oric's keyboard stops the showcase (`tools/vitrine.py`) at once; it
+resumes 30 s after the last key.
 
 On the Mac:
 

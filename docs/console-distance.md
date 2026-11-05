@@ -136,7 +136,7 @@ une trame refusée est redemandée.
 
 | Type | Données |
 |---|---|
-| `'S'` (60 octets) | mode (0 texte, 1 SPLIT, 2 HIRES plein écran ; bit 7 = `SCR_PROG`, écran texte au programme), colonne et ligne du curseur, curseur actif, puis 28 totaux de Fletcher (`s1 += octet ; s2 += s1`, 8 bits chacun, `s1` envoyé d'abord), un par ligne de `$BB80` |
+| `'S'` (60 octets) | mode (0 texte, 1 SPLIT, 2 HIRES plein écran ; bit 7 = `SCR_PROG`, écran texte au programme ; bit 6 = une touche a été tapée sur le clavier de l'Oric depuis la trame `S` précédente), colonne et ligne du curseur, curseur actif, puis 28 totaux de Fletcher (`s1 += octet ; s2 += s1`, 8 bits chacun, `s1` envoyé d'abord), un par ligne de `$BB80` |
 | `'L'` (41 octets) | numéro de ligne, puis ses 40 octets tels quels (attributs et bit 7 compris) |
 | `'C'` (16 octets) | les totaux de Fletcher (`s1`, `s2`) des 8 lignes de police demandées |
 
@@ -208,6 +208,32 @@ réponse (modem débranché : le LOCI ne vide plus le registre), la réponse
 est abandonnée et le voyant passe à `r` ; la console reste active (une nouvelle demande
 relance le service). `REMOTE OFF` coupe et raccroche.
 
+### Rappel automatique
+
+Le démon demande l'état deux fois par seconde au moins. Si le pilote ne reçoit plus
+aucune demande pendant 10 s (512 IRQ) alors que la console est active, la ligne est
+morte : démon relancé, connexion TCP tombée, WiFi perdu, modem réinitialisé. Le pilote
+raccroche alors et rappelle de lui-même le numéro composé par `REMOTE hôte`, que REMOTE
+lui a confié (fonction 117, op 4 ; rien après `REMOTE /N`). Tout se fait sous l'IRQ, une
+étape à la fois (`sr_rap`), sans jamais bloquer l'Oric ; le voyant est `r` pendant ce
+temps, et les octets reçus sont jetés. Une touche qui attend sur la ligne pendant que le
+tampon du clavier est plein compte aussi comme signe de vie (long collage).
+
+| Étape | Effet |
+|---|---|
+| 1 | une seconde de silence |
+| 2 | `+++` |
+| 3 | une seconde de silence |
+| 4 | CR, `ATH0`, CR (raccroche ; si la liaison était déjà tombée, `+++` CR donne `ERROR`, sans effet) |
+| 5 | une seconde, réponses jetées |
+| 6 | le numéro (`ATDT-hôte:port`, CR), un octet par IRQ |
+| 7 | `CONNECT` attendu 20 s (`CONN` reconnu) : la console reprend, voyant `R` ; le démon redemande l'écran (§ 9 : un nouvel appel remplace l'ancien) |
+| 8 | 30 s, puis l'étape 1 : on réessaie tant que personne ne répond |
+
+Le clavier de l'Oric reste à l'utilisateur pendant tout le rappel ; `REMOTE OFF`
+l'arrête (op 3 : numéro effacé), puis raccroche. Pas de rappel non plus au démarrage à
+froid (variables effacées).
+
 ## 5. Côté Oric : ce qui est résident
 
 `src/serial.s`, inclus avec l'option de construction `SERIE` (présente par défaut,
@@ -224,13 +250,16 @@ relance le service). `REMOTE OFF` coupe et raccroche.
 | PUNCH, READER (fonctions 4 et 3) | 72 |
 | voyant (`draw_flags`, table `sr_flg`), aiguillage du BDOS, appel dans l'IRQ (moins les anciennes entrées vides de PUNCH et READER) | 25 |
 | ajouts : suite de lignes (`L n+$80`), attente de l'émetteur comptée sur l'IRQ (`sr_bud`) | 38 |
-| **total** | **660** |
+| rappel automatique (`sr_rap`, `sr_nxt`, étapes, silence compté dans `sr_irq`, op 4) ; touche de l'Oric signalée (`kb_scan`, trame `S`) | 339 |
+| **total** | **999** |
 
 (Plus 65 octets pour la police, § 4.)
 
 Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`) : octet bas du port, état (console
 active, liaison perdue), préfixe reçu, trame en cours, position, ligne demandée, ligne
-lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH.
+lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH ;
+`$FD27-$FD56` : touche tapée sur l'Oric (`sr_kb`, bit 6 de la trame `S`), rappel (étape,
+délai, silence, position) et numéro à rappeler (`sr_num`, 41 octets).
 Effacées au démarrage à froid seulement. La ligne est lue par une instruction `LDA
 abs,Y` dont l'adresse est posée (`sr_lda`, RAM overlay) : pas de pointeur en page zéro.
 Les adresses de lignes viennent de `line_lo` / `line_hi` (page `$FF00`) ; celles des lignes
@@ -265,10 +294,12 @@ Ajouts seulement, rien ne bouge (`architecture.md` § 2) :
 | 1 | pose le port : p1 = octet bas (`$80` LOCI, `$1C` Oricutron ; 0 : aucun, console coupée) |
 | 2 | console à distance active |
 | 3 | console à distance coupée |
+| 4 | numéro à rappeler si le démon se tait 10 s : p1, p2 = adresse d'une chaîne terminée par 0, 40 caractères au plus (`ATDT-hôte:port`, CR) ; `$FF` si elle est plus longue (pas de rappel) |
 
-  Op 1 à 3 effacent aussi le préfixe et la trame en cours. La version ROM, et une
+  Op 1 à 3 effacent aussi le préfixe, la trame en cours et le numéro, et arrêtent un
+  rappel. La version ROM, et une
   construction sans `SERIE`, rendent `$FF` (règle du contrat). `progs/cpa.inc` :
-  `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`.
+  `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`, `SE_NUM`.
 - Constantes du protocole dans `progs/cpa.inc` : `RP_REQ` (`$FD`), `RP_KEY` (`$FE`),
   `RP_FRM` (`$FF`), `RP_PORT` (2324).
 
@@ -277,13 +308,16 @@ Ajouts seulement, rien ne bouge (`architecture.md` § 2) :
 `progs/remote.s` (1 966 octets, un bloc ; 1 918 en anglais). Coupe la console si elle est
 active, trouve et règle l'ACIA (`ac_find`, `ac_setup`), compose par `ac_dial` (§ 8 : nom
 pris dans `HOSTS`, port 2324 par défaut), pose le port et lève le drapeau par la fonction
-117. `REMOTE /N` ne règle l'ACIA que si elle ne l'est pas (comme XFER). `REMOTE OFF` :
-fonction 117 op 3, puis `ac_hang` (`AT`, sinon `+++` ; puis `ATH0`).
+117, puis lui confie le numéro composé (op 4 : `ATDT`, signe de mode sauf dans
+Oricutron, `adresse:port`, CR) pour le rappel automatique (§ 4) ; plus de 40 caractères :
+`Pas de rappel : adresse trop longue`. `REMOTE /N` ne règle l'ACIA que si elle ne l'est
+pas (comme XFER), et ne donne pas de numéro. `REMOTE OFF` : fonction 117 op 3 (console
+coupée, rappel arrêté), puis `ac_hang` (`AT`, sinon `+++` ; puis `ATH0`).
 
     REMOTE hote        compose et active (hote : nom de HOSTS,
                        adresse IP ou nom DNS ; :port facultatif)
     REMOTE /N          active sans composer (liaison ouverte par TERM)
-    REMOTE OFF         coupe, puis +++ et ATH
+    REMOTE OFF         coupe (et arrete un rappel), puis +++ et ATH
     REMOTE             etat
 
 Écrans (37 colonnes au plus, sans accents ; anglais sur `cpa-en.dsk`) :
@@ -463,8 +497,11 @@ pendant 20 s après sa dernière demande ; au-delà de `--max-spectateurs` (40),
 nouveau venu reçoit 503 (la page réessaie 30 s plus tard). `spectateurs` (dans toutes
 les réponses de `/ecran`) : le nombre en ligne, affiché sur la ligne d'état de la page.
 Un appel du port de l'Oric (2324) venu d'une adresse de spectateur est refusé. Un
-`POST` sans l'en-tête `X-Vitrine` (page, fenêtre, ligne de commande) note l'heure d'une
-frappe humaine : la vitrine se met en pause (§ 9.5).
+`POST` sans l'en-tête `X-Vitrine` (page, fenêtre, ligne de commande), comme une touche
+tapée sur le clavier de l'Oric (bit 6 de la trame `S`), note l'heure d'une frappe
+humaine. La vitrine envoie `X-Vitrine: S` (sa durée de pause, `--humain`) : ses
+`/touches`, `/coller` et `/reset` sont refusés (409) tant que la dernière frappe humaine
+a moins de `S` secondes ; elle se met aussitôt en pause (§ 9.5).
 
     {"version": 812, "liaison": "active", "hote": "192.168.1.30",
      "mode": 0, "curseur": [4, 19, true], "delai": 0.4,
@@ -484,7 +521,8 @@ frappe humaine : la vitrine se met en pause (§ 9.5).
 - `commentaire` : ce qui se passe, posé par la vitrine (§ 9.5) ; la page l'affiche à
   côté du voyant (sous la ligne d'état sur un écran étroit), tant que la liaison est active.
   Les spectateurs le reçoivent aussi.
-- `humain` : secondes depuis la dernière frappe qui ne vient pas de la vitrine (`null` :
+- `humain` : secondes depuis la dernière frappe qui ne vient pas de la vitrine (page,
+  fenêtre, ligne de commande, clavier de l'Oric ; `null` :
   aucune) ; `stats` : compteurs de la liaison (diagnostic).
 
 ### 9.2 Fenêtre tkinter : `tools/remote_tk.py` (Raspberry Pi Zero, Mac, Pi 400)
@@ -631,10 +669,11 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   l'Oric est resté en SPLIT ou en HIRES) ; sinon ESC, `^Q`, `^C`,
   RETURN, et en dernier recours le démarrage à chaud (`/reset`). Liaison pas active :
   attente. Démon injoignable : nouvel essai toutes les 10 s.
-- **Quelqu'un tape** (page, fenêtre, ligne de commande ; tout `POST` sans l'en-tête
-  `X-Vitrine`) : la scène s'arrête et la vitrine attend `--humain` secondes (120) sans
-  frappe avant de reprendre. Une frappe sur le clavier de l'Oric lui-même ne se voit pas :
-  arrêter la vitrine (CTRL-C) pour s'en servir.
+- **Quelqu'un tape** (clavier de l'Oric, page, fenêtre, ligne de commande ; tout `POST`
+  sans l'en-tête `X-Vitrine`) : le démon refuse aussitôt les touches de la vitrine (409,
+  § 9.1), la scène s'arrête au milieu de sa frappe, et la vitrine attend `--humain`
+  secondes (30) sans frappe avant de reprendre ; le commentaire de la page le dit. Sur
+  l'Oric, la première touche suffit : `REMOTE OFF` se tape ensuite tranquillement.
 - La vitrine lit l'heure de la machine où elle tourne (Mac, simon, Pi 400) : celle de Paris.
 
 ### 9.6 Publier sur Internet : passerelle, lecture seule
