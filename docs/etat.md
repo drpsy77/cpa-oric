@@ -251,6 +251,9 @@ et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
      et ainsi de suite, moins d'une seconde entre deux ; CMDER efface parfois un des deux
      `.GRX`, retapé ensuite dans EDIT ; française ou anglaise selon le système
      (`MOSAIC.GRX`, `CLOCK.GRX` en anglais).
+     **Vitrine commentée** : chaque étape dit ce qui se passe à côté du voyant de la
+     page (`POST /commentaire`, démon `2026-11-05.1`, `console-distance.md` § 9.1 et
+     9.5) ; essayée avec le faux démon.
      **Sur le vrai Oric** (01/11/2026) : démon sur simon, un Raspberry Pi Zero autonome
      (`10.0.0.39`, port 2324 pour l'Oric, 8040 en HTTP ; lancé au démarrage, fenêtre
      plein écran) ; Pico en `10.0.0.2` avec le firmware `tools/pico-modem/` (Nagle

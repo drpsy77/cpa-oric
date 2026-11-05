@@ -69,6 +69,99 @@ TEXTES = {
 }
 
 
+# Commentaires de la page (POST /commentaire du démon) : ce qui se passe, à
+# côté du voyant ; dans la langue du système. Clés : étapes des scènes, et
+# commandes tapées au prompt (« cmd »).
+TEXTES["fr"]["dit"] = {
+    "nouveau": "EDIT, l'editeur de texte : un nouveau fichier, %s",
+    "coller": "On colle le programme GRAPHER dans l'editeur (envoye comme des touches)",
+    "enregistrer": "CTRL-S enregistre %s sur la disquette, CTRL-Q quitte l'editeur",
+    "horloge": "GRAPHER execute %s : l'Oric n'a pas d'horloge, on lui tape l'heure",
+    "mosaique": "GRAPHER execute %s : des tuiles de couleur en mode texte (LORES)",
+    "texte": "TEXT : retour au mode texte",
+    "completion": "TAB complete le nom de la commande, puis celui du fichier",
+    "menus": "FUNCT ouvre la barre des menus deroulants, les fleches s'y promenent",
+    "debug": "DEBUG, le debogueur, sur le programme MEM charge en $0500",
+    "edit": "EDIT parcourt %s : defilement, page suivante, recherche (CTRL-F)",
+    "edsprite": "EDSPRITE ouvre %s : l'editeur de sprites (caracteres redefinis)",
+    "edsprite_codes": "CTRL-H : les codes hexadecimaux du sprite",
+    "edsprite_copie": "On copie le sprite (CTRL-C) et on colle la copie (CTRL-V)",
+    "edsprite_miroir": "Menu Dessin : miroir horizontal de la copie",
+    "edsprite_anime": "Menu Vue : le decor, puis l'animation des sprites",
+    "edsprite_fin": "On quitte sans enregistrer",
+    "cmder": "CMDER, le gestionnaire de fichiers a deux colonnes : tri, deplacements",
+    "cmder_info": "? : taille et attributs du fichier, sur la ligne d'etat",
+    "effacer": "Filtre sur %s, puis DEL l'efface (il sera retape dans EDIT)",
+    "humain": "Un visiteur a pris le clavier : la demonstration attend",
+    "debug_cmd": {"l c000": "L C000 : le systeme CP/A desassemble, en RAM overlay",
+                  "d bb80": "D BB80 : la memoire de l'ecran texte",
+                  "l 0500": "L 0500 : le programme MEM desassemble, la ou il tourne",
+                  "l e000": "L E000 : la suite du systeme CP/A",
+                  "? bb80": "? BB80 : une valeur en hexa et en decimal, et le symbole voisin",
+                  "r": "R : les registres du 6502, l'etat bit par bit",
+                  "d 0200": "D 0200 : la page 2, variables du systeme"},
+    "cmd": {"dir": "DIR : les fichiers de la disquette",
+            "dir *.com": "DIR *.COM : les programmes",
+            "dir *.grx": "DIR *.GRX : les programmes GRAPHER",
+            "dirs": "DIRS : tous les fichiers, systeme compris",
+            "stat": "STAT : la place libre sur la disquette",
+            "stat *.grx": "STAT : taille et attributs des programmes GRAPHER",
+            "type": "TYPE affiche un fichier texte",
+            "help": "HELP : l'aide integree",
+            "usbdir": "USBDIR : la cle USB du LOCI",
+            "usbdir /s": "USBDIR /S : les supports du LOCI",
+            "usbmount": "USBMOUNT : les images de disquette et la cassette montees",
+            "echo": "ECHO affiche une ligne : l'heure a Paris",
+            "ver": "VER : la version du systeme",
+            "mem": "MEM : la carte de la memoire",
+            "cls": "CLS efface l'ecran"},
+}
+TEXTES["en"]["dit"] = {
+    "nouveau": "EDIT, the text editor: a new file, %s",
+    "coller": "Pasting the GRAPHER program into the editor (sent as keystrokes)",
+    "enregistrer": "CTRL-S saves %s to the floppy, CTRL-Q leaves the editor",
+    "horloge": "GRAPHER runs %s: the Oric has no clock, so we type the time",
+    "mosaique": "GRAPHER runs %s: colour tiles in text mode (LORES)",
+    "texte": "TEXT: back to text mode",
+    "completion": "TAB completes the command name, then the file name",
+    "menus": "FUNCT opens the drop-down menu bar, arrows move around",
+    "debug": "DEBUG, the debugger, on the MEM program loaded at $0500",
+    "edit": "EDIT browses %s: scrolling, page down, search (CTRL-F)",
+    "edsprite": "EDSPRITE opens %s: the sprite editor (redefined characters)",
+    "edsprite_codes": "CTRL-H: the sprite's hex codes",
+    "edsprite_copie": "Copying the sprite (CTRL-C) and pasting the copy (CTRL-V)",
+    "edsprite_miroir": "Draw menu: horizontal mirror of the copy",
+    "edsprite_anime": "View menu: the background, then the sprite animation",
+    "edsprite_fin": "Quitting without saving",
+    "cmder": "CMDER, the two-pane file manager: sorting, moving around",
+    "cmder_info": "?: file size and attributes, on the status line",
+    "effacer": "Filter on %s, then DEL erases it (it will be typed again in EDIT)",
+    "humain": "A visitor has the keyboard: the demo is waiting",
+    "debug_cmd": {"l c000": "L C000: the CP/A system disassembled, in overlay RAM",
+                  "d bb80": "D BB80: the text screen memory",
+                  "l 0500": "L 0500: the MEM program disassembled, where it runs",
+                  "l e000": "L E000: more of the CP/A system",
+                  "? bb80": "? BB80: a value in hex and decimal, and the nearest symbol",
+                  "r": "R: the 6502 registers, status bit by bit",
+                  "d 0200": "D 0200: page 2, system variables"},
+    "cmd": {"dir": "DIR: the files on the floppy",
+            "dir *.com": "DIR *.COM: the programs",
+            "dir *.grx": "DIR *.GRX: the GRAPHER programs",
+            "dirs": "DIRS: all the files, system ones included",
+            "stat": "STAT: free space on the floppy",
+            "stat *.grx": "STAT: size and attributes of the GRAPHER programs",
+            "type": "TYPE shows a text file",
+            "help": "HELP: the built-in help",
+            "usbdir": "USBDIR: the LOCI's USB stick",
+            "usbdir /s": "USBDIR /S: the LOCI's media",
+            "usbmount": "USBMOUNT: the mounted floppy images and tape",
+            "echo": "ECHO prints a line: the time in Paris",
+            "ver": "VER: the system version",
+            "mem": "MEM: the memory map",
+            "cls": "CLS clears the screen"},
+}
+
+
 class Humain(Exception):
     """Quelqu'un d'autre tape : la scène s'arrête."""
 
@@ -131,6 +224,30 @@ class Vitrine:
     def coller(self, texte):
         self._http("/coller", texte.encode("utf-8"))
 
+    def dire(self, cle, *args):
+        """Commentaire de la page : l'étape cle (TEXTES[...]["dit"]), ou ""."""
+        t = self.t["dit"].get(cle, "") if cle else ""
+        try:
+            self._http("/commentaire", ((t % args) if args else t).encode("utf-8"))
+        except OSError:
+            pass
+
+    def dire_debug(self, cmd):
+        try:
+            self._http("/commentaire", self.t["dit"]["debug_cmd"].get(cmd, "").encode("utf-8"))
+        except OSError:
+            pass
+
+    def dire_commande(self, texte):
+        """Commentaire d'une commande tapée au prompt (son premier mot si la
+        ligne entière n'a pas le sien)."""
+        cmd = self.t["dit"]["cmd"]
+        t = cmd.get(texte) or cmd.get(texte.split()[0], "") if texte.strip() else ""
+        try:
+            self._http("/commentaire", t.encode("utf-8"))
+        except OSError:
+            pass
+
     # --- attentes --------------------------------------------------------------
     def attendre(self, cible, delai=30, suite=True):
         """Attend un texte (ou une condition sur les lignes) ; répond aux
@@ -172,6 +289,7 @@ class Vitrine:
         return self.attendre_prompt(20)
 
     def commande(self, texte, delai=60):
+        self.dire_commande(texte)
         self.taper(texte)
         return self.attendre_prompt(delai)
 
@@ -209,14 +327,17 @@ class Vitrine:
         tous : texte collé, ^S, ^Q."""
         f = self.nom(nom).lower() + ".grx"
         texte = open(os.path.join(ICI, self.t["dossier"], f), encoding="ascii").read()
+        self.dire("nouveau", f.upper())
         self.taper("edit " + f)
         self.attendre(lambda li: self.t["edit_nouveau"] in li[27] or self.t["edit_titre"] in li[0],
                       30, suite=False)
         time.sleep(1)
+        self.dire("coller")
         self.coller(texte)
         dernier = [l for l in texte.splitlines() if l.strip()][-1].strip()[:20]
         self.attendre(dernier, 300, suite=False)
         time.sleep(1)
+        self.dire("enregistrer", f.upper())
         self.touche(CTRL["S"], apres=3)
         self.touche(CTRL["Q"], apres=1)
         if self.attendre_prompt(30):
@@ -246,6 +367,7 @@ class Vitrine:
         """HORLOGE : l'heure en grands chiffres, tapée par la vitrine."""
         if not self.present("HORLOGE"):
             return
+        self.dire("horloge", self.nom("HORLOGE") + ".GRX")
         self.taper("grapher %s %d" % (self.nom("HORLOGE").lower(), random.randint(15, 25)))
         if not self.attendre(self.t["heure"], 40, suite=False):
             return
@@ -276,6 +398,7 @@ class Vitrine:
         """MOSAIQUE : tuiles de couleur en LORES."""
         if not self.present("MOSAIQUE"):
             return
+        self.dire("mosaique", self.nom("MOSAIQUE") + ".GRX")
         self.taper("grapher %s %d" % (self.nom("MOSAIQUE").lower(), random.randint(2, 3)))
         self.attendre_prompt(150)
 
@@ -286,6 +409,7 @@ class Vitrine:
 
     def s_completion(self):
         """Complétion par TAB : commande, puis nom de fichier, puis TYPE."""
+        self.dire("completion")
         self.taper("ty", entree=False)
         time.sleep(0.6)
         self.touche(TAB, apres=0.8)
@@ -313,6 +437,7 @@ class Vitrine:
 
     def s_menus(self):
         """Menus FUNCT : la barre, les menus déroulés, refermés."""
+        self.dire("menus")
         for _ in range(random.randint(2, 3)):
             self.touche(FUNCT, apres=1.2)           # la barre
             for _ in range(random.randint(0, 3)):
@@ -332,12 +457,14 @@ class Vitrine:
 
     def s_debug(self):
         """DEBUG : le système en $C000, l'écran lui-même en $BB80."""
+        self.dire("debug")
         self.taper("debug mem")
         if not self.attendre(lambda li: self.ligne_curseur() == "-", 30, suite=False):
             return self.retour_prompt()
         time.sleep(1)
         for cmd in random.sample(["l c000", "d bb80", "l 0500", "l e000", "? bb80", "r",
                                   "d 0200"], 3):
+            self.dire_debug(cmd)
             self.taper(cmd)
             time.sleep(random.uniform(1.5, 2.5))
         self.taper("q")
@@ -350,6 +477,7 @@ class Vitrine:
         if not noms:
             return self.present(random.choice(PROGRAMMES))
         nom = random.choice(noms)
+        self.dire("edit", nom.upper())
         self.taper("edit " + nom)
         if not self.attendre(nom.upper(), 30, suite=False):
             return self.retour_prompt()
@@ -379,24 +507,30 @@ class Vitrine:
         if not self.sprites:
             return self.s_edit()
         nom = "DUN.SPR" if "DUN.SPR" in self.sprites else random.choice(self.sprites)
+        self.dire("edsprite", nom)
         self.taper("edsprite " + nom[:-4].lower())
         if not self.attendre(nom, 30, suite=False):
             return self.retour_prompt()
         time.sleep(1)
         for _ in range(random.randint(6, 12)):      # le curseur dans la grille
             self.touche(random.choice([D, D, B, B, G, H, SH_D, SH_B]), apres=0.2)
+        self.dire("edsprite_codes")
         self.touche(CTRL["H"], apres=2.0)           # codes hexadécimaux
         self.touche(CTRL["H"], apres=0.8)           # et retour à la liste
+        self.dire("edsprite_copie")
         self.touche(TAB, apres=0.8)                 # la liste des sprites
         self.touche(CTRL["C"], apres=0.6)           # copier le sprite
         self.touche(CTRL["V"], apres=1.2)           # coller : la copie, après lui
         self.touche(RET, apres=0.8)                 # sa grille
+        self.dire("edsprite_miroir")
         self.menu(3, 1)                             # Dessin, Miroir horizontal
         time.sleep(1.5)
+        self.dire("edsprite_anime")
         self.menu(4, 1)                             # Vue, Décor (au suivant)
         self.menu(4, 2)                             # Vue, Animer
         time.sleep(random.uniform(2.5, 4))
         self.touche(ESC, apres=0.8)                 # une touche arrête
+        self.dire("edsprite_fin")
         self.touche(CTRL["Q"], apres=1.0)
         if not self.attendre_prompt(3):             # « Fichier modifie. Quitter (O/N) ? »
             if self.attendre(lambda li: any(self.t["quitter"] in l for l in li), 3, suite=False):
@@ -419,6 +553,7 @@ class Vitrine:
     def s_cmder(self):
         """CMDER : le gestionnaire de fichiers, tris, déplacements ; efface
         parfois MOSAIQUE.GRX ou HORLOGE.GRX (retapé ensuite dans EDIT)."""
+        self.dire("cmder")
         self.taper("cmder")
         if not self.attendre(self.t["cmder"], 30, suite=False):
             return self.retour_prompt()
@@ -428,6 +563,7 @@ class Vitrine:
         self.touche(random.choice([ord("2"), ord("3"), ord("4")]), apres=1.5)
         for _ in range(random.randint(2, 6)):
             self.touche(random.choice([B, B, H]), apres=0.4)
+        self.dire("cmder_info")
         self.touche(ord("?"), apres=2.0)            # infos du fichier (ligne d'état)
         if not self.manquants and random.random() < 0.6:
             self.effacer(random.choice(PROGRAMMES))
@@ -457,6 +593,7 @@ class Vitrine:
         fichier."""
         nom = self.nom(role)
         fichier = nom + ".GRX"
+        self.dire("effacer", fichier)
         if not self.filtre(fichier.lower()):
             return
         if self.attendre(lambda li: any(nom in l for l in li[2:24]), 5, suite=False):
@@ -502,6 +639,7 @@ class Vitrine:
         print(time.strftime("%H:%M:%S"), nom, flush=True)
         if self.etat()["mode"] & 0x7F:      # SPLIT ou HIRES restés d'avant : texte
             self.retour_prompt()
+            self.dire("texte")
             self.taper("text")
             self.attendre(lambda li: not self.e["mode"] & 0x7F, 15, suite=False)
         if not self.retour_prompt():
@@ -536,6 +674,7 @@ class Vitrine:
                 self.pause()
             except Humain:
                 print(time.strftime("%H:%M:%S"), "quelqu'un tape : pause", flush=True)
+                self.dire("humain")
                 time.sleep(10)
             except OSError as err:
                 print(time.strftime("%H:%M:%S"), "demon injoignable :", err, flush=True)

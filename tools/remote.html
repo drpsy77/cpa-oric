@@ -38,6 +38,8 @@ body { display: flex; flex-direction: column; overflow: hidden;
 #voyant.R { background: var(--vert); color: #000; }
 #voyant.r { background: var(--rouge); color: #000; }
 #delai { margin-left: auto; color: var(--pale); }
+#commentaire { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis;
+  color: var(--texte); font-style: italic; }
 #vue { flex-shrink: 0; font-size: 12px; padding: 2px 8px; min-width: 0; background: var(--bouton); color: var(--pale); }
 #reglages { position: absolute; right: 8px; top: 34px; z-index: 5; display: none; flex-direction: column;
   gap: 8px; background: var(--barre); border: 1px solid #444; border-radius: 8px; padding: 10px 12px;
@@ -78,12 +80,13 @@ button.actif { box-shadow: inset 0 0 0 2px #5b8cff; }
 body.spectateur #boutons, body.spectateur #saisie { display: none; }
 @media (pointer: coarse) { #cadre { align-items: flex-start; } }
 @media (max-width: 520px) { button { padding: 9px 8px; min-width: 36px; font-size: 12px; }
-  #etat { gap: 8px; font-size: 12px; } }
+  #etat { gap: 8px; font-size: 12px; flex-wrap: wrap; }
+  #commentaire { order: 9; flex-basis: 100%; white-space: normal; } }
 </style>
 </head>
 <body>
 <header id="etat">
-  <b>CP/A a distance</b><span id="hote"></span><span id="voyant">-</span><span id="delai"></span>
+  <b>CP/A a distance</b><span id="hote"></span><span id="voyant">-</span><span id="commentaire"></span><span id="delai"></span>
   <button id="vue" title="Affichage : forme des points, couleurs">Affichage</button>
 </header>
 <div id="reglages">
@@ -173,6 +176,7 @@ let memoire = new Array(48).fill(null);
 let jeuStd = POLICE, jeuAlt = null;      // jeuAlt null : secondaire = police de CP/A
 let curseur = [0, 0, false], mode = 0, liaison = "?", hote = "", delai = null, recu = 0;
 let enLigne = 0;                         // spectateurs en ligne (passerelle)
+let commentaire = "";                    // ce qui se passe (vitrine), à côté du voyant
 let eteint = false, injoignable = "";
 const mods = {ctrl: false, shift: false};
 
@@ -302,6 +306,8 @@ function afficherEtat() {
   $("voyant").className = v;
   const salle = enLigne ? " - " + enLigne + (lectureSeule ? " en ligne" : " spect.") : "";
   $("hote").textContent = (lectureSeule ? "en direct, lecture seule" : hote || "") + salle;
+  $("commentaire").textContent = liaison === "active" ? commentaire : "";
+  $("commentaire").title = $("commentaire").textContent;
   const age = delai == null ? null : delai + (Date.now() - recu) / 1000;
   $("delai").textContent = age == null ? "" : age.toFixed(1).replace(".", ",") + " s";
   let m = injoignable;
@@ -331,6 +337,7 @@ function appliquer(e) {
   if (e.lecture_seule) passerSpectateur();
   curseur = e.curseur; mode = e.mode; liaison = e.liaison; hote = e.hote || "";
   delai = e.delai; recu = Date.now(); enLigne = e.spectateurs || 0;
+  if (e.commentaire !== undefined) commentaire = e.commentaire;
   if (mode !== ancienMode) for (let n = 0; n < ROWS; n++) nums.add(n);
   if (ancien[0] !== curseur[0] || ancien[1] !== curseur[1])
     for (const n of [ancien[1], curseur[1]]) if (n < ROWS) nums.add(n);

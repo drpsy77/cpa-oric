@@ -53,7 +53,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import oric_ecran as oe  # noqa: E402
 
-VERSION = "2026-11-04.1"        # changée à chaque modification du démon
+VERSION = "2026-11-05.1"        # changée à chaque modification du démon
 COLS, ROWS = 40, 28
 RP_REQ, RP_KEY, RP_FRM = 0xFD, 0xFE, 0xFF
 LONGUEUR = {ord("S"): 60, ord("L"): 41, ord("C"): 16}
@@ -106,6 +106,7 @@ class Ecran:
         self.hote = ""
         self.t_cycle = None
         self.t_humain = None            # dernière touche venue d'ailleurs que la vitrine
+        self.commentaire = ""           # ce qui se passe, posé par la vitrine (POST /commentaire)
         self.stats = {}                 # mesures de la liaison (diagnostic)
         self.cond = threading.Condition()
 
@@ -141,6 +142,12 @@ class Ecran:
     def cycle_fait(self):
         self.t_cycle = time.time()
 
+    def commenter(self, texte):
+        with self.cond:
+            if texte != self.commentaire:
+                self.commentaire = texte
+                self._bump()
+
     def etat(self, depuis, attendre):
         with self.cond:
             if attendre and self.version <= depuis:
@@ -154,7 +161,8 @@ class Ecran:
             humain = round(maintenant - self.t_humain, 1) if self.t_humain else None
             return {"version": self.version, "liaison": self.liaison, "hote": self.hote,
                     "mode": self.mode, "curseur": list(self.curseur), "delai": delai,
-                    "humain": humain, "stats": self.stats, "lignes": lig, "police": pol}
+                    "humain": humain, "stats": self.stats, "commentaire": self.commentaire,
+                    "lignes": lig, "police": pol}
 
 
 class Liaison:
@@ -629,6 +637,10 @@ def demon(port, http, lent, fichier=None, spectateurs=(), max_spect=40):
             u = urlparse(self.path).path
             if self._spectateur():
                 self._rep(403, b"lecture seule\n", "text/plain")
+                return
+            if u == "/commentaire":         # une ligne, sans changer l'écran de l'Oric
+                ecran.commenter(" ".join(corps.decode("utf-8", "replace").split())[:160])
+                self._rep(204)
                 return
             if u in ("/touches", "/coller", "/reset") and not self.headers.get("X-Vitrine"):
                 ecran.t_humain = time.time()
