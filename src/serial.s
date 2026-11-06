@@ -396,6 +396,9 @@ tx      ldx sr_rp               ; étape d'envoi : un octet par IRQ
         beq nx
         jsr sr_wdat
         inc sr_mi
+        ldy sr_mi               ; dernier octet parti : étape suivante
+        jsr sr_s                ; tout de suite (sinon la réception de
+        beq nx                  ; l'IRQ suivante jetterait le CONNECT)
 r       rts
 wt      lda sr_tml              ; attente : délai (mot) décompté
         bne d

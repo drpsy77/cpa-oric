@@ -226,7 +226,7 @@ tampon du clavier est plein compte aussi comme signe de vie (long collage).
 | 3 | une seconde de silence |
 | 4 | CR, `ATH0`, CR (raccroche ; si la liaison était déjà tombée, `+++` CR donne `ERROR`, sans effet) |
 | 5 | une seconde, réponses jetées |
-| 6 | le numéro (`ATDT-hôte:port`, CR), un octet par IRQ |
+| 6 | le numéro (`ATDT-hôte:port`, CR), un octet par IRQ ; l'étape 7 commence dès le CR parti (une réponse immédiate du modem n'est pas jetée) |
 | 7 | `CONNECT` attendu 20 s (`CONN` reconnu) : la console reprend, voyant `R` ; le démon redemande l'écran (§ 9 : un nouvel appel remplace l'ancien) |
 | 8 | 30 s, puis l'étape 1 : on réessaie tant que personne ne répond |
 
@@ -250,8 +250,8 @@ froid (variables effacées).
 | PUNCH, READER (fonctions 4 et 3) | 72 |
 | voyant (`draw_flags`, table `sr_flg`), aiguillage du BDOS, appel dans l'IRQ (moins les anciennes entrées vides de PUNCH et READER) | 25 |
 | ajouts : suite de lignes (`L n+$80`), attente de l'émetteur comptée sur l'IRQ (`sr_bud`) | 38 |
-| rappel automatique (`sr_rap`, `sr_nxt`, étapes, silence compté dans `sr_irq`, op 4) ; touche de l'Oric signalée (`kb_scan`, trame `S`) | 339 |
-| **total** | **999** |
+| rappel automatique (`sr_rap`, `sr_nxt`, étapes, silence compté dans `sr_irq`, op 4) ; touche de l'Oric signalée (`kb_scan`, trame `S`) | 347 |
+| **total** | **1007** |
 
 (Plus 65 octets pour la police, § 4.)
 
