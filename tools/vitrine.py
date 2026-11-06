@@ -116,6 +116,7 @@ TEXTES["fr"]["dit"] = {
     "hex": "HEX : DEMO.COM octet par octet",
     "tap": "GRXASM /O : DEMO.TAP, pour un Oric seul, sans CP/A ni BASIC",
     "export": "EXPORT copie DEMO.TAP sur la cle USB : CLOAD\"\" sur n'importe quel Atmos",
+    "usbdir_tap": "USBDIR : DEMO.TAP est sur la cle, pret pour un Atmos",
     "nettoyer": "ERA efface les fichiers de la demonstration",
     "debug_cmd": {"l c000": "L C000 : le systeme CP/A desassemble, en RAM overlay",
                   "d bb80": "D BB80 : la memoire de l'ecran texte",
@@ -177,6 +178,7 @@ TEXTES["en"]["dit"] = {
     "hex": "HEX: DEMO.COM byte by byte",
     "tap": "GRXASM /O: DEMO.TAP, for a bare Oric, without CP/A or BASIC",
     "export": "EXPORT copies DEMO.TAP to the USB stick: CLOAD\"\" on any Atmos",
+    "usbdir_tap": "USBDIR: DEMO.TAP is on the stick, ready for an Atmos",
     "nettoyer": "ERA erases the demo files",
     "debug_cmd": {"l c000": "L C000: the CP/A system disassembled, in overlay RAM",
                   "d bb80": "D BB80: the text screen memory",
@@ -680,7 +682,8 @@ class Vitrine:
     def s_atelier(self):
         """DEMO.GRX : écrit dans EDIT, interprété, traduit (GRXASM), vu
         dans EDIT, assemblé (ASM), lancé, vu par DEBUG ou HEX, mis en
-        cassette (GRXASM /O) et copié sur la clé (EXPORT, jamais lancé),
+        cassette (GRXASM /O), copié sur la clé (EXPORT, jamais lancé) et vu
+        par USBDIR,
         puis effacé (ERA DEMO.*). Une fois sur deux, par le script
         FAIRE.BAT (MAKE.BAT), écrit dans EDIT s'il manque."""
         if not self.atelier_propre and not self.nettoyer():
@@ -752,7 +755,11 @@ class Vitrine:
         self.dire("export")
         self.taper("export demo.tap")
         self.attendre_prompt(60)
-        time.sleep(3)
+        time.sleep(2)
+        self.dire("usbdir_tap")
+        self.taper("usbdir")
+        self.attendre_prompt(60)
+        time.sleep(4)
         self.nettoyer()
 
     def chrono(self, delai, debut=30):
@@ -830,7 +837,7 @@ class Vitrine:
     SCENES = {"heure": (s_heure, 3, True), "mosaique": (s_mosaique, 3, True),
               "edit": (s_edit, 2, True), "debug": (s_debug, 1, True),
               "cmder": (s_cmder, 2, True), "edsprite": (s_edsprite, 2, True),
-              "atelier": (s_atelier, 2, True),
+              "atelier": (s_atelier, 5, True),
               "dir": (s_dir, 2, False), "completion": (s_completion, 2, False),
               "type": (s_type, 1, False), "aide": (s_aide, 1, False),
               "menus": (s_menus, 2, False), "usb": (s_usb, 2, False),
