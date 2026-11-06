@@ -616,7 +616,7 @@ showcase types on the Oric through the daemon, like someone using it.
     python3 tools/vitrine.py --liste
 
 - **Pace**: one showpiece scene (`heure`, `mosaique`, `edit`, `debug`, `cmder`,
-  `edsprite`; marked `*` by `--liste`), then two commands at the prompt, and so on; in
+  `edsprite`, `atelier`; marked `*` by `--liste`), then two commands at the prompt, and so on; in
   each group, weighted random draw, never the same one twice in a row; less than a
   second between two scenes (0.3 to 1 s). A program erased by CMDER comes first at the
   next showpiece scene.
@@ -633,7 +633,8 @@ showcase types on the Oric through the daemon, like someone using it.
   in the grid, codes `^H`, copy of the sprite (`^C` `^V` in the list) flipped by
   Draw/Horizontal mirror, View/Background, View/Animate, then `^Q` and `O` / `Y` at the
   "File changed. Quit (Y/N)?" question: nothing is saved, the scene plays again
-  identically; its redefined characters are seen by the page, § 4 "Font"), `echo` (the
+  identically; its redefined characters are seen by the page, § 4 "Font"), `atelier`
+  (the workshop, below), `echo` (the
   time at the prompt), `divers` (VER, MEM, CLS). Typing at 5 to 12 keys per second, with
   hesitations; end-of-screen pauses (`-- Suite` / `-- More`) passed after a reading time.
 - **Comment** (`POST /commentaire`, § 9.1): each step says what is going on, in the
@@ -655,7 +656,28 @@ showcase types on the Oric through the daemon, like someone using it.
   `DELAY 16` plus ~0.68 s of drawing, measured in Oricutron: ~2 s late per minute. At
   start-up, the showcase notes those that are missing (`DIR *.GRX`, and `DIR *.SPR` for
   EDSPRITE); the first scene that uses one writes it in EDIT, in front of everyone:
-  pasted text, `^S`, `^Q`, then runs it. Nothing else is written, erased or changed.
+  text pasted in chunks of 128 characters (the daemon does not read the screen again
+  while sending: the page would freeze for the whole paste), `^S`, `^Q`, then runs it.
+- **Workshop** (`atelier`): a program, from its text to the tape. `DEMO.GRX`
+  (`tools/vitrine/en/`, `HELLO`; `BONJOUR` in French) is pasted into EDIT, interpreted
+  by GRAPHER, translated (`GRXASM DEMO`), browsed in EDIT (`DEMO.ASM`: each GRAPHER line
+  as a comment, then its assembly; at the end, the `#lib` line of `GRX.LIB`), assembled
+  (`ASM DEMO /S`), run, seen by DEBUG (`L`, with the source names) or by HEX, translated
+  for a bare Oric (`GRXASM DEMO /O`), and `DEMO.TAP` copied to the stick (`EXPORT`;
+  never run); lastly `ERA DEMO.*`, which the showcase answers `Y` only if the files
+  shown are the workshop's. One time out of two, translation, assembly and run go
+  through `DO MAKE DEMO` (`FAIRE` in French), a script typed in EDIT if missing, and
+  kept. The background (340 pairs of cells computed one by one) shows the gap: the
+  showcase times the drawing, from the screen taken by the program to the line written
+  after it, and the comment gives both times (~30 s interpreted, 2 to 3 s translated,
+  in Oricutron during the remote console, which takes its share of the processor;
+  ~12 s interpreted without it);
+  the scrolling that follows is paced by `DELAY`, same speed in both versions: a free
+  scroll, translated, goes faster than the page. An interrupted scene leaves its files:
+  the next one starts with `ERA DEMO.*`.
+- **Files written**: MOSAIC, CLOCK and MAKE.BAT if missing, the workshop's `DEMO.*`
+  files (erased at the end), and `DEMO.TAP` on the stick. Nothing else is written,
+  erased or changed.
 - **Language**: the same showcase for `cpa.dsk` and `cpa-en.dsk`; the system's language
   is recognised at start-up from the menu bar (`Systeme` or `System`), `--langue fr|en`
   forces it. Table `TEXTES` in `vitrine.py`: what the showcase reads (`-- Suite` /

@@ -1,0 +1,44 @@
+; DEMO.GRX: the showcase workshop (tools/vitrine.py). The same
+; program, interpreted by GRAPHER, then translated by GRXASM,
+; assembled by ASM and run (DEMO.COM), lastly put on tape.
+;   GRAPHER DEMO
+; The background, a colour diamond computed by pairs of cells
+; (340 sums), shows the speed gap; the scrolling is paced by DELAY:
+; same speed in both versions, which the web page can follow.
+LORES
+DIM G$(36)
+N = 5
+FOR L 0 27
+  IF L<8 | L>18
+    Y = ABS(L-14)*3/2
+    LOCATE 0 L
+    FOR J 0 19
+      SPC 2 (17+(ABS(2*J-19)+Y)/3%7)
+    NEXT
+  ELSE
+    LOCATE 0 L
+    SPC 40 16
+  ENDIF
+NEXT
+; HELLO, 5 letters of 5 rows of 3 dots (0-7, bit 2 on the left)
+G$ = "5575574647444474444775557"
+X = 20-2*N
+FOR K 0 (N-1)
+  FOR R 0 4
+    V = G$(5*K+R)-48
+    W = 4
+    FOR J 0 2
+      IF V/W%2
+        CHAR (X+4*K+J) (10+R) (17+K%7)
+      ENDIF
+      W = W/2
+    NEXT
+  NEXT
+NEXT
+LOCATE 4 17
+PRINT "Written and compiled on the Oric"
+REPEAT 80
+  ROTH 1 0 10 39 14
+  DELAY 4
+NEXT
+DELAY 50

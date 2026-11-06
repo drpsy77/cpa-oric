@@ -1,0 +1,45 @@
+; DEMO.GRX : l'atelier de la vitrine (tools/vitrine.py). Le meme
+; programme, interprete par GRAPHER, puis traduit par GRXASM,
+; assemble par ASM et lance (DEMO.COM), enfin mis en cassette.
+;   GRAPHER DEMO
+; Le fond, un losange de couleurs calcule par paires de cases
+; (340 calculs), montre l'ecart de vitesse ; le defilement est cadence
+; par DELAY : meme vitesse dans les deux versions, que la page web
+; suit.
+LORES
+DIM G$(36)
+N = 7
+FOR L 0 27
+  IF L<8 | L>18
+    Y = ABS(L-14)*3/2
+    LOCATE 0 L
+    FOR J 0 19
+      SPC 2 (17+(ABS(2*J-19)+Y)/3%7)
+    NEXT
+  ELSE
+    LOCATE 0 L
+    SPC 40 16
+  ENDIF
+NEXT
+; BONJOUR, 7 lettres de 5 rangees de 3 points (0-7, bit 2 a gauche)
+G$ = "65656755576555511157755575555765655"
+X = 20-2*N
+FOR K 0 (N-1)
+  FOR R 0 4
+    V = G$(5*K+R)-48
+    W = 4
+    FOR J 0 2
+      IF V/W%2
+        CHAR (X+4*K+J) (10+R) (17+K%7)
+      ENDIF
+      W = W/2
+    NEXT
+  NEXT
+NEXT
+LOCATE 6 17
+PRINT "Ecrit et compile sur l'Oric"
+REPEAT 80
+  ROTH 1 0 10 39 14
+  DELAY 4
+NEXT
+DELAY 50

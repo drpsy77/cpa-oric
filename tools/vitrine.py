@@ -7,8 +7,9 @@ complétion, aide, menus FUNCT, EDIT sur un programme GRAPHER, EDSPRITE sur
 DUN.SPR (ou un autre .SPR de la disquette), CMDER, DEBUG,
 USBDIR, et deux programmes en mode texte (LORES) : MOSAIQUE (tuiles de
 couleur) et HORLOGE (l'heure, tapée par la vitrine : l'Oric n'a pas
-d'horloge). Rythme : une scène de spectacle (HORLOGE, MOSAIQUE, EDIT,
-DEBUG, CMDER, EDSPRITE), puis deux commandes au prompt, et ainsi de suite, moins
+d'horloge), et l'atelier : DEMO.GRX interprété, traduit, assemblé, mis
+en cassette. Rythme : une scène de spectacle (HORLOGE, MOSAIQUE, EDIT,
+DEBUG, CMDER, EDSPRITE, atelier), puis deux commandes au prompt, et ainsi de suite, moins
 d'une seconde entre deux ; scènes tirées au hasard dans chaque groupe, la
 frappe a un rythme humain : les spectateurs de la page web voient un Oric
 en direct, pas une vidéo.
@@ -31,8 +32,10 @@ une disquette où l'on peut écrire : la vitrine y écrit MOSAIQUE.GRX et
 HORLOGE.GRX (dans EDIT, à la vue de tous) s'ils manquent ; sur un système
 anglais, MOSAIC.GRX et CLOCK.GRX (tools/vitrine/en, textes en anglais). CMDER efface
 parfois l'un des deux (filtre sur son nom, DEL, O) ; la scène de spectacle
-suivante le retape dans EDIT, puis le lance. Rien d'autre n'est écrit,
-effacé ni modifié.
+suivante le retape dans EDIT, puis le lance. L'atelier écrit DEMO.GRX,
+le traduit, l'assemble, le met en cassette (DEMO.TAP copié sur la clé,
+jamais lancé), puis efface DEMO.* ; il tape FAIRE.BAT (MAKE.BAT) s'il
+manque. Rien d'autre n'est écrit, effacé ni modifié.
 Bibliothèque standard seulement (Mac, Raspberry Pi).
 """
 import json
@@ -58,14 +61,16 @@ TEXTES = {
            "edit_titre": "Fichier", "cmder": "ESC fin", "filtre": "Filtre",
            "effacer": "Effacer", "on": "(O/N)", "oui": "O", "quitter": "Quitter (O/N)",
            "aide": ["", "touches", "edit", "cmder", "usb", "prog", "edsprite"],
-           "noms": {"MOSAIQUE": "MOSAIQUE", "HORLOGE": "HORLOGE"}, "dossier": "vitrine",
+           "noms": {"MOSAIQUE": "MOSAIQUE", "HORLOGE": "HORLOGE", "DEMO": "DEMO"},
+           "dossier": "vitrine", "script": "FAIRE",
            "heure": "Heure ?",
            "echo": ["echo Il est %d h %02d a Paris", "echo %dh%02d : l'Oric est en direct"]},
     "en": {"barre": "System", "suite": "-- More", "edit_nouveau": "New file",
            "edit_titre": "File", "cmder": "ESC quit", "filtre": "Filter",
            "effacer": "Erase", "on": "(Y/N)", "oui": "Y", "quitter": "Quit (Y/N)",
            "aide": ["", "keys", "edit", "cmder", "usb", "prog", "edsprite"],
-           "noms": {"MOSAIQUE": "MOSAIC", "HORLOGE": "CLOCK"}, "dossier": "vitrine/en",
+           "noms": {"MOSAIQUE": "MOSAIC", "HORLOGE": "CLOCK", "DEMO": "DEMO"},
+           "dossier": "vitrine/en", "script": "MAKE",
            "heure": "Time ?",
            "echo": ["echo It is %d:%02d in Paris", "echo %d:%02d - live from an Oric"]},
 }
@@ -95,6 +100,23 @@ TEXTES["fr"]["dit"] = {
     "cmder_info": "? : taille et attributs du fichier, sur la ligne d'etat",
     "effacer": "Filtre sur %s, puis DEL l'efface (il sera retape dans EDIT)",
     "humain": "Un visiteur a pris le clavier : la demonstration attend",
+    "script": "EDIT : %s, un script ; $1 sera le nom du programme",
+    "interprete": "GRAPHER interprete DEMO.GRX, ligne apres ligne",
+    "duree": "Dessin interprete : %d s. Traduisons-le en assembleur 6502",
+    "grxasm": "GRXASM traduit DEMO.GRX en assembleur : DEMO.ASM",
+    "voir_asm": "DEMO.ASM : chaque ligne GRAPHER en commentaire, puis son assembleur",
+    "lib": "Fin du fichier : #lib, les routines precompilees de GRX.LIB",
+    "asm": "ASM, l'assembleur de CP/A, ecrit DEMO.COM (et ses symboles, /S)",
+    "faire": "DO %s DEMO : le script traduit, assemble, puis lance",
+    "compile": "DEMO.COM : le meme programme, traduit et assemble",
+    "compare": "Dessin : %d s interprete, %d s compile. Le defilement a la meme cadence",
+    "debug_com": "DEBUG sur DEMO.COM : le code desassemble, avec les noms du source",
+    "l 0500": "DEBUG : L 0500, le debut de DEMO.COM, avec les noms du source (ASM /S)",
+    "l": "L : la suite, la boucle FOR du fond (CHAR, ABS, calculs sur 16 bits)",
+    "hex": "HEX : DEMO.COM octet par octet",
+    "tap": "GRXASM /O : DEMO.TAP, pour un Oric seul, sans CP/A ni BASIC",
+    "export": "EXPORT copie DEMO.TAP sur la cle USB : CLOAD\"\" sur n'importe quel Atmos",
+    "nettoyer": "ERA efface les fichiers de la demonstration",
     "debug_cmd": {"l c000": "L C000 : le systeme CP/A desassemble, en RAM overlay",
                   "d bb80": "D BB80 : la memoire de l'ecran texte",
                   "l 0500": "L 0500 : le programme MEM desassemble, la ou il tourne",
@@ -139,6 +161,23 @@ TEXTES["en"]["dit"] = {
     "cmder_info": "?: file size and attributes, on the status line",
     "effacer": "Filter on %s, then DEL erases it (it will be typed again in EDIT)",
     "humain": "A visitor has the keyboard: the demo is waiting",
+    "script": "EDIT: %s, a script; $1 will be the program name",
+    "interprete": "GRAPHER interprets DEMO.GRX, line by line",
+    "duree": "Interpreted drawing: %d s. Let's translate it into 6502 assembly",
+    "grxasm": "GRXASM translates DEMO.GRX into assembly: DEMO.ASM",
+    "voir_asm": "DEMO.ASM: each GRAPHER line as a comment, then its assembly",
+    "lib": "End of file: #lib, the precompiled routines of GRX.LIB",
+    "asm": "ASM, CP/A's assembler, writes DEMO.COM (and its symbols, /S)",
+    "faire": "DO %s DEMO: the script translates, assembles, then runs",
+    "compile": "DEMO.COM: the same program, translated and assembled",
+    "compare": "Drawing: %d s interpreted, %d s compiled. Scrolling at the same pace",
+    "debug_com": "DEBUG on DEMO.COM: the code disassembled, with the source names",
+    "l 0500": "DEBUG: L 0500, the start of DEMO.COM, with the source names (ASM /S)",
+    "l": "L: what follows, the FOR loop of the background (CHAR, ABS, 16-bit sums)",
+    "hex": "HEX: DEMO.COM byte by byte",
+    "tap": "GRXASM /O: DEMO.TAP, for a bare Oric, without CP/A or BASIC",
+    "export": "EXPORT copies DEMO.TAP to the USB stick: CLOAD\"\" on any Atmos",
+    "nettoyer": "ERA erases the demo files",
     "debug_cmd": {"l c000": "L C000: the CP/A system disassembled, in overlay RAM",
                   "d bb80": "D BB80: the text screen memory",
                   "l 0500": "L 0500: the MEM program disassembled, where it runs",
@@ -175,6 +214,8 @@ class Vitrine:
         self.e = None
         self.manquants = set()          # programmes absents de la disquette
         self.sprites = []               # fichiers .SPR de la disquette
+        self.script = True              # FAIRE.BAT (MAKE.BAT) sur la disquette
+        self.atelier_propre = False     # pas de DEMO.* laissé par l'atelier
         self.langue = langue            # None : reconnue au démarrage
         self.t = TEXTES[langue or "fr"]
 
@@ -340,29 +381,39 @@ class Vitrine:
         presents = self.fichiers("*.grx")
         self.manquants = set(n for n in PROGRAMMES if self.nom(n) + ".GRX" not in presents)
         self.sprites = sorted(n for n in self.fichiers("*.spr") if n.endswith(".SPR"))
+        self.script = self.t["script"] + ".BAT" in self.fichiers("*.bat")
 
     def retaper(self, nom):
-        """Écrit le programme nom (MOSAIQUE, HORLOGE) dans EDIT, à la vue de
-        tous : texte collé, ^S, ^Q."""
+        """Écrit le programme nom (MOSAIQUE, HORLOGE, DEMO) dans EDIT, à la
+        vue de tous : texte collé, ^S, ^Q."""
         f = self.nom(nom).lower() + ".grx"
         texte = open(os.path.join(ICI, self.t["dossier"], f), encoding="ascii").read()
         self.dire("nouveau", f.upper())
+        if self.ecrire(f, texte, coller=True):
+            self.manquants.discard(nom)
+            return True
+        return False
+
+    def ecrire(self, f, texte, coller):
+        """Nouveau fichier f dans EDIT : texte collé (par morceaux) ou tapé,
+        ^S, ^Q ; vrai si l'on revient au prompt."""
         self.taper("edit " + f)
         self.attendre(lambda li: self.t["edit_nouveau"] in li[27] or self.t["edit_titre"] in li[0],
                       30, suite=False)
         time.sleep(1)
-        self.dire("coller")
-        self.coller(texte)
-        dernier = [l for l in texte.splitlines() if l.strip()][-1].strip()[:20]
-        self.attendre(dernier, 300, suite=False)
+        if coller:
+            self.dire("coller")
+            self.coller(texte)
+            dernier = [l for l in texte.splitlines() if l.strip()][-1].strip()[:20]
+            self.attendre(dernier, 300, suite=False)
+        else:
+            for ligne in texte.splitlines():
+                self.taper(ligne)
         time.sleep(1)
         self.dire("enregistrer", f.upper())
         self.touche(CTRL["S"], apres=3)
         self.touche(CTRL["Q"], apres=1)
-        if self.attendre_prompt(30):
-            self.manquants.discard(nom)
-            return True
-        return False
+        return self.attendre_prompt(30)
 
     def present(self, nom):
         """Le programme nom est sur la disquette ; sinon il est retapé."""
@@ -626,6 +677,150 @@ class Vitrine:
                 self.touche(ESC, apres=0.5)
         self.filtre("")
 
+    def s_atelier(self):
+        """DEMO.GRX : écrit dans EDIT, interprété, traduit (GRXASM), vu
+        dans EDIT, assemblé (ASM), lancé, vu par DEBUG ou HEX, mis en
+        cassette (GRXASM /O) et copié sur la clé (EXPORT, jamais lancé),
+        puis effacé (ERA DEMO.*). Une fois sur deux, par le script
+        FAIRE.BAT (MAKE.BAT), écrit dans EDIT s'il manque."""
+        if not self.atelier_propre and not self.nettoyer():
+            return
+        self.atelier_propre = False
+        self.manquants.add("DEMO")
+        if not self.present("DEMO"):
+            return
+        self.dire("interprete")
+        self.taper("grapher demo")
+        d_int = self.chrono(120)
+        if d_int is None:
+            return self.retour_prompt()
+        self.attendre_prompt(60)
+        self.dire("duree", d_int)
+        time.sleep(3)
+        debut = 30                                  # attente de l'écran LORES
+        if random.random() < 0.5:
+            if not self.atelier_script():
+                return
+            debut = 480                             # GRXASM et ASM d'abord
+        else:
+            self.dire("grxasm")
+            self.taper("grxasm demo")
+            if not self.attendre_prompt(180):
+                return
+            time.sleep(2)
+            self.voir_asm()
+            self.dire("asm")
+            self.taper("asm demo /s")
+            if not self.attendre_prompt(240):
+                return
+            time.sleep(2)
+            self.dire("compile")
+            self.taper("demo")
+        d_com = self.chrono(60, debut)
+        if d_com is None:
+            return self.retour_prompt()
+        d_com = max(d_com, 1)
+        self.dire("compare", d_int, d_com)
+        print("   dessin : %d s interprete, %d s compile" % (d_int, d_com), flush=True)
+        self.attendre_prompt(60)
+        time.sleep(3)
+        if random.random() < 0.6:
+            self.dire("debug_com")
+            self.taper("debug demo")
+            if self.attendre(lambda li: self.ligne_curseur() == "-", 30, suite=False):
+                for cmd in ("l 0500", "l"):           # le code, puis la suite
+                    time.sleep(1)
+                    self.dire(cmd)
+                    self.taper(cmd)
+                    time.sleep(random.uniform(3, 4))
+                self.taper("q")
+        else:
+            self.dire("hex")
+            self.taper("hex demo.com")
+            if self.attendre(lambda li: li[27][2:].startswith("DEMO.COM"), 30, suite=False):
+                time.sleep(2)
+                for _ in range(random.randint(2, 4)):
+                    self.touche(SH_B, apres=2.0)
+                self.touche(ESC, apres=1.0)
+        if not self.attendre_prompt(20):
+            self.retour_prompt()
+        self.dire("tap")
+        self.taper("grxasm demo /o")
+        if not self.attendre_prompt(240):
+            return
+        time.sleep(2)
+        self.dire("export")
+        self.taper("export demo.tap")
+        self.attendre_prompt(60)
+        time.sleep(3)
+        self.nettoyer()
+
+    def chrono(self, delai, debut=30):
+        """Secondes entre l'écran pris par le programme (LORES) et la ligne
+        écrite après le dessin ; None si l'un manque."""
+        if not self.attendre(lambda li: self.e["mode"] & 0x80, debut, suite=False):
+            return None
+        t0 = time.time()
+        if not self.attendre(lambda li: "compil" in li[17], delai, suite=False):
+            return None
+        return round(time.time() - t0)
+
+    def voir_asm(self):
+        """EDIT sur DEMO.ASM : le début, quelques pages, la fin (#lib)."""
+        self.dire("voir_asm")
+        self.taper("edit demo.asm")
+        if not self.attendre(lambda li: li[27][2:].startswith("DEMO.ASM"), 30, suite=False):
+            return self.retour_prompt()
+        time.sleep(3)
+        for _ in range(random.randint(8, 14)):
+            self.touche(B, apres=0.3)
+        for _ in range(random.randint(2, 4)):
+            self.touche(SH_B, apres=2.0)
+        self.dire("lib")
+        self.touche(CT_B, apres=4.0)                # fin du fichier
+        self.touche(CTRL["Q"], apres=1.0)
+        if not self.attendre_prompt(5):
+            self.touche(ord("N"), apres=1.0)
+            self.retour_prompt()
+
+    def atelier_script(self):
+        """FAIRE.BAT (écrit dans EDIT s'il manque) : DO FAIRE DEMO."""
+        s = self.t["script"]
+        if not self.script:
+            texte = ("; %s.BAT : $1.GRX traduit, assemble, lance\n"
+                     "GRXASM $1\nASM $1 /S\n$1\n" % s if self.t is TEXTES["fr"] else
+                     "; %s.BAT: $1.GRX translated, assembled, run\n"
+                     "GRXASM $1\nASM $1 /S\n$1\n" % s)
+            self.dire("script", s + ".BAT")
+            if not self.ecrire(s.lower() + ".bat", texte, coller=False):
+                return False
+            self.script = True
+            time.sleep(1)
+        self.dire("faire", s)
+        self.taper("do %s demo" % s.lower())
+        return True
+
+    def nettoyer(self):
+        """ERA DEMO.* : O seulement si les fichiers montrés sont ceux de
+        l'atelier ; vrai si la disquette n'en a plus."""
+        self.dire("nettoyer")
+        self.taper("era demo.*")
+        if not self.attendre(lambda li: self.au_prompt() or any(self.t["on"] in l for l in li),
+                             20, suite=False):
+            return False
+        if self.au_prompt():                            # aucun fichier
+            self.atelier_propre = True
+            return True
+        vus = set(re.findall(r"DEMO *\.([A-Z0-9_$]{1,3})", self.texte().split("ERA DEMO.*")[-1]))
+        time.sleep(1.5)
+        if vus <= {"GRX", "ASM", "COM", "SYM", "TAP"}:
+            self.touche(ord(self.t["oui"]), apres=1.0)
+            self.atelier_propre = self.attendre_prompt(20)
+            return self.atelier_propre
+        self.touche(ord("N"), apres=1.0)                # d'autres DEMO.* : pas à nous
+        self.attendre_prompt(10)
+        return False
+
     def s_divers(self):
         """VER, MEM, CLS."""
         self.commande(random.choice(["ver", "mem", "cls", "ver"]))
@@ -635,6 +830,7 @@ class Vitrine:
     SCENES = {"heure": (s_heure, 3, True), "mosaique": (s_mosaique, 3, True),
               "edit": (s_edit, 2, True), "debug": (s_debug, 1, True),
               "cmder": (s_cmder, 2, True), "edsprite": (s_edsprite, 2, True),
+              "atelier": (s_atelier, 2, True),
               "dir": (s_dir, 2, False), "completion": (s_completion, 2, False),
               "type": (s_type, 1, False), "aide": (s_aide, 1, False),
               "menus": (s_menus, 2, False), "usb": (s_usb, 2, False),
