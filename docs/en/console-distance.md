@@ -232,7 +232,7 @@ a sign of life (long paste).
 | 3 | one second of silence |
 | 4 | CR, `ATH0`, CR (hangs up; if the link had already dropped, `+++` CR gives `ERROR`, harmless) |
 | 5 | one second, answers thrown away |
-| 6 | the number (`ATDT-host:port`, CR), one byte per IRQ |
+| 6 | the number (`ATDT-host:port`, CR), one byte per IRQ; step 7 starts as soon as the CR is sent (an immediate modem reply is not discarded) |
 | 7 | `CONNECT` awaited 20 s (`CONN` recognised): the console resumes, `R` light; the daemon asks for the screen again (§ 9: a new call replaces the old one) |
 | 8 | 30 s, then step 1: it tries again as long as nobody answers |
 
@@ -255,8 +255,8 @@ cleared).
 | PUNCH, READER (functions 4 and 3) | 72 |
 | light (`draw_flags`, table `sr_flg`), BDOS dispatch, call in the IRQ (minus the former empty entries of PUNCH and READER) | 25 |
 | additions: run of rows (`L n+$80`), transmitter wait counted over the IRQ (`sr_bud`) | 38 |
-| automatic redial (`sr_rap`, `sr_nxt`, steps, silence counted in `sr_irq`, op 4); key typed on the Oric reported (`kb_scan`, `S` frame) | 339 |
-| **total** | **999** |
+| automatic redial (`sr_rap`, `sr_nxt`, steps, silence counted in `sr_irq`, op 4); key typed on the Oric reported (`kb_scan`, `S` frame) | 347 |
+| **total** | **1007** |
 
 (Plus 65 bytes for the font, § 4.)
 
