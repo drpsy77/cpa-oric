@@ -656,8 +656,9 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   `PRINT` ; une seconde dure `DELAY 16` plus ~0,68 s de dessin, mesuré dans Oricutron :
   ~2 s de retard par minute. Au démarrage, la vitrine note ceux qui manquent
   (`DIR *.GRX`, et `DIR *.SPR` pour EDSPRITE) ; la première scène qui s'en sert les écrit
-  dans EDIT, à la vue de tous : texte collé, `^S`, `^Q`, puis les lance. Rien d'autre
-  n'est écrit, effacé ni modifié.
+  dans EDIT, à la vue de tous : texte collé par morceaux de 128 caractères (le démon
+  ne relit pas l'écran pendant un envoi : la page resterait figée tout le collage), `^S`,
+  `^Q`, puis les lance. Rien d'autre n'est écrit, effacé ni modifié.
 - **Langue** : la même vitrine pour `cpa.dsk` et `cpa-en.dsk` ; la langue du système est
   reconnue au démarrage par la barre des menus (`Systeme` ou `System`), `--langue fr|en`
   la force. Table `TEXTES` de `vitrine.py` : ce que la vitrine lit (`-- Suite` / `-- More`,

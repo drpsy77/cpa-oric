@@ -228,8 +228,20 @@ class Vitrine:
             time.sleep(random.uniform(0.2, 0.6))
             self.envoyer([RET])
 
-    def coller(self, texte):
-        self._http("/coller", texte.encode("utf-8"))
+    def coller(self, texte, morceau=128):
+        """Texte collé par morceaux d'environ morceau caractères (lignes
+        entières) : le démon ne relit pas l'écran pendant un envoi, la page
+        resterait figée tout le collage. Chaque morceau attend que sa
+        dernière ligne soit à l'écran."""
+        lignes = texte.splitlines(keepends=True)
+        while lignes:
+            bloc = []
+            while lignes and (not bloc or sum(map(len, bloc)) + len(lignes[0]) <= morceau):
+                bloc.append(lignes.pop(0))
+            self._http("/coller", "".join(bloc).encode("utf-8"))
+            vues = [l.strip() for l in bloc if l.strip()]
+            if vues and lignes:
+                self.attendre(vues[-1][:20], 60, suite=False)
 
     def dire(self, cle, *args):
         """Commentaire de la page : l'étape cle (TEXTES[...]["dit"]), ou ""."""
