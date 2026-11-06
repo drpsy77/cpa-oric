@@ -664,7 +664,7 @@ showcase types on the Oric through the daemon, like someone using it.
   as a comment, then its assembly; at the end, the `#lib` line of `GRX.LIB`), assembled
   (`ASM DEMO /S`), run, seen by DEBUG (`L`, with the source names) or by HEX, translated
   for a bare Oric (`GRXASM DEMO /O`), and `DEMO.TAP` copied to the stick (`EXPORT`;
-  never run); lastly `ERA DEMO.*`, which the showcase answers `Y` only if the files
+  never run), where USBDIR shows it; lastly `ERA DEMO.*`, which the showcase answers `Y` only if the files
   shown are the workshop's. One time out of two, translation, assembly and run go
   through `DO MAKE DEMO` (`FAIRE` in French), a script typed in EDIT if missing, and
   kept. The background (340 pairs of cells computed one by one) shows the gap: the

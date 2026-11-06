@@ -665,7 +665,7 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   puis son assembleur ; à la fin, la ligne `#lib` de `GRX.LIB`), assemblé (`ASM DEMO
   /S`), lancé, vu par DEBUG (`L`, avec les noms du source) ou par HEX, traduit pour un
   Oric seul (`GRXASM DEMO /O`), et `DEMO.TAP` copié sur la clé (`EXPORT` ; jamais
-  lancé) ; enfin `ERA DEMO.*`, à qui la vitrine ne répond `O` que si les fichiers montrés
+  lancé), où USBDIR le montre ; enfin `ERA DEMO.*`, à qui la vitrine ne répond `O` que si les fichiers montrés
   sont ceux de l'atelier. Une fois sur deux, traduction, assemblage et lancement passent
   par `DO FAIRE DEMO` (`MAKE` en anglais), script tapé dans EDIT s'il manque, et gardé.
   Le fond (340 paires de cases calculées une à une) montre l'écart : la vitrine mesure
