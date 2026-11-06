@@ -616,7 +616,7 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
     python3 tools/vitrine.py --liste
 
 - **Rythme** : une scène de spectacle (`heure`, `mosaique`, `edit`, `debug`, `cmder`,
-  `edsprite` ; marquées `*` par `--liste`), puis deux commandes au prompt, et ainsi de
+  `edsprite`, `atelier` ; marquées `*` par `--liste`), puis deux commandes au prompt, et ainsi de
   suite ; dans chaque groupe, tirage au hasard pondéré, jamais deux fois la même de
   suite ; moins d'une seconde entre deux scènes (0,3 à 1 s). Un programme effacé par
   CMDER passe en tête de la scène de spectacle suivante.
@@ -633,7 +633,7 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   `^H`, copie du sprite (`^C` `^V` dans la liste) retournée par Dessin/Miroir horizontal,
   Vue/Décor, Vue/Animer, puis `^Q` et `O` à `Fichier modifie. Quitter (O/N) ?` : rien
   n'est enregistré, la scène se rejoue à l'identique ; ses caractères redéfinis
-  sont vus par la page, § 4 « Police »), `echo` (l'heure au prompt),
+  sont vus par la page, § 4 « Police »), `atelier` (ci-dessous), `echo` (l'heure au prompt),
   `divers` (VER, MEM, CLS). Frappe de 5 à 12 touches par seconde, avec des hésitations ;
   pauses de fin d'écran (`-- Suite`) passées après un temps de lecture.
 - **Commentaire** (`POST /commentaire`, § 9.1) : chaque étape dit ce qui se passe, dans
@@ -658,7 +658,26 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   (`DIR *.GRX`, et `DIR *.SPR` pour EDSPRITE) ; la première scène qui s'en sert les écrit
   dans EDIT, à la vue de tous : texte collé par morceaux de 128 caractères (le démon
   ne relit pas l'écran pendant un envoi : la page resterait figée tout le collage), `^S`,
-  `^Q`, puis les lance. Rien d'autre n'est écrit, effacé ni modifié.
+  `^Q`, puis les lance.
+- **Atelier** : un programme, de son texte à la cassette. `DEMO.GRX` (`tools/vitrine/`,
+  `BONJOUR` ; `HELLO` en anglais) est collé dans EDIT, interprété par GRAPHER, traduit
+  (`GRXASM DEMO`), parcouru dans EDIT (`DEMO.ASM` : chaque ligne GRAPHER en commentaire,
+  puis son assembleur ; à la fin, la ligne `#lib` de `GRX.LIB`), assemblé (`ASM DEMO
+  /S`), lancé, vu par DEBUG (`L`, avec les noms du source) ou par HEX, traduit pour un
+  Oric seul (`GRXASM DEMO /O`), et `DEMO.TAP` copié sur la clé (`EXPORT` ; jamais
+  lancé) ; enfin `ERA DEMO.*`, à qui la vitrine ne répond `O` que si les fichiers montrés
+  sont ceux de l'atelier. Une fois sur deux, traduction, assemblage et lancement passent
+  par `DO FAIRE DEMO` (`MAKE` en anglais), script tapé dans EDIT s'il manque, et gardé.
+  Le fond (340 paires de cases calculées une à une) montre l'écart : la vitrine mesure
+  le dessin, de l'écran pris par le programme à la ligne écrite après lui, et le
+  commentaire donne les deux durées (~30 s interprété, 2 à 3 s traduit, dans Oricutron
+  pendant la console à distance, qui prend sa part du processeur ; ~12 s interprété
+  sans elle) ; le défilement qui suit est cadencé par `DELAY`, même vitesse dans les
+  deux versions : un défilement libre, traduit, va plus vite que la page. Une scène interrompue laisse ses fichiers :
+  la suivante commence par `ERA DEMO.*`.
+- **Fichiers écrits** : MOSAIQUE, HORLOGE et FAIRE.BAT s'ils manquent, les fichiers
+  `DEMO.*` de l'atelier (effacés à la fin), et `DEMO.TAP` sur la clé. Rien d'autre n'est
+  écrit, effacé ni modifié.
 - **Langue** : la même vitrine pour `cpa.dsk` et `cpa-en.dsk` ; la langue du système est
   reconnue au démarrage par la barre des menus (`Systeme` ou `System`), `--langue fr|en`
   la force. Table `TEXTES` de `vitrine.py` : ce que la vitrine lit (`-- Suite` / `-- More`,
