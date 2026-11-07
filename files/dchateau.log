@@ -1,0 +1,83 @@
+POUR CHATEAU 
+ FIXECAP 0
+ FIXEXY 0 0
+ LC
+ RE 45
+ GA 90
+ AV 60
+ DR 90
+ TOUR 3 4 0
+ LC
+ DR 90
+ AV 60 + 60 + 11 * 3
+ GA 90
+ TOUR 3 4 0
+ LC
+ FIXEXY 0 0
+ RE 45
+
+ DR 90
+ LC
+ AV 22
+ GA 90
+ TOUR 4 6 1
+ LC
+ FIXEXY 0 0
+ FIXECAP 90
+FIN
+
+POUR TOUR :N :P :D
+ LC
+ GA 90
+ AV (11 * :N )
+ DR 90
+ BC
+ AV (10 * :P )
+ GA 45
+ AV (2 * :N )
+ DR 45
+ AV (3 * :N )
+ DR 90
+ REPETE 3 [CRENEAU :N]
+ SI :D > 0 [DRAPEAU :N]
+ BC 
+ AV (2 * :N )
+ DR 90
+ AV (3 * :N )
+ DR 45
+ AV (2 * :N )
+ GA 45
+ AV (10 * :P )
+ FIXECAP 0
+
+FIN
+
+POUR DRAPEAU :N
+ DONNE "TMX XCOR
+ DONNE "TMY YCOR 
+ LC 
+ RE (5 * :N ) 
+ GA 90 
+ RE :N 
+ BC 
+ AV 6 * :N 
+ DR 120 
+ AV 4 * :N  
+ DR 120
+ AV 4 * :N
+ LC  
+ FIXEXY :TMX :TMY
+ FIXECAP 90 
+FIN
+
+POUR CRENEAU :N
+ AV (2 * :N ) 
+ DR 90 
+ AV (1 * :N ) 
+ GA 90 
+ AV (2 * :N ) 
+ GA 90 
+ AV (1 * :N ) 
+ DR 90
+FIN
+

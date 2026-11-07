@@ -106,8 +106,34 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4), lots 1 à 3
 et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
 
-**Prochaine tâche** (demandée par Pierre le 07/11/2026) : nouvelle revue complète du projet
-(sources, outils, docs, disquettes) et proposition de nettoyage de ce qui est obsolète. Ensuite :
+**Prochaine tâche** (décidée par Pierre le 07/11/2026, au soir) : **lot 1, sprites en HIRES
+et en SPLIT dans GRAPHER**, pour une vidéo de LOGO (ci-dessous).
+- `HSHOW slot S$ n x y` : le sprite n d'un `.SPR` (genre 0) dessiné avec sa silhouette dans
+  l'image (HIRES plein écran ou SPLIT), le décor dessous gardé par emplacement ; `HHIDE slot`
+  le remet (comme `SSHOW` / `SHIDE`, § 7.1 de `grapher.md`). x par colonnes de 6 points (un
+  octet de l'écran), y au point près ; le placement au point près (décalages) plus tard.
+- Traduit aussi par GRXASM (`/C` et `/O`) : c'est le « programme assembleur » de la vidéo.
+- Chiffrer la place (GRAPHER, bibliothèques) ; doc `grapher.md` ; essai de non-régression.
+- Essai : `files/dun.spr` (chevalier, 4 × 3 cases, avec silhouette) devant le château.
+
+**Vidéo LOGO** (après le lot 1 ; plan approuvé par Pierre) : fabriquée sur le banc
+(Phosphoric natif, `--video` AVI avec le son, frappe par `--type-keys`), montage par ffmpeg
+(longues frappes accélérées × 3-4, sous-titres courts en français) ; une première version
+de 3-4 min soumise à Pierre. Programmes **tapés puis exécutés** (graphisme, interactivité,
+variables) :
+1. Château (`files/dchateau.log`, de Pierre) : `CRENEAU`, `DRAPEAU`, `TOUR` tapés, `TOUR`
+   essayée à deux échelles, puis `CHATEAU`.
+2. Le chevalier : sortie de LOGO (l'image reste en SPLIT), `CHEVAL.GRX` tapé dans EDIT,
+   lancé : `DUN.SPR` traverse devant les tours (flèches, ou seul).
+3. Le même en assembleur : `GRXASM CHEVAL /C`, ASM, `CHEVAL`.
+4. Forêt : `ARBRE` (`files/demo.log`) tapé, composition `FORET` (arbres à plusieurs
+   échelles et places, `HASARD`, sol, lune par `POLY`), `SAUVEIMAGE "FORET`.
+5. Traceur : `CHARGE "TRASINUS`, puis `F` seul retapé (x·sin x) et relancé.
+6. `VOIR FORET.IMG` : la forêt revient.
+7. Facultatif : `LABYRINT.GRX` de Pierre (sur sa clé LOCI, `files/`) en finale.
+
+**Ensuite** : nouvelle revue complète du projet (demandée par Pierre le 07/11/2026 : sources,
+outils, docs, disquettes) et proposition de nettoyage de ce qui est obsolète. Puis :
 avec un seul lecteur, demander la disquette système quand `CPA.BNK` de `A:` manque ou n'a pas
 la signature du système (brouillon : 67 octets ; changement de disquette du banc à réparer
 d'abord).
