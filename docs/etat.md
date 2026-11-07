@@ -106,6 +106,12 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4), lots 1 à 3
 et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
 
+**Prochaine tâche** (demandée par Pierre le 07/11/2026) : nouvelle revue complète du projet
+(sources, outils, docs, disquettes) et proposition de nettoyage de ce qui est obsolète. Ensuite :
+avec un seul lecteur, demander la disquette système quand `CPA.BNK` de `A:` manque ou n'a pas
+la signature du système (brouillon : 67 octets ; changement de disquette du banc à réparer
+d'abord).
+
 1. **Atelier créatif**
    - Fait dans GRAPHER : sprites en mode texte (`SPRITES`, `SPOOL`, `SSHOW`, `SHIDE`,
      bibliothèque `SPR.INC` ; `docs/grapher.md` § 7.1, § 10.1), rectangles (`PASTE`, `GRAB`,

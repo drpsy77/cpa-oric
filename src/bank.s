@@ -7,9 +7,11 @@
 ;  (img.s : GSAVE, GLOAD, SAVE) ou GFX (gfx_draw.s : tracés du SPLIT),
 ;  chargées de CPA.BNK quand elles servent.
 ;  win_id dit laquelle est là (0 : aucune, après un chargement manqué).
-;  CPA.BNK est cherché comme un programme (lecteur courant ou du script,
-;  puis A: à D:) ; sa signature doit être celle du système (bnk_sig,
-;  posée par tools/mkbnk.py) : une banque d'une autre version est refusée.
+;  CPA.BNK est lu sur A: seulement, d'où vient le système ; sa signature
+;  doit être celle du système (bnk_sig, posée par tools/mkbnk.py) : une
+;  banque d'une autre version ou d'une autre langue est refusée. Un
+;  programme lancé d'un autre lecteur (LOGO français en B: sous un système
+;  anglais) prend donc les banques de A:.
 ;
 ;  Format de CPA.BNK (enregistrements de 128 octets) : enregistrement 0 =
 ;  signature (2 octets) ; PUT en 1-5 et IMG en 6-10 (la fenêtre WIN-WIN_END,
@@ -112,11 +114,11 @@ cf      lda #0
 z       sta BNK_FCB,x
         dex
         bpl cf
+        ldx #15                 ; ouvert sur A: seulement
         lda #<BNK_FCB
-        sta ZP_CFCB
-        lda #>BNK_FCB
-        sta ZP_CFCB+1
-        jsr open_com
+        ldy #>BNK_FCB
+        jsr bdos
+        cmp #$FF
         bne op
         jmp bad
 op      lda #<BNK_BUF
@@ -212,7 +214,7 @@ bk_first .byt 1, 6, 0, 11
 bk_endh  .byt >WIN_END, >WIN_END, 0, >GFX_END
 
 bnk_name
-        .byt 0
+        .byt 1                  ; A:
         .asc "CPA     BNK"
 msg_bnk
         .asc "CPA.BNK?",13,10,0

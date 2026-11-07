@@ -282,9 +282,10 @@ SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance t
 **CPA.BNK** porte des parties du système qui ne restent pas en mémoire : GSAVE, GLOAD et SAVE
 (au prompt comme pour les programmes), les tracés du mode SPLIT (points, traits, rectangles,
 cercles, texte, attributs : ceux de LOGO et des programmes qui dessinent par le système) et
-une copie de PUT. Il est lu quand elles servent, sur le lecteur courant puis sur `A:` à `D:`,
-comme un programme ; le premier GSAVE, GLOAD ou tracé prend un instant de plus, les suivants
-rien. Sans lui, ou s'il vient d'une autre version de CP/A, ces commandes répondent `CPA.BNK?`
+une copie de PUT. Il est lu quand elles servent, sur `A:` seulement, la disquette du système :
+un programme lancé d'un autre lecteur, même d'une disquette de l'autre langue, prend celui de
+`A:`. Le premier GSAVE, GLOAD ou tracé prend un instant de plus, les suivants
+rien. Sans lui, ou s'il vient d'une autre version ou langue de CP/A, ces commandes répondent `CPA.BNK?`
 (une fois, puis les tracés ne dessinent plus jusqu'au prochain passage en SPLIT ; PUT marche
 tant qu'il n'a pas laissé la place à GSAVE, GLOAD ou un tracé). Il est sur toutes les disquettes amorçables ; pour une disquette faite par
 `DISKCOPY A: B: /S`, copier aussi `CPA.BNK` (`COPY A:CPA.BNK B:`).
