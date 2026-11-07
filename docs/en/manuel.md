@@ -273,9 +273,10 @@ renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BA
 **CPA.BNK** holds parts of the system that do not stay in memory: GSAVE, GLOAD and SAVE (at
 the prompt as well as for programs), the SPLIT mode drawing primitives (points, lines,
 rectangles, circles, text, attributes: those of LOGO and of programs that draw through the
-system) and a copy of PUT. It is read when they are used, on the current drive then on `A:` to
-`D:`, like a program; the first GSAVE, GLOAD or drawing takes a moment longer, the next ones
-nothing. Without it, or if it comes from another version of CP/A, these commands answer
+system) and a copy of PUT. It is read when they are used, on `A:` only, the system disk: a
+program run from another drive, even from a disk of the other language, uses the one on `A:`.
+The first GSAVE, GLOAD or drawing takes a moment longer, the next ones
+nothing. Without it, or if it comes from another version or language of CP/A, these commands answer
 `CPA.BNK?` (once, then drawings draw nothing until the next switch to SPLIT; PUT works as long
 as it has not made room for GSAVE, GLOAD or a drawing). It
 is on every bootable disk; for a disk made by `DISKCOPY A: B: /S`, also copy `CPA.BNK`

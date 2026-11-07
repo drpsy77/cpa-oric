@@ -189,8 +189,8 @@ chaud n'y touche pas.
   posée aussi en `bnk_sig` dans le système) ; PUT en 1-5 et IMG en 6-10 (576 octets chacune,
   bourrées), GFX en 11-19 (1 088 octets, bourrée) ; tables `bk_first` (premier
   enregistrement) et `bk_endh` (page de fin) de `src/bank.s`. 2 560 octets (deux blocs).
-- **Chargeur** (`bnk_load`, `src/bank.s`) : CPA.BNK cherché comme un programme (`open_com`),
-  FCB `BNK_FCB` (`$FDB0`), lecture directe (fonction 33) de chaque enregistrement dans
+- **Chargeur** (`bnk_load`, `src/bank.s`) : CPA.BNK lu sur A: seulement (la disquette du
+  système, fonction 15), FCB `BNK_FCB` (`$FDB0`), lecture directe (fonction 33) de chaque enregistrement dans
   `BNK_BUF`, recopié dans la fenêtre sans rien écrire après la fin de la banque (`GFX_END`
   reste avant `BNK_BUF`). Absent ou d'une autre
   signature : `CPA.BNK?`, fenêtre intacte ; erreur pendant la copie : `win_id` à 0. DMA et FCB
