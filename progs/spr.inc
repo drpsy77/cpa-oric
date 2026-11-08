@@ -29,11 +29,16 @@
 ;               (0, 1) ; tous ses codes deviennent libres (96 au plus)
 ;    s_show     SSHOW : A/Y = descripteur du tableau $ des sprites, X =
 ;               tas ; s_k emplacement, s_n rang du sprite, s_col, s_lig
-;    s_hide     SHIDE : A = emplacement
-;  Emplacement (5 octets) : tas + 1 (0 : libre), colonne, ligne,
-;  largeur, hauteur.
+;    s_hide     SHIDE, HHIDE : A = emplacement
+;    s_hshow    HSHOW : A/Y = descripteur du tableau $ des sprites ; s_k,
+;               s_n, s_col (colonne d'octets), s_lig (ligne de points) ;
+;               dans l'image (HIRES, SPLIT : h_lines, h_ylo, h_yhi)
+;  Emplacement (5 octets) : tas + 1 (0 : libre ; $80 : dans l'image),
+;  colonne, ligne, largeur, hauteur (lignes de points dans l'image).
 ;  r_chk <> 0 (interprété) : tout est vérifié ; 0 (traduit) : rien, sauf
-;  le tas vide (la case reste alors sans sprite).
+;  le tas vide (la case reste alors sans sprite). Les lignes entre « ;[ »
+;  et « ;] » ne servent qu'à ces vérifications : tools/mark_inc.py les
+;  retire des copies de la disquette (comme dans arr.inc).
 ;  Tuiles (carte de tuiles en mode texte, docs/grapher.md « Tuiles ») :
 ;    t_set      TILESET : A/Y = descripteur du tableau $ des tuiles (une
 ;               ligne par tuile : ses codes, ligne par ligne), t_w, t_h
@@ -81,6 +86,7 @@ t_wd    = $BE           ;   largeur de la fenêtre
 ; ---------------------------------------------------------------------
 s_res
 .(
+;[
         lda r_chk
         beq sq2
         lda s_ns                ; une seule fois
@@ -93,6 +99,7 @@ sq1     lda r_j+1               ; 1 à 255
         lda r_j
         bne sq2
 sq0     jmp rz_lim
+;]
 sq2     lda r_ok
         bne sq3
         jsr r_init
@@ -117,7 +124,29 @@ sq4     clc
         sta rz_p
         bcc sq5
         inc rz_p+1
-sq5     sec                     ; sous les tableaux, au-dessus de h_zbuf
+sq5     jsr sz_alloc
+        lda r_sa
+        sta s_su
+        clc
+        adc #192
+        sta s_sl
+        lda r_sa+1
+        sta s_su+1
+        adc #0
+        sta s_sl+1
+        lda #0                  ; tout à 0 : emplacements libres
+        sta rz_v
+        sta rz_v+1
+        lda #1
+        sta rz_es
+        jmp rz_fillb
+.)
+
+; sz_alloc : rz_p octets sous les tableaux, au-dessus de h_zbuf -> r_sa
+;   (r_top, h_ztop descendent) ; sinon erreur
+sz_alloc
+.(
+        sec
         lda r_top
         sbc rz_p
         sta r_sa
@@ -133,22 +162,10 @@ sq5     sec                     ; sous les tableaux, au-dessus de h_zbuf
         lda r_sa
         sta r_top
         sta h_ztop
-        sta s_su
-        clc
-        adc #192
-        sta s_sl
         lda r_sa+1
         sta r_top+1
         sta h_ztop+1
-        sta s_su+1
-        adc #0
-        sta s_sl+1
-        lda #0                  ; tout à 0 : emplacements libres
-        sta rz_v
-        sta rz_v+1
-        lda #1
-        sta rz_es
-        jmp rz_fillb
+        rts
 sqm     lda #<rz_m_mem
         ldy #>rz_m_mem
         jmp r_fail
@@ -161,7 +178,9 @@ s_pool
 .(
         stx s_h
         jsr rz_desc
+;[
         jsr sz_need
+;]
         ldy #2                  ; nombre d'éléments
         lda (r_dp),y
         sta rz_a
@@ -183,9 +202,12 @@ sq1     jsr rz_mul
         lda rz_p
         cmp #97
         bcc sq3
-sq2     lda r_chk
+sq2
+;[
+        lda r_chk
         beq sq2b
         jmp rz_lim
+;]
 sq2b    lda #96
 sq3     ldx s_h
         sta s_hn,x
@@ -197,6 +219,7 @@ sq3     ldx s_h
         lda (r_dp),y
         sta s_hah,x
         jsr sz_sel
+;[
         lda r_chk               ; codes de 32 à 127 (111 : secondaire)
         beq sq6
         ldx s_h
@@ -220,6 +243,7 @@ sq5     cpy #0
         bne sq4
         beq sq6
 sqb     jmp rz_lim
+;]
 sq6     ldy #32                 ; aucun code pris
         lda #0
 sq7     sta (s_so),y
@@ -245,28 +269,27 @@ s_hide
 sq1     rts
 .)
 
-; sz_off : retire le sprite de l'emplacement s_w (actif)
+; sz_off : retire le sprite de l'emplacement s_w (actif ; s_r : son
+;   numéro, laissé par sz_slot)
 sz_off
 .(
-        ldy #0
+        ldy #4                  ; colonne, ligne, largeur, hauteur
+sq1     lda (s_w),y
+        sta s_x0-1,y
+        dey
+        bne sq1
         lda (s_w),y
         tax
-        dex
-        stx s_h
         tya
         sta (s_w),y             ; libre
-        iny
-        lda (s_w),y
-        sta s_x0
-        iny
-        lda (s_w),y
-        sta s_y0
-        iny
-        lda (s_w),y
-        sta s_l
-        iny
-        lda (s_w),y
-        sta s_hh
+        txa
+        bpl sq2
+        lda #1                  ; image (HSHOW) : le décor gardé revient
+        sta s_v
+        lda s_r
+        jmp hz_each
+sq2     dex
+        stx s_h
         jsr sz_sel
         lda #<sz_back
         sta s_fn
@@ -328,6 +351,7 @@ sq1     lda s_dd
         lda s_hs
         sta s_h
         jsr sz_sel
+;[
         lda r_chk
         beq sq2
         ldx s_h                 ; tas déclaré
@@ -336,11 +360,13 @@ sq1     lda s_dd
         lda #<sz_m_pool
         ldy #>sz_m_pool
         jmp r_fail
+;]
 sq2     jsr sz_find             ; s_p : première case ; s_l, s_hh
         lda s_col
         sta s_x0
         lda s_lig
         sta s_y0
+;[
         lda r_chk
         beq sq4
         lda s_x0                ; dans l'écran
@@ -382,6 +408,7 @@ sq2     jsr sz_find             ; s_p : première case ; s_l, s_hh
         ldy #>sz_m_full
         jmp r_fail
 sql     jmp rz_lim
+;]
 sq4     lda #<sz_put
         sta s_fn
         lda #>sz_put
@@ -501,6 +528,177 @@ sz_gad
 .)
 
 ; ---------------------------------------------------------------------
+; HSHOW k S$ n col y : le sprite dans l'image (HIRES, SPLIT), colonne
+;   d'octets col (0-39), ligne de points y ; le décor recouvert est
+;   gardé dans le tampon de l'emplacement (128 octets, réservés pour
+;   tous les emplacements au premier HSHOW)
+; ---------------------------------------------------------------------
+s_hshow
+.(
+        sta s_dd
+        sty s_dd+1
+        lda s_k                 ; l'ancien sprite de l'emplacement
+        jsr sz_slot
+        ldy #0
+        lda (s_w),y
+        beq sq1
+        jsr sz_off
+sq1     lda s_hb+1              ; tampons : 128 x emplacements
+        bne sq2
+        lda s_ns
+        lsr
+        sta rz_p+1
+        lda #0
+        ror
+        sta rz_p
+        jsr sz_alloc
+        lda r_sa
+        sta s_hb
+        lda r_sa+1
+        sta s_hb+1
+sq2     lda s_dd
+        ldy s_dd+1
+        jsr rz_desc
+        jsr sz_find             ; s_p : première case ; s_l, s_hh
+        lda s_hh                ; hauteur en lignes de points
+        asl
+        asl
+        asl
+        sta s_hh
+        lda s_col
+        sta s_x0
+        lda s_lig
+        sta s_y0
+;[
+        lda r_chk
+        beq sq4
+        lda #40                 ; dans l'image
+        sec
+        sbc s_l
+        cmp s_x0
+        bcc sql
+        lda h_lines
+        sec
+        sbc s_hh
+        cmp s_y0
+        bcs sq4
+sql     jmp rz_lim
+;]
+sq4     lda #0
+        sta s_v
+        lda s_k
+        jsr hz_each
+        ldy #4                  ; l'emplacement
+sq5     lda s_x0-1,y
+        sta (s_w),y
+        dey
+        bne sq5
+        lda #$80
+        sta (s_w),y
+        rts
+.)
+
+; hz_each : A = emplacement ; rectangle (s_x0, s_y0, s_l octets, s_hh
+;   lignes) de l'image : s_v = 0, décor gardé dans le tampon puis
+;   (décor AND NOT silhouette) OR dessin, cases s_p ; s_v = 1, le décor
+;   gardé revient. Octets d'attribut laissés.
+hz_each
+.(
+        lsr                     ; s_q = s_hb + 128 * A
+        tax
+        lda #0
+        ror
+        clc
+        adc s_hb
+        sta s_q
+        txa
+        adc s_hb+1
+        sta s_q+1
+        lda s_p                 ; s_t : rangée de cases du sprite
+        sta s_t
+        lda s_p+1
+        sta s_t+1
+        lda #0
+        sta s_i
+        sta s_d
+sq1     lda s_y0                ; s_c : la ligne à l'écran
+        clc
+        adc s_i
+        tax
+        lda h_ylo,x
+        clc
+        adc s_x0
+        sta s_c
+        lda h_yhi,x
+        adc #0
+        sta s_c+1
+        lda s_d                 ; s_r : 16 x colonne + ligne de la case
+        sta s_r
+        lda #0
+        sta s_j
+sq2     ldy s_j
+        lda s_v
+        beq sq3
+        lda (s_q),y             ; retrait
+        jmp sq7
+sq3     lda (s_c),y
+        sta (s_q),y
+        tax
+        and #$60
+        beq sq8                 ; attribut
+        ldy s_r
+        lda (s_t),y             ; dessin
+        sta s_e
+        tya
+        ora #8
+        tay
+        lda (s_t),y             ; silhouette
+        eor #$FF
+        sta s_e+1
+        txa
+        and s_e+1
+        ora s_e
+        ldy s_j
+sq7     sta (s_c),y
+sq8     lda s_r
+        clc
+        adc #16
+        sta s_r
+        inc s_j
+        lda s_j
+        cmp s_l
+        bne sq2
+        clc                     ; ligne suivante du tampon
+        lda s_q
+        adc s_l
+        sta s_q
+        bcc sq9
+        inc s_q+1
+sq9     inc s_d
+        lda s_d
+        cmp #8
+        bne sqa
+        lda #0                  ; rangée de cases suivante
+        sta s_d
+        lda s_l
+        asl
+        asl
+        asl
+        asl
+        clc
+        adc s_t
+        sta s_t
+        bcc sqa
+        inc s_t+1
+sqa     inc s_i
+        lda s_i
+        cmp s_hh
+        beq sqb
+        jmp sq1
+sqb     rts
+.)
+
+; ---------------------------------------------------------------------
 ; Outils
 ; ---------------------------------------------------------------------
 ; sz_each : s_fn pour chaque case du rectangle (s_x0, s_y0, s_l, s_hh),
@@ -573,6 +771,7 @@ sq2     rts
 ; sz_need : erreur si SPRITES n'a pas été fait (r_chk)
 sz_need
 .(
+;[
         lda r_chk
         beq sq1
         lda s_ns
@@ -580,6 +779,7 @@ sz_need
         lda #<sz_m_res
         ldy #>sz_m_res
         jmp r_fail
+;]
 sq1     rts
 .)
 
@@ -587,6 +787,7 @@ sq1     rts
 sz_slot
 .(
         sta s_r
+;[
         jsr sz_need
         lda r_chk
         beq sq1
@@ -594,6 +795,7 @@ sz_slot
         cmp s_ns
         bcc sq1
         jmp rz_lim
+;]
 sq1     lda #0                  ; s_w = s_sl + 5 * k
         sta s_w+1
         lda s_r
@@ -624,6 +826,7 @@ sz_find0
         iny
         lda (r_dp),y
         sta s_p+1
+;[
         lda r_chk
         beq sq3
         ldy #2                  ; fin du tableau : s_e
@@ -656,6 +859,7 @@ sq2     lda (s_p),y
         bne sz_bad
         dey
         bpl sq2
+;]
 sq3     rts
 .)
 sz_bad  lda #<sz_m_spr
@@ -667,6 +871,7 @@ sz_bad  lda #<sz_m_spr
 sz_find
 .(
         jsr sz_find0
+;[
         lda r_chk
         beq sq3
         ldy #5                  ; genre 0 : sprites
@@ -678,6 +883,7 @@ sz_find
         bcc sq3
 sql     jmp rz_lim
 sqf     jmp sz_bad
+;]
 sq3     ldx s_n
         clc                     ; premier en-tête de sprite
         lda s_p
@@ -685,15 +891,19 @@ sq3     ldx s_n
         sta s_p
         bcc sq4
         inc s_p+1
-sq4     lda r_chk
+sq4
+;[
+        lda r_chk
         beq sq6
         jsr sz_r8
+;]
 sq6     ldy #0
         lda (s_p),y
         sta s_l
         iny
         lda (s_p),y
         sta s_hh
+;[
         lda r_chk               ; 1 à 4 colonnes, 1 à 4 lignes
         beq sq7
         lda s_l
@@ -707,6 +917,7 @@ sq6     ldy #0
         cmp #4
         bcc sq7
 sqg     jmp sqf
+;]
 sq7     lda #0                  ; s_sz = 16 * largeur * hauteur
         ldy s_hh
 sq8     clc
@@ -727,11 +938,14 @@ sq9     asl s_sz
         sta s_p
         bcc sqa
         inc s_p+1
-sqa     lda r_chk               ; les cases dans le tableau
+sqa
+;[
+        lda r_chk               ; les cases dans le tableau
         beq sqb
         lda s_sz
         ldy s_sz+1
         jsr sz_room
+;]
 sqb     txa
         beq sqr
         dex
@@ -1573,6 +1787,7 @@ s_lig   .byt 0
 ; état
 s_ns    .byt 0          ; nombre d'emplacements (0 : pas de SPRITES)
 s_sl    .word 0         ; emplacements
+s_hb    .word 0         ; tampons de HSHOW (0 : pas encore)
 s_su    .word 0         ; SOUS des deux tas
 s_hn    .byt 0,0        ; tas : nombre de codes (0 : pas déclaré)
 s_ht    .byt 0,0        ;   sommet

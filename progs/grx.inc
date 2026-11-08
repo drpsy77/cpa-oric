@@ -740,6 +740,7 @@ r       rts
 .)
 ; g_paste, g_grab : A/Y = descripteur du tableau $ ; colonne puis ligne
 ;   sur la pile des valeurs ; coin h_x1 h_y1, largeur h_x2, hauteur h_y2
+;>g_grab g_paste
 g_grab  ldx #1
         .byt $2C                ; (BIT abs : saute ldx #0)
 g_paste ldx #0

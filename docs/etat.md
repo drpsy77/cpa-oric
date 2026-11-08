@@ -71,7 +71,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
 | LOGO | 18 979 | Logo (français, ou anglais sur les disquettes anglaises : 18 770) : tortue, décimaux, listes, son, écran texte | `logo.md` |
 | LOGOTR | 4 429 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
-| GRAPHER, GRXASM | 17 769, 17 002 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques, prises précompilées dans `GRX.LIB` quand elle est là) ; fichiers de données, sprites en mode texte (`.SPR`) ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
+| GRAPHER, GRXASM | 18 183, 17 085 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques, prises précompilées dans `GRX.LIB` quand elle est là) ; fichiers de données, sprites (`.SPR`) en mode texte et dans l'image ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
@@ -106,17 +106,17 @@ du point 3 ci-dessous : `CASSETTE.COM` (décidé) ; le reste de la liste garde s
 Fait (01/11/2026) : le pilote série du BIOS et la console à distance (point 4), lots 1 à 3
 et la page web (lot 4, 02/11/2026) (`docs/console-distance.md`).
 
-**Prochaine tâche** (décidée par Pierre le 07/11/2026, au soir) : **lot 1, sprites en HIRES
-et en SPLIT dans GRAPHER**, pour une vidéo de LOGO (ci-dessous).
-- `HSHOW slot S$ n x y` : le sprite n d'un `.SPR` (genre 0) dessiné avec sa silhouette dans
-  l'image (HIRES plein écran ou SPLIT), le décor dessous gardé par emplacement ; `HHIDE slot`
-  le remet (comme `SSHOW` / `SHIDE`, § 7.1 de `grapher.md`). x par colonnes de 6 points (un
-  octet de l'écran), y au point près ; le placement au point près (décalages) plus tard.
-- Traduit aussi par GRXASM (`/C` et `/O`) : c'est le « programme assembleur » de la vidéo.
-- Chiffrer la place (GRAPHER, bibliothèques) ; doc `grapher.md` ; essai de non-régression.
-- Essai : `files/dun.spr` (chevalier, 4 × 3 cases, avec silhouette) devant le château.
+**Fait (lot 1, 07/11/2026)** : sprites dans l'image (HIRES, SPLIT) de GRAPHER, `HSHOW k S$ n
+col y` et `HHIDE k` (`docs/grapher.md` § 7.1) : `.SPR` de genre 0, décor gardé par emplacement
+(128 octets chacun, réservés au premier `HSHOW`), x par octets, y au point près ; traduits
+par GRXASM. Essais : `hi_spr.grx`, `e_hspr*.grx` ; dans Oricutron, `DUN.SPR` devant le
+château de LOGO. Coût : GRAPHER +414 octets (9 blocs), GRXASM +83 ; les vérifications de
+l'interprété sont retirées des copies de `SPR.INC` (`;[ ;]`), qui rapetisse (15 297
+octets), comme `GRX.LIB` (32 174). Plus tard : placement au point près (décalages). Corrigé en passant : un programme traduit
+qui faisait `GRAB` sans `PASTE` plantait (`g_grab` continue dans `g_paste`, non recopiée :
+marque `;>`, de même `h_lvon`).
 
-**Vidéo LOGO** (après le lot 1 ; plan approuvé par Pierre) : fabriquée sur le banc
+**Prochaine tâche : vidéo LOGO** (plan approuvé par Pierre) : fabriquée sur le banc
 (Phosphoric natif, `--video` AVI avec le son, frappe par `--type-keys`), montage par ffmpeg
 (longues frappes accélérées × 3-4, sous-titres courts en français) ; une première version
 de 3-4 min soumise à Pierre. Programmes **tapés puis exécutés** (graphisme, interactivité,
@@ -635,13 +635,13 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (17 769 octets) prend 9 blocs, 663 octets libres dans le dernier ; piste de
-  place : messages d'erreur par numéro, ~40 octets. GRXASM (17 002) prend 9 blocs, 1 430
-  octets libres dans le dernier (16 930 en anglais ; le texte d'un `.GRX` à traduire va de
-  `$5151` à `$9CE0`, ~19,3 Ko : 738 octets de moins depuis la lecture de `GRX.LIB`) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
+- GRAPHER (18 183 octets) prend 9 blocs, 249 octets libres dans le dernier ; piste de
+  place : messages d'erreur par numéro, ~40 octets. GRXASM (17 085) prend 9 blocs, 1 347
+  octets libres dans le dernier (17 013 en anglais ; le texte d'un `.GRX` à traduire va de
+  `$51A4` à `$9CE0`, ~19,2 Ko : 738 octets de moins depuis la lecture de `GRX.LIB`) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
-  blocs, 1 844 octets libres dans le dernier ; GRX.LIB (32 176, 32 117 en anglais) prend
-  16 blocs, 592 octets libres dans le dernier. HELP (12 922) prend 7 blocs, 1 414 octets libres dans le dernier (12 737 en anglais, 7
+  blocs, 1 844 octets libres dans le dernier ; GRX.LIB (32 174, 32 115 en anglais) prend
+  16 blocs, 594 octets libres dans le dernier. HELP (12 850) prend 7 blocs, 1 486 octets libres dans le dernier (13 029 en anglais, 7
   blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)

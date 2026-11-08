@@ -30,7 +30,8 @@
 ;             la ligne ; ECHO seul : colonne 0 de la ligne suivante
 ;  Touches    GET V (attend une touche), WAIT, INKEY
 ;  Sprites    SPRITES n, SPOOL T [ALT], SSHOW k S$ n col lig [ALT],
-;             SHIDE k (LORES ; fichiers .SPR lus par BLOAD) : spr.inc
+;             SHIDE k (LORES ; fichiers .SPR lus par BLOAD) ; dans l'image :
+;             HSHOW k S$ n col y, HHIDE k : spr.inc
 ;  Image      GCLS, PEN m, PLOT x y, LINE x1 y1 x2 y2, BOX / FBOX x1 y1
 ;             x2 y2, CIRCLE x y r, GTEXT col y texte, GNUM col y n,
 ;             ATTR col y1 y2 v, GLOAD nom, GSAVE nom   (valeurs 0-255)
@@ -2018,9 +2019,27 @@ c_sshow jsr needlo
         jsr desc_of
         ldx gd
         jmp s_show
-; SHIDE k
-c_shide jsr needlo
+; HSHOW k S$ n col y : dans l'image (HIRES, SPLIT)
+c_hshow jsr needgfx
         jsr getbyte
+        sta s_k
+        jsr sprarg
+        jsr getbyte
+        sta s_n
+        jsr getbyte
+        sta s_col
+        jsr getbyte
+        sta s_lig
+        jsr endline
+        lda aal
+        ldx #1
+        jsr desc_of
+        jmp s_hshow
+; HHIDE k ; SHIDE k
+c_hhide jsr needgfx
+        bne sh1                 ; (toujours : Z = 0 au retour)
+c_shide jsr needlo
+sh1     jsr getbyte
         pha
         jsr endline
         pla
@@ -2180,6 +2199,8 @@ cadr
         .word c_tileset  ; TILESET
         .word c_tmap     ; TMAP
         .word c_tfont    ; TFONT
+        .word c_hshow    ; HSHOW
+        .word c_hhide    ; HHIDE
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)

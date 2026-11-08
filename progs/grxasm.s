@@ -3438,6 +3438,7 @@ s_tw    .asc "t_w",0
 s_th    .asc "t_h",0
 s_tc    .asc "t_c",0
 s_shide .asc "jsr s_hide",0
+s_shsh  .asc "jsr s_hshow",0
 s_sk    .asc "s_k",0
 s_sn    .asc "s_n",0
 s_scol  .asc "s_col",0
@@ -3569,6 +3570,29 @@ k_sshow lda #<s_sk
         jsr k_desc
         lda #<s_sshow
         ldy #>s_sshow
+        jmp oi
+; HSHOW k S$ n col y (HHIDE : k_shide)
+k_hshow lda #<s_sk
+        ldy #>s_sk
+        jsr k_p
+        jsr sprarg
+        jsr k_need1
+        lda #<s_sn
+        ldy #>s_sn
+        jsr k_p
+        lda #<s_scol
+        ldy #>s_scol
+        jsr k_p
+        lda #<s_slig
+        ldy #>s_slig
+        jsr k_p
+        jsr endline
+        jsr k_spr
+        lda aal
+        ldx #1
+        jsr k_desc
+        lda #<s_shsh
+        ldy #>s_shsh
         jmp oi
 k_shide jsr k_byte
         jsr endline
@@ -5819,6 +5843,8 @@ cadr
         .word k_tileset  ; TILESET
         .word k_tmap     ; TMAP
         .word k_tfont    ; TFONT
+        .word k_hshow    ; HSHOW
+        .word k_shide    ; HHIDE
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

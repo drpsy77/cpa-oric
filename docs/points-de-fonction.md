@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
-| GRAPHER + GRXASM | 35 | 22 | 125 | 34 | 18 | **234** | 57 | **291** |
+| GRAPHER + GRXASM | 35 | 22 | 132 | 34 | 18 | **241** | 60 | **301** |
 | LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 44 | **238** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *225* | ***1105*** |
+| *Applications* | *168* | *52* | *446* | *110* | *111* | ***887*** | *228* | ***1115*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **227** | **82** | **691** | **376** | **216** | **1592** | **370** | **1962** |
+| **Total** | **227** | **82** | **698** | **376** | **216** | **1599** | **373** | **1972** |
 
-Points ajustés (indicatif, § 9) : 1 592 × 1,05 ≈ 1 672.
+Points ajustés (indicatif, § 9) : 1 599 × 1,05 ≈ 1 679.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 219 EI, 92 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 221 EI, 92 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -416,6 +416,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.T53 | TFONT | EI | 2 | 3 | F | 3 |
 | GRA.T54 | `/C` : traduire puis assembler (CHAIN vers `ASM NOM /E`), `NOM.COM` seul | EO | 2 | 3 | F | 4 |
 | GRA.T55 | `/O` : traduire pour un Oric seul, puis assembler (CHAIN vers `ASM NOM /E /T`) : `NOM.TAP` (en-tête, fichiers lus recopiés, refus de SPLIT et des écritures) | EO | 3 | 6 | M | 5 |
+| GRA.T56 | HSHOW : sprite dans l'image (HIRES, SPLIT) | EI | 2 | 6 | M | 4 |
+| GRA.T57 | HHIDE | EI | 1 | 1 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -436,6 +438,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version
 | GRA.A15 | Tuiles : une table par place dans la tuile, carte traduite par morceaux (avant, dans, après la carte), instructions modifiées par ligne, coordonnées sans division | `spr.inc` | 5 |
 | GRA.A16 | Oric seul : socle sans la ROM (vecteurs pris où la ROM les envoie, clavier, console, BDOS réduit à table d'entrées gardées avec leur routine, fichiers recopiés dans le programme, retour au texte), en-tête du `.TAP` dans la source | `oric.inc`, `grxasm.s` | 5 |
 | GRA.A17 | GRXASM : bibliothèques précompilées (`GRX.LIB` : besoins et noms lus, ligne `#lib`), repli sur les `.INC` | `grxasm.s` | 1 |
+| GRA.A18 | Sprites dans l'image : décor gardé par emplacement (tampons réservés au premier affichage), octets recomposés ligne par ligne, attributs épargnés, retrait commun avec le texte | `spr.inc` | 3 |
 
 ### 4.3 LOGO
 
@@ -979,6 +982,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-03 | passerelle | 0.9 | 1 573 | 361 | 1 934 | 248 | `tools/passerelle.py` (WireGuard, Apache en lecture seule, services du démon et de la vitrine ; clés X25519 calculées) ; spectateurs comptés et plafonnés, appel de l'Oric refusé depuis la passerelle |
 | 2026-11-04 | GRX.LIB | 0.9 | 1 581 | 370 | 1 951 | 260 | bibliothèques des programmes traduits précompilées (`tools/mk_lib.py`, `GRX.LIB`) ; ASM : directive `#lib` (édition de liens) ; GRXASM : `GRX.LIB` lue si présente, sinon les `.INC` ; `tools/test_lib.sh` |
 | 2026-11-05 | rappel automatique | 0.9 | 1 592 | 370 | 1 962 | 264 | console à distance : rappel automatique par le pilote (silence de 10 s, fonction 117 op 4), touche de l'Oric signalée au démon (la vitrine s'arrête) ; vitrine commentée (`/commentaire`) |
+| 2026-11-07 | sprites dans l'image | 0.9 | 1 599 | 373 | 1 972 | 271 | GRAPHER et GRXASM : `HSHOW`, `HHIDE` (sprites des `.SPR` dans l'image HIRES ou SPLIT, décor gardé) |
 
 ## 11. Comparaisons
 

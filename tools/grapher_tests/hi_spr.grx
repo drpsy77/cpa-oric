@@ -1,0 +1,26 @@
+; sprites dans l'image (SPLIT) : HSHOW, deplacement, attribut, HHIDE (GRAB)
+DIM S$(48) B$(4,16)
+BLOAD S$ HERO.SPR
+SPLIT
+GCLS
+SPRITES 2
+FBOX 0 0 239 9
+ATTR 3 7 7 1
+HSHOW 0 S$ 0 2 2
+HSHOW 1 S$ 0 3 0
+SUB VOIR
+  GRAB B$(0,0) 1 0 4 16
+  FOR L 0 15
+    PRINT B$(0,L) " " B$(1,L) " " B$(2,L) " " B$(3,L)
+    ECHO
+  NEXT
+  ECHO "--"
+ENDSUB
+CALL VOIR
+HSHOW 0 S$ 0 1 3 ; deplacement
+CALL VOIR
+HHIDE 1
+HHIDE 0
+HHIDE 0 ; deja libre
+CALL VOIR
+SHIDE 1

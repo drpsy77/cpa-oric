@@ -1706,4 +1706,8 @@ cmds
         .byt "P"|$80,0
         .asc "TFON"
         .byt "T"|$80,0
+        .asc "HSHO"
+        .byt "W"|$80,0
+        .asc "HHID"
+        .byt "E"|$80,0
         .byt 0

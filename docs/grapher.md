@@ -214,6 +214,36 @@ est celle de la ligne (attributs) : le sprite prend la couleur des lignes où il
   l'historique) : les tuiles le dessinent (`TFONT ... ALT`, § 7.3). Un `INPUT` abîme ses codes 64 à 111 ; à
   la fin d'un programme qui s'en est servi, l'historique des lignes est vidé.
 
+**Dans l'image (HIRES, SPLIT)** : les mêmes fichiers `.SPR` (genre 0) et les mêmes
+emplacements (`SPRITES n`) servent dans l'image, sans tas de codes.
+
+| Commande | Effet |
+|---|---|
+| `HSHOW k S$ n col y` | dessine le sprite n de `S$` dans l'image, emplacement k : coin haut-gauche dans la colonne d'octets `col` (0-39, 6 points), à la ligne de points `y`. Chaque octet recouvert devient `(décor AND NOT silhouette) OR dessin` ; le décor est gardé. Sur un emplacement occupé, l'ancien sprite est d'abord retiré : c'est aussi le déplacement |
+| `HHIDE k` | retire le sprite de l'emplacement k : le décor gardé revient (rien si l'emplacement est libre) |
+
+- `HSHOW` et `HHIDE` demandent HIRES ou SPLIT (`HIRES ou SPLIT d'abord`) ; le sprite doit
+  tenir dans l'image (40 colonnes, 200 lignes, 128 en SPLIT : `valeur hors limites`).
+- Le premier `HSHOW` réserve sous les tableaux 128 octets par emplacement, pour le décor
+  gardé (`memoire pleine` s'ils ne tiennent pas) : prévoir juste assez d'emplacements.
+- Le sprite se place à l'octet près en largeur (6 points) et au point près en hauteur.
+- Un octet d'attribut n'est jamais recouvert (la couleur reste celle de l'image) ; le bit
+  de vidéo inverse du décor est gardé.
+- Deux sprites qui se chevauchent : le second garde le premier dans son décor. On les retire
+  dans l'ordre inverse de leur affichage ; pour en déplacer un, retirer d'abord ceux qui
+  sont passés dessus. On ne dessine pas sous un sprite affiché (le retirer d'abord), et un
+  changement de mode ou `GCLS` laisse les emplacements occupés : `HHIDE` remettrait
+  l'ancien décor.
+
+    DIM S$(256)
+    BLOAD S$ DUN.SPR        ; le chevalier, 4 x 3 cases
+    SPRITES 1
+    FOR X 2 35              ; passe devant l'image en place (SPLIT laissé par LOGO)
+      HSHOW 0 S$ 0 X 100
+      DELAY 4
+    NEXT
+    HHIDE 0
+
 ### 7.2 Rectangles : copie, défilement, rotation
 
 Ces commandes travaillent sur l'écran texte (LORES) comme sur l'image (HIRES, SPLIT). En LORES,
@@ -768,14 +798,14 @@ Oricutron, `-t NOM.TAP`.
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (17 769 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (18 183 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
-  5 octets par emplacement et 192 octets pour les deux tas ; `TILESET`, (larg × haut + 1)
-  pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
-  17 Ko (texte à partir de `$5AD2`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  5 octets par emplacement et 192 octets pour les deux tas, le premier `HSHOW` 128 octets
+  par emplacement ; `TILESET`, (larg × haut + 1) pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
+  16,5 Ko (texte à partir de `$5C70`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
   ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
 - **Mémoire** (traduit) : le programme en `$0500` (`$0503` pour un Oric seul, § 12.1),
   puis les tables de `hires.inc`. Les tableaux sont réservés sous `$9D60` comme en
@@ -804,7 +834,8 @@ Oricutron, `-t NOM.TAP`.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
-  puis affichage). Une zone de 38 × 26 cases (programme traduit, mesure du 6502 simulé,
+  puis affichage). Le chevalier de `DUN.SPR` (4 × 3 cases, 96 octets) déplacé par `HSHOW` :
+  environ 9 000 instructions, ~25 à 30 ms (1,5 trame). Une zone de 38 × 26 cases (programme traduit, mesure du 6502 simulé,
   estimée en cycles) : `PASTE` ou `SCROLV`, environ 20 ms (une trame) ; `TMAP`, 35 à 55 ms
   selon la taille des tuiles (§ 7.3) ; `SCROLH`, `ROTH`,
   environ 40 ms (chaque ligne passe par un tampon) ; `ROTV n` : n passes d'une ligne, dans le
@@ -845,7 +876,7 @@ Oricutron, `-t NOM.TAP`.
 | `progs/arr.inc` (`ARR.INC`) | tableaux et chaînes, commune aux deux (`r_chk` : vérifications en interprété) ; descripteurs en `$9D60` ; rectangles de l'écran (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | écran : dessin, LORES (`h_lores`, `h_loc`, `h_chr`...), écriture verticale (`h_lvon`, `h_lvoff`), images ; `h_buf` : 40 octets libres après ses tables (tampon de `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | animations `.ANI` ; l'`ANIM` des programmes traduits (`a_grx`) est dans `GRX.INC`, pour ne rien coûter à l'interpréteur ni à VOIR |
-| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) et tuiles (`t_set`, `t_map`, `t_get`, `t_font` ; `g_tmap` de `GRX.INC` pour le traduit), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad` (`hires.inc`) ; demande au programme l'octet `s_hst` |
+| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide` ; dans l'image : `s_hshow`) et tuiles (`t_set`, `t_map`, `t_get`, `t_font` ; `g_tmap` de `GRX.INC` pour le traduit), commune aux deux ; se sert de `arr.inc` (descripteurs, place sous les tableaux) et de `hz_tad`, `h_ylo`, `h_yhi`, `h_lines` (`hires.inc`) ; demande au programme l'octet `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | fichiers de données (`SAVE`... `FOUND`), commune aux deux ; enregistrements dans `DEF_DMA` ; demande au programme son FCB (`f_fcb`), l'écriture d'un nombre (`f_fmt`, `f_nbuf`) et quatre messages (`f_mlo`, `f_mful`, `f_mro`, `f_mdir`) ; écriture par `NOM.$$$` (`f_wopen`, `f_wclose`, `f_wabort`), type d'origine gardé dans `f_ext` |
 | `progs/oric.inc` (`ORIC.INC`) | socle des programmes traduits pour un Oric seul (`/O`), à la place de `CPA.INC` : prise de la machine (`o_init`), interruption (`o_irq`), clavier (`o_kscan`), BDOS réduit (`BDOS`, `o_ftab`), console (`o_con`, `o_rdl`), fichiers recopiés (`o_open`, `o_read`), retour au texte (`o_text`), bip (`o_snd`), fin (`o_end`, `o_nmi`) |
 
@@ -1078,6 +1109,14 @@ Page zéro : `$10-$5C` pour GRAPHER et GRXASM, plus `$5E-$61` (GRAPHER : graine 
   (vidéo inverse) du décor est gardé. Traduit, un tas vide laisse la case sans sprite.
 - `SHIDE` : pour chaque case du rectangle, si son code a un `SOUS` non nul : le décor revient,
   `SOUS` à 0, le code retourne au tas.
+- **Dans l'image** (`s_hshow`) : l'emplacement porte `$80` au lieu du tas + 1 et sa hauteur
+  en lignes de points. Les tampons du décor (128 octets par emplacement : 4 colonnes × 32
+  lignes au plus) sont réservés sous les tableaux au premier `HSHOW`. `hz_each` parcourt le
+  rectangle ligne par ligne (adresse par `h_ylo` / `h_yhi` de `hires.inc`) : affichage,
+  l'octet de l'écran va au tampon puis reçoit `(décor AND NOT silhouette) OR dessin` (rien
+  si c'est un attribut, `(octet AND $60) = 0`) ; retrait, le tampon revient tel quel.
+  `sz_off` (retrait commun à `SHIDE`, `HHIDE`, `SSHOW` et `HSHOW`) choisit selon le premier
+  octet de l'emplacement.
 - **Historique des lignes** : `SPOOL ... ALT` met `s_hst` à 1 ; en rendant la console
   (`to_text` de GRAPHER, `g_totext` de `GRX.INC`), le programme vide alors l'historique
   (`$BA80`), recouvert par les dessins du jeu secondaire. Le système n'y est pour rien (aucun
@@ -1132,6 +1171,7 @@ saisies dans `NOM.in`). Puis essai Oricutron des exemples.
 ## 16. Décidé, pas encore fait
 
 - Caractères animés au rythme du 50 Hz (l'eau qui ondule), sans toucher à la carte.
+- `HSHOW` au point près en largeur (sprite décalé de 0 à 5 points, une colonne de plus).
 
 ## 17. Questions ouvertes
 

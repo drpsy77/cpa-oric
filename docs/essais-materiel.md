@@ -13,6 +13,14 @@ essais.
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Sprites dans l'image** (`HSHOW`, `HHIDE`, `docs/grapher.md` § 7.1) :
+
+- après `CHATEAU` de LOGO (`files/dchateau.log`, `AUREVOIR`), un programme qui fait
+  passer `DUN.SPR` devant les tours par `HSHOW` (`docs/grapher.md` § 7.1) : pas de trace
+  laissée, silhouette noire sur les murs, vitesse (~25 à 30 ms par pas estimés) et
+  scintillement, en interprété puis traduit (`GRXASM NOM /C`) ;
+- en HIRES plein écran, le même sprite près du bas (ligne 176).
+
 **Bibliothèques précompilées** (`GRX.LIB`, `docs/grapher.md` § 12) :
 
 - sur `cpa-exemples.dsk` : `GRXASM CARTE` puis `ASM CARTE`, chronométrés ; `CARTE.ASM`

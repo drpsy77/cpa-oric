@@ -214,6 +214,35 @@ that of the line (attributes): the sprite takes the colour of the lines it cross
   tiles draw it (`TFONT ... ALT`, § 7.3). An `INPUT` damages its codes 64 to 111; at the end of a
   program that used it, the line history is emptied.
 
+**In the picture (HIRES, SPLIT)**: the same `.SPR` files (kind 0) and the same slots
+(`SPRITES n`) work in the picture, with no pool of codes.
+
+| Command | Effect |
+|---|---|
+| `HSHOW k S$ n col y` | draws sprite n of `S$` in the picture, slot k: top-left corner in byte column `col` (0-39, 6 dots), at dot line `y`. Each byte covered becomes `(scenery AND NOT silhouette) OR drawing`; the scenery is kept. On a slot in use, the old sprite is removed first: this is also how it moves |
+| `HHIDE k` | removes the sprite of slot k: the kept scenery comes back (nothing if the slot is free) |
+
+- `HSHOW` and `HHIDE` need HIRES or SPLIT (`HIRES or SPLIT first`); the sprite must fit in
+  the picture (40 columns, 200 lines, 128 in SPLIT: `value out of range`).
+- The first `HSHOW` reserves 128 bytes per slot below the arrays, for the kept scenery
+  (`memory full` if they do not fit): declare just enough slots.
+- The sprite is placed to the byte (6 dots) across and to the dot down.
+- An attribute byte is never covered (the colour stays that of the picture); the inverse
+  video bit of the scenery is kept.
+- Two overlapping sprites: the second keeps the first in its scenery. Remove them in the
+  reverse order of display; to move one, first remove those drawn over it. Do not draw under
+  a shown sprite (remove it first); a mode change or `GCLS` leaves the slots in use: `HHIDE`
+  would put back the old scenery.
+
+    DIM S$(256)
+    BLOAD S$ DUN.SPR        ; the knight, 4 x 3 cells
+    SPRITES 1
+    FOR X 2 35              ; walks across the picture in place (SPLIT left by LOGO)
+      HSHOW 0 S$ 0 X 100
+      DELAY 4
+    NEXT
+    HHIDE 0
+
 ### 7.2 Rectangles: copy, scrolling, rotation
 
 These commands work on the text screen (LORES) as well as on the picture (HIRES, SPLIT). In
@@ -744,14 +773,15 @@ the LOCI's USB key, tape mounted from the LOCI's menu; in Oricutron, `-t NAME.TA
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (17,769 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (18,183 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
-  bytes per slot and 192 bytes for the two pools; `TILESET`, (wid × hgt + 1) pages (§ 7.3).
-  The free area for the text, the arrays and an animation is about 17 KB (text from
-  `$5AD2`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
+  bytes per slot and 192 bytes for the two pools, the first `HSHOW` 128 bytes per slot;
+  `TILESET`, (wid × hgt + 1) pages (§ 7.3).
+  The free area for the text, the arrays and an animation is about 16.5 KB (text from
+  `$5C70`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
   21 KB), which need translation.
 - **Memory** (translated): the program at `$0500` (`$0503` for a bare Oric, § 12.1), then
   the tables of `hires.inc`. Arrays are reserved below `$9D60` as when interpreted: fixed
@@ -777,7 +807,9 @@ the LOCI's USB key, tape mounted from the LOCI's menu; in Oricutron, `-t NAME.TA
   `$0500` and `$9D60` (~38 KB); 30 KB of code leave only ~8 KB of arrays.
 - **Speed**: 150 to a few hundred lines per second interpreted (a sky of 400 stars,
   `PLOT 1+RND(238) 1+RND(198)`: 5 s; translated: 0.6 s). A sprite of 1 × 2 cells moved with
-  `SSHOW`: 2.3 ms in a translated program (about 1.1 ms per cell: removal then display). An
+  `SSHOW`: 2.3 ms in a translated program (about 1.1 ms per cell: removal then display). The
+  knight of `DUN.SPR` (4 × 3 cells, 96 bytes) moved with `HSHOW`: about 9,000 instructions,
+  ~25 to 30 ms (1.5 frames). An
   area of 38 × 26 cells (translated program, measured in the simulated 6502, estimated in
   cycles): `PASTE` or `SCROLV`, about 20 ms (one frame); `TMAP`, 35 to 55 ms depending on
   the tile size (§ 7.3); `SCROLH`, `ROTH`, about 40 ms (each
@@ -818,7 +850,7 @@ the LOCI's USB key, tape mounted from the LOCI's menu; in Oricutron, `-t NAME.TA
 | `progs/arr.inc` (`ARR.INC`) | arrays and strings, shared by both (`r_chk`: checks when interpreted); descriptors at `$9D60`; screen rectangles (`r_blit`, `r_scrl`, `r_sdef`, `r_rows`) |
 | `progs/hires.inc` (`HIRES.INC`) | screen: drawing, LORES (`h_lores`, `h_loc`, `h_chr`...), vertical writing (`h_lvon`, `h_lvoff`), pictures; `h_buf`: 40 free bytes after its tables (buffer of `r_scrl`) |
 | `progs/anim.inc` (`ANIM.INC`) | `.ANI` animations; the `ANIM` of translated programs (`a_grx`) is in `GRX.INC`, so that it costs nothing to the interpreter or to VOIR |
-| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`) and tiles (`t_set`, `t_map`, `t_get`, `t_font`; `g_tmap` of `GRX.INC` for translated programs), shared by both; uses `arr.inc` (descriptors, room below the arrays) and `hz_tad` (`hires.inc`); asks the program for the byte `s_hst` |
+| `progs/spr.inc` (`SPR.INC`) | sprites (`s_res`, `s_pool`, `s_show`, `s_hide`; in the picture: `s_hshow`) and tiles (`t_set`, `t_map`, `t_get`, `t_font`; `g_tmap` of `GRX.INC` for translated programs), shared by both; uses `arr.inc` (descriptors, room below the arrays) and `hz_tad`, `h_ylo`, `h_yhi`, `h_lines` (`hires.inc`); asks the program for the byte `s_hst` |
 | `progs/fil.inc` (`FIL.INC`) | data files (`SAVE`... `FOUND`), shared by both; records in `DEF_DMA`; asks the program for its FCB (`f_fcb`), number writing (`f_fmt`, `f_nbuf`) and two messages |
 | `progs/oric.inc` (`ORIC.INC`) | base of programs translated for a bare Oric (`/O`), instead of `CPA.INC`: taking over the machine (`o_init`), interrupt (`o_irq`), keyboard (`o_kscan`), reduced BDOS (`BDOS`, `o_ftab`), console (`o_con`, `o_rdl`), copied files (`o_open`, `o_read`), return to text (`o_text`), beep (`o_snd`), end (`o_end`, `o_nmi`) |
 
@@ -1042,6 +1074,14 @@ for `hires.inc`, `$C8-$CF` for `arr.inc`, `$D0-$DF` for `fil.inc`, `$E0-$EF` and
   video) of the scenery is kept. Translated, an empty pool leaves the cell without a sprite.
 - `SHIDE`: for each cell of the rectangle, if its code has a non-zero `SOUS`: the scenery comes
   back, `SOUS` at 0, the code goes back to the pool.
+- **In the picture** (`s_hshow`): the slot holds `$80` instead of pool + 1, and its height
+  in dot lines. The scenery buffers (128 bytes per slot: 4 columns × 32 lines at most) are
+  reserved below the arrays at the first `HSHOW`. `hz_each` walks the rectangle line by line
+  (address from `h_ylo` / `h_yhi` of `hires.inc`): to show, the screen byte goes to the
+  buffer then receives `(scenery AND NOT silhouette) OR drawing` (nothing if it is an
+  attribute, `(byte AND $60) = 0`); to remove, the buffer comes back as is. `sz_off`
+  (removal shared by `SHIDE`, `HHIDE`, `SSHOW` and `HSHOW`) chooses from the first byte of
+  the slot.
 - **Line history**: `SPOOL ... ALT` sets `s_hst` to 1; when giving the console back (`to_text`
   in GRAPHER, `g_totext` in `GRX.INC`), the program then empties the history (`$BA80`),
   covered by the drawings of the secondary set. The system has nothing to do with it (no
@@ -1091,6 +1131,7 @@ examples are tried in Oricutron.
 ## 16. Decided, not done yet
 
 - Characters animated at the 50 Hz rate (rippling water), without touching the map.
+- `HSHOW` to the dot across (sprite shifted by 0 to 5 dots, one more column).
 
 ## 17. Open questions
 

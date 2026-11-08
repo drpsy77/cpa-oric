@@ -1,0 +1,5 @@
+; HSHOW hors de l image (HIRES, SPLIT)
+DIM S$(48)
+BLOAD S$ HERO.SPR
+SPRITES 1
+HSHOW 0 S$ 0 0 0

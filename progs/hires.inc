@@ -323,6 +323,7 @@ hz_lp9  rts
 .)
 
 ; h_lvon / h_lvoff : écriture verticale (le curseur descend) ou normale
+;>h_lvon h_lvoff
 h_lvon  lda #1
         .byt $2C                ; (BIT abs : saute lda #0)
 h_lvoff lda #0
