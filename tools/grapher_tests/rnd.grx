@@ -1,4 +1,4 @@
-; RND : valeurs dans 0..n-1, toutes atteintes (n < 256 : multiplication)
+; RND : valeurs dans 0..n-1, toutes atteintes
 DIM C(7)
 FOR I 1 700
   R = RND(7)

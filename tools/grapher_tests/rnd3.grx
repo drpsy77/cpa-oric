@@ -1,0 +1,22 @@
+; RND(n) pour n >= 256 : bits de poids fort, sans le biais du reste
+; 6000 tirages de RND(20000) : environ 3000 sous 10000 ; avec le reste
+; d'une division de 15 bits, 0..12767 sortaient deux fois plus (~3660)
+S = 0
+REPEAT 6000
+  IF RND(20000) < 10000
+    S = S+1
+  ENDIF
+NEXT
+PRINT S > 2800
+PRINT S < 3200
+M = 0
+REPEAT 300
+  R = RND(32767)
+  IF R > M
+    M = R
+  ENDIF
+  IF R < 0
+    M = -1
+  ENDIF
+NEXT
+PRINT M > 30000

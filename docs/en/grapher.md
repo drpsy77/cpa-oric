@@ -977,15 +977,16 @@ during translation (`NVS`), like the value stack of `GRX.INC` (24).
 
 **Random numbers**: 32-bit xorshift (`x ^= x << 8`, `x ^= x >> 9`, `x ^= x << 23`), of period
 2³² − 1. The shifts were chosen among those that give this period so as to work by bytes: byte
-copies and a single one-bit shift (63 bytes, no loop). `RND(n)` takes one step, then, for
-n < 256, returns (high word × n) / 65,536 (an 8-step multiplication); for larger n, the
-remainder of the division of the high word (15 bits) by n. Seed: the 50 Hz counter, completed
+copies and a single one-bit shift (63 bytes, no loop). `RND(n)` takes one step, then
+returns (high word × n) / 65,536 (a 16-step multiplication): the high-order bits, without the
+bias of a division remainder, whatever n (up to 32,767). Seed: the 50 Hz counter, completed
 with `$5A` `$A5` (never zero), then 4 steps, without which two runs one tick apart start with
 close values. The interpreter (`rand`, `f_rnd`) draws the seed at start; `GRX.INC` (`g_rnd`)
 at the first `RND`, so that a program without `RND` does not carry the generator. A 16-bit
 generator (seed × 5 + 13849, for example) ties each draw to the previous one: coordinates
 drawn in pairs line up in bands; no 16-bit generator holds in three dimensions. Tests:
-`rnd.grx` (values, bounds), `rnd2.grx` (pairs of draws: 64 cells all filled), `e_div0.grx`.
+`rnd.grx` (values, bounds), `rnd2.grx` (pairs of draws: 64 cells all filled), `rnd3.grx`
+(n ≥ 256: `RND(20000)` as often below 10,000 as above), `e_div0.grx`.
 
 **Rectangles** (`arr.inc`): they are in `ARR.INC` rather than in `HIRES.INC`, which other
 programs include (VOIR) without using them; a translated program that scrolls therefore

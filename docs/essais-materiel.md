@@ -13,6 +13,14 @@ essais.
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 
+**Hasard de LOGO et de GRAPHER** (xorshift 32 bits, tirage par multiplication ; `docs/logo.md` § « Mise en œuvre », `docs/grapher.md` « Hasard ») :
+
+- 200 arbres de taille au hasard, X par `(HASARD 200) - 99`, comptés par le tronc : autant
+  à gauche qu'à droite, aux écarts du hasard près (sur 200, entre ~86 et ~114 d'un côté) ;
+- deux lancements de LOGO à quelques secondes d'écart donnent des forêts différentes ;
+- GRAPHER, interprété puis traduit (`GRXASM NOM /C`) : `RND(20000)` tiré quelques milliers
+  de fois, autant de valeurs sous 10 000 qu'au-dessus (comme `tools/grapher_tests/rnd3.grx`).
+
 **Sprites dans l'image** (`HSHOW`, `HHIDE`, `docs/grapher.md` § 7.1) :
 
 - après `CHATEAU` de LOGO (`files/dchateau.log`, `AUREVOIR`), un programme qui fait

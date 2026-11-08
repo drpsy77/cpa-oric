@@ -62,7 +62,7 @@ si le point est allumé, 0 sinon. Tous refusent l'écran texte (`ECRANTEXTE`).
     ETIQUETTE [BONJOUR] FIXECOULEUR 3
     SI ALLUME? 0 0 [ECRIS "ALLUME]
 
-Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n`, `CAP`, `XCOR`, `YCOR`, `ALLUME? x y`,
+Dans les expressions : `+ - * / ( ) = < >`, ainsi que `HASARD n` (entier de 0 à n-1, n jusqu'à 32767 ; 0 si n ≤ 0), `CAP`, `XCOR`, `YCOR`, `ALLUME? x y`,
 `LISCAR`, `TOUCHE?`, `TOUCHE`, `CURSEUR`, `CARECRAN c l`, `JOUE? v`, `RACINE x`, `SIN x`, `COS x`, `ARCTAN x` (angles en degrés, comme la
 tortue : `SIN 30` donne 0.5, `ARCTAN 1` donne 45), `LN x`, `EXP x`, `ENT x` (partie entière, vers zéro), `ARRONDI x` (entier le plus proche,
 2.5 donne 3), `ABS x`, `QUOTIENT a b` (division entière, vers zéro) et `RESTE a b` (du signe
@@ -327,6 +327,13 @@ les variables, les arguments et la pile de valeurs ; une primitive qui réserve 
 empile d'abord ses textes. Une liste est rangée normalisée (une espace entre éléments, aucune
 après `[` ni avant `]`) ; une sous-liste est un groupe `[...]`. EXECUTE copie la liste dans
 une pile à part de 512 octets (`xstack`), que le compactage ne touche pas.
+
+**HASARD.** Le xorshift 32 bits de GRAPHER (`rstep`, `docs/grapher.md` § « Hasard ») :
+période 2³² − 1, graine `rnds` hors de la page zéro, tirée au lancement (`rseed` : compteur
+50 Hz, `$5A` `$A5`, 4 pas). Un tirage fait un pas et rend (mot haut × n) / 65 536 : les bits
+de poids fort, sans le biais du reste d'une division, pour tout n. Les tirages ne dépendent que
+de la graine (pas du compteur à chaque tirage) et passent par les 2³² − 1 états quel que soit
+le nombre de tirages par tour de boucle.
 
 **Tortue.** Virgule fixe au 1/256 ; le cap a un octet de fraction (`headf`). Table de sinus
 en 65536 × sin (90° traité à part). XCOR, YCOR, CAP : entier si la tortue est sur un point

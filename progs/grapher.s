@@ -493,12 +493,12 @@ f_rnd   jsr arg1
         bmi zero
         ora ev
         beq zero
-        jsr rand                ; et = hasard (0 à 32767)
-        lda ev+1                ; n < 256 : (graine * n) / 65536, sans
-        bne fr_big                ;   division (bits hauts de la graine)
-        sta mt
-        ldx #8
-fr_l    lsr ev
+        jsr rand                ; un pas du générateur
+        lda #0                  ; (mot haut de la graine * n) / 65536 :
+        sta mt                  ;   bits de poids fort, sans le biais du
+        ldx #16                 ;   reste d'une division
+fr_l    lsr ev+1
+        ror ev
         bcc fr_n
         pha
         clc
@@ -511,13 +511,9 @@ fr_n    ror
         ror mt
         dex
         bne fr_l
-        sta ev
-        rts
-fr_big  jsr udiv                ; sinon : reste de la division
-        lda mr
-        sta ev
-        lda mr+1
         sta ev+1
+        lda mt
+        sta ev
         rts
 zero    lda #0
         sta ev

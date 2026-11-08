@@ -1011,15 +1011,16 @@ valeurs de `GRX.INC` (24).
 **Hasard** : xorshift 32 bits (`x ^= x << 8`, `x ^= x >> 9`, `x ^= x << 23`), de période
 2³² − 1. Les décalages ont été choisis parmi ceux qui donnent cette période pour se faire par
 octets : recopies d'octets et un seul décalage d'un bit (63 octets, sans boucle). `RND(n)`
-fait un pas, puis, pour n < 256, rend (mot haut × n) / 65 536 (multiplication de 8 pas) ;
-pour n plus grand, le reste de la division du mot haut (15 bits) par n. Graine : le compteur
+fait un pas, puis rend (mot haut × n) / 65 536 (multiplication de 16 pas) : les bits de
+poids fort, sans le biais du reste d'une division, quel que soit n (jusqu'à 32 767). Graine : le compteur
 50 Hz, complété par `$5A` `$A5` (jamais nulle), puis 4 pas, sans quoi deux lancements à un tic
 d'écart commencent par des valeurs voisines. L'interpréteur (`rand`, `f_rnd`) tire la graine
 au lancement ; `GRX.INC` (`g_rnd`) au premier `RND`, pour qu'un programme sans `RND`
 n'emporte pas le générateur. Un générateur de 16 bits (graine × 5 + 13849, par exemple)
 lie chaque tirage au précédent : des coordonnées tirées par paires s'alignent en bandes ;
 aucun générateur de 16 bits ne tient en trois dimensions. Tests : `rnd.grx`
-(valeurs, bornes), `rnd2.grx` (couples de tirages : 64 cases toutes remplies),
+(valeurs, bornes), `rnd2.grx` (couples de tirages : 64 cases toutes remplies), `rnd3.grx`
+(n ≥ 256 : `RND(20000)` aussi souvent sous 10 000 qu'au-dessus),
 `e_div0.grx`.
 
 **Rectangles** (`arr.inc`) : ils sont dans `ARR.INC` plutôt que dans `HIRES.INC`, que d'autres

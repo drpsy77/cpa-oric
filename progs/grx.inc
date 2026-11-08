@@ -441,16 +441,11 @@ w       jsr step
         dex
         bne w
 go      jsr step
-        lda g_seed+2            ; mot haut, 15 bits, pour la division
-        sta g_et
-        lda g_seed+3
-        and #$7F
-        sta g_et+1
-        lda g_ev+1              ; n < 256 : (mot haut * n) / 65536, sans
-        bne big                 ;   division
-        sta g_mt
-        ldx #8
-l       lsr g_ev
+        lda #0                  ; (mot haut * n) / 65536 : bits de poids
+        sta g_mt                ;   fort, sans le biais du reste d'une
+        ldx #16                 ;   division
+l       lsr g_ev+1
+        ror g_ev
         bcc n
         pha
         clc
@@ -463,13 +458,9 @@ n       ror
         ror g_mt
         dex
         bne l
-        sta g_ev
-        rts
-big     jsr g_udiv              ; sinon : reste de la division
-        lda g_mr
-        sta g_ev
-        lda g_mr+1
         sta g_ev+1
+        lda g_mt
+        sta g_ev
         rts
 zero    lda #0
         sta g_ev

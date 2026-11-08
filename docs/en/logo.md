@@ -65,7 +65,7 @@ otherwise. All of them refuse the text screen (`TEXTSCREEN`).
     LABEL [HELLO] SETCOLOR 3
     IF DOT? 0 0 [PRINT "LIT]
 
-In expressions: `+ - * / ( ) = < >`, as well as `RANDOM n` (random), `HEADING` (heading), `XCOR`,
+In expressions: `+ - * / ( ) = < >`, as well as `RANDOM n` (integer from 0 to n-1, n up to 32767; 0 if n ≤ 0), `HEADING` (heading), `XCOR`,
 `YCOR`, `DOT? x y`, `READCHAR`, `KEY?`, `KEY`, `CURSOR`, `CELL c l`, `PLAYING? v`,
 `SQRT x` (square root), `SIN x`, `COS x`, `ARCTAN x` (angles in degrees, like the turtle:
 `SIN 30` gives 0.5, `ARCTAN 1` gives 45), `LN x`, `EXP x`, `INT x` (integer part, towards
@@ -320,6 +320,13 @@ stack count; a primitive that reserves space first pushes its texts there. A lis
 normalised (one space between elements, none after `[` or before `]`); a sublist is a group
 `[...]`. RUN copies the list into a separate 512-byte stack (`xstack`), which compaction
 does not touch.
+
+**RANDOM.** GRAPHER's 32-bit xorshift (`rstep`, `docs/en/grapher.md`, "Random numbers"):
+period 2³² − 1, seed `rnds` outside the zero page, taken at start-up (`rseed`: 50 Hz counter,
+`$5A` `$A5`, 4 steps). A draw takes one step and returns (high word × n) / 65,536: the
+high-order bits, without the bias of a division remainder, for any n. Draws depend only on the
+seed (not on the counter at each draw) and go through all 2³² − 1 states whatever the number of
+draws per loop iteration.
 
 **Turtle.** Fixed point to 1/256; the heading has a fraction byte (`headf`). Sine table in
 65536 × sin (90° handled separately). XCOR, YCOR, HEADING: an integer if the turtle is on a whole

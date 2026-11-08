@@ -79,7 +79,6 @@ ridx    = $59
 reof    = $5A
 nargs   = $5B
 sign    = $5C
-rnd     = $5D
 savsp   = $5F
 cname   = $60           ; nom de la commande en cours (adresse, longueur)
 clen    = $62
@@ -212,10 +211,7 @@ ok      jsr ix_build
         sta tdrawn
         lda #$FF                ; TOUCHE : aucune touche retenue
         sta tki
-        lda SYS_TICKS
-        sta rnd
-        ora #1
-        sta rnd+1
+        jsr rseed               ; graine de HASARD
         lda #1
         sta tvis
         sta pdown
@@ -2210,39 +2206,108 @@ fpe     ldx #0
         stx clen
         jmp error
 
-; random : val = nombre au hasard entre 0 et val-1
+; random : val = nombre au hasard entre 0 et val-1 (0 si val <= 0)
+;   xorshift 32 bits (8, 9, 23), comme GRAPHER : période 2^32 - 1.
+;   val = (mot haut de la graine * val) / 65536 : bits de poids fort,
+;   sans le biais d'un reste de division.
 random
 .(
-        lda val
-        ora val+1
+        lda val+1
+        bmi zero
+        ora val
         beq r
-        lda rnd                 ; générateur xorshift 16 bits
-        asl
-        lda rnd+1
-        rol
-        eor rnd
-        sta rnd
-        lda rnd+1
-        lsr
-        eor rnd
-        sta rnd+1
-        lda rnd
-        eor SYS_TICKS
-        sta ma
-        lda rnd+1
-        and #$7F
-        sta ma+1
-        lda val
+        jsr rstep
+        lda val                 ; multiplicateur, décalé à droite
         sta mb
         lda val+1
         sta mb+1
-        jsr udivmod             ; reste dans mr+2
+        lda #0                  ; moitié haute du produit
+        sta mr+2
+        sta mr+3
+        ldx #16
+l       lsr mb+1
+        ror mb
+        bcc n
+        clc
+        lda mr+2
+        adc rnds+2
+        sta mr+2
+        lda mr+3
+        adc rnds+3
+        sta mr+3
+n       ror mr+3
+        ror mr+2
+        dex
+        bne l
         lda mr+2
         sta val
         lda mr+3
         sta val+1
 r       rts
+zero    lda #0
+        sta val
+        sta val+1
+        rts
 .)
+
+; rseed : graine du hasard = compteur 50 Hz, jamais nulle, puis 4 tours
+;   pour que deux lancements proches divergent
+rseed
+.(
+        lda SYS_TICKS
+        sta rnds
+        lda SYS_TICKS+1
+        sta rnds+1
+        lda #$5A
+        sta rnds+2
+        lda #$A5
+        sta rnds+3
+        ldx #4
+w       jsr rstep
+        dex
+        bne w
+        rts
+.)
+
+; rstep : un pas du xorshift 32 bits (X conservé)
+;   x ^= x << 8 ; x ^= x >> 9 ; x ^= x << 23
+rstep
+        lda rnds+3              ; x ^= x << 8
+        eor rnds+2
+        sta rnds+3
+        lda rnds+2
+        eor rnds+1
+        sta rnds+2
+        lda rnds+1
+        eor rnds
+        sta rnds+1
+        lda rnds+2              ; x ^= x >> 9
+        lsr
+        lda rnds+1
+        ror
+        eor rnds
+        sta rnds
+        lda rnds+3
+        lsr
+        lda rnds+2
+        ror
+        eor rnds+1
+        sta rnds+1
+        lda rnds+3
+        lsr
+        eor rnds+2
+        sta rnds+2
+        lda rnds+1              ; x ^= x << 23
+        lsr
+        lda rnds
+        ror
+        eor rnds+3
+        sta rnds+3
+        lda #0
+        ror
+        eor rnds+2
+        sta rnds+2
+        rts
 
 ; ---------------------------------------------------------------------
 ; Arithmétique
@@ -6100,5 +6165,6 @@ llbuf   = xstack_end    ; ligne lue par LISLISTE, LISMOT (128)
 spill   = llbuf+128     ; pile du 6502 des expressions en attente d'une
 spill_end = spill+640   ;   fonction (RENDS)
 pix     = spill_end     ; index des primitives par lettre (2 x 26 mots)
-procbase = (pix+104+255)/256*256   ; procédures, puis le tas des textes
+rnds    = pix+104       ; graine de HASARD (4)
+procbase = (rnds+4+255)/256*256   ; procédures, puis le tas des textes
 
