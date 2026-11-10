@@ -10,6 +10,13 @@ Le vrai Oric est arrêté tant que son alimentation n'est pas réglée (`docs/lo
 « Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas ces
 essais.
 
+**Disquette changée sans CTRL-C** (`docs/systeme.md` § 3 ; sur des **copies**) :
+
+- au prompt, monter une autre image en A: par le LOCI sans redémarrer, attendre 2 s,
+  `PUT X.TXT DIR` : `X.TXT` créé, les autres fichiers intacts (`tools/mkdisk.py check`) ;
+- EDIT : ouvrir un texte, changer d'image, enregistrer : enregistré sur la nouvelle, rien
+  d'abîmé ; le temps de la première écriture après une pause reste insensible.
+
 **Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
 
 - un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`

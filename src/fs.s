@@ -40,6 +40,7 @@ FCB_S1  = 13
 ;   est réécrit avant d'en charger un autre, et à la fermeture.
 read_lsn
 .(
+        jsr dk_gap
         lda buf_ok
         beq load
         lda buf_lsn
@@ -77,6 +78,7 @@ err     rts
 ; claim_lsn : prend le secteur fs_lsn sans le lire (il sera entièrement
 ;   réécrit). C=1 si erreur.
 claim_lsn
+        jsr dk_gap
         jsr flush
         bcs cl_r
         lda act_drv
@@ -102,6 +104,7 @@ fl_ok   clc
 
 ; write_buf : écrit SECBUF sur le disque (secteur buf_lsn). C=1 si erreur.
 write_buf
+        jsr dk_gap
         lda #0
         sta buf_dirty
         lda buf_lsn
@@ -111,9 +114,9 @@ write_buf
         jsr set_secbuf
         jsr disk_write
         bne io_err
+        jsr dir_rec             ; secteur du répertoire : sa somme
         clc
         rts
-
 io_err
         lda #<msg_ioerr
         ldy #>msg_ioerr
@@ -134,6 +137,130 @@ ie_p
         sec
         rts
 
+; ---------------------------------------------------------------------
+; Disquette changée sans démarrage à chaud. La carte d'allocation d'un
+; lecteur est faite à sa première utilisation ; si la disquette change
+; ensuite, la carte de l'ancienne servirait sur la nouvelle (blocs
+; occupés pris pour libres). Comme CP/M, on garde une somme de chaque
+; secteur du répertoire (dir_cks : 16 par lecteur, posées à la lecture
+; du lecteur et à chaque écriture d'un secteur du répertoire). Une
+; disquette ne se change pas en moins d'une seconde : après une seconde
+; sans accès disque (dk_gap), le secteur en cache est oublié et chaque
+; lecteur est à vérifier (chk_vec) ; la vérification (chg_chk : 16
+; secteurs relus) se fait avant de prendre ou de rendre des blocs.
+; ---------------------------------------------------------------------
+; dk_gap : à chaque accès disque du BDOS ; note le top de l'accès
+dk_gap
+.(
+        sec
+        lda ticks
+        sbc dk_tick
+        tax
+        lda ticks+1
+        sbc dk_tick+1
+        bne gap
+        cpx #50
+        bcc r
+gap     lda #$0F
+        sta chk_vec
+        lda buf_dirty           ; un secteur à écrire reste en tampon
+        bne r
+        sta buf_ok
+r       lda ticks
+        sta dk_tick
+        lda ticks+1
+        sta dk_tick+1
+        rts
+.)
+; dir_rec : note la somme du secteur en tampon, si c'est un secteur du
+;   répertoire. dir_cksx : X = rang de sa somme (lecteur * 16 + secteur),
+;   C=1 si ce n'en est pas un. dir_sum : A = somme du tampon.
+dir_rec
+        jsr dir_cksx
+        bcs dx_r
+        jsr dir_sum
+        sta dir_cks,x
+dx_r    rts
+dir_cksx
+.(
+        lda buf_lsn+1
+        bne no
+        lda buf_lsn
+        sec
+        sbc #<DIR_LSN
+        cmp #16
+        bcs r
+        tax
+        ldy buf_drv
+        beq r
+add     txa
+        adc #16
+        tax
+        dey
+        bne add
+r       rts
+no      sec
+        rts
+.)
+dir_sum
+.(
+        ldy #0
+        tya
+        clc
+l       adc SECBUF,y
+        iny
+        bne l
+        rts
+.)
+; chg_chk : avant de prendre ou de rendre des blocs sur le lecteur
+;   act_drv. S'il est à vérifier, ses secteurs de répertoire sont relus
+;   et comparés à leurs sommes ; une différence : la disquette a changé,
+;   le lecteur est relu (carte et sommes refaites). C=1 : changée (ou
+;   illisible). dir_i est gardé (recherche 17/18 en cours).
+chg_chk
+.(
+        jsr dk_gap
+        ldx act_drv
+        lda bitmask,x
+        and chk_vec
+        beq same
+        eor chk_vec
+        sta chk_vec
+        lda dir_i
+        pha
+        lda #0
+        sta dir_i
+loop    jsr flush
+        lda #0
+        sta buf_ok              ; relu sur la disquette
+        jsr dir_get
+        bcs chg
+        jsr dir_cksx
+        jsr dir_sum
+        cmp dir_cks,x
+        bne chg
+        lda dir_i
+        clc
+        adc #8
+        sta dir_i
+        bpl loop
+        pla
+        sta dir_i
+same    clc
+        rts
+chg     pla
+        sta dir_i
+        ldx act_drv
+        lda bitmask,x
+        eor #$FF
+        and log_vec
+        sta log_vec
+        lda act_drv
+        jsr drv_select
+        sec
+        rts
+.)
+dir_cks .dsb NDRV*16,0
 set_secbuf
         lda #<SECBUF
         sta dsk_buf
@@ -406,7 +533,11 @@ clr     sta ALV,y
         sta ALV,y
 entry   jsr dir_get
         bcs err
-        ldy #0
+        lda dir_i
+        and #7
+        bne e1
+        jsr dir_rec             ; somme du secteur (disquette changée)
+e1      ldy #0
         lda dir_i               ; entrée 0 : l'étiquette du format
         bne ent
         ldy #11
@@ -435,10 +566,14 @@ next    inc dir_i
         pla
         sta dir_i
         ldx act_drv
-        lda bitmask,x           ; lu : il répond de nouveau
-        eor #$FF
+        lda bitmask,x           ; lu : il répond de nouveau, et n'est
+        eor #$FF                ; plus à vérifier
+        pha
         and bad_vec
         sta bad_vec
+        pla
+        and chk_vec
+        sta chk_vec
         lda bitmask,x
         ora log_vec
         sta log_vec
@@ -575,6 +710,7 @@ nf      lda #$FF
 ; ---------------------------------------------------------------------
 f_delete
         jsr set_fcb
+        jsr chg_chk
 .(
         lda #0
         sta dir_i
@@ -703,6 +839,7 @@ err     lda #0
 ; ---------------------------------------------------------------------
 f_make
         jsr set_fcb
+        jsr chg_chk
         jsr ro_named
         bcc make_int
         lda #$FF
@@ -967,6 +1104,8 @@ room
         ora (ZP_FCB),y
         bne have
         sty fs_idx
+        jsr chg_chk             ; disquette changée : rien n'est pris
+        bcs chg
         jsr alloc_block
         bcs full
         ldy fs_idx
@@ -1024,6 +1163,9 @@ dfull   lda #1
         rts
 full    lda #2
         rts
+chg     lda #<msg_chg
+        ldy #>msg_chg
+        jsr fs_err
 err     lda #$FF
         rts
 .)
@@ -1276,4 +1418,5 @@ f_curdsk
 
 msg_ioerr
         .asc 13,10,"BDOS: disk I/O error",13,10,0
+msg_chg .asc 13,10,"BDOS: disk changed",13,10,0
 msg_fmt .asc 13,10,"BDOS: not a CP/A 80-track disk",13,10,0

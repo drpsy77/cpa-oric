@@ -99,7 +99,15 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   juste sous les tampons de DO), faite à la première utilisation depuis le dernier démarrage
   à chaud (`log_vec`). Lecteur inconnu ou illisible : `$FF` ; une disquette sans l'étiquette
   du format (ci-dessous) est illisible, avec `BDOS: not a CP/A 80-track disk` (muet sous
-  `io_quiet`). Changer de disquette demande un CTRL-C, comme sous CP/M. Démarrage à chaud :
+  `io_quiet`). Disquette changée sans démarrage à chaud : après une seconde sans accès disque (`dk_gap`,
+  compteur 50 Hz), le secteur en cache est oublié et chaque lecteur est à vérifier (`chk_vec`) ;
+  avant de prendre ou de rendre des blocs (fonctions 19, 22, bloc neuf de 21 et 34), `chg_chk`
+  relit les 16 secteurs du répertoire et compare leurs sommes (`dir_cks`, posées à la lecture
+  du lecteur et à chaque écriture d'un secteur du répertoire) ; différentes, le lecteur est
+  relu (carte refaite). Une création ou un effacement continue sur la nouvelle disquette ;
+  l'allongement d'un fichier déjà ouvert est refusé (`BDOS: disk changed`, `$FF`), rien n'est
+  pris. Un fichier ouvert en écriture avant le changement reste perdu : on ne change pas de
+  disquette pendant un enregistrement. Démarrage à chaud :
   lecteur courant gardé et relu, retour en A: s'il ne répond plus.
 - **Recherche des programmes et des scripts** (`open_com`) : un `.COM` ou `.BAT` tapé sans
   lecteur (aussi par DO et XDO) est cherché sur le lecteur du script en cours (au prompt : le

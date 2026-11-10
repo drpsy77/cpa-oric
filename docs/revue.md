@@ -18,8 +18,16 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   à la fin du dernier extent : la fin est rendue à chaque lecture, une écriture ajoute un
   extent. La fonction 36 rend aussi la bonne position à la fin d'un extent plein (elle se
   trompait d'un enregistrement). Coût : 21 octets résidents.
+- **Disquette changée sans CTRL-C** (`docs/systeme.md` § 3). La carte des blocs libres de
+  l'ancienne disquette servait sur la nouvelle : dans Oricutron, `PUT X.TXT DIR` après un
+  échange de `cpa.dsk` contre `cpa-exemples.dsk` prenait un bloc d'`ARDOISE.GRX`. Comme
+  CP/M : une somme par secteur du répertoire, vérifiée avant de prendre ou de rendre des
+  blocs quand une seconde s'est passée sans accès disque ; différente, le lecteur est relu.
+  Le format et le contrat ne changent pas. Coût : 331 octets résidents (marge 184), 16
+  secteurs relus à la première écriture après une pause.
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
-  de fichier, ajout après la fin, position, taille, pour 100, 128 et 256 enregistrements).
+  de fichier, ajout après la fin, position, taille ; disquette changée : création,
+  allongement, pause sans changement).
 
 ## 2. Décidé, pas encore fait
 
@@ -33,17 +41,6 @@ Par ordre. Chaque lot se termine par les tests de `architecture.md` § 4.
   (`etat.md` § 2 point 6). Piste : un bit « FCB modifié » (posé à l'allocation d'un bloc et
   quand RC grandit, effacé par l'ouverture et la fermeture) ; un changement d'extent ne
   ferme que si le bit est posé (une lecture seule n'écrit jamais le répertoire).
-- **Disquette changée sans CTRL-C**. Le système garde en mémoire la carte des blocs libres
-  de chaque lecteur, faite à la première utilisation depuis le démarrage à chaud. Si la
-  disquette (ou l'image montée par le LOCI) change sans CTRL-C, la carte de l'ancienne sert
-  sur la nouvelle : une écriture prend des blocs que la nouvelle croit occupés, et des
-  fichiers sont abîmés. Un identifiant dans l'étiquette ne suffit pas : les images sont
-  souvent des copies l'une de l'autre (`DISKCOPY`, copie du `.dsk` sur la clé). Piste,
-  comme CP/M : garder une somme de contrôle des secteurs du répertoire lus, la comparer
-  avant chaque écriture qui alloue ou libère (création, écriture d'un bloc neuf,
-  effacement, fermeture) ; si elle diffère, relire le lecteur (carte refaite) au lieu
-  d'écrire avec l'ancienne carte. À spécifier et à mesurer (octets résidents, accès disque
-  en plus) avant de coder ; le format de la disquette et le contrat ne changent pas.
 - **Écritures qui effacent d'abord l'ancien fichier** (`etat.md` § 2 point 5) : `h_save`,
   SAVE du CCP, LOGO, COPY, IMPORT, ASM, à passer par `NOM.$$$`.
 - Chercher dans `progs/` les programmes qui lisent jusqu'à la fin puis écrivent (ajout en
@@ -110,5 +107,5 @@ fait par `GRXASM /O` et `.TAP`.
 
 ## 3. Questions ouvertes
 
-- Détection de la disquette changée : faut-il aussi la faire avant une lecture (un
-  programme lirait sinon les blocs de l'ancienne disquette), au prix d'un accès de plus ?
+- La marge du système est de 184 octets après le lot de sûreté : quelle piste de place
+  ouvrir en premier (`etat.md` § 3 : code répété, autre banque de la fenêtre) ?

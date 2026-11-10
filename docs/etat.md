@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F3C4` en français (`$F398` en anglais), **marge 515
-octets** (559 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F50F` en français (`$F4E3` en anglais), **marge 184
+octets** (228 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -31,6 +31,8 @@ l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 - lecture de ligne (BDOS 10) : édition, historique, complétion par TAB ou ESC des noms de fichiers
   et, en début de ligne, des commandes (sur les lecteurs où elles seraient cherchées) ;
 - fichiers CP/M 2.2 (séquentiel, accès direct, attributs R/O et SYS), lecteurs A: à D: ;
+  disquette changée sans CTRL-C reconnue avant toute écriture qui prend ou rend des blocs
+  (sommes du répertoire, `docs/systeme.md` § 3 ; 331 octets résidents) ;
   disquettes de 2 faces de 80 pistes (images de 1 Mo, 658 Ko pour les fichiers, numéros de
   bloc sur 16 bits, étiquette du format en entrée 0 ; `docs/systeme.md` § 3) ; celles de 42
   pistes sont refusées (`BDOS: not a CP/A 80-track disk`) et se convertissent sur le PC
@@ -577,7 +579,7 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 515 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+**Système** (marge 184 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
 `$FF00` : 10 octets ; variables du BDOS : `$FD57` libre, 1 octet ; rappel automatique de
 la console à distance : 339 octets résidents et `$FD27-$FD56`). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,

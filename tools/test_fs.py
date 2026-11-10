@@ -13,6 +13,11 @@ de suite (fonction 20 : 1), position (36), ajout d'un enregistrement
 après la fin (21), fermeture (16), taille (35), relecture de tout.
 Défaut gardé : après la fin d'un fichier multiple de 16 Ko, une lecture
 rendait de vieilles données et une écriture écrasait l'extent précédent.
+Disquette changée sans démarrage à chaud (après une seconde sans accès
+disque) : un fichier créé sur la nouvelle ne doit pas prendre les blocs
+d'un fichier qu'elle porte déjà ; un fichier ouvert puis allongé reçoit
+une erreur (rien n'est pris), puis l'écriture suivante passe ; sans
+changement de disquette, la pause ne gêne rien.
 Code de retour : 0 si tout est bon.
 """
 import os
@@ -64,10 +69,38 @@ class Banc:
             n += 1
             if n > 20_000_000:
                 raise RuntimeError("le BDOS ne revient pas (fonction %d)" % fonction)
-        return c.a
+        a = c.a
+        if fonction == 13:                      # la fonction 13 remet le DMA en $0480
+            self.bdos(26, DMA)
+        return a
 
-    def fcb(self):
-        self.mem[FCB:FCB + 36] = [0] + list(b"TEST    DAT") + [0] * 24
+    def fcb(self, nom=b"TEST    DAT"):
+        self.mem[FCB:FCB + 36] = [0] + list(nom) + [0] * 24
+
+    def pause(self, trames=100):
+        """Le temps passe sans accès disque (compteur 50 Hz)."""
+        t = (self.mem[0x21B] | self.mem[0x21C] << 8) + trames
+        self.mem[0x21B], self.mem[0x21C] = t & 255, (t >> 8) & 255
+
+    def ecrit(self, nom, n, v, cree=True):
+        """Crée (ou ouvre) nom et y écrit n enregistrements de valeur v."""
+        self.fcb(nom)
+        r = [self.bdos(22 if cree else 15, FCB)]
+        for _ in range(n):
+            self.mem[DMA:DMA + 128] = [v] * 128
+            r.append(self.bdos(21, FCB))
+        r.append(self.bdos(16, FCB))
+        return r
+
+    def relit(self, nom, n, v):
+        """True si nom fait n enregistrements de valeur v."""
+        self.fcb(nom)
+        if self.bdos(15, FCB):
+            return False
+        for _ in range(n):
+            if self.bdos(20, FCB) or self.mem[DMA:DMA + 128] != [v] * 128:
+                return False
+        return self.bdos(20, FCB) == 1
 
     def r0(self):
         return self.mem[FCB + 33] | self.mem[FCB + 34] << 8
@@ -106,6 +139,58 @@ def essai(b, n):
     return bad
 
 
+def essai_change(b):
+    """Disquette changée sans démarrage à chaud : liste des défauts."""
+    import copy
+    m, bad = b.mem, []
+    GROS, NEUF = b"GROS    DAT", b"NEUF    DAT"
+    m[b.sym["io_quiet"]] = 1                    # erreurs sans message
+    vide = copy.deepcopy(b.disque)
+    b.bdos(13); b.bdos(26, DMA)
+    if any(b.ecrit(GROS, 300, 0x11)):
+        bad.append("préparation de la disquette Y")
+    pleine = copy.deepcopy(b.disque)            # Y : GROS.DAT, 19 blocs
+    # 1. sans changement : une pause ne gêne pas
+    b.pause()
+    if any(b.ecrit(NEUF, 20, 0x22)) or not b.relit(GROS, 300, 0x11) \
+            or not b.relit(NEUF, 20, 0x22):
+        bad.append("pause sans changement : écriture refusée ou fichier abîmé")
+    # 2. disquette vide lue (carte vide), puis Y remise sans démarrage à chaud
+    b.disque = copy.deepcopy(vide)
+    b.bdos(13)
+    b.fcb(NEUF); b.bdos(15, FCB)                # carte de la vide en mémoire
+    b.pause()
+    b.disque = copy.deepcopy(pleine)
+    if any(b.ecrit(NEUF, 20, 0x22)):
+        bad.append("création après le changement : refusée")
+    b.bdos(13)
+    if not b.relit(GROS, 300, 0x11):
+        bad.append("création après le changement : GROS.DAT abîmé")
+    if not b.relit(NEUF, 20, 0x22):
+        bad.append("création après le changement : NEUF.DAT faux")
+    # 3. fichier ouvert sur la nouvelle disquette puis allongé : refus, puis bon
+    b.disque = copy.deepcopy(vide)
+    b.bdos(13)
+    b.ecrit(NEUF, 2, 0x33)
+    petite = copy.deepcopy(b.disque)            # Z : NEUF.DAT, 1 bloc
+    b.disque = copy.deepcopy(pleine)
+    b.bdos(13)
+    b.fcb(GROS); b.bdos(15, FCB)                # carte de Y en mémoire
+    b.pause()
+    b.disque = copy.deepcopy(petite)
+    b.disque[b.sym["DIR_LSN"]][64:96] = pleine[b.sym["DIR_LSN"]][32:64]
+    b.disque[b.sym["DIR_LSN"]][64 + 12] = 9     # Z porte aussi un autre fichier
+    b.fcb(NEUF); b.bdos(15, FCB)
+    m[FCB + 32] = 16                            # enregistrement 16 : bloc neuf
+    m[DMA:DMA + 128] = [0x44] * 128
+    r1 = b.bdos(21, FCB)
+    r2 = b.bdos(21, FCB)
+    if (r1, r2) != (0xFF, 0):
+        bad.append("allongement après le changement : %d puis %d, attendu 255 puis 0" % (r1, r2))
+    m[b.sym["io_quiet"]] = 0
+    return bad
+
+
 def main():
     binf = sys.argv[1] if len(sys.argv) > 2 else os.path.join(BUILD, "cpa_sys.bin")
     symf = sys.argv[2] if len(sys.argv) > 2 else os.path.join(BUILD, "cpa_sys.sym")
@@ -122,6 +207,11 @@ def main():
         for t in bad[:6]:
             print("    " + t)
         code |= bool(bad)
+    bad = essai_change(b)
+    print("disquette changée   : %s" % ("OK" if not bad else "ECHEC"))
+    for t in bad:
+        print("    " + t)
+    code |= bool(bad)
     return code
 
 
