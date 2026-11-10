@@ -203,7 +203,8 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   les ROM de l'Oric (`test_bas.py`), `test_logo.sh` et `test_lib.sh` (longs).
 - `.github/workflows/docs.yml` (« Documents ») : `check_en.py` quand un document change.
 - `.github/workflows/release.yml` (« Version ») : à l'envoi d'une étiquette (`git tag v1.0`,
-  `git push origin v1.0`), construit les douze disquettes et les attache à la version
+  `git push origin v1.0`), ou quand une version est créée sur la page Releases de GitHub
+  (« Draft a new release », étiquette `v1.0` sur `main`), construit les douze disquettes et les attache à la version
   GitHub du même nom, une par une et dans une archive ; les liens des README
   (`.../releases/latest/download/NOM.dsk`) donnent toujours la dernière. La page web
   d'Oricutron est refaite avec la disquette de cette version.

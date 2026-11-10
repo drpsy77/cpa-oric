@@ -10,7 +10,9 @@ on:
   push:
     tags: ['v*']
   release:
-    types: [created]      # version créée sur la page Releases de GitHub
+    types: [published]    # version créée sur la page Releases de GitHub
+
+concurrency: version-${{ github.ref_name }}
 
 permissions:
   contents: write
