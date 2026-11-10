@@ -120,7 +120,6 @@ DEF_DMA     = $0480
 TPA_START   = $0500
 TPA_END     = $B400     ; premier octet après la TPA
 
-#ifdef DISK
 ; --- Contrôleur Microdisc (WD1793) ---
 FDC_CMD     = $0310     ; commande (écriture) / état (lecture)
 FDC_TRK     = $0311
@@ -244,7 +243,6 @@ CP_TAB      = $B800     ; complétion : noms déjà vus (39 x 13 octets), pendan
 CP_TMAX     = 39        ;   seulement (zone de sauvegarde des menus, libre alors)
 CCP_FCB2    = $FDB0     ; FCB de travail : BNK_FCB (banques, GSAVE)
 SECBUF      = $FE00     ; tampon de secteur (256 octets)
-#endif
 
 ; --- Menus et préférences (page 2) ---
 m_lo        = $0250     ; 8 octets
@@ -342,7 +340,6 @@ img_cnt     = $02A8
 top_cap     = $02A9     ; page plafond de la TPA (0 = aucun), posé par DEBUG (public)
 ZP_G        = ZP_M3     ; pointeur dans l'image
 
-#ifdef DISK
 ; --- PUT : copie de la sortie console dans un fichier ---
 put_on      = $02AA     ; 1 = capture en cours
 put_pend    = $02AB     ; bit 7 : enregistrement(s) à écrire
@@ -380,4 +377,3 @@ bk_rec      = $FD0B     ;   enregistrement suivant
 bk_dst      = $FD0E     ;   2 octets : adresse dans la fenêtre
 img_f       = $FD10     ; 2 octets : FCB du fichier pendant GSAVE (img.s)
 bk_n        = $FD12     ; bnk_load : octets du morceau en cours
-#endif

@@ -20,7 +20,6 @@
 #   DSKSWAP=f.dsk     seconde disquette du lecteur A: (copiée en SORTIE.swap.dsk) :
 #                     chaque \x07 de TOUCHES met l'autre (swap, puis DSK...),
 #                     après avoir enregistré celle qui sort (un seul lecteur)
-#   ORIC_ROM=cpa      démarre sur build/cpa.rom au lieu de la ROM BASIC 1.1
 #   ORIC_LOCI=dossier interface du LOCI simulée, ce dossier tenant lieu de clé
 #                     USB (EXPORT, IMPORT, USBDIR)
 #   SHOW=1            montre la fenêtre (sinon écran virtuel Xvfb)
@@ -29,7 +28,6 @@
 #
 # Exemples :
 #   DSK=build/cpa.dsk tools/run_test.sh $'DIR\n' 600 /tmp/t && python3 tools/screen.py /tmp/t.mem
-#   ORIC_ROM=cpa tools/run_test.sh $'VER\n' 300 /tmp/r
 #   tools/run_test.sh $'||CALL#9000\n' 900 /tmp/c --turbotape on -t JEU.TAP
 #     (ROM BASIC, cassette : Oricutron tape lui-même CLOAD"")
 set -e
@@ -40,7 +38,6 @@ case "$OUT" in /*) ;; *) OUT="$(pwd)/$OUT" ;; esac
 rm -f "$OUT.mem" "$OUT.png"
 
 ROM=${ORIC_ROM:-basic11b}
-[ "$ROM" = cpa ] && cp "$HERE/build/cpa.rom" "$ORIC/roms/cpa.rom"
 if [ -n "$DSK" ]; then
   cp "$DSK" "$OUT.dsk"
   # lecteurs B: à D: (copies SORTIE.b.dsk...), remplis dans l'ordre

@@ -1,6 +1,5 @@
 #!/bin/sh
 # Construit CP/A :
-#   (build/cpa.rom, la ROM de 16 Ko, n'est plus construite : CLAUDE.md)
 #   build/cpa_sys.bin  système disque, chargé en RAM overlay $C000-$FFFF
 #   build/boot.bin     secteurs d'amorçage Microdisc (3 x 256 octets)
 #   build/progs/*.COM  programmes d'exemple
@@ -36,12 +35,10 @@ python3 tools/gen_logo_voc.py > /dev/null   # vocabulaire de LOGO (fr, en) et ta
 DISK_OPTS=${DISK_OPTS--DCPLCMD -DSERIE}
 # Système : textes (barre de menus, messages de la console) pris dans
 # src/msg/fr ou src/msg/en ; disque en deux langues (cpa_sys.bin,
-# cpa_sys_en.bin pour cpa-en.dsk) ; la ROM, projet à part, en français.
+# cpa_sys_en.bin pour cpa-en.dsk).
 cd src
-# ROM : plus construite ni étudiée (CLAUDE.md) ; build/cpa.rom reste la dernière faite
-# $XA -I msg/fr -o ../build/cpa.rom -l ../build/cpa.sym -e ../build/cpa.err cpa.s
-$XA -I msg/fr -DDISK $DISK_OPTS -o ../build/cpa_sys_all.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
-$XA -I msg/en -DDISK $DISK_OPTS -o ../build/cpa_sys_all_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
+$XA -I msg/fr $DISK_OPTS -o ../build/cpa_sys_all.bin -l ../build/cpa_sys.sym -e ../build/cpa_sys.err cpa.s
+$XA -I msg/en $DISK_OPTS -o ../build/cpa_sys_all_en.bin -l ../build/cpa_sys_en.sym -e ../build/cpa_sys_en.err cpa.s
 cd ..
 # banques de la fenêtre (src/bank.s) : l'image de 16 Ko est suivie de la
 # banque IMG ; tools/mkbnk.py les sépare, pose la signature dans le système

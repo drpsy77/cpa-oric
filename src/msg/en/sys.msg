@@ -4,11 +4,7 @@
 ; clavier est écrit au bout du libellé, aligné à droite.
 
 mn_sys
-#ifdef DISK
         .byt 6,11
-#else
-        .byt 5,11
-#endif
         .asc "System",0
         .asc "Version",0
         .byt MA_TYPE
@@ -22,16 +18,13 @@ mn_sys
         .asc "Printer  ^P",0
         .byt MA_CALL
         .word k_prt
-#ifdef DISK
         .asc "Next drive",0
         .byt MA_CALL
         .word m_drive
-#endif
         .asc "Reboot   ^C",0
         .byt MA_CALL
         .word m_reboot
 
-#ifdef DISK
 mn_fic  .byt 5,9
         .asc "Files",0
         .asc "Directory",0
@@ -49,7 +42,6 @@ mn_fic  .byt 5,9
         .asc "Erase...",0
         .byt MA_TYPE
         .word ty_era
-#endif
 
 mn_ecr  .byt 7,12
         .asc "Screen",0
@@ -91,6 +83,4 @@ mn_clv  .byt 3,6
 ; (ccp_gfx.s), script arrêté par CTRL-C (script.s)
 msg_more .asc " -- More (^C stop) -- ",0
 msg_key  .asc "Press a key to go on...",13,10,0
-#ifdef DISK
 msg_scrstop .asc "Script stopped.",13,10,0
-#endif

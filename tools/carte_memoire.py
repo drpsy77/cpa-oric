@@ -3,7 +3,7 @@
 
 Assemble une copie de src/ où une étiquette marque le début de chaque fichier
 inclus par cpa.s (et des parties de bios.s), avec les options de build.sh
-(-DDISK -DCPLCMD -DSERIE, messages français) ; vérifie que le code obtenu est
+(-DCPLCMD -DSERIE, messages français) ; vérifie que le code obtenu est
 octet pour octet celui de build/cpa_sys_all.bin, puis dessine la carte d'après
 les étiquettes et les zones de hw.inc.
     python3 tools/carte_memoire.py [sortie.html]
@@ -74,7 +74,7 @@ def assembler():
         out.append(l)
     open(p, "w").write("\n".join(out))
     b, sym = os.path.join(t, "m.bin"), os.path.join(t, "m.sym")
-    subprocess.run([XA, "-I", "msg/fr", "-DDISK", "-DCPLCMD", "-DSERIE", "-o", b, "-l", sym,
+    subprocess.run([XA, "-I", "msg/fr", "-DCPLCMD", "-DSERIE", "-o", b, "-l", sym,
                     "-e", os.path.join(t, "m.err"), "cpa.s"], cwd=src, check=True,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ref = os.path.join(R, "build", "cpa_sys_all.bin")

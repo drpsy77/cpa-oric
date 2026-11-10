@@ -53,8 +53,6 @@ Deux variantes sont construites à partir des mêmes sources :
   `MAP.GRX` ; correspondance dans `files/en/noms.txt`). LOGO parle lui aussi la langue de la
   disquette (`AVANCE`, `POUR ... FIN` en français), et `LOGOTR` traduit un programme de
   l'une à l'autre.
-- **`build/cpa.rom`**, une ROM de 16 Ko qui remplace la ROM BASIC : console et moniteur, sans
-  disque.
 
 ## Ce qu'il y a dedans
 
@@ -118,7 +116,6 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/etat.md` | état du projet, liste de la version 1.0 |
 | `docs/suite.md` | suite prévue, par priorité |
 | `docs/place.md` | réserves de place (système, disquettes) |
-| `docs/projet-rom.md` | la version ROM |
 | `docs/oric-basic.md` | CP/A pour l'Oric sous BASIC : sortie `.TAP` (MKTAP), jeux GRAPHER autonomes (`GRXASM /O`, `ORIC.INC`), routines pour le BASIC plus tard (spécification) |
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
@@ -149,7 +146,6 @@ Version disque : l'EPROM du Microdisc fait appel à la ROM BASIC 1.1, il faut do
 
     oricutron -m atmos -k microdisc -d build/cpa.dsk
 
-Version ROM : copier `build/cpa.rom` dans `roms/`, puis mettre `atmosrom = 'roms/cpa'` dans `oricutron.cfg`.
 
 Sur le matériel, copier `cpa.dsk` sur la clé USB du LOCI et démarrer dessus. Les disquettes
 ont 2 faces de 80 pistes (658 Ko pour les fichiers) ; celles de 42 pistes des versions
@@ -176,5 +172,5 @@ Sur l'Oric, `HELP` donne l'aide de chaque commande (`HELP` seul : la liste des r
 
 ## Licence
 
-CP/A est distribué sous licence MIT (voir `LICENSE`). Les images `build/cpa.dsk` et
-`build/cpa.rom` sont fournies prêtes à l'emploi ; `./build.sh` les reconstruit.
+CP/A est distribué sous licence MIT (voir `LICENSE`). Les images `build/*.dsk`
+sont fournies prêtes à l'emploi ; `./build.sh` les reconstruit.

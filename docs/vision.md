@@ -45,6 +45,8 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
   utilisateur, IOBYTE : non).
 - Un BASIC de plus : le pont va vers le BASIC de l'Oric, pas l'inverse.
 - Un outil pour PC ou pour émulateur : le vrai Oric est la référence.
+- Un système en ROM : les outils sont des `.COM` sur disquette ; ce qui doit tourner sans
+  CP/A se publie en `.TAP`.
 
 ## La version 1.0
 
@@ -71,4 +73,3 @@ cherche ailleurs.
 
 - Au-delà de son auteur : CP/A est-il proposé à la communauté Oric (langue des messages et
   de la documentation, diffusion) ?
-- La version ROM (`docs/projet-rom.md`) : quelle place dans la 1.0 ?

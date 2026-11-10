@@ -6,7 +6,6 @@
 ;  Version ROM : résident.
 ; =====================================================================
 
-#ifdef DISK
 ; cold_win : test de la RAM et son compte rendu, puis AUTO.BAT ; la
 ;   fenêtre ne garde ensuite que PUT (un BOOT plus tard ne revient pas ici)
 cold_win
@@ -45,7 +44,6 @@ auto_fcb
         .byt 1
         .asc "AUTO    BAT"
 .)
-#endif
 
 ; ---------------------------------------------------------------------
 ; ram_test : comme la ROM de l'Atmos, écrit $AA puis $55 dans chaque

@@ -62,7 +62,6 @@ cp      lda (ZP_PTR),y
         bcs go
         ldx vmode
         beq err
-#ifdef DISK
         cmp #2                  ; op 2 à 9 : banque GFX (gfx_draw.s), chargée
         bcc go                  ; au premier tracé ; refusée pendant un PUT
         lda put_on              ; (elle déborde sur le tampon de PUT) ;
@@ -84,7 +83,6 @@ cp      lda (ZP_PTR),y
         inc gfx_ko
 gk      pla
         rts
-#endif
 go      asl
         tax
         lda g_tab+1,x
@@ -96,20 +94,9 @@ err     lda #$FF
         rts
 .)
 
-#ifdef DISK
 g_tab   .word g_cls-1, g_setpen-1, g_plot, g_line, g_box, g_fbox
         .word g_circle, g_text, g_attr, g_point, g_mode-1, g_getmode-1
-#else
-g_tab   .word g_cls-1, g_setpen-1, g_plot-1, g_line-1, g_box-1, g_fbox-1
-        .word g_circle-1, g_text-1, g_attr-1, g_point-1, g_mode-1, g_getmode-1
-#endif
-#ifdef DISK
         .word g_gsave_r-1, g_gload_r-1  ; banque IMG (bank.s, img.s)
-#else
-        .word g_bad-1, g_bad-1
-g_bad   lda #$FF
-        rts
-#endif
 
 g_ok    lda #0
         rts
@@ -126,10 +113,8 @@ g_getmode
 
 g_mode
 .(
-#ifdef DISK
         lda #0                  ; la banque GFX sera de nouveau cherchée
         sta gfx_ko
-#endif
         lda g_p+1
         beq text
         cmp #2

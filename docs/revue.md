@@ -31,6 +31,10 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
 - **`etat.md` scindé** : `etat.md` (10 Ko : état, liste de la version 1.0, contraintes),
   `suite.md` (suite prévue), `place.md` (réserves de place) ; chiffres de l'état et de la
   place repris de `build/`.
+- **Version ROM abandonnée** : code retiré de `src/` (67 blocs `#ifdef DISK`, `#ifndef
+  DISK`), `-DDISK` retiré de `build.sh`, `build/cpa.rom` et `docs/projet-rom.md` retirés ;
+  les douze disquettes sont identiques octet par octet. `architecture.md`, `vision.md`,
+  `README`, `CLAUDE.md`, `etat.md` mis à jour.
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
@@ -69,25 +73,12 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   fonction 21 créent leur fichier par la 22 ; PUT crée le sien) ; le défaut du § 1 ne
   pouvait donc toucher qu'un programme écrit par l'utilisateur.
 
-### Lot 2 — version ROM archivée
-
-Décidé : la version ROM n'a plus de sens. Les commandes majeures sont des `.COM` (EDIT,
-GRAPHER, LOGO) qui ne tiendraient pas en ROM, et un programme qui tourne sur un Oric seul se
-fait par `GRXASM /O` et `.TAP`.
-
-- Retirer des sources le code de la ROM (environ 70 directives `#ifdef DISK`, `#ifndef
-  DISK`, `#else` dans dix fichiers de `src/`) ; `-DDISK` disparaît de `build.sh`. Le
-  système produit doit rester identique octet par octet.
-- Retirer `build/cpa.rom` et ses lignes de `.gitignore`, `build.sh`, `smoke_test.sh`,
-  `run_test.sh` (`ORIC_ROM=cpa`).
-- Documents : `projet-rom.md` retiré ; `architecture.md` (deux projets, colonne « Version
-  ROM », « les deux versions », § 4), `vision.md` (question ouverte fermée), `README`,
-  `CLAUDE.md`, en-tête de `src/cpa.s` (page zéro libre `$00-$DF`, fin du code `$F5C8`).
-- Le contrat reste ce qu'il est : il n'est plus « partagé avec la ROM », il est ce que les
-  programmes `.COM` déjà écrits attendent.
-
 ### Lot 3 — documents à jour
 
+- Mentions de la version ROM encore à retirer : `architecture.md` (cellules des tableaux
+  du § 1 et du § 2 : « ROM seulement », « en version disquette »), `docs/en/architecture.md`, `manuel.md` et
+  `docs/en/manuel.md`, `atelier.md`, `grapher.md` (fr, en), `memoire-pages-2-3.md`,
+  `points-de-fonction.md`, `suite.md` (point 8), `systeme.md`, `oric-basic.md`.
 - `docs/suite.md` (40 Ko, issu de la scission d'`etat.md`) garde des dates et le récit des
   lots faits, contre `architecture.md` § 7 : à réduire point par point, en vérifiant que
   chaque « Fait » est décrit dans la référence du programme avant de le retirer.

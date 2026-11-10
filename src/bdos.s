@@ -7,12 +7,10 @@ BDOS_NFUNC = 37
 
 bdos
         cld
-#ifdef DISK
         bit put_pend            ; sortie de PUT à écrire (entre deux appels)
         bpl bd_np
         jsr put_flush
 bd_np
-#endif
         sta bdos_a
         sty bdos_y
         sta ZP_PTR
@@ -88,7 +86,6 @@ bdos_tab
         .word f_readbuf-1       ; 10 lecture d'une ligne éditable
         .word f_const-1         ; 11 état console
         .word f_version-1       ; 12 version
-#ifdef DISK
         .word fs_reset-1        ; 13 réinitialisation disques
         .word f_seldsk-1        ; 14 sélection disque
         .word f_open-1          ; 15 ouverture fichier
@@ -102,26 +99,10 @@ bdos_tab
         .word f_rename-1        ; 23 renommage
         .word f_login-1         ; 24 lecteurs lus (bit 0 = A:)
         .word f_curdsk-1        ; 25 lecteur courant
-#else
-        .word f_disk-1          ; 13 réinitialisation disques
-        .word f_disk-1          ; 14 sélection disque
-        .word f_disk-1          ; 15 ouverture fichier
-        .word f_disk-1          ; 16 fermeture fichier
-        .word f_disk-1          ; 17 recherche premier
-        .word f_disk-1          ; 18 recherche suivant
-        .word f_disk-1          ; 19 suppression
-        .word f_disk-1          ; 20 lecture séquentielle
-        .word f_disk-1          ; 21 écriture séquentielle
-        .word f_disk-1          ; 22 création
-        .word f_disk-1          ; 23 renommage
-        .word f_none-1          ; 24 disques connectés
-        .word f_none-1          ; 25 disque courant
-#endif
         .word f_setdma-1        ; 26 adresse DMA
         .word f_none-1          ; 27 (vecteur d'allocation)
         .word f_none-1          ; 28 (protection du disque)
         .word f_none-1          ; 29 (vecteur R/O)
-#ifdef DISK
         .word f_attrib-1        ; 30 attributs de fichier
         .word f_none-1          ; 31 (paramètres du disque)
         .word f_none-1          ; 32 (numéro d'utilisateur)
@@ -129,15 +110,6 @@ bdos_tab
         .word f_rwrite-1        ; 34 écriture directe
         .word f_fsize-1         ; 35 taille du fichier
         .word f_setrnd-1        ; 36 position directe <- séquentielle
-#else
-        .word f_none-1          ; 30
-        .word f_none-1          ; 31
-        .word f_none-1          ; 32
-        .word f_none-1          ; 33
-        .word f_none-1          ; 34
-        .word f_none-1          ; 35
-        .word f_none-1          ; 36
-#endif
 
 f_wboot
         jmp wboot

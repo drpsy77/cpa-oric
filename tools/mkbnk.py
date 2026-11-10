@@ -3,7 +3,7 @@
 
   python3 tools/mkbnk.py ASSEMBLE.bin SYMBOLES.sym SYSTEME.bin CPA.BNK
 
-ASSEMBLE.bin : sortie de xa pour src/cpa.s (-DDISK) : l'image de 16 Ko
+ASSEMBLE.bin : sortie de xa pour src/cpa.s : l'image de 16 Ko
 ($C000-$FFFF), suivie des banques IMG (src/img.s) et GFX (src/gfx_draw.s),
 assemblées pour la fenêtre (*= WIN). Écrit :
   SYSTEME.bin  les 16 Ko, signature posée en bnk_sig ;

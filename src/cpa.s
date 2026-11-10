@@ -1,13 +1,14 @@
 ; =====================================================================
 ;  CP/A — Control Program for Atmos
-;  Mini système "à la CP/M" en ROM 16 Ko pour Oric Atmos
+;  Mini système "à la CP/M" pour Oric Atmos, chargé d'une disquette
+;  dans la RAM overlay
 ;  Assembleur : xa (OSDK)      Construire : ./build.sh
 ; =====================================================================
 ;
 ;  Carte mémoire
 ;  -------------
-;  $0000-$00EF  page zéro libre pour les programmes
-;  $00F0-$00FF  page zéro réservée au système
+;  $0000-$00DF  page zéro libre pour les programmes
+;  $00E0-$00FF  page zéro réservée au système
 ;  $0100-$01FF  pile
 ;  $0200-$020B  vecteurs en RAM (détournables) :
 ;                 $0200 JMP WBOOT   (équivalent de l'adresse 0 de CP/M)
@@ -20,8 +21,8 @@
 ;  $0500-$B3FF  TPA, zone des programmes utilisateur (44 800 octets)
 ;  $B400-$BB7F  jeux de caractères
 ;  $BB80-$BFDF  écran texte 40x28
-;  $C000-$FFFF  cette ROM (version disquette : RAM overlay ; le code s'arrête
-;               avant $F670, la page $FF00-$FFF9 reçoit tables_ff.s)
+;  $C000-$FFFF  le système, en RAM overlay (le code s'arrête avant SYS_END,
+;               $F5C8 ; la page $FF00-$FFF9 reçoit tables_ff.s)
 ;
 ;  Appel BDOS (depuis un programme) :
 ;      X = numéro de fonction (comme le registre C de CP/M)
@@ -45,7 +46,6 @@ bios_table
         jmp bios_list           ; $C00F LIST
         jmp bios_punch          ; $C012 PUNCH
         jmp bios_reader         ; $C015 READER
-#ifdef DISK
         jmp disk_home           ; $C018 HOME
         jmp drv_select          ; $C01B SELDSK  A = lecteur (0-3) -> A=0, $FF
         jmp bios_settrk         ; $C01E SETTRK  (sans effet : adressage par LSN)
@@ -54,16 +54,6 @@ bios_table
         jmp bios_read           ; $C027 READ    -> A=0 OK, 1 erreur
         jmp bios_write          ; $C02A WRITE
         jmp menu_install        ; $C02D MENUBAR A/Y = barre de menus
-#else
-        jmp bios_disk_stub      ; $C018 HOME
-        jmp bios_disk_stub      ; $C01B SELDSK
-        jmp bios_disk_stub      ; $C01E SETTRK
-        jmp bios_disk_stub      ; $C021 SETSEC
-        jmp bios_setdma         ; $C024 SETDMA
-        jmp bios_disk_stub      ; $C027 READ
-        jmp bios_disk_stub      ; $C02A WRITE
-        jmp menu_install        ; $C02D MENUBAR A/Y = barre de menus
-#endif
 
 #include "bios.s"
 #include "bdos.s"
@@ -71,38 +61,28 @@ bios_table
 #include "ccp.s"
 #include "menu.s"
 #include "gfx.s"
-#ifndef DISK
-#include "gfx_draw.s"
-#endif
 #include "ccp_gfx.s"
 #include "snd.s"
 #ifdef SERIE
 #include "serial.s"
 #endif
-#ifdef DISK
 #include "disk.s"
 #include "fs.s"
 #include "ccp_disk.s"
 #include "put.s"
 #include "bank.s"
 #include "script.s"
-#endif
-#ifndef DISK
-#include "cold.s"
-#endif
 #include "tables.s"
 #include "font.s"
 
 rom_end
 
-#ifdef DISK
 ; ---------------------------------------------------------------------
 ; Zones de travail ($F670-$F7BF), puis la fenêtre $F7C0-$FCFF : code
 ; chargé avec le système mais qui n'a pas besoin d'y rester (PUT, puis
 ; démarrage à froid dans la zone du tampon de PUT), et win_id ($FDF8).
 ; ---------------------------------------------------------------------
 #include "win.s"
-#endif
 
 ; ---------------------------------------------------------------------
 ; Page $FF00-$FFF9 : chargée avec le système (version disquette), elle
@@ -125,7 +105,6 @@ ff_end
         .word cold_boot         ; RESET (mise sous tension)
         .word V_IRQ             ; IRQ/BRK
 
-#ifdef DISK
 ; ---------------------------------------------------------------------
 ; Banque IMG (img.s) : assemblée pour la fenêtre, à la suite de l'image
 ; de 16 Ko dans le fichier produit ; tools/mkbnk.py la découpe et la
@@ -142,4 +121,3 @@ img_bank_end
 gfx_bank
 #include "gfx_draw.s"
 gfx_bank_end
-#endif

@@ -51,7 +51,6 @@ Two variants are built from the same sources:
   `CARTE.GRX` in French; the list is in `files/en/noms.txt`). LOGO speaks the language of the
   disk too (`FORWARD`, `TO ... END` in English), and `LOGOTR` translates a program from one
   to the other.
-- **`build/cpa.rom`**, a 16 KB ROM that replaces the BASIC ROM: console and monitor, no disk.
 
 ## What's inside
 
@@ -118,7 +117,6 @@ The user documents, the vision, the architecture, the USB stick, the WiFi modem 
 | `docs/etat.md` | project status, version 1.0 checklist (in French) |
 | `docs/suite.md` | what comes next, by priority (in French) |
 | `docs/place.md` | space reserves: system, disks (in French) |
-| `docs/projet-rom.md` | the ROM version |
 | `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (`GRXASM /O`, `ORIC.INC`), routines for BASIC later (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |
 | `docs/essais-materiel.md` | tests on a real Oric |
@@ -148,8 +146,6 @@ Disk version: the Microdisc EPROM calls the BASIC 1.1 ROM, so keep
 
     oricutron -m atmos -k microdisc -d build/cpa-en.dsk
 
-ROM version: copy `build/cpa.rom` into `roms/`, then set `atmosrom = 'roms/cpa'` in
-`oricutron.cfg`.
 
 On real hardware, copy `cpa-en.dsk` to the USB stick of the LOCI and boot from it. Disks have
 2 sides of 80 tracks (658 KB for files); the 42-track disks of earlier versions are no longer
@@ -174,5 +170,4 @@ On the Oric, `HELP` gives help on each command (`HELP` alone: the list of topics
 
 ## Licence
 
-CP/A is distributed under the MIT licence (see `LICENSE`). The disk images (`build/*.dsk`) and
-`build/cpa.rom` are ready to use; `./build.sh` rebuilds them.
+CP/A is distributed under the MIT licence (see `LICENSE`). The disk images (`build/*.dsk`) are ready to use; `./build.sh` rebuilds them.

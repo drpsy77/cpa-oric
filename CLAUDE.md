@@ -1,7 +1,7 @@
 # CP/A — notes pour Claude
 
-Mini système « à la CP/M » pour Oric Atmos (6502, assembleur `xa`). Deux variantes des mêmes
-sources : `build/cpa.dsk` (disquette Microdisc, système en RAM overlay) et `build/cpa.rom`.
+Mini système « à la CP/M » pour Oric Atmos (6502, assembleur `xa`). Le système est chargé
+d'une disquette Microdisc dans la RAM overlay (`build/cpa.dsk`) ; la version ROM est abandonnée.
 Au début de chaque conversation, lire **seulement** `docs/architecture.md` et `docs/etat.md`,
 puis les documents et les sources utiles à la demande (index : `README.md`). Règles de
 documentation : `docs/architecture.md` § 7.
@@ -27,11 +27,10 @@ documentation : `docs/architecture.md` § 7.
 ## Construire
 
     ./tools/build_xa.sh        # une fois : compile xa dans tools/xa
-    ./build.sh                 # ROM, système disque, .COM, disquettes ; erreurs dans build/*.err
+    ./build.sh                 # système, .COM, disquettes ; erreurs dans build/*.err
 
-Les images `build/*.dsk` et `build/cpa.rom` sont versionnées : après `./build.sh`, `git status`
+Les images `build/*.dsk` sont versionnées : après `./build.sh`, `git status`
 montre si elles ont changé. 
-La version rom ne doit plus être étudiée ni compilée.
 
 ## Tester
 

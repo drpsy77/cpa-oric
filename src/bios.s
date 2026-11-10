@@ -12,7 +12,6 @@ cold_boot
         txs
         lda #$7F
         sta VIA_IER             ; toutes les interruptions VIA coupées
-#ifdef DISK
         lda #MD_BASE            ; garde la RAM overlay visible, EPROM et IRQ disque coupées
         sta MD_CTRL
         ldy win_id              ; contenu de la fenêtre (win.s), avant l'effacement
@@ -21,7 +20,6 @@ cold_boot
 cb_sys  sta FS_VARS,x
         inx
         bne cb_sys
-#endif
         ; --- Efface page zéro, page 2 et page de base ---
         lda #0
         tax
@@ -31,11 +29,7 @@ cb_clr  sta $00,x
         inx
         bne cb_clr
         sta HIST                ; historique des lignes vide (A = 0)
-#ifdef DISK
         sty win_id
-#else
-        jsr ram_test            ; teste la TPA et la remplit de $00 (BRK)
-#endif
         jsr video_vars_text
         jsr hw_init
         lda #<T1_PERIOD
@@ -66,14 +60,10 @@ cb_clr  sta $00,x
         lda #<msg_banner
         ldy #>msg_banner
         jsr print_z
-#ifdef DISK
         bit win_id              ; test de RAM et AUTO.BAT : dans la fenêtre,
         bpl cb_w                ; juste après le chargement seulement
         jsr cold_win
 cb_w
-#else
-        jsr ram_report
-#endif
         ; continue en démarrage à chaud
 
 ; ---------------------------------------------------------------------
@@ -101,9 +91,7 @@ wb_h    lda lst_echo            ; édition de ligne interrompue
         lda #0
         sta m_act
         sta top_cap             ; plus de débogueur résident
-#ifdef DISK
         sta io_quiet            ; messages d'erreur disque rendus (programme
-#endif                          ; interrompu : CMDER figé, RESET)
         lda #>TPA_END           ; haut de la TPA selon le mode
         ldx vmode
         beq wb_t
@@ -122,10 +110,8 @@ wb_t    sta tpa_top+1
         sta dma
         lda #>DEF_DMA
         sta dma+1
-#ifdef DISK
         jsr put_end             ; un PUT en cours est refermé
         jsr fs_reset
-#endif
         jmp ccp
 
 ; Stubs recopiés en $0200
@@ -141,10 +127,8 @@ ram_vectors
 hw_init
         lda #$7F
         sta VIA_IER
-#ifdef DISK
         lda #MD_BASE
         sta MD_CTRL
-#endif
         lda #$FF
         sta VIA_DDRA            ; port A en sortie (bus AY)
         lda #$F7
@@ -280,12 +264,10 @@ w2      dey
 ;   illisible (répertoire compris). Un octet perdu par l'attente est
 ;   signalé par le contrôleur, et le secteur réécrit.
 nmi_handler
-#ifdef DISK
         bit dsk_nmi             ; (A, X, Y intacts)
         bpl nmi_now
         dec dsk_nmi             ; $80 -> $7F
         rti
-#endif
 nmi_now
         sei
         tsx
@@ -692,15 +674,6 @@ bios_reader
         lda #$1A                ; ^Z = fin de fichier
         rts
 #endif
-#ifndef DISK
-bios_setdma                     ; version disque : bios_dskbuf (disk.s)
-        sta dma
-        sty dma+1
-        rts
-bios_disk_stub
-        lda #1                  ; erreur : pas de disque dans la version ROM
-        rts
-#endif
 
 ; ---------------------------------------------------------------------
 ; Console
@@ -727,12 +700,10 @@ co_hidden
         bne co_nl
         jsr bios_list
 co_nl
-#ifdef DISK
         ldy put_on              ; PUT : copie dans le tampon
         beq co_np
         jsr put_char
 co_np
-#endif
         jsr con_char
         jsr show_cursor
         pla
@@ -835,10 +806,8 @@ line_down
 ld_sc   jsr scroll
 ld_pg   lda page_on             ; écran plein depuis la dernière touche ?
         beq ld_ok
-#ifdef DISK
         lda put_on              ; pas de pause pendant un PUT
         bne ld_ok
-#endif
         inc page_cnt
         lda con_last
         sec

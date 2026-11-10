@@ -1,24 +1,21 @@
-# CP/A — architecture commune et contrat d'interface
+# CP/A — architecture et contrat d'interface
 
-Ce document est la référence partagée par les deux projets issus de CP/A :
-
-- **la version disquette** (`build/cpa.dsk`) : système évolutif, mémoire étendue par le disque,
-  orienté développement, gestion et communication — voir `docs/etat.md` ;
-- **la version ROM** (`build/cpa.rom`) : ROM dédiée à l'exécution autonome d'un programme
-  (cassette, cartouche) — voir `docs/projet-rom.md`.
-
-Les deux sont construites à partir des **mêmes sources** (`src/`), la version disquette avec
-`-DDISK`. Ce qui est décrit ici ne doit pas changer sans accord entre les deux projets.
+Ce document est la référence de CP/A : un système chargé depuis une disquette
+(`build/cpa.dsk`) dans la RAM overlay, enrichi par des programmes `.COM` — état dans
+`docs/etat.md`. La version ROM de 16 Ko des débuts est abandonnée : les commandes majeures
+sont des `.COM` qui n'y tiendraient pas, et un programme pour un Oric seul se fait par
+`GRXASM /O` et `.TAP` (`docs/oric-basic.md`). Le contrat ci-dessous est ce que les
+programmes déjà écrits attendent : il ne change pas sans accord.
 
 ## 1. Les couches
 
-| Couche | Rôle | Où | Profil |
-|---|---|---|---|
-| BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque, port série et console à distance | `src/bios.s`, `src/disk.s`, `src/serial.s` | commun (disque : `-DDISK` ; série : `-DSERIE`, version disquette) |
-| BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | commun ; fichiers : disque seulement |
-| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | commun ; DIR/PUT/DO… : disque (TYPE, ERA, REN : `.COM` ; commandes de dessin : GRAPHER.COM, ROM seulement au prompt) |
-| Menus | barre de menus déroulants (FUNCT) | `src/menu.s` | commun |
-| Programmes | fichiers `.COM` chargés en `$0500` (un nom sans `.COM` se rabat sur le script `.BAT`) | `progs/*.s` | disque (la ROM pourra en intégrer un) |
+| Couche | Rôle | Où |
+|---|---|---|
+| BIOS | matériel : clavier, écran, console, IRQ 50 Hz, reprise après plantage, disque, port série et console à distance | `src/bios.s`, `src/disk.s`, `src/serial.s` |
+| BDOS | services numérotés comme CP/M 2.2 (`JSR $0203`, X = fonction) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` |
+| CCP | prompt `A>` et commandes internes (la ligne est lue par `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` |
+| Menus | barre de menus déroulants (FUNCT) | `src/menu.s` |
+| Programmes | fichiers `.COM` chargés en `$0500` (un nom sans `.COM` se rabat sur le script `.BAT`) | `progs/*.s` |
 
 **Règle de placement** (pour toute nouvelle fonction) :
 
@@ -30,7 +27,7 @@ Les deux sont construites à partir des **mêmes sources** (`src/`), la version 
 4. Tout le reste → **programme `.COM`** (version disquette) : il ne coûte rien tant qu'on ne le
    lance pas.
 
-## 2. Contrat d'interface (identique dans les deux versions)
+## 2. Contrat d'interface
 
 ### Table BIOS (`$C000`, 3 octets par entrée)
 
@@ -78,15 +75,15 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 ### Fonctions du BDOS
 
-| N° | Fonction | Versions |
-|---|---|---|
-| 0-12 | console et système, comme CP/M 2.2 (la 3 et la 4 : READER et PUNCH du BIOS ; la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus | les deux |
-| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) ; les entrées du répertoire rendues par 17 et 18 sont celles du format de la disquette (§ 2, « Disquette ») | disque ; la ROM renvoie `$FF` (0 pour 24 et 25) |
-| 26 | adresse DMA | les deux |
-| 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas | les deux |
-| 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 | les deux (12-13 GSAVE/GLOAD : disque) |
-| 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-8 (7 SYNC : départ simultané des voix, 8 MIXER : son et bruit d'une voix) | les deux |
-| 117 | port série et console à distance : bloc `[op, p1..p5]` ; op 0 état -> A (bit 0 port posé, bit 1 console active, bit 2 liaison perdue), X = octet bas du port ; op 1 pose le port (p1 = octet bas : `$80` LOCI, `$1C` Oricutron, 0 aucun) ; op 2 console active (`$FF` sans port) ; op 3 coupée ; op 4 numéro à rappeler si le démon se tait 10 s (p1, p2 : chaîne `ATDT-hôte:port`, CR, 0 ; 40 caractères au plus, sinon `$FF`) (`docs/console-distance.md`) | disque (option `SERIE`) ; la ROM renvoie `$FF` |
+| N° | Fonction |
+|---|---|
+| 0-12 | console et système, comme CP/M 2.2 (la 3 et la 4 : READER et PUNCH du BIOS ; la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus |
+| 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) ; les entrées du répertoire rendues par 17 et 18 sont celles du format de la disquette (§ 2, « Disquette ») |
+| 26 | adresse DMA |
+| 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas |
+| 115 | graphisme du mode SPLIT : bloc `[op, p1..p5]`, op 0-13 |
+| 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-8 (7 SYNC : départ simultané des voix, 8 MIXER : son et bruit d'une voix) |
+| 117 | port série et console à distance : bloc `[op, p1..p5]` ; op 0 état -> A (bit 0 port posé, bit 1 console active, bit 2 liaison perdue), X = octet bas du port ; op 1 pose le port (p1 = octet bas : `$80` LOCI, `$1C` Oricutron, 0 aucun) ; op 2 console active (`$FF` sans port) ; op 3 coupée ; op 4 numéro à rappeler si le démon se tait 10 s (p1, p2 : chaîne `ATDT-hôte:port`, CR, 0 ; 40 caractères au plus, sinon `$FF`) (`docs/console-distance.md`) |
 
 Numéros libres pour l'avenir : 37-46, 48-114 et 118 et suivants. Une fonction ajoutée existe dans les
 deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
@@ -112,20 +109,20 @@ format.
 
 ## 3. Carte mémoire
 
-| Zone | Version disquette | Version ROM |
-|---|---|---|
-| `$0000-$04FF` | page zéro, pile, page 2 (système), page de base | idem |
-| `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte | idem |
-| `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte | idem |
-| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F5C8` au plus (`SYS_END` ; fin réelle : `rom_end`, affichée par `./build.sh`), puis cartes d'allocation des 4 lecteurs (`ALV`, `$F5C8-$F66F`), tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (une banque à la fois en `$F7C0-$F9FF` : PUT, chargé avec le système, ou IMG, lue dans `CPA.BNK` quand elle sert ; ou GFX, les tracés du SPLIT, jusqu'à `$FBFF` sur le tampon de PUT ; tampon de PUT `$FA00` ; démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (`$FD00-$FD03` : bloc et compte du BDOS, `$FD04-$FD12` : banques, `$FD13-$FD21` : pilote série, `$FD22` : `gfx_ko`, `$FD23-$FD26` : plafonds du pilote série, `$FD27-$FD56` : rappel du pilote série, `$FD57` libre, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDFC-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` | ROM : code jusqu'à `$E3D4` environ, tables en `$FF00` (comme la disquette), reste libre |
+| Zone | Contenu |
+|---|---|
+| `$0000-$04FF` | page zéro, pile, page 2 (système), page de base |
+| `$0500-$B3FF` | TPA (programmes) ; `$A000-$B3FF` = image en SPLIT ; en HIRES plein écran (programme avec `progs/hires.inc`), image `$A000-$BF3F` qui recouvre aussi la police, les zones de `$B800-$BB7F` et l'écran texte |
+| `$B400-$BFDF` | `$B400-$B4FF` : adresses des lignes de points du mode SPLIT (`g_ylo`, `g_yhi`), calculées par `font_init` à la place des glyphes des codes 0-31 (des attributs, jamais affichés) ; police, police secondaire (`$B800-$B9FF` : sauvegarde des menus, et noms déjà vus pendant une complétion par ESC ; `$BA00-$BA7F` : ligne en cours d'édition ; `$BA80-$BB7F` : historique des lignes), écran texte |
+| `$C000-$FFFF` | RAM overlay chargée depuis la disquette : code jusqu'à `$F5C8` au plus (`SYS_END` ; fin réelle : `rom_end`, affichée par `./build.sh`), puis cartes d'allocation des 4 lecteurs (`ALV`, `$F5C8-$F66F`), tampons (ligne de commande `$F670`, DO `$F6C0`), fenêtre `$F7C0-$FCFF` (une banque à la fois en `$F7C0-$F9FF` : PUT, chargé avec le système, ou IMG, lue dans `CPA.BNK` quand elle sert ; ou GFX, les tracés du SPLIT, jusqu'à `$FBFF` sur le tampon de PUT ; tampon de PUT `$FA00` ; démarrage à froid ; `docs/systeme.md` § 6), variables du BDOS `$FD00` (`$FD00-$FD03` : bloc et compte du BDOS, `$FD04-$FD12` : banques, `$FD13-$FD21` : pilote série, `$FD22` : `gfx_ko`, `$FD23-$FD26` : plafonds du pilote série, `$FD27-$FD56` : rappel du pilote série, `$FD57` libre, puis variables ; `win_id` `$FDF8` : contenu de la fenêtre ; libres : `$FDFC-$FDFF`), tampon de secteur `$FE00`, page `$FF00-$FFF9` chargée avec le système (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` jusqu'à `$FFEF`, puis libre ; elle ne reçoit que des données ou des routines autonomes, car elle n'est pas contiguë au code), vecteurs `$FFFA` |
 
 ## 4. Construire et tester
 
 Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atelier.md`.
 
     ./tools/setup_linux.sh [roms]    # une fois, sur Linux : xa, py65, Oricutron de test
-    ./build.sh                       # build/cpa.rom, build/cpa.dsk (+ contrôles de taille)
-    tools/smoke_test.sh              # construction + démarrage disquette et ROM dans l'émulateur
+    ./build.sh                       # build/cpa.dsk et les autres disquettes (+ contrôles de taille)
+    tools/smoke_test.sh              # construction + démarrage de la disquette dans l'émulateur
     tools/test_asm.sh                # ASM.COM doit redonner les octets de xa
     tools/test_logo.sh               # LOGO.COM : scénarios comparés aux références
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM : calculs, boucles, erreurs (sans émulateur)
@@ -148,9 +145,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - `build.sh` refuse un système disque qui dépasse `SYS_END` (`$F5C8`), une fenêtre qui déborde (PUT après
   `$FA00`, démarrage à froid après `$FD00` ; par `tools/mkbnk.py` : IMG après `$FA00`, GFX après
   `GFX_END`), une page `$FF00` qui atteint les vecteurs (`$FFFA`)
-  et une ROM qui ne fait pas 16 Ko ; il affiche les marges.
+  ; il affiche les marges.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
-  `tools/oricutron-testhook.patch` ; `DSK=` pour la disquette, `ORIC_ROM=cpa` pour la ROM) et
+  `tools/oricutron-testhook.patch` ; `DSK=` pour la disquette) et
   `tools/screen.py` (texte de l'écran).
 - `tools/run_com.py` exécute un `.COM` dans un 6502 simulé avec un BDOS minimal (sans écran).
 - Matériel : essayé sur Oric Atmos + LOCI (version disquette). Les couleurs des menus sont
@@ -213,7 +210,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   de la console dans `src/msg/fr/sys.msg` ou `src/msg/en/sys.msg` (mêmes étiquettes),
   `build.sh` assemble `cpa_sys.bin` et `cpa_sys_en.bin` et contrôle la marge des deux (la
   française, plus longue, est la contrainte) ; les messages courts du CCP sont en anglais
-  dans les deux. La version ROM, projet à part, reste en français pour l'instant.
+  dans les deux.
 - Messages des programmes en deux langues : chaque programme traduit inclut ses messages
   (`#include "nom.msg"`, nom de 8 caractères au plus pour ASM), pris dans `progs/msg/fr/`
   ou `progs/msg/en/` (mêmes étiquettes ; la touche « oui » est la constante `K_YES`, `O` ou
@@ -269,7 +266,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `files/` | fichiers copiés tels quels sur la disquette (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | outils PC : images disque, tables, tests |
 | `docs/` | documentation (index dans `README.md`) |
-| `build/` | résultats ; seules les images prêtes à l'emploi sont versionnées : disquettes (`*.dsk`), `cpa.rom`, `.TAP` d'exemple (`build/tap/`) |
+| `build/` | résultats ; seules les images prêtes à l'emploi sont versionnées : disquettes (`*.dsk`), `.TAP` d'exemple (`build/tap/`) |
 
 ## 7. Documentation
 

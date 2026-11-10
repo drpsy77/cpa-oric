@@ -124,8 +124,8 @@ Revue du projet et lots en cours : `docs/revue.md`.
   dépassées du simple au double : prévoir large.
 - Les interruptions sont coupées pendant les accès disque (une touche peut être perdue, le
   compteur 50 Hz retarde).
-- Le contrat d'interface (`docs/architecture.md`) est commun avec la version ROM
-  (`docs/projet-rom.md`).
+- Le contrat d'interface (`docs/architecture.md`) est ce que les programmes déjà écrits
+  attendent : il ne change pas sans accord.
 - La plupart des possesseurs d'un vrai lecteur n'en ont qu'un : une commande disque doit
   marcher avec un seul lecteur dès que c'est possible, et les commandes de base doivent
   pouvoir être sur chaque disquette.

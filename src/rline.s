@@ -370,7 +370,6 @@ cut     ldx rl_t
         rts
 .)
 
-#ifdef DISK
 ; ---------------------------------------------------------------------
 ; ESC : complétion du nom de fichier qui finit au curseur
 ; ---------------------------------------------------------------------
@@ -713,5 +712,4 @@ c2      lda (ZP_DIRP),y
 no      sec
         rts
 .)
-#endif
 #endif

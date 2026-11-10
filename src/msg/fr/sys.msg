@@ -5,11 +5,7 @@
 ; clavier est écrit au bout du libellé, aligné à droite.
 ; Messages du CCP : en anglais court dans les deux langues (ccp.s...).
 
-#ifdef DISK
 mn_sys  .byt 6,15
-#else
-mn_sys  .byt 5,13
-#endif
         .asc "Systeme",0
         .asc "Version",0
         .byt MA_TYPE
@@ -20,25 +16,16 @@ mn_sys  .byt 5,13
         .asc "Memoire",0
         .byt MA_TYPE
         .word ty_mem
-#ifdef DISK
         .asc "Imprimante   ^P",0
-#else
-        .asc "Imprimante ^P",0
-#endif
         .byt MA_CALL
         .word k_prt
-#ifdef DISK
         .asc "Lecteur suivant",0
         .byt MA_CALL
         .word m_drive
         .asc "Redemarrer   ^C",0
-#else
-        .asc "Redemarrer ^C",0
-#endif
         .byt MA_CALL
         .word m_reboot
 
-#ifdef DISK
 mn_fic  .byt 5,11
         .asc "Fichiers",0
         .asc "Catalogue",0
@@ -56,7 +43,6 @@ mn_fic  .byt 5,11
         .asc "Effacer...",0
         .byt MA_TYPE
         .word ty_era
-#endif
 
 mn_ecr  .byt 7,13
         .asc "Ecran",0
@@ -98,6 +84,4 @@ mn_clv  .byt 3,6
 ; (ccp_gfx.s), script arrêté par CTRL-C (script.s)
 msg_more .asc " -- Suite (^C stop) -- ",0
 msg_key  .asc "Une touche pour continuer...",13,10,0
-#ifdef DISK
 msg_scrstop .asc "Script arrete.",13,10,0
-#endif

@@ -74,4 +74,3 @@ found elsewhere.
 
 - Beyond its author: is CP/A offered to the Oric community (language of the messages and
   of the documentation, distribution)?
-- The ROM version (`docs/projet-rom.md`): what place in 1.0?

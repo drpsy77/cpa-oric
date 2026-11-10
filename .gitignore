@@ -1,7 +1,6 @@
 # construction : seules les images prêtes à l'emploi sont gardées
 build/*
 !build/cpa.dsk
-!build/cpa.rom
 !build/cpa-logo.dsk
 !build/cpa-notes.dsk
 !build/cpa-exemples.dsk

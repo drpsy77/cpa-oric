@@ -631,7 +631,6 @@ m_kset  sta kb_delay
 m_reboot
         jmp wboot
 
-#ifdef DISK
 ; m_drive : tape « X: » pour passer au lecteur suivant (A B C D A...)
 m_drive
         ldx cur_drv
@@ -648,19 +647,13 @@ m_drive
         jmp kb_inject
 ty_drv  .byt $18
         .asc "A:",13,0
-#endif
 
 ; ---------------------------------------------------------------------
 ; Barre de menus du système
 ; ---------------------------------------------------------------------
 sys_bar
-#ifdef DISK
         .byt 4
         .word mn_sys, mn_fic, mn_ecr, mn_clv
-#else
-        .byt 3
-        .word mn_sys, mn_ecr, mn_clv
-#endif
 
 ; menus (libellés, largeurs) : src/msg/fr/sys.msg ou src/msg/en/sys.msg
 #include "sys.msg"
@@ -672,18 +665,13 @@ ty_ver  .byt $18
 ty_help .byt $18
         .asc "HELP",13,0
 ty_mem  .byt $18
-#ifdef DISK
         .asc "HELP MEM",13,0
-#else
-        .asc "MEM",13,0
-#endif
 ty_split .byt $18
         .asc "SPLIT",13,0
 ty_text .byt $18
         .asc "TEXT",13,0
 ty_cls  .byt $18
         .asc "CLS",13,0
-#ifdef DISK
 ty_dir  .byt $18
         .asc "DIR",13,0
 ty_type .byt $18
@@ -694,4 +682,3 @@ ty_ren  .byt $18
         .asc "REN ",0
 ty_era  .byt $18
         .asc "ERA ",0
-#endif
