@@ -42,6 +42,9 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   `tools/check_en.py` ; `docs/essais-materiel.md` trié en deux parties (A : ce qui exige
   le matériel, seule à compter pour la version 1.0 ; B : même logique que dans
   l'émulateur).
+- **Intégration continue** (`docs/atelier.md` § 4) : à chaque envoi, GitHub construit CP/A,
+  vérifie que les images du dépôt sont celles que donnent les sources, et lance les tests
+  sans émulateur (34 min) ; les traductions sont vérifiées à chaque envoi de documents.
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
@@ -87,11 +90,6 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   (environ 280 commits). Question ouverte (§ 3). `build/` garde de vieux fichiers ignorés
   (patchs, archives, disquettes de 42 pistes), et `.git` un verrou resté
   (`stale-maintenance-lock-claude`) et un `REBASE_HEAD`.
-- GitHub : tâche `.github/workflows/tests.yml` écrite (construction, images du dépôt à
-  jour, `test_asm.sh`, `test_fs.py`, `test_fdc.py`, `test_fp.py`, `test_inc.sh`,
-  `test_grapher.sh` dans les deux langues, `check_en.py`) ; sans `test_bas.py`, qui
-  demande la ROM du BASIC. **Pas encore vue tourner** : à contrôler dans l'onglet Actions
-  au premier envoi (durée, étape des images), puis à porter dans `docs/atelier.md`.
 
 ### Lot 5 — optimisations
 

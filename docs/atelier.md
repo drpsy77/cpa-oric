@@ -190,6 +190,19 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `tools/build_clk_mac.sh` | sur le Mac, avec Xcode : Clock Signal à quatre lecteurs dans `tools/clk-mac/` |
 | `tools/clk/clkheadless IMAGE tools/clk/roms SCRIPT` | Clock Signal sans écran : frappe, durées en temps émulé d'un vrai Microdisc (`cmd`), écran texte (`screen`) ; syntaxe en tête de `tools/clk-banc.patch` |
 
+### Sur GitHub, à chaque envoi
+
+- `.github/workflows/tests.yml` (« Construction et tests », une demi-heure), quand les
+  sources, les programmes, les fichiers des disquettes ou les outils changent : `xa` et
+  py65 installés, `./build.sh`, puis les images du dépôt comparées à celles qui viennent
+  d'être construites (une image oubliée fait échouer la tâche), `test_asm.sh`,
+  `test_fs.py`, `test_fdc.py`, `test_fp.py`, `test_inc.sh`, `test_grapher.sh` dans les deux
+  langues. Restent à lancer chez soi : `smoke_test.sh` et tout ce qui demande Oricutron ou
+  les ROM de l'Oric (`test_bas.py`), `test_logo.sh` et `test_lib.sh` (longs).
+- `.github/workflows/docs.yml` (« Documents ») : `check_en.py` quand un document change.
+
+Résultat : onglet Actions du dépôt ; un échec est signalé par courriel au compte GitHub.
+
 ### `run_test.sh` en détail
 
     tools/run_test.sh TOUCHES TRAME SORTIE [options d'Oricutron]

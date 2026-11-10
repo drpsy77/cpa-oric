@@ -1,7 +1,7 @@
 # Construit CP/A et lance les tests qui n'ont besoin ni de l'émulateur ni des
 # ROM de l'Oric (tout tourne dans le 6502 simulé de tools/run_com.py), à
 # chaque envoi qui touche les sources, les programmes, les fichiers des
-# disquettes ou les outils. Ce que cette tâche ne fait pas, à lancer chez
+# disquettes ou les outils (une demi-heure). Ce que cette tâche ne fait pas, à lancer chez
 # soi : tools/smoke_test.sh et les essais dans Oricutron, tools/test_bas.py
 # (ROM BASIC 1.1), tools/test_logo.sh et tools/test_lib.sh (longs).
 name: Construction et tests
@@ -14,7 +14,6 @@ on:
       - progs/**
       - files/**
       - tools/**
-      - docs/**
       - build.sh
       - .github/workflows/tests.yml
 
@@ -54,6 +53,3 @@ jobs:
         run: |
           tools/test_grapher.sh
           LANGUE=en tools/test_grapher.sh
-
-      - name: Traductions à jour
-        run: python3 tools/check_en.py
