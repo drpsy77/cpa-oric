@@ -293,11 +293,7 @@ noseek  jsr selside
         bcs werr
         jsr vtrack
         bcs verr
-        inc side
-        lda side
-        cmp #2
-        bne sl
-        inc cyl
+        inc cyl                 ; une seule face
         lda cyl
         cmp #NCYL
         bne cl

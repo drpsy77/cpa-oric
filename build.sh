@@ -119,54 +119,12 @@ GRX_EX="files/dessin.grx files/ecran.grx files/motifs.grx files/ardoise.grx file
   files/tuiles.spr files/defile.grx files/rotscrol.grx files/JEU.GRX"
 ASM_EX="$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 
-# Disquette système (cpa.dsk) : tous les programmes, sauf LOGO (il a sa
-# disquette) et les exemples (disquette Exemples) ; HELP garde toutes ses
-# rubriques. Tout est protégé (R/O). Cachés (SYS, montrés par DIRS) : les
-# commandes de base, MEM/POKE/GO, les bibliothèques, EDIT.CFG (modifiable) ;
-# DIR montre les applications, et un nouveau programme y apparaît de lui-même.
-SYS_CACHES="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
-  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/MEM.COM $P/POKE.COM $P/GO.COM files/usbcd.bat"
-SYS_AILLEURS="$P/LOGO.COM $P/LOGOTR.COM $P/HELLO.COM $P/GTEST.COM"
-SYS_VISIBLES=""
-for f in $P/*.COM files/readme.txt; do
-  case " $(echo $SYS_CACHES $SYS_AILLEURS) " in *" $f "*) ;; *) SYS_VISIBLES="$SYS_VISIBLES $f" ;; esac
-done
-disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/edit.cfg \
-  --ro --dir $SYS_VISIBLES
-
-# Disquettes par usage : chacune démarre seule et porte ses outils. Les
-# commandes de base, la clé USB, TERM et XFER y sont protégées et cachées
-# (SYS), EDIT.CFG modifiable et caché, EDIT et l'outil de la disquette
-# protégés et visibles, les exemples modifiables (ASM HELLO réécrit
-# HELLO.COM, LOGO réécrit DEMO.LOG).
+# Édition Microdisc (une face de 42 pistes) : la seule disquette LOGO, en
+# français et en anglais, autonome. Ni clé USB, ni modem, ni CMDER, ni
+# LOGOTR : un Oric, un Microdisc, un lecteur simple face.
 BASE="$P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
-  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
-  $P/TERM.COM $P/XFER.COM $P/CMDER.COM files/usbcd.bat"
-theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
-  disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg \
-    --ro --dir $P/EDIT.COM $3 --rw $5
-}
-# Animations : VOIR et VSYNC visibles, GRAPHER, GRXASM, ASM et les
-# bibliothèques cachés (GRXASM ANIMS refait le programme) ; animations
-# fabriquées par tools/anim_demos.py et gardées dans files/anim/ (pas de
-# Pillow ici) ; DEMO enchaîne tout
-theme anim anim "$P/VOIR.COM $P/VSYNC.COM" \
-  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $INCS" \
-  "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
-# Logo : la plateforme LOGO seule
-theme logo logo "$P/LOGO.COM $P/LOGOTR.COM" "$P/VOIR.COM" \
-  "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log"
-# Exemples : ceux de GRAPHER et d'ASM, visibles ; leurs outils cachés
-theme exemples examples "" \
-  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
-  "$GRX_EX $ASM_EX"
-# Notes : écrire du texte (et l'envoyer)
-theme notes notes "" "$P/VOIR.COM" ""
-# disquette de projet, vierge : sans système (amorce et pistes du système
-# vides), tout le reste pour les fichiers ; en B: à côté de cpa.dsk (même
-# contenu sous son nom anglais)
-echo "== build/cpa-projet.dsk, build/cpa-project-en.dsk"
-python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
-cp build/cpa-projet.dsk build/cpa-project-en.dsk
-echo "OK : build/cpa.rom ; build/cpa.dsk, cpa-{anim,logo,exemples,notes,projet}.dsk ;"
-echo "     build/cpa-en.dsk, cpa-{anim,logo,examples,notes,project}-en.dsk"
+  $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/VOIR.COM"
+disque build/cpa-logo-md.dsk build/cpa-logo-md-en.dsk --ro --sys $BASE --rw files/edit.cfg \
+  --ro --dir $P/EDIT.COM $P/LOGO.COM --rw \
+  files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log
+echo "OK : build/cpa-logo-md.dsk, build/cpa-logo-md-en.dsk"

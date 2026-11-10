@@ -138,15 +138,15 @@ LOCI_MNT    = $800B     ;   octet mounts : bit n = lecteur n monté
 
 ; --- Géométrie de la disquette CP/A ---
 SPT         = 17        ; secteurs de 256 octets par piste
-NSIDES      = 2
+NSIDES      = 1         ; édition Microdisc : une seule face
 NCYL        = 42
-NSECT       = 1428      ; SPT*NSIDES*NCYL
+NSECT       = 714       ; SPT*NSIDES*NCYL
 SYS_LSN     = 3         ; système : secteurs logiques 3..66 (16 Ko)
 DIR_LSN     = 68        ; début de la zone de données (bloc 0 = répertoire)
 BLK_SECT    = 8         ; bloc d'allocation = 2 Ko
-NBLK        = 170       ; (NSECT-DIR_LSN)/BLK_SECT
+NBLK        = 80        ; (NSECT-DIR_LSN)/BLK_SECT
 DIR_ENT     = 128       ; blocs 0 et 1 : 128 entrées de 32 octets
-ALV_LEN     = 22        ; (NBLK+7)/8
+ALV_LEN     = 10        ; (NBLK+7)/8
 
 ; --- RAM système dans la RAM overlay (au-dessus du code) ---
 NDRV        = 4         ; lecteurs A: à D: (Microdisc, LOCI, Oricutron)

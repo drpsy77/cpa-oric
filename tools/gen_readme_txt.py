@@ -759,16 +759,14 @@ def text(lines):
 # help.s), textes, fichiers produits
 LANGUES = {
     "fr": dict(sections=SECTIONS, defaut="COMMANDES",
-               sujets=["TOUCHES", "PROGRAMMES", "EDIT", "HEX", "LOGO", "ASM", "DEBUG",
-                       "MEMOIRE", "USB", "GRAPHER", "CMDER", "EDSPRITE"],
+               sujets=["TOUCHES", "PROGRAMMES", "EDIT", "LOGO"],
                aide=["Aide : HELP (commandes internes)", "et HELP suivi d'un sujet :"],
                autres="Autres sujets : HELP suivi de", lettres="  (4 lettres suffisent)",
                inconnu="Sujet inconnu.",
                readme="files/readme.txt", tab="progs/msg/fr/helptab.msg",
                langue="français", autre="en"),
     "en": dict(sections=SECTIONS_EN, defaut="COMMANDS",
-               sujets=["KEYS", "PROGRAMS", "EDIT", "HEX", "LOGO", "ASM", "DEBUG",
-                       "MEMORY", "USB", "GRAPHER", "CMDER", "EDSPRITE"],
+               sujets=["KEYS", "PROGRAMS", "EDIT", "LOGO"],
                aide=["Help: HELP (built-in commands)", "and HELP followed by a topic:"],
                autres="Other topics: HELP followed by", lettres="  (4 letters are enough)",
                inconnu="Unknown topic.",
@@ -776,6 +774,15 @@ LANGUES = {
                langue="anglais", autre="fr"),
 }
 RACINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+
+# Édition Microdisc : seuls les programmes de la disquette LOGO sont décrits
+ABSENTS = {"HEX", "EDSPRITE", "GRAPHER", "GRXASM", "VSYNC", "CMDER", "LOGOTR", "ASM",
+           "DEBUG", "EXPORT", "IMPORT", "USBDIR", "USBMOUNT", "MKTAP", "TERM", "XFER",
+           "MEM", "POKE", "GO", "GTEST", "HELLO"}
+SECTIONS = [(t, [r for r in rows if r[0].split()[0] not in ABSENTS]) for t, rows in SECTIONS]
+SECTIONS_EN = [(t, [r for r in rows if r[0].split()[0] not in ABSENTS]) for t, rows in SECTIONS_EN]
+LANGUES["fr"]["sections"] = SECTIONS
+LANGUES["en"]["sections"] = SECTIONS_EN
 
 assert len(SECTIONS) == len(SECTIONS_EN)
 for (tf, rf), (te, re_) in zip(SECTIONS, SECTIONS_EN):
@@ -787,8 +794,7 @@ def genere(code, L):
     topics = L["sujets"]
     for t in topics:
         assert t in byname, t
-    sujets = ["  " + " ".join(topics[:4]), "  " + " ".join(topics[4:8]),
-              "  " + " ".join(topics[8:]), L["lettres"]]
+    sujets = ["  " + " ".join(topics), L["lettres"]]
 
     # --- README.TXT : notation et renvoi à HELP ---
     readme = render(*L["sections"][0]) + [""] + L["aide"] + sujets

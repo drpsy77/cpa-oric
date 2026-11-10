@@ -25,7 +25,7 @@
 ;  du LOCI la liste des lecteurs montés : un lecteur vide est refusé
 ;  sans qu'aucune commande ne lui soit envoyée.
 ;  Correspondance LSN -> piste physique :
-;     piste logique = LSN / 17 ; cylindre = piste/2 ; face = piste and 1
+;     piste logique = LSN / 17 = cylindre ; face 0 (édition Microdisc)
 ;     secteur = LSN mod 17 + 1
 ; =====================================================================
 
@@ -74,8 +74,6 @@ fdd     dey
 
 ; disk_home : ramène la tête du lecteur buf_drv en piste 0
 disk_home
-        jsr loci_abs
-        bcs dh_no
         php
         sei
         jsr md_sel
@@ -84,53 +82,7 @@ disk_home
         plp
         lda #0
         rts
-dh_no   lda #1
-        rts
 
-; loci_abs : C=1 si le lecteur buf_drv n'a pas d'image sur le LOCI.
-;   Rien à faire si c'est le lecteur en service (phy_drv), ou sans LOCI
-;   ("L" en $0319 ; sans LOCI, $03A8-$03AB sont des registres du VIA :
-;   on n'y touche pas). Le menu du LOCI range sa configuration dans la
-;   XRAM ("LOCI" en $8000, octet mounts en $800B, mis à jour à chaque
-;   éjection). Signature absente ou octet invraisemblable (A: non monté,
-;   bits 6-7 non nuls : autre version du menu) : on laisse passer.
-loci_abs
-.(
-        lda buf_drv
-        cmp phy_drv
-        beq ok                  ; lecteur déjà en service
-        lda LOCI_ID
-        cmp #"L"
-        bne ok                  ; pas de LOCI
-        lda #1
-        sta MIA_STEP1
-        lda #>LOCI_CFG
-        sta MIA_ADDR1+1
-        ldx #<LOCI_CFG
-        stx MIA_ADDR1
-sig     lda MIA_RW1             ; octet, puis adresse suivante
-        cmp loci_sig,x
-        bne ok
-        inx
-        cpx #4
-        bne sig
-        lda #<LOCI_MNT
-        sta MIA_ADDR1
-        lda MIA_RW1
-        tay
-        and #$C1
-        cmp #1
-        bne ok                  ; invraisemblable : on laisse passer
-        tya
-        ldx buf_drv
-        and bitmask,x
-        bne ok                  ; monté
-        sec
-        rts
-ok      clc
-        rts
-.)
-loci_sig .asc "LOCI"
 
 ; md_sel : lecteur buf_drv et face dsk_side, contrôleur libre, registre
 ;   de piste du lecteur (gardé dans dsk_trk au changement). C=1 si le
@@ -194,11 +146,8 @@ done    lda fs_t0
         clc
         adc #1
         sta dsk_sec
-        txa
-        lsr
-        sta dsk_cyl
+        stx dsk_cyl             ; une seule face : piste logique = cylindre
         lda #0
-        rol
         sta dsk_side
         clc
         rts
@@ -218,8 +167,6 @@ disk_write
         lda #$80                ; et le RESET (NMI) attend la fin du secteur
         sta dsk_nmi
         jsr lsn_to_chs
-        bcs fl
-        jsr loci_abs            ; LOCI : lecteur sans image refusé d'emblée
         bcc chs_ok
 fl      jmp fail
 chs_ok  lda #4

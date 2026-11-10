@@ -67,7 +67,7 @@ def crlf_texte(name, data):
         return data
     return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
-SPT, NSIDES, NCYL = 17, 2, 42
+SPT, NSIDES, NCYL = 17, 1, 42
 NSECT = SPT * NSIDES * NCYL
 SYS_LSN, DIR_LSN = 3, 68
 BLK_SECT = 8
@@ -107,7 +107,7 @@ def crc16(data):
 
 def lsn_chs(lsn):
     lt = lsn // SPT
-    return lt // 2, lt % 2, lsn % SPT + 1
+    return lt, 0, lsn % SPT + 1
 
 
 class Disk:
@@ -176,7 +176,7 @@ class Disk:
                 t = bytearray()
                 t += b"\x4e" * (GAP1 - 12)
                 for s in slot_order(ENTREL):
-                    lt = cyl * 2 + side
+                    lt = cyl
                     data = self.sec[lt * SPT + s - 1]
                     idf = b"\xa1\xa1\xa1\xfe" + bytes([cyl, side, s, 1])
                     t += b"\x00" * 12 + idf + struct.pack(">H", crc16(idf))

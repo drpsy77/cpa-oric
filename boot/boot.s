@@ -128,11 +128,7 @@ rd      lda MD_DRQ
         bne next
         lda #1
         sta sect
-        lda side
-        eor #1
-        sta side
-        bne next
-        inc cyl
+        inc cyl                 ; une seule face
 next    dec count
         bne loop
         jmp ($FFFC)             ; démarrage à froid de CP/A

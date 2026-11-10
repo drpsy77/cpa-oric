@@ -31,7 +31,7 @@ used    = $20           ; blocs occupés
 nro     = $21           ; fichiers protégés
 nsy     = $22           ; fichiers système (cachés de DIR)
 
-NBLK    = 168           ; blocs de données (170 moins le répertoire)
+NBLK    = 78            ; blocs de données (80 moins le répertoire)
 
         *= $0500
 start

@@ -9,7 +9,5 @@ adr bb        | hexa : 0500 A9
 
 Aide : HELP (commandes internes)
 et HELP suivi d'un sujet :
-  TOUCHES PROGRAMMES EDIT HEX
-  LOGO ASM DEBUG MEMOIRE
-  USB GRAPHER CMDER EDSPRITE
+  TOUCHES PROGRAMMES EDIT LOGO
   (4 lettres suffisent)

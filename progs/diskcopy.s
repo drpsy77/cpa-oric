@@ -21,8 +21,8 @@
 #include "cpa.inc"
 
 DIR_LSN     = 68
-NSECT       = 1428
-NBLK        = 170
+NSECT       = 714
+NBLK        = 80
 
 ptr     = $10           ; 2 octets
 src     = $12
