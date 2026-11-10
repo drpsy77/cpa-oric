@@ -8,6 +8,7 @@ name: Oricutron macOS
 on:
   workflow_dispatch:
   push:
+    branches: [main]      # pas à l'envoi d'une étiquette
     paths:
       - tools/oricutron-testhook.patch
       - tools/LISEZMOI-mac.txt

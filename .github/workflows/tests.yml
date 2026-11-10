@@ -9,6 +9,7 @@ name: Construction et tests
 on:
   workflow_dispatch:
   push:
+    branches: [main]      # pas à l'envoi d'une étiquette
     paths:
       - src/**
       - progs/**

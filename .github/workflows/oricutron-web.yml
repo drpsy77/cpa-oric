@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['v*']          # une version publiée : la page prend sa disquette
+    tags: ['v*', 'V*']    # une version publiée : la page prend sa disquette
     paths:
       - tools/oricutron-testhook.patch
       - tools/web/**

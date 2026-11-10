@@ -8,7 +8,7 @@ name: Version
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', 'V*']
   release:
     types: [published]    # version créée sur la page Releases de GitHub
 
