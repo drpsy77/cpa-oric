@@ -160,10 +160,11 @@ lisibles dans certains émulateurs, sont nettes sur un vrai écran.
 SEDORIC) : il ne lit pas les disquettes de CP/A (2 faces de 80 pistes, images de 1 Mo). Cumulus, Gotek, HxC ou
 lecteur 3,5″ double face : jamais essayés, et sans LOCI la clé USB et le réseau manquent.
 Aucun portage pour le Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt
-pour en parler. Les disquettes d'avant ce format (géométrie de SEDORIC : 42 pistes de 17 secteurs, sur 2
-faces, 336 Ko) restent
-publiées, figées au 31 octobre 2026 :
-[CP/A 0.9, 42 pistes](https://github.com/drpsy77/cpa-oric/releases/tag/v0.9-42pistes).
+pour en parler. Une démonstration existe pourtant : l'**édition Microdisc**, une disquette
+LOGO autonome sur une seule face de 42 pistes (la géométrie de SEDORIC), en français et en
+anglais, sans LOCI ni clé USB ; essayée dans Oricutron seulement, figée (branche
+`microdisc`) :
+[CP/A, édition Microdisc](https://github.com/drpsy77/cpa-oric/releases/tag/microdisc-logo).
 
 **Plusieurs lecteurs.** CP/A gère quatre lecteurs, `A:` à `D:`, comme le
 contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :

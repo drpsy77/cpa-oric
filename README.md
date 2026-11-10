@@ -158,9 +158,11 @@ some emulators, are sharp on a real screen.
 **Microdisc.** The original 3″ Microdisc drive is single-sided (42 tracks under SEDORIC): it
 cannot read CP/A disks (2 sides of 80 tracks, 1 MB images). Cumulus, Gotek, HxC or a double-sided 3.5″
 drive: never tried, and without a LOCI there is no USB stick and no network. No Microdisc port is planned; if you
-want one, open an issue on this repository to talk about it. The disks from before this
-format (SEDORIC geometry: 42 tracks of 17 sectors, on 2 sides, 336 KB) remain published, frozen as of 31 October 2026:
-[CP/A 0.9, 42 tracks](https://github.com/drpsy77/cpa-oric/releases/tag/v0.9-42pistes).
+want one, open an issue on this repository to talk about it. There is a demonstration,
+though: the **Microdisc edition**, a stand-alone LOGO disk on a single side of 42 tracks
+(the SEDORIC geometry), in English and in French, with no LOCI and no USB stick; tried in
+Oricutron only, frozen (`microdisc` branch):
+[CP/A, Microdisc edition](https://github.com/drpsy77/cpa-oric/releases/tag/microdisc-logo).
 
 **Several drives.** CP/A handles four drives, `A:` to `D:`, like the Microdisc
 controller, the LOCI and Oricutron (one `-d` per drive:
