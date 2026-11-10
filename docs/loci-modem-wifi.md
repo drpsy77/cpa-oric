@@ -90,7 +90,7 @@ sans `T`, `P` ou `I`, répond `ERROR`).
   montage d'une image de la mémoire interne (`0:`) y fige le LOCI : CP/A le refuse.
 - **0.3.1 officielle** : `TERM /D` y lisait `A7 4C D0` (état, commande, contrôle), mais le
   Pico était alors relié par un câble sans données ; contre-essai à refaire avec le bon
-  câble (`docs/etat.md` § 2 point 4).
+  câble (`docs/suite.md` point 4).
 - La branche de l'issue 17 du firmware (ACIA en `$0340` ou `$0380`, mars 2026) n'est pas
   finie : elle enregistre `CONFIG.SYS` avant que le système de fichiers soit monté et ne
   réapplique pas le réglage lu ; ne pas l'installer en l'état.

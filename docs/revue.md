@@ -28,6 +28,9 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   Le format et le contrat ne changent pas. Coût de l'option : 331 octets résidents (marge
   184 au lieu de 515), 37 ms à chaque lecture d'un lecteur, 16 secteurs relus à la première
   écriture après une pause.
+- **`etat.md` scindé** : `etat.md` (10 Ko : état, liste de la version 1.0, contraintes),
+  `suite.md` (suite prévue), `place.md` (réserves de place) ; chiffres de l'état et de la
+  place repris de `build/`.
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
@@ -85,22 +88,16 @@ fait par `GRXASM /O` et `.TAP`.
 
 ### Lot 3 — documents à jour
 
-- **`etat.md` scindé** : il fait 55 Ko, avec des dates et du récit, contre sa propre règle
-  (`architecture.md` § 7). Garder l'état (court), la suite prévue et les réserves de place ;
-  le récit des lots faits est dans git et dans les références des programmes.
-- **Liste de la 1.0** en tête de la suite prévue, d'après `vision.md` : dessin assisté (à
-  spécifier), son de GRAPHER, phases d'un jeu (`RUN`), `CASSETTE.COM`, un jeu complet (le
-  rogue-like comme fil conducteur), vérification sur le matériel. Ce qui n'y est pas attend.
-- Chiffres périmés de `etat.md`, à reprendre de `build/` : HELP (13 029 en français,
-  12 850 en anglais ; le § 3 les inverse), REMOTE (2 127), place libre de GRAPHER (257),
-  tailles anglaises du § 2 point 7 (GRAPHER 18 104, GRXASM 17 013, CMDER 17 859 : 9
-  blocs), ASM du point 8 (7 322 : déjà 4 blocs), place libre des disquettes (`cpa.dsk`
-  358 Ko, anim 318, exemples 324, logo 510, notes 558).
+- `docs/suite.md` (40 Ko, issu de la scission d'`etat.md`) garde des dates et le récit des
+  lots faits, contre `architecture.md` § 7 : à réduire point par point, en vérifiant que
+  chaque « Fait » est décrit dans la référence du programme avant de le retirer.
+- Chiffres périmés de `docs/suite.md` : tailles anglaises du point 7 (GRAPHER 18 104,
+  GRXASM 17 013, CMDER 17 859 : 9 blocs), ASM du point 8 (7 322 : déjà 4 blocs).
 - `docs/en/` contient dix documents : les cinq d'utilisation, suivis par
   `tools/check_en.py`, et cinq internes (architecture, vision, usb, console-distance,
-  loci-modem-wifi), annoncés par `README.md` mais pas suivis, alors que `etat.md` § 2
+  loci-modem-wifi), annoncés par `README.md` mais pas suivis, alors que `suite.md`
   point 7 dit les documents internes en français seulement. Les ajouter à `check_en.py` et
-  corriger `etat.md` ; `README.fr.md` ne cite que les cinq premiers.
+  corriger `suite.md` ; `README.fr.md` ne cite que les cinq premiers.
 - **`essais-materiel.md` trié** : environ 35 rubriques attendent le vrai Oric, arrêté.
   Séparer ce qui exige le matériel (timing du disque et du LOCI, son, couleurs, vidéo par
   ligne) de ce qu'un émulateur couvre.

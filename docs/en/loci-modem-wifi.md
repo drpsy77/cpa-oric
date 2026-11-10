@@ -94,7 +94,7 @@ without `T`, `P` or `I`, answers `ERROR`).
   an image from the internal memory (`0:`) freezes the LOCI with it: CP/A refuses it.
 - **Official 0.3.1**: `TERM /D` read `A7 4C D0` there (status, command, control), but the
   Pico was then connected by a cable without data; the counter-test must be redone with the
-  right cable (`docs/etat.md` § 2 item 4).
+  right cable (`docs/suite.md` item 4).
 - The firmware's issue 17 branch (ACIA at `$0340` or `$0380`, March 2026) is not
   finished: it saves `CONFIG.SYS` before the file system is mounted and does not
   reapply the setting it read; do not install it as it stands.

@@ -62,7 +62,7 @@ machine.
 
 ## How to decide
 
-An idea enters the planned work (`docs/etat.md` § 2) if it serves one of points 1 to 3
+An idea enters the planned work (`docs/suite.md`) if it serves one of points 1 to 3
 without betraying points 4 and 5. What serves none of the three waits, or is not done.
 
 The pull-down menus and completion (file names and commands, `CPLCMD` option) are the

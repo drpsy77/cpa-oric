@@ -1,7 +1,7 @@
 # Étude : place sur les disquettes et formats de stockage
 
 Spécification de travail. Elle rassemble les mesures, les contraintes et les pistes de la
-place sur les disquettes. Elle prolonge le point 9 de `docs/etat.md` (« Orientation LOCI du
+place sur les disquettes. Elle prolonge le point 9 de `docs/suite.md` (« Orientation LOCI du
 stockage » : la cible est l'Oric Atmos muni d'un LOCI ; la place doit venir aussi du lecteur
 « fichiers USB », pas de disquettes 3 pouces rentabilisées), qu'il faut relire avec elle.
 

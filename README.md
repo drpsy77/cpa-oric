@@ -115,7 +115,9 @@ The user documents, the vision, the architecture, the USB stick, the WiFi modem 
 | `docs/systeme.md` | how the system works inside |
 | `docs/memoire-pages-2-3.md` | page 2 and page 3 variables |
 | `docs/carte-memoire.html` | visual map of the resident system, `$C000-$FFFF` (made by `tools/carte_memoire.py`; in French) |
-| `docs/etat.md` | project status, what comes next, space reserves |
+| `docs/etat.md` | project status, version 1.0 checklist (in French) |
+| `docs/suite.md` | what comes next, by priority (in French) |
+| `docs/place.md` | space reserves: system, disks (in French) |
 | `docs/projet-rom.md` | the ROM version |
 | `docs/oric-basic.md` | CP/A for the Oric under BASIC: `.TAP` output (MKTAP), standalone GRAPHER games (`GRXASM /O`, `ORIC.INC`), routines for BASIC later (specification) |
 | `docs/atelier.md` | building and testing (tools, emulators, test benches) |

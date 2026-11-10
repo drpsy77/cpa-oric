@@ -236,4 +236,4 @@ Mesurer par module et par routine avec `build/cpa_sys.sym` ; carte visuelle :
 `docs/carte-memoire.html` (`tools/carte_memoire.py`). Les plus gros postes : `fs.s`, `bios.s`,
 `menu.s`, `rline.s`, `ccp_disk.s`, tables, police. La page `$FF00`
 (`src/tables_ff.s`, écrite par `tools/gen_tables.py`) reçoit les tables de l'écran texte et du
-clavier. Réserves : `docs/etat.md` § 3.
+clavier. Réserves : `docs/place.md`.

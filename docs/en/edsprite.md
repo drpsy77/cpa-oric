@@ -152,4 +152,4 @@ one to the other (or the Sprite menu, Select / Draw).
 
 - Sprites in full-screen HIRES: the `.SPR` format (6 dots per byte) already fits; what is
   missing is the display in GRAPHER (library), not the editor.
-- Characters animated at 50 Hz (`etat.md` § 2 point 1).
+- Characters animated at 50 Hz (`suite.md` point 1).

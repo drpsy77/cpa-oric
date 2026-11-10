@@ -150,7 +150,7 @@ plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en angla
   ~6 s par accès) au lieu de `No file`. Dire ensuite si `DIR` sur A: remarche (au besoin
   après CTRL-C) ou seulement après le redémarrage du LOCI, et si le voyant du LOCI reste
   allumé. Un seul appui bref, puis un appui long : la différence dit si le bouton rebondit
-  (cause supposée : une seconde NMI pendant le démarrage à chaud, `docs/etat.md` § 2
+  (cause supposée : une seconde NMI pendant le démarrage à chaud, `docs/suite.md`
   point 5) ;
 - RESET pendant un enregistrement : `EDIT` d'un texte de quelques Ko, une modification,
   CTRL-S puis RESET aussitôt, une dizaine de fois en variant l'instant ; de même `GRAPHER`
@@ -297,7 +297,7 @@ un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lect
   Mac, `nc -l 2323 < un_long_texte.txt` (quelques Ko, lignes courtes), puis `TERM /E /L` et
   `ATDT-IP_DU_MAC:2323` : le texte doit arriver entier, alors que l'écran défile ;
 - imprimante : pas d'imprimante ; à essayer par `PUT /P` quand il existera
-  (`docs/etat.md` § 2 point 6).
+  (`docs/suite.md` point 6).
 
 **HOSTS et appel du modem** (TERM, XFER) : le premier `XFER ... @MAC` répondait `ERROR` (la liaison s'ouvrait quand même) et
 un serveur qui n'était pas relancé ne répondait plus : corrigés (`docs/console-distance.md`
@@ -571,7 +571,7 @@ Cas limites et disquette française, 24 octobre 2026 :
   disquette ; `T` sur `JSR BDOS` l'exécute d'un coup, comme prévu ;
 - HEX : écriture d'octets ; EDIT : CTRL-W (trois modes), d'usage courant ;
 - GRAPHER traduit, boucle sans lecture du clavier : arrêtée par RESET, système rendu ;
-- LOGO : son (essayé plus tôt ; maniement jugé lourd, `docs/etat.md` § 2 point 6) ;
+- LOGO : son (essayé plus tôt ; maniement jugé lourd, `docs/suite.md` point 6) ;
 - TERM : RETURN ne passait pas à la ligne (corrigé, en attente du Pico ci-dessus).
 
 GRXASM `/O`, 25 octobre 2026 : un jeu de puzzle (`JEUCOUL.TAP`) écrit dans EDIT sur l'Oric,

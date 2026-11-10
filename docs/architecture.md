@@ -280,7 +280,9 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 |---|---|
 | but, public, principes, ce que CP/A n'est pas | `docs/vision.md` (critère pour ordonner la suite) |
 | contrat, conventions, construction | ce document |
-| état, suite prévue, réserves de place | `docs/etat.md` (court : relu à chaque conversation) |
+| état, liste de la version 1.0 | `docs/etat.md` (court : relu à chaque conversation) |
+| suite prévue | `docs/suite.md` |
+| réserves de place | `docs/place.md` |
 | fonctionnement interne du système | `docs/systeme.md` |
 | mode d'emploi d'un programme | `docs/manuel.md`, ou sa référence (`logo.md`, `grapher.md`, `cmder.md`, `edsprite.md`) |
 | choix de mise en œuvre d'un programme | section « Mise en œuvre » de sa référence |
@@ -293,7 +295,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   fait », « Questions ouvertes ». Une question disparaît dès qu'elle a sa réponse : la
   réponse est intégrée au texte. Une fois le travail livré, la spécification devient (ou
   rejoint) la référence du programme.
-- À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge, suite),
+- À chaque livraison : la référence du programme, `docs/etat.md` (tailles, marge), `docs/suite.md`,
   `docs/essais-materiel.md` (« À vérifier ») et, si une fonction change,
   `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
 - `README.md` (anglais) et `README.fr.md` (français) vont ensemble : un changement de l'un

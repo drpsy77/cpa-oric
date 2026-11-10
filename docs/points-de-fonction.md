@@ -911,7 +911,7 @@ Réutilisation : 57 255 lignes de code écrites dans `progs/`, 67 491 lignes
 
 ## 8. Qualité
 
-Défauts connus : `docs/etat.md` § 5 ; points à vérifier : `docs/essais-materiel.md`
+Défauts connus : `docs/suite.md` point 5 ; points à vérifier : `docs/essais-materiel.md`
 (« À vérifier », une puce = un point).
 
 | Composant | Défauts connus | Manques notés | À vérifier sur le matériel |
@@ -1225,7 +1225,7 @@ qu'on disait indispensables. Place d'après la règle de `docs/architecture.md` 
 |---|---|---|---|
 | WordStar, MailMerge, Spellguard | traitement de texte | EDIT (édition, impression mise en page) | mise en forme à l'impression (gras, souligné, en-têtes, numéros de page, justification), publipostage, orthographe |
 | SuperCalc, Multiplan | tableur | — | tout ; les décimaux de LOGO (`fp_inc.s`) servent tels quels |
-| dBASE II | base de données | fichiers de données de GRAPHER | une base simple sur l'accès direct (déjà notée, `docs/etat.md` § 2.6) |
+| dBASE II | base de données | fichiers de données de GRAPHER | une base simple sur l'accès direct (déjà notée, `docs/suite.md`.6) |
 | MBASIC, CBASIC | BASIC avec décimaux et fichiers | LOGO (décimaux), GRAPHER (fichiers) | pas de BASIC sous CP/A : le pont va dans l'autre sens, vers le BASIC de l'Oric (`docs/oric-basic.md`) |
 | Turbo Pascal, BDS C | langage compilé avec éditeur | GRAPHER : interprété pour la mise au point, traduit en assembleur par GRXASM pour la vitesse ; ASM | peu de chose : les phases d'un jeu, les tuiles (`docs/grapher.md` § 16, § 17) |
 | MODEM7, Kermit, XMODEM | communication | `TERM.COM` (terminal), `XFER.COM` (XMODEM-CRC, serveur `xfer_server.py`) | Kermit, YMODEM (plusieurs fichiers, noms transmis) |

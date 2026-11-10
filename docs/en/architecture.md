@@ -282,7 +282,9 @@ decided), without narrative, without discussion dates, without "Pierre said". Th
 |---|---|
 | goal, audience, principles, what CP/A is not | `docs/en/vision.md` (criterion for ordering what comes next) |
 | contract, conventions, building | this document |
-| status, planned next steps, space reserves | `docs/etat.md` (short: re-read at each conversation) |
+| status, version 1.0 checklist | `docs/etat.md` (short: re-read at each conversation) |
+| planned next steps | `docs/suite.md` |
+| space reserves | `docs/place.md` |
 | internal workings of the system | `docs/systeme.md` |
 | user guide of a program | `docs/en/manuel.md`, or its reference (`logo.md`, `grapher.md`, `cmder.md`, `edsprite.md`) |
 | implementation choices of a program | "Mise en œuvre" (Implementation) section of its reference |
@@ -295,7 +297,7 @@ decided), without narrative, without discussion dates, without "Pierre said". Th
   fait" (Decided, not yet done), "Questions ouvertes" (Open questions). A question disappears as soon as it has its answer: the
   answer is worked into the text. Once the work is delivered, the specification becomes (or
   joins) the reference of the program.
-- At each delivery: the reference of the program, `docs/etat.md` (sizes, margin, next steps),
+- At each delivery: the reference of the program, `docs/etat.md` (sizes, margin), `docs/suite.md`,
   `docs/essais-materiel.md` ("À vérifier", To be checked) and, if a function changes,
   `docs/points-de-fonction.md` (§ 2.4) are updated; nothing is narrated.
 - `README.md` (English) and `README.fr.md` (French) go together: a change to one

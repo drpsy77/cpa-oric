@@ -59,7 +59,7 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
 
 ## Pour décider
 
-Une idée entre dans la suite prévue (`docs/etat.md` § 2) si elle sert l'un des points 1 à 3
+Une idée entre dans la suite prévue (`docs/suite.md`) si elle sert l'un des points 1 à 3
 sans trahir les points 4 et 5. Ce qui ne sert aucun des trois attend, ou n'est pas fait.
 
 Les menus déroulants et la complétion (noms de fichiers et commandes, option `CPLCMD`) sont

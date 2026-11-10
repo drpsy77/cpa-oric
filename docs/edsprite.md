@@ -155,4 +155,4 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
 
 - Sprites en HIRES plein écran : le format `.SPR` (6 points par octet) convient déjà ; il
   manque l'affichage dans GRAPHER (bibliothèque), pas l'éditeur.
-- Caractères animés au 50 Hz (`etat.md` § 2 point 1).
+- Caractères animés au 50 Hz (`suite.md` point 1).

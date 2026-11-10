@@ -269,6 +269,6 @@ files behave like those of a disk (EDIT, GRAPHER, COPY, DIR...). A driver in the
 sends all the file functions of that drive to the LOCI API; neither attributes nor
 allocation table (fictitious free space; FORMAT, DISKCOPY and direct sector accesses
 refused). Estimated resident space 1.5 to 2 KB, when the system has 12 bytes of margin:
-after PUT is moved down into a bank (`docs/etat.md` § 3), or the driver itself in a bank.
+after PUT is moved down into a bank (`docs/place.md`), or the driver itself in a bank.
 Erasing is used there (EDIT saves through `NOM.$$$`, erase, rename). Affects the system,
 not the BDOS numbers; would also benefit the ROM version.
