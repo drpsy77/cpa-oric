@@ -145,6 +145,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
     tools/test_xfer.sh               # XFER.COM and xfer_server.py in Oricutron (simulated modem)
     tools/test_remote.sh             # remote console: driver, REMOTE, remote.py (~6 min)
     python3 tools/test_fdc.py        # disk driver: controller that stops responding (simulated 6502)
+    python3 tools/test_fs.py         # files: end of file, appending after the end (simulated 6502)
 
 - `build.sh` refuses a disk system that goes beyond `SYS_END` (`$F5C8`), a window that overflows (PUT after
   `$FA00`, cold boot after `$FD00`; through `tools/mkbnk.py`: IMG after `$FA00`, GFX after
@@ -288,6 +289,7 @@ decided), without narrative, without discussion dates, without "Pierre said". Th
 | trials on the real hardware | `docs/essais-materiel.md` (read only when needed) |
 | help on the Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
 | measurement (function points, lines, bytes) | `docs/points-de-fonction.md` |
+| project review: findings, decided batches | `docs/revue.md` |
 
 - A working specification follows the same plan: what is done, "Décidé, pas encore
   fait" (Decided, not yet done), "Questions ouvertes" (Open questions). A question disappears as soon as it has its answer: the

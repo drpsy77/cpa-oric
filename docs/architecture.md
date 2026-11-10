@@ -143,6 +143,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     tools/test_remote.sh             # console à distance : pilote, REMOTE, remote.py (~6 min)
     python3 tools/test_fdc.py        # pilote disque : contrôleur qui ne répond plus (6502 simulé)
+    python3 tools/test_fs.py         # fichiers : fin de fichier, ajout après la fin (6502 simulé)
 
 - `build.sh` refuse un système disque qui dépasse `SYS_END` (`$F5C8`), une fenêtre qui déborde (PUT après
   `$FA00`, démarrage à froid après `$FD00` ; par `tools/mkbnk.py` : IMG après `$FA00`, GFX après
@@ -169,7 +170,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | en plus : `tools/test_xfer.sh` (~4 min) ; pour TERM, essai Oricutron en boucle (`serial = 'loopback'`) |
 | `src/serial.s`, REMOTE.COM, `tools/remote.py`, la fonction 117, PUNCH, READER | en plus : `tools/test_remote.sh` (~6 min) et `tools/test_xfer.sh` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | en plus : `tools/test_grapher.sh` (et `LANGUE=en` si un message change), `tools/test_inc.sh`, `tools/test_oric.sh`, essai Oricutron des exemples `.GRX` (dessin) |
-| EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
+| EDIT (ouverture, enregistrement), `fil.inc`, `src/fs.s`, `src/disk.s` | en plus : `python3 tools/test_fichiers.py` (~10 min ; `--vite` pour un balayage plus lâche) ; pour `src/fs.s`, aussi `python3 tools/test_fs.py` ; pour `src/disk.s`, aussi `python3 tools/test_fdc.py` |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | en plus : `python3 tools/test_anim.py` (images et animations dans le 6502 simulé) |
 | Avant un commit de version, ou sur demande | tout |
 
@@ -286,6 +287,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 | essais sur le vrai matériel | `docs/essais-materiel.md` (lu seulement au besoin) |
 | aide sur l'Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
 | mesure (points de fonction, lignes, octets) | `docs/points-de-fonction.md` |
+| revue du projet : constats, lots décidés | `docs/revue.md` |
 
 - Une spécification de travail suit le même plan : ce qui est fait, « Décidé, pas encore
   fait », « Questions ouvertes ». Une question disparaît dès qu'elle a sa réponse : la

@@ -10,6 +10,12 @@ Le vrai Oric est arrêté tant que son alimentation n'est pas réglée (`docs/lo
 « Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas ces
 essais.
 
+**Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
+
+- un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`
+  vers un autre nom, puis `STAT` : même taille, même contenu ;
+- EDIT : l'ouvrir, ajouter une ligne, enregistrer, rouvrir.
+
 Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
 rencontre pas.
 

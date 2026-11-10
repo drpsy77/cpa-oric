@@ -893,7 +893,7 @@ f_read
         lda #0
         sta (ZP_FCB),y
         jsr open_ext
-        bne eof
+        bne back
         ldy #FCB_RC
         lda (ZP_FCB),y
         beq eof
@@ -909,6 +909,14 @@ have    jsr rec_lsn
         sta (ZP_FCB),y
         lda #0
         rts
+back    ldy #FCB_EX             ; pas d'extent suivant : le FCB reste à la
+        lda (ZP_FCB),y          ; fin du dernier (EX, CR = 128, ses blocs),
+        sec                     ; une nouvelle lecture redonne la fin et
+        sbc #1                  ; une écriture ajoute un extent
+        sta (ZP_FCB),y
+        ldy #FCB_CR
+        lda #128
+        sta (ZP_FCB),y
 eof     lda #1
         rts
 err     lda #$FF
@@ -1204,8 +1212,11 @@ f_setrnd
         lda #0
         ror
         ldy #FCB_CR
-        ora (ZP_FCB),y
-        ldy #FCB_R0
+        clc                     ; CR vaut 128 à la fin d'un extent plein
+        adc (ZP_FCB),y
+        bcc sr_1
+        inc fs_t1
+sr_1    ldy #FCB_R0
         sta (ZP_FCB),y
         iny
         lda fs_t1

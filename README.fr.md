@@ -109,7 +109,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
 | `docs/edsprite.md` | EDSPRITE, l'éditeur de sprites et de caractères |
-| `docs/en/` | les quatre documents ci-dessus en anglais |
+| `docs/en/` | les cinq documents ci-dessus en anglais |
 | `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
 | `docs/systeme.md` | fonctionnement interne du système |
@@ -121,6 +121,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/atelier.md` | construire et tester (outils, émulateurs, bancs d'essai) |
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
+| `docs/revue.md` | revue du projet : constats, corrections, lots décidés |
 | `docs/etude-stockage.md` | place sur les disquettes : le format de 80 pistes (fait), les pistes restantes |
 | `docs/usb.md` | les clés USB du LOCI depuis CP/A : répertoire courant, montage des disquettes et cassettes, duplication, renommage, effacement (référence du niveau 1) |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM, XFER |

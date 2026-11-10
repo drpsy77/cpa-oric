@@ -8,8 +8,8 @@ Usages visés : développer sur l'Oric lui-même, gérer des fichiers et des don
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F3A7` en français (`$F37B` en anglais), **marge 544
-octets** (588 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F3C4` en français (`$F398` en anglais), **marge 515
+octets** (559 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -132,8 +132,8 @@ variables) :
 6. `VOIR FORET.IMG` : la forêt revient.
 7. Facultatif : `LABYRINT.GRX` de Pierre (sur sa clé LOCI, `files/`) en finale.
 
-**Ensuite** : nouvelle revue complète du projet (demandée par Pierre le 07/11/2026 : sources,
-outils, docs, disquettes) et proposition de nettoyage de ce qui est obsolète. Puis :
+**Ensuite** : les lots de la revue du projet (`docs/revue.md` : sûreté des fichiers, version
+ROM archivée, documents, dépôt, optimisations). Puis :
 avec un seul lecteur, demander la disquette système quand `CPA.BNK` de `A:` manque ou n'a pas
 la signature du système (brouillon : 67 octets ; changement de disquette du banc à réparer
 d'abord).
@@ -577,7 +577,7 @@ demandera : note de `README.md`, piste F de `docs/etude-stockage.md`).
 
 ## 3. Réserves de place
 
-**Système** (marge 544 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+**Système** (marge 515 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
 `$FF00` : 10 octets ; variables du BDOS : `$FD57` libre, 1 octet ; rappel automatique de
 la console à distance : 339 octets résidents et `$FD27-$FD56`). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
