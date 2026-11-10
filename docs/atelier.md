@@ -14,8 +14,9 @@ Raspberry Pi 400. Il dit aussi à quoi sert chaque machine.
 | **Oric Atmos + LOCI** | essai final sur le vrai matériel | timing, son et écran réels |
 
 Les fichiers circulent par GitHub : `git push` depuis une machine, `git pull` sur une autre.
-Les images prêtes à l'emploi (`build/cpa.dsk` et les autres disquettes) sont dans le dépôt : Windows et
-le LOCI n'ont donc jamais besoin de construire quoi que ce soit.
+Les disquettes ne sont pas dans le dépôt : chaque machine de l'atelier les construit
+(`./build.sh`), et la dernière version publiée se télécharge sur la page Releases de GitHub :
+Windows et le LOCI n'ont donc jamais besoin de construire quoi que ce soit.
 
 ## 2. Comment Claude travaille
 
@@ -195,11 +196,17 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 - `.github/workflows/tests.yml` (« Construction et tests », une demi-heure), quand les
   sources, les programmes, les fichiers des disquettes ou les outils changent : `xa` et
   py65 installés, `./build.sh`, puis les images du dépôt comparées à celles qui viennent
-  d'être construites (une image oubliée fait échouer la tâche), `test_asm.sh`,
+  d'être construites par leurs sommes (`build/disquettes.md5` ; une construction oubliée
+  fait échouer la tâche), disquettes gardées 90 jours comme artefact, `test_asm.sh`,
   `test_fs.py`, `test_fdc.py`, `test_fp.py`, `test_inc.sh`, `test_grapher.sh` dans les deux
   langues. Restent à lancer chez soi : `smoke_test.sh` et tout ce qui demande Oricutron ou
   les ROM de l'Oric (`test_bas.py`), `test_logo.sh` et `test_lib.sh` (longs).
 - `.github/workflows/docs.yml` (« Documents ») : `check_en.py` quand un document change.
+- `.github/workflows/release.yml` (« Version ») : à l'envoi d'une étiquette (`git tag v1.0`,
+  `git push origin v1.0`), construit les douze disquettes et les attache à la version
+  GitHub du même nom, une par une et dans une archive ; les liens des README
+  (`.../releases/latest/download/NOM.dsk`) donnent toujours la dernière. La page web
+  d'Oricutron est refaite avec la disquette de cette version.
 
 Résultat : onglet Actions du dépôt ; un échec est signalé par courriel au compte GitHub.
 
@@ -296,10 +303,10 @@ Markdown. Code de retour 0 si tout est vert.
 
 ## 5. Windows 11 : jouer avec le résultat
 
-Rien à construire : les images sont dans le dépôt.
+Rien à construire : les disquettes sont sur la page Releases du dépôt.
 
-1. Récupérer `build/cpa.dsk` : `git pull` si Git est installé sous Windows, sinon le bouton
-   de téléchargement du fichier sur GitHub, ou une copie depuis le Pi.
+1. Télécharger `cpa.dsk` (`https://github.com/drpsy77/cpa-oric/releases/latest`), ou en
+   prendre une copie sur le Pi.
 2. Dans Oricutron, machine Atmos, contrôleur Microdisc, insérer `cpa.dsk`, puis RESET.
 
 Le correctif de test n'est pas nécessaire sous Windows pour les scénarios automatiques, qui

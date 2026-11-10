@@ -29,8 +29,9 @@ documentation : `docs/architecture.md` § 7.
     ./tools/build_xa.sh        # une fois : compile xa dans tools/xa
     ./build.sh                 # système, .COM, disquettes ; erreurs dans build/*.err
 
-Les images `build/*.dsk` sont versionnées : après `./build.sh`, `git status`
-montre si elles ont changé. 
+Les images `build/*.dsk` ne sont pas versionnées (publiées par une version GitHub :
+`git tag vX.Y`, `git push origin vX.Y`). Leurs sommes le sont (`build/disquettes.md5`) :
+après `./build.sh`, `git status` montre si une image a changé.
 
 ## Tester
 

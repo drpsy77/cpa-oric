@@ -268,7 +268,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | `files/` | files copied as they are onto the disk (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | PC tools: disk images, tables, tests |
 | `docs/` | documentation (index in `README.md`) |
-| `build/` | outputs; only the ready-to-use images are under version control: disks (`*.dsk`), example `.TAP` files (`build/tap/`) |
+| `build/` | outputs, not under version control, except the checksums of the disks (`disquettes.md5`: `git status` shows whether an image has changed) and the example `.TAP` files (`build/tap/`); the disks are published by a GitHub release (`.github/workflows/release.yml`, when a `vX.Y` tag is pushed) |
 
 ## 7. Documentation
 

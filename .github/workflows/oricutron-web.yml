@@ -9,10 +9,11 @@ name: Oricutron web
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+    tags: ['v*']          # une version publiée : la page prend sa disquette
     paths:
       - tools/oricutron-testhook.patch
       - tools/web/**
-      - build/cpa.dsk
       - .github/workflows/oricutron-web.yml
 
 env:
@@ -41,6 +42,14 @@ jobs:
           cd oric
           git checkout -q "$ORIC_COMMIT"
           git apply ../tools/oricutron-testhook.patch
+
+      # la disquette de la page est construite ici (les images ne sont pas dans
+      # le dépôt)
+      - name: Disquette cpa.dsk
+        run: |
+          ./tools/build_xa.sh
+          python3 -m pip install --quiet --target tools/pylib py65
+          ./build.sh
 
       - name: Compilation
         run: |

@@ -32,10 +32,16 @@ jobs:
       - name: Construction (tailles et marges contrôlées)
         run: ./build.sh
 
-      # les images sont versionnées : celles du dépôt doivent être celles que
-      # donnent les sources (une image oubliée fait échouer cette étape)
-      - name: Images du dépôt à jour
-        run: git diff --stat --exit-code -- build/
+      # les sommes des images sont versionnées : celles du dépôt doivent être
+      # celles que donnent les sources (une construction oubliée fait échouer
+      # cette étape)
+      - name: Sommes des disquettes à jour
+        run: git diff --exit-code -- build/disquettes.md5
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: disquettes
+          path: build/*.dsk
 
       - name: ASM.COM == xa
         run: tools/test_asm.sh

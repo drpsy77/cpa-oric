@@ -45,6 +45,12 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
 - **Intégration continue** (`docs/atelier.md` § 4) : à chaque envoi, GitHub construit CP/A,
   vérifie que les images du dépôt sont celles que donnent les sources, et lance les tests
   sans émulateur (34 min) ; les traductions sont vérifiées à chaque envoi de documents.
+- **Disquettes hors du dépôt** : les `.dsk` sont retirés de tout l'historique (3,5 Mo au
+  lieu de 385 ; avec eux `cpa.rom` et une application Clock Signal envoyée par erreur) et
+  ne sont plus versionnés ; leurs sommes le sont (`build/disquettes.md5`). Les disquettes
+  sont publiées par une version GitHub à l'envoi d'une étiquette (`docs/atelier.md` § 4).
+  L'historique d'avant est gardé dans `archives/cpa-oric-avant-reecriture.bundle` (non
+  versionné).
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
@@ -85,11 +91,7 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ### Lot 4 — dépôt et intégration continue
 
-- Dépôt : `git gc` fait (un seul paquet, `git fsck` sans défaut). L'historique pèse
-  385 Mo : douze images de 1 Mo sont versionnées et changent à presque chaque commit
-  (environ 280 commits). Question ouverte (§ 3). `build/` garde de vieux fichiers ignorés
-  (patchs, archives, disquettes de 42 pistes), et `.git` un verrou resté
-  (`stale-maintenance-lock-claude`) et un `REBASE_HEAD`.
+- `build/` garde de vieux fichiers ignorés (patchs, archives, disquettes de 42 pistes).
 
 ### Lot 5 — optimisations
 
@@ -106,6 +108,4 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ## 3. Questions ouvertes
 
-- Images `build/*.dsk` dans git : les garder versionnées (prêtes à l'emploi pour qui clone,
-  mais ~12 Mo de plus par livraison), ou les publier comme fichiers d'une version GitHub
-  (« release ») et ne plus les versionner ?
+Aucune.

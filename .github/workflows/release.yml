@@ -1,0 +1,39 @@
+# Publie une version : à l'envoi d'une étiquette vX.Y (git tag v1.0 ;
+# git push origin v1.0), construit CP/A et attache les douze disquettes à
+# la version GitHub du même nom (page Releases du dépôt), une par une et
+# dans une archive. Les adresses .../releases/latest/download/NOM.dsk des
+# README pointent toujours sur la dernière version publiée.
+name: Version
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils (xa de l'OSDK, py65)
+        run: |
+          ./tools/build_xa.sh
+          python3 -m pip install --quiet --target tools/pylib py65
+
+      - name: Construction
+        run: |
+          ./build.sh
+          git diff --exit-code -- build/disquettes.md5
+
+      - name: Archive
+        run: cd build && zip -q cpa-disks-${GITHUB_REF_NAME}.zip *.dsk disquettes.md5
+
+      - name: Version GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "CP/A ${GITHUB_REF_NAME#v}" --generate-notes \
+            build/*.dsk build/cpa-disks-${GITHUB_REF_NAME}.zip

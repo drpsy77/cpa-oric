@@ -15,7 +15,7 @@
 - **Un système fiable et solide** : sur un vrai Atmos avec un LOCI, des séances de travail entières
   sans un plantage ni un redémarrage.
 
-**L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
+**L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
 et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
 prompt `A>` :
 
@@ -27,8 +27,8 @@ prompt `A>` :
     SERPENT           ...et lance la version compilée
     CMDER             gestionnaire de fichiers plein écran (ESC pour finir)
 
-La touche FUNCT ouvre les menus partout. Ensuite, [`cpa-anim.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-anim.dsk) :
-`DEMO` (images et animations) ; [`cpa-logo.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-logo.dsk) : `LOGO DEMO`, puis
+La touche FUNCT ouvre les menus partout. Ensuite, [`cpa-anim.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-anim.dsk) :
+`DEMO` (images et animations) ; [`cpa-logo.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-logo.dsk) : `LOGO DEMO`, puis
 `DEMO` (la tortue dessine un arbre).
 
 **En vidéo** : GRAPHER et la route qui défile de `DEFILE.GRX`.
@@ -37,9 +37,11 @@ La touche FUNCT ouvre les menus partout. Ensuite, [`cpa-anim.dsk`](https://githu
 
 Mini système « à la CP/M » pour Oric Atmos, écrit en assembleur 6502. Version 0.9.
 
-Deux variantes sont construites à partir des mêmes sources :
+Les disquettes ne sont pas dans le dépôt : elles se téléchargent sur la page
+[Releases](https://github.com/drpsy77/cpa-oric/releases/latest) (une par une, ou toutes dans
+une archive), ou se construisent par `./build.sh`.
 
-- **`build/cpa.dsk`**, la version principale : une disquette amorçable au format du
+- **`cpa.dsk`**, la disquette principale : une disquette amorçable au format du
   contrôleur Microdisc, pour le LOCI (Microdisc : voir plus bas). Le système se charge dans les 16 Ko de RAM
   overlay (`$C000-$FFFF`) cachés sous la ROM BASIC : aucune EPROM à graver, et l'espace des
   programmes reste intact. C'est la disquette système : tous les programmes (sauf LOGO) et

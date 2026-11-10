@@ -188,5 +188,17 @@ theme notes notes "" "$P/VOIR.COM" ""
 echo "== build/cpa-projet.dsk, build/cpa-project-en.dsk"
 python3 tools/mkdisk.py new build/cpa-projet.dsk | tail -1
 cp build/cpa-projet.dsk build/cpa-project-en.dsk
+# sommes des images (versionnées à leur place : `git status` montre si une
+# image a changé ; les images elles-mêmes sont publiées par une version GitHub)
+python3 - <<'PY'
+import hashlib
+noms = ["cpa", "cpa-anim", "cpa-logo", "cpa-exemples", "cpa-notes", "cpa-projet",
+        "cpa-en", "cpa-anim-en", "cpa-logo-en", "cpa-examples-en", "cpa-notes-en",
+        "cpa-project-en"]
+with open("build/disquettes.md5", "w") as f:
+    for n in noms:
+        d = open("build/%s.dsk" % n, "rb").read()
+        f.write("%s  %s.dsk\n" % (hashlib.md5(d).hexdigest(), n))
+PY
 echo "OK : build/cpa.dsk, cpa-{anim,logo,exemples,notes,projet}.dsk ;"
 echo "     build/cpa-en.dsk, cpa-{anim,logo,examples,notes,project}-en.dsk"

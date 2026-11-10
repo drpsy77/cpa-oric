@@ -266,7 +266,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `files/` | fichiers copiés tels quels sur la disquette (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | outils PC : images disque, tables, tests |
 | `docs/` | documentation (index dans `README.md`) |
-| `build/` | résultats ; seules les images prêtes à l'emploi sont versionnées : disquettes (`*.dsk`), `.TAP` d'exemple (`build/tap/`) |
+| `build/` | résultats, non versionnés, sauf les sommes des disquettes (`disquettes.md5` : `git status` montre si une image a changé) et les `.TAP` d'exemple (`build/tap/`) ; les disquettes sont publiées par une version GitHub (`.github/workflows/release.yml`, à l'envoi d'une étiquette `vX.Y`) |
 
 ## 7. Documentation
 

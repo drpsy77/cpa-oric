@@ -14,7 +14,7 @@
 - **Rock solid**: on a real Atmos with a LOCI, whole working sessions without a single
   crash or reboot.
 
-**Try it in five minutes.** Download [`cpa-examples-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-examples-en.dsk), put it on the USB stick of your LOCI
+**Try it in five minutes.** Download [`cpa-examples-en.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-examples-en.dsk), put it on the USB stick of your LOCI
 and boot, or run it in Oricutron (see below). At the `A>`
 prompt:
 
@@ -26,8 +26,8 @@ prompt:
     SNAKE             ...and play the compiled version
     CMDER             full-screen file manager (ESC to quit)
 
-The FUNCT key opens the menus everywhere. Then [`cpa-anim-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-anim-en.dsk):
-`DEMO` (pictures and animations); [`cpa-logo-en.dsk`](https://github.com/drpsy77/cpa-oric/raw/main/build/cpa-logo-en.dsk): `LOGO DEMO`, then
+The FUNCT key opens the menus everywhere. Then [`cpa-anim-en.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-anim-en.dsk):
+`DEMO` (pictures and animations); [`cpa-logo-en.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-logo-en.dsk): `LOGO DEMO`, then
 `DEMO` (the turtle draws a tree).
 
 **See it run**: GRAPHER and the scrolling road of `ROAD.GRX` (video, French version of the disk).
@@ -36,9 +36,11 @@ The FUNCT key opens the menus everywhere. Then [`cpa-anim-en.dsk`](https://githu
 
 A small "CP/M-like" system for the Oric Atmos, written in 6502 assembly. Version 0.9.
 
-Two variants are built from the same sources:
+The disks are not in the repository: download them from the
+[Releases](https://github.com/drpsy77/cpa-oric/releases/latest) page (one by one, or all of
+them in an archive), or build them with `./build.sh`.
 
-- **`build/cpa-en.dsk`**, the main version: a bootable disk in the Microdisc controller's
+- **`cpa-en.dsk`**, the main disk: a bootable disk in the Microdisc controller's
   format, for the LOCI (Microdisc: see below). The system loads into the 16 KB of overlay RAM
   (`$C000-$FFFF`) hidden under the BASIC ROM: no EPROM to burn, and the program space stays
   intact. This is the system disk: every program (except LOGO) and all the help, no
