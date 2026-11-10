@@ -7,8 +7,17 @@ livraison ajoute ses points à « À vérifier » ; un point vérifié passe dan
 ## À vérifier sur Oric Atmos + LOCI
 
 Le vrai Oric est arrêté tant que son alimentation n'est pas réglée (`docs/loci-modem-wifi.md`,
-« Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas ces
-essais.
+« Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas les
+essais de la partie A.
+
+Deux parties. **A** : ce que seul le matériel peut dire (le LOCI et son firmware, la clé
+USB, la cassette montée par le LOCI, le modem et le WiFi, le bouton RESET, les durées, le
+son, le rendu de l'écran) ; c'est elle qui compte pour « vérifiée sur le vrai matériel »
+de la version 1.0 (`docs/etat.md` § 2). **B** : ce dont la logique est la même dans
+Oricutron, où chaque livraison a été essayée ; à refaire sur l'Oric à l'occasion, sans que
+cela retienne la version 1.0.
+
+### A. Exige le matériel
 
 **Disquette changée sans CTRL-C** (système construit avec l'option `CHGDSK`,
 `docs/systeme.md` § 3 ; sur des **copies**) :
@@ -17,23 +26,6 @@ essais.
   `PUT X.TXT DIR` : `X.TXT` créé, les autres fichiers intacts (`tools/mkdisk.py check`) ;
 - EDIT : ouvrir un texte, changer d'image, enregistrer : enregistré sur la nouvelle, rien
   d'abîmé ; le temps de la première écriture après une pause reste insensible.
-
-**Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
-
-- un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`
-  vers un autre nom, puis `STAT` : même taille, même contenu ;
-- EDIT : l'ouvrir, ajouter une ligne, enregistrer, rouvrir.
-
-Ce qui reste demande une mise en place exprès ou vise un cas limite que l'usage courant ne
-rencontre pas.
-
-**Hasard de LOGO et de GRAPHER** (xorshift 32 bits, tirage par multiplication ; `docs/logo.md` § « Mise en œuvre », `docs/grapher.md` « Hasard ») :
-
-- 200 arbres de taille au hasard, X par `(HASARD 200) - 99`, comptés par le tronc : autant
-  à gauche qu'à droite, aux écarts du hasard près (sur 200, entre ~86 et ~114 d'un côté) ;
-- deux lancements de LOGO à quelques secondes d'écart donnent des forêts différentes ;
-- GRAPHER, interprété puis traduit (`GRXASM NOM /C`) : `RND(20000)` tiré quelques milliers
-  de fois, autant de valeurs sous 10 000 qu'au-dessus (comme `tools/grapher_tests/rnd3.grx`).
 
 **Sprites dans l'image** (`HSHOW`, `HHIDE`, `docs/grapher.md` § 7.1) :
 
@@ -59,7 +51,7 @@ rencontre pas.
 **Disquettes de 80 pistes** (2 faces, images de 1 Mo ; `docs/systeme.md` § 3) :
 
 - démarrage sur `cpa.dsk` et sur chaque disquette du coffret : le LOCI monte-t-il une image
-  de 80 pistes, et le système se charge-t-il comme avant ? `DIR` : `408K free` sur `cpa.dsk` ;
+  de 80 pistes, et le système se charge-t-il comme avant ? `DIR` : `358K free` sur `cpa.dsk` ;
 - fin de la disquette : copier sur `cpa-projet.dsk` en B: un fichier de plus de 600 Ko (fait
   sur le PC : `mkdisk.py put`, ou par `COPY` de B: vers C:), puis `STAT B:*.*` (blocs,
   octets), relire le fichier (`COPY` vers C:, `mkdisk.py get` et comparer sur le Mac) : les
@@ -78,22 +70,6 @@ rencontre pas.
 - vitesse : un accès vers la fin de la disquette (pistes 70-79) n'est pas plus lent qu'au
   début de façon visible.
 
-**Coffret de disquettes** (une par usage ; `docs/manuel.md`, disquettes par usage ; chaque
-disquette démarre seule, avec un seul lecteur) :
-
-- `cpa.dsk` : `DIR` montre les applications et README.TXT, sans exemple ni LOGO ; `DIRS`
-  montre aussi les commandes de base et les `.INC` ; `HELP LOGO` répond quand même ;
-- `cpa-anim.dsk` : `DEMO` enchaîne l'image, les trois animations et `GRAPHER ANIMS` ;
-- `cpa-logo.dsk` : `DIR` ne montre que LOGO, LOGOTR, EDIT et les `.LOG` ; `LOGO DEMO`, puis
-  `DEMO` ;
-- `cpa-exemples.dsk` seule : `GRAPHER CARTE`, puis `GRXASM SERPENT`, `ASM SERPENT`,
-  `SERPENT` (la place suffit-elle ?) ; `ASM HELLO`, `HELLO` ;
-- `cpa-notes.dsk` : écrire un texte dans EDIT, puis `EXPORT` vers la clé et `XFER` (cachés,
-  présents) ;
-- deux lecteurs : `cpa.dsk` en A:, `cpa-projet.dsk` en B:, `B:`, `GRAPHER` et `ASM` trouvés
-  sur A: ;
-- les mêmes sur les jumelles anglaises (`cpa-examples-en.dsk`...).
-
 **Fenêtre : PUT et démarrage à froid** (`docs/systeme.md` § 6 ; sur une **copie** de
 `cpa.dsk`, puis de `cpa-en.dsk`) :
 
@@ -107,11 +83,6 @@ disquette démarre seule, avec un seul lecteur) :
   écrans (`ATI`, une page d'un serveur), CTRL-Q : `S.TXT` a toute la session ;
 - disque presque plein (une copie remplie par `COPY`), `PUT T.TXT TYPE GRX.INC` : `Disk full`
   à la fin, `T.TXT` garde ce qui tenait.
-
-**Police rangée sur 5 octets** (dépliée au démarrage ; identique octet par octet dans
-Oricutron) : au démarrage, puis après un bouton RESET et après `GRAPHER` d'un `.GRX` en
-HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avant ; `SPLIT`,
-`GTEXT 2 10 Bonjour` dans l'image.
 
 **Fenêtre, lot 2 : banques de CPA.BNK** (`docs/systeme.md` § 6 ; sur une **copie** de
 `cpa.dsk`, puis de `cpa-en.dsk`) :
@@ -129,18 +100,6 @@ HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avan
 - RESET pendant le premier `GSAVE` (pendant la lecture de `CPA.BNK`) : retour au prompt, puis
   `GSAVE T` et `PUT L.TXT DIR` marchent.
 
-**Fenêtre, lot 4 : banque GFX, tracés du SPLIT** (`docs/systeme.md` § 6 ; sur
-`cpa-exemples.dsk`, puis `cpa-logo.dsk` et une jumelle anglaise) :
-
-- `GSAVE T`, puis `GTEST` : le tracé recharge la banque (un instant), image juste ;
-- `PUT G.TXT GTEST` : rien n'est dessiné, `TYPE G.TXT` montre `Image dessinee.` ; puis `GTEST`
-  dessine de nouveau ;
-- LOGO : `LOGO DEMO` puis `DEMO`, quelques `AV`, `CERCLE`, `ALLUME?` ; `SAUVEIMAGE`, puis
-  continuer à dessiner ;
-- disquette sans `CPA.BNK` (sur une copie) : `GTEST` répond `CPA.BNK?` une seule fois ;
-- RESET pendant le premier tracé (lecture de `CPA.BNK`) : retour au prompt, puis `GTEST` et
-  `PUT L.TXT DIR` marchent.
-
 **Après la correction du pilote** (un contrôleur qui ne répond plus donne une erreur disque,
 plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en anglais, sur une
 **copie** de disquette :
@@ -157,12 +116,6 @@ plus un accès déclaré bon : `docs/systeme.md` § 3), en français et en angla
   avec un `SAVE` d'un gros tableau. Chaque fois : `DIR` marche, le fichier est l'ancien ou le
   nouveau, entier (`TYPE`), ou le nouveau dans `NOM.$$$` ; `ERA *.$$$` ensuite. Rapporter la
   disquette sur le PC : `python3 tools/mkdisk.py check` sans défaut.
-
-**Après la correction d'EDIT** (le fichier est converti en le lisant : une fin de ligne
-compte un octet en mémoire, deux sur le disque) : le même `ESSAI.INC` (CPA.INC et ARR.INC
-insérés, enregistré à 32 761 octets) se rouvre sans `Fichier tronque`, en entier (fin du
-texte à sa place) ; un fichier encore plus gros donne toujours le message ; un texte court
-s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
 
 **Clé USB, lot 1 : répertoire courant et supports** (`docs/usb.md` § 1 ; sur `cpa.dsk`,
 puis quelques commandes sur `cpa-en.dsk`) :
@@ -238,53 +191,6 @@ commandes sur `cpa-en.dsk`) :
   mêmes images ;
 - en-têtes : `CMDER`, `CMDER A: B:` : nom de chaque image (coupé avec `~` s'il est long) ;
   sur un Oric sans LOCI (s'il y en a un sous la main) : en-têtes comme avant.
-
-**Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
-
-- HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli
-  l'écran) : les 3 lignes du bas restent noires, sans caractères ;
-- un `.GRX` avec `HIRES` puis `GLOAD ABSENT`, traduit (`GRXASM E2 /C`, puis `E2`) :
-  `Erreur : image introuvable` reste affiché au-dessus du prompt ;
-- `REN A.TXT B.TXT` (ordre de COPY) et `REN A.TXT=B.TXT` (ordre de CP/M) ; `REN` seul
-  montre les deux formes ;
-- menus : CMDER, Vue, « Autre col. ^I » ; HEX, Mode, « Hex/ASCII ^I » ; `HELP TOUCHES`.
-
-**Tableaux de GRAPHER en (colonne, ligne)** (`DIM T$(c,l)`, `T$(x,y)`, `PASTE T$(x,y)`) :
-interprété puis traduit (`GRXASM NOM /C`), sur `cpa-exemples.dsk` et `cpa-examples-en.dsk` : `CARTE` (lacs plus
-larges que hauts, chaînes de montagnes horizontales, joueur au centre), `ROTSCROL`,
-`SCORES` (noms et scores relus), `JEU` (les pièces de 5 × 3 cases). Un `.GRX` à soi
-qui a des tableaux à deux dimensions est à passer par `tools/grx_colig.py` (EXPORT, puis
-sur le Mac, puis IMPORT).
-
-**`PRINT` à plusieurs éléments** (interprété puis traduit, console et LORES) :
-`PRINT "V= " V`, `PRINT A$ " / " V+1`, `PRINT "Total : " ;` puis `PRINT T` sur la même
-ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
-console : sans les guillemets, espaces gardés.
-
-**EDSPRITE, deuxième version** (curseur, grisé, aide, Détourer, tuiles), sur `cpa-exemples.dsk` :
-
-- le curseur clignote toujours, même après une longue séance, un nouveau sprite, une
-  relance (le défaut venait de l'horloge passée `$8000`, ~11 minutes après le démarrage) ;
-- le transparent plus sombre (un point sur quatre) : le curseur se voit dessus, la grille et
-  le damier de « Reel » restent lisibles ;
-- la ligne d'aide (ligne 26) change avec la zone ;
-- Dessin, Detourer sur un héros : un contour de masque, coins compris ; `^Z` l'annule ;
-- `EDSPRITE TUILES`, ARBR ou MUR : « Reel » rempli par le motif de la tuile ;
-- l'historique des lignes (flèche haut) est intact après EDSPRITE.
-
-**Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
-protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
-(attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans
-un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lecteur sans
-`GRX.INC` : `GRX.INC absente (bibliotheque)`, pas de `.ASM` ; sur la disquette Logo,
-`GRAPHER X /A` : GRXASM introuvable.
-
-**Outils**
-
-- DEBUG, `T` dans une routine du programme : HELLO n'appelle que le BDOS, et un `JSR` vers
-  le système est toujours exécuté d'un coup, même par `T` (voulu). Essai : `GRXASM SERPENT`,
-  `ASM SERPENT /S`, `DEBUG SERPENT`, puis `T` sur un `JSR` vers une routine de bibliothèque
-  (`JSR g_xxx`) : on doit y entrer ; `P` au même endroit l'exécute d'un coup.
 
 **En attente**
 
@@ -392,10 +298,6 @@ clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
   `Console a distance coupee`, voyant éteint, puis `XFER ... @MAC` marche ;
 - `REMOTE MAC` dans `AUTO.BAT` : au démarrage à froid, l'Oric appelle le Mac de lui-même.
 
-**XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
-du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
-" " -`, sans caractère parasite.
-
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
 - Sur `cpa-exemples.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire
@@ -442,6 +344,112 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 - Si quelqu'un a un **Oric-1** : `serpent.tap` doit marcher aussi (vecteurs pris en `$0228`
   et `$022B`, d'après la ROM 1.0, jamais essayé).
 
+### B. Même logique que dans l'émulateur
+
+**Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
+
+- un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`
+  vers un autre nom, puis `STAT` : même taille, même contenu ;
+- EDIT : l'ouvrir, ajouter une ligne, enregistrer, rouvrir.
+
+**Hasard de LOGO et de GRAPHER** (xorshift 32 bits, tirage par multiplication ; `docs/logo.md` § « Mise en œuvre », `docs/grapher.md` « Hasard ») :
+
+- 200 arbres de taille au hasard, X par `(HASARD 200) - 99`, comptés par le tronc : autant
+  à gauche qu'à droite, aux écarts du hasard près (sur 200, entre ~86 et ~114 d'un côté) ;
+- deux lancements de LOGO à quelques secondes d'écart donnent des forêts différentes ;
+- GRAPHER, interprété puis traduit (`GRXASM NOM /C`) : `RND(20000)` tiré quelques milliers
+  de fois, autant de valeurs sous 10 000 qu'au-dessus (comme `tools/grapher_tests/rnd3.grx`).
+
+**Coffret de disquettes** (une par usage ; `docs/manuel.md`, disquettes par usage ; chaque
+disquette démarre seule, avec un seul lecteur) :
+
+- `cpa.dsk` : `DIR` montre les applications et README.TXT, sans exemple ni LOGO ; `DIRS`
+  montre aussi les commandes de base et les `.INC` ; `HELP LOGO` répond quand même ;
+- `cpa-anim.dsk` : `DEMO` enchaîne l'image, les trois animations et `GRAPHER ANIMS` ;
+- `cpa-logo.dsk` : `DIR` ne montre que LOGO, LOGOTR, EDIT et les `.LOG` ; `LOGO DEMO`, puis
+  `DEMO` ;
+- `cpa-exemples.dsk` seule : `GRAPHER CARTE`, puis `GRXASM SERPENT`, `ASM SERPENT`,
+  `SERPENT` (la place suffit-elle ?) ; `ASM HELLO`, `HELLO` ;
+- `cpa-notes.dsk` : écrire un texte dans EDIT, puis `EXPORT` vers la clé et `XFER` (cachés,
+  présents) ;
+- deux lecteurs : `cpa.dsk` en A:, `cpa-projet.dsk` en B:, `B:`, `GRAPHER` et `ASM` trouvés
+  sur A: ;
+- les mêmes sur les jumelles anglaises (`cpa-examples-en.dsk`...).
+
+**Police rangée sur 5 octets** (dépliée au démarrage ; identique octet par octet dans
+Oricutron) : au démarrage, puis après un bouton RESET et après `GRAPHER` d'un `.GRX` en
+HIRES plein écran (retour au texte) : texte de l'écran et des menus comme avant ; `SPLIT`,
+`GTEXT 2 10 Bonjour` dans l'image.
+
+**Fenêtre, lot 4 : banque GFX, tracés du SPLIT** (`docs/systeme.md` § 6 ; sur
+`cpa-exemples.dsk`, puis `cpa-logo.dsk` et une jumelle anglaise) :
+
+- `GSAVE T`, puis `GTEST` : le tracé recharge la banque (un instant), image juste ;
+- `PUT G.TXT GTEST` : rien n'est dessiné, `TYPE G.TXT` montre `Image dessinee.` ; puis `GTEST`
+  dessine de nouveau ;
+- LOGO : `LOGO DEMO` puis `DEMO`, quelques `AV`, `CERCLE`, `ALLUME?` ; `SAUVEIMAGE`, puis
+  continuer à dessiner ;
+- disquette sans `CPA.BNK` (sur une copie) : `GTEST` répond `CPA.BNK?` une seule fois ;
+- RESET pendant le premier tracé (lecture de `CPA.BNK`) : retour au prompt, puis `GTEST` et
+  `PUT L.TXT DIR` marchent.
+
+**Après la correction d'EDIT** (le fichier est converti en le lisant : une fin de ligne
+compte un octet en mémoire, deux sur le disque) : le même `ESSAI.INC` (CPA.INC et ARR.INC
+insérés, enregistré à 32 761 octets) se rouvre sans `Fichier tronque`, en entier (fin du
+texte à sa place) ; un fichier encore plus gros donne toujours le message ; un texte court
+s'ouvre comme avant (sur `cpa.dsk` et `cpa-en.dsk`).
+
+**Lot de petites corrections** (rapide, sur `cpa.dsk` puis `cpa-en.dsk`) :
+
+- HIRES plein écran (`GRAPHER ECRAN`, `VOIR` d'une image, après un `DIR` qui a rempli
+  l'écran) : les 3 lignes du bas restent noires, sans caractères ;
+- un `.GRX` avec `HIRES` puis `GLOAD ABSENT`, traduit (`GRXASM E2 /C`, puis `E2`) :
+  `Erreur : image introuvable` reste affiché au-dessus du prompt ;
+- `REN A.TXT B.TXT` (ordre de COPY) et `REN A.TXT=B.TXT` (ordre de CP/M) ; `REN` seul
+  montre les deux formes ;
+- menus : CMDER, Vue, « Autre col. ^I » ; HEX, Mode, « Hex/ASCII ^I » ; `HELP TOUCHES`.
+
+**Tableaux de GRAPHER en (colonne, ligne)** (`DIM T$(c,l)`, `T$(x,y)`, `PASTE T$(x,y)`) :
+interprété puis traduit (`GRXASM NOM /C`), sur `cpa-exemples.dsk` et `cpa-examples-en.dsk` : `CARTE` (lacs plus
+larges que hauts, chaînes de montagnes horizontales, joueur au centre), `ROTSCROL`,
+`SCORES` (noms et scores relus), `JEU` (les pièces de 5 × 3 cases). Un `.GRX` à soi
+qui a des tableaux à deux dimensions est à passer par `tools/grx_colig.py` (EXPORT, puis
+sur le Mac, puis IMPORT).
+
+**`PRINT` à plusieurs éléments** (interprété puis traduit, console et LORES) :
+`PRINT "V= " V`, `PRINT A$ " / " V+1`, `PRINT "Total : " ;` puis `PRINT T` sur la même
+ligne, `PRINT X ;; commentaire`, `PRINT A$ = B$` (1 ou 0) ; `ECHO "  texte  "` dans la
+console : sans les guillemets, espaces gardés.
+
+**EDSPRITE, deuxième version** (curseur, grisé, aide, Détourer, tuiles), sur `cpa-exemples.dsk` :
+
+- le curseur clignote toujours, même après une longue séance, un nouveau sprite, une
+  relance (le défaut venait de l'horloge passée `$8000`, ~11 minutes après le démarrage) ;
+- le transparent plus sombre (un point sur quatre) : le curseur se voit dessus, la grille et
+  le damier de « Reel » restent lisibles ;
+- la ligne d'aide (ligne 26) change avec la zone ;
+- Dessin, Detourer sur un héros : un contour de masque, coins compris ; `^Z` l'annule ;
+- `EDSPRITE TUILES`, ARBR ou MUR : « Reel » rempli par le motif de la tuile ;
+- l'historique des lignes (flèche haut) est intact après EDSPRITE.
+
+**Cas limites de GRAPHER** (pas d'urgence) : `SAVE`, `BSAVE` d'un fichier R/O (`fichier
+protege`), disque plein (ancien intact, pas de `NOM.$$$`) ; un `.GRX` d'environ 20 Ko
+(attend un gros programme) : `Fichier trop gros` au bon moment ; un tableau trop grand dans
+un programme traduit : `memoire pleine` dès le lancement ; `GRXASM` sur un lecteur sans
+`GRX.INC` : `GRX.INC absente (bibliotheque)`, pas de `.ASM` ; sur la disquette Logo,
+`GRAPHER X /A` : GRXASM introuvable.
+
+**Outils**
+
+- DEBUG, `T` dans une routine du programme : HELLO n'appelle que le BDOS, et un `JSR` vers
+  le système est toujours exécuté d'un coup, même par `T` (voulu). Essai : `GRXASM SERPENT`,
+  `ASM SERPENT /S`, `DEBUG SERPENT`, puis `T` sur un `JSR` vers une routine de bibliothèque
+  (`JSR g_xxx`) : on doit y entrer ; `P` au même endroit l'exécute d'un coup.
+
+**XFER, texte avec accents** (`/T`, conversion faite par `tools/xfer_server.py`) : un texte
+du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans EDIT, `e e a c oe ae
+" " -`, sans caractère parasite.
+
 **LOGO, `RETOURPROMPT`** (`docs/logo.md`) :
 
 - `LOGO ELIZA2`, quelques phrases, puis `AUREVOIR` : le message, puis le prompt `?` de LOGO
@@ -449,6 +457,8 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 - une procédure qui joue un son sans fin (`SON 0 37 10 0`) puis fait `RETOURPROMPT` : le son
   s'arrête, comme avec ESC ;
 - la même chose sur `cpa-logo-en.dsk` (`LOGO ELIZA2`, `GOODBYE`, `TOPLEVEL`).
+
+
 
 ## À vérifier ailleurs
 
@@ -492,7 +502,7 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 ## Vérifié
 
-Sur Oric Atmos + LOCI, version disquette :
+Sur Oric Atmos + LOCI :
 
 - Console à distance, plafonds du LOCI et firmware du Pico qui lit tout l'USB (2 novembre
   2026, démon sur le Mac) : écho 0,21 s, 27 lignes en 0,4 s (1,0 s avec les plafonds du
@@ -586,5 +596,3 @@ clair pour le curseur : assombri), tous les menus sans traces, héros modifié v
 `GRAPHER SPRITES`, police normale en sortant. Défaut trouvé : le curseur ne clignotait plus
 (corrigé ci-dessus). RESET pendant `^S` pas essayé (peu utile sous CP/A ; essayé dans
 Oricutron par `tools/test_fichiers.py`).
-
-Pour la version ROM : voir `docs/projet-rom.md`.

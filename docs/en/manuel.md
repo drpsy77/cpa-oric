@@ -4,7 +4,7 @@
 > of the English disks (`cpa-en.dsk`...); on the French disks (`cpa.dsk`...) they are in
 > French (`docs/manuel.md`).
 
-User guide for the disk version: commands, programs, programming. GRAPHER and LOGO have their
+User guide for CP/A: commands, programs, programming. GRAPHER and LOGO have their
 own reference (`grapher.md`, `logo.md`), and so do CMDER and EDSPRITE (`cmder.md`,
 `edsprite.md`). Interface contract
 (BIOS table, BDOS functions, memory map): `docs/architecture.md` (in French). On the Oric,
@@ -29,11 +29,11 @@ own reference (`grapher.md`, `logo.md`), and so do CMDER and EDSPRITE (`cmder.md
 | `VER`, `CLS` | version, clear the screen |
 | `PAPER n`, `INK n` | background, ink colour (0 black, 1 red, 2 green, 3 yellow, 4 blue, 5 magenta, 6 cyan, 7 white) of the whole console; the same colour for both is allowed (hidden text) |
 | `PAGE ON`, `PAGE OFF` | pause at the end of each screen, or not (see below) |
-| `B:` (`A:` to `D:`) | changes the current drive (disk version); the prompt becomes `B>` |
+| `B:` (`A:` to `D:`) | changes the current drive; the prompt becomes `B>` |
 
 TYPE, ERA and REN are programs (`.COM`), to save resident space. The drawing commands
 (`PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `PEN`) are in `GRAPHER.COM`
-(`grapher.md`); the ROM version keeps them at the prompt. A `.COM` is typed like a built-in
+(`grapher.md`). A `.COM` is typed like a built-in
 command, including in scripts and after PUT; it is searched for on the other drives if it is
 not on the current one (see "Drives A: to D:").
 
@@ -50,8 +50,8 @@ Transient commands (`.COM` files on the disk) that complete the CCP:
 | `GO adr [parameters]` | runs the code at `adr` like a `.COM` (an `RTS` returns to the prompt) |
 | `XDO NAME [p1 ... p9]` | a script called by a script; started by the CCP, not to be typed (see DO) |
 
-In the disk version, `HELP`, `MEM`, `POKE` and `GO` are `.COM` files and DEBUG replaces `DUMP`,
-to leave room for the BDOS; the ROM version, with no disk, has them built in.
+`HELP`, `MEM`, `POKE` and `GO` are `.COM` files, and DEBUG shows the memory, to leave the
+resident space to the BDOS.
 
 Other programs on the disk:
 - `HELLO.COM` displays its arguments;
@@ -79,7 +79,7 @@ Other programs on the disk:
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]`: copies a disk, or its system.
 
-**POKE and GO in the disk version.** Like any `.COM`, they are loaded at `$0500`: each fits in
+**POKE and GO.** Like any `.COM`, they are loaded at `$0500`: each fits in
 one page (`$0500-$05FF`), so everything from `$0600` on is preserved from one call to the next.
 A small program typed with several POKEs therefore starts at `$0600`:
 
@@ -903,12 +903,12 @@ Every warm start also puts back in place:
 - the menu bar.
 
 Only illegal "JAM" instructions, which lock up the 6502 itself, and overwriting the system in
-RAM (disk version) force a full restart.
+RAM force a full restart.
 
 ## Pull-down menus
 
 The status line is used as a menu bar: **System** (Version, Help, Memory, Printer `^P`, Next
-drive, Reboot `^C`), **Files** (disk version only: Directory, Show..., Copy..., Rename...,
+drive, Reboot `^C`), **Files** (Directory, Show..., Copy..., Rename...,
 Erase...), **Screen** (SPLIT mode, Text mode, Clear, Ink, Paper, Caps lock `^T`, Paging) and
 **Keyboard** (Fast, Normal, Slow). An item that has a keyboard shortcut shows it
 at the end of its label (`^C` reboots only on an empty line of the prompt; the item also works
@@ -996,15 +996,13 @@ as for CP/M's GSX extension):
 | 12 | GSAVE | address of the FCB (low byte, high byte): saves the picture |
 | 13 | GLOAD | address of the FCB: loads a picture and switches to SPLIT |
 
-GSAVE and GLOAD (disk version) use the type `.IMG` if the name has none, and return 0 if all is
+GSAVE and GLOAD use the type `.IMG` if the name has none, and return 0 if all is
 well, 1 if the file is missing, 2 if the disk or the directory is full, 3 if the file is
 read-only (GSAVE), `$FF` for GSAVE outside SPLIT mode, and for both without `CPA.BNK`
 (message `CPA.BNK?`). A program that calls GLOAD from text mode must stay below `$A000`.
 
 **Without a program**, you draw with `GRAPHER` and a `.GRX` file (`grapher.md`), and `GSAVE`
-keeps the result. The ROM version keeps one command per primitive at the prompt (`PEN m`,
-`PLOT x y`, `LINE x1 y1 x2 y2`, `BOX`, `FBOX`, `CIRCLE x y r`, `GTEXT col y text`,
-`ATTR col y1 y2 v`, `POINT x y`), in SPLIT mode only. The pen is in "draw" mode at start-up.
+keeps the result. The pen is in "draw" mode at start-up.
 
 Outside SPLIT mode, primitives 0 to 9 return `$FF`. `GTEST.COM` is a complete example: it
 switches to SPLIT and draws a frame, diagonals, circles, rectangles and text.
@@ -1097,8 +1095,7 @@ practice, **about 200 changed bytes per 1/50 s**.
 ## Sound (BDOS function 116)
 
 The Oric's sound chip (AY-3-8912, three voices and a noise generator) is reached like the
-graphics: X = 116, A/Y = address of a block `[op, p1..p5]`. Both versions (disk and ROM) have
-it.
+graphics: X = 116, A/Y = address of a block `[op, p1..p5]`.
 
 | op | Primitive | Parameters |
 |---|---|---|
@@ -1472,7 +1469,7 @@ on, bit 2 link lost) and the port's low byte in X; op 1 sets the port (p1: `$80`
 and set up as in `progs/acia_inc.s` (REMOTE uses it). Once the port is set, function 4
 sends a byte (waits for the transmitter 5 s at most) and function 3 waits for one (`$1A` if
 a key is typed on the Oric, or if the remote console has the port). With no serial driver
-(ROM version), function 117 returns `$FF`.
+(build without `SERIE`), function 117 returns `$FF`.
 
 **Chaining two programs.** Function 47 (like CP/M 3's) ends the program and has the CCP run a
 line, as if it had been typed: it is shown after `A>` and then run, before the next line of a

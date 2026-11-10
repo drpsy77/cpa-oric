@@ -24,7 +24,7 @@ programmes déjà écrits attendent : il ne change pas sans accord.
    numéro de fonction et un bloc de paramètres `[op, p1..p5]` comme les fonctions 115 et 116.
 3. Une commande instantanée ou utile dans les scripts → **CCP** (commande interne), seulement si
    la place le permet.
-4. Tout le reste → **programme `.COM`** (version disquette) : il ne coûte rien tant qu'on ne le
+4. Tout le reste → **programme `.COM`** : il ne coûte rien tant qu'on ne le
    lance pas.
 
 ## 2. Contrat d'interface
@@ -41,7 +41,7 @@ disquette qu'il vient de formater) ; SETSEC prend un secteur logique de 0 à 2 7
 Les entrées existantes ne bougent jamais ; une nouvelle entrée s'ajoute à la fin (`$C030`…).
 LIST imprime A sur le port Centronics (port A du VIA, strobe PB4, accusé CA1 attendu 2 ms au
 plus ; Oricutron écrit dans `printer_out.txt`). PUNCH et READER : port série
-(version disquette, option `SERIE` ; port posé par la fonction 117). PUNCH envoie A,
+(option `SERIE` ; port posé par la fonction 117). PUNCH envoie A,
 attend l'émetteur libre 5 s au plus et rend A = 0, C = 0 (parti) ou A = `$FF`, C = 1 (pas
 parti, ou aucun port). READER attend un octet et le rend dans A ; `$1A` (^Z) tout de suite
 si aucun port n'est posé ou si la console à distance est active, et dès qu'une touche est
@@ -77,7 +77,7 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 
 | N° | Fonction |
 |---|---|
-| 0-12 | console et système, comme CP/M 2.2 (la 3 et la 4 : READER et PUNCH du BIOS ; la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC en version disquette ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus |
+| 0-12 | console et système, comme CP/M 2.2 (la 3 et la 4 : READER et PUNCH du BIOS ; la 5 imprime sur le port Centronics) ; la 10 édite la ligne (flèches, insertion, historique ; complétion des noms de fichiers par TAB ou ESC ; CTRL-C n'y fait un démarrage à chaud que sur une ligne vide du prompt du CCP), 126 caractères au plus |
 | 13-25, 30, 33-36 | fichiers (CP/M 2.2, accès direct, attributs) ; lecteurs A: à D: (octet 0 du FCB : 0 = courant, 1 = A:... ; 14 choisit le lecteur courant, 24 rend les lecteurs lus, 25 le lecteur courant) ; les entrées du répertoire rendues par 17 et 18 sont celles du format de la disquette (§ 2, « Disquette ») |
 | 26 | adresse DMA |
 | 47 | CHAIN (comme CP/M 3) : A/Y = ligne de commande terminée par 0 (78 caractères au plus), exécutée par le CCP après un démarrage à chaud ; ne revient pas |
@@ -85,8 +85,8 @@ publique est dans `progs/cpa.inc`, que tout programme inclut.
 | 116 | son AY-3-8912 : bloc `[op, p1..p5]`, op 0-8 (7 SYNC : départ simultané des voix, 8 MIXER : son et bruit d'une voix) |
 | 117 | port série et console à distance : bloc `[op, p1..p5]` ; op 0 état -> A (bit 0 port posé, bit 1 console active, bit 2 liaison perdue), X = octet bas du port ; op 1 pose le port (p1 = octet bas : `$80` LOCI, `$1C` Oricutron, 0 aucun) ; op 2 console active (`$FF` sans port) ; op 3 coupée ; op 4 numéro à rappeler si le démon se tait 10 s (p1, p2 : chaîne `ATDT-hôte:port`, CR, 0 ; 40 caractères au plus, sinon `$FF`) (`docs/console-distance.md`) |
 
-Numéros libres pour l'avenir : 37-46, 48-114 et 118 et suivants. Une fonction ajoutée existe dans les
-deux versions, quitte à renvoyer `$FF` là où elle n'a pas de sens.
+Numéros libres pour l'avenir : 37-46, 48-114 et 118 et suivants. Une fonction liée à une
+option de construction (`SERIE`) garde son numéro et renvoie `$FF` quand l'option est absente.
 
 ### Disquette
 
@@ -144,13 +144,13 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 
 - `build.sh` refuse un système disque qui dépasse `SYS_END` (`$F5C8`), une fenêtre qui déborde (PUT après
   `$FA00`, démarrage à froid après `$FD00` ; par `tools/mkbnk.py` : IMG après `$FA00`, GFX après
-  `GFX_END`), une page `$FF00` qui atteint les vecteurs (`$FFFA`)
-  ; il affiche les marges.
+  `GFX_END`), une page `$FF00` qui atteint les vecteurs (`$FFFA`) ;
+  il affiche les marges.
 - Tests dans Oricutron : `tools/run_test.sh` (frappe simulée et vidage mémoire, avec le patch
   `tools/oricutron-testhook.patch` ; `DSK=` pour la disquette) et
   `tools/screen.py` (texte de l'écran).
 - `tools/run_com.py` exécute un `.COM` dans un 6502 simulé avec un BDOS minimal (sans écran).
-- Matériel : essayé sur Oric Atmos + LOCI (version disquette). Les couleurs des menus sont
+- Matériel : essayé sur Oric Atmos + LOCI. Les couleurs des menus sont
   meilleures sur un vrai écran que dans certains émulateurs.
 
 **Quels tests pour quel changement** (proportionnés au risque ; `test_logo.sh` dure ~25 min) :
@@ -205,7 +205,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   provoque un retour à la ligne automatique en plus). Messages du CCP en anglais court ; menus,
   aide et programmes en français sur `cpa.dsk`, en anglais sur `cpa-en.dsk` (ci-dessous).
 - Commentaires et documentation en français.
-- **Deux langues** : tout ce qui est produit pour la version disquette, système compris, existe
+- **Deux langues** : tout ce qui est produit, système compris, existe
   en français et en anglais (`cpa.dsk`, `cpa-en.dsk`). Système : barre de menus et messages
   de la console dans `src/msg/fr/sys.msg` ou `src/msg/en/sys.msg` (mêmes étiquettes),
   `build.sh` assemble `cpa_sys.bin` et `cpa_sys_en.bin` et contrôle la marge des deux (la
@@ -296,8 +296,10 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
   `docs/essais-materiel.md` (« À vérifier ») et, si une fonction change,
   `docs/points-de-fonction.md` (§ 2.4) sont mis à jour ; rien n'est raconté.
 - `README.md` (anglais) et `README.fr.md` (français) vont ensemble : un changement de l'un
-  est reporté dans l'autre. De même pour les documents d'utilisation (`manuel.md`, `logo.md`,
-  `grapher.md`, `cmder.md`, `edsprite.md`) et leur traduction dans `docs/en/` : `python3 tools/check_en.py`
+  est reporté dans l'autre. De même pour les documents traduits dans `docs/en/` : ceux
+  d'utilisation (`manuel.md`, `logo.md`, `grapher.md`, `cmder.md`, `edsprite.md`) et cinq
+  documents internes (`architecture.md`, `vision.md`, `usb.md`, `console-distance.md`,
+  `loci-modem-wifi.md`) ; les autres sont en français seulement. `python3 tools/check_en.py`
   signale une traduction en retard (titres, tableaux, exemples).
 - Les documents de `docs/en/` décrivent les disquettes anglaises : écrans, menus, questions,
   messages et noms d'exemples y sont ceux de `cpa-en.dsk` et de ses jumelles ; les documents

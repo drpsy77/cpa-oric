@@ -3,10 +3,10 @@
 Référence : `src/hw.inc` (système), `progs/cpa.inc` (interface publique des programmes).
 Document à tenir à jour avec eux.
 
-**Public** : fait partie du contrat d'interface (`docs/architecture.md`), donc stable et commun
-aux versions disquette et ROM ; un programme peut s'en servir. **Interne** : variable du
+**Public** : fait partie du contrat d'interface (`docs/architecture.md`), donc stable ;
+un programme peut s'en servir. **Interne** : variable du
 système, qui peut changer ou bouger d'une version à l'autre ; un programme n'y touche pas (sauf
-mention). **Disque** : version disquette seulement (l'adresse reste réservée dans la ROM).
+mention). **Disque** : variable des fichiers, des lecteurs ou des scripts.
 
 CP/A remplace la ROM BASIC : rien de ce que le BASIC de l'Oric range en page 2 n'a cours ici.
 
@@ -43,7 +43,7 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$021A` | `caps` | 1 | 1 = majuscules verrouillées (CTRL-T, voyant `A`/`a`) | interne |
 | `$021B` | `ticks` / `SYS_TICKS` | 2 | compteur 50 Hz (incrémenté par l'IRQ du timer 1) | public |
 | `$021D` | `dma` | 2 | adresse DMA courante du BDOS (fonction 26) | interne |
-| `$021F` | `dump_addr` | 2 | prochaine adresse de DUMP (ROM) | interne |
+| `$021F` | `dump_addr` | 2 | libre (nom gardé dans `src/hw.inc`) | interne |
 | `$0221` | `bdos_a` | 1 | paramètre A reçu par le BDOS | interne |
 | `$0222` | `bdos_y` | 1 | paramètre Y reçu par le BDOS | interne |
 | `$0223` | `hex_val` | 2 | nombre hexadécimal lu par le CCP | interne |
@@ -143,7 +143,7 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$02AD` | `put_cnt` | 2 | octets dans le tampon de PUT | interne, disque |
 | `$02AF` | `scr_on` / `SCR_ON` | 1 | 1 = script DO en cours | public (pour XDO.COM), disque |
 | `$02B0` | `scr_idx` / `SCR_IDX` | 1 | position dans l'enregistrement du script (128 : à lire) | public (pour XDO.COM), disque |
-| `$02B1` | `cg_blk` | 6 | bloc des commandes graphiques du CCP (version ROM) | interne |
+| `$02B1` | `cg_blk` | 6 | libre (nom gardé dans `src/hw.inc`) | interne |
 | `$02B7` | `cg_n` | 1 | idem | interne |
 | `$02B8` | `cg_i` | 1 | idem | interne |
 
@@ -205,7 +205,7 @@ LOCI) : un programme ne touche aux registres d'une extension qu'après l'avoir r
 | `$030E` | IER | seule l'interruption de T1 est autorisée |
 | `$030F` | ORA sans poignée de main | bus de l'AY (registre 14 de l'AY = colonnes du clavier) |
 
-### Contrôleur de disquettes Microdisc (`$0310-$031B`, version disquette)
+### Contrôleur de disquettes Microdisc (`$0310-$031B`)
 
 Même interface sur le Microdisc d'origine, le Cumulus, le LOCI et Oricutron.
 
@@ -219,7 +219,7 @@ Même interface sur le Microdisc d'origine, le Cumulus, le LOCI et Oricutron.
 | `$0318` | DRQ (lecture) | bit 7 = /DRQ (0 = un octet de données à lire ou à écrire) |
 | `$0319` | LOCI (lecture) | `"L"` ($4C) si un LOCI est là (marque d'identité de la MIA) ; sert à reconnaître le LOCI sans écrire (`loci_abs`, `src/disk.s`) |
 
-### LOCI (version disquette)
+### LOCI
 
 | Adresse | Usage |
 |---|---|

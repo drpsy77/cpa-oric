@@ -7,7 +7,7 @@ disparaît d'ici quand elle est faite et portée dans le document qui la concern
 Étendue : `architecture.md`, `etat.md`, `vision.md`, `src/fs.s` et `src/bdos.s` lus en
 entier, `src/bios.s` et `src/cpa.s` en partie, documents comparés aux fichiers de `build/`.
 Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les outils
-(`tools/`), les manuels.
+(`tools/`) ; les manuels ne l'ont été que pour la version ROM.
 
 ## 1. Fait
 
@@ -35,6 +35,13 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   DISK`), `-DDISK` retiré de `build.sh`, `build/cpa.rom` et `docs/projet-rom.md` retirés ;
   les douze disquettes sont identiques octet par octet. `architecture.md`, `vision.md`,
   `README`, `CLAUDE.md`, `etat.md` mis à jour.
+- **Documents à jour** : dernières mentions de la version ROM retirées (manuels, atelier,
+  `memoire-pages-2-3.md`, `docs/en/architecture.md` aligné sur le français...) ;
+  `docs/suite.md` réduit à ce qui reste à faire (18 Ko au lieu de 40 : ni dates ni récit,
+  ce qui est fait est dans les références) ; les dix documents de `docs/en/` suivis par
+  `tools/check_en.py` ; `docs/essais-materiel.md` trié en deux parties (A : ce qui exige
+  le matériel, seule à compter pour la version 1.0 ; B : même logique que dans
+  l'émulateur).
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
@@ -73,26 +80,6 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   fonction 21 créent leur fichier par la 22 ; PUT crée le sien) ; le défaut du § 1 ne
   pouvait donc toucher qu'un programme écrit par l'utilisateur.
 
-### Lot 3 — documents à jour
-
-- Mentions de la version ROM encore à retirer : `architecture.md` (cellules des tableaux
-  du § 1 et du § 2 : « ROM seulement », « en version disquette »), `docs/en/architecture.md`, `manuel.md` et
-  `docs/en/manuel.md`, `atelier.md`, `grapher.md` (fr, en), `memoire-pages-2-3.md`,
-  `points-de-fonction.md`, `suite.md` (point 8), `systeme.md`, `oric-basic.md`.
-- `docs/suite.md` (40 Ko, issu de la scission d'`etat.md`) garde des dates et le récit des
-  lots faits, contre `architecture.md` § 7 : à réduire point par point, en vérifiant que
-  chaque « Fait » est décrit dans la référence du programme avant de le retirer.
-- Chiffres périmés de `docs/suite.md` : tailles anglaises du point 7 (GRAPHER 18 104,
-  GRXASM 17 013, CMDER 17 859 : 9 blocs), ASM du point 8 (7 322 : déjà 4 blocs).
-- `docs/en/` contient dix documents : les cinq d'utilisation, suivis par
-  `tools/check_en.py`, et cinq internes (architecture, vision, usb, console-distance,
-  loci-modem-wifi), annoncés par `README.md` mais pas suivis, alors que `suite.md`
-  point 7 dit les documents internes en français seulement. Les ajouter à `check_en.py` et
-  corriger `suite.md` ; `README.fr.md` ne cite que les cinq premiers.
-- **`essais-materiel.md` trié** : environ 35 rubriques attendent le vrai Oric, arrêté.
-  Séparer ce qui exige le matériel (timing du disque et du LOCI, son, couleurs, vidéo par
-  ligne) de ce qu'un émulateur couvre.
-
 ### Lot 4 — dépôt et intégration continue
 
 - Dépôt : `git gc` fait (un seul paquet, `git fsck` sans défaut). L'historique pèse
@@ -100,9 +87,11 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   (environ 280 commits). Question ouverte (§ 3). `build/` garde de vieux fichiers ignorés
   (patchs, archives, disquettes de 42 pistes), et `.git` un verrou resté
   (`stale-maintenance-lock-claude`) et un `REBASE_HEAD`.
-- GitHub : les deux tâches ne construisent qu'Oricutron. En ajouter une qui lance
-  `./build.sh` et les tests sans émulateur (`test_asm.sh`, `test_grapher.sh`, `test_fp.py`,
-  `test_fs.py`, `test_fdc.py`, `test_bas.py`) à chaque envoi.
+- GitHub : tâche `.github/workflows/tests.yml` écrite (construction, images du dépôt à
+  jour, `test_asm.sh`, `test_fs.py`, `test_fdc.py`, `test_fp.py`, `test_inc.sh`,
+  `test_grapher.sh` dans les deux langues, `check_en.py`) ; sans `test_bas.py`, qui
+  demande la ROM du BASIC. **Pas encore vue tourner** : à contrôler dans l'onglet Actions
+  au premier envoi (durée, étape des images), puis à porter dans `docs/atelier.md`.
 
 ### Lot 5 — optimisations
 
@@ -112,6 +101,8 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 - **ERA, REN, attributs** : le secteur du répertoire est réécrit à chaque entrée ; une
   écriture différée par secteur divise les accès (jusqu'à 8 entrées par secteur). À peser
   avec la fenêtre de RESET.
+- `src/hw.inc` garde des noms de la version ROM qui ne servent plus (`dump_addr`, `cg_blk`,
+  `cg_n`, `cg_i` : 10 octets de page 2 libres) : à retirer avec `memoire-pages-2-3.md`.
 - Routines répétées dans les `.COM` (`puts` défini 17 fois) : à mesurer ; gain utile
   seulement s'il fait passer un programme sous un bloc de 2 Ko.
 

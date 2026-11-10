@@ -1,0 +1,59 @@
+# Construit CP/A et lance les tests qui n'ont besoin ni de l'émulateur ni des
+# ROM de l'Oric (tout tourne dans le 6502 simulé de tools/run_com.py), à
+# chaque envoi qui touche les sources, les programmes, les fichiers des
+# disquettes ou les outils. Ce que cette tâche ne fait pas, à lancer chez
+# soi : tools/smoke_test.sh et les essais dans Oricutron, tools/test_bas.py
+# (ROM BASIC 1.1), tools/test_logo.sh et tools/test_lib.sh (longs).
+name: Construction et tests
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - src/**
+      - progs/**
+      - files/**
+      - tools/**
+      - docs/**
+      - build.sh
+      - .github/workflows/tests.yml
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils (xa de l'OSDK, py65)
+        run: |
+          ./tools/build_xa.sh
+          python3 -m pip install --quiet --target tools/pylib py65
+
+      - name: Construction (tailles et marges contrôlées)
+        run: ./build.sh
+
+      # les images sont versionnées : celles du dépôt doivent être celles que
+      # donnent les sources (une image oubliée fait échouer cette étape)
+      - name: Images du dépôt à jour
+        run: git diff --stat --exit-code -- build/
+
+      - name: ASM.COM == xa
+        run: tools/test_asm.sh
+
+      - name: Fichiers, pilote disque, décimaux
+        run: |
+          python3 tools/test_fs.py
+          python3 tools/test_fdc.py
+          python3 tools/test_fp.py
+
+      - name: Bibliothèques .INC
+        run: tools/test_inc.sh
+
+      - name: GRAPHER et GRXASM (français, anglais)
+        run: |
+          tools/test_grapher.sh
+          LANGUE=en tools/test_grapher.sh
+
+      - name: Traductions à jour
+        run: python3 tools/check_en.py

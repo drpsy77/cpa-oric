@@ -136,8 +136,7 @@ numéro.
 ## 3. Système et commandes
 
 BIOS, BDOS, CCP, menus, chargeur d'amorçage, et les commandes `.COM` du système : TYPE, ERA,
-REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC. Version disquette
-(dans la ROM, HELP, MEM, POKE, GO et DUMP sont internes au CCP).
+REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 
 **Données**
 
@@ -780,7 +779,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | OUT.D02 | Sources du projet (`src`, `progs`, `files`) | EIF | 3 | 3 | F | 5 |
 | OUT.D03 | Images et animations d'origine (PNG, GIF) | EIF | 1 | 3 | F | 5 |
 | OUT.D04 | Scénarios et références des tests | EIF | 2 | 3 | F | 5 |
-| OUT.T01 | `build.sh` : ROM et sept disquettes (dont la disquette de projet vierge et la disquette anglaise), deux langues de messages, contrôles de taille, marges | EO | 3 | 8 | M | 5 |
+| OUT.T01 | `build.sh` : sept disquettes (dont la disquette de projet vierge et la disquette anglaise), deux langues de messages, contrôles de taille, marges | EO | 3 | 8 | M | 5 |
 | OUT.T02 | `mkdisk.py new` : créer une image | EI | 2 | 6 | M | 4 |
 | OUT.T03 | `mkdisk.py ls` | EQ | 1 | 5 | F | 3 |
 | OUT.T04 | `mkdisk.py get` | EQ | 1 | 2 | F | 3 |
@@ -945,7 +944,7 @@ Les 14 caractéristiques générales d'IFPUG (0 à 5), pour l'ensemble :
 | Performances (6502 à 1 MHz) | 4 | Réutilisation | 3 |
 | Configuration contrainte (16 Ko résidents, octets comptés) | 5 | Facilité d'installation | 2 |
 | Volume de transactions | 1 | Facilité d'exploitation (reprise, scripts) | 3 |
-| Saisie interactive | 5 | Plusieurs sites (disquette, ROM, émulateurs, matériel) | 3 |
+| Saisie interactive | 5 | Plusieurs sites (disquette, émulateurs, matériel) | 3 |
 | Ergonomie (menus, complétion, historique) | 4 | Facilité de modification | 2 |
 
 Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.

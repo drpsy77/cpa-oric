@@ -108,8 +108,7 @@ que sur lui, le chargeur des autres blocs prenant `$0501` aussi. Mode d'emploi :
 
 **Décidé, pas encore fait** : **`CASSETTE.COM`** écrit un `.TAP` sur le port cassette (vrai
 magnétophone) et lit une cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`,
-rien dans le système de la version disquette ; dans la version ROM, ce sera une fonction du
-système (`docs/projet-rom.md`).
+rien dans le système.
 
 ## 3. GRXASM pour un Oric seul (fait)
 

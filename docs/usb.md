@@ -271,5 +271,4 @@ LOCI ; ni attributs, ni table d'allocation (place libre fictive ; FORMAT, DISKCO
 accès directs aux secteurs refusés). Place résidente estimée 1,5 à 2 Ko, quand le système a
 12 octets de marge : après la descente de PUT en banque (`docs/place.md`), ou le pilote
 lui-même en banque. L'effacement y sert (EDIT enregistre par `NOM.$$$`, effacement,
-renommage). Touche le système, pas les numéros du BDOS ; profiterait aussi à la version
-ROM.
+renommage). Touche le système, pas les numéros du BDOS.

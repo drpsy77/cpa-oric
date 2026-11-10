@@ -297,8 +297,8 @@ Ajouts seulement, rien ne bouge (`architecture.md` § 2) :
 | 4 | numéro à rappeler si le démon se tait 10 s : p1, p2 = adresse d'une chaîne terminée par 0, 40 caractères au plus (`ATDT-hôte:port`, CR) ; `$FF` si elle est plus longue (pas de rappel) |
 
   Op 1 à 3 effacent aussi le préfixe, la trame en cours et le numéro, et arrêtent un
-  rappel. La version ROM, et une
-  construction sans `SERIE`, rendent `$FF` (règle du contrat). `progs/cpa.inc` :
+  rappel. Une
+  construction sans `SERIE` rend `$FF` (règle du contrat). `progs/cpa.inc` :
   `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`, `SE_NUM`.
 - Constantes du protocole dans `progs/cpa.inc` : `RP_REQ` (`$FD`), `RP_KEY` (`$FE`),
   `RP_FRM` (`$FF`), `RP_PORT` (2324).

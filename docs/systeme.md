@@ -7,7 +7,7 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
 ## 1. Console et clavier
 
 - **Lecture de ligne dans le BDOS** (fonction 10, `src/rline.s`), pas dans le CCP : LOGO et
-  DEBUG en profitent, et la ROM l'a (sans la complétion). La ligne est éditée en `$BA00`
+  DEBUG en profitent. La ligne est éditée en `$BA00`
   (126 caractères au plus), l'historique est en `$BA80-$BB7F` (fin du jeu de caractères
   secondaire). Un seul historique pour le CCP et les programmes ; il est gardé au démarrage
   à chaud, sauf après un HIRES plein écran (zone recouverte par l'image).
@@ -44,8 +44,8 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   Mac et répond par trames ; PUNCH, READER, fonction 117. Détail, protocole et place :
   `docs/console-distance.md` (§ 4, § 5).
 - `PAPER`, `INK` (attributs de tête de chaque ligne de la console, `apply_colors`, même
-  couleur permise) et `PAGE ON/OFF` (`page_on`) sont des commandes internes, donc aussi
-  dans la ROM ; réglages gardés jusqu'au démarrage à froid.
+  couleur permise) et `PAGE ON/OFF` (`page_on`) sont des commandes internes ;
+  réglages gardés jusqu'au démarrage à froid.
 
 ## 2. Écran
 

@@ -1,26 +1,23 @@
-# CP/A — common architecture and interface contract
+# CP/A — architecture and interface contract
 
 English translation of `docs/architecture.md` (the French document is the reference; the other documents it points to are in French unless an English version exists in `docs/en/`).
 
-This document is the reference shared by the two projects that come from CP/A:
-
-- **the disk version** (`build/cpa.dsk`): an evolving system, memory extended by the disk,
-  aimed at development, management and communication — see `docs/etat.md`;
-- **the ROM version** (`build/cpa.rom`): a ROM dedicated to running a program on its own
-  (tape, cartridge) — see `docs/projet-rom.md`.
-
-Both are built from the **same sources** (`src/`), the disk version with
-`-DDISK`. What is described here must not change without agreement between the two projects.
+This document is the reference of CP/A: a system loaded from a disk (`build/cpa.dsk`) into
+the overlay RAM, extended by `.COM` programs — status in `docs/etat.md`. The 16 KB ROM
+version of the early days is abandoned: the major commands are `.COM` files that would not
+fit in it, and a program for an Oric on its own is made with `GRXASM /O` and a `.TAP`
+(`docs/oric-basic.md`). The contract below is what the programs already written expect: it
+does not change without agreement.
 
 ## 1. The layers
 
-| Layer | Role | Where | Profile |
-|---|---|---|---|
-| BIOS | hardware: keyboard, screen, console, 50 Hz IRQ, recovery after a crash, disk, serial port and remote console | `src/bios.s`, `src/disk.s`, `src/serial.s` | common (disk: `-DDISK`; serial: `-DSERIE`, disk version) |
-| BDOS | numbered services as in CP/M 2.2 (`JSR $0203`, X = function) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` | common; files: disk only |
-| CCP | `A>` prompt and built-in commands (the line is read by `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` | common; DIR/PUT/DO…: disk (TYPE, ERA, REN: `.COM`; drawing commands: GRAPHER.COM, ROM only at the prompt) |
-| Menus | drop-down menu bar (FUNCT) | `src/menu.s` | common |
-| Programs | `.COM` files loaded at `$0500` (a name without `.COM` falls back to the `.BAT` script) | `progs/*.s` | disk (the ROM may include one) |
+| Layer | Role | Where |
+|---|---|---|
+| BIOS | hardware: keyboard, screen, console, 50 Hz IRQ, recovery after a crash, disk, serial port and remote console | `src/bios.s`, `src/disk.s`, `src/serial.s` |
+| BDOS | numbered services as in CP/M 2.2 (`JSR $0203`, X = function) | `src/bdos.s`, `src/fs.s`, `src/gfx.s`, `src/snd.s` |
+| CCP | `A>` prompt and built-in commands (the line is read by `src/rline.s`, BDOS 10) | `src/ccp.s`, `src/ccp_gfx.s`, `src/ccp_disk.s`, `src/put.s`, `src/script.s` |
+| Menus | drop-down menu bar (FUNCT) | `src/menu.s` |
+| Programs | `.COM` files loaded at `$0500` (a name without `.COM` falls back to the `.BAT` script) | `progs/*.s` |
 
 **Placement rule** (for any new function):
 
@@ -29,7 +26,7 @@ Both are built from the **same sources** (`src/`), the disk version with
    function number and a parameter block `[op, p1..p5]` like functions 115 and 116.
 3. A command that is instantaneous or useful in scripts → **CCP** (built-in command), only if
    space allows.
-4. Everything else → **`.COM` program** (disk version): it costs nothing as long as it is not
+4. Everything else → **`.COM` program**: it costs nothing as long as it is not
    run.
 
 ## 2. Interface contract (identical in both versions)
@@ -46,7 +43,7 @@ disk it has just formatted); SETSEC takes a logical sector from 0 to 2,719.
 Existing entries never move; a new entry is added at the end (`$C030`…).
 LIST prints A on the Centronics port (VIA port A, strobe PB4, CA1 acknowledge awaited 2 ms at
 most; Oricutron writes to `printer_out.txt`). PUNCH and READER: serial port
-(disk version, `SERIE` option; port set by function 117). PUNCH sends A,
+(`SERIE` option; port set by function 117). PUNCH sends A,
 waits at most 5 s for the transmitter to be free and returns A = 0, C = 0 (sent) or A = `$FF`, C = 1 (not
 sent, or no port). READER waits for a byte and returns it in A; `$1A` (^Z) at once
 if no port is set or if the remote console is active, and as soon as a key is
@@ -80,18 +77,18 @@ part is in `progs/cpa.inc`, which every program includes.
 
 ### BDOS functions
 
-| No. | Function | Versions |
-|---|---|---|
-| 0-12 | console and system, as in CP/M 2.2 (3 and 4: the BIOS READER and PUNCH; 5 prints on the Centronics port); 10 edits the line (arrows, insertion, history; file name completion by TAB or ESC in the disk version; CTRL-C there does a warm boot only on an empty line at the CCP prompt), 126 characters at most | both |
-| 13-25, 30, 33-36 | files (CP/M 2.2, random access, attributes); drives A: to D: (FCB byte 0: 0 = current, 1 = A:...; 14 selects the current drive, 24 returns the logged-in drives, 25 the current drive); the directory entries returned by 17 and 18 are those of the disk format (§ 2, "Disk") | disk; the ROM returns `$FF` (0 for 24 and 25) |
-| 26 | DMA address | both |
-| 47 | CHAIN (as in CP/M 3): A/Y = command line terminated by 0 (78 characters at most), executed by the CCP after a warm boot; does not return | both |
-| 115 | SPLIT mode graphics: block `[op, p1..p5]`, op 0-13 | both (12-13 GSAVE/GLOAD: disk) |
-| 116 | AY-3-8912 sound: block `[op, p1..p5]`, op 0-8 (7 SYNC: simultaneous start of the voices, 8 MIXER: tone and noise of a voice) | both |
-| 117 | serial port and remote console: block `[op, p1..p5]`; op 0 status -> A (bit 0 port set, bit 1 console active, bit 2 link lost), X = low byte of the port; op 1 sets the port (p1 = low byte: `$80` LOCI, `$1C` Oricutron, 0 none); op 2 console on (`$FF` without a port); op 3 off (`docs/en/console-distance.md`) | disk (`SERIE` option); the ROM returns `$FF` |
+| No. | Function |
+|---|---|
+| 0-12 | console and system, as in CP/M 2.2 (3 and 4: the BIOS READER and PUNCH; 5 prints on the Centronics port); 10 edits the line (arrows, insertion, history; file name completion by TAB or ESC; CTRL-C there does a warm boot only on an empty line at the CCP prompt), 126 characters at most |
+| 13-25, 30, 33-36 | files (CP/M 2.2, random access, attributes); drives A: to D: (FCB byte 0: 0 = current, 1 = A:...; 14 selects the current drive, 24 returns the logged-in drives, 25 the current drive); the directory entries returned by 17 and 18 are those of the disk format (§ 2, "Disk") |
+| 26 | DMA address |
+| 47 | CHAIN (as in CP/M 3): A/Y = command line terminated by 0 (78 characters at most), executed by the CCP after a warm boot; does not return |
+| 115 | SPLIT mode graphics: block `[op, p1..p5]`, op 0-13 |
+| 116 | AY-3-8912 sound: block `[op, p1..p5]`, op 0-8 (7 SYNC: simultaneous start of the voices, 8 MIXER: tone and noise of a voice) |
+| 117 | serial port and remote console: block `[op, p1..p5]`; op 0 status -> A (bit 0 port set, bit 1 console active, bit 2 link lost), X = low byte of the port; op 1 sets the port (p1 = low byte: `$80` LOCI, `$1C` Oricutron, 0 none); op 2 console on (`$FF` without a port); op 3 off (`docs/en/console-distance.md`) |
 
-Numbers free for the future: 37-46, 48-114 and 118 onwards. An added function exists in both
-versions, even if it returns `$FF` where it makes no sense.
+Numbers free for the future: 37-46, 48-114 and 118 onwards. A function tied to a build
+option (`SERIE`) keeps its number and returns `$FF` when the option is absent.
 
 ### Disk
 
@@ -114,20 +111,20 @@ format.
 
 ## 3. Memory map
 
-| Area | Disk version | ROM version |
-|---|---|---|
-| `$0000-$04FF` | zero page, stack, page 2 (system), base page | same |
-| `$0500-$B3FF` | TPA (programs); `$A000-$B3FF` = picture in SPLIT; in full-screen HIRES (program with `progs/hires.inc`), picture `$A000-$BF3F`, which also covers the font, the `$B800-$BB7F` areas and the text screen | same |
-| `$B400-$BFDF` | `$B400-$B4FF`: addresses of the SPLIT mode pixel rows (`g_ylo`, `g_yhi`), computed by `font_init` in place of the glyphs of codes 0-31 (attributes, never displayed); font, secondary font (`$B800-$B9FF`: menu save area, and names already seen during an ESC completion; `$BA00-$BA7F`: line being edited; `$BA80-$BB7F`: line history), text screen | same |
-| `$C000-$FFFF` | overlay RAM loaded from the disk: code up to `$F5C8` at most (`SYS_END`; actual end: `rom_end`, shown by `./build.sh`), then allocation maps of the 4 drives (`ALV`, `$F5C8-$F66F`), buffers (command line `$F670`, DO `$F6C0`), window `$F7C0-$FCFF` (one bank at a time at `$F7C0-$F9FF`: PUT, loaded with the system, or IMG, read from `CPA.BNK` when it is needed; or GFX, the SPLIT drawing routines, up to `$FBFF` over the PUT buffer; PUT buffer `$FA00`; cold boot; `docs/systeme.md` § 6), BDOS variables `$FD00` (`$FD00-$FD03`: BDOS block and count, `$FD04-$FD12`: banks, `$FD13-$FD21`: serial driver, `$FD22`: `gfx_ko`, `$FD23-$FD26`: serial driver ceilings, `$FD27-$FD57` free, then variables; `win_id` `$FDF8`: contents of the window; free: `$FDFC-$FDFF`), sector buffer `$FE00`, page `$FF00-$FFF9` loaded with the system (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` up to `$FFEF`, then free; it only receives data or self-contained routines, since it is not contiguous with the code), vectors `$FFFA` | ROM: code up to about `$E3D4`, tables at `$FF00` (as on disk), rest free |
+| Area | Contents |
+|---|---|
+| `$0000-$04FF` | zero page, stack, page 2 (system), base page |
+| `$0500-$B3FF` | TPA (programs); `$A000-$B3FF` = picture in SPLIT; in full-screen HIRES (program with `progs/hires.inc`), picture `$A000-$BF3F`, which also covers the font, the `$B800-$BB7F` areas and the text screen |
+| `$B400-$BFDF` | `$B400-$B4FF`: addresses of the SPLIT mode pixel rows (`g_ylo`, `g_yhi`), computed by `font_init` in place of the glyphs of codes 0-31 (attributes, never displayed); font, secondary font (`$B800-$B9FF`: menu save area, and names already seen during an ESC completion; `$BA00-$BA7F`: line being edited; `$BA80-$BB7F`: line history), text screen |
+| `$C000-$FFFF` | overlay RAM loaded from the disk: code up to `$F5C8` at most (`SYS_END`; actual end: `rom_end`, shown by `./build.sh`), then allocation maps of the 4 drives (`ALV`, `$F5C8-$F66F`), buffers (command line `$F670`, DO `$F6C0`), window `$F7C0-$FCFF` (one bank at a time at `$F7C0-$F9FF`: PUT, loaded with the system, or IMG, read from `CPA.BNK` when it is needed; or GFX, the SPLIT drawing routines, up to `$FBFF` over the PUT buffer; PUT buffer `$FA00`; cold boot; `docs/systeme.md` § 6), BDOS variables `$FD00` (`$FD00-$FD03`: BDOS block and count, `$FD04-$FD12`: banks, `$FD13-$FD21`: serial driver, `$FD22`: `gfx_ko`, `$FD23-$FD26`: serial driver ceilings, `$FD27-$FD57` free, then variables; `win_id` `$FDF8`: contents of the window; free: `$FDFC-$FDFF`), sector buffer `$FE00`, page `$FF00-$FFF9` loaded with the system (tables `src/tables_ff.s`, `rl_keys.s`, `menu_col.s` up to `$FFEF`, then free; it only receives data or self-contained routines, since it is not contiguous with the code), vectors `$FFFA` |
 
 ## 4. Building and testing
 
 Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.md`.
 
     ./tools/setup_linux.sh [roms]    # once, on Linux: xa, py65, test Oricutron
-    ./build.sh                       # build/cpa.rom, build/cpa.dsk (+ size checks)
-    tools/smoke_test.sh              # build + disk and ROM boot in the emulator
+    ./build.sh                       # build/cpa.dsk and the other disks (+ size checks)
+    tools/smoke_test.sh              # build + disk boot in the emulator
     tools/test_asm.sh                # ASM.COM must give back the bytes of xa
     tools/test_logo.sh               # LOGO.COM: scenarios compared with the references
     tools/test_grapher.sh            # GRAPHER.COM, GRXASM.COM: calculations, loops, errors (no emulator)
@@ -149,13 +146,13 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 
 - `build.sh` refuses a disk system that goes beyond `SYS_END` (`$F5C8`), a window that overflows (PUT after
   `$FA00`, cold boot after `$FD00`; through `tools/mkbnk.py`: IMG after `$FA00`, GFX after
-  `GFX_END`), a `$FF00` page that reaches the vectors (`$FFFA`)
-  and a ROM that is not 16 KB; it shows the margins.
+  `GFX_END`), a `$FF00` page that reaches the vectors (`$FFFA`);
+  it shows the margins.
 - Tests in Oricutron: `tools/run_test.sh` (simulated typing and memory dump, with the patch
-  `tools/oricutron-testhook.patch`; `DSK=` for the disk, `ORIC_ROM=cpa` for the ROM) and
+  `tools/oricutron-testhook.patch`; `DSK=` for the disk) and
   `tools/screen.py` (screen text).
 - `tools/run_com.py` runs a `.COM` in a simulated 6502 with a minimal BDOS (no screen).
-- Hardware: tried on Oric Atmos + LOCI (disk version). The menu colours look
+- Hardware: tried on Oric Atmos + LOCI. The menu colours look
   better on a real screen than in some emulators.
 
 **Which tests for which change** (in proportion to the risk; `test_logo.sh` takes ~25 min):
@@ -210,12 +207,12 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
   causes an extra automatic line break). CCP messages in short English; menus,
   help and programs in French on `cpa.dsk`, in English on `cpa-en.dsk` (below).
 - Comments and documentation in French.
-- **Two languages**: everything produced for the disk version, system included, exists
+- **Two languages**: everything produced, system included, exists
   in French and in English (`cpa.dsk`, `cpa-en.dsk`). System: menu bar and console
   messages in `src/msg/fr/sys.msg` or `src/msg/en/sys.msg` (same labels);
   `build.sh` assembles `cpa_sys.bin` and `cpa_sys_en.bin` and checks the margin of both (the
   French one, being longer, is the constraint); the short CCP messages are in English
-  in both. The ROM version, a separate project, stays in French for now.
+  in both.
 - Program messages in two languages: each translated program includes its messages
   (`#include "nom.msg"`, name of 8 characters at most for ASM), taken from `progs/msg/fr/`
   or `progs/msg/en/` (same labels; the "yes" key is the constant `K_YES`, `O` or
@@ -271,7 +268,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | `files/` | files copied as they are onto the disk (README.TXT, DEMO.LOG, DESSIN.BAT) |
 | `tools/` | PC tools: disk images, tables, tests |
 | `docs/` | documentation (index in `README.md`) |
-| `build/` | outputs; only the ready-to-use images are under version control: disks (`*.dsk`), `cpa.rom`, example `.TAP` files (`build/tap/`) |
+| `build/` | outputs; only the ready-to-use images are under version control: disks (`*.dsk`), example `.TAP` files (`build/tap/`) |
 
 ## 7. Documentation
 
@@ -301,8 +298,10 @@ decided), without narrative, without discussion dates, without "Pierre said". Th
   `docs/essais-materiel.md` ("À vérifier", To be checked) and, if a function changes,
   `docs/points-de-fonction.md` (§ 2.4) are updated; nothing is narrated.
 - `README.md` (English) and `README.fr.md` (French) go together: a change to one
-  is carried over to the other. The same holds for the user documents (`manuel.md`, `logo.md`,
-  `grapher.md`, `cmder.md`, `edsprite.md`) and their translation in `docs/en/`: `python3 tools/check_en.py`
+  is carried over to the other. The same holds for the documents translated in `docs/en/`: the
+  user documents (`manuel.md`, `logo.md`, `grapher.md`, `cmder.md`, `edsprite.md`) and five
+  internal ones (`architecture.md`, `vision.md`, `usb.md`, `console-distance.md`,
+  `loci-modem-wifi.md`); the others are in French only. `python3 tools/check_en.py`
   reports a translation that is lagging behind (headings, tables, examples).
 - The documents in `docs/en/` describe the English disks: screens, menus, questions,
   messages and example names there are those of `cpa-en.dsk` and its twins; the French

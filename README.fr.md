@@ -107,7 +107,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/grapher.md` | GRAPHER |
 | `docs/cmder.md` | CMDER |
 | `docs/edsprite.md` | EDSPRITE, l'éditeur de sprites et de caractères |
-| `docs/en/` | les cinq documents ci-dessus en anglais |
+| `docs/en/` | les cinq documents ci-dessus en anglais, ainsi que la vision, l'architecture, la clé USB, le modem WiFi et la console à distance |
 | `docs/vision.md` | but de CP/A, public, principes, ce qu'il n'est pas, la 1.0 |
 | `docs/architecture.md` | couches, contrat d'interface (BIOS, BDOS, page 2), carte mémoire, conventions |
 | `docs/systeme.md` | fonctionnement interne du système |
@@ -160,7 +160,7 @@ lecteur 3,5″ double face : jamais essayés, et sans LOCI la clé USB et le ré
 Aucun portage pour le Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt
 pour en parler.
 
-**Plusieurs lecteurs.** La version disquette gère quatre lecteurs, `A:` à `D:`, comme le
+**Plusieurs lecteurs.** CP/A gère quatre lecteurs, `A:` à `D:`, comme le
 contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
 `oricutron -m atmos -k microdisc -d build/cpa.dsk -d donnees.dsk`) ; voir `docs/manuel.md`.
 

@@ -1,6 +1,6 @@
 # CP/A — manuel
 
-Mode d'emploi de la version disquette : commandes, programmes, programmation. GRAPHER et LOGO
+Mode d'emploi de CP/A : commandes, programmes, programmation. GRAPHER et LOGO
 ont leur propre référence (`docs/grapher.md`, `docs/logo.md`), CMDER et EDSPRITE aussi
 (`docs/cmder.md`, `docs/edsprite.md`).
 Contrat d'interface (table BIOS, fonctions du BDOS, carte mémoire) : `docs/architecture.md`.
@@ -25,11 +25,11 @@ Sur l'Oric, `HELP` donne un résumé de chaque commande.
 | `VER`, `CLS` | version, effacement de l'écran |
 | `PAPER n`, `INK n` | couleur du fond, de l'encre (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc) de toute la console ; la même couleur pour les deux est permise (texte caché) |
 | `PAGE ON`, `PAGE OFF` | pause en fin d'écran, ou non (voir plus bas) |
-| `B:` (`A:` à `D:`) | change de lecteur courant (version disquette) ; l'invite devient `B>` |
+| `B:` (`A:` à `D:`) | change de lecteur courant ; l'invite devient `B>` |
 
 TYPE, ERA et REN sont des programmes (`.COM`), pour la place résidente. Les commandes de
 dessin (`PLOT`, `LINE`, `BOX`, `FBOX`, `CIRCLE`, `GTEXT`, `ATTR`, `PEN`) sont dans
-`GRAPHER.COM` (`docs/grapher.md`) ; la version ROM les garde au prompt. Un `.COM` se tape
+`GRAPHER.COM` (`docs/grapher.md`). Un `.COM` se tape
 comme une commande interne, y compris dans les scripts et après PUT ; il est cherché sur les
 autres lecteurs s'il n'est pas sur le courant (voir « Lecteurs A: à D: »).
 
@@ -46,8 +46,8 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 | `GO adr [paramètres]` | lance le code en `adr` comme un `.COM` (un `RTS` ramène au prompt) |
 | `XDO NOM [p1 ... p9]` | appel d'un script par un script ; lancé par le CCP, pas à taper (voir DO) |
 
-Dans la version disquette, `HELP`, `MEM`, `POKE` et `GO` sont des `.COM` et DEBUG remplace
-`DUMP`, pour laisser la place au BDOS ; la version ROM, sans disque, les a en interne.
+`HELP`, `MEM`, `POKE` et `GO` sont des `.COM`, et DEBUG montre la mémoire, pour laisser la
+place résidente au BDOS.
 
 Autres programmes de la disquette :
 - `HELLO.COM` affiche ses arguments ;
@@ -75,7 +75,7 @@ Autres programmes de la disquette :
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
 - `DISKCOPY.COM src: dst: [/T] [/V] [/S]` : copie d'une disquette, ou de son système.
 
-**POKE et GO en version disquette.** Comme tout `.COM`, ils sont chargés en `$0500` : chacun
+**POKE et GO.** Comme tout `.COM`, ils sont chargés en `$0500` : chacun
 tient en une page (`$0500-$05FF`), donc tout ce qui est à partir de `$0600` est préservé d'un
 appel à l'autre. Un petit programme tapé avec plusieurs POKE commence donc en `$0600` :
 
@@ -930,12 +930,12 @@ Chaque démarrage à chaud remet aussi en place :
 - la barre de menus.
 
 Seules les instructions illégales de type « JAM », qui bloquent le 6502 lui-même, et
-l'écrasement du système en RAM (version disque) obligent à redémarrer complètement.
+l'écrasement du système en RAM obligent à redémarrer complètement.
 
 ## Menus déroulants
 
 La ligne d'état sert de barre de menus : **Systeme** (Version, Aide, Memoire, Imprimante `^P`,
-Lecteur suivant, Redemarrer `^C`), **Fichiers** (version disque seulement),
+Lecteur suivant, Redemarrer `^C`), **Fichiers**,
 **Ecran** (Mode SPLIT, Mode texte, Effacer, Encre, Papier, Majuscules `^T`, Pagination) et
 **Clavier**. Un article qui a un raccourci clavier le montre au bout de son libellé (`^C`
 redémarre seulement sur une ligne vide du prompt ; l'article, lui, marche aussi dans un
@@ -1025,17 +1025,14 @@ en main avec la bibliothèque `hires.inc` (voir « HIRES plein écran »), comme
 | 12 | GSAVE | adresse du FCB (octet bas, octet haut) : enregistre l'image |
 | 13 | GLOAD | adresse du FCB : charge une image et passe en SPLIT |
 
-GSAVE et GLOAD (version disque) prennent le type `.IMG` si le nom n'en a pas, et renvoient
+GSAVE et GLOAD prennent le type `.IMG` si le nom n'en a pas, et renvoient
 0 si tout va bien, 1 si le fichier est absent, 2 si le disque ou le répertoire est plein,
 3 si le fichier est protégé (GSAVE), `$FF` pour GSAVE hors du mode SPLIT, et pour l'une et
 l'autre sans `CPA.BNK` (message `CPA.BNK?`). Un programme qui appelle GLOAD depuis le mode texte doit
 rester sous `$A000`.
 
 **Sans programme**, on dessine avec `GRAPHER` et un fichier `.GRX` (`docs/grapher.md`), et
-`GSAVE` garde le résultat. La version ROM garde au prompt une commande par primitive (`PEN m`,
-`PLOT x y`, `LINE x1 y1 x2 y2`, `BOX`, `FBOX`, `CIRCLE x y r`, `GTEXT col y texte`,
-`ATTR col y1 y2 v`, `POINT x y`), en mode SPLIT seulement. Le crayon est en mode « trace » au
-démarrage.
+`GSAVE` garde le résultat. Le crayon est en mode « trace » au démarrage.
 
 Hors du mode SPLIT, les primitives 0 à 9 renvoient `$FF`. `GTEST.COM` est un exemple
 complet : il passe en SPLIT et dessine un cadre, des diagonales, des cercles, des
@@ -1131,8 +1128,7 @@ longueur ; en pratique, **environ 200 octets changés par 1/50 s**.
 ## Le son (fonction 116 du BDOS)
 
 Le circuit sonore de l'Oric (AY-3-8912, trois voix et un bruit) est accessible comme le
-graphisme : X = 116, A/Y = adresse d'un bloc `[op, p1..p5]`. Les deux versions (disquette et
-ROM) l'ont.
+graphisme : X = 116, A/Y = adresse d'un bloc `[op, p1..p5]`.
 
 | op | Primitive | Paramètres |
 |---|---|---|
@@ -1514,7 +1510,7 @@ distance active, bit 2 liaison perdue) et l'octet bas du port dans X ; op 1 pose
 distance. Le port se trouve et se règle comme dans `progs/acia_inc.s` (REMOTE s'en sert).
 Une fois le port posé, la fonction 4 envoie un octet (attente de l'émetteur 5 s au plus) et
 la fonction 3 en attend un (`$1A` si une touche est tapée sur l'Oric, ou si la console à
-distance a le port). Sans pilote série (version ROM), la fonction 117 rend `$FF`.
+distance a le port). Sans pilote série (construction sans `SERIE`), la fonction 117 rend `$FF`.
 
 **Enchaîner deux programmes.** La fonction 47 (comme celle de CP/M 3) termine le programme
 et fait exécuter une ligne par le CCP, comme si on l'avait tapée : elle s'affiche après `A>`

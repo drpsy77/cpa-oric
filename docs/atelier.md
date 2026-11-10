@@ -14,7 +14,7 @@ Raspberry Pi 400. Il dit aussi à quoi sert chaque machine.
 | **Oric Atmos + LOCI** | essai final sur le vrai matériel | timing, son et écran réels |
 
 Les fichiers circulent par GitHub : `git push` depuis une machine, `git pull` sur une autre.
-Les images prêtes à l'emploi (`build/cpa.dsk`, `build/cpa.rom`) sont dans le dépôt : Windows et
+Les images prêtes à l'emploi (`build/cpa.dsk` et les autres disquettes) sont dans le dépôt : Windows et
 le LOCI n'ont donc jamais besoin de construire quoi que ce soit.
 
 ## 2. Comment Claude travaille
@@ -24,9 +24,9 @@ outils, et suit toujours la même boucle.
 
 ### Les outils
 
-1. **`xa`** (l'assembleur de l'OSDK), compilé depuis ses sources. `./build.sh` assemble la ROM,
+1. **`xa`** (l'assembleur de l'OSDK), compilé depuis ses sources. `./build.sh` assemble
    le système disque, l'amorce et les programmes `.COM`, puis fabrique la disquette avec
-   `tools/mkdisk.py`. Le script contrôle aussi les tailles (ROM de 16 Ko, système disque qui
+   `tools/mkdisk.py`. Le script contrôle aussi les tailles (système disque qui
    s'arrête avant ses cartes d'allocation (`SYS_END`, `$F5C8`), page `$FF00` qui n'atteint pas
    les vecteurs).
 2. **Oricutron modifié** (`tools/oricutron-testhook.patch`, surtout dans `main.c`). Le
@@ -72,7 +72,7 @@ outils, et suit toujours la même boucle.
    qu'à la routine clavier de la ROM BASIC (adresse `$EB78`), que CP/A n'utilise pas. Le texte
    est maintenant tapé sur la matrice du clavier simulé (tables de `src/tables.s`), environ 15
    caractères par seconde (touche 2 trames enfoncée, 1 relâchée ; SHIFT une trame avant), ce qui
-   marche avec tout logiciel. En CP/A disquette (ROM masquée),
+   marche avec tout logiciel. Sous CP/A (ROM de l'Oric masquée),
    le collage tient compte du verrouillage des majuscules (`$021A`) pour garder la casse.
    Enfin, les 8 couleurs de l'Oric se règlent dans `oricutron.cfg` : `colour0 = '#000000'` à
    `colour7 = '#FFFFFF'` (RRGGBB en hexadécimal ; une ligne absente garde la couleur d'origine).
@@ -143,8 +143,8 @@ Ensuite, la vérification complète :
 
     tools/smoke_test.sh
 
-Le script construit tout, démarre la disquette et tape `DIR`, démarre la ROM et tape `VER`,
-affiche les deux écrans et finit par « OK : l'atelier fonctionne ».
+Le script construit tout, démarre la disquette et tape `DIR`, essaie
+l'imprimante, deux disquettes et la fin d'une disquette, et finit par « OK : l'atelier fonctionne ».
 
 Cette procédure a été essayée de bout en bout sur un Linux vierge (Ubuntu 24.04 sur PC). Sur le
 Pi, seules les durées changent : comptez quelques minutes pour compiler Oricutron, et plusieurs
@@ -158,7 +158,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 
 | Commande | Rôle |
 |---|---|
-| `./build.sh` | construit `build/cpa.rom`, le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `CPA.BNK` dans les deux (banques de la fenêtre, découpées par `tools/mkbnk.py`), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes et des banques |
+| `./build.sh` | construit le système disque `build/cpa_sys.bin` et `build/progs/*.COM` (en français), `build/cpa_sys_en.bin` et `build/progs-en/*.COM` (en anglais), `CPA.BNK` dans les deux (banques de la fenêtre, découpées par `tools/mkbnk.py`), `build/cpa.dsk`, `build/cpa-en.dsk`, et les `.sym` ; affiche les marges des deux systèmes et des banques |
 | `tools/smoke_test.sh` | vérifie toute la chaîne (construction + émulateur), dont l'usage à deux disquettes : `GRXASM CARTE /C` sur `cpa-projet.dsk` en B:, bibliothèques lues sur A: ; la fin de la disquette (copie d'un fichier de 640 Ko, blocs au-delà de 255) et le refus d'une disquette sans étiquette du format |
 | `tools/test_asm.sh` | ASM.COM doit redonner exactement les octets de `xa` |
 | `python3 tools/test_fp.py [n]` | `progs/fp_inc.s` (décimaux) dans un 6502 simulé, comparé à un calcul exact |
@@ -223,8 +223,7 @@ Variables utiles :
 | `DSK=build/cpa.dsk` | démarre sur la disquette. Elle est copiée, car Oricutron réécrit l'image : l'original ne change pas |
 | `DSKB=b.dsk` (`DSKC`, `DSKD`) | disquettes des lecteurs B: à D:, copiées en `SORTIE.b.dsk`... (on y relit ce qui a été écrit). Les lecteurs sont remplis dans l'ordre : avec `DSKB` seul, C: et D: sont vides (essai d'un lecteur absent) |
 | `DSKSWAP=b.dsk` | seconde disquette du lecteur A:, copiée en `SORTIE.swap.dsk` : chaque `\x07` de TOUCHES met l'autre (d'abord celle-ci, puis `DSK`, et ainsi de suite), après avoir enregistré celle qui sort. Pour essayer les copies à un seul lecteur (CMDER) ; laisser au programme le temps d'afficher sa demande avant `\x07` (pauses `\|`), car une touche tapée pendant une copie est prise pour un essai d'ESC |
-| `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 pour la ROM |
-| `ORIC_ROM=cpa` | démarre sur `build/cpa.rom` au lieu de la ROM BASIC 1.1 |
+| `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 |
 | `DISK_OPTS` (pour `build.sh`) | options du système disque, par défaut `-DCPLCMD -DSERIE` : complétion des commandes (243 octets) et pilote série (622 octets). Elles font partie de CP/A ; les retirer ne sert qu'à des essais |
 | `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR, CMDER ; plusieurs clés : `usb1` à `usb8`) ; sans elle, ces commandes répondent `LOCI absent` |
 | `ORIC_WARP=1` | émulateur sans attente du temps réel (même résultat, bien plus vite) |
@@ -235,7 +234,7 @@ Points à connaître :
 - Les touches tapées avant la fin du démarrage sont perdues. Si l'écran ne montre pas ta
   commande, retarde `ORIC_KEYS_AT`.
 - Dans le vidage, `$0300-$03FF` (entrées-sorties) vaut zéro. La zone `$C000-$FFFF` montre ce que
-  le processeur voit au moment du vidage : la RAM overlay pour la version disquette.
+  le processeur voit au moment du vidage : la RAM overlay.
 - Pour lire une variable :
   `python3 -c "m=open('/tmp/t.mem','rb').read(); print(hex(m[0x280]))"` (ici `vmode`, adresse
   prise dans `build/cpa_sys.sym`).
@@ -286,13 +285,9 @@ Markdown. Code de retour 0 si tout est vert.
 
 Rien à construire : les images sont dans le dépôt.
 
-1. Récupérer `build/cpa.dsk` et `build/cpa.rom` : `git pull` si Git est installé sous Windows,
-   sinon le bouton de téléchargement de chaque fichier sur Codeberg, ou une copie depuis le Pi.
-2. **Version disquette** : dans Oricutron, machine Atmos, contrôleur Microdisc, insérer
-   `cpa.dsk`, puis RESET.
-3. **Version ROM** : copier `cpa.rom` dans le dossier `roms` d'Oricutron et choisir cette ROM à
-   la place de `basic11b` (fichier `oricutron.cfg` : `atmosrom = 'roms/cpa'`). Pense à remettre
-   `basic11b` ensuite.
+1. Récupérer `build/cpa.dsk` : `git pull` si Git est installé sous Windows, sinon le bouton
+   de téléchargement du fichier sur GitHub, ou une copie depuis le Pi.
+2. Dans Oricutron, machine Atmos, contrôleur Microdisc, insérer `cpa.dsk`, puis RESET.
 
 Le correctif de test n'est pas nécessaire sous Windows pour les scénarios automatiques, qui
 tournent sur le Pi ; sans lui, le collage F12 ne marche pas dans CP/A.

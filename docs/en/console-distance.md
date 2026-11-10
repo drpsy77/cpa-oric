@@ -301,8 +301,8 @@ Additions only, nothing moves (`architecture.md` § 2):
 | 4 | number to redial if the daemon stays silent for 10 s: p1, p2 = address of a string ended by 0, 40 characters at most (`ATDT-host:port`, CR); `$FF` if it is longer (no redial) |
 
   Ops 1 to 3 also clear the prefix, the current frame and the number, and stop a
-  redial. The ROM version, and a build
-  without `SERIE`, return `$FF` (rule of the contract). `progs/cpa.inc`:
+  redial. A build
+  without `SERIE` returns `$FF` (rule of the contract). `progs/cpa.inc`:
   `F_SERIAL = 117`, `SE_STATE`, `SE_PORT`, `SE_ON`, `SE_OFF`, `SE_NUM`.
 - Protocol constants in `progs/cpa.inc`: `RP_REQ` (`$FD`), `RP_KEY` (`$FE`),
   `RP_FRM` (`$FF`), `RP_PORT` (2324).
