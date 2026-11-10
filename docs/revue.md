@@ -18,20 +18,24 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   à la fin du dernier extent : la fin est rendue à chaque lecture, une écriture ajoute un
   extent. La fonction 36 rend aussi la bonne position à la fin d'un extent plein (elle se
   trompait d'un enregistrement). Coût : 21 octets résidents.
-- **Disquette changée sans CTRL-C** (`docs/systeme.md` § 3). La carte des blocs libres de
+- **Disquette changée sans CTRL-C** : option de construction `CHGDSK`, absente par défaut
+  (`docs/systeme.md` § 3 ; sur un petit ordinateur, c'est à l'utilisateur de savoir ce
+  qu'il fait : CTRL-C après un changement de disquette). Sans elle, la carte des blocs libres de
   l'ancienne disquette servait sur la nouvelle : dans Oricutron, `PUT X.TXT DIR` après un
   échange de `cpa.dsk` contre `cpa-exemples.dsk` prenait un bloc d'`ARDOISE.GRX`. Comme
   CP/M : une somme par secteur du répertoire, vérifiée avant de prendre ou de rendre des
   blocs quand une seconde s'est passée sans accès disque ; différente, le lecteur est relu.
-  Le format et le contrat ne changent pas. Coût : 331 octets résidents (marge 184), 16
-  secteurs relus à la première écriture après une pause.
+  Le format et le contrat ne changent pas. Coût de l'option : 331 octets résidents (marge
+  184 au lieu de 515), 37 ms à chaque lecture d'un lecteur, 16 secteurs relus à la première
+  écriture après une pause.
 - **`tools/test_fs.py`** : le système de fichiers dans un 6502 simulé, sans émulateur (fin
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
 
 ## 2. Décidé, pas encore fait
 
-Par ordre. Chaque lot se termine par les tests de `architecture.md` § 4.
+Par ordre. Chaque lot se termine par les tests de `architecture.md` § 4. Tout ajout
+résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ### Lot 1 — sûreté des fichiers
 
@@ -107,5 +111,4 @@ fait par `GRXASM /O` et `.TAP`.
 
 ## 3. Questions ouvertes
 
-- La marge du système est de 184 octets après le lot de sûreté : quelle piste de place
-  ouvrir en premier (`etat.md` § 3 : code répété, autre banque de la fenêtre) ?
+Aucune.

@@ -243,10 +243,8 @@ ESC at any other prompt stops everything. Moving with a single drive erases the 
 when the source comes back.
 
 As under CP/M, a drive's directory is read at its first use, and read again after a warm start
-(CTRL-C at the start of a line, or the end of a program): after changing disks, CTRL-C
-remains the right habit, but forgetting it no longer damages anything: before writing, the
-system checks that the disk is the one it read, and reads it again otherwise (an already
-open file being extended gets `BDOS: disk changed`; save again). The current drive is kept across a warm start (back to `A:` if it no
+(CTRL-C at the start of a line, or the end of a program): after changing disks, press CTRL-C
+before writing to it. The current drive is kept across a warm start (back to `A:` if it no
 longer answers). An empty or missing drive does not lock up the Oric: after less than a
 second, `BDOS: disk I/O error`, and `B:` answers `B:?` without changing drive. A DO script
 keeps reading from its own disk even if it changes drive.

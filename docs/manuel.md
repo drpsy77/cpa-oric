@@ -251,9 +251,7 @@ quand la source revient.
 
 Comme sous CP/M, le répertoire d'un lecteur est lu à sa première utilisation, et relu après
 un démarrage à chaud (CTRL-C en début de ligne, ou fin d'un programme) : après avoir changé
-de disquette, CTRL-C reste le bon réflexe, mais un oubli n'abîme plus rien : avant d'écrire, le
-système vérifie que la disquette est celle qu'il a lue, et la relit sinon (un fichier déjà
-ouvert qu'on allonge reçoit `BDOS: disk changed` ; recommencer l'enregistrement). Le lecteur courant est gardé au démarrage à
+de disquette, faire CTRL-C avant d'écrire dessus. Le lecteur courant est gardé au démarrage à
 chaud (retour en `A:` s'il ne répond plus). Un lecteur vide ou absent ne bloque pas l'Oric :
 après moins d'une seconde, `BDOS: disk I/O error`, et `B:` répond `B:?` sans changer de
 lecteur. Un script DO continue de se lire sur sa disquette même s'il change de lecteur.

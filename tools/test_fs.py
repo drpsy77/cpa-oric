@@ -13,7 +13,8 @@ de suite (fonction 20 : 1), position (36), ajout d'un enregistrement
 après la fin (21), fermeture (16), taille (35), relecture de tout.
 Défaut gardé : après la fin d'un fichier multiple de 16 Ko, une lecture
 rendait de vieilles données et une écriture écrasait l'extent précédent.
-Disquette changée sans démarrage à chaud (après une seconde sans accès
+Disquette changée sans démarrage à chaud (système construit avec
+l'option CHGDSK ; après une seconde sans accès
 disque) : un fichier créé sur la nouvelle ne doit pas prendre les blocs
 d'un fichier qu'elle porte déjà ; un fichier ouvert puis allongé reçoit
 une erreur (rien n'est pris), puis l'écriture suivante passe ; sans
@@ -207,6 +208,9 @@ def main():
         for t in bad[:6]:
             print("    " + t)
         code |= bool(bad)
+    if "chg_chk" not in sym:                    # option CHGDSK de build.sh
+        print("disquette changée   : pas dans ce système (option CHGDSK)")
+        return code
     bad = essai_change(b)
     print("disquette changée   : %s" % ("OK" if not bad else "ECHEC"))
     for t in bad:

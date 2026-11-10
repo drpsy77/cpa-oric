@@ -10,7 +10,8 @@ Le vrai Oric est arrêté tant que son alimentation n'est pas réglée (`docs/lo
 « Alimentation ») ; l'émulateur du Raspberry Pi 3B+ (« Sans Oric ») ne remplace pas ces
 essais.
 
-**Disquette changée sans CTRL-C** (`docs/systeme.md` § 3 ; sur des **copies**) :
+**Disquette changée sans CTRL-C** (système construit avec l'option `CHGDSK`,
+`docs/systeme.md` § 3 ; sur des **copies**) :
 
 - au prompt, monter une autre image en A: par le LOCI sans redémarrer, attendre 2 s,
   `PUT X.TXT DIR` : `X.TXT` créé, les autres fichiers intacts (`tools/mkdisk.py check`) ;

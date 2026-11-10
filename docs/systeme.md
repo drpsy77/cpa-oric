@@ -99,7 +99,9 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   juste sous les tampons de DO), faite à la première utilisation depuis le dernier démarrage
   à chaud (`log_vec`). Lecteur inconnu ou illisible : `$FF` ; une disquette sans l'étiquette
   du format (ci-dessous) est illisible, avec `BDOS: not a CP/A 80-track disk` (muet sous
-  `io_quiet`). Disquette changée sans démarrage à chaud : après une seconde sans accès disque (`dk_gap`,
+  `io_quiet`). Changer de disquette demande un CTRL-C, comme sous CP/M. Option `CHGDSK` de la construction
+  (absente par défaut : 331 octets résidents ; `DISK_OPTS="-DCPLCMD -DSERIE -DCHGDSK" ./build.sh`),
+  disquette changée sans démarrage à chaud : après une seconde sans accès disque (`dk_gap`,
   compteur 50 Hz), le secteur en cache est oublié et chaque lecteur est à vérifier (`chk_vec`) ;
   avant de prendre ou de rendre des blocs (fonctions 19, 22, bloc neuf de 21 et 34), `chg_chk`
   relit les 16 secteurs du répertoire et compare leurs sommes (`dir_cks`, posées à la lecture

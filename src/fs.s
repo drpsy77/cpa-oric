@@ -40,7 +40,9 @@ FCB_S1  = 13
 ;   est réécrit avant d'en charger un autre, et à la fermeture.
 read_lsn
 .(
+#ifdef CHGDSK
         jsr dk_gap
+#endif
         lda buf_ok
         beq load
         lda buf_lsn
@@ -78,7 +80,9 @@ err     rts
 ; claim_lsn : prend le secteur fs_lsn sans le lire (il sera entièrement
 ;   réécrit). C=1 si erreur.
 claim_lsn
+#ifdef CHGDSK
         jsr dk_gap
+#endif
         jsr flush
         bcs cl_r
         lda act_drv
@@ -104,7 +108,9 @@ fl_ok   clc
 
 ; write_buf : écrit SECBUF sur le disque (secteur buf_lsn). C=1 si erreur.
 write_buf
+#ifdef CHGDSK
         jsr dk_gap
+#endif
         lda #0
         sta buf_dirty
         lda buf_lsn
@@ -114,7 +120,9 @@ write_buf
         jsr set_secbuf
         jsr disk_write
         bne io_err
+#ifdef CHGDSK
         jsr dir_rec             ; secteur du répertoire : sa somme
+#endif
         clc
         rts
 io_err
@@ -137,8 +145,10 @@ ie_p
         sec
         rts
 
+#ifdef CHGDSK
 ; ---------------------------------------------------------------------
-; Disquette changée sans démarrage à chaud. La carte d'allocation d'un
+; Disquette changée sans démarrage à chaud (option CHGDSK de la
+; construction, absente par défaut : build.sh). La carte d'allocation d'un
 ; lecteur est faite à sa première utilisation ; si la disquette change
 ; ensuite, la carte de l'ancienne servirait sur la nouvelle (blocs
 ; occupés pris pour libres). Comme CP/M, on garde une somme de chaque
@@ -261,6 +271,7 @@ chg     pla
         rts
 .)
 dir_cks .dsb NDRV*16,0
+#endif
 set_secbuf
         lda #<SECBUF
         sta dsk_buf
@@ -533,10 +544,12 @@ clr     sta ALV,y
         sta ALV,y
 entry   jsr dir_get
         bcs err
+#ifdef CHGDSK
         lda dir_i
         and #7
         bne e1
         jsr dir_rec             ; somme du secteur (disquette changée)
+#endif
 e1      ldy #0
         lda dir_i               ; entrée 0 : l'étiquette du format
         bne ent
@@ -568,12 +581,16 @@ next    inc dir_i
         ldx act_drv
         lda bitmask,x           ; lu : il répond de nouveau, et n'est
         eor #$FF                ; plus à vérifier
+#ifdef CHGDSK
         pha
+#endif
         and bad_vec
         sta bad_vec
+#ifdef CHGDSK
         pla
         and chk_vec
         sta chk_vec
+#endif
         lda bitmask,x
         ora log_vec
         sta log_vec
@@ -710,7 +727,9 @@ nf      lda #$FF
 ; ---------------------------------------------------------------------
 f_delete
         jsr set_fcb
+#ifdef CHGDSK
         jsr chg_chk
+#endif
 .(
         lda #0
         sta dir_i
@@ -839,7 +858,9 @@ err     lda #0
 ; ---------------------------------------------------------------------
 f_make
         jsr set_fcb
+#ifdef CHGDSK
         jsr chg_chk
+#endif
         jsr ro_named
         bcc make_int
         lda #$FF
@@ -1104,8 +1125,10 @@ room
         ora (ZP_FCB),y
         bne have
         sty fs_idx
+#ifdef CHGDSK
         jsr chg_chk             ; disquette changée : rien n'est pris
         bcs chg
+#endif
         jsr alloc_block
         bcs full
         ldy fs_idx
@@ -1163,9 +1186,11 @@ dfull   lda #1
         rts
 full    lda #2
         rts
+#ifdef CHGDSK
 chg     lda #<msg_chg
         ldy #>msg_chg
         jsr fs_err
+#endif
 err     lda #$FF
         rts
 .)
@@ -1418,5 +1443,7 @@ f_curdsk
 
 msg_ioerr
         .asc 13,10,"BDOS: disk I/O error",13,10,0
+#ifdef CHGDSK
 msg_chg .asc 13,10,"BDOS: disk changed",13,10,0
+#endif
 msg_fmt .asc 13,10,"BDOS: not a CP/A 80-track disk",13,10,0

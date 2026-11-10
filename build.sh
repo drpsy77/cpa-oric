@@ -30,6 +30,9 @@ python3 tools/gen_logo_voc.py > /dev/null   # vocabulaire de LOGO (fr, en) et ta
 # SERIE : pilote série et console à distance (src/serial.s, fonction 117,
 # PUNCH, READER ; 622 octets résidents).
 # DISK_OPTS="..." ./build.sh pour un essai sans l'une d'elles.
+# Option absente par défaut : CHGDSK, disquette changée sans CTRL-C reconnue
+# avant d'écrire (src/fs.s, docs/systeme.md § 3 ; 331 octets résidents) :
+# DISK_OPTS="-DCPLCMD -DSERIE -DCHGDSK" ./build.sh
 DISK_OPTS=${DISK_OPTS--DCPLCMD -DSERIE}
 # Système : textes (barre de menus, messages de la console) pris dans
 # src/msg/fr ou src/msg/en ; disque en deux langues (cpa_sys.bin,
