@@ -95,9 +95,11 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ### Lot 4 — dépôt et intégration continue
 
-- Dépôt : 579 Mo d'objets git non compactés pour 10,6 Mo utiles, un verrou resté
-  (`.git/stale-maintenance-lock-claude`), un `REBASE_HEAD` : `git gc` après vérification.
-  `build/` garde de vieux fichiers ignorés (patchs, archives, disquettes de 42 pistes).
+- Dépôt : `git gc` fait (un seul paquet, `git fsck` sans défaut). L'historique pèse
+  385 Mo : douze images de 1 Mo sont versionnées et changent à presque chaque commit
+  (environ 280 commits). Question ouverte (§ 3). `build/` garde de vieux fichiers ignorés
+  (patchs, archives, disquettes de 42 pistes), et `.git` un verrou resté
+  (`stale-maintenance-lock-claude`) et un `REBASE_HEAD`.
 - GitHub : les deux tâches ne construisent qu'Oricutron. En ajouter une qui lance
   `./build.sh` et les tests sans émulateur (`test_asm.sh`, `test_grapher.sh`, `test_fp.py`,
   `test_fs.py`, `test_fdc.py`, `test_bas.py`) à chaque envoi.
@@ -115,4 +117,6 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ## 3. Questions ouvertes
 
-Aucune.
+- Images `build/*.dsk` dans git : les garder versionnées (prêtes à l'emploi pour qui clone,
+  mais ~12 Mo de plus par livraison), ou les publier comme fichiers d'une version GitHub
+  (« release ») et ne plus les versionner ?
