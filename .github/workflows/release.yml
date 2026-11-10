@@ -1,0 +1,44 @@
+# Édition Microdisc : quand une version est publiée sur la page Releases de
+# GitHub avec une étiquette posée sur la branche microdisc, construit les
+# deux disquettes LOGO simple face et les attache à cette version (une par
+# une et dans une archive, avec le LISEZMOI). La version n'est pas marquée
+# « latest » : les liens de téléchargement de la branche main restent ceux
+# de la dernière version de CP/A.
+name: Version Microdisc
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils (xa de l'OSDK, py65)
+        run: |
+          ./tools/build_xa.sh
+          python3 -m pip install --quiet --target tools/pylib py65
+
+      - name: Construction
+        run: |
+          ./build.sh
+          python3 tools/mkdisk.py check build/cpa-logo-md.dsk
+          python3 tools/mkdisk.py check build/cpa-logo-md-en.dsk
+
+      - name: Archive
+        run: |
+          cp files/LISEZMOI-microdisc.txt build/LISEZMOI.txt
+          cd build && zip -q cpa-logo-microdisc.zip cpa-logo-md.dsk cpa-logo-md-en.dsk LISEZMOI.txt
+
+      - name: Fichiers de la version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" --clobber \
+            build/cpa-logo-md.dsk build/cpa-logo-md-en.dsk build/cpa-logo-microdisc.zip
+          gh release edit "$GITHUB_REF_NAME" --latest=false
