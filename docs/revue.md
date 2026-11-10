@@ -40,15 +40,18 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 ### Lot 1 — sûreté des fichiers
 
 - **Accès direct** : la fonction 33 (et la 20 quand elle passe à l'extent suivant) change
-  d'extent sans ranger l'actuel ; un bloc alloué juste avant par la fonction 34 ou 21 est
-  perdu. Aucun programme ne s'en sert encore ; à corriger avant le sélecteur d'EDIT
-  (`etat.md` § 2 point 6). Piste : un bit « FCB modifié » (posé à l'allocation d'un bloc et
-  quand RC grandit, effacé par l'ouverture et la fermeture) ; un changement d'extent ne
-  ferme que si le bit est posé (une lecture seule n'écrit jamais le répertoire).
+  d'extent sans ranger l'actuel ; un bloc neuf alloué juste avant par la fonction 34 ou 21
+  est perdu. Aucun programme n'y est exposé : HEX écrit sur place (blocs existants, taille
+  inchangée), CMDER, MKTAP et STAT ne font que lire, GRAPHER et LOGO n'ont pas d'accès
+  direct. À corriger le jour où un programme allonge un fichier en accès direct, pas
+  avant (environ 40 octets résidents). Piste : un bit « FCB modifié » (posé à l'allocation
+  d'un bloc et quand RC grandit, effacé par l'ouverture et la fermeture) ; un changement
+  d'extent ne ferme que si le bit est posé.
 - **Écritures qui effacent d'abord l'ancien fichier** (`etat.md` § 2 point 5) : `h_save`,
   SAVE du CCP, LOGO, COPY, IMPORT, ASM, à passer par `NOM.$$$`.
-- Chercher dans `progs/` les programmes qui lisent jusqu'à la fin puis écrivent (ajout en
-  fin de fichier) : ils étaient exposés au défaut du § 1.
+- Ajout en fin de fichier : aucun programme ne le fait (tous ceux qui écrivent par la
+  fonction 21 créent leur fichier par la 22 ; PUT crée le sien) ; le défaut du § 1 ne
+  pouvait donc toucher qu'un programme écrit par l'utilisateur.
 
 ### Lot 2 — version ROM archivée
 

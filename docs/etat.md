@@ -431,8 +431,9 @@ d'abord).
      de 128 octets, position 0-127 dans l'enregistrement : ~20 octets par bout) ; insertion
      par lecture directe (fonction 33) à cet enregistrement puis lecture suivie jusqu'au
      bout suivant. Pas de fichier d'index sur disque (rien pour savoir s'il est périmé).
-   - un usage des fichiers à accès direct (fonctions 33 à 36) dans les programmes : GRAPHER,
-     LOGO ou un `.COM`, à trouver.
+   - fichiers à accès direct (fonctions 33 à 36) : HEX lit et écrit sur place (la taille ne
+     change pas), CMDER, MKTAP et STAT lisent ; un usage dans GRAPHER ou LOGO (enregistrement
+     n d'un fichier de données) reste à trouver. Limite à lever avant : `docs/revue.md` § 2.
 7. **Version anglaise** (faite et essayée sur le vrai Oric le 24/10/2026 ; tout nouveau texte affiché ou document d'utilisation se fait dans les deux langues)
    - Décidé : une seule disquette anglaise, `cpa-en.dsk` (le contenu de `cpa.dsk`, programmes
      de `build/progs-en`) ; pas de disquettes par usage en anglais tant que LOGO n'est pas
