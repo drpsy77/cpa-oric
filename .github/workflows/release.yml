@@ -1,5 +1,6 @@
 # Publie une version : à l'envoi d'une étiquette vX.Y (git tag v1.0 ;
-# git push origin v1.0), construit CP/A et attache les douze disquettes à
+# git push origin v1.0), ou quand une version est créée sur la page Releases
+# de GitHub, construit CP/A et attache les douze disquettes à
 # la version GitHub du même nom (page Releases du dépôt), une par une et
 # dans une archive. Les adresses .../releases/latest/download/NOM.dsk des
 # README pointent toujours sur la dernière version publiée.
@@ -8,6 +9,8 @@ name: Version
 on:
   push:
     tags: ['v*']
+  release:
+    types: [created]      # version créée sur la page Releases de GitHub
 
 permissions:
   contents: write
@@ -35,5 +38,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --title "CP/A ${GITHUB_REF_NAME#v}" --generate-notes \
-            build/*.dsk build/cpa-disks-${GITHUB_REF_NAME}.zip
+          # la version existe déjà (créée à la main sur GitHub) : ses fichiers sont remplacés
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --clobber \
+              build/*.dsk build/cpa-disks-${GITHUB_REF_NAME}.zip
+          else
+            gh release create "$GITHUB_REF_NAME" --title "CP/A ${GITHUB_REF_NAME#v}" --generate-notes \
+              build/*.dsk build/cpa-disks-${GITHUB_REF_NAME}.zip
+          fi
