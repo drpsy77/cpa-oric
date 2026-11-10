@@ -156,11 +156,12 @@ précédentes ne sont plus lues, `tools/mkdisk.py conv` recopie leurs fichiers s
 dans les émulateurs et sur un vrai Oric Atmos muni d'un LOCI ; les couleurs des menus, peu
 lisibles dans certains émulateurs, sont nettes sur un vrai écran.
 
-**Microdisc.** Le lecteur 3″ d'origine du Microdisc n'a qu'une face de 40 pistes : il ne lit
-pas les disquettes de CP/A (2 faces de 80 pistes, images de 1 Mo). Cumulus, Gotek, HxC ou
+**Microdisc.** Le lecteur 3″ d'origine du Microdisc est simple face (42 pistes sous
+SEDORIC) : il ne lit pas les disquettes de CP/A (2 faces de 80 pistes, images de 1 Mo). Cumulus, Gotek, HxC ou
 lecteur 3,5″ double face : jamais essayés, et sans LOCI la clé USB et le réseau manquent.
 Aucun portage pour le Microdisc n'est prévu ; si vous y tenez, ouvrez une issue sur ce dépôt
-pour en parler. Les disquettes d'avant ce format (2 faces de 42 pistes, 336 Ko) restent
+pour en parler. Les disquettes d'avant ce format (géométrie de SEDORIC : 42 pistes de 17 secteurs, sur 2
+faces, 336 Ko) restent
 publiées, figées au 31 octobre 2026 :
 [CP/A 0.9, 42 pistes](https://github.com/drpsy77/cpa-oric/releases/tag/v0.9-42pistes).
 
