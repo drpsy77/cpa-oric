@@ -368,12 +368,11 @@ d'abord).
      perdu, `REN` le remet). La fermer : une section protégée contre RESET pendant
      l'effacement et le renommage (variable publique en page 2, ou fonction BDOS de
      remplacement) — touche au contrat, à décider.
-   - Écrivent encore en effaçant d'abord l'ancien fichier (disque plein ou RESET : ancien
-     perdu), à passer par `NOM.$$$` et à ajouter à la batterie : `h_save` de `hires.inc`
-     (image HIRES plein écran ; en SPLIT, GSAVE du système passe déjà par `NOM.$$$`), SAVE
-     du CCP, LOGO (`SAUVE`, et `LOGO.$$$`
-     de l'état), COPY et IMPORT sur un fichier existant, ASM (`.COM`, `.SYM` : refaits par
-     un nouvel assemblage).
+   - L'écriture par `NOM.$$$` reste réservée à ce qui ne se refait pas (EDIT, EDSPRITE,
+     tableaux de GRAPHER) : elle demande la place du nouveau fichier en plus de l'ancien.
+     `h_save`, COPY, IMPORT, ASM et PUT écrivent directement, par choix (`docs/revue.md`
+     § 2). À étudier : la sauvegarde du travail sous LOGO (l'édition depuis LOGO perd les
+     commandes directes du fichier) ; `SAVE` du CCP à réécrire.
    - GSAVE du système rend 3 pour un fichier protégé ; GRAPHER (`h_save`) et LOGO
      (`SAUVEIMAGE`) l'affichent encore comme un disque plein : leur message à corriger.
    - GRAPHER : pas de moyen de savoir si un fichier existe sans le charger (`FOUND` ne vaut

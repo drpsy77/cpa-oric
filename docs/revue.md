@@ -47,8 +47,21 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   avant (environ 40 octets résidents). Piste : un bit « FCB modifié » (posé à l'allocation
   d'un bloc et quand RC grandit, effacé par l'ouverture et la fermeture) ; un changement
   d'extent ne ferme que si le bit est posé.
-- **Écritures qui effacent d'abord l'ancien fichier** (`etat.md` § 2 point 5) : `h_save`,
-  SAVE du CCP, LOGO, COPY, IMPORT, ASM, à passer par `NOM.$$$`.
+- **Écriture par `NOM.$$$`** : réservée à ce qui ne se refait pas. Elle demande la place du
+  nouveau fichier en plus de l'ancien ; elle se justifie pour EDIT (et EDSPRITE, les
+  tableaux de GRAPHER : faits), où un incident perd un travail. Pas ailleurs : ce que
+  GRAPHER produit se rejoue (un langage de dessin et de jeux, pas un logiciel qui crée des
+  données de l'utilisateur) ; COPY et IMPORT gardent leur source ; ASM a la sienne ; PUT
+  part d'un fichier vide par définition. Une demande nouvelle se décide avec la vue
+  d'ensemble.
+- **LOGO, sauvegarde du travail** (à étudier, options à présenter avant tout code) : un
+  fichier `.LOG` peut contenir des commandes directes ; l'édition depuis LOGO ne reprend
+  que les procédures (`POUR`) et réécrit le fichier d'origine, qui perd ses commandes
+  directes. Chercher une solution plus large pour garder le travail fait sous LOGO.
+- **`SAVE n fichier` du CCP** (à réécrire, à spécifier) : elle enregistre toujours à partir
+  de `$0500` (le `SAVE` de CP/M : faire un `.COM` de la mémoire), ce qui ne sert pas à
+  l'utilisateur ; aucun script ni outil du dépôt ne s'en sert. Elle est dans la banque IMG
+  de la fenêtre, pas dans le code résident.
 - Ajout en fin de fichier : aucun programme ne le fait (tous ceux qui écrivent par la
   fonction 21 créent leur fichier par la 22 ; PUT crée le sien) ; le défaut du § 1 ne
   pouvait donc toucher qu'un programme écrit par l'utilisateur.
