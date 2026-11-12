@@ -88,7 +88,7 @@ kb_mods     = $0219     ; bit0 SHIFT, bit1 CTRL, bit2 FUNCT
 caps        = $021A     ; 1 = verrouillage majuscules
 ticks       = $021B     ; 2 octets, compteur 50 Hz
 dma         = $021D     ; 2 octets, adresse DMA courante
-dump_addr   = $021F     ; 2 octets, prochaine adresse pour DUMP
+                        ; $021F-$0220 : libres
 bdos_a      = $0221
 bdos_y      = $0222
 hex_val     = $0223     ; 2 octets
@@ -294,9 +294,7 @@ g_cy        = $029F
 g_r         = $02A0
 g_cnt       = $02A1
 page_cnt    = $02A2     ; lignes défilées depuis la dernière touche
-cg_blk      = $02B1     ; 6 octets : bloc des commandes graphiques
-cg_n        = $02B7
-cg_i        = $02B8
+                        ; $02B1-$02B8 : libres
 ; son (BDOS 116)
 s_p         = $02B9     ; 6 octets : paramètres recopiés
 s_dur       = $02BF     ; 3 octets : durées restantes (1/50 s)

@@ -55,6 +55,15 @@ Pas encore relus : les sources des programmes (`progs/`, ~60 000 lignes), les ou
   de fichier, ajout après la fin, position, taille ; disquette changée : création,
   allongement, pause sans changement).
 
+- **Aiguillage du BDOS** (`src/bdos.s`) : les fonctions de la table (0 à 36) sont
+  reconnues d'abord ; un appel courant (chaque caractère affiché) prend 19 cycles de moins
+  (fonction 12 : 73 au lieu de 92), les fonctions 47, 115, 116 et 117 en prennent 5 de plus ;
+  même taille.
+- **Noms de la version ROM** retirés de `src/hw.inc` (`dump_addr`, `cg_blk`, `cg_n`,
+  `cg_i`) : 10 octets de plus libres en page 2 (`memoire-pages-2-3.md`).
+- **`build/` nettoyé** : patchs, archives et disquettes de 42 pistes retirés ; il ne
+  garde que ce que construit `build.sh`.
+
 ## 2. Décidé, pas encore fait
 
 Par ordre. Chaque lot se termine par les tests de `architecture.md` § 4. Tout ajout
@@ -91,14 +100,9 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ### Lot 5 — optimisations
 
-- **Aiguillage du BDOS** : un appel standard (chaque caractère affiché) passe quatre
-  comparaisons (115, 116, 117, 47) avant sa table ; tester d'abord `BDOS_NFUNC` gagne une
-  dizaine de cycles par appel, sans octet de plus.
 - **ERA, REN, attributs** : le secteur du répertoire est réécrit à chaque entrée ; une
   écriture différée par secteur divise les accès (jusqu'à 8 entrées par secteur). À peser
   avec la fenêtre de RESET.
-- `src/hw.inc` garde des noms de la version ROM qui ne servent plus (`dump_addr`, `cg_blk`,
-  `cg_n`, `cg_i` : 10 octets de page 2 libres) : à retirer avec `memoire-pages-2-3.md`.
 - Routines répétées dans les `.COM` (`puts` défini 17 fois) : à mesurer ; gain utile
   seulement s'il fait passer un programme sous un bloc de 2 Ko.
 

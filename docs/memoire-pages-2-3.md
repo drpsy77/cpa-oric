@@ -43,7 +43,7 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$021A` | `caps` | 1 | 1 = majuscules verrouillées (CTRL-T, voyant `A`/`a`) | interne |
 | `$021B` | `ticks` / `SYS_TICKS` | 2 | compteur 50 Hz (incrémenté par l'IRQ du timer 1) | public |
 | `$021D` | `dma` | 2 | adresse DMA courante du BDOS (fonction 26) | interne |
-| `$021F` | `dump_addr` | 2 | libre (nom gardé dans `src/hw.inc`) | interne |
+| `$021F-$0220` | — | 2 | **libres** | |
 | `$0221` | `bdos_a` | 1 | paramètre A reçu par le BDOS | interne |
 | `$0222` | `bdos_y` | 1 | paramètre Y reçu par le BDOS | interne |
 | `$0223` | `hex_val` | 2 | nombre hexadécimal lu par le CCP | interne |
@@ -143,9 +143,7 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$02AD` | `put_cnt` | 2 | octets dans le tampon de PUT | interne, disque |
 | `$02AF` | `scr_on` / `SCR_ON` | 1 | 1 = script DO en cours | public (pour XDO.COM), disque |
 | `$02B0` | `scr_idx` / `SCR_IDX` | 1 | position dans l'enregistrement du script (128 : à lire) | public (pour XDO.COM), disque |
-| `$02B1` | `cg_blk` | 6 | libre (nom gardé dans `src/hw.inc`) | interne |
-| `$02B7` | `cg_n` | 1 | idem | interne |
-| `$02B8` | `cg_i` | 1 | idem | interne |
+| `$02B1-$02B8` | — | 8 | **libres** | |
 
 ### Son (`$02B9-$02C6`) et édition de ligne (`$02C7-$02FF`)
 
@@ -178,7 +176,8 @@ Toute la page 2 est remise à 0 au démarrage à froid (`cold_boot`), puis initi
 | `$02E4` | `cp_com` | 13 | préfixe commun | interne |
 | `$02F1-$02FF` | `rl_pr` | 15 | prompt recopié de l'écran | interne |
 
-**Octets libres de la page 2** : `$020F`, `$022F`, `$024E-$024F`, `$027F` (5 octets).
+**Octets libres de la page 2** : `$020F`, `$021F-$0220`, `$022F`, `$024E-$024F`, `$027F`,
+`$02B1-$02B8` (15 octets).
 
 ## Page 3 (`$0300-$03FF`) : entrées et sorties
 

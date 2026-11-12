@@ -15,7 +15,19 @@ bd_np
         sty bdos_y
         sta ZP_PTR
         sty ZP_PTR+1
-        cpx #GFX_FUNC
+        cpx #BDOS_NFUNC         ; fonctions de la table d'abord : chaque
+        bcs bd_ext              ; caractère affiché passe par là
+        txa
+        asl
+        tax
+        lda bdos_tab+1,x
+        pha
+        lda bdos_tab,x
+        pha
+        lda bdos_a
+        rts                     ; saute à la fonction, qui revient à l'appelant
+
+bd_ext  cpx #GFX_FUNC
         bne bd_snd
         jmp gfx_call
 bd_snd  cpx #SND_FUNC
@@ -29,18 +41,6 @@ bd_sr
 #endif
 bd_ch   cpx #CHAIN_FUNC
         beq f_chain
-bd_std  cpx #BDOS_NFUNC
-        bcs bdos_bad
-        txa
-        asl
-        tax
-        lda bdos_tab+1,x
-        pha
-        lda bdos_tab,x
-        pha
-        lda bdos_a
-        rts                     ; saute à la fonction, qui revient à l'appelant
-
 bdos_bad
         lda #$FF
         rts
