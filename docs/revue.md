@@ -89,10 +89,6 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   fonction 21 créent leur fichier par la 22 ; PUT crée le sien) ; le défaut du § 1 ne
   pouvait donc toucher qu'un programme écrit par l'utilisateur.
 
-### Lot 4 — dépôt et intégration continue
-
-- `build/` garde de vieux fichiers ignorés (patchs, archives, disquettes de 42 pistes).
-
 ### Lot 5 — optimisations
 
 - **Aiguillage du BDOS** : un appel standard (chaque caractère affiché) passe quatre
