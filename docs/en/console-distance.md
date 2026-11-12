@@ -188,12 +188,16 @@ emulated ACIA has no timing: the 9600 baud is only a setting passed on to the mo
 | Task | Per 1/50 s frame: 6551 | LOCI (`$80`) |
 |---|---|---|
 | reading | 4 bytes at most; the first without waiting, the next ones after ~1.2 ms at most | 16 bytes at most (8 keys); wait for the next ones ~0.2 ms |
-| checksums | computed while sending, when their turn comes (~0.6 ms per row): no buffer | same |
-| sending | 24 bytes at most, as long as the wait for the transmitter, counted over the whole IRQ, stays under ~6 ms; transmitter busy: the rest at the next IRQ | 64 bytes at most (a whole `S` frame), wait ~7.5 ms at most |
+| checksums | computed while sending, when their turn comes (~1.2 ms per row): no buffer; 6 rows per IRQ at most (`SR_FLMAX`), the rest at the next IRQ | same |
+| sending | 24 bytes at most, as long as the wait for the transmitter, counted over the whole IRQ, stays under ~6 ms; transmitter busy: the rest at the next IRQ | 64 bytes at most (an `S` frame in 5 IRQs, 0.1 s, because of the checksum limit), wait ~7.5 ms at most |
 
 Measured on the real Oric (LOCI, Pico with the firmware in `tools/pico-modem/`, daemon on
 the Mac): 27 rows in 0.4 s, i.e. ~3 KB/s, the limit of 64 bytes per IRQ (1.0 s with the
 6551 limits); echo 0.21 s; `VER` on a full screen 0.8 to 0.9 s.
+
+The checksum limit keeps the IRQ far from a whole frame (~8,000 cycles for the checksums,
+against 14,000 between the tick and the VSYNC window, or the decoding of an animation
+frame): without it, an `S` frame took ~3 frames at once and VSYNC flickered during REMOTE.
 
 The limits can be changed without rebuilding (tests): `DEBUG`, then `M FD23 rx at tx bu`;
 they go back to the table at the next `REMOTE`.
@@ -264,7 +268,8 @@ Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`): low byte of the port, stat
 (console on, link lost), received prefix, current frame, position, requested row, row
 being read, `s1`, `s2`, checksum, IRQs without sending, length, counter, start of the
 PUNCH delay; `$FD27-$FD56`: key typed on the Oric (`sr_kb`, bit 6 of the `S` frame),
-redial (step, delay, silence, position) and number to redial (`sr_num`, 41 bytes).
+redial (step, delay, silence, position) and number to redial (`sr_num`, 41 bytes); `$FD57`: checksums
+still allowed in the IRQ (`sr_flc`).
 Cleared at cold start only. The row is read by an `LDA abs,Y` instruction
 whose address is set (`sr_lda`, overlay RAM): no zero-page pointer. Row addresses come
 from `line_lo` / `line_hi` (page `$FF00`); font rows are computed from `$B400`.

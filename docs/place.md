@@ -3,8 +3,8 @@
 Marges du système et des disquettes, pistes pour gagner de la place. À lire avec
 `docs/etat.md` ; `./build.sh` affiche les marges.
 
-**Système** (marge 515 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
-`$FF00` : 10 octets ; variables du BDOS : `$FD57` libre, 1 octet ; rappel automatique de
+**Système** (marge 463 octets ; fenêtre : 2 octets pour PUT, 4 pour IMG, 91 pour GFX ; page
+`$FF00` : 10 octets ; variables du BDOS : aucune libre en `$FD13-$FD57` ; rappel automatique de
 la console à distance : 339 octets résidents et `$FD27-$FD56`). Fait : les tracés
 du SPLIT en banque GFX (959 octets rendus, variante sans toucher aux tables `g_xcol`,
 `g_xbit`). Fait : police rangée sur 5

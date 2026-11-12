@@ -297,6 +297,10 @@ clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
 - `TERM` et `XFER` pendant la console : `Console a distance : REMOTE OFF` ; `REMOTE OFF` :
   `Console a distance coupee`, voyant éteint, puis `XFER ... @MAC` marche ;
 - `REMOTE MAC` dans `AUTO.BAT` : au démarrage à froid, l'Oric appelle le Mac de lui-même.
+- `VSYNC` calé (texte entier et immobile), puis `REMOTE MAC` et `VSYNC` de nouveau : le
+  texte ne clignote plus pendant que le Mac rafraîchit l'écran (6 totaux de lignes par
+  IRQ au plus) ; écran entier vu par le Mac toujours en ~0,5 s ; animation dans `VOIR`
+  pendant la console : même vitesse que sans.
 
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 

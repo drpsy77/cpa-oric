@@ -190,7 +190,7 @@ sr_mi       = $FD2D     ;   rappel : position dans la chaîne envoyée, ou dans 
 sr_num      = $FD2E     ;   numéro à rappeler : « ATDT-adresse:port », CR, 0 (41 octets,
                         ;   jusqu'à $FD56 ; 0 : pas de rappel) ; posé par la fonction 117, op 4
 SR_NUML     = 41
-                        ; $FD57 : libre
+sr_flc      = $FD57     ;   totaux de lignes encore permis dans l'IRQ (serial.s)
 dsk_lsn     = $FD58     ; 2 octets
 dsk_buf     = $FD5A     ; 2 octets
 dsk_cyl     = $FD5C

@@ -28,6 +28,9 @@
 ; =====================================================================
 
 SER_FUNC = 117
+SR_FLMAX = 6            ; totaux de lignes par IRQ au plus (~1 100 cycles
+                        ; chacun) : l'IRQ reste loin d'une trame (VSYNC,
+                        ; animations décodées juste après le top)
 ; Plafonds par IRQ (sr_rxn, sr_rxw, sr_txn, sr_bdg), posés avec le port
 ; (table sr_par) : un vrai 6551 (Oricutron, carte série) n'a qu'un octet
 ; reçu et émet un octet par milliseconde ; le LOCI garde 32 octets reçus,
@@ -102,6 +105,8 @@ tx      lda sr_req              ; émission de la trame en cours
         sta sr_cnt
         lda sr_bdg
         sta sr_bud
+        lda #SR_FLMAX           ; totaux de lignes permis dans l'IRQ
+        sta sr_flc
 t1      jsr sr_rsta
         and #$10
         bne t3
@@ -122,6 +127,8 @@ t3      jsr sr_next
         sta sr_wt
         lda sr_req
         beq r
+        lda sr_flc              ; plafond des totaux atteint : la suite
+        beq r                   ; à l'IRQ suivante
         dec sr_cnt
         bne t1
 r       rts
@@ -277,24 +284,47 @@ t2      lda sr_s2
         bcs add
 .)
 
-; sr_fl : totaux de Fletcher de la ligne X -> sr_s1, sr_s2 (C=0)
+; sr_fl : totaux de Fletcher de la ligne X -> sr_s1, sr_s2 (C=0) ; un de
+;   moins permis dans l'IRQ (sr_flc). La ligne est lue directement (~27
+;   cycles par octet, 1 100 par ligne), puis la case du curseur, lue
+;   inversée, est rétablie dans les totaux : s1 + $80, et s2 + $80 si elle
+;   y compte un nombre impair de fois (40 - x : x impair).
 sr_fl
 .(
+        dec sr_flc
         jsr sr_line
+        lda sr_lda+1
+        sta ld+1
+        lda sr_lda+2
+        sta ld+2
         lda #0
-        sta sr_s1
         sta sr_s2
-        tay
-l       jsr sr_byte
-        clc
-        adc sr_s1
-        sta sr_s1
+        tay                     ; A = s1
+l       clc
+ld      adc SCREEN,y
+        tax
         clc
         adc sr_s2
         sta sr_s2
+        txa
         iny
         cpy #40
         bne l
+        ldx cur_vis
+        beq e
+        ldx sr_l
+        cpx cur_y
+        bne e
+        eor #$80
+        tax
+        lda cur_x
+        lsr
+        bcc e1
+        lda sr_s2
+        eor #$80
+        sta sr_s2
+e1      txa
+e       sta sr_s1
         clc
         rts
 .)

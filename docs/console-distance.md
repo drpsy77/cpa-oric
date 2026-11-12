@@ -182,12 +182,16 @@ cadence : les 9600 bauds ne sont qu'un réglage transmis au modem).
 | Tâche | Par trame de 1/50 s : 6551 | LOCI (`$80`) |
 |---|---|---|
 | lecture | 4 octets au plus ; le premier sans attendre, les suivants après ~1,2 ms au plus | 16 octets au plus (8 touches) ; attente des suivants ~0,2 ms |
-| totaux | calculés pendant l'émission, quand leur tour vient (~0,6 ms par ligne) : pas de tampon | idem |
-| émission | 24 octets au plus, tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms ; émetteur occupé : la suite à l'IRQ suivante | 64 octets au plus (une trame `S` entière), attente ~7,5 ms au plus |
+| totaux | calculés pendant l'émission, quand leur tour vient (~1,2 ms par ligne) : pas de tampon ; 6 lignes par IRQ au plus (`SR_FLMAX`), la suite à l'IRQ suivante | idem |
+| émission | 24 octets au plus, tant que l'attente de l'émetteur libre, comptée sur toute l'IRQ, ne dépasse pas ~6 ms ; émetteur occupé : la suite à l'IRQ suivante | 64 octets au plus (une trame `S` en 5 IRQ, 0,1 s, à cause du plafond des totaux), attente ~7,5 ms au plus |
 
 Mesuré sur le vrai Oric (LOCI, Pico au firmware de `tools/pico-modem/`, démon sur le Mac) :
 27 lignes en 0,4 s, soit ~3 Ko/s, le plafond de 64 octets par IRQ (1,0 s avec ceux du 6551) ;
 écho 0,21 s ; `VER` sur un écran plein 0,8 à 0,9 s.
+
+Le plafond des totaux tient l'IRQ loin d'une trame (~8 000 cycles pour les totaux, contre
+14 000 entre le top et la fenêtre de VSYNC, ou le décodage d'une image d'animation) : sans
+lui, une trame `S` prenait ~3 trames d'un coup et VSYNC clignotait pendant REMOTE.
 
 Les plafonds se changent sans reconstruire (essais) : `DEBUG`, puis `M FD23 rx at tx bu` ;
 ils reviennent à la table au prochain `REMOTE`.
@@ -259,7 +263,8 @@ Variables `sr_port`... (`src/hw.inc`, `$FD13-$FD21`) : octet bas du port, état 
 active, liaison perdue), préfixe reçu, trame en cours, position, ligne demandée, ligne
 lue, `s1`, `s2`, total, IRQ sans émission, longueur, compteur, départ du délai de PUNCH ;
 `$FD27-$FD56` : touche tapée sur l'Oric (`sr_kb`, bit 6 de la trame `S`), rappel (étape,
-délai, silence, position) et numéro à rappeler (`sr_num`, 41 octets).
+délai, silence, position) et numéro à rappeler (`sr_num`, 41 octets) ; `$FD57` : totaux
+encore permis dans l'IRQ (`sr_flc`).
 Effacées au démarrage à froid seulement. La ligne est lue par une instruction `LDA
 abs,Y` dont l'adresse est posée (`sr_lda`, RAM overlay) : pas de pointeur en page zéro.
 Les adresses de lignes viennent de `line_lo` / `line_hi` (page `$FF00`) ; celles des lignes

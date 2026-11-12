@@ -116,7 +116,7 @@ pre.algo{background:var(--panel);border:1px solid var(--line);border-radius:8px;
 <ul style="margin:.3em 0;padding-left:1.2em">
 <li><b>Firmware du Pico</b> : il lit tout ce qui attend sur l'USB (un octet par tour de boucle le limitait à ~650 octets/s).</li>
 <li><b>Plafonds par IRQ selon le port</b> : LOCI 16 octets reçus et 64 émis (une trame <code>S</code> entière par IRQ) ; un vrai 6551 garde 4 et 24. Réglables par <code>DEBUG</code> en <code>$FD23-$FD26</code>.</li>
-<li><b>Totaux calculés au fil de l'émission</b> (~0,6 ms par ligne) : pas de tampon.</li>
+<li><b>Totaux calculés au fil de l'émission</b> (~1,2 ms par ligne, 6 lignes par IRQ au plus) : pas de tampon.</li>
 <li><b>Demande groupée</b> <code>L n+$80</code> : un seul aller-retour pour un écran qui défile.</li>
 <li><b>Écho rapide</b> réservé aux frappes (4 touches au plus), pas aux textes collés.</li>
 <li><b>Délais du démon</b> : 3 s avant de redemander (le modem retient parfois l'envoi plus d'une seconde), acquit TCP immédiat sous Linux.</li>
@@ -359,7 +359,7 @@ function cycle(again){
   return [
     {hl:["d_core"], m: again ? "Des lignes ont changé : le démon redemande les totaux tout de suite (l'écran bouge peut-être encore)." : "Le démon lance un cycle : c'est lui qui mène. Il envoie la demande de totaux."},
     {r:DOWN,c:"down",b:"FD 53",m:"Demande « S » (totaux des 28 lignes)."},
-    {hl:["irq","screen","vars"],m:"À l'IRQ suivante, la demande est notée. Le service émet la trame au fil des IRQ : avec le LOCI, jusqu'à 64 octets par trame de 1/50 s, soit la trame S entière d'un coup. Chaque total (Fletcher 16 bits, case du curseur rétablie) est calculé quand vient son tour d'être émis, ~0,6 ms par ligne : pas de tampon. Le programme en cours continue."},
+    {hl:["irq","screen","vars"],m:"À l'IRQ suivante, la demande est notée. Le service émet la trame au fil des IRQ : avec le LOCI, jusqu'à 64 octets par trame de 1/50 s, mais 6 totaux au plus : la trame S en 5 IRQ (0,1 s). Chaque total (Fletcher 16 bits, case du curseur rétablie) est calculé quand vient son tour d'être émis, ~1,2 ms par ligne : pas de tampon. Le programme en cours continue."},
     {r:UP,c:"up",b:"FF 53 3C mode cx cy act [56 o] tt",m:"Trame S : mode, curseur, 28 totaux. Le démon vérifie la longueur et le total de la trame.",
      act:()=>{ known=new Set(); oric.forEach((l,n)=>{ if(fletcher(l)!==fletcher(copie[n])) known.add(n); }); }},
     {expand:()=>{ const d=[...known];

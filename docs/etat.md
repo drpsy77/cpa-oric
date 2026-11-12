@@ -9,8 +9,8 @@ de place dans `docs/place.md` : à lire quand la demande les concerne.
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F3C4` en français (`$F398` en anglais), **marge 515
-octets** (559 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F3F8` en français (`$F3CC` en anglais), **marge 463
+octets** (507 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,

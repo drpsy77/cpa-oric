@@ -116,7 +116,7 @@ pre.algo{background:var(--panel);border:1px solid var(--line);border-radius:8px;
 <ul style="margin:.3em 0;padding-left:1.2em">
 <li><b>Pico firmware</b>: it reads everything waiting on the USB (one byte per loop turn capped it at ~650 bytes/s).</li>
 <li><b>Per-IRQ caps depending on the port</b>: LOCI 16 bytes received and 64 sent (a whole <code>S</code> frame per IRQ); a real 6551 keeps 4 and 24. Adjustable with <code>DEBUG</code> at <code>$FD23-$FD26</code>.</li>
-<li><b>Checksums computed as the bytes are sent</b> (~0.6 ms per row): no buffer.</li>
+<li><b>Checksums computed as the bytes are sent</b> (~1.2 ms per row, 6 rows per IRQ at most): no buffer.</li>
 <li><b>Grouped request</b> <code>L n+$80</code>: a single round trip for a scrolling screen.</li>
 <li><b>Fast echo</b> kept for typing (4 keys at most), not for pasted text.</li>
 <li><b>Daemon timings</b>: 3 s before asking again (the modem sometimes holds back sending for more than a second), immediate TCP acknowledgement under Linux.</li>
@@ -359,7 +359,7 @@ function cycle(again){
   return [
     {hl:["d_core"], m: again ? "Rows have changed: the daemon asks for the checksums again straight away (the screen may still be moving)." : "The daemon starts a cycle: it is the one leading. It sends the checksum request."},
     {r:DOWN,c:"down",b:"FD 53",m:"\"S\" request (checksums of the 28 rows)."},
-    {hl:["irq","screen","vars"],m:"At the next IRQ, the request is noted. The service sends the frame over the IRQs: with the LOCI, up to 64 bytes per 1/50 s tick, i.e. the whole S frame at once. Each checksum (16-bit Fletcher, cursor cell restored) is computed when its turn to be sent comes, ~0.6 ms per row: no buffer. The running program carries on."},
+    {hl:["irq","screen","vars"],m:"At the next IRQ, the request is noted. The service sends the frame over the IRQs: with the LOCI, up to 64 bytes per 1/50 s tick, but 6 checksums at most: the S frame in 5 IRQs (0.1 s). Each checksum (16-bit Fletcher, cursor cell restored) is computed when its turn to be sent comes, ~1.2 ms per row: no buffer. The running program carries on."},
     {r:UP,c:"up",b:"FF 53 3C mode cx cy act [56 b] tt",m:"S frame: mode, cursor, 28 checksums. The daemon checks the frame's length and checksum.",
      act:()=>{ known=new Set(); oric.forEach((l,n)=>{ if(fletcher(l)!==fletcher(copie[n])) known.add(n); }); }},
     {expand:()=>{ const d=[...known];
