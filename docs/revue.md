@@ -100,9 +100,6 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
 
 ### Lot 5 — optimisations
 
-- **ERA, REN, attributs** : le secteur du répertoire est réécrit à chaque entrée ; une
-  écriture différée par secteur divise les accès (jusqu'à 8 entrées par secteur). À peser
-  avec la fenêtre de RESET.
 - Routines répétées dans les `.COM` (`puts` défini 17 fois) : à mesurer ; gain utile
   seulement s'il fait passer un programme sous un bloc de 2 Ko.
 

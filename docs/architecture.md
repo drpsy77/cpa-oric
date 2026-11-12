@@ -287,6 +287,7 @@ décidé), sans récit, sans dates de discussion, sans « Pierre a dit ». L'his
 | aide sur l'Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
 | mesure (points de fonction, lignes, octets) | `docs/points-de-fonction.md` |
 | revue du projet : constats, lots décidés | `docs/revue.md` |
+| idées examinées et écartées, avec leurs raisons | `docs/fausses-bonnes-idees.md` |
 
 - Une spécification de travail suit le même plan : ce qui est fait, « Décidé, pas encore
   fait », « Questions ouvertes ». Une question disparaît dès qu'elle a sa réponse : la

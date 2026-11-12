@@ -124,6 +124,7 @@ The user documents, the vision, the architecture, the USB stick, the WiFi modem 
 | `docs/essais-materiel.md` | tests on a real Oric |
 | `docs/points-de-fonction.md` | measurement: IFPUG function points, algorithms, lines, bytes, documentation |
 | `docs/revue.md` | project review: findings, fixes, decided batches (in French) |
+| `docs/fausses-bonnes-idees.md` | ideas examined and rejected, with the reasons (in French) |
 | `docs/etude-stockage.md` | room on the disks: the 80-track format (done), the remaining options (in French) |
 | [`docs/en/usb.md`](docs/en/usb.md) | the LOCI's USB sticks from CP/A: current directory, mounting disks and tapes, duplicating, renaming, erasing (reference of level 1) |
 | [`docs/en/loci-modem-wifi.md`](docs/en/loci-modem-wifi.md) | connecting a WiFi modem (Pico W) to the LOCI: firmware, set-up, TERM, XFER |

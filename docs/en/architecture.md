@@ -289,6 +289,7 @@ decided), without narrative, without discussion dates, without "Pierre said". Th
 | help on the Oric | `tools/gen_readme_txt.py` (HELP.COM, README.TXT) |
 | measurement (function points, lines, bytes) | `docs/points-de-fonction.md` |
 | project review: findings, decided batches | `docs/revue.md` |
+| ideas examined and rejected, with the reasons | `docs/fausses-bonnes-idees.md` |
 
 - A working specification follows the same plan: what is done, "Décidé, pas encore
   fait" (Decided, not yet done), "Questions ouvertes" (Open questions). A question disappears as soon as it has its answer: the

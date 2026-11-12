@@ -123,6 +123,7 @@ rituel familier, c'est la première chose qu'on remarque. Cela tient à la conce
 | `docs/essais-materiel.md` | essais sur le vrai Oric |
 | `docs/points-de-fonction.md` | mesure : points de fonction IFPUG, algorithmes, lignes, octets, documentation |
 | `docs/revue.md` | revue du projet : constats, corrections, lots décidés |
+| `docs/fausses-bonnes-idees.md` | idées examinées et écartées, avec leurs raisons |
 | `docs/etude-stockage.md` | place sur les disquettes : le format de 80 pistes (fait), les pistes restantes |
 | `docs/usb.md` | les clés USB du LOCI depuis CP/A : répertoire courant, montage des disquettes et cassettes, duplication, renommage, effacement (référence du niveau 1) |
 | `docs/loci-modem-wifi.md` | relier un modem WiFi (Pico W) au LOCI : firmware, réglage, TERM, XFER |
