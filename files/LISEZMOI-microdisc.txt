@@ -12,8 +12,9 @@ Geometrie de SEDORIC : une face, 42 pistes de 17 secteurs ; 74 Ko libres.
 
 Pour commencer : LOGO DEMO, puis DEMO. HELP LOGO donne les primitives.
 
-Essaye dans Oricutron seulement (Atmos, controleur Microdisc). Jamais
-essaye sur un vrai Microdisc : si vous en avez un, dites-nous ce que cela
+Essaye dans Oricutron et dans Clock Signal (Atmos, controleur Microdisc ;
+Clock Signal simule la rotation du disque). Jamais essaye sur un vrai
+Microdisc : si vous en avez un, dites-nous ce que cela
 donne (une issue sur https://github.com/drpsy77/cpa-oric).
 
 Sources : branche "microdisc" du depot. Ces disquettes ne sont pas lues
@@ -28,8 +29,9 @@ SEDORIC geometry: one side, 42 tracks of 17 sectors; 74 KB free.
 
 To start: LOGO DEMO, then DEMO. HELP LOGO lists the primitives.
 
-Tried in Oricutron only (Atmos, Microdisc controller). Never tried on a
-real Microdisc: if you have one, please tell us how it goes (open an
+Tried in Oricutron and in Clock Signal (Atmos, Microdisc controller;
+Clock Signal simulates the disk rotation). Never tried on a real
+Microdisc: if you have one, please tell us how it goes (open an
 issue at https://github.com/drpsy77/cpa-oric).
 
 Sources: the "microdisc" branch of the repository. These disks are not

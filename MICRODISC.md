@@ -18,8 +18,10 @@ lecteur simple face, sans rien d'autre. Elle part du code du 31 octobre 2026 (de
   seulement), `tools/gen_readme_txt.py` (aide réduite aux programmes présents).
 - **Essayé** dans Oricutron seulement (Atmos, contrôleur Microdisc, image simple face) :
   démarrage, `DIRS`, `STAT`, `HELP`, `LOGO DEMO`, `SAUVE`, `FORMAT B:`, `COPY` vers B:,
-  `DISKCOPY A: B:` ; images vérifiées par `tools/mkdisk.py check`. **Jamais essayé sur un
-  vrai Microdisc** : qui en a un est le bienvenu pour le dire (une issue sur le dépôt).
+  `DISKCOPY A: B:` ; images vérifiées par `tools/mkdisk.py check`. Essayé aussi dans
+  Clock Signal, qui simule la rotation du disque et le contrôleur : démarrage, `LOGO DEMO`,
+  `ARBRE`, un fichier texte créé puis relu après avoir refermé et rouvert la disquette.
+  **Jamais essayé sur un vrai Microdisc** : qui en a un est le bienvenu pour le dire (une issue sur le dépôt).
 - Ces disquettes ne sont pas lues par CP/A de la branche `main` (2 faces de 80 pistes), ni
   l'inverse.
 
@@ -30,5 +32,6 @@ Microdisc controller and its single-sided drive, nothing else. Built from the co
 31 October 2026 (SEDORIC geometry, 42 tracks of 17 sectors), frozen. Disks:
 `cpa-logo-md-en.dsk` (English) and `cpa-logo-md.dsk` (French), bootable, one side of 42
 tracks, 74 KB free: LOGO and its examples, EDIT, HELP, VOIR and the basic commands. No USB
-stick, no modem, no LOCI. Tried in Oricutron only — never on a real Microdisc: reports are
+stick, no modem, no LOCI. Tried in Oricutron and in Clock Signal (which simulates the disk
+rotation) — never on a real Microdisc: reports are
 welcome (open an issue).
