@@ -5,6 +5,9 @@
 # le nom anglais. Lu par tools/en_files.py (build.sh) ; un fichier de files/
 # mis sur une disquette doit figurer ici.
 #
+# Troisième colonne, facultative : la traduction, quand un même nom de
+# fichier a un contenu différent selon la disquette.
+#
 # français                  anglais
 files/dessin.grx            DRAWING.GRX
 files/ecran.grx             TITLE.GRX
@@ -29,6 +32,11 @@ files/trasinus.log          PLOTSIN.LOG
 files/trasinxx.log          PLOTSINX.LOG
 files/fleches.log           ARROWS.LOG
 files/demo.bat              DEMO.BAT
+files/auto.bat              AUTO.BAT
+files/accueil/exemples/accueil.txt  WELCOME.TXT  files/en/accueil/examples.txt
+files/accueil/anim/accueil.txt      WELCOME.TXT  files/en/accueil/anim.txt
+files/accueil/logo/accueil.txt      WELCOME.TXT  files/en/accueil/logo.txt
+files/accueil/notes/accueil.txt     WELCOME.TXT  files/en/accueil/notes.txt
 files/usbcd.bat             USBCD.BAT
 files/anim/CUBE.ANI         CUBE.ANI
 files/anim/BALLE.ANI        BALL.ANI

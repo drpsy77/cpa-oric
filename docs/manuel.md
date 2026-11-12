@@ -295,7 +295,10 @@ démarre seule et porte ses outils (un seul lecteur suffit). Sur chacune, CPA.BN
 de base (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), la clé USB
 (EXPORT, IMPORT, USBDIR, USBMOUNT, le script USBCD.BAT), TERM et XFER sont protégés et
 **cachés** (SYS) : `DIR` ne montre que l'outil de la disquette et les fichiers de travail,
-`DIRS` montre tout. EDIT y est partout, protégé et visible.
+`DIRS` montre tout. EDIT y est partout, protégé et visible. Chacune s'ouvre sur un accueil :
+`AUTO.BAT` (`CLS`, `TYPE ACCUEIL.TXT`) affiche ce que fait l'invite `A>`, ESC (complétion et
+liste des commandes), FUNCT et HELP, puis les commandes pour commencer avec la disquette.
+Les deux fichiers sont modifiables et visibles ; effacer `AUTO.BAT` supprime l'accueil.
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
@@ -303,6 +306,8 @@ de base (TYPE, ERA, REN, SET, STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMD
 | `build/cpa-logo.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, FLECHES.LOG |
 | `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes.dsk` (écrire) | EDIT | | |
+
+Sur toutes les quatre, en plus : AUTO.BAT, ACCUEIL.TXT (l'accueil).
 
 Sur `cpa-anim.dsk`, `DEMO` (le script `DEMO.BAT`) enchaîne l'image compressée, les trois
 animations dans VOIR, puis `GRAPHER ANIMS` (une touche entre deux).

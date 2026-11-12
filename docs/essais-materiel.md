@@ -350,6 +350,10 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 
 ### B. Même logique que dans l'émulateur
 
+**Accueil des disquettes d'usage** (`AUTO.BAT`, `ACCUEIL.TXT`) : démarrer à froid sur
+`cpa-exemples.dsk` (puis anim, logo, notes, et une anglaise) : l'accueil s'affiche en entier,
+sans pause, et l'invite `A>` revient dessous.
+
 **Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
 
 - un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`

@@ -15,8 +15,8 @@
   crash or reboot.
 
 **Try it in five minutes.** Download [`cpa-examples-en.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-examples-en.dsk), put it on the USB stick of your LOCI
-and boot, or run it in Oricutron (see below). At the `A>`
-prompt:
+and boot, or run it in Oricutron (see below). The disk opens on a welcome
+screen that shows what to type. At the `A>` prompt:
 
     DIR               what's on the disk
     HELP              help topics

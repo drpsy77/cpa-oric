@@ -223,7 +223,9 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
   `loci_inc.s` (`loci.msg`) just before it. A program's menus (FUNCT) are in
   its messages file, width included; the other answer keys also have their
   constant (`K_ALL`, "all": `T` or `A`). Shipped files that have an English
-  version are in `files/en/`, under their English name in lower case.
+  version are in `files/en/`, under their English name in lower case (except when one
+  name has a different content on each disk: the welcome screen, `ACCUEIL.TXT`, in
+  `files/accueil/NAME/` and `files/en/accueil/`, third column of `files/en/noms.txt`).
 - **Twin disks**: each French disk has its English twin (`cpa-en.dsk`,
   `cpa-logo-en.dsk`... `cpa-project-en.dsk`), made by the same line of `build.sh`
   (`disque`). `files/en/noms.txt` gives the English name of each shipped file;

@@ -162,9 +162,12 @@ disque build/cpa.dsk build/cpa-en.dsk --ro --sys $SYS_CACHES $INCS --rw files/ed
 BASE="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM $P/HELP.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/EXPORT.COM $P/IMPORT.COM $P/USBDIR.COM $P/USBMOUNT.COM
   $P/TERM.COM $P/XFER.COM $P/REMOTE.COM $P/CMDER.COM files/usbcd.bat"
+# Chacune s'ouvre sur son accueil : AUTO.BAT (CLS, TYPE ACCUEIL.TXT) et
+# files/accueil/NOM/accueil.txt, modifiables et visibles (effacer AUTO.BAT
+# supprime l'accueil).
 theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
   disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg files/hosts \
-    --ro --dir $P/EDIT.COM $3 --rw $5
+    --ro --dir $P/EDIT.COM $3 --rw files/auto.bat files/accueil/$1/accueil.txt $5
 }
 # Animations : VOIR et VSYNC visibles, GRAPHER, GRXASM, ASM et les
 # bibliothèques cachés (GRXASM ANIMS refait le programme) ; animations

@@ -15,7 +15,9 @@
   files/..., build/src/X.ASM (exemples) -> d'après files/en/noms.txt :
                         files/en/<nom anglais en minuscules>=NOM.EXT, ou le
                         fichier français s'il n'y a rien à traduire (images,
-                        sprites, animations)
+                        sprites, animations) ; une troisième colonne donne
+                        la traduction quand un même nom porte un contenu
+                        différent selon la disquette (ACCUEIL.TXT)
 Un exemple absent de la table, ou un texte (.GRX .LOG .BAT .ASM .TXT .CFG)
 sans traduction, arrête tout : chaque exemple a sa version anglaise."""
 import os
@@ -26,16 +28,30 @@ TABLE = os.path.join(RACINE, "files", "en", "noms.txt")
 TEXTES = {"GRX", "LOG", "BAT", "ASM", "TXT", "CFG"}
 
 
+TRAD = {}                                   # fichier français -> traduction
+
+
 def table():
     t = {}
+    disque = {}                             # nom anglais -> nom français sur la disquette
     for l in open(TABLE, encoding="utf-8"):
         l = l.split("#")[0].split()
         if l:
-            fr, en = l
-            if fr in t or en.upper() in (e.upper() for e in t.values()):
+            fr, en = l[:2]
+            # un nom anglais n'a qu'un nom français (ACCUEIL.TXT des quatre
+            # disquettes d'usage : même nom, contenus différents)
+            nom = os.path.basename(fr).upper()
+            if fr in t or disque.get(en.upper(), nom) != nom:
                 sys.exit("noms.txt : %s ou %s en double" % (fr, en))
+            disque[en.upper()] = nom
             t[fr] = en
+            if len(l) > 2:
+                TRAD[fr] = l[2]
     return t
+
+
+def traduction(fr, en):
+    return TRAD.get(fr, "files/en/" + en.lower())
 
 
 def anglais(f, t):
@@ -48,7 +64,7 @@ def anglais(f, t):
     if f not in t:
         sys.exit("en_files : %s n'a pas de nom anglais (files/en/noms.txt)" % f)
     en = t[f]
-    tr = "files/en/" + en.lower()
+    tr = traduction(f, en)
     if os.path.exists(os.path.join(RACINE, tr)):
         return "%s=%s" % (tr, en)
     if en.rpartition(".")[2].upper() in TEXTES:
@@ -64,12 +80,14 @@ def verifie(t):
         if len(en.partition(".")[0]) > 8 or len(en.partition(".")[2]) > 3:
             print("pas en 8.3 :", en); ok = False
         if en.rpartition(".")[2].upper() in TEXTES and \
-                not os.path.exists(os.path.join(RACINE, "files/en", en.lower())):
+                not os.path.exists(os.path.join(RACINE, traduction(fr, en))):
             print("pas traduit :", fr, "->", en); ok = False
-    connus = {en.lower() for en in t.values()} | {"noms.txt"}
-    for f in os.listdir(os.path.join(RACINE, "files", "en")):
-        if f not in connus:
-            print("dans files/en mais pas dans la table :", f); ok = False
+    connus = {traduction(fr, en) for fr, en in t.items()} | {"files/en/noms.txt"}
+    for d, _, fs in os.walk(os.path.join(RACINE, "files", "en")):
+        for f in fs:
+            f = os.path.relpath(os.path.join(d, f), RACINE)
+            if f not in connus:
+                print("dans files/en mais pas dans la table :", f); ok = False
     print("noms.txt : %d exemples, %s" % (len(t), "correspondance complète" if ok else "A CORRIGER"))
     return ok
 

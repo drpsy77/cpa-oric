@@ -221,7 +221,9 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
   `loci_inc.s` (`loci.msg`) juste avant elle. Les menus d'un programme (FUNCT) sont dans
   son fichier de messages, largeur comprise ; les autres touches de réponse ont aussi leur
   constante (`K_ALL`, « tous » : `T` ou `A`). Les fichiers livrés qui ont une version
-  anglaise sont dans `files/en/`, sous leur nom anglais en minuscules.
+  anglaise sont dans `files/en/`, sous leur nom anglais en minuscules (sauf quand un même
+  nom a un contenu différent selon la disquette : l'accueil, `ACCUEIL.TXT`, dans
+  `files/accueil/NOM/` et `files/en/accueil/`, troisième colonne de `files/en/noms.txt`).
 - **Disquettes jumelles** : chaque disquette française a sa jumelle anglaise (`cpa-en.dsk`,
   `cpa-logo-en.dsk`... `cpa-project-en.dsk`), faite par la même ligne de `build.sh`
   (`disque`). `files/en/noms.txt` donne pour chaque fichier livré son nom anglais ;

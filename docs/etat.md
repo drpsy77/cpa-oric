@@ -81,11 +81,12 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-358 Ko libres), `cpa-anim.dsk` (la démonstration, 318 Ko libres), `cpa-logo.dsk` (LOGO seul,
-510 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 324 Ko libres), `cpa-notes.dsk` (écrire, 558 Ko libres) ; `CPA.BNK` (2 560 octets,
+358 Ko libres), `cpa-anim.dsk` (la démonstration, 314 Ko libres), `cpa-logo.dsk` (LOGO seul,
+506 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 320 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
-sans système : le travail en B:, 658 Ko) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
+sans système : le travail en B:, 658 Ko) ; les quatre disquettes d'usage s'ouvrent sur un
+accueil (`AUTO.BAT`, `ACCUEIL.TXT` : l'invite, ESC, FUNCT, HELP, puis quoi taper) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
 **Mesure** : 1 569 points de fonction IFPUG et 360 points d'algorithmes ; détail, lignes,

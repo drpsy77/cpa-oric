@@ -1,0 +1,15 @@
+Welcome to CP/A!
+"A>" prompts you for a command.
+ESC completes a command you started;
+on an empty line, ESC lists them
+all: built-in, .COM and .BAT.
+FUNCT opens menus, HELP gives help.
+
+LOGO, the turtle and lists:
+ LOGO DEMO        then type DEMO:
+                  the turtle draws
+ LOGO ELIZA       a conversation
+                  (GOODBYE: end)
+ LOGO PLOTSIN     a curve
+In LOGO: HELP, and QUIT to go
+back to CP/A.

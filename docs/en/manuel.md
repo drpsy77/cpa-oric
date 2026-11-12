@@ -287,7 +287,10 @@ carries its tools (one drive is enough). On each one, CPA.BNK, the basic command
 STAT, COPY, HELP, FORMAT, DISKCOPY, XDO, VOIR, CMDER), the USB stick (EXPORT, IMPORT, USBDIR,
 USBMOUNT, the script USBCD.BAT), TERM and XFER are read-only and **hidden** (SYS): `DIR` only
 shows the disk's tool and the working files, `DIRS` shows everything. EDIT is on every disk,
-read-only and visible.
+read-only and visible. Each one opens on a welcome screen: `AUTO.BAT` (`CLS`, `TYPE WELCOME.TXT`)
+shows what the `A>` prompt does, ESC (completion and the list of commands), FUNCT and HELP, then
+the commands to start with on that disk. Both files can be changed and are visible; erasing
+`AUTO.BAT` removes the welcome screen.
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
@@ -295,6 +298,8 @@ read-only and visible.
 | `build/cpa-logo-en.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, ARROWS.LOG |
 | `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes-en.dsk` (writing) | EDIT | | |
+
+On all four, as well: AUTO.BAT, WELCOME.TXT (the welcome screen).
 
 On `cpa-anim-en.dsk`, `DEMO` (the script `DEMO.BAT`) chains the compressed picture, the three
 animations in VOIR, then `GRAPHER ANIMS` (a key between each).

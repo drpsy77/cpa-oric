@@ -1,0 +1,15 @@
+Bienvenue dans CP/A !
+"A>" invite a saisir une commande.
+ESC complete la commande commencee ;
+sur une ligne vide, ESC les montre
+toutes : internes, .COM et .BAT.
+FUNCT ouvre les menus, HELP l'aide.
+
+LOGO, la tortue et les listes :
+ LOGO DEMO        puis tapez DEMO :
+                  la tortue dessine
+ LOGO ELIZA       une conversation
+                  (AUREVOIR : fin)
+ LOGO TRASINUS    une courbe
+Dans LOGO : AIDE, et QUITTE pour
+revenir a CP/A.

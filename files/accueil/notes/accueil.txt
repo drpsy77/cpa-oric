@@ -1,0 +1,13 @@
+Bienvenue dans CP/A !
+"A>" invite a saisir une commande.
+ESC complete la commande commencee ;
+sur une ligne vide, ESC les montre
+toutes : internes, .COM et .BAT.
+FUNCT ouvre les menus, HELP l'aide.
+
+Ecrire :
+ EDIT NOTES.TXT   ecrire un texte
+                  (CTRL-S enregistre,
+                  CTRL-Q quitte)
+ TYPE NOTES.TXT   le relire
+ DIR              vos fichiers

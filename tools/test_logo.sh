@@ -31,8 +31,10 @@ fi
 # place pour les scénarios (un bloc de 2 Ko chacun) : GRXASM et sa
 # bibliothèque, inutiles ici, sont retirés de la copie
 # (et d'autres, sous leurs noms des deux langues : la place manque pour l'état
-# de LOGO.$$$ pendant EDITE)
-for f in GRXASM.COM GRX.INC CMDER.COM GRAPHER.COM ROTSCROL.GRX JEU.GRX PUZZLE.GRX; do
+# de LOGO.$$$ pendant EDITE) ; l'accueil (AUTO.BAT) aussi, pour que les touches
+# arrivent au prompt comme avant
+for f in GRXASM.COM GRX.INC CMDER.COM GRAPHER.COM ROTSCROL.GRX JEU.GRX PUZZLE.GRX \
+    AUTO.BAT ACCUEIL.TXT WELCOME.TXT; do
   python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null 2>&1 || true
 done
 mkdir "$T/tr"

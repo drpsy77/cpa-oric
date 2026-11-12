@@ -1,0 +1,19 @@
+Welcome to CP/A!
+"A>" prompts you for a command.
+ESC completes a command you started;
+on an empty line, ESC lists them
+all: built-in, .COM and .BAT.
+FUNCT opens menus, HELP gives help.
+
+Try GRAPHER, the language of CP/A.
+It runs a program (.GRX):
+ GRAPHER MAP      a random island
+ GRAPHER SNAKE    the snake (Q: end)
+ EDIT SNAKE.GRX   see and change it
+Then compile it on the Oric:
+ GRXASM SNAKE     translate...
+ ASM SNAKE        ...assemble...
+ SNAKE            ...and run
+ GRXASM SNAKE /O  a .TAP for an
+                  Oric without CP/A
+DIR shows the other examples.

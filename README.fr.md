@@ -16,8 +16,8 @@
   sans un plantage ni un redémarrage.
 
 **L'essayer en cinq minutes.** Téléchargez [`cpa-exemples.dsk`](https://github.com/drpsy77/cpa-oric/releases/latest/download/cpa-exemples.dsk), copiez-le sur la clé USB du LOCI
-et démarrez, ou lancez-le dans Oricutron (voir plus bas). Au
-prompt `A>` :
+et démarrez, ou lancez-le dans Oricutron (voir plus bas). La disquette s'ouvre sur un
+accueil qui montre quoi taper. Au prompt `A>` :
 
     DIR               ce qu'il y a sur la disquette
     HELP              les rubriques d'aide

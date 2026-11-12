@@ -1,0 +1,16 @@
+Welcome to CP/A!
+"A>" prompts you for a command.
+ESC completes a command you started;
+on an empty line, ESC lists them
+all: built-in, .COM and .BAT.
+FUNCT opens menus, HELP gives help.
+
+Pictures and animations:
+ DEMO             all of it in turn
+ VOIR CUBE.ANI    an animation
+                  (a key: stop)
+ VOIR LOGO.HIZ    a picture
+ GRAPHER ANIMS    animations in a
+                  program
+ EDIT DEMO.BAT    the DEMO script
+DIR shows the other files.
