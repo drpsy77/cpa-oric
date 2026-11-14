@@ -412,6 +412,8 @@ tend    lda #0
         sta DEF_DMA+1,y
         sty DEF_DMA
         jsr dma_default
+        lda #1
+        sta prog_on             ; (^C à la pause : console muette, pas WBOOT)
         jsr TPA_START
         jmp wboot
 fail    jmp wboot

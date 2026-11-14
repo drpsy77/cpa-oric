@@ -483,6 +483,12 @@ du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans 
 - menu Fichier, « Sauver donn. » : tape `SAUVEDONNEES "` et attend le nom ;
 - `cpa-logo-en.dsk` : `SAVEDATA "D1`, « Save data... », lignes `MAKE`.
 
+**Pause en fin d'écran, `^C` dans un programme** (`docs/manuel.md`) :
+
+- `LOGO`, `AIDE`, `^C` à ` -- Suite -- ` : le prompt `?` revient aussitôt, LOGO toujours là
+  (`TITRES` répond) ; `TYPE README.TXT` puis `^C` : retour à `A>` comme avant ; `DEBUG`,
+  `D 0500` plusieurs fois puis `^C` à la pause : le prompt de DEBUG revient.
+
 **Remplissage : `REMPLIS` de LOGO, `PAINT` de GRAPHER** (`docs/logo.md`, « Dessiner sans la
 tortue » ; `docs/grapher.md` § 6) :
 

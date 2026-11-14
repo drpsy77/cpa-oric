@@ -412,9 +412,11 @@ reste).
 
 **Pause en fin d'écran.** Quand une commande remplit la console (27 lignes en mode texte,
 10 en mode SPLIT) sans que l'utilisateur ait touché le clavier, l'affichage s'arrête sur
-` -- Suite (^C stop) -- `. Une touche continue, CTRL-C abandonne et revient au
-prompt. Cela vaut pour `HELP`, `TYPE`, `DIR`, `DUMP`… et pour les programmes qui affichent par
-le BDOS ou le BIOS. `PAGE OFF` (ou l'article Pagination du menu Ecran, qui bascule) supprime
+` -- Suite (^C stop) -- `. Une touche continue, CTRL-C abandonne : pour une commande du
+système (`HELP`, `TYPE`, `DIR`, `DUMP`…), retour au prompt ; pour un programme qui affiche
+par le BDOS ou le BIOS (l'`AIDE` de LOGO, un `D` de DEBUG), le programme continue mais la
+console se tait jusqu'à la prochaine touche qu'il lit, son prompt en général : on ne sort
+pas du programme. `PAGE OFF` (ou l'article Pagination du menu Ecran, qui bascule) supprime
 la pause, `PAGE ON` la remet ; le réglage reste jusqu'au démarrage à froid. Un programme qui ne
 veut pas de pause met `$02A3` à 0 (variable publique, remise à 1 au démarrage à froid).
 

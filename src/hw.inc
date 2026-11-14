@@ -294,7 +294,11 @@ g_cy        = $029F
 g_r         = $02A0
 g_cnt       = $02A1
 page_cnt    = $02A2     ; lignes défilées depuis la dernière touche
-                        ; $02B1-$02B8 : libres
+prog_on     = $02B1     ; 1 = un programme (.COM) tourne (posé par le CCP, effacé
+                        ;   au démarrage à chaud) : ^C à la pause rend la console
+                        ;   muette (con_mute) au lieu de revenir au système
+con_mute    = $02B2     ; 1 = console muette jusqu'à la prochaine touche lue
+                        ; $02B3-$02B8 : libres
 ; son (BDOS 116)
 s_p         = $02B9     ; 6 octets : paramètres recopiés
 s_dur       = $02BF     ; 3 octets : durées restantes (1/50 s)

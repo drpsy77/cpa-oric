@@ -90,6 +90,8 @@ wb_h    lda lst_echo            ; édition de ligne interrompue
         sta lst_echo
         lda #0
         sta m_act
+        sta prog_on             ; plus de programme, console rendue
+        sta con_mute
         sta top_cap             ; plus de débogueur résident
         sta io_quiet            ; messages d'erreur disque rendus (programme
         lda #>TPA_END           ; haut de la TPA selon le mode
@@ -622,8 +624,9 @@ conin_key
         ldx kb_tail
         lda kb_buf,x
         pha
-        lda #0                  ; une touche lue : la pagination repart
-        sta page_cnt
+        lda #0                  ; une touche lue : la pagination repart,
+        sta page_cnt            ;   la console parle
+        sta con_mute
         inx
         txa
         and #KB_MASK
@@ -704,8 +707,10 @@ co_nl
         beq co_np
         jsr put_char
 co_np
+        ldy con_mute            ; ^C à la pause : plus rien d'affiché
+        bne co_mute
         jsr con_char
-        jsr show_cursor
+co_mute jsr show_cursor
         pla
         tay
         pla
@@ -842,9 +847,13 @@ pwait   cli                     ; le clavier fonctionne par interruption
         ldx con_last
         jsr clear_row
         pla
-        cmp #3                  ; CTRL-C : abandon, retour au système
+        cmp #3                  ; CTRL-C : abandon
         bne pgo
-        jmp V_WBOOT
+        lda prog_on             ; commande du CCP : retour au système ;
+        beq pwb                 ;   programme : console muette jusqu'à la
+        sta con_mute            ;   touche qu'il lira (son prompt)
+        bne pgo
+pwb     jmp V_WBOOT
 pgo
         lda #0
         sta page_cnt

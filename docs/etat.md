@@ -9,8 +9,8 @@ de place dans `docs/place.md` : à lire quand la demande les concerne.
 
 ## 1. Ce qui existe (version 0.9)
 
-**Système** : code résident `$C000-$F3F8` en français (`$F3CC` en anglais), **marge 463
-octets** (507 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
+**Système** : code résident `$C000-$F416` en français (`$F3EA` en anglais), **marge 434
+octets** (478 en anglais) jusqu'à `$F5C8`, où commencent les cartes d'allocation
 des 4 lecteurs (168 octets, puis les tampons de DO en `$F670`) ; fenêtre `$F7C0-$FCFF`, une
 banque à la fois, lue dans `CPA.BNK` quand elle sert : PUT (marge 2 octets) ou IMG (GSAVE,
 GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés du SPLIT,
@@ -18,7 +18,8 @@ GLOAD, SAVE ; marge 4) avant le tampon de PUT de 768 octets, ou GFX (les tracés
 froid dans le tampon, marge 565 (`docs/systeme.md` § 6) ; page `$FF00-$FFEF`, marge 10 octets (table des touches de
 l'édition de ligne, encres des menus). `./build.sh` affiche les marges.
 
-- console : pause en fin d'écran, menus déroulants (FUNCT), voyants `A`/`a`, `P` et `R`/`r`,
+- console : pause en fin d'écran (`^C` : abandon ; dans un programme, console muette jusqu'à
+  sa prochaine lecture au lieu d'un retour au système), menus déroulants (FUNCT), voyants `A`/`a`, `P` et `R`/`r`,
   couleurs et pagination (`PAPER`, `INK`, `PAGE`) ;
 - port série et console à distance (`src/serial.s`, option `SERIE`) : service sous l'IRQ
   de 50 Hz, le Mac tape et lit l'écran par le modem du LOCI (`REMOTE`, démon

@@ -18,6 +18,11 @@ avant de toucher au BIOS, au BDOS ou au CCP. Variables des pages 2 et 3 :
   donnent 0, CTRL-[ 27 ; CTRL avec une autre touche (chiffre, signe, RETURN, ESC, DEL) ne
   donne rien. CTRL-T (20) bascule les majuscules sauf quand l'écran est au programme.
 - Flèches : gauche `$08` n'efface pas (DEL le fait), bas `$0A` ne valide pas la ligne.
+- **Pause en fin d'écran** (`line_down`, `page_pause`) : `page_cnt` compte les lignes
+  défilées depuis la dernière touche lue (`conin_key` le remet à 0). `^C` à la pause :
+  `V_WBOOT` si aucun programme ne tourne, sinon `con_mute` à 1 et `conout` n'affiche plus
+  rien (PUT et imprimante continuent) jusqu'à la touche suivante lue, qui l'efface.
+  `prog_on` (`$02B1`) est posé par le CCP avant `jsr TPA_START`, effacé au démarrage à chaud.
   SHIFT-<- / SHIFT-> (ou CTRL-A / CTRL-E) : début / fin de la ligne ; CTRL-U l'efface.
   Table des touches : `src/rl_keys.s`, rangée dans la page `$FF00` (données seulement).
 - CTRL-C sur une ligne vide fait un démarrage à chaud seulement au prompt du CCP (tampon

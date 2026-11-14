@@ -400,9 +400,10 @@ remains).
 
 **Pause at the end of the screen.** When a command fills the console (27 lines in text mode, 10
 in SPLIT mode) without the user touching the keyboard, the display stops on
-` -- More (^C stop) -- `. A key continues, CTRL-C gives up and returns to the prompt.
-This applies to `HELP`, `TYPE`, `DIR`, `DUMP`… and to programs that display through the BDOS
-or the BIOS. `PAGE OFF` (or the Paging item of the Screen menu, which toggles) removes the
+` -- More (^C stop) -- `. A key continues, CTRL-C gives up: for a system command (`HELP`,
+`TYPE`, `DIR`, `DUMP`…), back to the prompt; for a program that displays through the BDOS or
+the BIOS (LOGO's `HELP`, a `D` in DEBUG), the program goes on but the console stays silent
+until the next key it reads, usually its prompt: you do not leave the program. `PAGE OFF` (or the Paging item of the Screen menu, which toggles) removes the
 pause, `PAGE ON` puts it back; the setting stays until the cold start. A program that does not
 want the pause sets `$02A3` to 0 (public variable, reset to 1 at cold start).
 
