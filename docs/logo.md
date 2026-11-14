@@ -195,7 +195,9 @@ variables gardées) ; le programme lui-même le fait par `RETOURPROMPT`, sans me
 les commandes à la place de l'utilisateur.
 
 Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut modifier avec
-`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier. Une ligne de fichier a
+`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier ; `SAUVE` (et `EDITE`)
+réécrit le fichier avec les seules procédures : pour garder les autres lignes d'un fichier
+chargé, enregistrer sous un autre nom, ou modifier le fichier dans EDIT, hors de LOGO. Une ligne de fichier a
 126 caractères au plus, comme au clavier : au-delà, `CHARGE` s'arrête sur
 `Ligne de plus de 126 car. : L 12` (le numéro est celui de la ligne d'état d'EDIT, qui signale
 ces lignes : voir `EDIT.CFG`) ; une longue liste se construit en plusieurs lignes (`DONNE "L

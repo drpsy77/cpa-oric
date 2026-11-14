@@ -195,7 +195,9 @@ kept); the program itself does it with `TOPLEVEL`, without a message; at the `?`
 commands for the user.
 
 Procedures are saved as text (`TO` ... `END`), which can be changed with `EDIT DEMO.LOG`.
-`LOAD` also runs the other lines of the file. A file line is at most 126 characters, as on
+`LOAD` also runs the other lines of the file; `SAVE` (and `EDIT`) writes the file again
+with the procedures alone: to keep the other lines of a loaded file, save under another
+name, or change the file in EDIT, outside LOGO. A file line is at most 126 characters, as on
 the keyboard: beyond that, `LOAD` stops on `Line over 126 chars : L 12` (the number is
 that of EDIT's status line, which flags these lines: see `EDIT.CFG`); a long list is built
 over several lines (`MAKE "L SE :L [...]`). The disk contains `DEMO.LOG`, with SQUARE, POLY,

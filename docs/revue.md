@@ -86,32 +86,22 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   données de l'utilisateur) ; COPY et IMPORT gardent leur source ; ASM a la sienne ; PUT
   part d'un fichier vide par définition. Une demande nouvelle se décide avec la vue
   d'ensemble.
-- **LOGO, sauvegarde du travail** : un fichier `.LOG` peut contenir des commandes directes
-  (tables de `DONNE`, ligne de lancement) ; `SAUVE`, et donc `EDITE`, réécrit le fichier
-  avec les seules procédures et les perd. Décidé :
-  - `SAUVE "NOM` fusionne : `NOM.LOG` garde à leur place ses lignes hors procédures ;
-    chaque procédure du fichier présente en mémoire y est remplacée, à sa place, par sa
-    version en mémoire ; une procédure du fichier absente de la mémoire (oubliée, ou jamais
-    chargée) y reste telle quelle ; les procédures en mémoire absentes du fichier sont
-    ajoutées après la dernière procédure du fichier. Une ligne commence une procédure si
-    son premier mot est `POUR` (`TO`), comme pour `CHARGE`. Écriture par `NOM.$$$`, puis
-    effacement de `NOM.LOG` et renommage : un RESET ou une disquette pleine laisse l'ancien
-    fichier.
-  - `CHARGE` en deux passes : d'abord les procédures (`POUR` ... `FIN`), puis les autres
-    lignes, dans l'ordre du fichier ; une commande directe connaît toutes les procédures du
-    fichier, où qu'elles soient.
-  - Une procédure définie deux fois dans un même fichier est une erreur (nom, numéro de
-    ligne) : `CHARGE` s'arrête à la première passe, avant toute commande directe ;
-    `SAUVE` et `EDITE` refusent le fichier sans rien écrire. Elle se corrige dans EDIT,
-    hors de LOGO. Une procédure qui existait avant le `CHARGE` (tapée au prompt, chargée
-    par un autre fichier) est remplacée, comme aujourd'hui.
-  - Retour d'`EDITE` : la première passe seule ; l'état (variables, mots et listes,
-    tortue, dessin, mode d'écran) est repris de `LOGO.$$$`, les commandes directes ne sont
-    pas réexécutées.
-  - Coût estimé : 700 à 1 100 octets de LOGO.COM, autant de place en moins pour les
-    procédures et le tas.
-  - À décider : sauvegarde de toute la session (procédures, variables, tortue, dessin ;
-    `SAUVETOUT`, `REPRENDS`), lisible seulement par la même version de LOGO.
+- **LOGO, sauvegarde du travail** : `SAUVE`, et donc `EDITE`, réécrit le fichier avec les
+  seules procédures ; les autres lignes d'un fichier chargé (tables de `DONNE`, ligne de
+  lancement) n'y sont plus. C'est l'usage de LOGO tel qu'il est : enregistrer sous un
+  nouveau nom n'écrase pas le fichier d'origine, et un fichier qui a des commandes
+  directes se modifie dans EDIT, hors de LOGO. La fusion est écartée
+  (`docs/fausses-bonnes-idees.md`). À décider :
+  - retirer `EDITE` (environ 660 octets de LOGO.COM et son article du menu Fichier ; environ
+    160 octets d'EDIT pour son mode Retour) et `SAUVE` (environ 220 octets) : on travaille
+    alors dans le fichier (EDIT, puis `LOGO NOM`), `POUR` au prompt ne sert plus qu'à
+    essayer ;
+  - une fonction de sauvegarde de données (variables, mots et listes gardés dans un
+    fichier et relus) : options à présenter avant tout code.
+- **LOGO, message d'une procédure redéfinie** : `CARRE defini.` montre un nom faux
+  (`NARRE defini.`) quand une version précédente est effacée : `def_end` affiche le nom
+  après `rec_delete`, qui a fait descendre le texte. Correction sans octet de plus :
+  afficher le nom avant l'effacement (`tools/test_logo.sh` ensuite).
 - **`SAVE n fichier` du CCP** (à réécrire, à spécifier) : elle enregistre toujours à partir
   de `$0500` (le `SAVE` de CP/M : faire un `.COM` de la mémoire), ce qui ne sert pas à
   l'utilisateur ; aucun script ni outil du dépôt ne s'en sert. Elle est dans la banque IMG
