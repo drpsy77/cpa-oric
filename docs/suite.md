@@ -132,7 +132,7 @@ du banc à réparer d'abord).
      qu'on attend d'un accord.
    - LOGO : ne pas perdre la frappe anticipée pendant `NOTE` / `ATTENDS` ; passer des
      paramètres d'un script à `LOGO NOM` ; tokenisation des procédures **en mémoire**
-     seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE`, `EDITE` ; numéros de
+     seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE` ; numéros de
      `tools/gen_logo_voc.py`), sur mesure (vitesse d'ELIZA et des traceurs, place) ; le
      contenu des listes reste du texte (code ou données : décidé à l'exécution).
    - EDIT : une édition plein écran (colonnes 0-1 comprises) pour dessiner un écran texte.

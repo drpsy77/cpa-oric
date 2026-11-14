@@ -5,7 +5,7 @@
 ; barre de menus : les articles tapent des commandes
 lg_bar  .byt 3
         .word mn_fic, mn_tor, mn_aid
-mn_fic  .byt 8,11
+mn_fic  .byt 7,11
         .asc "File",0
         .asc "Load...",0
         .byt MA_TYPE
@@ -13,9 +13,6 @@ mn_fic  .byt 8,11
         .asc "Save...",0
         .byt MA_TYPE
         .word ty_sauve
-        .asc "Edit...",0
-        .byt MA_TYPE
-        .word ty_edite
         .asc "Load pic...",0
         .byt MA_TYPE
         .word ty_cimg
@@ -92,7 +89,7 @@ m_aide    .asc "FD BK RT LT n  PU PD PE PX",13,10
           .asc "BUTFIRST BUTLAST ITEM",13,10
           .asc "COUNT EMPTY? WORD? NUMBER? LIST?",13,10
           .asc "MEMBER?  RUN [..]  OUTPUT x",13,10
-          .asc "SAVE/LOAD/EDIT ",$22,"NAME  POTS",13,10
+          .asc "SAVE/LOAD ",$22,"NAME  POTS",13,10
           .asc "SAVEPIC/LOADPIC ",$22,"NAME",13,10
           .asc "PO/ERASE ",$22,"NAME  ERALL",13,10
           .asc "ESC interrupts  BYE",13,10,0
@@ -123,4 +120,3 @@ e_unused  .asc "What to do with the output of",0
 e_rtop    .asc "OUTPUT only in a procedure",0
 e_text    .asc "Not on the text screen :",0
 e_range   .asc "Value out of range :",0
-m_lost    .asc "State in LOGO.$$$ lost",13,10,0

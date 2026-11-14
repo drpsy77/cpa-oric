@@ -17,7 +17,7 @@
 ;  Dessin (coordonnées de la tortue) : POINT, TRAIT, RECTANGLE, PAVE,
 ;  CERCLE, ETIQUETTE, FIXECOULEUR ; fonction ALLUME?
 ;  REPETE, SI, STOP, RENDS,
-;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, EDITE, TITRES, LISTE,
+;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
 ;  Son : SON, SONF, BRUITV, ENVELOPPE, MELANGE, ENSEMBLE, ATTENDSSON, SILENCE
 ;  Opérations : + - * / ( ) = < > HASARD CAP XCOR YCOR LISCAR TOUCHE? JOUE?
@@ -224,7 +224,7 @@ ok      jsr ix_build
         lda #<m_banner
         ldy #>m_banner
         jsr puts
-        jsr args                ; LOGO NOM : charge NOM.LOG ; /R : retour d'EDIT
+        jsr args                ; LOGO NOM : charge NOM.LOG
 .)
 repl
         tsx                     ; point de reprise en cas d'erreur
@@ -3596,44 +3596,6 @@ p_emixte
         ldx #0
         beq em_set
 
-; ---------------------------------------------------------------------
-; EDITE "NOM : enregistre les procédures dans NOM.LOG, range l'état de
-;   LOGO dans LOGO.$$$ et passe la main à EDIT (BDOS 47, CHAIN) par
-;   « EDIT NOM.LOG /L ». L'article « Retour » d'EDIT relance
-;   « LOGO NOM.LOG /R » : LOGO reprend son état et recharge NOM.LOG.
-;   Etat : page zéro, variables globales, tas des textes, mode d'écran ;
-;   l'image reste en place (EDIT la garde quand il part du mode SPLIT).
-; ---------------------------------------------------------------------
-p_edite
-        jsr p_sauve             ; NOM.LOG ; le nom reste dans fcb
-        ldx #0                  ; fbuf = "EDIT NOM.LOG /L"
-        ldy #0
-ed1     lda s_edit,y
-        sta fbuf,x
-        inx
-        iny
-        cpy #5
-        bne ed1
-        jsr fcb_text
-        ldy #0
-ed2     lda s_retl,y
-        sta fbuf,x
-        inx
-        iny
-        cpy #4
-        bne ed2
-        jsr save_state
-        lda tmode               ; EDIT doit partir du mode SPLIT pour
-        beq ed3                 ; garder l'image
-        lda #<gq_keep
-        ldy #>gq_keep
-        ldx #F_GFX
-        jsr BDOS
-ed3     lda #<fbuf
-        ldy #>fbuf
-        ldx #F_CHAIN
-        jmp BDOS
-
 ; fcb_text : écrit le nom de fcb (NOM.TYP, sans blancs) en fbuf+X
 fcb_text
         lda fcb                 ; lecteur donné : « B: »
@@ -3669,145 +3631,7 @@ ft4     iny
         bne ft3
 ft5     rts
 
-; st_fcb : fcb = LOGO.$$$
-st_fcb
-        ldx #35
-        lda #0
-sf1     sta fcb,x
-        dex
-        bpl sf1
-        ldx #10
-sf2     lda s_state,x
-        sta fcb+1,x
-        dex
-        bpl sf2
-        rts
-
-; heap_recs : p1 = début des enregistrements du tas (hp arrondi à 128),
-;   cnt = leur nombre ((memtop - p1) / 128 ; memtop est un début de page)
-heap_recs
-        lda hp
-        and #$80
-        sta p1
-        lda hp+1
-        sta p1+1
-        sec                     ; (memtop - p1) / 128, p1 bas = 0 ou $80
-        lda memtop+1
-        sbc p1+1
-        asl
-        sta cnt
-        lda p1
-        beq hr1
-        dec cnt
-hr1     rts
-
-; save_state : écrit LOGO.$$$ (en-tête, variables globales, tas, page
-;   zéro). Erreur disque : message et retour au prompt
-save_state
-        jsr st_fcb
-        ldx #F_DELETE
-        jsr bdos_fcb
-        ldx #F_MAKE
-        jsr bdos_fcb
-        cmp #$FF
-        bne ss0
-        jmp ss_err
-ss0     ldx #127                ; en-tête : "LGS1", hp, memtop, tmode
-        lda #0
-ss1     sta recbuf,x
-        dex
-        bpl ss1
-        ldx #3
-ss2     lda s_magic,x
-        sta recbuf,x
-        dex
-        bpl ss2
-        lda hp
-        sta recbuf+4
-        lda hp+1
-        sta recbuf+5
-        lda memtop
-        sta recbuf+6
-        lda memtop+1
-        sta recbuf+7
-        lda tmode
-        sta recbuf+8
-        lda #<recbuf
-        ldy #>recbuf
-        ldx #1
-        jsr w_recs
-        lda #<globals
-        ldy #>globals
-        ldx #MAXGL*VAR_SIZE/128
-        jsr w_recs
-        jsr heap_recs
-        lda p1
-        ldy p1+1
-        ldx cnt
-        jsr w_recs
-        lda #0                  ; page zéro en dernier
-        tay
-        ldx #2
-        jsr w_recs
-        ldx #F_CLOSE
-        jsr bdos_fcb
-        jmp dma_def
-
-; w_recs : écrit X enregistrements depuis A/Y
-w_recs
-        clc
-        bcc rw_recs
-; r_recs : lit X enregistrements vers A/Y (C=1 : fichier trop court)
-r_recs
-        sec
-rw_recs
-.(
-        sta p1
-        sty p1+1
-        stx cnt
-        ror rwop                ; bit 7 : lecture
-loop    lda cnt
-        beq r
-        ldx #F_SETDMA
-        lda p1
-        ldy p1+1
-        jsr BDOS
-        ldx #F_WRITE
-        bit rwop
-        bpl w
-        ldx #F_READ
-w       jsr bdos_fcb
-        cmp #0
-        bne bad
-        clc
-        lda p1
-        adc #128
-        sta p1
-        bcc nx
-        inc p1+1
-nx      dec cnt
-        jmp loop
-r       clc
-        rts
-bad     bit rwop                ; lecture : fin de fichier, C=1
-        bpl ss_err
-        sec
-        rts
-.)
-ss_err  jsr dma_def
-        lda #0
-        sta clen
-        lda #<e_disk
-        ldy #>e_disk
-        jmp error
-
-dma_def ldx #F_SETDMA
-        lda #<DEF_DMA
-        ldy #>DEF_DMA
-        jmp BDOS
-
-; args : paramètres de LOGO. « LOGO NOM » prépare la ligne CHARGE "NOM ;
-;   avec /R (retour d'EDIT), l'état rangé par EDITE est repris d'abord
+; args : paramètres de LOGO. « LOGO NOM » prépare la ligne CHARGE "NOM
 args
 .(
         lda FCB1+1
@@ -3830,121 +3654,6 @@ nm      lda FCB1,y
         sta fbuf,x
         lda #1
         sta autold
-        ldx TAIL                ; /R dans les paramètres ?
-sl      dex
-        bmi r
-        lda TAIL+1,x
-        cmp #"R"
-        bne sl
-        lda TAIL,x
-        cmp #"/"
-        bne sl
-        jmp load_state
-r       rts
-.)
-
-; load_state : reprend l'état de LOGO.$$$ (sinon, LOGO repart à neuf)
-load_state
-.(
-        jmp ls0
-jl      jmp lost                ; (branchements trop longs)
-ls0     jsr st_fcb
-        ldx #F_OPEN
-        jsr bdos_fcb
-        cmp #$FF
-        beq jl
-        lda #<recbuf
-        ldy #>recbuf
-        ldx #1
-        jsr r_recs
-        bcs jl
-        ldx #3                  ; même LOGO, même haut de mémoire ?
-mg      lda recbuf,x
-        cmp s_magic,x
-        bne jl
-        dex
-        bpl mg
-        lda recbuf+6
-        cmp memtop
-        bne jl
-        lda recbuf+7
-        cmp memtop+1
-        bne jl
-        lda recbuf+8            ; mode d'écran
-        pha
-        lda recbuf+4            ; tas : à partir de hp arrondi à 128
-        and #$80
-        sta tmp
-        lda recbuf+5
-        sta tmp+1
-        lda #<globals
-        ldy #>globals
-        ldx #MAXGL*VAR_SIZE/128
-        jsr r_recs
-        bcs lost1
-        lda hp                  ; heap_recs avec le hp rangé
-        pha
-        lda hp+1
-        pha
-        lda tmp
-        sta hp
-        lda tmp+1
-        sta hp+1
-        jsr heap_recs
-        pla
-        sta hp+1
-        pla
-        sta hp
-        lda p1
-        ldy p1+1
-        ldx cnt
-        jsr r_recs
-        bcs lost1
-        lda #<lbuf              ; page zéro : dans lbuf et llbuf, recopiée
-        ldy #>lbuf              ; d'un coup à la fin
-        ldx #1
-        jsr r_recs
-        bcs lost1
-        lda #<llbuf
-        ldy #>llbuf
-        ldx #1
-        jsr r_recs
-        bcs lost1
-        ldx #F_DELETE
-        jsr bdos_fcb
-        jsr dma_def
-        ldx #127
-z1      lda lbuf,x
-        sta $00,x
-        dex
-        bpl z1
-        ldx #$DF-$80            ; $80-$DF
-z2      lda llbuf,x
-        sta $80,x
-        dex
-        bpl z2
-        lda #<procbase          ; les procédures reviennent par CHARGE
-        sta pend
-        lda #>procbase
-        sta pend+1
-        lda #0
-        sta nloc
-        sta defmode
-        sta stopf
-        sta capf
-        sta tdrawn
-        sta pkey
-        lda #1                  ; (le CHARGE préparé par args)
-        sta autold
-        jsr set_pen
-        pla
-        beq r
-        jmp p_etexte
-lost1   pla
-lost    jsr dma_def
-        lda #<m_lost
-        ldy #>m_lost
-        jmp puts
 r       rts
 .)
 
@@ -4868,6 +4577,8 @@ def_end
         sta cname+1
         lda tlen
         sta clen
+        jsr put_cname           ; affiché avant rec_delete, qui ferait
+                                ;   descendre le texte que cname désigne
         ; une ancienne version porte-t-elle le même nom ?
         lda #<procbase
         sta hdr
@@ -4885,8 +4596,7 @@ chk     jsr rec_name_cmp
         jmp done
 next    jsr rec_next
         jmp look
-done    jsr put_cname
-        lda #<m_defined
+done    lda #<m_defined
         ldy #>m_defined
         jmp puts
 .)
@@ -5636,7 +5346,7 @@ ex      cpy tl
 done    rts
 .)
 
-; ld_check : erreur si un CHARGE est en cours (SAUVE, CHARGE et EDITE
+; ld_check : erreur si un CHARGE est en cours (SAUVE et CHARGE
 ;   prendraient son FCB et son tampon : la suite du fichier serait perdue)
 ld_check
         lda ldon
@@ -6092,10 +5802,6 @@ dec_hi  .byt >10000,>1000,>100,>10
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_split .byt G_MODE,1,0,0,0,0
 gq_text  .byt G_MODE,0,0,0,0,0
-s_edit   .asc "EDIT "
-s_retl   .asc " /L",0
-s_state  .asc "LOGO    $$$"
-s_magic  .asc "LGS1"
 gq_keep  .byt G_MODE,2,0,0,0,0
 
 #include "logo.msg"            ; menus, aide (AIDE), messages (progs/msg/fr, en)
@@ -6123,8 +5829,7 @@ ernum   = ld_n+2        ; 1 : error affiche val après le message
 ssp     = ernum+1       ; haut de la zone de débordement de la pile (2)
 tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)
 autold  = tmode+1       ; 1 : la ligne de fbuf sera exécutée au prompt
-rwop    = autold+1      ; r_recs / w_recs : bit 7 = lecture
-ldon    = rwop+1        ; 1 = CHARGE en cours (fichier ouvert dans fcb)
+ldon    = autold+1      ; 1 = CHARGE en cours (fichier ouvert dans fcb)
 ensd    = ldon+1        ; ENSEMBLE en cours (niveaux)
 tkc     = ensd+1        ; TOUCHE : code de la dernière touche lue
 tki     = tkc+1         ;   et sa place dans la matrice (KB_HELD)

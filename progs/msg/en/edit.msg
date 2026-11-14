@@ -1,7 +1,6 @@
 ; edit.msg : menus et messages d'EDIT.COM en anglais (le français est dans
 ;   progs/msg/fr/edit.msg, mêmes étiquettes). Inclus par progs/edit.s.
-; Menus : .byt nombre d'articles, largeur (plus long libellé) ; it_quit et
-; s_retour (« Back » quand EDIT est lancé par LOGO) : 7 caractères copiés.
+; Menus : .byt nombre d'articles, largeur (plus long libellé)
 mn_fic  .byt 7,14
         .asc "File",0
         .asc "New",0
@@ -76,8 +75,6 @@ it_lig  .asc " Line       ^W",0
         .asc " Statistics",0
         .byt MA_TYPE
         .word c_stats
-
-s_retour .asc "Back   "
 
 m_noname  .asc "(no name)",0
 m_ins     .asc "INS"

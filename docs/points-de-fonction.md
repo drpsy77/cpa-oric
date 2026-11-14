@@ -15,9 +15,9 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | Composant | ILF | EIF | EI | EO | EQ | **PF IFPUG** | Algorithmes | **Total** |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
-| EDIT | 21 | 0 | 36 | 8 | 9 | **74** | 18 | **92** |
+| EDIT | 21 | 0 | 33 | 8 | 9 | **71** | 18 | **89** |
 | GRAPHER + GRXASM | 35 | 22 | 132 | 34 | 18 | **241** | 60 | **301** |
-| LOGO | 28 | 0 | 121 | 12 | 33 | **194** | 46 | **240** |
+| LOGO | 28 | 0 | 117 | 12 | 33 | **190** | 43 | **233** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *446* | *110* | *111* | ***887*** | *230* | ***1117*** |
+| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *227* | ***1107*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **227** | **82** | **698** | **376** | **216** | **1599** | **375** | **1974** |
+| **Total** | **227** | **82** | **691** | **376** | **216** | **1592** | **372** | **1964** |
 
-Points ajustés (indicatif, § 9) : 1 599 × 1,05 ≈ 1 679.
+Points ajustés (indicatif, § 9) : 1 592 × 1,05 ≈ 1 672.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 221 EI, 92 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 219 EI, 92 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -324,7 +324,6 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | EDIT.T04 | Enregistrer (`NOM.$$$` puis remplacement) | EI | 2 | 2 | F | 3 |
 | EDIT.T05 | Enregistrer sous (réglages relus ; fichier existant : `Remplacer (O/N)`, protégé : refusé) | EI | 2 | 4 | F | 3 |
 | EDIT.T06 | Imprimer, mis en page | EO | 2 | 3 | F | 4 |
-| EDIT.T07 | Retour vers LOGO (lancé par `EDITE`) | EI | 1 | 2 | F | 3 |
 | EDIT.T08 | Saisir et modifier le texte (insertion ou remplacement, DEL, RETURN) | EI | 1 | 3 | F | 3 |
 | EDIT.T09 | Effacer le paragraphe | EI | 1 | 1 | F | 3 |
 | EDIT.T10 | Couper le bloc | EI | 2 | 2 | F | 3 |
@@ -480,7 +479,6 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | LOGO.T31 | OUBLIETOUT | EI | 1 | 1 | F | 3 |
 | LOGO.T32 | SAUVE | EI | 1 | 2 | F | 3 |
 | LOGO.T33 | CHARGE (nom calculé, lignes exécutées) | EI | 2 | 2 | F | 3 |
-| LOGO.T34 | EDITE et retour d'EDIT (état gardé) | EI | 4 | 3 | M | 4 |
 | LOGO.T35 | SAUVEIMAGE | EI | 1 | 1 | F | 3 |
 | LOGO.T36 | CHARGEIMAGE | EI | 1 | 1 | F | 3 |
 | LOGO.T37 | LISLISTE | EI | 0 | 1 | F | 3 |
@@ -513,7 +511,6 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | LOGO.A08 | RENDS : fonctions de l'utilisateur, pile du 6502 recopiée | `logo.s` | 3 |
 | LOGO.A09 | Tortue en virgule fixe 1/256, sinus en table interpolé | `logo.s` | 3 |
 | LOGO.A10 | Dessin sans la tortue : découpage aux bords, cercle, rectangle, étiquette | `logo.s` | 3 |
-| LOGO.A11 | EDITE : état sauvé dans `LOGO.$$$`, CHAIN aller et retour | `logo.s` | 3 |
 | LOGO.A12 | Son : ENSEMBLE (contexte, imbrication), arguments gardés sur la pile | `logo.s` | 1 |
 | LOGO.A13 | TOUCHE sans délai de répétition | `logo.s` | 1 |
 | LOGO.A14 | HASARD : xorshift 32 bits, tirage par multiplication (bits de poids fort) | `logo.s` | 3 |
@@ -865,10 +862,10 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 303 | 1 449 | 574 | 1 670 | 11 % | 38 094 | 34 | 104 |
-| EDIT | 4 | 3 615 | 197 | 129 | 5 | 5 % | 8 704 | 49 | 118 |
+| Système et commandes | 70 | 12 011 | 1 474 | 569 | 1 663 | 11 % | 38 167 | 33 | 104 |
+| EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
 | GRAPHER + GRXASM | 23 | 14 740 | 1 252 | 467 | 0 | 8 % | 35 260 | 61 | 146 |
-| LOGO | 12 | 9 547 | 632 | 321 | 848 | 6 % | 19 108 | 49 | 98 |
+| LOGO | 12 | 9 267 | 616 | 314 | 834 | 6 % | 18 473 | 49 | 97 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
@@ -876,36 +873,36 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | USB | 33 | 6 613 | 706 | 261 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
-| Exemples | 35 | 1 172 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 196 | 12 846 | 1 763 | 998 | 0 | 12 % | — | 55 | — |
-| **Total** | 396 | 80 997 | 7 207 | 3 459 | 2 593 | 8 % | 162 874 | 51 | 102 |
+| Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
+| Outillage PC | 197 | 13 035 | 1 793 | 1 024 | 0 | 12 % | — | 56 | — |
+| **Total** | 398 | 80 536 | 7 244 | 3 471 | 2 572 | 8 % | 162 312 | 51 | 102 |
 
-Octets du système : code résident 13 232 (`$C000-$F3B0`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
+Octets du système : code résident 13 305 (`$C000-$F3F9`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 740 | 85 | 4,8 | 109 |
-| EDIT | 96 | 20 | 1,3 | 13 |
-| GRAPHER + GRXASM | 1 054 | 72 | 4,4 | 43 |
-| LOGO | 322 | 64 | 1,7 | 21 |
-| CMDER | 235 | 26 | 2,6 | 18 |
+| Système et commandes | 1 715 | 85 | 4,7 | 120 |
+| EDIT | 94 | 19 | 1,3 | 13 |
+| GRAPHER + GRXASM | 1 054 | 72 | 4,4 | 44 |
+| LOGO | 315 | 63 | 1,7 | 23 |
+| CMDER | 234 | 26 | 2,6 | 18 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 140 | 13 | 2,1 | 4 |
+| EDSPRITE | 140 | 13 | 2,1 | 5 |
 | VOIR | 78 | — | 4,1 | 12 |
 | USB | 80 | 13 | 0,8 | 28 |
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
-| Exemples | 0 | — | 0,0 | 29 |
-| Outillage PC | 351 | — | 1,5 | 159 |
-| Transverse (projet) | 2 966 | — | — | 123 |
-| Traduction anglaise (docs/en) | 3 064 | — | — | 58 |
-| **Total** | 10 263 | 325 | 6,4 | 271 |
+| Exemples | 0 | — | 0,0 | 30 |
+| Outillage PC | 365 | — | 1,6 | 169 |
+| Transverse (projet) | 2 469 | — | — | 134 |
+| Traduction anglaise (docs/en) | 3 055 | — | — | 65 |
+| **Total** | 9 736 | 323 | 6,1 | 295 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 271 commits du 2026-10-04 au 2026-11-08.
+Historique : 295 commits du 2026-10-04 au 2026-11-14.
 
-Réutilisation : 57 255 lignes de code écrites dans `progs/`, 67 491 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 56 901 lignes de code écrites dans `progs/`, 67 137 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -998,10 +995,10 @@ d'équivalent.
 | Domaine | CP/A PF | CP/A algo. | CP/A total | CP/M 2.2 PF | CP/M algo. | CP/M total | CP/A / CP/M |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Système, commandes, utilitaires de fichiers | 366 | 75 | 441 | 261 | 41 | 302 | 1,5 |
-| Éditeur (EDIT / ED) | 74 | 18 | 92 | 71 | 9 | 80 | 1,1 |
+| Éditeur (EDIT / ED) | 71 | 18 | 89 | 71 | 9 | 80 | 1,1 |
 | Assembleur (ASM / ASM et LOAD) | 9 | 15 | 24 | 13 | 13 | 26 | 0,9 |
 | Débogueur (DEBUG / DDT) | 75 | 13 | 88 | 51 | 15 | 66 | 1,3 |
-| **Total** | **524** | **121** | **645** | **396** | **78** | **474** | **1,4** |
+| **Total** | **521** | **121** | **642** | **396** | **78** | **474** | **1,4** |
 <!-- comparaison:fin -->
 
 | Domaine | CP/A lignes | CP/M lignes | CP/A octets | CP/M octets |

@@ -264,5 +264,4 @@ caractères au plus).
 ## 8. Plus tard
 
 - Un programme de comparaison de fichiers, à part.
-- Ouvrir un fichier dans EDIT ou HEX puis revenir à CMDER (CHAIN et un script, comme
-  `EDITE` de LOGO).
+- Ouvrir un fichier dans EDIT ou HEX puis revenir à CMDER (CHAIN et un script).

@@ -47,7 +47,6 @@ or decimals (see below).
 | `CURSOR`, `CELL c l` | cursor position `[column line]`; code of the cell (0-255) |
 | `ASCII x`, `CHAR n` | code of the first character; character of code n |
 | `SAVE "NAME`, `LOAD "NAME` | save the procedures, load a file (`NAME.LOG`: procedures and other lines, executed); the name can be computed (`LOAD :F`, `LOAD WORD "S :N`) and start with a drive (`LOAD "B:GAME`) |
-| `EDIT "NAME` | change the procedures with EDIT, then come back (see below) |
 | `SAVEPIC "NAME`, `LOADPIC "NAME` | save, load the drawing (`NAME.IMG`, without the turtle) |
 | `POTS`, `PRINTOUT "NAME`, `ERASE "NAME`, `ERALL` | list the procedures, show one, forget one, forget all |
 | `NOTE v n vol d`, `TONE`, `NOISE`, `ENVELOPE`, `MIX`, `TOGETHER`, `WAITSOUND`, `SILENCE` | sound: see "Sound in LOGO" below |
@@ -172,13 +171,10 @@ table to 1/65536, is interpolated between two degrees. `REPEAT 7 [FD 30 RT 360 /
 a whole point, otherwise a decimal rounded to 2 places (`SETHEADING 30 FD 100` gives `86.6` for
 `YCOR`). A position beyond -32768..32767 gives `Number too big`.
 
-**Changing procedures with EDIT.** `EDIT "NAME` (File menu, "Edit...") saves all the
-procedures to `NAME.LOG` and opens that file in EDIT. EDIT's File menu then offers Back: the file is saved if it changed, LOGO comes back with its variables, its words and
-lists, the turtle, the drawing and the screen mode, and loads `NAME.LOG` again (the
-procedures are those of the file). LOGO's state goes through the file `LOGO.$$$`, erased on
-return. A running program stops. You can also start `LOGO NAME`, which loads `NAME.LOG` right
-away. Going from one program to the other uses BDOS function 47 (see "Calling the BDOS"
-(`manuel.md`)).
+**Changing procedures with EDIT.** A program is written in a `.LOG` file with EDIT, then
+`LOGO NAME` loads it right away (or `LOAD "NAME` at the prompt); `BYE` goes back to CP/A to
+take it up again in EDIT. At the prompt, `TO` is for trying a procedure out, and `SAVE "NAME`
+keeps those defined at the keyboard.
 
 **Text screen.** For a program that only writes text (decimal calculations, words and lists),
 `TEXTSCREEN` (Turtle menu, "Text screen") gives the whole screen to text: 26 lines instead of
@@ -195,7 +191,7 @@ kept); the program itself does it with `TOPLEVEL`, without a message; at the `?`
 commands for the user.
 
 Procedures are saved as text (`TO` ... `END`), which can be changed with `EDIT DEMO.LOG`.
-`LOAD` also runs the other lines of the file; `SAVE` (and `EDIT`) writes the file again
+`LOAD` also runs the other lines of the file; `SAVE` writes the file again
 with the procedures alone: to keep the other lines of a loaded file, save under another
 name, or change the file in EDIT, outside LOGO. A file line is at most 126 characters, as on
 the keyboard: beyond that, `LOAD` stops on `Line over 126 chars : L 12` (the number is
@@ -241,10 +237,10 @@ Example (tried): `KERNEL.LOG` contains
 
 and `S1.LOG`, `S2.LOG`, `S3.LOG` each define a procedure `ROOM`, which plays the stage and
 chooses the next one (`MAKE "N 2`). Start `LOGO KERNEL`, then `GAME`. The name given to
-`LOAD` (as to `SAVE`, `SAVEPIC`, `LOADPIC` and `EDIT`) can be computed: `"S1`, `:F`,
+`LOAD` (as to `SAVE`, `SAVEPIC` and `LOADPIC`) can be computed: `"S1`, `:F`,
 `WORD "S :N`... A stage file can load its picture (`LOADPIC "ROOM1`). Two rules:
 
-- No `LOAD`, `SAVE` or `EDIT` during a `LOAD` (in the loaded file, or in a procedure it
+- No `LOAD` or `SAVE` during a `LOAD` (in the loaded file, or in a procedure it
   calls): they would take the file being read. LOGO refuses it (`Not allowed during LOAD :
   LOAD`) and goes back to the prompt. The kernel chains the loads,
   once each file is finished.
@@ -343,11 +339,6 @@ OUTPUT, or OUTPUT in a procedure called as a statement, is an error. Depth: abou
 **TOPLEVEL.** It is the end of `error` (`to_top`) without the message: 6502 stack reset to
 `savsp`, contexts, `spill` and the `reset_frames` stacks emptied by `repl`, `LOAD`, `TOGETHER`
 and a definition in progress abandoned, `SILENCE`.
-
-**EDIT.** SAVE, then the state into `LOGO.$$$` (header "LGS1", global variables, heap, zero
-page read back last), then CHAIN to `EDIT NAME.LOG /L`. EDIT's Back chains to
-`LOGO NAME.LOG /R`, which reloads the state and the file. Procedures are not in the state; the
-execution context is not kept.
 
 **LOAD.** Accepts a computed name; a LOAD inside a loaded file is refused (`ldon`,
 `Not allowed during LOAD :`). A large program is loaded in stages (`LOAD`, `ERASE`): that

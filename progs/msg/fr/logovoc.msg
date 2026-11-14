@@ -42,8 +42,6 @@ prims
         .word p_exec
         .asc "ECRANTEXTE",0
         .word p_etexte
-        .asc "EDITE",0
-        .word p_edite
         .asc "ECRANMIXTE",0
         .word p_emixte
         .asc "ETIQUETTE",0
@@ -244,8 +242,6 @@ ty_charge .byt $18
           .asc "CHARGE ",$22,0
 ty_sauve  .byt $18
           .asc "SAUVE ",$22,0
-ty_edite  .byt $18
-          .asc "EDITE ",$22,0
 ty_cimg   .byt $18
           .asc "CHARGEIMAGE ",$22,0
 ty_simg   .byt $18

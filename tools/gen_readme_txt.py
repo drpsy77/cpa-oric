@@ -215,7 +215,6 @@ SECTIONS = [
   ("^W", "affichage suivant : coupure mots, a 38 car., ligne entiere (defile en largeur ; < > sur la ligne d'etat)"),
   ("EDIT.CFG", "par fichier : nom maxi [MOTS|CAR|LIGNE] [largeur impr.], ex. *.LOG 126 LIGNE 80 (WORDS, CHAR, LINE aussi)"),
   ("FUNCT", "menus Fichier (dont Inserer, Imprimer), Edition, Chercher, Options"),
-  ("Retour", "(lance par EDITE de LOGO) enregistre et revient"),
  ]),
  ("CMDER : FICHIERS PLEIN ECRAN", [
   ("CMDER [d:][afn]", "fichiers de d:, filtre afn (CMDER B:*.COM)"),
@@ -297,7 +296,6 @@ SECTIONS = [
   ("EC x", "ecrit"),
   ("SAUVE \"N", "procedures -> N.LOG"),
   ("CHARGE \"N", "charge N.LOG"),
-  ("EDITE \"N", "N.LOG dans EDIT, puis Retour"),
   ("SAUVEIMAGE \"N", "dessin -> N.IMG"),
   ("CHARGEIMAGE \"N", "charge N.IMG"),
   ("3.14  2E-7", "decimaux (9 chiffres) ; 7 / 2 = 3.5"),
@@ -573,7 +571,6 @@ SECTIONS_EN = [
   ("^W", "next display: word wrap, at 38 chars, whole line (scrolls sideways; < > on the status line)"),
   ("EDIT.CFG", "per file: name max [WORDS|CHAR|LINE] [print width], e.g. *.LOG 126 LINE 80 (MOTS, CAR, LIGNE too)"),
   ("FUNCT", "menus File (with Insert, Print), Edit, Search, Options"),
-  ("Back", "(run by LOGO's EDIT) saves and goes back"),
  ]),
  ("CMDER: FULL-SCREEN FILES", [
   ("CMDER [d:][afn]", "files of d:, filter afn (CMDER B:*.COM)"),
@@ -655,7 +652,6 @@ SECTIONS_EN = [
   ("PR x", "prints (PRINT)"),
   ("SAVE \"N", "procedures -> N.LOG"),
   ("LOAD \"N", "loads N.LOG"),
-  ("EDIT \"N", "N.LOG in EDIT, then Back"),
   ("SAVEPIC \"N", "drawing -> N.IMG"),
   ("LOADPIC \"N", "loads N.IMG"),
   ("3.14  2E-7", "decimals (9 digits); 7 / 2 = 3.5"),

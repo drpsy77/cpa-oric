@@ -86,22 +86,19 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   données de l'utilisateur) ; COPY et IMPORT gardent leur source ; ASM a la sienne ; PUT
   part d'un fichier vide par définition. Une demande nouvelle se décide avec la vue
   d'ensemble.
-- **LOGO, sauvegarde du travail** : `SAUVE`, et donc `EDITE`, réécrit le fichier avec les
-  seules procédures ; les autres lignes d'un fichier chargé (tables de `DONNE`, ligne de
-  lancement) n'y sont plus. C'est l'usage de LOGO tel qu'il est : enregistrer sous un
-  nouveau nom n'écrase pas le fichier d'origine, et un fichier qui a des commandes
-  directes se modifie dans EDIT, hors de LOGO. La fusion est écartée
-  (`docs/fausses-bonnes-idees.md`). À décider :
-  - retirer `EDITE` (environ 660 octets de LOGO.COM et son article du menu Fichier ; environ
-    160 octets d'EDIT pour son mode Retour) et `SAUVE` (environ 220 octets) : on travaille
-    alors dans le fichier (EDIT, puis `LOGO NOM`), `POUR` au prompt ne sert plus qu'à
-    essayer ;
-  - une fonction de sauvegarde de données (variables, mots et listes gardés dans un
-    fichier et relus) : options à présenter avant tout code.
-- **LOGO, message d'une procédure redéfinie** : `CARRE defini.` montre un nom faux
-  (`NARRE defini.`) quand une version précédente est effacée : `def_end` affiche le nom
-  après `rec_delete`, qui a fait descendre le texte. Correction sans octet de plus :
-  afficher le nom avant l'effacement (`tools/test_logo.sh` ensuite).
+- **LOGO, sauvegarde du travail** : `SAUVE` réécrit le fichier avec les seules procédures ;
+  les autres lignes d'un fichier chargé (tables de `DONNE`, ligne de lancement) n'y sont
+  plus. C'est l'usage de LOGO tel qu'il est : enregistrer sous un nouveau nom n'écrase pas
+  le fichier d'origine, et un fichier qui a des commandes directes se modifie dans EDIT,
+  hors de LOGO. La fusion est écartée (`docs/fausses-bonnes-idees.md`). **Fait** : `EDITE`
+  retiré (635 octets de LOGO.COM, l'article Editer... du menu Fichier, l'état `LOGO.$$$` ;
+  dans EDIT, l'option `/L` et le mode Retour : 8 192 octets de code, rien ne change au
+  bloc) ; on écrit le programme dans EDIT puis `LOGO NOM` le charge. `SAUVE` est gardé.
+  **À décider** : une sauvegarde de données (variables, mots et listes gardés dans un
+  fichier et relus) : options présentées, choix de Pierre attendu.
+- **LOGO, message d'une procédure redéfinie** : **corrigé** (`def_end` affiche le nom avant
+  `rec_delete`, qui faisait descendre le texte ; sans octet de plus) ; `tools/test_logo.sh`
+  à relancer sur le Mac.
 - **`SAVE n fichier` du CCP** (à réécrire, à spécifier) : elle enregistre toujours à partir
   de `$0500` (le `SAVE` de CP/M : faire un `.COM` de la mémoire), ce qui ne sert pas à
   l'utilisateur ; aucun script ni outil du dépôt ne s'en sert. Elle est dans la banque IMG

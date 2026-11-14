@@ -1251,8 +1251,6 @@ Menus :
   imprimante qui passe d'elle-même à la ligne ne fasse pas de ligne blanche ; un mot plus long
   qu'une ligne est coupé. ESC arrête entre deux lignes. Sans imprimante rien ne bloque, mais chaque
   caractère attend 2 ms l'accusé de réception (une vingtaine de secondes pour 10 Ko) : ESC.
-  Lancé depuis LOGO par `EDITE`, EDIT montre Retour au lieu de Quitter : il enregistre le texte
-  s'il a changé et revient dans LOGO (voir LOGO).
 - **Edition** : Marquer, Copier, Couper, Coller, Eff. paragr. Le presse-papiers fait 4 Ko au plus.
   On marque un bout du bloc (CTRL-ESPACE), on déplace le curseur à l'autre bout, puis on copie
   (CTRL-C) ou on coupe (CTRL-X) ; CTRL-V colle au curseur. ESC ôte la marque.
@@ -1520,8 +1518,8 @@ distance a le port). Sans pilote série (construction sans `SERIE`), la fonction
 **Enchaîner deux programmes.** La fonction 47 (comme celle de CP/M 3) termine le programme
 et fait exécuter une ligne par le CCP, comme si on l'avait tapée : elle s'affiche après `A>`
 puis s'exécute, avant la ligne suivante d'un script DO en cours. Sous CP/M 3 la ligne est au
-DMA ; ici elle est donnée par A/Y (78 caractères au plus). Exemple : LOGO lance
-`EDIT NOM.LOG /L`, et EDIT revient par `LOGO NOM.LOG /R`.
+DMA ; ici elle est donnée par A/Y (78 caractères au plus). Exemple : `USBCD` seul enchaîne
+sur CMDER.
 
 **Accès direct.** Les fonctions 33 à 36 lisent et écrivent l'enregistrement de 128 octets dont
 le numéro est en R0-R1 (octets 33 et 34 du FCB, R2 à 0), sans tout relire depuis le début.
@@ -1624,7 +1622,7 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
   Oricutron (le `.BAS` chargé et lancé est, octet pour octet, le programme tapé au clavier) ;
   `tools/test_bas.py` : le codage de `mktap.py` contre la ROM elle-même dans le 6502 simulé.
 - **EDIT** : 8 192 octets exactement (tout ajout coûte un bloc de 2 Ko ; 842 octets de
-  tampons pourraient sortir du fichier). `/L` : l'article Quitter devient Retour (vers LOGO).
+  tampons pourraient sortir du fichier).
 - **ASM** écrit le code au fil de la passe 2, par enregistrements (`wput`) : la mémoire ne
   sert qu'aux symboles. Le fichier est effacé s'il y a des erreurs. `/T` change seulement le
   type du fichier écrit (`t_out`, aussi dans le message de fin). Les appels au BDOS sur le

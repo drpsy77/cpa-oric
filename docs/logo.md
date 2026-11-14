@@ -44,7 +44,6 @@ décimaux (voir plus bas).
 | `CURSEUR`, `CARECRAN c l` | position du curseur `[colonne ligne]` ; code de la case (0-255) |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) et commencer par un lecteur (`CHARGE "B:JEU`) |
-| `EDITE "NOM` | modifier les procédures avec EDIT, puis revenir (voir plus bas) |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
 | `SON v n vol d`, `SONF`, `BRUITV`, `ENVELOPPE`, `MELANGE`, `ENSEMBLE`, `ATTENDSSON`, `SILENCE` | le son : voir « Le son dans LOGO » plus bas |
@@ -171,14 +170,10 @@ se referme, `DR 0.5` tourne d'un demi-degré. `XCOR`, `YCOR` et `CAP` rendent un
 la tortue est sur un point entier, sinon un décimal arrondi à 2 décimales (`FIXECAP 30 AV 100`
 donne `86.6` pour `YCOR`). Une position au-delà de -32768..32767 donne `Nombre trop grand`.
 
-**Modifier ses procédures avec EDIT.** `EDITE "NOM` (menu Fichier, « Editer... ») enregistre
-toutes les procédures dans `NOM.LOG` et ouvre ce fichier dans EDIT. Le menu Fichier d'EDIT
-propose alors Retour : le fichier est enregistré s'il a changé, LOGO revient avec ses
-variables, ses mots et listes, la tortue, le dessin et le mode d'écran, et recharge `NOM.LOG`
-(les procédures sont celles du fichier). L'état de LOGO passe par le fichier `LOGO.$$$`,
-effacé au retour. Un programme en cours s'arrête. On peut aussi lancer `LOGO NOM`, qui charge
-`NOM.LOG` dès le démarrage. Le passage d'un programme à l'autre utilise la fonction 47 du
-BDOS (voir « Appel du BDOS » (`docs/manuel.md`)).
+**Modifier ses procédures avec EDIT.** Un programme s'écrit dans un fichier `.LOG` avec
+EDIT, puis `LOGO NOM` le charge dès le démarrage (ou `CHARGE "NOM` au prompt) ; `QUITTE`
+revient à CP/A pour le reprendre dans EDIT. Au prompt, `POUR` sert à essayer une procédure, et
+`SAUVE "NOM` à garder celles qu'on a définies au clavier.
 
 **Écran texte.** Pour un programme qui n'écrit que du texte (calculs décimaux, mots et
 listes), `ECRANTEXTE` (menu Tortue, « Ecran texte ») donne tout l'écran au texte : 26 lignes
@@ -195,7 +190,7 @@ variables gardées) ; le programme lui-même le fait par `RETOURPROMPT`, sans me
 les commandes à la place de l'utilisateur.
 
 Les procédures sont enregistrées comme du texte (`POUR` ... `FIN`), qu'on peut modifier avec
-`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier ; `SAUVE` (et `EDITE`)
+`EDIT DEMO.LOG`. `CHARGE` exécute aussi les autres lignes du fichier ; `SAUVE`
 réécrit le fichier avec les seules procédures : pour garder les autres lignes d'un fichier
 chargé, enregistrer sous un autre nom, ou modifier le fichier dans EDIT, hors de LOGO. Une ligne de fichier a
 126 caractères au plus, comme au clavier : au-delà, `CHARGE` s'arrête sur
@@ -243,11 +238,11 @@ globales passent d'une étape à l'autre. Exemple (essayé) : `NOYAU.LOG` contie
 
 et `S1.LOG`, `S2.LOG`, `S3.LOG` définissent chacun une procédure `SALLE`, qui fait l'étape et
 choisit la suivante (`DONNE "N 2`). On lance `LOGO NOYAU`, puis `JEU`. Le nom donné à
-`CHARGE` (comme à `SAUVE`, `SAUVEIMAGE`, `CHARGEIMAGE` et `EDITE`) peut être calculé : `"S1`,
+`CHARGE` (comme à `SAUVE`, `SAUVEIMAGE` et `CHARGEIMAGE`) peut être calculé : `"S1`,
 `:F`, `MOT "S :N`... Un fichier d'étape peut charger son image (`CHARGEIMAGE "SALLE1`). Deux
 règles :
 
-- Pas de `CHARGE`, de `SAUVE` ni d'`EDITE` pendant un `CHARGE` (dans le fichier chargé, ou
+- Pas de `CHARGE` ni de `SAUVE` pendant un `CHARGE` (dans le fichier chargé, ou
   dans une procédure qu'il appelle) : ils prendraient le fichier en cours de lecture. LOGO
   le refuse (`Interdit pendant CHARGE : CHARGE`) et revient au prompt. C'est le noyau qui
   enchaîne les chargements, une fois chaque fichier fini.
@@ -351,11 +346,6 @@ erreur. Profondeur : une quarantaine de niveaux.
 **RETOURPROMPT.** C'est la fin de `error` (`to_top`) sans le message : pile du 6502 remise à
 `savsp`, contextes, `spill` et piles de `reset_frames` vidés par `repl`, `CHARGE`, `ENSEMBLE`
 et définition en cours abandonnés, `SILENCE`.
-
-**EDITE.** SAUVE, puis l'état dans `LOGO.$$$` (en-tête « LGS1 », variables globales, tas,
-page zéro relue en dernier), puis CHAIN sur `EDIT NOM.LOG /L`. Le Retour d'EDIT enchaîne sur
-`LOGO NOM.LOG /R`, qui recharge l'état et le fichier. Les procédures ne sont pas dans l'état ;
-le contexte d'exécution n'est pas gardé.
 
 **CHARGE.** Accepte un nom calculé ; un CHARGE dans un fichier chargé est refusé (`ldon`,
 `Interdit pendant CHARGE :`). Un grand programme se charge par étapes (`CHARGE`, `OUBLIE`) :

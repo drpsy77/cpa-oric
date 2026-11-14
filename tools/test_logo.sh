@@ -30,9 +30,8 @@ else
 fi
 # place pour les scénarios (un bloc de 2 Ko chacun) : GRXASM et sa
 # bibliothèque, inutiles ici, sont retirés de la copie
-# (et d'autres, sous leurs noms des deux langues : la place manque pour l'état
-# de LOGO.$$$ pendant EDITE) ; l'accueil (AUTO.BAT) aussi, pour que les touches
-# arrivent au prompt comme avant
+# (et d'autres, sous leurs noms des deux langues) ; l'accueil (AUTO.BAT) aussi,
+# pour que les touches arrivent au prompt comme avant
 for f in GRXASM.COM GRX.INC CMDER.COM GRAPHER.COM ROTSCROL.GRX JEU.GRX PUZZLE.GRX \
     AUTO.BAT ACCUEIL.TXT WELCOME.TXT; do
   python3 tools/mkdisk.py era "$T/test.dsk" $f >/dev/null 2>&1 || true
@@ -205,13 +204,12 @@ run ecran 'PUT OUT.TXT LOGO
 ' 2600
 check ecran
 
-echo "== aller-retour avec EDIT : EDITE, Retour (environ 3 min)"
-# PUT ne survit pas au passage par EDIT : on compare le texte de l'écran.
-# Dans EDIT : une procédure tapée en tête, puis Fichier > Retour.
-K=$(printf 'LOGO\n||pour carre\nrepete 4 [av 30 dr 90]\nfin\n|donne "l [a b c]\n|carre dr 45\n|ecrantexte\n|edite "essai\n||||||pour neuf\recris 99\rfin\r||\005||\004|\004|\004|\004|\004|\004|\004||\r|||||||||||||| ecris :l\n| neuf\n| ecris cap\n| av 10\n|')
-run edite "$K" 8100
-python3 tools/screen.py "$T/edite.mem" | sed -n '2,13p' > "$T/edite.out"
-check edite
+echo "== procedure redefinie (le nom affiche apres l'effacement de l'ancienne), EDITE retire"
+run redef 'PUT OUT.TXT LOGO
+|| charge "e30
+| quitte
+' 1500
+check redef
 run logonom 'LOGO demo
 |||||| titres
 ' 1500

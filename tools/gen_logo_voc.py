@@ -40,7 +40,6 @@ VOC = [
     ("p", "p_donne",   "DONNE",                       "MAKE"),
     ("p", "p_exec",    "EXECUTE EXEC",                "RUN"),
     ("p", "p_etexte",  "ECRANTEXTE",                  "TEXTSCREEN TS"),
-    ("p", "p_edite",   "EDITE",                       "EDIT ED"),
     ("p", "p_emixte",  "ECRANMIXTE",                  "SPLITSCREEN SS"),
     ("p", "p_etiq",    "ETIQUETTE",                   "LABEL"),
     ("p", "p_ecris",   "ECRIS EC",                    "PRINT PR"),
@@ -131,7 +130,7 @@ CODE = {"p_repete": [2], "p_si": [2, 3], "p_exec": [1], "p_ensemble": [1]}
 # commandes tapées par les articles des menus : étiquette, routine, rang du
 # nom (0 long, 1 court), fin (" : guillemet, nom à compléter ; CR : exécutée)
 TYPES = [("ty_charge", "p_charge", 0, '"'), ("ty_sauve", "p_sauve", 0, '"'),
-         ("ty_edite", "p_edite", 0, '"'), ("ty_cimg", "p_cimage", 0, '"'),
+         ("ty_cimg", "p_cimage", 0, '"'),
          ("ty_simg", "p_simage", 0, '"'), ("ty_titres", "p_titres", 0, "CR"),
          ("ty_oubtout", "p_oubtout", 0, "CR"), ("ty_quitte", "p_quitte", 1, "CR"),
          ("ty_ve", "p_ve", 1, "CR"), ("ty_orig", "p_orig", 0, "CR"), ("ty_ct", "p_ct", 1, "CR"),

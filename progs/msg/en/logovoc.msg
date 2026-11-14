@@ -22,10 +22,6 @@ prims
         .word p_vt
         .asc "DOT",0
         .word p_point
-        .asc "EDIT",0
-        .word p_edite
-        .asc "ED",0
-        .word p_edite
         .asc "ENVELOPE",0
         .word p_env
         .asc "ERASE",0
@@ -260,8 +256,6 @@ ty_charge .byt $18
           .asc "LOAD ",$22,0
 ty_sauve  .byt $18
           .asc "SAVE ",$22,0
-ty_edite  .byt $18
-          .asc "EDIT ",$22,0
 ty_cimg   .byt $18
           .asc "LOADPIC ",$22,0
 ty_simg   .byt $18

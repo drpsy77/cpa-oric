@@ -1212,9 +1212,7 @@ Menus:
   lines of at most the printer width minus one character (79 for 80, adjustable in
   `EDIT.CFG`), so that a printer that wraps by itself does not add a blank line; a word longer
   than a line is cut. ESC stops between two lines. Without a printer nothing hangs, but each
-  character waits 2 ms for the acknowledge (about twenty seconds for 10 KB): ESC. Started from
-  LOGO with `EDIT`, EDIT shows Back instead of Quit: it saves the text if it
-  changed and goes back into LOGO (see LOGO).
+  character waits 2 ms for the acknowledge (about twenty seconds for 10 KB): ESC.
 - **Edit**: Mark, Copy, Cut, Paste, Del. para. (erase the paragraph). The clipboard holds 4 KB at most. Mark one end of the block (CTRL-SPACE),
   move the cursor to the other end, then copy (CTRL-C) or cut (CTRL-X); CTRL-V pastes at the
   cursor. ESC removes the mark.
@@ -1479,8 +1477,7 @@ a key is typed on the Oric, or if the remote console has the port). With no seri
 **Chaining two programs.** Function 47 (like CP/M 3's) ends the program and has the CCP run a
 line, as if it had been typed: it is shown after `A>` and then run, before the next line of a
 DO script in progress. Under CP/M 3 the line is at the DMA; here it is given by A/Y (78
-characters at most). Example: LOGO starts `EDIT NAME.LOG /L`, and EDIT comes back with
-`LOGO NAME.LOG /R`.
+characters at most). Example: `USBCD` alone chains to CMDER.
 
 **Random access.** Functions 33 to 36 read and write the 128-byte record whose number is in
 R0-R1 (FCB bytes 33 and 34, R2 at 0), without reading everything again from the start. As under
@@ -1581,7 +1578,7 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
   Oricutron (the `.BAS` loaded and run is, byte for byte, the program typed on the keyboard);
   `tools/test_bas.py`: the encoding of `mktap.py` against the ROM itself in the simulated 6502.
 - **EDIT**: exactly 8,192 bytes (any addition costs a 2 KB block; 842 bytes of buffers could
-  leave the file). `/L`: the Quitter item becomes Retour (back to LOGO).
+  leave the file).
 - **ASM** writes the code during pass 2, record by record (`wput`): memory is only used for the
   symbols. The file is erased if there are errors. `/T` only changes the type of the file
   written (`t_out`, also in the final message). Calls to the BDOS on the output FCB go through

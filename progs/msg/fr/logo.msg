@@ -5,7 +5,7 @@
 ; barre de menus : les articles tapent des commandes
 lg_bar  .byt 3
         .word mn_fic, mn_tor, mn_aid
-mn_fic  .byt 8,12
+mn_fic  .byt 7,12
         .asc "Fichier",0
         .asc "Charger...",0
         .byt MA_TYPE
@@ -13,9 +13,6 @@ mn_fic  .byt 8,12
         .asc "Sauver...",0
         .byt MA_TYPE
         .word ty_sauve
-        .asc "Editer...",0
-        .byt MA_TYPE
-        .word ty_edite
         .asc "Charger img.",0
         .byt MA_TYPE
         .word ty_cimg
@@ -91,7 +88,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "SAUFPREMIER SAUFDERNIER ITEM",13,10
           .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
           .asc "MEMBRE?  EXECUTE [..]  RENDS x",13,10
-          .asc "SAUVE/CHARGE/EDITE ",$22,"NOM  TITRES",13,10
+          .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
           .asc "ESC interrompt  QUITTE",13,10,0
@@ -122,4 +119,3 @@ e_unused  .asc "Que faire de ce que rend",0
 e_rtop    .asc "RENDS seulement dans une procedure",0
 e_text    .asc "Impossible en ecran texte :",0
 e_range   .asc "Valeur hors limites :",0
-m_lost    .asc "Etat de LOGO.$$$ perdu",13,10,0

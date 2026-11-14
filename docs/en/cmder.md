@@ -260,5 +260,4 @@ there is none (`B:projects-~  112K`, 10 characters at most).
 ## 8. Later
 
 - A file comparison program, separate.
-- Open a file in EDIT or HEX, then come back to CMDER (CHAIN and a script, like LOGO's
-  `EDIT`).
+- Open a file in EDIT or HEX, then come back to CMDER (CHAIN and a script).

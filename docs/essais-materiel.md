@@ -466,6 +466,14 @@ du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans 
   s'arrête, comme avec ESC ;
 - la même chose sur `cpa-logo-en.dsk` (`LOGO ELIZA2`, `GOODBYE`, `TOPLEVEL`).
 
+**LOGO, procédure redéfinie et EDITE retiré** (`docs/logo.md`) :
+
+- `POUR CARRE`, `FIN`, puis de nouveau `POUR CARRE`, `FIN` : le message est `CARRE defini.`
+  les deux fois (et pas `NARRE defini.`) ;
+- `EDITE "X` répond `Je ne connais pas EDITE` ; le menu Fichier de LOGO n'a plus Editer... ;
+  dans EDIT, Quitter reste Quitter, `EDIT X.LOG /L` ne change rien ;
+- `cpa-logo-en.dsk` : `EDIT "X` refusé de même, le menu File n'a plus Edit....
+
 
 
 ## À vérifier ailleurs
