@@ -56,7 +56,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 12 970 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 13 055 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
@@ -73,7 +73,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | ASM | 7 322 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: ; `#lib` : routines de `GRX.LIB` reliées | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
-| LOGO | 18 473 | Logo (français, ou anglais sur les disquettes anglaises : 18 264) : tortue, décimaux, listes, son, écran texte | `logo.md` |
+| LOGO | 18 903 | Logo (français, ou anglais sur les disquettes anglaises : 18 677) : tortue, décimaux, listes, son, écran texte, sauvegarde de données (`SAUVEDONNEES`) | `logo.md` |
 | LOGOTR | 4 408 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
 | GRAPHER, GRXASM | 18 175, 17 085 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, tableaux à adresse fixe, seules routines utiles des bibliothèques, prises précompilées dans `GRX.LIB` quand elle est là) ; fichiers de données, sprites (`.SPR`) en mode texte et dans l'image ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments | `grapher.md` |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |

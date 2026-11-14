@@ -6,6 +6,7 @@ Variables :
   INPUT=l1|l2   lignes lues par la fonction 10
   KEYS=27,65    touches rendues par CONST et CONIN du BIOS, dans l'ordre
                 (ensuite : CONST 0, CONIN 13)
+                (MENUBAR du BIOS : accepté, sans effet ; LOGO.COM tourne)
   DUMP=fichier  mémoire (64 Ko) écrite à la fin
   SCREEN=1      écran texte ($BB80, 40 x 28) affiché à la fin, lignes non
                 vides seulement : attribut 16 « . », autre code 0-31 « ^ »,
@@ -86,9 +87,10 @@ def main():
                 calls.append((pstart[0], m.processorCycles - pstart[0])); pstart = None
         if pc == 0xFFF0: break
         if pc == 0xFFF3: print('\n*BRK* non intercepté'); break
-        if pc in (0x203, 0xC006, 0xC009, 0xC00C):
+        if pc in (0x203, 0xC006, 0xC009, 0xC00C, 0xC02D):
             a = m.a
             if pc == 0xC00C: out.append(chr(a))
+            elif pc == 0xC02D: pass             # MENUBAR : rien
             elif pc in (0xC006, 0xC009):       # CONST, CONIN : drapeaux N et Z
                 if pc == 0xC006: m.a = 0xFF if keys else 0  # comme le BIOS
                 else: m.a = keys.pop(0) if keys else 13

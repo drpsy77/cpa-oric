@@ -135,6 +135,11 @@ du banc à réparer d'abord).
      seulement (au `CHARGE`, détokenisées par `SAUVE`, `LISTE` ; numéros de
      `tools/gen_logo_voc.py`), sur mesure (vitesse d'ELIZA et des traceurs, place) ; le
      contenu des listes reste du texte (code ou données : décidé à l'exécution).
+   - LOGO : **lecture et écriture de fichiers texte** (`OUVRE`, `LISFICHIER` ligne par ligne,
+     `ECRISFICHIER`, `FERME` : ~600-800 octets, un FCB et un tampon de plus) pour des données
+     trop grandes pour les 32 globales (carte, dictionnaire, journal d'un jeu). Attend un
+     programme qui en ait besoin : `SAUVEDONNEES` + `CHARGE` couvrent la sauvegarde de
+     partie et les scores (`docs/logo.md`).
    - EDIT : une édition plein écran (colonnes 0-1 comprises) pour dessiner un écran texte.
    - EDIT : un **sélecteur de fichiers** pour Ouvrir... et Insérer... (liste aux flèches,
      début de nom pour filtrer, RETURN choisit, ESC sort ; même esprit que `USBMOUNT`). À

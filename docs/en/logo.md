@@ -47,6 +47,7 @@ or decimals (see below).
 | `CURSOR`, `CELL c l` | cursor position `[column line]`; code of the cell (0-255) |
 | `ASCII x`, `CHAR n` | code of the first character; character of code n |
 | `SAVE "NAME`, `LOAD "NAME` | save the procedures, load a file (`NAME.LOG`: procedures and other lines, executed); the name can be computed (`LOAD :F`, `LOAD WORD "S :N`) and start with a drive (`LOAD "B:GAME`) |
+| `SAVEDATA "NAME`, `SAVEDATA "NAME [X Y]` | save the global variables (all, or those in the list) to `NAME.LOG`, one `MAKE "X value` line each: `LOAD "NAME` puts them back (see "A large program in stages") |
 | `SAVEPIC "NAME`, `LOADPIC "NAME` | save, load the drawing (`NAME.IMG`, without the turtle) |
 | `POTS`, `PRINTOUT "NAME`, `ERASE "NAME`, `ERALL` | list the procedures, show one, forget one, forget all |
 | `NOTE v n vol d`, `TONE`, `NOISE`, `ENVELOPE`, `MIX`, `TOGETHER`, `WAITSOUND`, `SILENCE` | sound: see "Sound in LOGO" below |
@@ -248,6 +249,23 @@ chooses the next one (`MAKE "N 2`). Start `LOGO KERNEL`, then `GAME`. The name g
   running procedure, or a procedure loaded before it, would move in memory the text being
   executed.
 
+**Saving the game.** Global variables go from one stage to the next without writing
+anything; to find them again another day, `SAVEDATA "GAME [HP GOLD BAG PLACE]` (File menu,
+"Save data...") writes `GAME.LOG`:
+
+    MAKE "HP 14
+    MAKE "GOLD 5
+    MAKE "BAG [SWORD KEY]
+    MAKE "PLACE 3
+
+This is Logo, readable in EDIT, which `LOAD "GAME` runs: the game picks up where it was
+(`LOGO KERNEL`, `LOAD "GAME`, `PLAY`). Without a list, `SAVEDATA "NAME` saves every global
+variable; an unknown name (`No value for`) or a value that does not fit in a 126-character
+line (`Too long for one line`) stops the writing, and the file is not kept. Same use for a
+high-score table: `SAVEDATA "SCORES [BEST NAME]` at the end, `LOAD "SCORES` at the start
+(an initial `SCORES.LOG` shipped with the game). Like `SAVE`, not during a `LOAD`: the kernel
+calls `SAVEDATA`.
+
 Every value (variable, parameter, intermediate result of a calculation) is typed: one type
 byte and 5 bytes of contents: an integer, or a decimal (library `progs/fp_inc.s`, reusable by
 other programs). Words and lists are texts stored in a heap (see "Implementation").
@@ -339,6 +357,11 @@ OUTPUT, or OUTPUT in a procedure called as a statement, is an error. Depth: abou
 **TOPLEVEL.** It is the end of `error` (`to_top`) without the message: 6502 stack reset to
 `savsp`, contexts, `spill` and the `reset_frames` stacks emptied by `repl`, `LOAD`, `TOGETHER`
 and a definition in progress abandoned, `SILENCE`.
+
+**SAVEDATA.** Walks the globals (`globals`, `ngl`) or the elements of the given list
+(`sc_init`, `el_next` on the line's text, `find_var`), and writes each line through the display
+routines (`put_num`, `fp_print`, `put_val`): bit 6 of `capf` sends `putc` to `wput`, `ncap`
+counts the line. `w_open`, `w_close` and `w_abort` (file erased) are shared with SAVE.
 
 **LOAD.** Accepts a computed name; a LOAD inside a loaded file is refused (`ldon`,
 `Not allowed during LOAD :`). A large program is loaded in stages (`LOAD`, `ERASE`): that

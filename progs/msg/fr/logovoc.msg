@@ -124,6 +124,8 @@ prims
         .word p_silence
         .asc "SAUVE",0
         .word p_sauve
+        .asc "SAUVEDONNEES",0
+        .word p_sdonnees
         .asc "SAUVEIMAGE",0
         .word p_simage
         .asc "TRAIT",0
@@ -242,6 +244,8 @@ ty_charge .byt $18
           .asc "CHARGE ",$22,0
 ty_sauve  .byt $18
           .asc "SAUVE ",$22,0
+ty_sdon   .byt $18
+          .asc "SAUVEDONNEES ",$22,0
 ty_cimg   .byt $18
           .asc "CHARGEIMAGE ",$22,0
 ty_simg   .byt $18
@@ -269,3 +273,4 @@ ty_lc     .byt $18
 ty_aide   .byt $18
           .asc "AIDE",13,0
 s_charge .asc "CHARGE ",$22,0
+s_donne  .asc "DONNE ",$22,0

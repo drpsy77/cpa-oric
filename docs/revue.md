@@ -94,8 +94,9 @@ résident est annoncé à Pierre (octets, temps) avant d'être codé.
   retiré (635 octets de LOGO.COM, l'article Editer... du menu Fichier, l'état `LOGO.$$$` ;
   dans EDIT, l'option `/L` et le mode Retour : 8 192 octets de code, rien ne change au
   bloc) ; on écrit le programme dans EDIT puis `LOGO NOM` le charge. `SAUVE` est gardé.
-  **À décider** : une sauvegarde de données (variables, mots et listes gardés dans un
-  fichier et relus) : options présentées, choix de Pierre attendu.
+  **Fait** : `SAUVEDONNEES "NOM [X Y]` (toutes les globales, ou celles de la liste) écrit
+  des lignes `DONNE` que `CHARGE` relit (430 octets, `docs/logo.md` « Sauvegarder la
+  partie ») ; la lecture de fichier ligne à ligne attend un besoin concret (`docs/suite.md`).
 - **LOGO, message d'une procédure redéfinie** : **corrigé** (`def_end` affiche le nom avant
   `rec_delete`, qui faisait descendre le texte ; sans octet de plus) ; `tools/test_logo.sh`
   à relancer sur le Mac.

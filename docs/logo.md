@@ -44,6 +44,7 @@ décimaux (voir plus bas).
 | `CURSEUR`, `CARECRAN c l` | position du curseur `[colonne ligne]` ; code de la case (0-255) |
 | `ASCII x`, `CAR n` | code du premier caractère ; caractère de code n |
 | `SAUVE "NOM`, `CHARGE "NOM` | enregistrer les procédures, charger un fichier (`NOM.LOG` : procédures et autres lignes, exécutées) ; le nom peut être calculé (`CHARGE :F`, `CHARGE MOT "S :N`) et commencer par un lecteur (`CHARGE "B:JEU`) |
+| `SAUVEDONNEES "NOM`, `SAUVEDONNEES "NOM [X Y]` | enregistrer les variables globales (toutes, ou celles de la liste) dans `NOM.LOG`, une ligne `DONNE "X valeur` chacune : `CHARGE "NOM` les remet (voir « Un grand programme par étapes ») |
 | `SAUVEIMAGE "NOM`, `CHARGEIMAGE "NOM` | enregistrer, charger le dessin (`NOM.IMG`, sans la tortue) |
 | `TITRES`, `LISTE "NOM`, `OUBLIE "NOM`, `OUBLIETOUT` | lister, afficher, supprimer |
 | `SON v n vol d`, `SONF`, `BRUITV`, `ENVELOPPE`, `MELANGE`, `ENSEMBLE`, `ATTENDSSON`, `SILENCE` | le son : voir « Le son dans LOGO » plus bas |
@@ -250,6 +251,23 @@ règles :
   la procédure en cours, ou une procédure chargée avant elle, déplacerait en mémoire le texte
   qui est en train de s'exécuter.
 
+**Sauvegarder la partie.** Les variables globales passent d'une étape à l'autre sans rien
+écrire ; pour les retrouver un autre jour, `SAUVEDONNEES "PARTIE [PV OR SAC LIEU]` (menu
+Fichier, « Sauver donn. ») écrit `PARTIE.LOG` :
+
+    DONNE "PV 14
+    DONNE "OR 5
+    DONNE "SAC [EPEE CLE]
+    DONNE "LIEU 3
+
+C'est du Logo, lisible dans EDIT, que `CHARGE "PARTIE` exécute : la partie reprend là où elle
+en était (`LOGO NOYAU`, `CHARGE "PARTIE`, `JEU`). Sans liste, `SAUVEDONNEES "NOM` enregistre
+toutes les variables globales ; un nom inconnu (`Pas de valeur pour`) ou une valeur qui ne
+tient pas sur une ligne de 126 caractères (`Trop long pour une ligne`) arrête l'écriture, et
+le fichier n'est pas gardé. Même usage pour un tableau des scores : `SAUVEDONNEES "SCORES
+[MEILLEUR NOM]` à la fin, `CHARGE "SCORES` au début (un `SCORES.LOG` initial livré avec le
+jeu). Comme `SAUVE`, pas pendant un `CHARGE` : c'est le noyau qui appelle `SAUVEDONNEES`.
+
 Chaque valeur (variable, paramètre, résultat intermédiaire d'un calcul) est typée : un octet
 de type et 5 octets de contenu : un entier, ou un décimal (bibliothèque `progs/fp_inc.s`,
 réutilisable par d'autres programmes). Les mots et les listes sont des textes rangés dans un tas (voir « Mise en
@@ -346,6 +364,12 @@ erreur. Profondeur : une quarantaine de niveaux.
 **RETOURPROMPT.** C'est la fin de `error` (`to_top`) sans le message : pile du 6502 remise à
 `savsp`, contextes, `spill` et piles de `reset_frames` vidés par `repl`, `CHARGE`, `ENSEMBLE`
 et définition en cours abandonnés, `SILENCE`.
+
+**SAUVEDONNEES.** Parcourt les globales (`globals`, `ngl`) ou les éléments de la liste
+donnée (`sc_init`, `el_next` sur le texte de la ligne, `find_var`), et écrit chaque ligne par
+les routines d'affichage (`put_num`, `fp_print`, `put_val`) : le bit 6 de `capf` envoie `putc`
+dans `wput`, `ncap` compte la ligne. `w_open`, `w_close` et `w_abort` (fichier effacé) sont
+partagés avec SAUVE.
 
 **CHARGE.** Accepte un nom calculé ; un CHARGE dans un fichier chargé est refusé (`ldon`,
 `Interdit pendant CHARGE :`). Un grand programme se charge par étapes (`CHARGE`, `OUBLIE`) :

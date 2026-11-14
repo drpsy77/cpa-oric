@@ -1,0 +1,25 @@
+LOGO CP/A - type HELP
+?  LOAD "E31
+Loaded.
+?  SAVEDATA "D1
+Saved.
+?  SAVEDATA "D2 [PV SAC ZZ]
+No value for ZZ
+?  ERALL
+?  PRINT :PV
+No value for PV
+?  LOAD "D1
+Loaded.
+?  PRINT :L
+A [B C] D
+?  PRINT :X
+1.5
+?  PRINT :N
+-7
+?  PRINT :M
+BONJOUR
+?  PRINT :SAC
+EPEE CLE
+?  PRINT :PV
+14
+?  QUIT

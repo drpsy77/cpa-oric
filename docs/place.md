@@ -67,7 +67,7 @@ multiple de 2 048) :
   `$51A4` à `$9CE0`, ~19,2 Ko : 738 octets de moins depuis la lecture de `GRX.LIB`) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
   blocs, 1 844 octets libres dans le dernier ; GRX.LIB (32 174, 32 115 en anglais) prend
-  16 blocs, 594 octets libres dans le dernier. HELP (12 970) prend 7 blocs, 1 366 octets libres dans le dernier (12 796 en anglais, 7
+  16 blocs, 594 octets libres dans le dernier. HELP (13 055) prend 7 blocs, 1 281 octets libres dans le dernier (12 870 en anglais, 7
   blocs). CMDER (18 025) prend 9 blocs, 407 octets libres dans le dernier ;
   EXPORT, IMPORT, USBDIR 2 blocs chacun (le code commun de `loci_inc.s` : ~1,7 Ko) ;
   USBMOUNT (4 032) prend 2 blocs, 64 octets libres (87 en anglais) ; MKTAP (4 079)

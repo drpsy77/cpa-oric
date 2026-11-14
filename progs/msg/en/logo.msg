@@ -5,7 +5,7 @@
 ; barre de menus : les articles tapent des commandes
 lg_bar  .byt 3
         .word mn_fic, mn_tor, mn_aid
-mn_fic  .byt 7,11
+mn_fic  .byt 8,12
         .asc "File",0
         .asc "Load...",0
         .byt MA_TYPE
@@ -13,6 +13,9 @@ mn_fic  .byt 7,11
         .asc "Save...",0
         .byt MA_TYPE
         .word ty_sauve
+        .asc "Save data...",0
+        .byt MA_TYPE
+        .word ty_sdon
         .asc "Load pic...",0
         .byt MA_TYPE
         .word ty_cimg
@@ -90,6 +93,7 @@ m_aide    .asc "FD BK RT LT n  PU PD PE PX",13,10
           .asc "COUNT EMPTY? WORD? NUMBER? LIST?",13,10
           .asc "MEMBER?  RUN [..]  OUTPUT x",13,10
           .asc "SAVE/LOAD ",$22,"NAME  POTS",13,10
+          .asc "SAVEDATA ",$22,"NAME [X Y] -> LOAD",13,10
           .asc "SAVEPIC/LOADPIC ",$22,"NAME",13,10
           .asc "PO/ERASE ",$22,"NAME  ERALL",13,10
           .asc "ESC interrupts  BYE",13,10,0
@@ -115,6 +119,7 @@ e_name    .asc "A name is needed after TO",0
 e_disk    .asc "Disk error",0
 e_nofile  .asc "File not found",0
 e_long    .asc "Line over 126 chars : L ",0
+e_sdlong  .asc "Too long for one line :",0
 e_noret   .asc "No output from",0
 e_unused  .asc "What to do with the output of",0
 e_rtop    .asc "OUTPUT only in a procedure",0

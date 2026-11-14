@@ -210,6 +210,25 @@ run redef 'PUT OUT.TXT LOGO
 | quitte
 ' 1500
 check redef
+echo "== SAUVEDONNEES : toutes les globales, une liste de noms, relecture par CHARGE"
+run sdonnees 'PUT OUT.TXT LOGO
+|| charge "e31
+| sauvedonnees "d1
+| sauvedonnees "d2 [pv sac zz]
+| oublietout
+| ecris :pv
+| charge "d1
+| ecris :l
+| ecris :x
+| ecris :n
+| ecris :m
+| ecris :sac
+| ecris :pv
+| quitte
+' 3200
+check sdonnees
+python3 tools/mkdisk.py get "$T/sdonnees.dsk" D1.LOG "$T/d1.raw" >/dev/null 2>&1 && tr -d '\r\032' < "$T/d1.raw" > "$T/d1.out"
+check d1
 run logonom 'LOGO demo
 |||||| titres
 ' 1500

@@ -10,7 +10,8 @@ premier est le nom long, les suivants des abréviations). Produit :
   progs/msg/fr/logovoc.msg, progs/msg/en/logovoc.msg
       tables prims (instructions) et funcs (fonctions) de LOGO.COM, rangées
       par première lettre (ix_build en tire l'index pix), les mots POUR / FIN
-      (TO / END), les commandes tapées par les menus (ty_...) et s_charge ;
+      (TO / END), les commandes tapées par les menus (ty_...), s_charge et
+      s_donne (la ligne CHARGE du démarrage, les lignes DONNE de SAUVEDONNEES) ;
       inclus par progs/logo.s (build.sh : -I msg/fr ou msg/en)
   progs/lgtr_tab.s
       les deux vocabulaires numérotés, pour le traducteur LOGOTR.COM
@@ -74,6 +75,7 @@ VOC = [
     ("p", "p_son",     "SON",                         "NOTE"),
     ("p", "p_silence", "SILENCE",                     "SILENCE"),
     ("p", "p_sauve",   "SAUVE",                       "SAVE"),
+    ("p", "p_sdonnees", "SAUVEDONNEES",               "SAVEDATA"),
     ("p", "p_simage",  "SAUVEIMAGE",                  "SAVEPIC"),
     ("p", "p_trait",   "TRAIT",                       "LINE"),
     ("p", "p_tape",    "TAPE",                        "TYPE"),
@@ -130,6 +132,7 @@ CODE = {"p_repete": [2], "p_si": [2, 3], "p_exec": [1], "p_ensemble": [1]}
 # commandes tapées par les articles des menus : étiquette, routine, rang du
 # nom (0 long, 1 court), fin (" : guillemet, nom à compléter ; CR : exécutée)
 TYPES = [("ty_charge", "p_charge", 0, '"'), ("ty_sauve", "p_sauve", 0, '"'),
+         ("ty_sdon", "p_sdonnees", 0, '"'),
          ("ty_cimg", "p_cimage", 0, '"'),
          ("ty_simg", "p_simage", 0, '"'), ("ty_titres", "p_titres", 0, "CR"),
          ("ty_oubtout", "p_oubtout", 0, "CR"), ("ty_quitte", "p_quitte", 1, "CR"),
@@ -189,6 +192,7 @@ def msg(lang):
         else:
             out.append('          .asc "%s",13,0' % n)
     out.append('s_charge .asc "%s ",$22,0' % noms(ligne("p_charge"), lang)[0])
+    out.append('s_donne  .asc "%s ",$22,0' % noms(ligne("p_donne"), lang)[0])
     p = os.path.join(RACINE, "progs", "msg", code, "logovoc.msg")
     open(p, "w", encoding="utf-8").write("\n".join(out) + "\n")
 

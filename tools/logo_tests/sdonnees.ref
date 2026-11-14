@@ -1,0 +1,25 @@
+LOGO CP/A - tapez AIDE
+?  CHARGE "E31
+Charge.
+?  SAUVEDONNEES "D1
+Sauve.
+?  SAUVEDONNEES "D2 [PV SAC ZZ]
+Pas de valeur pour ZZ
+?  OUBLIETOUT
+?  ECRIS :PV
+Pas de valeur pour PV
+?  CHARGE "D1
+Charge.
+?  ECRIS :L
+A [B C] D
+?  ECRIS :X
+1.5
+?  ECRIS :N
+-7
+?  ECRIS :M
+BONJOUR
+?  ECRIS :SAC
+EPEE CLE
+?  ECRIS :PV
+14
+?  QUITTE

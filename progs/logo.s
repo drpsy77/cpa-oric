@@ -123,7 +123,7 @@ cbv     = $D6           ; dscan : routine appelée (2)
 ts      = $D8           ; texte source (2)
 tl      = $DA           ; longueur (2)
 td      = $DC           ; destination (2)
-capf    = $DE           ; bit 7 : putc écrit dans nbuf
+capf    = $DE           ; bit 7 : putc écrit dans nbuf ; bit 6 : dans le fichier
 ncap    = $DF           ;   nombre de caractères écrits
 scp     = $2E           ; parcours d'une liste (ma) : position
 sce     = $30           ;   fin (mb)
@@ -313,6 +313,7 @@ to_top  lda defmode             ; définition en cours abandonnée
         lda #0
         sta defmode
 er2     lda #0
+        sta capf                ; putc à l'écran
         sta ldon                ; un CHARGE en cours est abandonné
         sta ensd                ; un ENSEMBLE aussi
         sta nloc
@@ -5365,23 +5366,7 @@ p_sauve
 .(
         jsr ld_check
         jsr make_fcb
-        ldx #F_DELETE
-        jsr bdos_fcb
-        ldx #F_MAKE
-        jsr bdos_fcb
-        cmp #$FF
-        bne ok
-        lda #0
-        sta clen
-        lda #<e_disk
-        ldy #>e_disk
-        jmp error
-ok      ldx #F_SETDMA
-        lda #<recbuf
-        ldy #>recbuf
-        jsr BDOS
-        lda #0
-        sta ridx
+        jsr w_open
         lda #<procbase
         sta p2
         lda #>procbase
@@ -5431,22 +5416,67 @@ endrec  lda #CR                 ; après FIN : fin de ligne et ligne vide
         lda #LF
         jsr wput
         jmp rec
-fin     lda ridx                ; complète par des ^Z
+fin     jmp w_close
+.)
+
+; w_open : crée le fichier fcb (SAUVE, SAUVEDONNEES), DMA = recbuf, ridx = 0
+w_open
+.(
+        ldx #F_DELETE
+        jsr bdos_fcb
+        ldx #F_MAKE
+        jsr bdos_fcb
+        cmp #$FF
+        bne ok
+        lda #0
+        sta clen
+        lda #<e_disk
+        ldy #>e_disk
+        jmp error
+ok      ldx #F_SETDMA
+        lda #<recbuf
+        ldy #>recbuf
+        jsr BDOS
+        lda #0
+        sta ridx
+        rts
+.)
+
+; w_close : complète par des ^Z, ferme, DMA par défaut, « Sauve. »
+w_close
+.(
+        lda ridx
         beq cl
 pad     lda #$1A
         jsr wput
         lda ridx
         bne pad
-cl      ldx #F_CLOSE
-        jsr bdos_fcb
-        ldx #F_SETDMA
-        lda #<DEF_DMA
-        ldy #>DEF_DMA
-        jsr BDOS
+cl      jsr w_end
         lda #<m_saved
         ldy #>m_saved
         jmp puts
 .)
+; w_abort : erreur A/Y pendant l'écriture : putc rendu à l'écran, fichier
+;   effacé (il serait incomplet), DMA par défaut
+w_abort
+        pha
+        tya
+        pha
+        lda #0
+        sta capf
+        ldx #F_DELETE
+        jsr bdos_fcb
+        jsr w_dma
+        pla
+        tay
+        pla
+        jmp error
+w_end   ldx #F_CLOSE
+        jsr bdos_fcb
+w_dma   ldx #F_SETDMA
+        lda #<DEF_DMA
+        ldy #>DEF_DMA
+        jmp BDOS
 
 ; wput : ajoute A à l'enregistrement, l'écrit quand il est plein
 wput
@@ -5467,8 +5497,135 @@ wput
         sta clen
         lda #<e_disk
         ldy #>e_disk
-        jmp error
+        jmp w_abort
 r       rts
+.)
+
+; SAUVEDONNEES "NOM [V1 V2...] : les variables globales (toutes, ou celles
+;   de la liste) dans NOM.LOG, une ligne DONNE "V valeur chacune : CHARGE
+;   les relit. Une ligne de plus de 126 caractères est refusée.
+p_sdonnees
+.(
+        jsr ld_check
+        jsr make_fcb
+        lda #0
+        sta sdsel               ; 0 : toutes les globales
+        sta sdix
+        lda ttype
+        cmp #TK_LBR
+        bne all
+        jsr need_list           ; la liste des noms : lstart, lend
+        lda lstart
+        sta ts
+        lda lstart+1
+        sta ts+1
+        sec
+        lda lend
+        sbc lstart
+        sta tl
+        lda lend+1
+        sbc lstart+1
+        sta tl+1
+        jsr sc_init
+        inc sdsel
+all     jsr w_open
+loop    lda sdsel
+        beq byix
+        jsr sc_end              ; nom suivant de la liste
+        bcc nxt
+        jmp done
+nxt     jsr el_next
+        lda els
+        sta tnam
+        lda els+1
+        sta tnam+1
+        lda eln
+        sta tlen
+        jsr find_var
+        bcs novar
+        jsr ld_val
+        jmp line
+byix    ldx sdix                ; globale suivante
+        cpx ngl
+        bne nxg
+        jmp done
+nxg     inc sdix
+        lda #<globals
+        ldy #>globals
+        jsr entry_addr
+        jsr ld_val
+        lda p2                  ; son nom : 10 caractères au plus,
+        sta tnam                ;   complété par des 0
+        lda p2+1
+        sta tnam+1
+        ldy #0
+nl      lda (p2),y
+        beq nle
+        iny
+        cpy #NAMELEN
+        bne nl
+nle     sty tlen
+line    lda tnam
+        sta cname
+        lda tnam+1
+        sta cname+1
+        lda tlen
+        sta clen
+        lda #0
+        sta ncap                ; longueur de la ligne
+        lda #$40                ; putc écrit dans le fichier
+        sta capf
+        lda #<s_donne
+        ldy #>s_donne
+        jsr puts
+        jsr put_cname
+        lda #" "
+        jsr putc
+        jsr put_lit
+        lda #0
+        sta capf
+        lda ncap
+        cmp #127
+        bcs long
+        lda #CR
+        jsr wput
+        lda #LF
+        jsr wput
+        jmp loop
+done    lda #0
+        sta clen
+        jmp w_close
+novar   lda tnam                ; (le nom après le message)
+        sta cname
+        lda tnam+1
+        sta cname+1
+        lda tlen
+        sta clen
+        lda #<e_novar
+        ldy #>e_novar
+        bne ab
+long    lda #<e_sdlong
+        ldy #>e_sdlong
+ab      jmp w_abort
+.)
+
+; put_lit : la valeur courante comme on la taperait : nombre, "MOT, [LISTE]
+put_lit
+.(
+        lda vt
+        cmp #T_WORD
+        bne nw
+        lda #$22
+        jsr putc
+        beq v
+nw      cmp #T_LIST
+        bne v
+        lda #"["
+        jsr putc
+        jsr put_val
+        lda #"]"
+        jmp putc
+v       jmp put_val
 .)
 
 ; SAUVEIMAGE "NOM / CHARGEIMAGE "NOM : l'image du mode SPLIT (.IMG)
@@ -5672,6 +5829,7 @@ end     sec
 ; ---------------------------------------------------------------------
 putc    bit capf
         bmi pcap
+        bvs pfile
         pha
         txa
         pha
@@ -5693,6 +5851,13 @@ pcap    sty capy                ; as_text : le caractère va dans nbuf
         sta nbuf,y
         inc ncap
         ldy capy
+        rts
+pfile   stx capy                ; SAUVEDONNEES : dans le fichier ; ncap
+        inc ncap                ;   compte la ligne (plafonné à 255)
+        bne pfl
+        dec ncap
+pfl     jsr wput
+        ldx capy
         rts
 
 puts
@@ -5825,6 +5990,8 @@ ld_tok  = bodyst+2
 ld_end  = ld_tok+2
 ld_fb   = ld_end+2
 ld_n    = ld_fb+2       ; CHARGE : numéro de la ligne lue (2)
+sdix    = ld_n          ; SAUVEDONNEES (jamais pendant CHARGE) : globale
+sdsel   = ld_n+1        ;   suivante ; 1 : les noms sont donnés en liste
 ernum   = ld_n+2        ; 1 : error affiche val après le message
 ssp     = ernum+1       ; haut de la zone de débordement de la pile (2)
 tmode   = ssp+2         ; 1 en écran texte (ECRANTEXTE)

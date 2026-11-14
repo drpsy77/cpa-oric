@@ -17,7 +17,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 33 | 8 | 9 | **71** | 18 | **89** |
 | GRAPHER + GRXASM | 35 | 22 | 132 | 34 | 18 | **241** | 60 | **301** |
-| LOGO | 28 | 0 | 117 | 12 | 33 | **190** | 43 | **233** |
+| LOGO | 28 | 0 | 120 | 12 | 33 | **193** | 44 | **237** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *439* | *110* | *111* | ***880*** | *227* | ***1107*** |
+| *Applications* | *168* | *52* | *442* | *110* | *111* | ***883*** | *228* | ***1111*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **227** | **82** | **691** | **376** | **216** | **1592** | **372** | **1964** |
+| **Total** | **227** | **82** | **694** | **376** | **216** | **1595** | **373** | **1968** |
 
-Points ajustés (indicatif, § 9) : 1 592 × 1,05 ≈ 1 672.
+Points ajustés (indicatif, § 9) : 1 595 × 1,05 ≈ 1 675.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 219 EI, 92 EO, 72 EQ.
+Nombre de fonctions comptées : 32 ILF, 16 EIF, 220 EI, 92 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -479,6 +479,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | LOGO.T31 | OUBLIETOUT | EI | 1 | 1 | F | 3 |
 | LOGO.T32 | SAUVE | EI | 1 | 2 | F | 3 |
 | LOGO.T33 | CHARGE (nom calculé, lignes exécutées) | EI | 2 | 2 | F | 3 |
+| LOGO.T34 | SAUVEDONNEES (toutes les globales ou une liste de noms, lignes DONNE relues par CHARGE) | EI | 2 | 3 | F | 3 |
 | LOGO.T35 | SAUVEIMAGE | EI | 1 | 1 | F | 3 |
 | LOGO.T36 | CHARGEIMAGE | EI | 1 | 1 | F | 3 |
 | LOGO.T37 | LISLISTE | EI | 0 | 1 | F | 3 |
@@ -511,6 +512,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | LOGO.A08 | RENDS : fonctions de l'utilisateur, pile du 6502 recopiée | `logo.s` | 3 |
 | LOGO.A09 | Tortue en virgule fixe 1/256, sinus en table interpolé | `logo.s` | 3 |
 | LOGO.A10 | Dessin sans la tortue : découpage aux bords, cercle, rectangle, étiquette | `logo.s` | 3 |
+| LOGO.A11 | SAUVEDONNEES : valeurs écrites par les routines d'affichage détournées vers le fichier (`capf`) | `logo.s` | 1 |
 | LOGO.A12 | Son : ENSEMBLE (contexte, imbrication), arguments gardés sur la pile | `logo.s` | 1 |
 | LOGO.A13 | TOUCHE sans délai de répétition | `logo.s` | 1 |
 | LOGO.A14 | HASARD : xorshift 32 bits, tirage par multiplication (bits de poids fort) | `logo.s` | 3 |
@@ -862,10 +864,10 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 011 | 1 474 | 569 | 1 663 | 11 % | 38 167 | 33 | 104 |
+| Système et commandes | 70 | 12 011 | 1 474 | 569 | 1 673 | 11 % | 38 108 | 33 | 104 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
 | GRAPHER + GRXASM | 23 | 14 740 | 1 252 | 467 | 0 | 8 % | 35 260 | 61 | 146 |
-| LOGO | 12 | 9 267 | 616 | 314 | 834 | 6 % | 18 473 | 49 | 97 |
+| LOGO | 12 | 9 432 | 624 | 318 | 847 | 6 % | 18 903 | 49 | 98 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
@@ -874,18 +876,18 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 197 | 13 035 | 1 793 | 1 024 | 0 | 12 % | — | 56 | — |
-| **Total** | 398 | 80 536 | 7 244 | 3 471 | 2 572 | 8 % | 162 312 | 51 | 102 |
+| Outillage PC | 199 | 13 074 | 1 792 | 1 024 | 0 | 12 % | — | 56 | — |
+| **Total** | 400 | 80 740 | 7 251 | 3 475 | 2 595 | 8 % | 162 683 | 51 | 102 |
 
 Octets du système : code résident 13 305 (`$C000-$F3F9`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 715 | 85 | 4,7 | 120 |
-| EDIT | 94 | 19 | 1,3 | 13 |
+| Système et commandes | 1 715 | 85 | 4,7 | 121 |
+| EDIT | 94 | 19 | 1,3 | 14 |
 | GRAPHER + GRXASM | 1 054 | 72 | 4,4 | 44 |
-| LOGO | 315 | 63 | 1,7 | 23 |
-| CMDER | 234 | 26 | 2,6 | 18 |
+| LOGO | 335 | 64 | 1,7 | 24 |
+| CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 140 | 13 | 2,1 | 5 |
 | VOIR | 78 | — | 4,1 | 12 |
@@ -893,16 +895,16 @@ Octets du système : code résident 13 305 (`$C000-$F3F9`), page `$FF00` 240, 
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 365 | — | 1,6 | 169 |
-| Transverse (projet) | 2 469 | — | — | 134 |
-| Traduction anglaise (docs/en) | 3 055 | — | — | 65 |
-| **Total** | 9 736 | 323 | 6,1 | 295 |
+| Outillage PC | 365 | — | 1,6 | 170 |
+| Transverse (projet) | 2 484 | — | — | 135 |
+| Traduction anglaise (docs/en) | 3 074 | — | — | 66 |
+| **Total** | 9 790 | 324 | 6,1 | 296 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 295 commits du 2026-10-04 au 2026-11-14.
+Historique : 296 commits du 2026-10-04 au 2026-11-14.
 
-Réutilisation : 56 901 lignes de code écrites dans `progs/`, 67 137 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 57 059 lignes de code écrites dans `progs/`, 67 295 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

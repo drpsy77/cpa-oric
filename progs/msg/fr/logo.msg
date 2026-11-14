@@ -5,7 +5,7 @@
 ; barre de menus : les articles tapent des commandes
 lg_bar  .byt 3
         .word mn_fic, mn_tor, mn_aid
-mn_fic  .byt 7,12
+mn_fic  .byt 8,12
         .asc "Fichier",0
         .asc "Charger...",0
         .byt MA_TYPE
@@ -13,6 +13,9 @@ mn_fic  .byt 7,12
         .asc "Sauver...",0
         .byt MA_TYPE
         .word ty_sauve
+        .asc "Sauver donn.",0
+        .byt MA_TYPE
+        .word ty_sdon
         .asc "Charger img.",0
         .byt MA_TYPE
         .word ty_cimg
@@ -89,6 +92,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "COMPTE VIDE? MOT? NOMBRE? LISTE?",13,10
           .asc "MEMBRE?  EXECUTE [..]  RENDS x",13,10
           .asc "SAUVE/CHARGE ",$22,"NOM  TITRES",13,10
+          .asc "SAUVEDONNEES ",$22,"NOM [X Y] -> CHARGE",13,10
           .asc "SAUVEIMAGE/CHARGEIMAGE ",$22,"NOM",13,10
           .asc "LISTE/OUBLIE ",$22,"NOM  OUBLIETOUT",13,10
           .asc "ESC interrompt  QUITTE",13,10,0
@@ -114,6 +118,7 @@ e_name    .asc "Il faut un nom apres POUR",0
 e_disk    .asc "Erreur disque",0
 e_nofile  .asc "Fichier introuvable",0
 e_long    .asc "Ligne de plus de 126 car. : L ",0
+e_sdlong  .asc "Trop long pour une ligne :",0
 e_noret   .asc "Rien n'a ete rendu par",0
 e_unused  .asc "Que faire de ce que rend",0
 e_rtop    .asc "RENDS seulement dans une procedure",0

@@ -134,6 +134,8 @@ prims
         .word p_silence
         .asc "SAVE",0
         .word p_sauve
+        .asc "SAVEDATA",0
+        .word p_sdonnees
         .asc "SAVEPIC",0
         .word p_simage
         .asc "TEXTSCREEN",0
@@ -256,6 +258,8 @@ ty_charge .byt $18
           .asc "LOAD ",$22,0
 ty_sauve  .byt $18
           .asc "SAVE ",$22,0
+ty_sdon   .byt $18
+          .asc "SAVEDATA ",$22,0
 ty_cimg   .byt $18
           .asc "LOADPIC ",$22,0
 ty_simg   .byt $18
@@ -283,3 +287,4 @@ ty_lc     .byt $18
 ty_aide   .byt $18
           .asc "HELP",13,0
 s_charge .asc "LOAD ",$22,0
+s_donne  .asc "MAKE ",$22,0

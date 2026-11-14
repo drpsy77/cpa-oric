@@ -474,6 +474,15 @@ du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans 
   dans EDIT, Quitter reste Quitter, `EDIT X.LOG /L` ne change rien ;
 - `cpa-logo-en.dsk` : `EDIT "X` refusé de même, le menu File n'a plus Edit....
 
+**LOGO, `SAUVEDONNEES`** (`docs/logo.md`, « Sauvegarder la partie ») :
+
+- `DONNE "PV 14`, `DONNE "SAC [EPEE CLE]`, `DONNE "X 1.5`, puis `SAUVEDONNEES "D1` :
+  `Sauve.` ; `TYPE D1.LOG` sous CP/A montre trois lignes `DONNE` ; `OUBLIETOUT`,
+  `CHARGE "D1`, `ECRIS :SAC` donne `EPEE CLE` ;
+- `SAUVEDONNEES "D2 [PV ZZ]` : `Pas de valeur pour ZZ`, et `DIR` ne montre pas `D2.LOG` ;
+- menu Fichier, « Sauver donn. » : tape `SAUVEDONNEES "` et attend le nom ;
+- `cpa-logo-en.dsk` : `SAVEDATA "D1`, « Save data... », lignes `MAKE`.
+
 
 
 ## À vérifier ailleurs
