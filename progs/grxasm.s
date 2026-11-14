@@ -1947,6 +1947,11 @@ k_fbox  jsr k_p4
         lda #<s_fbox
         ldy #>s_fbox
         jmp oi
+k_paint jsr k_p2
+        jsr endline
+        lda #<s_paint
+        ldy #>s_paint
+        jmp oi
 k_circle
         jsr k_p2
         lda #<s_hr
@@ -3361,6 +3366,7 @@ s_line  .asc "jsr h_line",0
 s_box   .asc "jsr h_box",0
 s_fbox  .asc "jsr h_fbox",0
 s_circle .asc "jsr h_circle",0
+s_paint .asc "jsr h_paint",0
 s_attr  .asc "jsr h_attr",0
 s_gtext .asc "jsr g_gtext",0
 s_echo  .asc "jsr g_echo",0
@@ -5845,6 +5851,7 @@ cadr
         .word k_tfont    ; TFONT
         .word k_hshow    ; HSHOW
         .word k_shide    ; HHIDE
+        .word k_paint    ; PAINT
 
 ; tampons après le programme, mis à 0 au lancement
 bufs    = *

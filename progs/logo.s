@@ -15,7 +15,7 @@
 ;  BAISSECRAYON/BC, GOMME, INVERSE, CACHETORTUE/CT, MONTRETORTUE/MT,
 ;  VIDEECRAN/VE, NETTOIE, ORIGINE, FIXECAP, FIXEXY, ECRANTEXTE, ECRANMIXTE,
 ;  Dessin (coordonnées de la tortue) : POINT, TRAIT, RECTANGLE, PAVE,
-;  CERCLE, ETIQUETTE, FIXECOULEUR ; fonction ALLUME?
+;  CERCLE, ETIQUETTE, FIXECOULEUR, REMPLIS ; fonction ALLUME?
 ;  REPETE, SI, STOP, RENDS,
 ;  ECRIS/EC, DONNE, ATTENDS, POUR...FIN, SAUVE, CHARGE, TITRES, LISTE,
 ;  OUBLIE, OUBLIETOUT, AIDE, QUITTE/AUREVOIR
@@ -2773,6 +2773,23 @@ pt      lda rtab,x              ; un côté : quatre coordonnées de rbox
         bne side
         rts
 rtab    .byt 0,2,4,2, 4,2,4,6, 4,6,0,6, 0,6,0,2
+.)
+
+; REMPLIS : remplit, avec le crayon (GOMME : dégarnit), la zone de l'image
+;   reliée à la tortue ; pnt_inc.s, partagé avec GRAPHER (PAINT)
+p_remplis
+.(
+        jsr need_img
+        jsr tur_scr
+        bcs r
+        lda x1
+        sta p_x
+        lda y1
+        sta p_y
+        lda pmode
+        sta p_pen
+        jmp paint               ; (p_ny = 128)
+r       rts
 .)
 
 ; PAVE x1 y1 x2 y2 : rectangle plein, borné à l'image
@@ -5957,6 +5974,9 @@ dec_hi  .byt >10000,>1000,>100,>10
 #include "fp_inc.s"
 ; mots et listes
 #include "ltxt_inc.s"
+; remplissage (REMPLIS) ; page zéro : dst3, libre hors des déplacements
+P_ZP    = dst3
+#include "pnt_inc.s"
 
 ; Tables des primitives (nom, 0, adresse ; 0 à la fin), rangées par
 ;   première lettre : ix_build en tire au démarrage l'index pix (début du

@@ -33,7 +33,7 @@
 ;             SHIDE k (LORES ; fichiers .SPR lus par BLOAD) ; dans l'image :
 ;             HSHOW k S$ n col y, HHIDE k : spr.inc
 ;  Image      GCLS, PEN m, PLOT x y, LINE x1 y1 x2 y2, BOX / FBOX x1 y1
-;             x2 y2, CIRCLE x y r, GTEXT col y texte, GNUM col y n,
+;             x2 y2, CIRCLE x y r, PAINT x y, GTEXT col y texte, GNUM col y n,
 ;             ATTR col y1 y2 v, GLOAD nom, GSAVE nom   (valeurs 0-255)
 ;  Calcul     LET V = expr  (ou V = expr)
 ;  Contrôle   REPEAT n ... NEXT
@@ -735,6 +735,10 @@ c_box   jsr needgfx
 c_fbox  jsr needgfx
         jsr p4
         jmp h_fbox
+c_paint jsr needgfx
+        jsr p2
+        jsr endline
+        jmp h_paint
 c_circle
         jsr needgfx
         jsr p2
@@ -2197,6 +2201,7 @@ cadr
         .word c_tfont    ; TFONT
         .word c_hshow    ; HSHOW
         .word c_hhide    ; HHIDE
+        .word c_paint    ; PAINT
 
 a_fail  = error         ; (anim.inc : pour les programmes traduits)
 r_fail  = error         ; arr.inc : erreurs, valeurs (ev, et)
@@ -2217,7 +2222,9 @@ f_mdir  = m_dirf
 #include "fil.msg"
 #include "spr.inc"
 #include "spr.msg"
-#include "hires.inc"
+#include "hpnt_inc.s"       ; h_paint et le remplissage (recopiés dans HIRES.INC sur
+#include "pnt_inc.s"        ;   la disquette) ; avant hires.inc, dont les tables suivent
+#include "hires.inc"          ;   la fin du programme
 
 ; tampons après les tables de hires.inc, mis à 0 au lancement (bufs à
 ;   fstep+1), puis les variables (vars, VSIZE octets)

@@ -74,6 +74,7 @@ m_aide    .asc "FD BK RT LT n  PU PD PE PX",13,10
           .asc "SETH n  SETXY x y  WAIT n",13,10
           .asc "DOT x y  LINE RECTANGLE FILLRECT",13,10
           .asc "  x y x y  CIRCLE r  LABEL x",13,10
+          .asc "FILL (area around the turtle)",13,10
           .asc "SETCOLOR v  NOTE v n vol d (37 = C)",13,10
           .asc "SILENCE  TONE v p vol d",13,10
           .asc "NOISE v p vol d  ENVELOPE f p",13,10

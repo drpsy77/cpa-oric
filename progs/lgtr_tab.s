@@ -1,6 +1,6 @@
 ; lgtr_tab.s : vocabulaires de LOGO numérotés, pour LOGOTR.COM
 ; Généré par tools/gen_logo_voc.py — ne pas éditer à la main.
-TR_N    = 97          ; primitives (numéros 1 à TR_N ; TR_N + 1 : FIN / END)
+TR_N    = 98          ; primitives (numéros 1 à TR_N ; TR_N + 1 : FIN / END)
 ; tr_fr : nom, 0, numéro, rang du nom (0 : long, 1 : abréviation...)
 tr_fr
         .asc "AVANCE",0,1,0
@@ -51,75 +51,76 @@ tr_fr
         .asc "OUBLIETOUT",0,36,0
         .asc "POINT",0,37,0
         .asc "PAVE",0,38,0
-        .asc "POUR",0,39,0
-        .asc "RENDS",0,40,0
-        .asc "RECULE",0,41,0
-        .asc "RE",0,41,1
-        .asc "RECTANGLE",0,42,0
-        .asc "REPETE",0,43,0
-        .asc "SI",0,44,0
-        .asc "STOP",0,45,0
-        .asc "SONF",0,46,0
-        .asc "SON",0,47,0
-        .asc "SILENCE",0,48,0
-        .asc "SAUVE",0,49,0
-        .asc "SAUVEDONNEES",0,50,0
-        .asc "SAUVEIMAGE",0,51,0
-        .asc "TRAIT",0,52,0
-        .asc "TAPE",0,53,0
-        .asc "TITRES",0,54,0
-        .asc "VIDEECRAN",0,55,0
-        .asc "VE",0,55,1
-        .asc "VIDETEXTE",0,56,0
-        .asc "VT",0,56,1
-        .asc "ALLUME?",0,57,0
-        .asc "ARCTAN",0,58,0
-        .asc "ASCII",0,59,0
-        .asc "ARRONDI",0,60,0
-        .asc "ABS",0,61,0
-        .asc "CAP",0,62,0
-        .asc "COS",0,63,0
-        .asc "CAR",0,64,0
-        .asc "COMPTE",0,65,0
-        .asc "CURSEUR",0,66,0
-        .asc "CARECRAN",0,67,0
-        .asc "DERNIER",0,68,0
-        .asc "DER",0,68,1
-        .asc "EXP",0,69,0
-        .asc "ENT",0,70,0
-        .asc "HASARD",0,71,0
-        .asc "ITEM",0,72,0
-        .asc "JOUE?",0,73,0
-        .asc "LN",0,74,0
-        .asc "LISLISTE",0,75,0
-        .asc "LL",0,75,1
-        .asc "LISMOT",0,76,0
-        .asc "LISCAR",0,77,0
-        .asc "LISTE",0,78,0
-        .asc "LISTE?",0,79,0
-        .asc "MOT",0,80,0
-        .asc "MOT?",0,81,0
-        .asc "MEMBRE?",0,82,0
-        .asc "NOMBRE?",0,83,0
-        .asc "PHRASE",0,84,0
-        .asc "PH",0,84,1
-        .asc "PREMIER",0,85,0
-        .asc "PR",0,85,1
-        .asc "QUOTIENT",0,86,0
-        .asc "RACINE",0,87,0
-        .asc "RESTE",0,88,0
-        .asc "SIN",0,89,0
-        .asc "SAUFPREMIER",0,90,0
-        .asc "SP",0,90,1
-        .asc "SAUFDERNIER",0,91,0
-        .asc "SD",0,91,1
-        .asc "TOUCHE?",0,92,0
-        .asc "TOUCHE",0,93,0
-        .asc "VIDE?",0,94,0
-        .asc "XCOR",0,95,0
-        .asc "YCOR",0,96,0
-        .asc "RETOURPROMPT",0,97,0
-        .asc "FIN",0,98,0
+        .asc "REMPLIS",0,39,0
+        .asc "POUR",0,40,0
+        .asc "RENDS",0,41,0
+        .asc "RECULE",0,42,0
+        .asc "RE",0,42,1
+        .asc "RECTANGLE",0,43,0
+        .asc "REPETE",0,44,0
+        .asc "SI",0,45,0
+        .asc "STOP",0,46,0
+        .asc "SONF",0,47,0
+        .asc "SON",0,48,0
+        .asc "SILENCE",0,49,0
+        .asc "SAUVE",0,50,0
+        .asc "SAUVEDONNEES",0,51,0
+        .asc "SAUVEIMAGE",0,52,0
+        .asc "TRAIT",0,53,0
+        .asc "TAPE",0,54,0
+        .asc "TITRES",0,55,0
+        .asc "VIDEECRAN",0,56,0
+        .asc "VE",0,56,1
+        .asc "VIDETEXTE",0,57,0
+        .asc "VT",0,57,1
+        .asc "ALLUME?",0,58,0
+        .asc "ARCTAN",0,59,0
+        .asc "ASCII",0,60,0
+        .asc "ARRONDI",0,61,0
+        .asc "ABS",0,62,0
+        .asc "CAP",0,63,0
+        .asc "COS",0,64,0
+        .asc "CAR",0,65,0
+        .asc "COMPTE",0,66,0
+        .asc "CURSEUR",0,67,0
+        .asc "CARECRAN",0,68,0
+        .asc "DERNIER",0,69,0
+        .asc "DER",0,69,1
+        .asc "EXP",0,70,0
+        .asc "ENT",0,71,0
+        .asc "HASARD",0,72,0
+        .asc "ITEM",0,73,0
+        .asc "JOUE?",0,74,0
+        .asc "LN",0,75,0
+        .asc "LISLISTE",0,76,0
+        .asc "LL",0,76,1
+        .asc "LISMOT",0,77,0
+        .asc "LISCAR",0,78,0
+        .asc "LISTE",0,79,0
+        .asc "LISTE?",0,80,0
+        .asc "MOT",0,81,0
+        .asc "MOT?",0,82,0
+        .asc "MEMBRE?",0,83,0
+        .asc "NOMBRE?",0,84,0
+        .asc "PHRASE",0,85,0
+        .asc "PH",0,85,1
+        .asc "PREMIER",0,86,0
+        .asc "PR",0,86,1
+        .asc "QUOTIENT",0,87,0
+        .asc "RACINE",0,88,0
+        .asc "RESTE",0,89,0
+        .asc "SIN",0,90,0
+        .asc "SAUFPREMIER",0,91,0
+        .asc "SP",0,91,1
+        .asc "SAUFDERNIER",0,92,0
+        .asc "SD",0,92,1
+        .asc "TOUCHE?",0,93,0
+        .asc "TOUCHE",0,94,0
+        .asc "VIDE?",0,95,0
+        .asc "XCOR",0,96,0
+        .asc "YCOR",0,97,0
+        .asc "RETOURPROMPT",0,98,0
+        .asc "FIN",0,99,0
         .byt 0
 ; tr_en : nom, 0, numéro, rang du nom (0 : long, 1 : abréviation...)
 tr_en
@@ -177,80 +178,81 @@ tr_en
         .asc "ERALL",0,36,0
         .asc "DOT",0,37,0
         .asc "FILLRECT",0,38,0
-        .asc "TO",0,39,0
-        .asc "OUTPUT",0,40,0
-        .asc "OP",0,40,1
-        .asc "BACK",0,41,0
-        .asc "BK",0,41,1
-        .asc "RECTANGLE",0,42,0
-        .asc "REPEAT",0,43,0
-        .asc "IF",0,44,0
-        .asc "STOP",0,45,0
-        .asc "TONE",0,46,0
-        .asc "NOTE",0,47,0
-        .asc "SILENCE",0,48,0
-        .asc "SAVE",0,49,0
-        .asc "SAVEDATA",0,50,0
-        .asc "SAVEPIC",0,51,0
-        .asc "LINE",0,52,0
-        .asc "TYPE",0,53,0
-        .asc "POTS",0,54,0
-        .asc "CLEARSCREEN",0,55,0
-        .asc "CS",0,55,1
-        .asc "CLEARTEXT",0,56,0
-        .asc "CT",0,56,1
-        .asc "DOT?",0,57,0
-        .asc "ARCTAN",0,58,0
-        .asc "ASCII",0,59,0
-        .asc "ROUND",0,60,0
-        .asc "ABS",0,61,0
-        .asc "HEADING",0,62,0
-        .asc "COS",0,63,0
-        .asc "CHAR",0,64,0
-        .asc "COUNT",0,65,0
-        .asc "CURSOR",0,66,0
-        .asc "CELL",0,67,0
-        .asc "LAST",0,68,0
-        .asc "EXP",0,69,0
-        .asc "INT",0,70,0
-        .asc "RANDOM",0,71,0
-        .asc "ITEM",0,72,0
-        .asc "PLAYING?",0,73,0
-        .asc "LN",0,74,0
-        .asc "READLIST",0,75,0
-        .asc "RL",0,75,1
-        .asc "READWORD",0,76,0
-        .asc "RW",0,76,1
-        .asc "READCHAR",0,77,0
-        .asc "RC",0,77,1
-        .asc "LIST",0,78,0
-        .asc "LIST?",0,79,0
-        .asc "WORD",0,80,0
-        .asc "WORD?",0,81,0
-        .asc "MEMBER?",0,82,0
-        .asc "NUMBER?",0,83,0
-        .asc "SENTENCE",0,84,0
-        .asc "SE",0,84,1
-        .asc "FIRST",0,85,0
-        .asc "QUOTIENT",0,86,0
-        .asc "SQRT",0,87,0
-        .asc "REMAINDER",0,88,0
-        .asc "SIN",0,89,0
-        .asc "BUTFIRST",0,90,0
-        .asc "BF",0,90,1
-        .asc "BUTLAST",0,91,0
-        .asc "BL",0,91,1
-        .asc "KEY?",0,92,0
-        .asc "KEY",0,93,0
-        .asc "EMPTY?",0,94,0
-        .asc "XCOR",0,95,0
-        .asc "YCOR",0,96,0
-        .asc "TOPLEVEL",0,97,0
-        .asc "END",0,98,0
+        .asc "FILL",0,39,0
+        .asc "TO",0,40,0
+        .asc "OUTPUT",0,41,0
+        .asc "OP",0,41,1
+        .asc "BACK",0,42,0
+        .asc "BK",0,42,1
+        .asc "RECTANGLE",0,43,0
+        .asc "REPEAT",0,44,0
+        .asc "IF",0,45,0
+        .asc "STOP",0,46,0
+        .asc "TONE",0,47,0
+        .asc "NOTE",0,48,0
+        .asc "SILENCE",0,49,0
+        .asc "SAVE",0,50,0
+        .asc "SAVEDATA",0,51,0
+        .asc "SAVEPIC",0,52,0
+        .asc "LINE",0,53,0
+        .asc "TYPE",0,54,0
+        .asc "POTS",0,55,0
+        .asc "CLEARSCREEN",0,56,0
+        .asc "CS",0,56,1
+        .asc "CLEARTEXT",0,57,0
+        .asc "CT",0,57,1
+        .asc "DOT?",0,58,0
+        .asc "ARCTAN",0,59,0
+        .asc "ASCII",0,60,0
+        .asc "ROUND",0,61,0
+        .asc "ABS",0,62,0
+        .asc "HEADING",0,63,0
+        .asc "COS",0,64,0
+        .asc "CHAR",0,65,0
+        .asc "COUNT",0,66,0
+        .asc "CURSOR",0,67,0
+        .asc "CELL",0,68,0
+        .asc "LAST",0,69,0
+        .asc "EXP",0,70,0
+        .asc "INT",0,71,0
+        .asc "RANDOM",0,72,0
+        .asc "ITEM",0,73,0
+        .asc "PLAYING?",0,74,0
+        .asc "LN",0,75,0
+        .asc "READLIST",0,76,0
+        .asc "RL",0,76,1
+        .asc "READWORD",0,77,0
+        .asc "RW",0,77,1
+        .asc "READCHAR",0,78,0
+        .asc "RC",0,78,1
+        .asc "LIST",0,79,0
+        .asc "LIST?",0,80,0
+        .asc "WORD",0,81,0
+        .asc "WORD?",0,82,0
+        .asc "MEMBER?",0,83,0
+        .asc "NUMBER?",0,84,0
+        .asc "SENTENCE",0,85,0
+        .asc "SE",0,85,1
+        .asc "FIRST",0,86,0
+        .asc "QUOTIENT",0,87,0
+        .asc "SQRT",0,88,0
+        .asc "REMAINDER",0,89,0
+        .asc "SIN",0,90,0
+        .asc "BUTFIRST",0,91,0
+        .asc "BF",0,91,1
+        .asc "BUTLAST",0,92,0
+        .asc "BL",0,92,1
+        .asc "KEY?",0,93,0
+        .asc "KEY",0,94,0
+        .asc "EMPTY?",0,95,0
+        .asc "XCOR",0,96,0
+        .asc "YCOR",0,97,0
+        .asc "TOPLEVEL",0,98,0
+        .asc "END",0,99,0
         .byt 0
-TR_POUR = 39          ; POUR / TO : le mot suivant est un nom de procédure
+TR_POUR = 40          ; POUR / TO : le mot suivant est un nom de procédure
 TR_FR_DP = 30        ; nom à double sens : numéro de l'instruction (0 : aucun)
-TR_FR_DF = 78        ;   et de la fonction
+TR_FR_DF = 79        ;   et de la fonction
 TR_EN_DP = 0        ; nom à double sens : numéro de l'instruction (0 : aucun)
 TR_EN_DF = 0        ;   et de la fonction
 ; par numéro (1 à TR_N) : bit 7 fonction ; bits 0-2 : arguments 1 à 3
@@ -258,8 +260,8 @@ TR_EN_DF = 0        ;   et de la fonction
 tr_kind
         .byt 0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0
         .byt 0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0
-        .byt 0,0,0,0,0,0,0,0,0,0,2,6,0,0,0,0
-        .byt 0,0,0,0,0,0,0,0,128,128,128,128,128,128,128,128
+        .byt 0,0,0,0,0,0,0,0,0,0,0,2,6,0,0,0
+        .byt 0,0,0,0,0,0,0,0,0,128,128,128,128,128,128,128
         .byt 128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128
         .byt 128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128
-        .byt 0
+        .byt 128,0

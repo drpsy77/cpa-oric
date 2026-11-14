@@ -122,6 +122,7 @@ Blocks nest up to 16 levels (loops and calls).
 | `LINE x1 y1 x2 y2` | line |
 | `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, filled rectangle |
 | `CIRCLE x y r` | circle (r ≤ 127) |
+| `PAINT x y` | fills, with the pen, the area connected to point (x, y) and in the same state as it: the unlit points of a closed shape (`PEN 1`), or the lit points (`PEN 0`: the shape and its outline vanish); lines, attribute cells and edges stop the filling; more than 63 openings on one line (hatching): partly filled, do it again in what is left; `progs/pnt_inc.s`, also in LOGO (`FILL`) and `HIRES.INC` (`h_paint`) |
 | `GTEXT col y text` | text in the picture: cell `col` (0-39, 6 points), point line `y` |
 | `GNUM col y n` | number in the picture (a score) |
 | `ATTR col y1 y2 v` | attribute in cell `col`, lines `y1` to `y2`: ink 0-7, paper 16-23 |

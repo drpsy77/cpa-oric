@@ -483,6 +483,19 @@ du Mac avec `é è à ç œ æ « » —` reçu par `XFER R NOTE.TXT /T` : dans 
 - menu Fichier, « Sauver donn. » : tape `SAUVEDONNEES "` et attend le nom ;
 - `cpa-logo-en.dsk` : `SAVEDATA "D1`, « Save data... », lignes `MAKE`.
 
+**Remplissage : `REMPLIS` de LOGO, `PAINT` de GRAPHER** (`docs/logo.md`, « Dessiner sans la
+tortue » ; `docs/grapher.md` § 6) :
+
+- LOGO : `REPETE 5 [AV 40 DR 72]`, `LC DR 36 AV 20 REMPLIS` : le pentagone se remplit (une
+  fraction de seconde) ; `GOMME REMPLIS` : le pentagone et son contour disparaissent ;
+  `FIXECOULEUR 3` puis un `REMPLIS` dans une forme ouverte à gauche : le remplissage s'arrête
+  à la colonne de couleur sans la détruire (les couleurs restent) ; `REMPLIS` sur un trait :
+  rien ; `REMPLIS` dans l'image vide : tout l'écran s'allume en une seconde environ ;
+- GRAPHER : `SPLIT`, `GCLS`, `CIRCLE 120 64 30`, `PAINT 120 64`, puis `PEN 0`, `PAINT 120 64` ;
+  un programme traduit (`GRXASM NOM /C`) qui fait `PAINT` donne le même dessin ;
+- ASM : un programme qui inclut `HIRES.INC` et appelle `h_paint` s'assemble sur l'Oric (la
+  bibliothèque a grandi : `HIRES.INC` ~ +1,2 Ko sur la disquette).
+
 
 
 ## À vérifier ailleurs

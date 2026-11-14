@@ -23,6 +23,7 @@ or decimals (see below).
 | `DOT x y`, `LINE x1 y1 x2 y2` | a point, a line (turtle coordinates) |
 | `RECTANGLE x1 y1 x2 y2`, `FILLRECT x1 y1 x2 y2` | rectangle (two opposite corners), filled rectangle |
 | `CIRCLE r` | circle of radius r (0 to 127) around the turtle |
+| `FILL` | fills the area of the picture where the turtle is (see "Drawing without the turtle") |
 | `LABEL x` | writes x (number, word or list, like `PRINT`) in the picture, to the right of the turtle and sitting on its line |
 | `SETCOLOR v` | colour of the whole picture: ink 0 to 7 (0 black, 1 red, 2 green, 3 yellow, 4 blue, 5 magenta, 6 cyan, 7 white) or paper 16 to 23 |
 | `TEXTSCREEN`, `SPLITSCREEN` | switch to the text screen (26 lines, no picture or turtle), back to the picture and the turtle |
@@ -60,6 +61,16 @@ take turtle coordinates (centre 0 0, y upwards) but do not move it. They follow 
 the colour at the start of every line of the picture: its first 6 points (column 0) become
 the colour, which drawing does not erase. `DOT? x y` returns 1 if the point is lit, 0
 otherwise. All of them refuse the text screen (`TEXTSCREEN`).
+
+`FILL` fills, with the pen, everything connected to the point where the turtle is and in the
+same state as it: the unlit points of a closed shape (`REPEAT 5 [FD 40 RT 72]`, then `PU RT 36
+FD 20 FILL`), or, with `PENERASE`, the lit points (a solid shape and its outline vanish
+together). Lines, colour cells (`SETCOLOR`) and the edges of the picture stop the filling; an
+open shape lets it leak to the edges. The turtle must be inside (on a line of the outline,
+nothing happens): move it there with the pen up. A whole screen fills in a second; a shape
+with very many detours (hatching, dots: more than 63 openings on one line) may be left
+partly filled: a second `FILL` in the part left empty finishes the job. The same filling is in
+GRAPHER (`PAINT`), from the library `pnt_inc.s`.
 
     CS CIRCLE 40 RECTANGLE -40 -40 40 40 LINE -40 -40 40 40
     LABEL [HELLO] SETCOLOR 3
@@ -362,6 +373,11 @@ and a definition in progress abandoned, `SILENCE`.
 (`sc_init`, `el_next` on the line's text, `find_var`), and writes each line through the display
 routines (`put_num`, `fp_print`, `put_val`): bit 6 of `capf` sends `putc` to `wput`, `ncap`
 counts the line. `w_open`, `w_close` and `w_abort` (file erased) are shared with SAVE.
+
+**FILL.** `progs/pnt_inc.s`, shared with GRAPHER (`PAINT`) and `HIRES.INC` (`h_paint`):
+scan-line segment filling (Heckbert), stack of 63 segments, a whole byte (6 points) handled at
+once; writes the picture directly (not through function 115). Zero page `dst3`; `p_ny` = 128;
+the pen (`pmode`) chooses: draw or erase.
 
 **LOAD.** Accepts a computed name; a LOAD inside a loaded file is refused (`ldon`,
 `Not allowed during LOAD :`). A large program is loaded in stages (`LOAD`, `ERASE`): that

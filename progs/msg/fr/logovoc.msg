@@ -100,6 +100,8 @@ prims
         .word p_pour
         .asc "QUITTE",0
         .word p_quitte
+        .asc "REMPLIS",0
+        .word p_remplis
         .asc "RENDS",0
         .word p_rends
         .asc "RECULE",0

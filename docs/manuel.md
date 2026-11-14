@@ -1062,7 +1062,7 @@ mais une règle : **le programme prend l'écran pour lui**, et rend la main prop
 - `progs/hires.inc` (`HIRES.INC` sur les disquettes) est la bibliothèque qu'un programme inclut
   (`#include "HIRES.INC"`, avec xa sur le Mac ou ASM sur l'Oric) : `h_full` (plein écran),
   `h_split`, `h_text`, `h_cls`, `h_pen`, `h_plot`, `h_line`, `h_box`, `h_fbox`, `h_circle`,
-  `h_print` (texte), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key` ; pour l'écran texte
+  `h_paint` (remplissage depuis `h_x1`, `h_y1`), `h_print` (texte), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key` ; pour l'écran texte
   (LORES) : `h_lores`, `h_lcls`, `h_loc`, `h_chr`, `h_scrn`, `h_lput`, `h_lstr`, `h_lspc`,
   `h_ltab`, `h_lnl` (curseur d'écriture `h_lx`, `h_ly`). Les paramètres sont dans
   `h_x1`, `h_y1`, `h_x2`, `h_y2`, `h_r` ; elle utilise `$C0-$C7` en page zéro et place ses

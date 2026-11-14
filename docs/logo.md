@@ -20,6 +20,7 @@ décimaux (voir plus bas).
 | `POINT x y`, `TRAIT x1 y1 x2 y2` | un point, un trait (coordonnées de la tortue) |
 | `RECTANGLE x1 y1 x2 y2`, `PAVE x1 y1 x2 y2` | rectangle (deux coins opposés), rectangle plein |
 | `CERCLE r` | cercle de rayon r (0 à 127) autour de la tortue |
+| `REMPLIS` | remplit la zone de l'image où est la tortue (voir « Dessiner sans la tortue ») |
 | `ETIQUETTE x` | écrit x (nombre, mot ou liste, comme `ECRIS`) dans l'image, à droite de la tortue et posé sur sa ligne |
 | `FIXECOULEUR v` | couleur de toute l'image : encre 0 à 7 (0 noir, 1 rouge, 2 vert, 3 jaune, 4 bleu, 5 magenta, 6 cyan, 7 blanc) ou papier 16 à 23 |
 | `ECRANTEXTE`, `ECRANMIXTE` | passer en écran texte (26 lignes, sans image ni tortue), revenir à l'image et à la tortue |
@@ -57,6 +58,17 @@ bords de l'image ; `CERCLE` et `ETIQUETTE` ne dessinent rien si la tortue est ho
 l'image. `FIXECOULEUR` pose la couleur en tête de chaque ligne de l'image : ses 6 premiers
 points (la colonne 0) deviennent la couleur, que le dessin n'efface pas. `ALLUME? x y` rend 1
 si le point est allumé, 0 sinon. Tous refusent l'écran texte (`ECRANTEXTE`).
+
+`REMPLIS` remplit, avec le crayon, tout ce qui est relié au point où est la tortue et dans le
+même état que lui : les points éteints d'une forme fermée (`REPETE 5 [AV 40 DR 72]`, puis
+`LC DR 36 AV 20 REMPLIS`), ou, avec `GOMME`, les points allumés (une forme pleine et son
+contour s'effacent d'un coup). Les traits, les cases de couleur (`FIXECOULEUR`) et les bords
+de l'image arrêtent le remplissage ; une forme ouverte laisse fuir le remplissage jusqu'aux
+bords. La tortue doit être à l'intérieur (sur un trait du contour, rien ne se passe) : on
+l'y met crayon levé. Un écran entier se remplit en une seconde ; une forme aux très nombreux
+détours (hachures, pointillés : plus de 63 ouvertures sur une même ligne) peut rester remplie
+en partie : un second `REMPLIS` dans la partie restée vide finit le travail. Même
+remplissage dans GRAPHER (`PAINT`), par la bibliothèque `pnt_inc.s`.
 
     VE CERCLE 40 RECTANGLE -40 -40 40 40 TRAIT -40 -40 40 40
     ETIQUETTE [BONJOUR] FIXECOULEUR 3
@@ -370,6 +382,11 @@ donnée (`sc_init`, `el_next` sur le texte de la ligne, `find_var`), et écrit c
 les routines d'affichage (`put_num`, `fp_print`, `put_val`) : le bit 6 de `capf` envoie `putc`
 dans `wput`, `ncap` compte la ligne. `w_open`, `w_close` et `w_abort` (fichier effacé) sont
 partagés avec SAUVE.
+
+**REMPLIS.** `progs/pnt_inc.s`, partagé avec GRAPHER (`PAINT`) et `HIRES.INC` (`h_paint`) :
+remplissage par segments de ligne (Heckbert), pile de 63 segments, un octet entier (6 points)
+traité d'un coup ; écrit l'image directement (pas par la fonction 115). Page zéro `dst3` ;
+`p_ny` = 128 ; le crayon (`pmode`) décide du sens : trace ou gomme.
 
 **CHARGE.** Accepte un nom calculé ; un CHARGE dans un fichier chargé est refusé (`ldon`,
 `Interdit pendant CHARGE :`). Un grand programme se charge par étapes (`CHARGE`, `OUBLIE`) :

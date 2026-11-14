@@ -15,7 +15,10 @@ Une ligne « ;#msg NOM.msg » de la bibliothèque est remplacée par la copie
 allégée de DOSSIER_MSG/NOM.msg (par défaut msg/fr à côté de SOURCE ;
 msg/en pour la disquette anglaise) : la copie de la disquette porte ses
 messages, que les programmes de progs/ incluent à part (ASM n'a qu'un
-niveau d'inclusion). « - » : marques retirées sans les messages.
+niveau d'inclusion). De même « ;#inc NOM.s » : la copie allégée de
+progs/NOM.s (hpnt_inc.s et pnt_inc.s dans HIRES.INC ; pnt_inc.s est
+partagé avec LOGO). « - » : marques retirées sans les messages ni les
+inclusions.
 Les annotations « ;> » et « ;& » (ORIC.INC), « ;[ » et « ;] » (ARR.INC :
 « ;[ » seul, sans son commentaire) restent : tools/mark_inc.py les lit, puis
 les retire."""
@@ -54,9 +57,12 @@ def main(src, dst, msgdir=None):
     name = os.path.basename(dst).upper()
     res = ["; %s : version allegee, documentation dans les sources de CP/A" % name]
     for l in lines:
-        if l.startswith(";#msg "):
+        if l.startswith(";#msg ") or l.startswith(";#inc "):
             if msgdir != "-":
-                m = os.path.join(msgdir, l.split()[1])
+                if l.startswith(";#msg "):
+                    m = os.path.join(msgdir, l.split()[1])
+                else:
+                    m = os.path.join(os.path.dirname(src) or ".", l.split()[1])
                 for ml in open(m, encoding="latin-1").read().splitlines():
                     s = strip_line(ml)
                     if s:

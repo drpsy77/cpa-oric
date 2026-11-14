@@ -64,6 +64,7 @@ VOC = [
     ("p", "p_oubtout", "OUBLIETOUT",                  "ERALL"),
     ("p", "p_point",   "POINT",                       "DOT"),
     ("p", "p_pave",    "PAVE",                        "FILLRECT"),
+    ("p", "p_remplis", "REMPLIS",                      "FILL"),
     ("p", "p_pour",    "POUR",                        "TO"),
     ("p", "p_rends",   "RENDS",                       "OUTPUT OP"),
     ("p", "p_re",      "RECULE RE",                   "BACK BK"),

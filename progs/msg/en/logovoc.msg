@@ -36,6 +36,8 @@ prims
         .word p_av
         .asc "FILLRECT",0
         .word p_pave
+        .asc "FILL",0
+        .word p_remplis
         .asc "HELP",0
         .word p_aide
         .asc "HIDETURTLE",0

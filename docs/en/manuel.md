@@ -1030,7 +1030,7 @@ but a rule: **the program takes the screen for itself**, and hands it back prope
 - `progs/hires.inc` (`HIRES.INC` on the disks) is the library a program includes
   (`#include "HIRES.INC"`, with xa on the Mac or ASM on the Oric): `h_full` (full screen),
   `h_split`, `h_text`, `h_cls`, `h_pen`, `h_plot`, `h_line`, `h_box`, `h_fbox`, `h_circle`,
-  `h_print` (text), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key`; for the text screen
+  `h_paint` (filling from `h_x1`, `h_y1`), `h_print` (text), `h_attr`, `h_point`, `h_load`, `h_save`, `h_key`; for the text screen
   (LORES): `h_lores`, `h_lcls`, `h_loc`, `h_chr`, `h_scrn`, `h_lput`, `h_lstr`, `h_lspc`,
   `h_ltab`, `h_lnl` (writing cursor `h_lx`, `h_ly`). The parameters are in `h_x1`, `h_y1`,
   `h_x2`, `h_y2`, `h_r`; it uses `$C0-$C7` in the zero page and places its tables (2 KB) after

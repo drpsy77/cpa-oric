@@ -119,6 +119,7 @@ Les blocs s'imbriquent sur 16 niveaux (boucles et appels).
 | `LINE x1 y1 x2 y2` | ligne |
 | `BOX x1 y1 x2 y2`, `FBOX x1 y1 x2 y2` | rectangle, rectangle plein |
 | `CIRCLE x y r` | cercle (r ≤ 127) |
+| `PAINT x y` | remplit, avec le crayon, la zone reliée au point (x, y) et dans le même état que lui : les points éteints d'une forme fermée (`PEN 1`), ou les points allumés (`PEN 0` : la forme et son contour s'effacent) ; traits, cases d'attribut et bords arrêtent le remplissage ; plus de 63 ouvertures sur une même ligne (hachures) : remplissage en partie, à refaire dans ce qui reste ; `progs/pnt_inc.s`, aussi dans LOGO (`REMPLIS`) et `HIRES.INC` (`h_paint`) |
 | `GTEXT col y texte` | texte dans l'image : case `col` (0-39, 6 points), ligne de points `y` |
 | `GNUM col y n` | nombre dans l'image (un score) |
 | `ATTR col y1 y2 v` | attribut dans la case `col`, lignes `y1` à `y2` : encre 0-7, papier 16-23 |

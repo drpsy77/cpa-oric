@@ -34,7 +34,9 @@ du banc à réparer d'abord).
    - Sprites dans l'image (`HSHOW`, `HHIDE`) : placement au point près en x (décalages).
    - Caractères animés au 50 Hz (`docs/grapher.md` § 16).
    - Un **dessin assisté** (`.COM`, plus précis que la tortue de LOGO : points, traits,
-     formes, remplissage, couleurs par attributs, vers `.HIR` / `.HIZ`), à spécifier.
+     formes, remplissage, couleurs par attributs, vers `.HIR` / `.HIZ`), à spécifier. Le
+     remplissage existe déjà (`progs/pnt_inc.s` : `PAINT` de GRAPHER, `REMPLIS` de LOGO,
+     `h_paint` de `HIRES.INC`).
 2. **GRAPHER, plateforme de développement** (bibliothèques précompilées `GRX.LIB` :
    `docs/grapher.md` § 12 et § 15)
    - Phases d'un jeu (`RUN`), à décider : `docs/grapher.md` § 17.

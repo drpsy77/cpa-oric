@@ -7,6 +7,9 @@ Variables :
   KEYS=27,65    touches rendues par CONST et CONIN du BIOS, dans l'ordre
                 (ensuite : CONST 0, CONIN 13)
                 (MENUBAR du BIOS : accepté, sans effet ; LOGO.COM tourne)
+  Fonction 115 : une image SPLIT (240 x 128, $A000) est tenue en mémoire
+                (CLS, MODE, PEN, PLOT, LINE, BOX, FBOX ; le reste ignoré) :
+                à lire dans DUMP
   DUMP=fichier  mémoire (64 Ko) écrite à la fin
   SCREEN=1      écran texte ($BB80, 40 x 28) affiché à la fin, lignes non
                 vides seulement : attribut 16 « . », autre code 0-31 « ^ »,
@@ -68,6 +71,35 @@ def main():
         for f in os.listdir(d):
             if f.upper() == os.path.basename(p).upper(): return os.path.join(d, f)
         return None
+    gpen = [1]
+    def gpix(x, y):
+        if not (0 <= x < 240 and 0 <= y < 128): return
+        i = 0xA000 + 40 * y + x // 6; b = mem[i]
+        if b & 0x40 == 0: return
+        k = 0x20 >> (x % 6)
+        mem[i] = (b & ~k) if gpen[0] == 0 else (b | k) if gpen[0] == 1 else (b ^ k)
+    def gline(x1, y1, x2, y2):
+        dx, dy = abs(x2 - x1), abs(y2 - y1); sx = 1 if x2 > x1 else -1; sy = 1 if y2 > y1 else -1
+        e = dx - dy
+        while True:
+            gpix(x1, y1)
+            if x1 == x2 and y1 == y2: break
+            e2 = 2 * e
+            if e2 > -dy: e -= dy; x1 += sx
+            if e2 < dx: e += dx; y1 += sy
+    def gfx(a):
+        op, p = mem[a], mem[a+1:a+6]
+        if op == 0 or (op == 10 and p[0] == 1):      # CLS, MODE SPLIT : image vide
+            mem[0xA000:0xA000+40*128] = b'\x40' * (40 * 128)
+        elif op == 1: gpen[0] = p[0]
+        elif op == 2: gpix(p[0], p[1])
+        elif op == 3: gline(p[0], p[1], p[2], p[3])
+        elif op in (4, 5):
+            xa, xb = sorted((p[0], p[2])); ya, yb = sorted((p[1], p[3]))
+            if op == 5:
+                for y in range(ya, yb + 1): gline(xa, y, xb, y)
+            else:
+                gline(xa, ya, xb, ya); gline(xa, yb, xb, yb); gline(xa, ya, xa, yb); gline(xb, ya, xb, yb)
     steps = 0
     prof = int(os.environ['PROF'], 16) if os.environ.get('PROF') else None
     calls = []
@@ -143,12 +175,13 @@ def main():
                     l = bytes(mem[adr:mem.index(0, adr)]).decode()
                     out.append('[CHAIN %s]\n' % l)
                     break
-                elif x == 115:
-                    pass        # graphisme : mode texte (GETMODE -> 0)
+                elif x == 115:  # graphisme : image SPLIT tenue en mémoire
+                    gfx(adr)    #   (CLS, MODE, PEN, PLOT, LINE, BOX, FBOX)
                 elif x == 116:
                     pass        # son : rien
                 else:
                     print('BDOS ?', x); break
+                m.p = (m.p & ~0x82) | (0x80 if m.a & 0x80 else 0) | (0 if m.a else 0x02)  # N, Z
             # rts
             lo = mem[0x100 + ((m.sp + 1) & 255)]; hi = mem[0x100 + ((m.sp + 2) & 255)]
             m.sp = (m.sp + 2) & 255; m.pc = ((hi << 8) | lo) + 1

@@ -27,6 +27,11 @@
 ;    h_line    ligne (h_x1, h_y1) - (h_x2, h_y2)
 ;    h_box     rectangle, h_fbox rectangle plein (mêmes coins)
 ;    h_circle  cercle de centre (h_x1, h_y1), rayon h_r (127 au plus)
+;    h_paint   remplit depuis (h_x1, h_y1) la zone reliée de points
+;              éteints (crayon 1 ou 2) ou allumés (crayon 0 : gomme),
+;              jusqu'aux points de l'autre état, aux cases d'attribut et
+;              aux bords (progs/hpnt_inc.s et pnt_inc.s, recopiés ici
+;              sur la disquette ; dans le dépôt, à inclure à part)
 ;    h_print   chaîne A/Y (terminée par 0) à la case h_x1 (0-39), à
 ;              partir de la ligne de points h_y1
 ;    h_attr    attribut A (encre 0-7, papier 16-23) dans la case h_x1,
@@ -1151,6 +1156,11 @@ hz_fin  lda hp
         ldy hp+1
         rts
 .)
+
+; h_paint (hpnt_inc.s) et le remplissage (pnt_inc.s) : recopiés ici sur
+;   la disquette ; les programmes du dépôt qui s'en servent les incluent à part
+;#inc hpnt_inc.s
+;#inc pnt_inc.s
 
 ; h_sys : GLOAD / GSAVE du système (X = op, A/Y = FCB)
 h_sys   stx h_blk

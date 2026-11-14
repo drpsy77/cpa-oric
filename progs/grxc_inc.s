@@ -1710,4 +1710,6 @@ cmds
         .byt "W"|$80,0
         .asc "HHID"
         .byt "E"|$80,0
+        .asc "PAIN"
+        .byt "T"|$80,0
         .byt 0

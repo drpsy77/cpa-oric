@@ -74,6 +74,7 @@ m_aide    .asc "AV RE DR GA n  LC BC GOMME INVERSE",13,10
           .asc "FIXECAP n  FIXEXY x y  ATTENDS n",13,10
           .asc "POINT x y  TRAIT RECTANGLE PAVE x y x y",13,10
           .asc "CERCLE r  ETIQUETTE x  FIXECOULEUR v",13,10
+          .asc "REMPLIS (zone autour de la tortue)",13,10
           .asc "SON v n vol d (37 = do)  SILENCE",13,10
           .asc "SONF v p vol d  BRUITV v p vol d",13,10
           .asc "ENVELOPPE f p  MELANGE v son bruit",13,10
