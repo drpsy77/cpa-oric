@@ -179,6 +179,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
 | `python3 tools/test_fichiers.py [--vite] [--garde DOSSIER] [mots]` | sûreté des fichiers : enregistrements qui tournent mal pour EDIT et GRAPHER (§ 4.1) |
 | `python3 tools/grx_colig.py FICHIER.GRX` | passe un `.GRX` de l'ancien ordre des tableaux à deux dimensions (ligne, colonne) au nouveau (colonne, ligne) ; `--voir` montre sans écrire ; une seule fois par fichier |
 | `python3 tools/test_fs.py` | système de fichiers (6502 simulé, quelques secondes) : fin de fichier rendue à chaque lecture, ajout après la fin, position et taille, pour 100, 128 et 256 enregistrements |
+| `python3 tools/test_mou.py` | souris du LOCI (`progs/mou_inc.s`, 6502 et LOCI simulés, quelques secondes) : sans LOCI, départ, mouvements tirés au hasard pour chaque sensibilité contre un calcul en Python, boutons, molette, réglage gardé dans `0:CPA.MOU`, fin |
 | `python3 tools/test_fdc.py` | pilote disque face à un contrôleur qui ne répond plus (6502 simulé, ~15 s) : `disk_read` et `disk_write` doivent échouer, jamais déclarer l'accès bon |
 | `python3 tools/mkdisk.py repare IMAGE SORTIE` | réécrit une image saine dans une autre (SORTIE obligatoire), au format de l'image (80 pistes, ou 42 pour une ancienne, avant `conv`), par exemple après Clock Signal, qui en réécrivant une piste ne garde que deux des trois `$A1` de chaque synchronisation (la disquette paraît alors vide à Oricutron et au LOCI) |
 | `python3 tools/gen_readme_txt.py` | régénère README.TXT (court) et la table compressée de HELP.COM |
@@ -198,7 +199,7 @@ Oricutron : supprimer `tools/oricutron/` puis relancer `./tools/setup_linux.sh`.
   py65 installés, `./build.sh`, puis les images du dépôt comparées à celles qui viennent
   d'être construites par leurs sommes (`build/disquettes.md5` ; une construction oubliée
   fait échouer la tâche), disquettes gardées 90 jours comme artefact, `test_asm.sh`,
-  `test_fs.py`, `test_fdc.py`, `test_fp.py`, `test_inc.sh`, `test_grapher.sh` dans les deux
+  `test_fs.py`, `test_fdc.py`, `test_mou.py`, `test_fp.py`, `test_inc.sh`, `test_grapher.sh` dans les deux
   langues. Restent à lancer chez soi : `smoke_test.sh` et tout ce qui demande Oricutron ou
   les ROM de l'Oric (`test_bas.py`), `test_logo.sh` et `test_lib.sh` (longs).
 - `.github/workflows/docs.yml` (« Documents ») : `check_en.py` quand un document change.

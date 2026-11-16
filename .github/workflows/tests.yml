@@ -47,10 +47,11 @@ jobs:
       - name: ASM.COM == xa
         run: tools/test_asm.sh
 
-      - name: Fichiers, pilote disque, décimaux
+      - name: Fichiers, pilote disque, souris, décimaux
         run: |
           python3 tools/test_fs.py
           python3 tools/test_fdc.py
+          python3 tools/test_mou.py
           python3 tools/test_fp.py
 
       - name: Bibliothèques .INC
