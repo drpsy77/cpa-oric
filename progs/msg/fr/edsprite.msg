@@ -104,7 +104,7 @@ mn_des  .byt 11,17
         .byt MA_TYPE
         .word c_9d
 
-mn_vue  .byt 3,12
+mn_vue  .byt 4,12
         .asc "Vue",0
         .asc "Codes hexa ^H",0
         .byt MA_TYPE
@@ -115,6 +115,9 @@ mn_vue  .byt 3,12
         .asc "Animer",0
         .byt MA_TYPE
         .word c_a0
+        .asc "Souris...",0
+        .byt MA_TYPE
+        .word c_a2
 
 K_YES   = "O"           ; touche Oui
 K_SPR   = "S"           ; nouveau fichier : sprites
@@ -138,6 +141,11 @@ m_noclip  .asc "Presse-papiers vide",0
 m_last    .asc "Dernier sprite : garde",0
 m_rot     .asc "Quart de tour : sprite 4x3",0
 m_badnum  .asc "Code de 32 a 127",0
+q_mouse   .asc "Vitesse souris (1 lent a 5 vif) : ",0
+m_nomouse .asc "Pas de souris (LOCI)",0
+m_mousek  .asc "Vitesse de la souris gardee",0
+m_mouseko .asc "Vitesse non gardee (LOCI)",0
+m_badspd  .asc "Vitesse de 1 a 5",0
 m_badsize .asc "Taille : 1 a 4 x 1 a 4 (2X2)",0
 m_badname .asc "Nom : 1 a 4 lettres ou chiffres",0
 m_badfn   .asc "Nom de fichier incorrect",0

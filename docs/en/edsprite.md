@@ -7,7 +7,8 @@
 Full-screen editor for GRAPHER's `.SPR` files (format: `grapher.md` § 10.1): sprites (kind
 0: drawing and mask) and tiles or characters (kind 1: drawing only, copied into the font by
 `TFONT`). It replaces HEX and `tools/mkspr.py` for making these files on the Oric. One `.COM`
-(8,802 bytes; 8,967 in French), nothing resident. On the disks that have GRAPHER: `cpa.dsk`,
+(10,265 bytes; 10,444 in French), nothing resident. With a LOCI, the USB mouse works too
+(§ 3.1); everything can be done from the keyboard. On the disks that have GRAPHER: `cpa.dsk`,
 `cpa-exemples.dsk`, `cpa-anim.dsk` and their English twins.
 
 ## 1. Calling it
@@ -99,6 +100,27 @@ one to the other (or the Sprite menu, Select / Draw).
 | `^Z` `^X` `^C` `^V` | undo, cut, copy, paste the character under the cursor | the whole sprite |
 | `^N` `^O` `^S` `^Q` | new file, open, save, quit | same |
 
+### 3.1 Mouse (LOCI)
+
+A USB mouse plugged into the LOCI is taken at start; without a LOCI (or in an emulator
+without a mouse), nothing changes.
+
+- **Pointer**: the screen cell under the mouse, in inverse video (in normal video on the
+  inverse row of the list). In the grid, while drawing, the cursor follows it.
+- **Left button**: sets the state chosen from the keyboard (SPACE: full, `M`: mask; full at
+  start); **right**: transparent (eraser; tiles: empty); **middle**: mask (sprites only). A
+  click sets one dot; with the button held, the mouse draws (two positions read in a row are
+  joined by a line, with no gap). A click in the grid switches to drawing. `^Z` undoes the
+  whole stroke.
+- **Left click in the list**: that sprite becomes the current one (selection). **In
+  "Real"**: next backdrop.
+- **Wheel**: previous sprite (up) or next.
+- **Scrolling** (sprite 4 characters high): the pointer on the row of numbers, above the
+  grid, moves it up by one character; on the help row, below it, down.
+- **Speed**: View menu, Mouse...; from 1 (slow) to 5 (fast), 3 at first (16 mouse steps per
+  cell). The LOCI keeps it (file `0:CPA.MOU` in its memory), for later runs and for the
+  other programs that will use the mouse.
+
 ## 4. Menus (FUNCT)
 
 - **File**: New `^N` (question: sprites or tiles), Open... `^O`, Save `^S`, Save as...,
@@ -121,7 +143,8 @@ one to the other (or the Sprite menu, Select / Draw).
   as a starting point. Each transformation can be undone with `^Z`.
 - **View**: Hex codes `^H`, Backdrop (none, checks, bricks, grass, in turn), Animate: plays
   in "Real" the sprites of the same size whose names start the same way (without the final
-  digits: `HER1`, `HER2`...), one every 12/50 s; a key stops it.
+  digits: `HER1`, `HER2`...), one every 12/50 s; a key stops it. Mouse...: speed from 1
+  to 5 (§ 3.1); without a mouse, `No mouse (LOCI)`.
 
 ## 5. Files and safety
 
@@ -147,6 +170,14 @@ one to the other (or the Sprite menu, Select / Draw).
   a RESET in EDSPRITE, the history may keep damaged lines (harmless: lengths are bounded).
 - The grid is redrawn cell by cell (one read of the sprite per character and per dot row,
   then its 6 dots).
+- Mouse: library `progs/mou_inc.s` (read through window 0 of the XRAM, report at `$FF00`,
+  nothing under interrupt; test `tools/test_mou.py`). EDSPRITE reads it in its waiting loop
+  and at each grid row during a redraw (about a tenth of a second): the library adds up
+  buttons, wheel and moves, nothing is lost. A move alone only redraws the cursor and the
+  status line; a dot set, the whole screen. After a key, the mouse move made meanwhile is
+  dropped (`mo_sync`). Position in text cells (columns 2-39, rows 1-27: never on the
+  attributes nor on the menu bar). On leaving, the LOCI stops writing the mouse. Test in
+  Oricutron: `ORIC_MOUSE` (`docs/atelier.md`).
 
 ## 7. Later
 

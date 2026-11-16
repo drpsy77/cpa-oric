@@ -3,7 +3,8 @@
 Éditeur plein écran des fichiers `.SPR` de GRAPHER (format : `grapher.md` § 10.1) : sprites
 (genre 0 : dessin et silhouette) et tuiles ou caractères (genre 1 : dessin seul, copiés dans
 la police par `TFONT`). Il remplace HEX et `tools/mkspr.py` pour fabriquer ces fichiers sur
-l'Oric. Un `.COM` (8 967 octets ; 8 802 en anglais), rien de résident. Sur les disquettes qui
+l'Oric. Un `.COM` (10 444 octets ; 10 265 en anglais), rien de résident. Avec un LOCI,
+la souris USB sert aussi (§ 3.1) ; tout se fait au clavier. Sur les disquettes qui
 ont GRAPHER : `cpa.dsk`, `cpa-exemples.dsk`, `cpa-anim.dsk` et leurs jumelles
 anglaises.
 
@@ -99,6 +100,28 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
 | `^Z` `^X` `^C` `^V` | annuler, couper, copier, coller le caractère sous le curseur | le sprite entier |
 | `^N` `^O` `^S` `^Q` | nouveau fichier, ouvrir, enregistrer, quitter | idem |
 
+### 3.1 Souris (LOCI)
+
+Une souris USB branchée sur le LOCI est prise au lancement ; sans LOCI (ou dans un
+émulateur sans souris), rien ne change.
+
+- **Pointeur** : la case de l'écran sous la souris, en vidéo inverse (en vidéo normale sur la
+  ligne en inverse de la liste). Dans la grille, en saisie, le curseur le suit.
+- **Bouton gauche** : pose l'état choisi au clavier (ESPACE : plein, `M` : masque ; plein
+  au départ) ; **droit** : transparent (gomme ; tuiles : vide) ; **milieu** : masque (sprites
+  seulement). Un clic pose un point ; bouton tenu, la souris trace (deux positions lues de
+  suite sont reliées par un trait, sans trou). Un clic dans la grille passe à la saisie.
+  `^Z` annule le trait entier.
+- **Clic gauche dans la liste** : ce sprite devient le courant (sélection). **Dans
+  « Réel »** : décor suivant.
+- **Molette** : sprite précédent (vers le haut) ou suivant.
+- **Défilement** (sprite de 4 caractères de haut) : le pointeur posé sur la ligne des numéros,
+  au-dessus de la grille, la fait remonter d'un caractère ; sur la ligne d'aide, en dessous,
+  descendre.
+- **Vitesse** : menu Vue, Souris... ; de 1 (lente) à 5 (rapide), 3 au départ (16 pas de la
+  souris par case). Elle est gardée par le LOCI (fichier `0:CPA.MOU` de sa mémoire), pour les
+  lancements suivants et pour les autres programmes qui se serviront de la souris.
+
 ## 4. Menus (FUNCT)
 
 - **Fichier** : Nouveau `^N` (question : sprites ou tuiles), Ouvrir... `^O`, Enregistrer `^S`,
@@ -124,6 +147,7 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
 - **Vue** : Codes hexa `^H`, Décor (vide, damier, briques, herbe, à tour de rôle), Animer :
   fait défiler dans « Réel » les sprites de même taille dont le nom commence pareil (sans les
   chiffres de la fin : `HER1`, `HER2`...), un toutes les 12/50 s ; une touche arrête.
+  Souris... : vitesse de 1 à 5 (§ 3.1) ; sans souris, `Pas de souris (LOCI)`.
 
 ## 5. Fichiers et sûreté
 
@@ -150,6 +174,15 @@ de l'une à l'autre (ou menu Sprite, Select / Saisie).
   EDSPRITE, l'historique peut garder des lignes abîmées (sans danger : longueurs bornées).
 - La grille est redessinée case par case (une lecture du sprite par caractère et par ligne
   de points, puis ses 6 points).
+- Souris : bibliothèque `progs/mou_inc.s` (lecture par la fenêtre 0 de la XRAM, rapport en
+  `$FF00`, rien sous interruption ; essai `tools/test_mou.py`). EDSPRITE la lit dans sa
+  boucle d'attente et à chaque ligne de la grille pendant un réaffichage (environ un dixième
+  de seconde) : la bibliothèque cumule boutons, molette et déplacements, rien n'est perdu.
+  Un déplacement seul ne refait que le curseur et la ligne d'état ; un point posé, tout
+  l'écran. Après une touche, le mouvement fait pendant est oublié (`mo_sync`). Position en
+  cases du texte (colonnes 2-39, lignes 1-27 : jamais sur les attributs ni sur la barre des
+  menus). En sortant, le LOCI cesse d'écrire la souris. Essai dans Oricutron : `ORIC_MOUSE`
+  (`docs/atelier.md`).
 
 ## 7. Plus tard
 

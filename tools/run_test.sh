@@ -22,6 +22,8 @@
 #                     après avoir enregistré celle qui sort (un seul lecteur)
 #   ORIC_LOCI=dossier interface du LOCI simulée, ce dossier tenant lieu de clé
 #                     USB (EXPORT, IMPORT, USBDIR)
+#   ORIC_MOUSE=fichier avec ORIC_LOCI : souris du LOCI, lignes « trame boutons
+#                     dx dy [molette] » (chemin complet ; docs/atelier.md)
 #   SHOW=1            montre la fenêtre (sinon écran virtuel Xvfb)
 #   ORICUTRON=dossier Oricutron avec le crochet de test (défaut tools/oricutron)
 #   ORIC_CFG=lignes    ajoutées à oricutron.cfg (ex. "colour3 = '#FFF426'")

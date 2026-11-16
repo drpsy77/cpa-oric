@@ -106,6 +106,29 @@ fsl     = $59           ; taille lue au chargement (2 octets)
 d0      = $5B           ; draw_grid : octets de la case, bit du point
 sx1     = $5C
 bm      = $5D
+; souris (progs/mou_inc.s)
+mpx     = $5E           ; pointeur affiché en vidéo inverse : colonne, ligne
+mpy     = $5F
+mpon    = $60           ; 1 : pointeur affiché
+mink    = $61           ; état posé par le bouton gauche (0 plein, 1 masque)
+mstk    = $62           ; trait en cours : état posé + 1 (0 : aucun)
+mbut    = $63           ; bouton du trait
+mlx     = $64           ; dernier point du trait ($FF : aucun)
+mly     = $65
+mhit    = $66           ; zone du pointeur (m_hit)
+mrd     = $67           ; 1 : tout réafficher après l'événement
+mchg    = $68           ; ce que mo_poll a cumulé
+mbp     = $69
+mbr     = $6A
+mw      = $6B
+tx      = $6C           ; m_line : point d'arrivée, écarts, sens, erreur
+ty      = $6D
+ldx_    = $6E
+ldy_    = $6F
+lsx     = $70
+lsy     = $71
+lerr    = $72
+le2     = $73
 
         *= $0500
 
@@ -116,7 +139,7 @@ start
 .(
         cld
         lda #0
-        ldx #$4F-$10
+        ldx #$73-$10
 z       sta $10,x
         dex
         bpl z
@@ -202,6 +225,17 @@ hs      lda HIST,x              ;   le décor de l'aperçu (code PCD)
         dex
         bpl hs
         jsr glyphs
+        lda #2                  ; souris : 2^2 fois la sensibilité par case
+        sta mo_unit
+        lda #37                 ; pointeur : colonnes 2-39, lignes 1-27
+        sta mo_xmax
+        lda #26
+        sta mo_ymax
+        lda #GCOL-2             ; au premier point de la grille
+        sta mo_x
+        lda #GROW-1
+        sta mo_y
+        jsr mo_init
         lda #0
         jsr sel
         jmp main
@@ -231,18 +265,30 @@ fatal   ldx #F_PRINT
 ; ---------------------------------------------------------------------
 main
         jsr render
+        jsr ptr_on
 wait    jsr B_CONST
         bne getk
+        jsr mo_poll             ; la souris (rien sans LOCI)
+        bne mouse
         jsr blink
         jmp wait
-getk    jsr cur_off
+getk    jsr ptr_off
+        jsr cur_off
         jsr B_CONIN
         ldx #0                  ; une touche efface le message
         stx msgp+1
         jsr dispatch
         jsr B_CONST             ; d'autres touches attendent : on
         bne getk                ;   n'affiche qu'à la fin de la rafale
+        jsr mo_sync             ; souris bougée pendant les touches : oublié
         jmp main
+mouse   jsr ptr_off
+        jsr cur_off
+        jsr m_event
+        bcs main                ; C=1 : tout réafficher
+        jsr draw_status         ; sinon le curseur et la ligne d'état
+        jsr ptr_on
+        jmp wait
 
 ; dispatch : A = touche ou code de menu ($81-$A0)
 dispatch
@@ -268,7 +314,7 @@ arr     and #$07                ; SHIFT ou CTRL + flèche ($F0-$F7)
         lda av_hi,x
         sta t0+1
         jmp (t0)
-menu    cmp #$A2
+menu    cmp #$A3
         bcs none
         sec
         sbc #$81
@@ -327,17 +373,18 @@ cv_hi   .byt >k_none,>k_none,>k_none,>k_copy,>k_none,>k_none,>k_none,>k_none
 ; SHIFT + gauche droite bas haut, CTRL + gauche droite bas haut
 av_lo   .byt <k_sleft,<k_sright,<k_sdown,<k_sup,<k_prev,<k_next,<k_last,<k_first
 av_hi   .byt >k_sleft,>k_sright,>k_sdown,>k_sup,>k_prev,>k_next,>k_last,>k_first
-; menus ($81-$A1), dans l'ordre des articles (Détourer, $A1, ajouté à la fin)
+; menus ($81-$A2), dans l'ordre des articles (Détourer, $A1, et Souris, $A2,
+; ajoutés à la fin)
 mv_lo   .byt <k_newf,<k_open,<k_save,<k_saveas,<k_quit
         .byt <k_undo,<k_cut,<k_copy,<k_paste,<k_erase
         .byt <k_snew,<k_sdup,<k_sdel,<k_sren,<k_ssize,<k_sfwd,<k_sback,<k_zsel,<k_zedit
         .byt <k_inv,<k_mirh,<k_mirv,<k_rot,<k_shl,<k_shr,<k_shu,<k_shd,<k_sil,<k_font
-        .byt <k_hex,<k_decor,<k_anim,<k_detour
+        .byt <k_hex,<k_decor,<k_anim,<k_detour,<k_mouse
 mv_hi   .byt >k_newf,>k_open,>k_save,>k_saveas,>k_quit
         .byt >k_undo,>k_cut,>k_copy,>k_paste,>k_erase
         .byt >k_snew,>k_sdup,>k_sdel,>k_sren,>k_ssize,>k_sfwd,>k_sback,>k_zsel,>k_zedit
         .byt >k_inv,>k_mirh,>k_mirv,>k_rot,>k_shl,>k_shr,>k_shu,>k_shd,>k_sil,>k_font
-        .byt >k_hex,>k_decor,>k_anim,>k_detour
+        .byt >k_hex,>k_decor,>k_anim,>k_detour,>k_mouse
 
 ; ---------------------------------------------------------------------
 ; Sprite courant
@@ -646,7 +693,9 @@ m0      lda zone
         beq g0
         lda aa
         bne nomask
-g0      jsr cur_pix
+g0      lda aa                  ; état du bouton gauche de la souris
+        sta mink
+        jsr cur_pix
         jsr state
         cmp aa
         bne set
@@ -678,13 +727,14 @@ k_state
         bne ks_r
         jsr save_undo
 put_last
-        lda zone
+        ldx lastst
+; put_x : X = état (0 plein, 1 masque, 2 transparent) au point du curseur
+put_x   lda zone
         bne ks_r
         lda px
         sta gx
         lda py
         sta gy
-        ldx lastst
         lda mm                  ; mode M : plein et masque = silhouette
         beq ks_s
         cpx #2
@@ -2323,7 +2373,8 @@ h       lda ghead,x
         bne h
         lda #0
         sta rr                  ; ligne de la grille 0-23
-lr      lda rr
+lr      jsr mo_poll             ; souris lue à chaque ligne (rien perdu)
+        lda rr
         clc
         adc #GROW
         tax
@@ -4155,7 +4206,8 @@ k_quit
         ldy #>q_quit
         jsr ask_yn
         bcc r
-go      ldx #7                  ; historique rendu
+go      jsr mo_end              ; le LOCI cesse d'écrire la souris
+        ldx #7                  ; historique rendu
 hr      lda hsave,x
         sta HIST,x
         dex
@@ -4173,6 +4225,394 @@ cls     ldx #F_CONOUT
         jmp WBOOT               ; police et barre de menus du système
 r       rts
 .)
+
+; ---------------------------------------------------------------------
+; Souris du LOCI (progs/mou_inc.s) : pointeur en vidéo inverse ; dans la
+;   grille, le curseur le suit (saisie). Bouton gauche : l'état choisi au
+;   clavier (ESPACE plein, M masque), droit : transparent, milieu :
+;   masque ; tenu, il trace (un trait relie deux lectures). Clic dans la
+;   liste : le sprite ; dans « Réel » : décor suivant. Molette : sprite
+;   précédent / suivant. Pointeur au-dessus ou au-dessous de la grille :
+;   défilement d'un caractère (sprite de 4 de haut). Tout reste au clavier.
+; ---------------------------------------------------------------------
+; m_event : traite ce que mo_poll a cumulé ; C=1 s'il faut tout réafficher
+m_event
+.(
+        lda mo_chg
+        sta mchg
+        lda mo_bp
+        sta mbp
+        lda mo_br
+        sta mbr
+        lda mo_w
+        sta mw
+        jsr mo_ack
+        lda #0
+        sta mrd
+        lda mbp                 ; un clic ou la molette efface le message
+        ora mw
+        beq wh
+        lda #0
+        sta msgp+1
+wh      lda mw                  ; molette : fin du trait, sprite précédent
+        beq hit                 ;   (vers le haut) ou suivant
+        lda #0
+        sta mstk
+        inc mrd
+        lda mw
+        bmi wd
+wu      jsr k_prev
+        dec mw
+        bne wu
+        beq hit
+wd      jsr k_next
+        inc mw
+        bne wd
+hit     jsr m_hit
+        lda mchg                ; pointeur arrivé au-dessus ou au-dessous
+        lsr                     ;   de la grille (saisie) : défilement
+        bcc st
+        lda zone
+        bne st
+        lda mhit
+        cmp #3
+        bne dn
+        lda gtop
+        beq st
+        dec gtop
+        clc                     ; curseur gardé dans les lignes affichées
+        adc #2
+        asl
+        asl
+        asl
+        cmp py
+        beq up8
+        bcs sc
+up8     lda py
+        sec
+        sbc #8
+        sta py
+        jmp sc
+dn      cmp #4
+        bne st
+        lda gtop
+        clc
+        adc #3
+        cmp sh
+        bcs st
+        inc gtop
+        lda gtop
+        asl
+        asl
+        asl
+        cmp py
+        bcc sc
+        beq sc
+        lda py
+        adc #7                  ; C=1 : + 8
+        sta py
+sc      inc mrd
+        jsr m_hit               ; la grille a bougé sous le pointeur
+st      lda mstk                ; trait en cours ?
+        bne tr
+        lda mbp
+        and #7
+        beq ck
+        ldx mhit
+        bne ck
+        lsr                     ; début d'un trait : gauche, droit, milieu
+        bcc b2
+        ldx mink
+        lda #1
+        bne bs
+b2      lsr
+        bcc b3
+        ldx #2
+        lda #2
+        bne bs
+b3      ldx genre               ; tuiles : pas de masque
+        bne ck
+        inx
+        lda #4
+bs      sta mbut
+        inx
+        stx mstk
+        lda #0
+        sta zone
+        jsr save_undo
+        lda #$FF
+        sta mlx
+tr      lda mhit
+        bne out
+        jsr m_line
+        inc mrd
+        jmp te
+out     lda #$FF                ; hors de la grille : le trait reprendra
+        sta mlx                 ;   au point d'entrée
+te      lda mbr                 ; bouton relâché : fin du trait
+        and mbut
+        bne end
+        lda mo_b
+        and mbut
+        bne fin
+end     lda #0
+        sta mstk
+        jmp fin
+ck      lda mbp                 ; clic gauche : liste, « Réel »
+        lsr
+        bcc mv
+        lda mhit
+        cmp #1
+        bne c2
+        lda kk
+        jsr sel
+        lda #1
+        sta zone
+        inc mrd
+        bne fin
+c2      cmp #2
+        bne mv
+        jsr k_decor
+        inc mrd
+        bne fin
+mv      lda zone                ; saisie : le curseur suit le pointeur
+        bne fin
+        lda mhit
+        bne fin
+        lda gx
+        sta px
+        lda gy
+        sta py
+fin     lda mrd
+        cmp #1
+        rts
+.)
+
+; m_hit : zone du pointeur -> mhit : 0 point de la grille (gx, gy), 1
+;   sprite de la liste (kk), 2 « Réel », 3 au-dessus de la grille, 4
+;   au-dessous, 5 ailleurs
+m_hit
+.(
+        ldx #5
+        lda mo_x                ; colonne de l'écran - 2
+        sec
+        sbc #GCOL-2
+        cmp #24
+        bcs right
+        sta gx
+        lda mo_y                ; ligne de l'écran - 1
+        cmp #GROW-2
+        beq up
+        cmp #GROW+23
+        beq down
+        sec
+        sbc #GROW-1
+        cmp #24
+        bcs r
+        sta gy
+        lda gtop
+        asl
+        asl
+        asl
+        adc gy                  ; C=0
+        sta gy
+        cmp hh
+        bcs r
+        lda gx
+        cmp ww
+        bcs r
+        ldx #0
+        beq r
+right   lda mo_x
+        cmp #PCOL-2
+        bcc r
+        lda hexm
+        bne r
+        lda mo_y
+        cmp #PROW-1
+        bcs reel
+        sbc #0                  ; C=0 : - 1 ; ligne - 2 = rang dans la liste
+        cmp #LROWS
+        bcs r
+        adc ltop
+        bcs r
+        cmp BUF+4
+        bcs r
+        sta kk
+        ldx #1
+        bne r
+reel    cmp #PROW+5
+        bcs r
+        ldx #2
+        bne r
+up      ldx #3
+        .byt $2C
+down    ldx #4
+r       stx mhit
+        rts
+.)
+
+; m_line : trait de (mlx, mly) à (gx, gy), chaque point posé dans l'état
+;   mstk - 1 (Bresenham) ; (mlx, mly) = $FF : le seul point d'arrivée.
+;   Le curseur finit à l'arrivée.
+m_line
+.(
+        lda gx
+        sta tx
+        lda gy
+        sta ty
+        lda mlx
+        cmp #$FF
+        bne go
+        lda tx
+        sta mlx
+        lda ty
+        sta mly
+go      ldx #1                  ; ldx_ = |tx - x|, lsx = sens
+        lda tx
+        sec
+        sbc mlx
+        bcs p1
+        eor #$FF
+        adc #1
+        ldx #$FF
+p1      sta ldx_
+        stx lsx
+        ldx #1                  ; ldy_ = -|ty - y|, lsy = sens
+        lda ty
+        sec
+        sbc mly
+        bcs p2
+        eor #$FF
+        adc #1
+        ldx #$FF
+p2      stx lsy
+        eor #$FF
+        clc
+        adc #1
+        sta ldy_
+        clc
+        adc ldx_
+        sta lerr
+l       lda mlx                 ; pose le point
+        sta px
+        lda mly
+        sta py
+        ldx mstk
+        dex
+        jsr put_x
+        lda mlx
+        cmp tx
+        bne c
+        lda mly
+        cmp ty
+        beq r
+c       lda lerr                ; e2 = 2 err (|err| < 64)
+        asl
+        sta le2
+        sec                     ; e2 >= dy : x avance
+        sbc ldy_
+        bmi s1
+        lda lerr
+        clc
+        adc ldy_
+        sta lerr
+        lda mlx
+        clc
+        adc lsx
+        sta mlx
+s1      lda ldx_                ; e2 <= dx : y avance
+        sec
+        sbc le2
+        bmi l
+        lda lerr
+        clc
+        adc ldx_
+        sta lerr
+        lda mly
+        clc
+        adc lsy
+        sta mly
+        jmp l
+r       rts
+.)
+
+; ptr_on : affiche le pointeur (sauf sur le curseur de la saisie)
+ptr_on
+.(
+        lda mo_on
+        beq r
+        lda mo_x
+        clc
+        adc #2
+        sta mpx
+        ldx mo_y
+        inx
+        stx mpy
+        lda zone
+        bne d
+        jsr cur_cell            ; X = ligne, Y = colonne du curseur
+        cpx mpy
+        bne d
+        cpy mpx
+        beq r
+d       lda #1
+        sta mpon
+        bne mp_xor
+r       rts
+.)
+
+; ptr_off : efface le pointeur
+ptr_off
+        lda mpon
+        beq mp_r
+        lda #0
+        sta mpon
+mp_xor  ldx mpy
+        jsr row_ptr
+        ldy mpx
+        lda (scr),y
+        eor #$80
+        sta (scr),y
+mp_r    rts
+
+; k_mouse (menu Vue, Souris...) : vitesse de 1 à 5, gardée par le LOCI
+k_mouse
+.(
+        lda mo_on
+        bne on
+        lda #<m_nomouse
+        ldy #>m_nomouse
+        jmp set_msg
+on      lda #<q_mouse
+        ldy #>q_mouse
+        jsr ask
+        bcs r
+        jsr parse_num
+        bcs bad
+        cmp #1
+        bcc bad
+        cmp #6
+        bcs bad
+        eor #$FF                ; réglage = 5 - vitesse (2 : vitesse 3)
+        sec
+        adc #5
+        sta mo_reg
+        jsr mo_setn
+        jsr mo_save
+        lda #<m_mousek
+        ldy #>m_mousek
+        bcc s
+        lda #<m_mouseko
+        ldy #>m_mouseko
+s       jmp set_msg
+bad     lda #<m_badspd
+        ldy #>m_badspd
+        jmp set_msg
+r       rts
+.)
+
+#include "mou_inc.s"
 
 ; ---------------------------------------------------------------------
 ; Menus
@@ -4215,6 +4655,7 @@ c_9e    .byt $9E,0
 c_9f    .byt $9F,0
 c_a0    .byt $A0,0
 c_a1    .byt $A1,0
+c_a2    .byt $A2,0
 
 gq_get   .byt G_GETMODE,0,0,0,0,0
 gq_text  .byt G_MODE,0,0,0,0,0

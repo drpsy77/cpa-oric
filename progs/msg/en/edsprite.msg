@@ -103,7 +103,7 @@ mn_des  .byt 11,17
         .byt MA_TYPE
         .word c_9d
 
-mn_vue  .byt 3,12
+mn_vue  .byt 4,12
         .asc "View",0
         .asc "Hex codes  ^H",0
         .byt MA_TYPE
@@ -114,6 +114,9 @@ mn_vue  .byt 3,12
         .asc "Animate",0
         .byt MA_TYPE
         .word c_a0
+        .asc "Mouse...",0
+        .byt MA_TYPE
+        .word c_a2
 
 K_YES   = "Y"           ; Yes key
 K_SPR   = "S"           ; new file: sprites
@@ -137,6 +140,11 @@ m_noclip  .asc "Clipboard empty",0
 m_last    .asc "Last sprite: kept",0
 m_rot     .asc "Quarter turn: 4x3 sprite only",0
 m_badnum  .asc "Code from 32 to 127",0
+q_mouse   .asc "Mouse speed (1 slow to 5 fast): ",0
+m_nomouse .asc "No mouse (LOCI)",0
+m_mousek  .asc "Mouse speed saved",0
+m_mouseko .asc "Mouse speed not saved (LOCI)",0
+m_badspd  .asc "Speed from 1 to 5",0
 m_badsize .asc "Size: 1 to 4 x 1 to 4 (2X2)",0
 m_badname .asc "Name: 1 to 4 letters or digits",0
 m_badfn   .asc "Bad file name",0

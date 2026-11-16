@@ -19,6 +19,22 @@ cela retienne la version 1.0.
 
 ### A. Exige le matériel
 
+**Souris USB du LOCI dans EDSPRITE** (`docs/edsprite.md` § 3.1 ; souris branchée sur le
+LOCI, ou sur la Pi du banc oric-rpi) :
+
+- au lancement, pas de blocage ni de plantage (XREG accepté) ; le pointeur en vidéo
+  inverse suit la souris, sans saut quand on la déplace vite (même pendant le réaffichage
+  qui suit un point posé) ; le curseur le suit dans la grille ;
+- boutons : gauche plein (ou masque après `M`), droit gomme, milieu masque ; trait continu
+  à main levée, `^Z` qui annule tout le trait ; clic dans la liste, dans « Réel » ;
+  molette (sens : vers le haut = sprite précédent) ; défilement d'un sprite 4 × 4 ;
+- vitesse (menu Vue, Souris...) : 3 confortable ? 1 et 5 utiles ? gardée après un
+  redémarrage de l'Oric et du LOCI (`0:CPA.MOU`) ;
+- le LOCI ne se sert pas lui-même de la XRAM en `$FF00` (rapport de la souris) : rien
+  d'abîmé dans son menu, ses montages, la clé, après une séance d'EDSPRITE ;
+- sans souris branchée : EDSPRITE comme avant, au clavier ; après `^Q`, au prompt, rien ne
+  bouge quand on remue la souris.
+
 **Disquette changée sans CTRL-C** (système construit avec l'option `CHGDSK`,
 `docs/systeme.md` § 3 ; sur des **copies**) :
 

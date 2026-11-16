@@ -13,7 +13,8 @@ close). Essais :
 - 3 000 mouvements tirés au hasard pour chaque sensibilité (0 à 7) et des
   bornes variées, comparés à un calcul en Python (différence signée,
   restes gardés, bornes), passage de 255 à 0 compris ;
-- boutons (enfoncés, relâchés, tenus au départ), molette, mo_sync ;
+- boutons (enfoncés, relâchés, tenus au départ), molette, cumul jusqu'à
+  mo_ack (clic entier entre deux traitements), mo_sync ;
 - mo_save puis mo_init relit le réglage ; réglage hors limites refusé ;
 - mo_end : plus de rapport ($FFFF) ; la fenêtre 1 n'est jamais touchée.
 Code de retour : 0 si tout est bon.
@@ -30,7 +31,7 @@ sys.path.insert(0, os.path.join(ICI, "pylib"))
 from py65.devices.mpu6502 import MPU          # noqa: E402
 from py65.memory import ObservableMemory      # noqa: E402
 
-ROUTINES = ("mo_init", "mo_poll", "mo_sync", "mo_save", "mo_end", "mo_setn")
+ROUTINES = ("mo_init", "mo_poll", "mo_sync", "mo_save", "mo_end", "mo_setn", "mo_ack")
 
 
 def assembler():
@@ -261,7 +262,25 @@ def main():
             if obtenu != attendu:
                 verifie(False, "n=%d, essai %d : %s au lieu de %s" % (n, i, obtenu, attendu))
                 break
+            b.appel("mo_ack")
         verifie(not L.fen1, "n=%d : la fenêtre 1 a été touchée" % n)
+
+    # Cumul jusqu'à mo_ack : clic entier entre deux traitements, molette
+    b = Banc(binaire, sym)
+    L = b.loci
+    b.appel("mo_init")
+    L.souris(1, 0, 0, 2)
+    b.appel("mo_poll")
+    L.souris(0, 0, 0, -5)
+    b.appel("mo_poll")
+    L.souris(0, 0, 0, 0)
+    a, c = b.appel("mo_poll")
+    verifie((a, b["mo_bp"], b["mo_br"], b["mo_b"], signe(b["mo_w"])) == (6, 1, 1, 0, -3),
+            "cumul : A=%d bp=%d br=%d b=%d w=%d" % (a, b["mo_bp"], b["mo_br"], b["mo_b"],
+                                                 signe(b["mo_w"])))
+    b.appel("mo_ack")
+    a, c = b.appel("mo_poll")
+    verifie(a == 0 and b["mo_bp"] == 0 and b["mo_w"] == 0, "mo_ack : tout repart de 0")
 
     # Bouton tenu au départ, mo_sync
     b = Banc(binaire, sym)

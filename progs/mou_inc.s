@@ -25,7 +25,7 @@
 ;  Sans LOCI (ou LOCI qui refuse XREG) : mo_on = 0, mo_poll rend toujours
 ;  A = 0 ; le programme marche au clavier seul.
 ;
-;  Appels : mo_init, mo_poll, mo_sync, mo_setn, mo_save, mo_end.
+;  Appels : mo_init, mo_poll, mo_ack, mo_sync, mo_setn, mo_save, mo_end.
 ;  Ni page zéro ni tampon : variables à la fin de la bibliothèque.
 ; =====================================================================
 
@@ -43,25 +43,25 @@ mo_init
         sta mo_on
         lda $0319               ; "L" : démarré par le LOCI
         cmp #"L"
-        bne no
+        bne zno
         lda #0                  ; opération 0 : vide la pile d'échange ;
         sta $03AF               ;   le LOCI réécrit alors en $03B0
         ldx #4                  ;   CLV / BVC / LDA # / LDX # / RTS
-c       ldy mo_spo,x            ;   (sans LOCI : registres du VIA, et un
+zc       ldy mo_spo,x            ;   (sans LOCI : registres du VIA, et un
         lda $03B0,y             ;   JSR $03B0 planterait)
         cmp mo_spc,x
-        bne no
+        bne zno
         dex
-        bpl c
+        bpl zc
         lda #<MO_XRAM
         ldx #>MO_XRAM
         jsr mo_xreg
-        bcs no
+        bcs zno
         lda #2                  ; réglage par défaut
         sta mo_reg
         ldx #1                  ; O_RDONLY
         jsr mo_open
-        bcs n
+        bcs zn
         pha
         lda #0                  ; compte (16 bits) : poids fort d'abord
         sta $03AC
@@ -72,22 +72,22 @@ c       ldy mo_spo,x            ;   (sans LOCI : registres du VIA, et un
         sta $03B4
         lda #$16                ; read_xstack
         jsr mo_call
-        bcs cl
+        bcs zcl
         cmp #1
-        bne cl
+        bne zcl
         lda $03AC
         cmp #5
-        bcs cl                  ; réglage hors limites : défaut
+        bcs zcl                  ; réglage hors limites : défaut
         sta mo_reg
-cl      pla
+zcl      pla
         jsr mo_close
-n       jsr mo_setn
+zn       jsr mo_setn
         lda #1
         sta mo_on
         jsr mo_sync
         clc
         rts
-no      sec
+zno      sec
         rts
 .)
 
@@ -98,9 +98,9 @@ mo_setn
         clc
         adc mo_reg
         cmp #8
-        bcc s
+        bcc zs
         lda #7
-s       sta mo_n
+zs       sta mo_n
         rts
 .)
 
@@ -111,10 +111,10 @@ s       sta mo_n
 mo_save
 .(
         lda mo_on
-        beq no
+        beq zno
         ldx #$12                ; O_WRONLY + O_CREAT
         jsr mo_open
-        bcs r
+        bcs zr
         pha
         sta $03B4
         lda mo_reg
@@ -125,8 +125,8 @@ mo_save
         php
         jsr mo_close
         plp
-r       rts
-no      sec
+zr       rts
+zno      sec
         rts
 .)
 
@@ -137,24 +137,25 @@ no      sec
 mo_end
 .(
         lda mo_on
-        beq r
+        beq zr
         lda #0
         sta mo_on
+        jsr mo_ack
         lda #$FF
         tax
         jmp mo_xreg
-r       rts
+zr       rts
 .)
 
 ; ---------------------------------------------------------------------
 ; mo_sync : les compteurs actuels deviennent le point de départ (le
 ;   mouvement fait depuis la dernière lecture est oublié), restes à 0,
-;   boutons pris sans les compter comme enfoncés.
+;   boutons pris sans les compter comme enfoncés ; puis mo_ack.
 ; ---------------------------------------------------------------------
 mo_sync
 .(
         lda mo_on
-        beq r
+        beq mo_ack
         jsr mo_rd
         sta mo_aw
         stx mo_ax
@@ -164,27 +165,29 @@ mo_sync
         lda #0
         sta mo_rx
         sta mo_rx+1
-        sta mo_bp
-        sta mo_br
-        sta mo_w
-r       rts
 .)
-
-; ---------------------------------------------------------------------
-; mo_poll : lit la souris. Met à jour mo_x, mo_y (bornés), mo_b (boutons
-;   tenus), mo_bp (enfoncés depuis la lecture d'avant), mo_br (relâchés),
-;   mo_w (crans de molette depuis la lecture d'avant, signé).
-;   A = ce qui a changé (bit 0 : position, bit 1 : boutons, bit 2 :
-;   molette ; Z=1 si rien). Sans souris : A = 0.
-; ---------------------------------------------------------------------
-mo_poll
-.(
+; mo_ack : ce qui a été cumulé est pris (mo_chg, mo_bp, mo_br, mo_w à 0)
+mo_ack
         lda #0
         sta mo_chg
         sta mo_bp
         sta mo_br
+        sta mo_w
+        rts
+
+; ---------------------------------------------------------------------
+; mo_poll : lit la souris. Met à jour mo_x, mo_y (bornés) et mo_b
+;   (boutons tenus) ; cumule jusqu'au prochain mo_ack : mo_bp (boutons
+;   enfoncés), mo_br (relâchés), mo_w (crans de molette, signé), mo_chg.
+;   A = mo_chg, ce qui a changé (bit 0 : position, bit 1 : boutons,
+;   bit 2 : molette ; Z=1 si rien). Sans souris : A = 0.
+;   Peut s'appeler souvent pendant un long travail (un réaffichage) : rien
+;   n'est perdu, le programme traite le tout ensuite.
+; ---------------------------------------------------------------------
+mo_poll
+.(
         lda mo_on
-        beq r
+        beq zr
         jsr mo_rd               ; A = molette, X, Y = compteurs
         pha
         tya
@@ -200,24 +203,28 @@ mo_poll
         sec
         sbc mo_aw
         sty mo_aw
+        beq zb
+        clc
+        adc mo_w
         sta mo_w
-        beq b
         lda #4
         jsr mo_set
-b       lda mo_bn               ; boutons
+zb       lda mo_bn               ; boutons
         eor mo_b
-        beq r
+        beq zr
         tax                     ; bits changés
         and mo_bn
+        ora mo_bp
         sta mo_bp
         txa
         and mo_b
+        ora mo_br
         sta mo_br
         lda mo_bn
         sta mo_b
         lda #2
         jsr mo_set
-r       lda mo_chg
+zr       lda mo_chg
         rts
 .)
 
@@ -238,48 +245,48 @@ mo_axe
         sta mo_ax,x
         ldy #0                  ; s = d (étendu à 16 bits) + reste
         lda mo_sl
-        bpl p
+        bpl zp
         dey
-p       sty mo_sh
+zp       sty mo_sh
         clc
         adc mo_rx,x
         sta mo_sl
-        bcc m
+        bcc zm
         inc mo_sh
-m       ldy mo_n
+zm       ldy mo_n
         and mo_msk,y
         sta mo_rx,x             ; nouveau reste
         cpy #0
-        beq q
-sh      lda mo_sh               ; décalage arithmétique de n bits
+        beq zq
+zsh      lda mo_sh               ; décalage arithmétique de n bits
         cmp #$80
         ror
         sta mo_sh
         ror mo_sl
         dey
-        bne sh
-q       lda mo_sl               ; q (-128..127 : |s| < 256)
-        beq r
+        bne zsh
+zq       lda mo_sl               ; q (-128..127 : |s| < 256)
+        beq zr
         clc
         adc mo_x,x
         tay
         lda mo_sh
         adc #0
-        bmi lo                  ; sous 0
-        bne hi                  ; au-delà de 255
+        bmi zlo                  ; sous 0
+        bne zhi                  ; au-delà de 255
         tya
         cmp mo_xmax,x
-        bcc ok
-        beq ok
-hi      lda mo_xmax,x
+        bcc zok
+        beq zok
+zhi      lda mo_xmax,x
         .byt $2C                ; BIT abs : saute le LDA #0
-lo      lda #0
-ok      cmp mo_x,x
-        beq r
+zlo      lda #0
+zok      cmp mo_x,x
+        beq zr
         sta mo_x,x
         lda #1
         jmp mo_set
-r       rts
+zr       rts
 .)
 
 ; mo_rd : lit le rapport -> mo_bn = boutons, X = compteur X,
@@ -323,10 +330,10 @@ mo_call
 mo_open
 .(
         ldy #mo_spo-mo_fn-1     ; chemin empilé à l'envers
-p       lda mo_fn,y
+zp       lda mo_fn,y
         sta $03AC
         dey
-        bpl p
+        bpl zp
         stx $03B4
         lda #$14                ; open
         jmp mo_call
@@ -354,8 +361,9 @@ mo_reg  .byt 2                  ; réglage de l'utilisateur (0 à 4)
 mo_n    .byt 2                  ; mo_unit + mo_reg
 mo_b    .byt 0                  ; boutons tenus : bit 0 gauche, 1 droit,
 mo_bp   .byt 0                  ;   2 milieu ; enfoncés, relâchés depuis
-mo_br   .byt 0                  ;   la lecture d'avant
-mo_w    .byt 0                  ; crans de molette (signé)
+mo_br   .byt 0                  ;   le dernier mo_ack
+mo_w    .byt 0                  ; crans de molette (signé), idem
+mo_chg  .byt 0                  ; changements (A de mo_poll), idem
 ; Internes
 mo_ax   .byt 0,0                ; anciens compteurs X, Y
 mo_rx   .byt 0,0                ; restes X, Y
@@ -363,4 +371,3 @@ mo_aw   .byt 0                  ; ancien compteur de molette
 mo_bn   .byt 0
 mo_sl   .byt 0
 mo_sh   .byt 0
-mo_chg  .byt 0

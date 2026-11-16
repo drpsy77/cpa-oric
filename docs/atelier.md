@@ -248,6 +248,7 @@ Variables utiles :
 | `ORIC_KEYS_AT=400` | début de la frappe : 400 pour la disquette (environ 6 s de démarrage), défaut 100 |
 | `DISK_OPTS` (pour `build.sh`) | options du système disque, par défaut `-DCPLCMD -DSERIE` : complétion des commandes (243 octets) et pilote série (622 octets). Elles font partie de CP/A ; les retirer ne sert qu'à des essais |
 | `ORIC_LOCI=dossier` | simule le LOCI et sa clé USB sur ce dossier (EXPORT, IMPORT, USBDIR, CMDER ; plusieurs clés : `usb1` à `usb8`) ; sans elle, ces commandes répondent `LOCI absent` |
+| `ORIC_MOUSE=fichier` | avec `ORIC_LOCI` : souris du LOCI (XREG, fenêtre 0 de la XRAM) menée par ce fichier (chemin complet), une ligne par mouvement : `trame boutons dx dy [molette]` (trames croissantes ; boutons : 1 gauche, 2 droit, 4 milieu ; dx, dy en pas de la souris, de -127 à 127 par ligne). Pour EDSPRITE (`docs/edsprite.md` § 3.1) |
 | `ORIC_WARP=1` | émulateur sans attente du temps réel (même résultat, bien plus vite) |
 | `SHOW=1` | **affiche la fenêtre** sur le bureau du Pi au lieu de l'écran virtuel : pratique pour regarder un scénario se dérouler |
 

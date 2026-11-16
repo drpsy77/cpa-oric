@@ -20,19 +20,19 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | LOGO | 28 | 0 | 123 | 12 | 33 | **196** | 44 | **240** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
-| EDSPRITE | 7 | 5 | 42 | 8 | 6 | **68** | 17 | **85** |
+| EDSPRITE | 14 | 5 | 51 | 8 | 6 | **84** | 21 | **105** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *168* | *52* | *448* | *110* | *111* | ***889*** | *231* | ***1120*** |
+| *Applications* | *175* | *52* | *457* | *110* | *111* | ***905*** | *235* | ***1140*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **227** | **82** | **700** | **376** | **216** | **1601** | **376** | **1977** |
+| **Total** | **234** | **82** | **709** | **376** | **216** | **1617** | **380** | **1997** |
 
-Points ajustés (indicatif, § 9) : 1 601 × 1,05 ≈ 1 681.
+Points ajustés (indicatif, § 9) : 1 617 × 1,05 ≈ 1 698.
 
-Nombre de fonctions comptées : 32 ILF, 16 EIF, 222 EI, 92 EO, 72 EQ.
+Nombre de fonctions comptées : 33 ILF, 16 EIF, 225 EI, 92 EO, 72 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -688,6 +688,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 |---|---|---|---:|---:|---|---:|
 | EDS.D01 | Fichier `.SPR` (en-tête ; sprites : nom, taille, dessin, silhouette) | ILF | 2 | 8 | F | 7 |
 | EDS.D02 | Police standard (dessins des caractères) | EIF | 1 | 2 | F | 5 |
+| EDS.D03 | Réglage de la souris (`0:CPA.MOU`, mémoire du LOCI) | ILF | 1 | 1 | F | 7 |
 | EDS.T01 | Ouvrir et afficher (grille à trois états, liste, contrôle du format) | EQ | 1 | 8 | F | 3 |
 | EDS.T02 | Nouveau fichier (sprites ou tuiles) | EI | 1 | 2 | F | 3 |
 | EDS.T03 | Poser des points (plein, masque, transparent ; crayon) | EI | 1 | 4 | F | 3 |
@@ -706,6 +707,9 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | EDS.T16 | Animer (sprites de même préfixe) | EO | 1 | 3 | F | 4 |
 | EDS.T17 | Enregistrer, enregistrer sous (remplacer) | EI | 1 | 8 | F | 3 |
 | EDS.T18 | Détourer (contour de masque autour du dessin) | EI | 1 | 2 | F | 3 |
+| EDS.T19 | Dessiner à la souris (pointeur, bouton gauche, gomme, masque ; trait tenu) | EI | 1 | 5 | F | 3 |
+| EDS.T20 | Choisir à la souris (sprite de la liste, décor, molette, défilement) | EI | 1 | 4 | F | 3 |
+| EDS.T21 | Vitesse de la souris (gardée) | EI | 1 | 2 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -718,6 +722,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | EDS.A07 | Annulation par échange avec une copie du sprite | `edsprite.s` | 1 |
 | EDS.A08 | Enregistrement sûr (`NOM.$$$`, effacer, renommer) | `edsprite.s` | 1 |
 | EDS.A09 | Détourage : 8 voisins lus dans la copie, écrits dans le sprite | `edsprite.s` | 1 |
+| EDS.A10 | Souris : différences des compteurs sur 8 bits, division avec reste gardé, bornes ; boutons, molette et mouvements cumulés jusqu'au traitement (lecture pendant un réaffichage) | `mou_inc.s` | 3 |
+| EDS.A11 | Trait entre deux positions lues (Bresenham) | `edsprite.s` | 1 |
 
 ## 5. Exemples
 
@@ -873,41 +879,41 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
-| EDSPRITE | 3 | 4 293 | 203 | 123 | 0 | 5 % | 8 967 | 63 | 132 |
+| EDSPRITE | 4 | 5 008 | 296 | 145 | 0 | 6 % | 10 444 | 60 | 124 |
 | VOIR | 7 | 1 481 | 191 | 65 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 33 | 6 613 | 706 | 261 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 200 | 13 139 | 1 799 | 1 024 | 0 | 12 % | — | 57 | — |
-| **Total** | 401 | 80 852 | 7 272 | 3 477 | 2 608 | 8 % | 165 066 | 51 | 103 |
+| Outillage PC | 201 | 13 457 | 1 829 | 1 057 | 0 | 12 % | — | 58 | — |
+| **Total** | 403 | 81 885 | 7 395 | 3 532 | 2 608 | 8 % | 166 543 | 51 | 103 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 722 | 85 | 4,7 | 123 |
+| Système et commandes | 1 724 | 85 | 4,7 | 125 |
 | EDIT | 94 | 19 | 1,3 | 14 |
 | GRAPHER + GRXASM | 1 055 | 73 | 4,3 | 45 |
 | LOGO | 350 | 65 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 140 | 13 | 2,1 | 5 |
+| EDSPRITE | 170 | 13 | 2,0 | 6 |
 | VOIR | 78 | — | 4,1 | 13 |
 | USB | 80 | 13 | 0,8 | 28 |
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 365 | — | 1,6 | 172 |
-| Transverse (projet) | 2 503 | — | — | 137 |
-| Traduction anglaise (docs/en) | 3 090 | — | — | 68 |
-| **Total** | 9 848 | 326 | 6,2 | 298 |
+| Outillage PC | 367 | — | 1,6 | 173 |
+| Transverse (projet) | 2 525 | — | — | 138 |
+| Traduction anglaise (docs/en) | 3 118 | — | — | 69 |
+| **Total** | 9 932 | 326 | 6,1 | 300 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 298 commits du 2026-10-04 au 2026-11-14.
+Historique : 300 commits du 2026-10-04 au 2026-11-16.
 
-Réutilisation : 57 490 lignes de code écrites dans `progs/`, 68 115 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 58 189 lignes de code écrites dans `progs/`, 68 814 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -984,6 +990,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-04 | GRX.LIB | 0.9 | 1 581 | 370 | 1 951 | 260 | bibliothèques des programmes traduits précompilées (`tools/mk_lib.py`, `GRX.LIB`) ; ASM : directive `#lib` (édition de liens) ; GRXASM : `GRX.LIB` lue si présente, sinon les `.INC` ; `tools/test_lib.sh` |
 | 2026-11-05 | rappel automatique | 0.9 | 1 592 | 370 | 1 962 | 264 | console à distance : rappel automatique par le pilote (silence de 10 s, fonction 117 op 4), touche de l'Oric signalée au démon (la vitrine s'arrête) ; vitrine commentée (`/commentaire`) |
 | 2026-11-07 | sprites dans l'image | 0.9 | 1 599 | 373 | 1 972 | 271 | GRAPHER et GRXASM : `HSHOW`, `HHIDE` (sprites des `.SPR` dans l'image HIRES ou SPLIT, décor gardé) |
+| 2026-11-16 | souris | 0.9 | 1 617 | 380 | 1 997 | 301 | souris USB du LOCI : bibliothèque `mou_inc.s` (`test_mou.py`) ; EDSPRITE à la souris (tracé, gomme, masque, liste, molette, défilement, vitesse gardée dans `0:CPA.MOU`) ; Oricutron de test : XREG, `ORIC_MOUSE` |
 
 ## 11. Comparaisons
 

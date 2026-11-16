@@ -70,7 +70,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur ; 8 192 octets de code, le reste du dernier bloc est libre) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
-| EDSPRITE | 8 967 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) | `edsprite.md` |
+| EDSPRITE | 10 444 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) ; souris USB du LOCI facultative (tracé, gomme, liste, molette ; vitesse gardée dans `0:CPA.MOU`) | `edsprite.md` |
 | ASM | 7 322 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: ; `#lib` : routines de `GRX.LIB` reliées | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |
@@ -82,15 +82,15 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-358 Ko libres), `cpa-anim.dsk` (la démonstration, 314 Ko libres), `cpa-logo.dsk` (LOGO seul,
+348 Ko libres), `cpa-anim.dsk` (la démonstration, 304 Ko libres), `cpa-logo.dsk` (LOGO seul,
 506 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 320 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
+d'ASM, 310 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; les quatre disquettes d'usage s'ouvrent sur un
 accueil (`AUTO.BAT`, `ACCUEIL.TXT` : l'invite, ESC, FUNCT, HELP, puis quoi taper) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 601 points de fonction IFPUG et 376 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 617 points de fonction IFPUG et 380 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric

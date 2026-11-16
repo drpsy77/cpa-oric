@@ -49,7 +49,7 @@ COMPOSANTS = [
              + ["progs/msg/*/%s.msg" % n for n in ("logo", "logovoc", "logotr")]),
     ("CMD",  ["progs/cmder.s", "progs/msg/*/cmder.msg"]),
     ("HEX",  ["progs/hex.s", "progs/msg/*/hex.msg"]),
-    ("EDS",  ["progs/edsprite.s", "progs/msg/*/edsprite.msg"]),
+    ("EDS",  ["progs/edsprite.s", "progs/msg/*/edsprite.msg", "progs/mou_inc.s"]),
     ("VOIR", ["progs/voir.s", "progs/anim.inc", "progs/hires.inc", "progs/msg/*/voir.msg",
               "progs/msg/*/anim.msg"]),
     ("USB",  ["progs/export.s", "progs/import.s", "progs/usbdir.s", "progs/usbmount.s", "progs/loci_inc.s", "progs/ljok_inc.s", "progs/lmnt_inc.s",

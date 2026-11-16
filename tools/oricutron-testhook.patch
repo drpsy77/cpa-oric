@@ -154,10 +154,10 @@ index 90e24c6..30574e6 100644
          break;
  
 diff --git a/machine.c b/machine.c
-index 00b7b0e..8781179 100644
+index 00b7b0e..4d27215 100644
 --- a/machine.c
 +++ b/machine.c
-@@ -502,6 +502,355 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
+@@ -502,6 +502,380 @@ void jasmin_o16kwrite(struct m6502 *cpu, unsigned short addr, unsigned char data
    oric->mem[addr&0x3fff] = data;
  }
  
@@ -169,8 +169,9 @@ index 00b7b0e..8781179 100644
 +   15 close, 16 read_xstack, 18 write_xstack, 1B unlink, 80-82 répertoire
 +   (80 d'un chemin vide : liste des appareils), 88 getcwd, 90 mount, 91
 +   umount (lecteurs 0-3 : la disquette insérée change ; cassette notée),
-+   A0 boot (drapeaux écrits dans boot.txt, pas de démarrage), 1C rename. XRAM
-+   $8000-$81FF inscriptible (configuration du menu). Plusieurs clés :
++   A0 boot (drapeaux écrits dans boot.txt, pas de démarrage), 1C rename,
++   01 XREG (souris seulement). XRAM $8000-$81FF inscriptible (configuration
++   du menu), rapport de la souris. Plusieurs clés :
 +   voir mia_haskeys. MIA_TRACE=1 : chaque opération sur stderr.
 +   Codes d'erreur comme le LOCI (FatFs + 32). Pas sous Windows. --- */
 +static int loci_wedged = 0;                    /* voir mia_write */
@@ -180,6 +181,7 @@ index 00b7b0e..8781179 100644
 +#define mia_active(addr) 0
 +#define mia_read(addr) 0
 +#define mia_write(addr, data)
++void cpa_mouse_report(int b, int dx, int dy, int w) { }
 +#else
 +#include <dirent.h>
 +#include <strings.h>
@@ -192,6 +194,11 @@ index 00b7b0e..8781179 100644
 +static int mia_dev = -1;                 /* liste des appareils ouverte */
 +static char mia_mp[6][256];              /* images montées par l'API (getcwd) */
 +static char mia_dpath[4][1024];
++/* Souris (XREG périphérique 0, canal 0, registre 1) : rapport de 5 octets
++   tenu à l'adresse mia_mou de la XRAM (boutons, X, Y, molette cumulés),
++   comme loci_mou_report ; mouvements donnés par ORIC_MOUSE (main.c). */
++static unsigned short mia_mou = 0xFFFF;
++static unsigned char mia_mr[5];
 +
 +static void mia_ret(int ax)
 +{
@@ -284,6 +291,10 @@ index 00b7b0e..8781179 100644
 +  int a = mia_r[0x14], i, n, r;
 +  switch (op) {
 +  case 0x00: mia_xp = 512; mia_ret(0); return;
++  case 0x01:              /* XREG : périphérique, canal, registre, adresse (haut, bas) */
++    if (mia_xp != 507 || mia_xs[511]) { mia_err(13); return; }
++    if (mia_xs[510] == 0 && mia_xs[509] == 1) mia_mou = mia_xs[508] << 8 | mia_xs[507];
++    mia_xp = 512; mia_ret(0); return;
 +  case 0x14: {            /* open : A = drapeaux de cc65 */
 +    const char *mode;
 +    int z; struct stat st;
@@ -476,6 +487,7 @@ index 00b7b0e..8781179 100644
 +static unsigned char mia_xram(unsigned short a)
 +{
 +  mia_xr_init();
++  if (mia_mou != 0xFFFF && a >= mia_mou && a - mia_mou < 5) return mia_mr[a - mia_mou];
 +  if (a >= 0x8000 && a < 0x8200) return mia_xr[a - 0x8000];
 +  return 0;
 +}
@@ -488,14 +500,26 @@ index 00b7b0e..8781179 100644
 +   une commande pour un lecteur sans image n'est jamais terminée (état
 +   occupé), et la tâche disque ne lit plus aucune commande, Force Interrupt
 +   compris, jusqu'au redémarrage du LOCI. Simulé ici avec le LOCI. */
++void cpa_mouse_report(int b, int dx, int dy, int w)
++{
++  if (mia_mou == 0xFFFF) return;
++  mia_mr[0] = b; mia_mr[1] += dx; mia_mr[2] += dy; mia_mr[3] += w;
++}
++/* fenêtre 0 de la XRAM ($03A4 données, $03A5 pas, $03A6-$03A7 adresse) */
++static unsigned short mia_xa0 = 0;
 +static void mia_write(unsigned short addr, unsigned char data)
 +{
 +  int i = addr - 0x3A0;
++  if (i == 0x06 || i == 0x07) {
++    if (i == 0x06) mia_xa0 = (mia_xa0 & 0xff00) | data; else mia_xa0 = (mia_xa0 & 0xff) | (data << 8);
++    mia_r[0x04] = mia_xram(mia_xa0);
++  }
++  if (i == 0x04) { mia_xram_w(mia_xa0, data); mia_xa0 += (signed char)mia_r[0x05]; mia_r[0x04] = mia_xram(mia_xa0); }
 +  if (i == 0x0A || i == 0x0B) {
 +    if (i == 0x0A) mia_xa1 = (mia_xa1 & 0xff00) | data; else mia_xa1 = (mia_xa1 & 0xff) | (data << 8);
 +    mia_r[0x08] = mia_xram(mia_xa1);
 +  }
-+  if (i == 0x08) { mia_xram_w(mia_xa1, data); mia_xa1 += (signed char)mia_r[0x09]; mia_r[0x08] = mia_xram(mia_xa1); }
++  else if (i == 0x08) { mia_xram_w(mia_xa1, data); mia_xa1 += (signed char)mia_r[0x09]; mia_r[0x08] = mia_xram(mia_xa1); }
 +  else if (i == 0x0C) { if (mia_xp) mia_xs[--mia_xp] = data; mia_r[0x0C] = mia_xs[mia_xp]; }
 +  else if (i == 0x0F) { mia_r[0x0F] = data; mia_op(data); }
 +  else mia_r[i] = data;
@@ -504,6 +528,7 @@ index 00b7b0e..8781179 100644
 +{
 +  int i = addr - 0x3A0;
 +  unsigned char v = mia_r[i];
++  if (i == 0x04) { mia_xa0 += (signed char)mia_r[0x05]; mia_r[0x04] = mia_xram(mia_xa0); }
 +  if (i == 0x08) { mia_xa1 += (signed char)mia_r[0x09]; mia_r[0x08] = mia_xram(mia_xa1); }
 +  if (i == 0x0C) { if (mia_xp < 512) mia_xp++; mia_r[0x0C] = mia_xs[mia_xp]; }
 +  return v;
@@ -513,7 +538,7 @@ index 00b7b0e..8781179 100644
  // Oric Atmos + microdisc
  void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char data)
  {
-@@ -517,8 +861,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
+@@ -517,8 +891,16 @@ void microdisc_atmoswrite(struct m6502 *cpu, unsigned short addr, unsigned char
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -532,7 +557,7 @@ index 00b7b0e..8781179 100644
  
      else if(oric->aciabackend && (oric->aciaoffset <= addr && addr < oric->aciaoffset+4))
        acia_write(&oric->tele_acia, addr, data);
-@@ -918,6 +1270,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
+@@ -918,6 +1300,16 @@ unsigned char microdisc_atmosread(struct m6502 *cpu, unsigned short addr)
  
    if((addr & 0xff00) == 0x0300)
    {
@@ -550,7 +575,7 @@ index 00b7b0e..8781179 100644
        return microdisc_read(&oric->md, addr);
  
 diff --git a/main.c b/main.c
-index a47cd0c..95af81c 100644
+index a47cd0c..bf2269a 100644
 --- a/main.c
 +++ b/main.c
 @@ -513,6 +513,51 @@ SDL_bool read_config_joykey(char* buf, char* token, SDL_COMPAT_KEY *dest)
@@ -614,7 +639,7 @@ index a47cd0c..95af81c 100644
      if(read_config_option(&sto->lctmp[i], "machine", &sto->start_machine, machtypes)) continue;
      if(read_config_option(&sto->lctmp[i], "disktype", &sto->start_disktype, disktypes)) continue;
      if(read_config_bool(&sto->lctmp[i], "debug", &sto->start_debug)) continue;
-@@ -1759,9 +1806,173 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
+@@ -1759,9 +1806,198 @@ void frameloop_normal(struct machine *oric, SDL_bool *framedone, SDL_bool *needr
  }
  
  /* Tasks to do once per emulated frame */
@@ -710,6 +735,30 @@ index a47cd0c..95af81c 100644
 +  }
 +}
 +
++/* --- souris du LOCI simulé : ORIC_MOUSE = fichier de lignes « trame
++   boutons dx dy [molette] » (trames croissantes ; boutons : bit 0 gauche,
++   1 droit, 2 milieu), mouvements ajoutés au rapport de XREG --- */
++void cpa_mouse_report(int b, int dx, int dy, int w);   /* machine.c */
++static void cpa_mouse_tick(long fr)
++{
++  static FILE *f = NULL; static int fini = 0, att = 0;
++  static long t; static int b, dx, dy, w;
++  char l[128];
++  if (fini) return;
++  if (!f) { if (!getenv("ORIC_MOUSE") || !(f = fopen(getenv("ORIC_MOUSE"), "r"))) { fini = 1; return; } }
++  for (;;) {
++    if (!att) {
++      if (!fgets(l, sizeof l, f)) { fini = 1; return; }
++      w = 0;
++      if (sscanf(l, "%ld %d %d %d %d", &t, &b, &dx, &dy, &w) < 4) continue;
++      att = 1;
++    }
++    if (t > fr) return;
++    cpa_mouse_report(b, dx, dy, w);
++    att = 0;
++  }
++}
++
 +/* --- test hook (Claude): ORIC_KEYS / ORIC_KEYS_AT / ORIC_DUMP / ORIC_DUMP_AT --- */
 +extern void ay_keypress(struct ay8912 *ay, SDL_COMPAT_KEY key, SDL_bool down);
 +static void test_hook(struct machine *oric)
@@ -720,6 +769,7 @@ index a47cd0c..95af81c 100644
 +  long kat = getenv("ORIC_KEYS_AT") ? atol(getenv("ORIC_KEYS_AT")) : 150;
 +  long dat = getenv("ORIC_DUMP_AT") ? atol(getenv("ORIC_DUMP_AT")) : -1;
 +  fr++;
++  cpa_mouse_tick(fr);
 +  if (fr == 1 && getenv("ORIC_WARP")) warpspeed = SDL_TRUE;   /* ORIC_WARP : sans attendre le temps réel */
 +  if (getenv("ORIC_PASTE") && fr == (getenv("ORIC_PASTE_AT") ? atol(getenv("ORIC_PASTE_AT")) : kat)) cpa_paste(getenv("ORIC_PASTE"));   /* essai du collage */
 +  static long pause_until = 0;
@@ -788,7 +838,7 @@ index a47cd0c..95af81c 100644
  
    if(oric->diskautosave)
    {
-@@ -2102,6 +2313,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
+@@ -2102,6 +2338,26 @@ void downloadFailed(emscripten_fetch_t* fetch)
    emscripten_fetch_close(fetch); // Also free data on failure.
  }
  
@@ -815,7 +865,7 @@ index a47cd0c..95af81c 100644
  void EMSCRIPTEN_KEEPALIVE www_async_dload()
  {
  
-@@ -2192,6 +2423,10 @@ int main(int argc, char* argv[])
+@@ -2192,6 +2448,10 @@ int main(int argc, char* argv[])
  #ifdef WWW
    // save the context to a global
    gCtx = &ctx;
@@ -826,7 +876,7 @@ index a47cd0c..95af81c 100644
    // create read-write fs
    EM_ASM(
      FS.mkdir('/readwritefs');
-@@ -2207,6 +2442,7 @@ int main(int argc, char* argv[])
+@@ -2207,6 +2467,7 @@ int main(int argc, char* argv[])
    });
    );
  
