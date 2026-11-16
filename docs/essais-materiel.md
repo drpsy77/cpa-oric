@@ -26,10 +26,11 @@ LOCI, ou sur la Pi du banc oric-rpi) :
   inverse suit la souris, sans saut quand on la déplace vite (même pendant le réaffichage
   qui suit un point posé) ; le curseur le suit dans la grille ;
 - boutons : gauche plein (ou masque après `M`), droit gomme, milieu masque ; trait continu
-  à main levée, `^Z` qui annule tout le trait ; clic dans la liste, dans « Réel » ;
-  molette (sens : vers le haut = sprite précédent) ; défilement d'un sprite 4 × 4 ;
-- vitesse (menu Vue, Souris...) : 3 confortable ? 1 et 5 utiles ? gardée après un
-  redémarrage de l'Oric et du LOCI (`0:CPA.MOU`) ;
+  à main levée (cases redessinées une à une, « Réel » au relâchement), `^Z` qui annule
+  tout le trait ; clic dans la liste, dans « Réel » ; molette sans effet ; défilement d'un
+  sprite 4 × 4 ;
+- vitesse (menu Vue, Souris...) : 2 par défaut (choisie sur le banc oric-rpi, souris
+  Genius) ; gardée après un redémarrage de l'Oric et du LOCI (`0:CPA.MOU`) ;
 - le LOCI ne se sert pas lui-même de la XRAM en `$FF00` (rapport de la souris) : rien
   d'abîmé dans son menu, ses montages, la clé, après une séance d'EDSPRITE ;
 - sans souris branchée : EDSPRITE comme avant, au clavier ; après `^Q`, au prompt, rien ne

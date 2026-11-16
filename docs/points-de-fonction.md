@@ -708,7 +708,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | EDS.T17 | Enregistrer, enregistrer sous (remplacer) | EI | 1 | 8 | F | 3 |
 | EDS.T18 | Détourer (contour de masque autour du dessin) | EI | 1 | 2 | F | 3 |
 | EDS.T19 | Dessiner à la souris (pointeur, bouton gauche, gomme, masque ; trait tenu) | EI | 1 | 5 | F | 3 |
-| EDS.T20 | Choisir à la souris (sprite de la liste, décor, molette, défilement) | EI | 1 | 4 | F | 3 |
+| EDS.T20 | Choisir à la souris (sprite de la liste, décor, défilement) | EI | 1 | 3 | F | 3 |
 | EDS.T21 | Vitesse de la souris (gardée) | EI | 1 | 2 | F | 3 |
 
 | Id | Algorithme | Où | Points |
@@ -879,14 +879,14 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
-| EDSPRITE | 4 | 5 008 | 296 | 145 | 0 | 6 % | 10 444 | 60 | 124 |
+| EDSPRITE | 4 | 5 018 | 299 | 146 | 0 | 6 % | 10 460 | 60 | 125 |
 | VOIR | 7 | 1 481 | 191 | 65 | 0 | 11 % | 3 353 | 78 | 176 |
 | USB | 33 | 6 613 | 706 | 261 | 0 | 10 % | 13 467 | 67 | 137 |
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
 | Outillage PC | 201 | 13 457 | 1 829 | 1 057 | 0 | 12 % | — | 58 | — |
-| **Total** | 403 | 81 885 | 7 395 | 3 532 | 2 608 | 8 % | 166 543 | 51 | 103 |
+| **Total** | 403 | 81 895 | 7 398 | 3 533 | 2 608 | 8 % | 166 559 | 51 | 103 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
@@ -898,22 +898,22 @@ Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, 
 | LOGO | 350 | 65 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 170 | 13 | 2,0 | 6 |
+| EDSPRITE | 171 | 13 | 2,0 | 7 |
 | VOIR | 78 | — | 4,1 | 13 |
 | USB | 80 | 13 | 0,8 | 28 |
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 173 |
-| Transverse (projet) | 2 525 | — | — | 138 |
-| Traduction anglaise (docs/en) | 3 118 | — | — | 69 |
-| **Total** | 9 932 | 326 | 6,1 | 300 |
+| Outillage PC | 367 | — | 1,6 | 174 |
+| Transverse (projet) | 2 526 | — | — | 139 |
+| Traduction anglaise (docs/en) | 3 120 | — | — | 70 |
+| **Total** | 9 936 | 326 | 6,1 | 301 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 300 commits du 2026-10-04 au 2026-11-16.
+Historique : 301 commits du 2026-10-04 au 2026-11-16.
 
-Réutilisation : 58 189 lignes de code écrites dans `progs/`, 68 814 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 58 199 lignes de code écrites dans `progs/`, 68 824 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -990,7 +990,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-04 | GRX.LIB | 0.9 | 1 581 | 370 | 1 951 | 260 | bibliothèques des programmes traduits précompilées (`tools/mk_lib.py`, `GRX.LIB`) ; ASM : directive `#lib` (édition de liens) ; GRXASM : `GRX.LIB` lue si présente, sinon les `.INC` ; `tools/test_lib.sh` |
 | 2026-11-05 | rappel automatique | 0.9 | 1 592 | 370 | 1 962 | 264 | console à distance : rappel automatique par le pilote (silence de 10 s, fonction 117 op 4), touche de l'Oric signalée au démon (la vitrine s'arrête) ; vitrine commentée (`/commentaire`) |
 | 2026-11-07 | sprites dans l'image | 0.9 | 1 599 | 373 | 1 972 | 271 | GRAPHER et GRXASM : `HSHOW`, `HHIDE` (sprites des `.SPR` dans l'image HIRES ou SPLIT, décor gardé) |
-| 2026-11-16 | souris | 0.9 | 1 617 | 380 | 1 997 | 301 | souris USB du LOCI : bibliothèque `mou_inc.s` (`test_mou.py`) ; EDSPRITE à la souris (tracé, gomme, masque, liste, molette, défilement, vitesse gardée dans `0:CPA.MOU`) ; Oricutron de test : XREG, `ORIC_MOUSE` |
+| 2026-11-16 | souris | 0.9 | 1 617 | 380 | 1 997 | 301 | souris USB du LOCI : bibliothèque `mou_inc.s` (`test_mou.py`) ; EDSPRITE à la souris (tracé, gomme, masque, liste, défilement, vitesse gardée dans `0:CPA.MOU`) ; Oricutron de test : XREG, `ORIC_MOUSE` |
 
 ## 11. Comparaisons
 

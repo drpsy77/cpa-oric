@@ -70,7 +70,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | XDO | 1 351 | appel de script à script | `manuel.md` |
 | EDIT | 8 704 | éditeur de texte (coupure aux mots, à 38 caractères, ou ligne entière qui défile en largeur ; 8 192 octets de code, le reste du dernier bloc est libre) | `manuel.md` |
 | HEX | 3 840 | éditeur hexadécimal | `manuel.md` |
-| EDSPRITE | 10 444 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) ; souris USB du LOCI facultative (tracé, gomme, liste, molette ; vitesse gardée dans `0:CPA.MOU`) | `edsprite.md` |
+| EDSPRITE | 10 460 | éditeur plein écran des sprites et caractères `.SPR` de GRAPHER (grille à trois états, liste, aperçu réel, codes hexa, transformations, animation) ; souris USB du LOCI facultative (tracé, gomme, masque, liste ; vitesse gardée dans `0:CPA.MOU`) | `edsprite.md` |
 | ASM | 7 322 | assembleur 6502 (identique à xa sur nos sources) ; `/S` : symboles, `/E` : source effacée, `/T` : fichier écrit nommé `NOM.TAP` ; `#include` cherchés sur A: à D: ; `#lib` : routines de `GRX.LIB` reliées | `manuel.md` |
 | DEBUG | 6 490 | moniteur, désassembleur, pas à pas | `manuel.md` |
 | MEM, POKE, GO | 674, 254, 221 | mémoire | `manuel.md` |

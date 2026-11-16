@@ -120,7 +120,6 @@ mrd     = $67           ; 1 : tout réafficher après l'événement
 mchg    = $68           ; ce que mo_poll a cumulé
 mbp     = $69
 mbr     = $6A
-mw      = $6B
 tx      = $6C           ; m_line : point d'arrivée, écarts, sens, erreur
 ty      = $6D
 ldx_    = $6E
@@ -4231,9 +4230,11 @@ r       rts
 ;   grille, le curseur le suit (saisie). Bouton gauche : l'état choisi au
 ;   clavier (ESPACE plein, M masque), droit : transparent, milieu :
 ;   masque ; tenu, il trace (un trait relie deux lectures). Clic dans la
-;   liste : le sprite ; dans « Réel » : décor suivant. Molette : sprite
-;   précédent / suivant. Pointeur au-dessus ou au-dessous de la grille :
-;   défilement d'un caractère (sprite de 4 de haut). Tout reste au clavier.
+;   liste : le sprite ; dans « Réel » : décor suivant. Pendant un trait,
+;   seules les cases posées sont redessinées (tout l'écran au relâchement).
+;   Pointeur au-dessus ou au-dessous de la grille : défilement d'un
+;   caractère (sprite de 4 de haut). La molette n'est pas lue (celle du
+;   bouton du milieu tourne quand on clique). Tout reste au clavier.
 ; ---------------------------------------------------------------------
 ; m_event : traite ce que mo_poll a cumulé ; C=1 s'il faut tout réafficher
 m_event
@@ -4244,30 +4245,13 @@ m_event
         sta mbp
         lda mo_br
         sta mbr
-        lda mo_w
-        sta mw
         jsr mo_ack
         lda #0
         sta mrd
-        lda mbp                 ; un clic ou la molette efface le message
-        ora mw
-        beq wh
+        lda mbp                 ; un clic efface le message
+        beq hit
         lda #0
         sta msgp+1
-wh      lda mw                  ; molette : fin du trait, sprite précédent
-        beq hit                 ;   (vers le haut) ou suivant
-        lda #0
-        sta mstk
-        inc mrd
-        lda mw
-        bmi wd
-wu      jsr k_prev
-        dec mw
-        bne wu
-        beq hit
-wd      jsr k_next
-        inc mw
-        bne wd
 hit     jsr m_hit
         lda mchg                ; pointeur arrivé au-dessus ou au-dessous
         lsr                     ;   de la grille (saisie) : défilement
@@ -4337,15 +4321,17 @@ b3      ldx genre               ; tuiles : pas de masque
 bs      sta mbut
         inx
         stx mstk
-        lda #0
+        lda zone                ; venu de la liste : tout réafficher
+        beq bz
+        inc mrd
+bz      lda #0
         sta zone
         jsr save_undo
         lda #$FF
         sta mlx
 tr      lda mhit
         bne out
-        jsr m_line
-        inc mrd
+        jsr m_line              ; cases redessinées une à une
         jmp te
 out     lda #$FF                ; hors de la grille : le trait reprendra
         sta mlx                 ;   au point d'entrée
@@ -4355,8 +4341,9 @@ te      lda mbr                 ; bouton relâché : fin du trait
         lda mo_b
         and mbut
         bne fin
-end     lda #0
+end     lda #0                  ; fin du trait : tout réafficher
         sta mstk
+        inc mrd
         jmp fin
 ck      lda mbp                 ; clic gauche : liste, « Réel »
         lsr
@@ -4501,6 +4488,7 @@ l       lda mlx                 ; pose le point
         ldx mstk
         dex
         jsr put_x
+        jsr draw_pt
         lda mlx
         cmp tx
         bne c
@@ -4535,6 +4523,32 @@ s1      lda ldx_                ; e2 <= dx : y avance
         sta mly
         jmp l
 r       rts
+.)
+
+; draw_pt : redessine la case de la grille du point du curseur (px, py)
+draw_pt
+.(
+        jsr cur_pix
+        jsr state
+        asl                     ; état * 4 + traits (comme draw_grid)
+        asl
+        sta tmpb
+        ldx px
+        lda mod6,x
+        cmp #5
+        bne n1
+        inc tmpb
+n1      lda py
+        and #7
+        cmp #7
+        bne n2
+        inc tmpb
+        inc tmpb
+n2      jsr cur_cell
+        ldx tmpb
+        lda gcodes,x
+        sta (scr),y
+        rts
 .)
 
 ; ptr_on : affiche le pointeur (sauf sur le curseur de la saisie)

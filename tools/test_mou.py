@@ -9,7 +9,7 @@ le LOCI est simulé : registres de la MIA ($03A4-$03AF), code d'attente
 en $03B0, XREG, fenêtre 0 de la XRAM, fichiers de 0: (open, read, write,
 close). Essais :
 - sans LOCI : mo_init refuse, mo_poll rend 0 ;
-- départ : rapport tenu en $FF00, réglage 2 sans 0:CPA.MOU ;
+- départ : rapport tenu en $FF00, réglage 3 sans 0:CPA.MOU ;
 - 3 000 mouvements tirés au hasard pour chaque sensibilité (0 à 7) et des
   bornes variées, comparés à un calcul en Python (différence signée,
   restes gardés, bornes), passage de 255 à 0 compris ;
@@ -222,7 +222,7 @@ def main():
         a, c = b.appel("mo_init")
         verifie(c == 0 and b["mo_on"] == 1, "n=%d : mo_init doit accepter" % n)
         verifie(L.mou == 0xFF00, "rapport en $FF00 (%04X)" % L.mou)
-        verifie(b["mo_reg"] == 2, "réglage par défaut 2")
+        verifie(b["mo_reg"] == 3, "réglage par défaut 3")
         b["mo_n"] = n
         xmax, ymax = hasard.choice([(239, 199), (39, 27), (255, 255), (0, 5)])
         b["mo_xmax"], b["mo_ymax"] = xmax, ymax
@@ -310,7 +310,7 @@ def main():
     verifie(b["mo_n"] == 7, "mo_n borné à 7")
     L.fichiers["0:CPA.MOU"] = [9]
     b.appel("mo_init")
-    verifie(b["mo_reg"] == 2, "réglage hors limites : défaut")
+    verifie(b["mo_reg"] == 3, "réglage hors limites : défaut")
     verifie(not L.ouverts, "fichiers restés ouverts : %s" % L.ouverts)
 
     # Fin

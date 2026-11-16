@@ -19,7 +19,7 @@
 ;  environ 100 par cm) ; mo_n = mo_unit (fixé par le programme selon ses
 ;  unités : 0 pour des points, 2 pour des cases du texte) + mo_reg
 ;  (réglage de l'utilisateur, 0 à 4, gardé dans le fichier 0:CPA.MOU de
-;  la mémoire du LOCI, commun à tous les programmes ; 2 sans fichier).
+;  la mémoire du LOCI, commun à tous les programmes ; 3 sans fichier).
 ;  Les restes de la division sont gardés : un mouvement lent avance aussi.
 ;
 ;  Sans LOCI (ou LOCI qui refuse XREG) : mo_on = 0, mo_poll rend toujours
@@ -57,7 +57,7 @@ zc       ldy mo_spo,x            ;   (sans LOCI : registres du VIA, et un
         ldx #>MO_XRAM
         jsr mo_xreg
         bcs zno
-        lda #2                  ; réglage par défaut
+        lda #3                  ; réglage par défaut
         sta mo_reg
         ldx #1                  ; O_RDONLY
         jsr mo_open
@@ -357,7 +357,7 @@ mo_xmax .byt 239                ; bornes (comprises)
 mo_ymax .byt 199
 mo_on   .byt 0                  ; 1 : souris active
 mo_unit .byt 0                  ; unité du programme (2^n pas)
-mo_reg  .byt 2                  ; réglage de l'utilisateur (0 à 4)
+mo_reg  .byt 3                  ; réglage de l'utilisateur (0 à 4)
 mo_n    .byt 2                  ; mo_unit + mo_reg
 mo_b    .byt 0                  ; boutons tenus : bit 0 gauche, 1 droit,
 mo_bp   .byt 0                  ;   2 milieu ; enfoncés, relâchés depuis
