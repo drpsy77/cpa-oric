@@ -47,6 +47,11 @@ bas("PROG.BAS", b"10 REM essai de MKTAP\r\n"
     b"110 REM " + b"X" * 80 + b"\r\n"      # plus de 78 : avertissement
     b"120 a=\x07peek(1)\r\n")               # contrôle retiré
 bas("LF.BAS", b"5 CLS\n10 PRINT\"FIN\"")   # LF seuls, sans fin de ligne
+# notation d'UNTAP : {hh} (pas 00), {{ ; le reste tel quel ; décodée avant
+# la limite de 78 caractères
+bas("ESC.BAS", b"10 PRINT\"{1B}N{{}{1b}\":REM {80}{FF}{7F}\r\n"
+    b"20 {20}PRINT\"{00}{zz}{1}{A{\"\r\n30 {31}0 PRINT\r\n"
+    b"40 A$=\"" + b"{41}" * 30 + b"\"\r\n50 PRINT \"{\"\r\n")
 # un gros programme (plusieurs pages, liens de toutes sortes)
 bas("GROS.BAS", b"".join(b"%d PRINT\"LIGNE %d\";A$(%d):DATA %d,X\r\n"
                          % (i, i, i % 7, i * 3) for i in range(1, 900)))
@@ -101,6 +106,7 @@ cas B1 PROG.BAS /R
 cas B2 PROG.BAS DATA.BIN 9100 TEST.COM 9000
 cas B3 TEST.COM 9000 LF.BAS /R
 cas B4 GROS.BAS
+cas B5 ESC.BAS
 if grep -q "ligne 110 : plus de 78 caracteres" "$T/B1.out"; then
   echo "avertissement : ligne de plus de 78 caracteres"; ok=$((ok+1))
 else echo "AVERTISSEMENT ABSENT"; cat "$T/B1.out"; ko=$((ko+1))

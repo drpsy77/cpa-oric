@@ -319,6 +319,16 @@ clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
   IRQ au plus) ; écran entier vu par le Mac toujours en ~0,5 s ; animation dans `VOIR`
   pendant la console : même vitesse que sans.
 
+**UNTAP** (essayé dans le 6502 simulé et Oricutron) :
+
+- Un vrai `.TAP` d'autrefois (un jeu en BASIC, de préférence avec des couleurs dans ses
+  chaînes) : `IMPORT JEU.TAP`, `UNTAP JEU` (la liste tient sur 37 colonnes), `UNTAP JEU *`,
+  puis `TYPE JEU.BAS` ou EDIT : le programme se lit comme sous `LIST`, les couleurs en
+  `{hh}`. Noter les lignes `recodage different` et pourquoi.
+- Aller-retour : `MKTAP JEU2 JEU.BAS /R`, `EXPORT JEU2.TAP`, `USBMOUNT JEU2.TAP /B` : le jeu
+  doit tourner comme l'original.
+- Durée sur un gros programme (un `.TAP` de 30 Ko) : dire si elle gêne.
+
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
 - Sur `cpa-exemples.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire

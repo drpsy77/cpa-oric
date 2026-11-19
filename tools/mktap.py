@@ -23,8 +23,9 @@
   un seul) ne prend pas d'adresse : il est codé comme le ferait la ROM 1.1
   (mots-clés en un octet) et chargé en $0501 comme un programme BASIC ;
   /R le lance (RUN) à la fin du chargement. Les minuscules passent en
-  majuscules, sauf entre guillemets, après REM et dans un DATA. Codage
-  et contrôles : voir code_bas (docs/oric-basic.md § 2).
+  majuscules, sauf entre guillemets, après REM et dans un DATA. « {hh} »
+  après le numéro : l'octet hh (notation d'UNTAP, « {{ » : accolade).
+  Codage et contrôles : voir code_bas (docs/oric-basic.md § 2).
 
 Contrôles (les mêmes que MKTAP.COM) : 8 blocs au plus, un seul /R, chaque
 bloc dans $0500-$BFFF, pas de chevauchement (chargeur BASIC compris),
@@ -158,12 +159,40 @@ def code_ligne(t):
     return bytes(out)
 
 
+HEXA = b"0123456789ABCDEFabcdef"
+
+
+def unesc(t):
+    """Notation d'UNTAP dans le texte d'une ligne (après son numéro) :
+    « {hh} » (deux chiffres hexadécimaux, pas 00) -> l'octet hh, « {{ » ->
+    une accolade ; une autre accolade reste telle quelle."""
+    out = bytearray()
+    i = 0
+    while i < len(t):
+        c = t[i]
+        if c == 0x7B:
+            if t[i + 1:i + 2] == b"{":
+                out.append(c)
+                i += 2
+                continue
+            h = t[i + 1:i + 3]
+            if (len(h) == 2 and all(x in HEXA for x in h) and t[i + 3:i + 4] == b"}"
+                    and int(h, 16) != 0):
+                out.append(int(h, 16))
+                i += 4
+                continue
+        out.append(c)
+        i += 1
+    return bytes(out)
+
+
 def code_bas(data, nom):
     """Programme BASIC en texte -> octets chargés en $0501 (lignes liées,
     fin 0 0, plus un octet : la ROM en fait le début des variables).
     Chaque ligne : numéro (espaces admis, comme à la saisie), puis le texte.
     Lignes vides ignorées, ligne réduite à un numéro aussi ; caractères de
-    contrôle retirés (le clavier de l'Oric n'en met pas dans une ligne).
+    contrôle retirés (le clavier de l'Oric n'en met pas dans une ligne),
+    puis notation d'UNTAP décodée après le numéro (unesc : « {1B} »).
     Erreurs : numéro absent ou plus grand que 63999, numéros pas
     croissants, ligne de texte de plus de 255 caractères ou codée sur plus
     de 250 octets, caractère de code $80 ou plus hors texte. Avertissement :
@@ -199,9 +228,10 @@ def code_bas(data, nom):
             continue                    # numéro seul : rien
         if num <= der:
             sys.exit("ligne %d : hors d'ordre" % num)
-        if len(t) > LG_EDITEUR:
+        texte = unesc(t[i:])
+        if i + len(texte) > LG_EDITEUR:
             print("ligne %d : plus de 78 caracteres" % num)
-        code = code_ligne(t[i:])
+        code = code_ligne(texte)
         if code is None:
             sys.exit("ligne %d : caractere invalide" % num)
         if len(code) > LG_CODE:

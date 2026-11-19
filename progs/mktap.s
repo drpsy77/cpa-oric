@@ -16,8 +16,10 @@
 ;            un chargeur BASIC est mis en tête (nommé NOM, lancé tout
 ;            seul) : 10 CLOAD"":CLOAD"":...:CALL#adr
 ;    .BAS    programme BASIC en texte (un seul, sans adresse) : codé
-;            comme le ferait la ROM 1.1 (codebas), chargé en $0501 ;
-;            /R : il est lancé (RUN) à la fin du chargement
+;            comme le ferait la ROM 1.1 (codebas, crunch de bcr_inc.s),
+;            chargé en $0501 ; « {hh} » après le numéro : l'octet hh
+;            (notation d'UNTAP, unesc) ; /R : il est lancé (RUN) à la fin
+;            du chargement
 ;  Contrôles avant d'écrire : blocs dans $0500-$BFFF, sans chevauchement
 ;  (chargeur compris), longueur non nulle et pas plus grande que le
 ;  fichier, bloc /R en $0503 au plus tôt (la ROM met $00 en $0500-$0502
@@ -941,7 +943,8 @@ n7      lda num                 ; numéros croissants
         lda #<m_ord
         ldy #>m_ord
         jmp lfail
-n8      lda slen                ; plus que l'éditeur de l'Oric
+n8      jsr unesc               ; {hh} et {{ dans le texte
+        lda slen                ; plus que l'éditeur de l'Oric
         cmp #79
         bcc n9
         stx sx
@@ -1168,127 +1171,66 @@ e       sec
         rts
 .)
 
-; ---------------------------------------------------------------------
-; crunch : texte sbuf,X (après le numéro) -> (po),Y comme TokeniseLine
-;   de la ROM 1.1 ($C5FA), lettres en majuscules hors texte -> Y =
-;   octets codés. Erreur : caractère de code $80 ou plus hors texte.
-crunch
+; unesc : texte sbuf,X... (après le numéro) : « {hh} » (deux chiffres
+;   hexadécimaux, pas 00) devient l'octet hh, « {{ » une accolade ; une
+;   autre accolade reste telle quelle. En place, slen ajusté ; X gardé.
+;   Notation d'UNTAP pour les caractères de contrôle et les codes de 128
+;   et plus d'une chaîne (docs/oric-basic.md § 5.1).
+unesc
 .(
-        ldy #0
-        sty dmode
-cl      cpx slen
-        bne c0
-        rts
-c0      lda sbuf,x
-        cmp #$22                ; chaîne : jusqu'au guillemet
-        bne c1
-s       sta (po),y
-        iny
-        inx
-        cpx slen
-        bne s0
-        rts
-s0      lda sbuf,x
-        cmp #$22
-        bne s
-        sta (po),y
-        iny
-        inx
-        jmp cl
-c1      cmp #" "
-        beq st
-        bit dmode               ; DATA : tel quel jusqu'au « : »
-        bmi st
-        cmp #"?"
-        bne c2
-        lda #T_PRINT
-        bne st
-c2      cmp #"0"                ; chiffres, « : », « ; »
-        bcc kw
-        cmp #";"+1
-        bcc st
-kw      cmp #$80
-        bcc k0
-        lda #<m_car
-        ldy #>m_car
-        jmp lfail
-k0      stx sx                  ; mots-clés, dans l'ordre de la table
-        sty sy
-        lda #<bastab
-        sta kp
-        lda #>bastab
-        sta kp+1
-        lda #$80
-        sta tok
-k1      ldy #0
-k2      lda sbuf,x
-        jsr upc
-        sta pa
-        lda (kp),y
-        and #$7F
-        cmp pa
-        bne kn
-        lda (kp),y
-        bmi kf
-        inx
-        iny
-        bne k2
-kn      lda (kp),y              ; mot suivant
-        iny
-        asl
-        bcc kn
-        tya
-        clc
-        adc kp
-        sta kp
-        bcc k3
-        inc kp+1
-k3      inc tok
-        ldx sx
-        ldy #0
-        lda (kp),y
-        bne k1
-        lda sbuf,x              ; aucun : le caractère, en majuscule
-        jsr upc
-        ldy sy
-        jmp st
-kf      lda tok
-        ldy sy
-st      inx
-        sta (po),y
-        iny
-        cmp #":"
-        bne p1
-        lda #0
-        sta dmode
-        jmp cl
-p1      cmp #T_DATA
-        bne p2
-        lda #$80
-        sta dmode
-        jmp cl
-p2      cmp #T_REM
-        beq r
-        jmp cl
-r       cpx slen                ; REM : le reste tel quel
-        beq done
+        stx sx
+        txa
+        tay                     ; Y : écriture, X : lecture
+l       cpx slen
+        beq e
         lda sbuf,x
-        sta (po),y
+        cmp #"{"
+        bne c
+        lda sbuf+1,x            ; « {{ »
+        cmp #"{"
+        beq one
+        jsr hexval              ; « {hh} » (le 0 de fin arrête tout)
+        bcs lit
+        asl
+        asl
+        asl
+        asl
+        sta pa
+        lda sbuf+2,x
+        jsr hexval
+        bcs lit
+        ora pa
+        beq lit                 ; {00} : pas un octet de ligne
+        sta pa
+        lda sbuf+3,x
+        cmp #"}"
+        bne lit
+        inx
+        inx
+one     inx
+        lda sbuf,x
+        cmp #"{"
+        beq c
+        lda pa
+        .byt $2C                ; (BIT abs : saute le LDA)
+lit     lda #"{"
+c       sta sbuf,y
         iny
         inx
-        bne r
-done    rts
+        bne l
+e       sty slen
+        lda #0
+        sta sbuf,y
+        ldx sx
+        rts
 .)
 
-upc
-.(
-        cmp #"a"
-        bcc r
-        cmp #"z"+1
-        bcs r
-        and #$DF
-r       rts
-.)
+; cr_bad : caractère de code $80 ou plus hors texte (crunch, bcr_inc.s)
+cr_bad  lda #<m_car
+        ldy #>m_car
+        jmp lfail
+
+#include "bcr_inc.s"
 
 ; pbas : le programme codé (pbuf, lenl/lenh du bloc ib) dans le .TAP
 pbas

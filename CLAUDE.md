@@ -41,6 +41,7 @@ après `./build.sh`, `git status` montre si une image a changé.
     tools/test_lib.sh [NOM...]                           # GRX.LIB (#lib) == .INC, programmes traduits
     python3 tools/test_fs.py                             # fichiers : fin de fichier, ajout (6502 simulé)
     python3 tools/test_mou.py                            # souris du LOCI (mou_inc.s, 6502 simulé)
+    python3 tools/test_untap.py                          # UNTAP (.TAP lus), aller-retour BASIC par MKTAP
     python3 tools/test_fp.py                             # décimaux de LOGO
     tools/test_logo.sh                                   # LOGO (long : ~20 min sur le Pi)
     DSK=build/cpa.dsk ORIC_KEYS_AT=400 tools/run_test.sh $'DIR\n' 900 /tmp/t

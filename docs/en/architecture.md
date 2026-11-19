@@ -138,6 +138,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
     python3 tools/test_fichiers.py   # EDIT, GRAPHER: disk full, R/O, RESET during writing
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, then CLOAD under BASIC 1.1
     python3 tools/test_bas.py        # .BAS: mktap.py encoding == ROM 1.1 (simulated 6502)
+    python3 tools/test_untap.py      # UNTAP.COM == tools/untap.py, BASIC round trip through mktap.py
     tools/test_oric.sh               # GRXASM /O, ASM /T: refusals, .TAP under BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM and xfer_server.py in Oricutron (simulated modem)
     tools/test_remote.sh             # remote console: driver, REMOTE, remote.py (~6 min)
@@ -163,7 +164,8 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | System (BIOS, BDOS, CCP, menus) | in addition: Oricutron trial targeted at what changes, `tools/smoke_test.sh` |
 | LOGO.COM, `fp_inc.s`, `ltxt_inc.s`, or BDOS functions 10, 47, 115, 116 | in addition: `tools/test_logo.sh` |
 | `fp_inc.s` | in addition: `python3 tools/test_fp.py` |
-| MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s` | in addition: `tools/test_mktap.sh` (also runs `tools/test_bas.py`) |
+| MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s`, `progs/bcr_inc.s` | in addition: `tools/test_mktap.sh` (also runs `tools/test_bas.py`) and `python3 tools/test_untap.py` |
+| UNTAP.COM, `tools/untap.py` | in addition: `python3 tools/test_untap.py` (~3 min) |
 | ASM.COM (`/T` option) | in addition: `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, a library of translated programs | in addition: `tools/test_lib.sh` (~30 min; names as arguments for a targeted run) |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | in addition: `tools/test_xfer.sh` (~4 min); for TERM, Oricutron trial in loopback (`serial = 'loopback'`) |

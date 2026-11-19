@@ -66,7 +66,9 @@ them in an archive), or build them with `./build.sh`.
 - Tools to develop on the Oric itself: **EDIT** (text editor), **HEX** (hex editor),
   **ASM** (6502 assembler), **DEBUG** (monitor, disassembler, single step), and **MKTAP**,
   which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""` (machine code, data,
-  or a BASIC program typed in EDIT and encoded exactly as the Oric's ROM would).
+  or a BASIC program typed in EDIT and encoded exactly as the Oric's ROM would), and
+  **UNTAP**, which does the reverse: the blocks of a `.TAP` tape, an old BASIC program turned
+  into text for EDIT (which MKTAP encodes back identically), the code as `.BIN`.
 - **LOGO** in English and in French (turtle, decimals, words and lists, sound; `LOGOTR`
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the

@@ -70,6 +70,8 @@ Autres programmes de la disquette :
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM` : échange de fichiers avec la clé USB du LOCI.
 - `MKTAP.COM NOM fic adr [/R]...` : fichier `.TAP` pour l'Oric sous BASIC, code machine,
   données ou programme BASIC écrit dans EDIT (voir « Publier pour l'Oric sous BASIC »).
+- `UNTAP.COM NOM [n|*]` : les blocs d'un `.TAP`, programme BASIC rendu en texte, code en
+  `.BIN` (voir « Lire une cassette : UNTAP »).
 - `TERM.COM [hote] [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série » et « Les hôtes : HOSTS »).
 - `XFER.COM R|E fic [nom] [/T] [@hote]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
@@ -270,7 +272,7 @@ tous les fichiers.
 rubriques. Tout y est **protégé** (R/O) : un `ERA *.*` ou un nom complété par ESC ne peut
 rien effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis
 la copier. `DIR` y montre les applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER,
-GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) et
+GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, UNTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) et
 README.TXT ; CPA.BNK (des parties du système chargées quand elles servent, ci-dessous), les
 commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
 MEM, POKE, GO, le script USBCD.BAT, les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
@@ -302,9 +304,9 @@ Les deux fichiers sont modifiables et visibles ; effacer `AUTO.BAT` supprime l'a
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 | `build/cpa-logo.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, FLECHES.LOG |
-| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes.dsk` (écrire) | EDIT | | |
 
 Sur toutes les quatre, en plus : AUTO.BAT, ACCUEIL.TXT (l'accueil).
@@ -682,6 +684,10 @@ ne prend pas d'adresse :
   et un mot-clé est reconnu même au milieu d'un nom (`SCORE` contient `OR` : `SC OR E`),
   comme si on tapait la ligne. Un programme listé par `LIST` après chargement est donc
   identique à celui qu'on aurait tapé.
+- Codes qu'on ne tape pas dans EDIT (couleurs glissées dans une chaîne, caractères de 128 et
+  plus) : `{hh}`, en hexadécimal, après le numéro de la ligne (`PRINT "{1B}NROUGE"`) ; `{{`
+  pour une accolade ; une autre accolade reste telle quelle. C'est la notation qu'écrit
+  UNTAP (ci-dessous).
 - Avertissement (le `.TAP` est quand même écrit) : `ligne N : plus de 78 caracteres`. Une telle
   ligne marche, mais l'éditeur de l'Oric ne pourrait pas la retaper.
 - Refusés, avec le numéro de la ligne : `apres N : numero invalide` (ligne sans numéro, ou
@@ -690,6 +696,46 @@ ne prend pas d'adresse :
   montrerait pas), `ligne N : caractere invalide` (code 128 ou plus hors du texte), `trop long`
   (fin du programme après `$97FF`, la limite du BASIC ; ou plus de place en mémoire pour le
   coder : le mode SPLIT en laisse moins).
+
+### Lire une cassette : UNTAP
+
+`UNTAP` lit un fichier `.TAP` (une cassette de l'Oric) sous CP/A : un vieux programme BASIC
+devient un texte qu'on lit et modifie dans EDIT, du code machine un fichier `.BIN` à son
+adresse. Le `.TAP` est d'abord copié sur la disquette (`IMPORT JEU.TAP`, ou CMDER) ; les
+fichiers écrits vont sur le même lecteur.
+
+    A>UNTAP JEU
+      1 JEU              BAS 0501-0A3F /R
+      2 -                BIN 9800-9F12
+      3 ECRAN            BIN BB80-BFDF
+    A>UNTAP JEU *
+    JEU.BAS ecrit
+    JEU2.BIN 9800-9F12 ecrit
+    ECRAN.BIN BB80-BFDF ecrit
+
+- `UNTAP JEU` liste les blocs : numéro, nom (`-` : sans nom, fréquent), `BAS` (programme
+  BASIC) ou `BIN` (code, données), adresses, `/R` (lancé tout seul après le chargement).
+  `UNTAP JEU 2` extrait le bloc 2, `UNTAP JEU *` tous.
+- Un programme BASIC devient `NOM.BAS`, comme `LIST` l'afficherait. `MKTAP` le recode à
+  l'identique (`MKTAP JEU2 JEU.BAS`) : on peut donc le modifier dans EDIT et refaire la
+  cassette. Ce qui ne se tape pas (couleurs glissées dans une chaîne, caractères de 128 et
+  plus) est écrit `{hh}` ; de même un espace ou un chiffre en tête de ligne, un espace en fin
+  (EDIT les perdrait ou MKTAP les lirait autrement), et `{{` pour une accolade.
+- `ligne N : recodage different` : MKTAP ne redonnerait pas exactement cette ligne (minuscules
+  hors des chaînes, ligne fabriquée par un autre outil que la ROM, code inconnu, ligne
+  vide). Elle est écrite quand même ; le programme recodé marchera presque toujours, mais
+  pas octet pour octet.
+- Du code collé après la fin du programme BASIC, dans le même bloc (courant), devient
+  `NOM.BIN`, avec son adresse.
+- Noms des fichiers : les lettres et chiffres du nom du bloc (8 au plus) ; un bloc sans nom,
+  ou dont le nom est déjà pris par un bloc précédent, prend le nom du `.TAP` suivi de son
+  numéro (`JEU2`, `AVENTU12`). Un fichier qui existe est remplacé, comme par COPY.
+- `/1` : programme BASIC de l'Oric-1 (ROM 1.0 : `INVERSE`, `NORMAL` et `GO` à la place de
+  `STORE`, `RECALL`, et en plus). MKTAP ne code que pour l'Atmos : ces lignes sont
+  signalées.
+- `bloc N incomplet` : le fichier finit avant le bloc ; ce qui est là est extrait.
+- Lancer un `.TAP`, plutôt : `USBMOUNT JEU.TAP /B` (voir « Échange de fichiers avec la clé USB du LOCI »).
+- Sur le PC, `tools/untap.py` fait la même chose (mêmes arguments).
 
 ## Terminal série : TERM
 

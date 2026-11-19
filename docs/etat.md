@@ -57,13 +57,14 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 13 118 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 13 171 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
 | EXPORT, IMPORT, USBDIR | 3 046, 3 381, 2 961 | échange avec la clé USB du LOCI, relatif au répertoire courant de CP/A (`0:CPA.CWD`) ; jokers ; `USBDIR /S` : supports ; `USBCD rep` (`USBDIR /C`) : change de répertoire, `USBCD` seul : CMDER | `manuel.md`, `usb.md` |
 | USBMOUNT | 4 032 | monte, montre, éjecte les images de disquette (B: à D:) et la cassette de la clé ; `/B` : démarre le BASIC 1.1 du LOCI sur la cassette | `manuel.md`, `usb.md` |
-| MKTAP | 4 079 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1 | `manuel.md`, `oric-basic.md` |
+| MKTAP | 4 171 | fichier `.TAP` pour l'Oric sous BASIC (`CLOAD""`) : un bloc par fichier, démarrage automatique (bloc `/R` en `$0503` au plus tôt) ou chargeur BASIC ; programme BASIC en texte (`.BAS`) codé comme la ROM 1.1, notation `{hh}` | `manuel.md`, `oric-basic.md` |
+| UNTAP | 3 329 | les blocs d'un `.TAP` : liste ; programme BASIC rendu en texte (`.BAS`, que MKTAP recode à l'identique, lignes vérifiées), code en `.BIN` ; noms vides ou en double, ROM 1.0 (`/1`) | `manuel.md`, `oric-basic.md` |
 | TERM | 2 007 | terminal série (modem WiFi du LOCI, ACIA `$0380` ; Oricutron `$031C`) ; `TERM hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
 | XFER | 3 179 | envoi et réception de fichiers par le modem (XMODEM-CRC), serveur `tools/xfer_server.py` ; `@hote` compose d'abord (fichier `HOSTS`) | `manuel.md` |
 | REMOTE | 2 127 | console à distance : appelle le démon du Mac (`HOSTS`, port 2324), active, coupe, état | `manuel.md`, `console-distance.md` |
@@ -82,15 +83,15 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-348 Ko libres), `cpa-anim.dsk` (la démonstration, 304 Ko libres), `cpa-logo.dsk` (LOGO seul,
+342 Ko libres), `cpa-anim.dsk` (la démonstration, 298 Ko libres), `cpa-logo.dsk` (LOGO seul,
 506 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 310 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
+d'ASM, 304 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; les quatre disquettes d'usage s'ouvrent sur un
 accueil (`AUTO.BAT`, `ACCUEIL.TXT` : l'invite, ESC, FUNCT, HELP, puis quoi taper) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 620 points de fonction IFPUG et 380 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 628 points de fonction IFPUG et 383 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric
@@ -114,7 +115,7 @@ D'après `docs/vision.md`. Ce qui n'est pas dans cette liste attend (`docs/suite
 | GRAPHER plateforme : son | à spécifier |
 | GRAPHER plateforme : un jeu complet fait sur l'Oric (le rogue-like) | à écrire |
 | Pont vers l'Oric de base : `.TAP` autonome | fait (`MKTAP`, `GRXASM /O`) |
-| Pont vers l'Oric de base : lire les `.TAP` (UNTAP, DIS) | spécifié (`docs/oric-basic.md` § 5) |
+| Pont vers l'Oric de base : lire les `.TAP` (UNTAP, DIS) | UNTAP fait ; DIS spécifié (`docs/oric-basic.md` § 5) |
 | Extérieur : terminal et transfert par le modem du LOCI | fait (TERM, XFER) |
 | Vérifiée sur le vrai matériel | en attente (`docs/essais-materiel.md`) |
 

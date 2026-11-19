@@ -5,7 +5,7 @@ des programmes en langage machine chargés par `CLOAD`, et, au bout du chemin, u
 GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Dans l'autre sens, que les
 vieux programmes de l'Oric, presque tous conservés en `.TAP`, se reprennent sous CP/A. Quatre
 étages : la sortie `.TAP` (faite), GRXASM vers un Oric seul (fait), la lecture des `.TAP`
-sous CP/A (décidée), puis une boîte à outils pour le BASIC (plus tard).
+sous CP/A (UNTAP fait, DIS décidé), puis une boîte à outils pour le BASIC (plus tard).
 
 ## 1. Ce qui est établi (Oricutron, ROM BASIC 1.1)
 
@@ -104,7 +104,8 @@ que sur lui, le chargeur des autres blocs prenant `$0501` aussi. Mode d'emploi :
   la table de `progs/bas_tab.s` est celle de la ROM ; `tools/test_mktap.sh` compare MKTAP.COM
   à `mktap.py`, puis charge un `.BAS` dans Oricutron : programme lancé, octets et début des
   variables identiques à ceux du même programme tapé au clavier.
-- Le sens inverse (`.TAP` vers texte) : § 5.
+- Le sens inverse (`.TAP` vers texte) : UNTAP, § 5.1, qui écrit `{hh}` pour un code qu'on ne
+  tape pas ; MKTAP décode cette notation après le numéro de la ligne.
 
 **Lancer un `.TAP`** : `USBMOUNT JEU.TAP /B` (`docs/usb.md` § 1.4) monte la cassette et
 redémarre le LOCI en BASIC 1.1, qui la charge tout seul ; le `.TAP` tourne sous la ROM, sans
@@ -170,7 +171,7 @@ Mesuré : 1,2 Ko dans `SERPENT` et `DEFILE`, 1,3 Ko dans `CARTE` (fichiers lus).
 routines utiles sont recopiées (`tools/mark_inc.py`, annotations `;>` et `;&`) : un jeu sans
 `INPUT` dans la console n'emporte pas `o_rdl`.
 
-## 5. Lire un `.TAP` sous CP/A : UNTAP et DIS (décidé, pas encore fait)
+## 5. Lire un `.TAP` sous CP/A : UNTAP (fait), DIS (décidé, pas encore fait)
 
 La plupart des vieux programmes de l'Oric existent en `.TAP`. Les lancer passe par la ROM
 (§ 2, « Lancer un `.TAP` ») ; les **lire** se fait sous CP/A, sans ROM ni LOCI : un programme
@@ -178,47 +179,70 @@ BASIC devient un texte qu'on lit et modifie dans EDIT, et que MKTAP recode ; du 
 devient un source qu'ASM réassemble. Le `.TAP` est d'abord copié sur la disquette (`IMPORT
 JEU.TAP`, ou CMDER) : un fichier de CP/A comme un autre. Deux `.COM`, rien dans le système.
 
-### 5.1 UNTAP : les blocs d'un `.TAP`
+### 5.1 UNTAP : les blocs d'un `.TAP` (fait)
+
+`UNTAP.COM` (`progs/untap.s`) et `tools/untap.py` (sur le PC) donnent le même résultat. Mode
+d'emploi : `docs/manuel.md`, « Lire une cassette : UNTAP ».
 
     UNTAP JEU                 liste les blocs
     UNTAP JEU 2               extrait le bloc 2
     UNTAP JEU *               extrait tous les blocs
-    UNTAP JEU 2 /D            extrait le bloc 2 et le désassemble (DIS, par CHAIN)
+    UNTAP JEU 1 /1            programme BASIC de l'Oric-1
 
     A>UNTAP JEU
-    1 JEU        BASIC  0501-0A3F  auto
-    2 -          code   9800-9F12
-    3 ECRAN      code   BB80-BFDF
+      1 JEU              BAS 0501-0A3F /R
+      2 -                BIN 9800-9F12
+      3 ECRAN            BIN BB80-BFDF
 
 - **Lecture** (format du § 1) : après au moins un `$16`, un `$24`, l'en-tête de 9 octets, le
-  nom jusqu'au `$00`, puis `fin - début + 1` octets. Ce qui n'est pas un bloc entre deux
-  blocs est sauté ; la fin du fichier (les `^Z` de remplissage d'un fichier importé, ou
-  n'importe quoi après le dernier bloc) aussi. Un bloc coupé par la fin du fichier est
-  extrait avec ce qu'il a, et signalé (`bloc 2 incomplet`).
-- **Blocs sans nom** : fréquents (`CSAVE""`, et `CLOAD""` charge le bloc suivant quel que
-  soit son nom) ; la liste les montre par `-`.
-- **Noms des fichiers écrits** : le nom du bloc (16 caractères quelconques), ses lettres et
-  chiffres seulement, 8 au plus, en majuscules. Nom vide (bloc sans nom, ou sans lettre ni
-  chiffre), ou déjà pris par un bloc précédent du même `.TAP` : le nom du `.TAP` suivi du
-  numéro du bloc, le nom raccourci pour tenir en 8 (`JEU2`, `AVENTUR2`, `AVENTU12`). Un
-  fichier qui existe déjà est remplacé après la question habituelle (`O` / `N` / `T` pour
-  tous).
-- **Bloc BASIC** (type `$00`) → `NOM.BAS`, en texte, comme `LIST` l'afficherait : numéro,
-  espace, la ligne avec chaque mot-clé écrit en entier (table de `progs/bas_tab.s`, celle de
-  MKTAP), lignes terminées par CR LF. Ce qui suit la fin du programme (`$00 $00`) dans le
-  bloc, souvent du code machine collé au programme, devient `NOM.BIN`, à son adresse
-  (listée).
-- **Aller-retour** : `MKTAP JEU2 NOM.BAS` redonne le même bloc, octet par octet, pour tout
-  programme que la ROM a pu coder elle-même (tapé au clavier) ; c'est la propriété vérifiée
-  par les essais. Exceptions connues, signalées par UNTAP ligne par ligne : caractères de
-  contrôle et codes de 128 et plus dans le texte (couleurs glissées dans une chaîne, très
-  courant), qu'il faut écrire dans le `.BAS` dans une notation que MKTAP comprenne aussi
-  (§ 8).
-- **Bloc de code** (type `$80`) → `NOM.BIN` : les octets tels quels ; adresse de début,
-  de fin, et démarrage automatique dans la liste. `/D` passe ce fichier à DIS avec son
-  adresse et son point d'entrée.
-- **Oric-1** : un programme BASIC de la ROM 1.0 n'a que deux codes différents (`$82`, `$83`)
-  et un de plus (`GO`, `$F7`) ; `/1` lit le bloc avec la table de la 1.0.
+  nom jusqu'au `$00` (16 caractères gardés), puis `fin - début + 1` octets (aucun si la fin
+  est avant le début). Ce qui n'est pas un bloc entre deux blocs est sauté ; la fin du
+  fichier (les `^Z` de remplissage, ou n'importe quoi après le dernier bloc) aussi. Un bloc
+  coupé par la fin du fichier est extrait avec ce qu'il a, et signalé (`bloc 2 incomplet`).
+  255 blocs au plus.
+- **Liste** : numéro, nom (`-` : bloc sans nom, fréquent, car `CLOAD""` charge le bloc
+  suivant quel que soit son nom ; `?` pour un caractère qui ne s'affiche pas), `BAS` (type
+  `$00`) ou `BIN` (tout autre type), début et fin, `/R` (démarrage automatique). 37 colonnes.
+- **Noms des fichiers écrits** : les lettres et chiffres du nom du bloc, 8 au plus, en
+  majuscules. Nom vide (bloc sans nom, ou sans lettre ni chiffre), ou déjà pris par un bloc
+  précédent du même `.TAP` (48 noms retenus) : le nom du `.TAP` suivi du numéro du bloc, le
+  nom raccourci pour tenir en 8 (`JEU2`, `AVENTUR2`, `AVENTU12`). Les noms sont calculés pour
+  tous les blocs, même quand un seul est extrait : `UNTAP JEU 4` et `UNTAP JEU *` donnent le
+  même nom au bloc 4. Un fichier qui existe est remplacé, comme par COPY et MKTAP ; les
+  fichiers vont sur le lecteur du `.TAP`.
+- **Bloc BASIC** → `NOM.BAS`, en texte, comme `LIST` l'afficherait : numéro, espace, la ligne
+  avec chaque mot-clé écrit en entier (table de `progs/bas_tab.s`, celle de MKTAP), CR LF.
+  Le découpage suit celui du codage : texte entre guillemets (jusqu'au guillemet suivant ou
+  la fin de la ligne), `DATA` jusqu'au `:`, `REM` jusqu'au bout recopiés tels quels ;
+  ailleurs, un code de `$80` et plus est un mot-clé. Fin du programme : un lien dont l'octet
+  fort est nul (comme `LIST`). Ce qui suit dans le bloc, s'il y a plus d'un octet (le
+  programme en a un de plus, § 1), souvent du code collé au programme, devient `NOM.BIN`, à
+  son adresse (affichée).
+- **Notation** `{hh}` (hexadécimal, en majuscules) pour ce que MKTAP ne relirait pas tel
+  quel : codes 0 à 31 et 127 et plus (couleurs glissées dans une chaîne, très courant), un
+  espace ou un chiffre en tête du texte (MKTAP les prendrait pour le numéro), un espace en
+  fin (un éditeur peut les retirer) ; `{{` pour une accolade. MKTAP et `mktap.py` la
+  décodent après le numéro (`{00}` et toute autre accolade restent tels quels), avant la
+  limite de 78 caractères (§ 2).
+- **Vérification, aller-retour** : chaque ligne rendue en texte est recodée par la routine de
+  MKTAP (`progs/bcr_inc.s`, partagée) et comparée à l'originale ; une différence donne
+  `ligne N : recodage different` (minuscules hors texte, que MKTAP met en majuscules ;
+  ligne fabriquée par un autre outil que la ROM ; code inconnu, `$F7` et plus ; ligne vide,
+  que MKTAP ignore ; ligne de plus de 255 caractères en texte). Sans avertissement, pour un
+  programme en `$0501` aux numéros croissants (tout ce qu'a écrit `CSAVE`), `MKTAP JEU2
+  NOM.BAS` redonne le même programme, octet par octet, liens compris.
+- **Bloc de code** → `NOM.BIN` : les octets tels quels ; son adresse est dans la liste et dans
+  le message (`ECRAN.BIN BB80-BFDF ecrit`).
+- **Oric-1** : `/1` lit les codes `$82` (`INVERSE`), `$83` (`NORMAL`) et `$F7` (`GO`) de la
+  ROM 1.0 ; MKTAP codant pour la 1.1, ces lignes sont signalées.
+- **Taille** : 3,3 Ko. Lecture et écriture par enregistrements de 128 octets, une ligne à la
+  fois : la taille du `.TAP` n'est pas limitée.
+- **Essais** : `tools/test_untap.py` (UNTAP.COM dans le 6502 simulé contre `untap.py` : noms
+  vides, en double, longs, en minuscules ; synchronisation longue, rebut, bloc coupé, fin
+  avant le début ; queue de code, codes inconnus, minuscules, ligne vide, espace en tête,
+  ROM 1.0 ; douze blocs ; puis l'aller-retour de programmes tirés au hasard, octets de
+  contrôle et de 128 et plus compris, recodés par `mktap.py`) ; `tools/test_mktap.sh`
+  compare MKTAP.COM à `mktap.py` sur la notation.
 
 ### 5.2 DIS : du code machine vers un source
 
@@ -298,11 +322,9 @@ au BASIC les opérations rapides de GRAPHER par la commande `!` :
 
 ## 8. Questions ouvertes
 
-- UNTAP (§ 5.1) : notation, dans un `.BAS`, des caractères de contrôle et des codes de 128 et
-  plus d'une chaîne ou d'un `REM` (proposé : `{nn}` en hexadécimal, `{{` pour une accolade),
-  comprise par MKTAP et `mktap.py`.
 - DIS (§ 5.2) : contenu de `ATMOS.SYM` (combien de noms de la ROM : quelques dizaines de
-  points d'entrée utiles, ou tous) ; DIS et UNTAP en un seul programme si DIS reste petit.
+  points d'entrée utiles, ou tous) ; `UNTAP JEU 2 /D`, qui passerait le bloc à DIS (par
+  CHAIN), si DIS reste un programme à part.
 - Boîte à outils (§ 6) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
   module ou plusieurs selon la place ; adresse du module (sous `HIMEM`, ou `$9800-$9FFF`
   quand le programme reste en mode texte).

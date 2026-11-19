@@ -56,7 +56,8 @@ COMPOSANTS = [
               "progs/msg/*/export.msg", "progs/msg/*/import.msg", "progs/msg/*/usbdir.msg", "progs/msg/*/usbmount.msg",
               "progs/msg/*/loci.msg", "progs/term.s", "progs/msg/*/term.msg", "progs/acia_inc.s", "progs/msg/*/acia.msg",
               "progs/xfer.s", "progs/msg/*/xfer.msg", "progs/remote.s", "progs/msg/*/remote.msg",
-              "progs/mktap.s", "progs/bas_tab.s", "progs/msg/*/mktap.msg"]),
+              "progs/mktap.s", "progs/bas_tab.s", "progs/msg/*/mktap.msg", "progs/bcr_inc.s",
+              "progs/untap.s", "progs/msg/*/untap.msg"]),
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s", "progs/msg/*/asm.msg"]),
     ("DBG",  ["progs/debug.s", "progs/msg/*/debug.msg"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",
@@ -83,7 +84,7 @@ ORDRE = [c for _, l in GROUPES for c in l]
 # programmes .COM de chaque composant (octets)
 COMS = {"SYS": [n.upper() for n in SYS_COM if n != "helptab"], "EDIT": ["EDIT"],
         "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"], "EDS": ["EDSPRITE"],
-        "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR", "MKTAP"], "ASM": ["ASM"],
+        "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR", "MKTAP", "UNTAP"], "ASM": ["ASM"],
         "DBG": ["DEBUG"], "EX": ["HELLO", "GTEST"]}
 
 # documentation : fichier -> composant ; manuel.md est découpé par section (## ...)

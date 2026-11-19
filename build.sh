@@ -174,14 +174,14 @@ theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
 # fabriquées par tools/anim_demos.py et gardées dans files/anim/ (pas de
 # Pillow ici) ; DEMO enchaîne tout
 theme anim anim "$P/VOIR.COM $P/VSYNC.COM" \
-  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $INCS" \
+  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $INCS" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 # Logo : la plateforme LOGO seule
 theme logo logo "$P/LOGO.COM $P/LOGOTR.COM" "$P/VOIR.COM" \
   "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log"
 # Exemples : ceux de GRAPHER et d'ASM, visibles ; leurs outils cachés
 theme exemples examples "" \
-  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
+  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
   "$GRX_EX $ASM_EX"
 # Notes : écrire du texte (et l'envoyer)
 theme notes notes "" "$P/VOIR.COM" ""

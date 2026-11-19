@@ -74,6 +74,8 @@ Other programs on the disk:
 - `EXPORT.COM`, `IMPORT.COM`, `USBDIR.COM`: file exchange with the LOCI's USB stick.
 - `MKTAP.COM NAME file adr [/R]...`: `.TAP` file for the Oric under BASIC, machine code, data
   or a BASIC program written in EDIT (see "Publishing for the Oric under BASIC").
+- `UNTAP.COM NAME [n|*]`: the blocks of a `.TAP`, BASIC program as text, code as `.BIN` (see
+  "Reading a tape: UNTAP").
 - `TERM.COM [host] [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal" and "Hosts: HOSTS").
 - `XFER.COM R|S file [name] [/T] [@host]`: receives or sends a file over the modem (see "File transfer").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
@@ -262,7 +264,7 @@ byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of a
 Everything on it is **read-only** (R/O): an `ERA *.*` or a name completed with ESC cannot
 erase anything. To replace a command with a new version: `SET COPY.COM RW`, then copy it.
 `DIR` shows the applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER, GRXASM, EDSPRITE,
-ASM, DEBUG, MKTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; CPA.BNK
+ASM, DEBUG, MKTAP, UNTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; CPA.BNK
 (parts of the system loaded when they are used, below), the basic
 commands (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO), MEM, POKE, GO, the script
 USBCD.BAT, the eight libraries (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) and EDIT.CFG (changeable) are **hidden** (SYS): `DIRS` shows them.
@@ -294,9 +296,9 @@ the commands to start with on that disk. Both files can be changed and are visib
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-anim-en.dsk` (the demonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, the eight libraries | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim-en.dsk` (the demonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, the eight libraries | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 | `build/cpa-logo-en.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, ARROWS.LOG |
-| `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes-en.dsk` (writing) | EDIT | | |
 
 On all four, as well: AUTO.BAT, WELCOME.TXT (the welcome screen).
@@ -660,6 +662,9 @@ one byte) and makes it the BASIC program of the tape, at `$0501`; it takes no ad
   keyword is recognised even inside a name (`SCORE` contains `OR`: `SC OR E`), as when the
   line is typed. A program listed by `LIST` after loading is therefore the one you would have
   typed.
+- Codes you cannot type in EDIT (colours slipped into a string, characters 128 and up):
+  `{hh}`, in hexadecimal, after the line number (`PRINT "{1B}NRED"`); `{{` for a brace; any
+  other brace stays as it is. This is the notation UNTAP writes (below).
 - Warning (the `.TAP` is written anyway): `line N: over 78 characters`. Such a line works, but
   the Oric's editor could not type it again.
 - Refused, with the line number: `after N: invalid number` (line without a number, or 64000
@@ -667,6 +672,44 @@ one byte) and makes it the BASIC program of the tape, at `$0501`; it takes no ad
   characters, or over 250 bytes once encoded: `LIST` would not show it), `line N: invalid
   character` (code 128 or more outside text), `too long` (end of the program after `$97FF`,
   BASIC's limit; or no room left in memory to encode it: SPLIT mode leaves less).
+
+### Reading a tape: UNTAP
+
+`UNTAP` reads a `.TAP` file (an Oric tape) under CP/A: an old BASIC program becomes text you
+read and change in EDIT, machine code a `.BIN` file at its address. The `.TAP` is first
+copied onto the disk (`IMPORT GAME.TAP`, or CMDER); the files written go to the same drive.
+
+    A>UNTAP GAME
+      1 GAME             BAS 0501-0A3F /R
+      2 -                BIN 9800-9F12
+      3 SCREEN           BIN BB80-BFDF
+    A>UNTAP GAME *
+    GAME.BAS written
+    GAME2.BIN 9800-9F12 written
+    SCREEN.BIN BB80-BFDF written
+
+- `UNTAP GAME` lists the blocks: number, name (`-`: no name, which is common), `BAS` (BASIC
+  program) or `BIN` (code, data), addresses, `/R` (run by itself after loading).
+  `UNTAP GAME 2` extracts block 2, `UNTAP GAME *` all of them.
+- A BASIC program becomes `NAME.BAS`, as `LIST` would show it. `MKTAP` encodes it back
+  identically (`MKTAP GAME2 GAME.BAS`): you can therefore change it in EDIT and make the tape
+  again. What cannot be typed (colours slipped into a string, characters 128 and up) is
+  written `{hh}`; so is a space or a digit at the start of a line, a space at the end (EDIT
+  would lose them or MKTAP would read them otherwise), and `{{` for a brace.
+- `line N: re-encodes differently`: MKTAP would not give back exactly this line (lower case
+  outside strings, a line made by a tool other than the ROM, an unknown code, an empty
+  line). It is written anyway; the re-encoded program will nearly always work, but not byte
+  for byte.
+- Code stuck after the end of the BASIC program, in the same block (common), becomes
+  `NAME.BIN`, with its address.
+- File names: the letters and digits of the block's name (8 at most); a block without a name,
+  or whose name is already taken by an earlier block, takes the name of the `.TAP` followed by
+  its number (`GAME2`, `ADVENT12`). A file that exists is replaced, as by COPY.
+- `/1`: BASIC program of the Oric-1 (ROM 1.0: `INVERSE`, `NORMAL` and `GO` instead of `STORE`,
+  `RECALL`, and in addition). MKTAP only encodes for the Atmos: those lines are reported.
+- `block N incomplete`: the file ends before the block does; what is there is extracted.
+- To run a `.TAP` instead: `USBMOUNT GAME.TAP /B` (see "File exchange with the LOCI's USB stick").
+- On the PC, `tools/untap.py` does the same (same arguments).
 
 ## Serial terminal: TERM
 
