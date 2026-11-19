@@ -56,7 +56,8 @@ machine.
 - **GRAPHER as a platform**: a complete game written, drawn, debugged and translated on
   the Oric (game phases, tiles).
 - **Bridge to the basic Oric**: a game made under CP/A loads on an Atmos without a disk
-  drive, from a tape (`MKTAP`, `CASSETTE`).
+  drive, from a tape (`MKTAP`); old programs kept as `.TAP` can be read under CP/A (BASIC as
+  text, code disassembled: `UNTAP`, `DIS`).
 - **Outside world**: file transfer and terminal through the LOCI's WiFi modem.
 - Checked on the real hardware.
 

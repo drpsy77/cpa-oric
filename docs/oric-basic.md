@@ -2,9 +2,10 @@
 
 But : que ce qui est fait sous CP/A serve aussi sur un Oric ordinaire, sans disquette CP/A :
 des programmes en langage machine chargés par `CLOAD`, et, au bout du chemin, un jeu écrit en
-GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Trois étages : la sortie
-`.TAP` (faite), GRXASM vers un Oric seul (fait), puis une boîte à outils pour le BASIC
-(plus tard).
+GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Dans l'autre sens, que les
+vieux programmes de l'Oric, presque tous conservés en `.TAP`, se reprennent sous CP/A. Quatre
+étages : la sortie `.TAP` (faite), GRXASM vers un Oric seul (fait), la lecture des `.TAP`
+sous CP/A (décidée), puis une boîte à outils pour le BASIC (plus tard).
 
 ## 1. Ce qui est établi (Oricutron, ROM BASIC 1.1)
 
@@ -103,12 +104,15 @@ que sur lui, le chargeur des autres blocs prenant `$0501` aussi. Mode d'emploi :
   la table de `progs/bas_tab.s` est celle de la ROM ; `tools/test_mktap.sh` compare MKTAP.COM
   à `mktap.py`, puis charge un `.BAS` dans Oricutron : programme lancé, octets et début des
   variables identiques à ceux du même programme tapé au clavier.
-- **Plus tard** : le sens inverse (`.TAP` vers texte) pour reprendre de vieux programmes dans
-  EDIT.
+- Le sens inverse (`.TAP` vers texte) : § 5.
 
-**Décidé, pas encore fait** : **`CASSETTE.COM`** écrit un `.TAP` sur le port cassette (vrai
-magnétophone) et lit une cassette vers un fichier `.TAP`, pour l'Oric sans LOCI. Un `.COM`,
-rien dans le système.
+**Lancer un `.TAP`** : `USBMOUNT JEU.TAP /B` (`docs/usb.md` § 1.4) monte la cassette et
+redémarre le LOCI en BASIC 1.1, qui la charge tout seul ; le `.TAP` tourne sous la ROM, sans
+CP/A. Le firmware du LOCI (`mia_api_boot`, `mia_task`) charge la ROM, y pose ses
+modifications pour la cassette et le chargement automatique (`CLOAD""` en `$E738`, appelé
+depuis `$ED83` en 1.1), remet la ROM à la place de la RAM overlay et saute par `($FFFC)`.
+Le LOCI émulé de Phosphoric ne fait que changer de ROM (`op_mia_boot`) : CP/A reprend la
+main, et `CLOAD""` reste à taper ; signalé à son auteur.
 
 ## 3. GRXASM pour un Oric seul (fait)
 
@@ -166,7 +170,102 @@ Mesuré : 1,2 Ko dans `SERPENT` et `DEFILE`, 1,3 Ko dans `CARTE` (fichiers lus).
 routines utiles sont recopiées (`tools/mark_inc.py`, annotations `;>` et `;&`) : un jeu sans
 `INPUT` dans la console n'emporte pas `o_rdl`.
 
-## 5. Plus tard : boîte à outils pour le BASIC
+## 5. Lire un `.TAP` sous CP/A : UNTAP et DIS (décidé, pas encore fait)
+
+La plupart des vieux programmes de l'Oric existent en `.TAP`. Les lancer passe par la ROM
+(§ 2, « Lancer un `.TAP` ») ; les **lire** se fait sous CP/A, sans ROM ni LOCI : un programme
+BASIC devient un texte qu'on lit et modifie dans EDIT, et que MKTAP recode ; du code machine
+devient un source qu'ASM réassemble. Le `.TAP` est d'abord copié sur la disquette (`IMPORT
+JEU.TAP`, ou CMDER) : un fichier de CP/A comme un autre. Deux `.COM`, rien dans le système.
+
+### 5.1 UNTAP : les blocs d'un `.TAP`
+
+    UNTAP JEU                 liste les blocs
+    UNTAP JEU 2               extrait le bloc 2
+    UNTAP JEU *               extrait tous les blocs
+    UNTAP JEU 2 /D            extrait le bloc 2 et le désassemble (DIS, par CHAIN)
+
+    A>UNTAP JEU
+    1 JEU        BASIC  0501-0A3F  auto
+    2 -          code   9800-9F12
+    3 ECRAN      code   BB80-BFDF
+
+- **Lecture** (format du § 1) : après au moins un `$16`, un `$24`, l'en-tête de 9 octets, le
+  nom jusqu'au `$00`, puis `fin - début + 1` octets. Ce qui n'est pas un bloc entre deux
+  blocs est sauté ; la fin du fichier (les `^Z` de remplissage d'un fichier importé, ou
+  n'importe quoi après le dernier bloc) aussi. Un bloc coupé par la fin du fichier est
+  extrait avec ce qu'il a, et signalé (`bloc 2 incomplet`).
+- **Blocs sans nom** : fréquents (`CSAVE""`, et `CLOAD""` charge le bloc suivant quel que
+  soit son nom) ; la liste les montre par `-`.
+- **Noms des fichiers écrits** : le nom du bloc (16 caractères quelconques), ses lettres et
+  chiffres seulement, 8 au plus, en majuscules. Nom vide (bloc sans nom, ou sans lettre ni
+  chiffre), ou déjà pris par un bloc précédent du même `.TAP` : le nom du `.TAP` suivi du
+  numéro du bloc, le nom raccourci pour tenir en 8 (`JEU2`, `AVENTUR2`, `AVENTU12`). Un
+  fichier qui existe déjà est remplacé après la question habituelle (`O` / `N` / `T` pour
+  tous).
+- **Bloc BASIC** (type `$00`) → `NOM.BAS`, en texte, comme `LIST` l'afficherait : numéro,
+  espace, la ligne avec chaque mot-clé écrit en entier (table de `progs/bas_tab.s`, celle de
+  MKTAP), lignes terminées par CR LF. Ce qui suit la fin du programme (`$00 $00`) dans le
+  bloc, souvent du code machine collé au programme, devient `NOM.BIN`, à son adresse
+  (listée).
+- **Aller-retour** : `MKTAP JEU2 NOM.BAS` redonne le même bloc, octet par octet, pour tout
+  programme que la ROM a pu coder elle-même (tapé au clavier) ; c'est la propriété vérifiée
+  par les essais. Exceptions connues, signalées par UNTAP ligne par ligne : caractères de
+  contrôle et codes de 128 et plus dans le texte (couleurs glissées dans une chaîne, très
+  courant), qu'il faut écrire dans le `.BAS` dans une notation que MKTAP comprenne aussi
+  (§ 8).
+- **Bloc de code** (type `$80`) → `NOM.BIN` : les octets tels quels ; adresse de début,
+  de fin, et démarrage automatique dans la liste. `/D` passe ce fichier à DIS avec son
+  adresse et son point d'entrée.
+- **Oric-1** : un programme BASIC de la ROM 1.0 n'a que deux codes différents (`$82`, `$83`)
+  et un de plus (`GO`, `$F7`) ; `/1` lit le bloc avec la table de la 1.0.
+
+### 5.2 DIS : du code machine vers un source
+
+    DIS NOM.BIN 9800          désassemble, point d'entrée au début
+    DIS NOM.BIN 9800 /E 9A10  points d'entrée en plus (8 au plus)
+    DIS PROG.COM              un .COM de CP/A (en $0500 par défaut)
+
+DIS écrit `NOM.ASM`, un source qu'**ASM réassemble en un fichier identique** à celui de
+départ : c'est sa règle, et ce que les essais vérifient. Il sert aux `.TAP` comme à tout
+fichier de code (`.COM` de CP/A, image de la ROM, police).
+
+- **Code ou données** : en partant des points d'entrée (le début, le démarrage automatique,
+  ceux de `/E`), DIS suit les sauts, les appels et les deux suites de chaque branchement ;
+  ce qu'il atteint est du code, le reste des données, écrites en `.byt` (en `.asc` pour une
+  suite d'au moins 4 caractères imprimables). Une instruction coupée par une donnée, un
+  code d'opération non documenté : `.byt`. Le reste se corrige à la main dans EDIT (tables
+  de sauts, `RTS` utilisé comme saut, code modifié par lui-même), puis se réassemble.
+- **Étiquettes** : `Lxxxx` sur chaque cible d'un saut, d'un branchement ou d'une adresse
+  absolue qui tombe dans le fichier ; `*=` à l'adresse de chargement. Hors du fichier, les
+  adresses connues sont nommées par une table de symboles : celle de la ROM 1.1 (points
+  d'entrée, page zéro et page 2 du BASIC, registres du VIA), livrée sur la disquette dans le
+  format `.SYM` d'ASM (`ATMOS.SYM`), ce qui la rend utile aussi à DEBUG ; les noms qu'elle
+  donne sont déclarés en tête du source (`nom = $xxxx`), pour qu'il s'assemble seul.
+- **Taille** : un bit par octet du fichier pour « code » et un pour « étiquette » : 12 Ko
+  pour un bloc de 48 Ko ; le source s'écrit au fil de la seconde passe, sans le garder en
+  mémoire. Tables d'instructions : `progs/asm_tab.s`, celles d'ASM et de DEBUG.
+
+### 5.3 Vers un `.COM` : au cas par cas
+
+Faire tourner un vieux programme sous CP/A n'est pas un but de UNTAP ni de DIS : il attend la
+ROM (cachée par la RAM overlay), utilise la page 2 et la page zéro du BASIC (en partie celles
+de CP/A) et se charge rarement en `$0500`. Le source de DIS est le chemin : on y remplace les
+appels à la ROM par ceux du BDOS, on change `*=`, on réassemble. Un programme en code pur qui
+n'appelle pas la ROM (un jeu qui prend toute la machine) passe presque tel quel ; les autres
+demandent ce travail à la main. Une couche qui imiterait la ROM sous CP/A n'est pas prévue.
+
+### 5.4 Essais prévus
+
+- UNTAP dans le 6502 simulé (`tools/run_com.py`), contre un `tools/untap.py` qui fait la même
+  chose sur le PC : blocs, noms, cas tordus (synchronisation longue, rebut entre les blocs,
+  bloc coupé, `^Z` de fin).
+- Aller-retour BASIC : les 3 000 lignes tirées au hasard de `tools/test_bas.py`, codées par la
+  ROM, rendues en texte par UNTAP, recodées par MKTAP : mêmes octets ; puis des `.TAP` de
+  programmes connus.
+- DIS → ASM → mêmes octets, sur tous les `.COM` de CP/A et sur la ROM 1.1 entière.
+
+## 6. Plus tard : boîte à outils pour le BASIC
 
 À faire après `GRXASM /O`, qui aura déjà le socle `ORIC.INC` et le tri des routines. Un module
 en code machine (`OUTILS.TAP`, par exemple), chargé en haut de la mémoire sous `HIMEM`, donne
@@ -192,13 +291,18 @@ au BASIC les opérations rapides de GRAPHER par la commande `!` :
   socle `ORIC.INC` dans une variante « sous BASIC » (modes par `HIRES` et `TEXT` du BASIC,
   compteur de trames, pas de clavier ni de fichiers).
 
-## 6. Écarté
+## 7. Écarté
 
 - **GRAPHER traduit en BASIC** : tokeniseur, décimaux du BASIC au lieu des entiers de
   GRAPHER, pas de blocs `IF` ; et la vitesse, raison d'être de GRAPHER traduit, serait perdue.
 
-## 7. Questions ouvertes
+## 8. Questions ouvertes
 
-- Boîte à outils (§ 5) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
+- UNTAP (§ 5.1) : notation, dans un `.BAS`, des caractères de contrôle et des codes de 128 et
+  plus d'une chaîne ou d'un `REM` (proposé : `{nn}` en hexadécimal, `{{` pour une accolade),
+  comprise par MKTAP et `mktap.py`.
+- DIS (§ 5.2) : contenu de `ATMOS.SYM` (combien de noms de la ROM : quelques dizaines de
+  points d'entrée utiles, ou tous) ; DIS et UNTAP en un seul programme si DIS reste petit.
+- Boîte à outils (§ 6) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
   module ou plusieurs selon la place ; adresse du module (sous `HIMEM`, ou `$9800-$9FFF`
   quand le programme reste en mode texte).

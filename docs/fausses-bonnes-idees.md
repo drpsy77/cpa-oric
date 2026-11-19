@@ -3,6 +3,21 @@
 Idées examinées puis écartées, avec leurs raisons, pour ne pas les réétudier à chaque revue.
 Une idée ne sort d'ici que si un fait nouveau retire l'une de ses raisons.
 
+## `CASSETTE.COM` : écrire et lire un vrai magnétophone
+
+**L'idée** : un `.COM` qui écrit un `.TAP` sur le port cassette et lit une cassette vers un
+fichier, l'équivalent de `CSAVE` et `CLOAD` sous CP/A, pour l'Oric sans LOCI.
+
+**Pourquoi non** :
+
+- Très peu de possesseurs se servent encore d'un vrai magnétophone : les cassettes
+  d'autrefois sont presque toutes conservées en `.TAP`, que le LOCI monte et charge (`USBMOUNT
+  JEU.TAP /B`). Même raison que pour le vrai Microdisc, où rien n'est investi.
+- Le coût est réel : sous CP/A la ROM est cachée par la RAM overlay, il faudrait réécrire ses
+  routines cassette et régler leur timing sur un magnétophone.
+- Le besoin réel est l'autre sens : lire les `.TAP` sous CP/A (UNTAP, DIS,
+  `docs/oric-basic.md` § 5).
+
 ## Écriture différée du répertoire (ERA, REN, attributs)
 
 **L'idée** : ERA, REN et SET réécrivent le secteur du répertoire après chaque entrée

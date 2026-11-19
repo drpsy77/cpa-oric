@@ -55,7 +55,8 @@ parlent la même langue, et tout ce qu'il faut pour créer sans quitter la machi
 - **GRAPHER plateforme** : un jeu complet écrit, dessiné, mis au point et traduit sur l'Oric
   (phases d'un jeu, tuiles).
 - **Pont vers l'Oric de base** : un jeu fait sous CP/A se charge sur un Atmos sans lecteur,
-  depuis une cassette (`MKTAP`, `CASSETTE`).
+  depuis une cassette (`MKTAP`) ; les vieux programmes en `.TAP` se lisent sous CP/A (BASIC
+  en texte, code désassemblé : `UNTAP`, `DIS`).
 - **Extérieur** : transfert de fichiers et terminal par le modem WiFi du LOCI.
 - Vérifiée sur le vrai matériel.
 

@@ -72,13 +72,16 @@ du banc à réparer d'abord).
    - Exemples de fichiers de données : un niveau écrit dans EDIT (`LOAD`), un écran titre
      (`BLOAD SCREEN`).
 3. **Publier vers l'Oric de base** (`MKTAP`, `GRXASM /O`, `.BAS` : `docs/oric-basic.md`)
-   - `CASSETTE.COM` (décidé, `docs/oric-basic.md` § 2), l'équivalent de `CSAVE`. Sous
-     CP/A, la ROM de l'Oric est remplacée par la RAM overlay : réécrire les routines
-     cassette (timing à essayer sur un vrai magnétophone) ou basculer un moment sur la ROM.
+   - **Lire les `.TAP` sous CP/A** (décidé, `docs/oric-basic.md` § 5) : UNTAP (blocs ;
+     BASIC rendu en texte pour EDIT, que MKTAP recode ; code en `.BIN`) et DIS (code
+     machine vers un source qu'ASM réassemble à l'identique, noms de la ROM 1.1 dans
+     `ATMOS.SYM`). Ordre : UNTAP et le BASIC d'abord, DIS ensuite. Lancer un `.TAP` :
+     `USBMOUNT JEU.TAP /B` (le LOCI émulé de Phosphoric ne redémarre pas en BASIC :
+     signalé).
    - Décidé, pas encore fait : SPLIT dans `ORIC.INC`, le son quand GRAPHER en aura.
-   - Plus tard : un `.TAP` de BASIC rendu en texte (l'inverse de MKTAP) ; la boîte à
-     outils appelée par `!` depuis le BASIC (`docs/oric-basic.md` § 5). Écartée : la
-     traduction de GRAPHER en BASIC (§ 6).
+   - Plus tard : la boîte à outils appelée par `!` depuis le BASIC
+     (`docs/oric-basic.md` § 6). Écartées : la traduction de GRAPHER en BASIC (§ 7),
+     `CASSETTE.COM` (`docs/fausses-bonnes-idees.md`).
    - **La clé USB et le LOCI depuis CP/A** (niveau 1 : `docs/usb.md`). Niveau 2, un
      répertoire de la clé comme lecteur : point 9.
 4. **Réseau par le LOCI** (TERM, XFER, `HOSTS` : `docs/manuel.md` ; matériel :

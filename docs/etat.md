@@ -114,7 +114,7 @@ D'après `docs/vision.md`. Ce qui n'est pas dans cette liste attend (`docs/suite
 | GRAPHER plateforme : son | à spécifier |
 | GRAPHER plateforme : un jeu complet fait sur l'Oric (le rogue-like) | à écrire |
 | Pont vers l'Oric de base : `.TAP` autonome | fait (`MKTAP`, `GRXASM /O`) |
-| Pont vers l'Oric de base : `CASSETTE.COM` | décidé, pas fait |
+| Pont vers l'Oric de base : lire les `.TAP` (UNTAP, DIS) | spécifié (`docs/oric-basic.md` § 5) |
 | Extérieur : terminal et transfert par le modem du LOCI | fait (TERM, XFER) |
 | Vérifiée sur le vrai matériel | en attente (`docs/essais-materiel.md`) |
 
