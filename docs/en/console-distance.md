@@ -657,8 +657,10 @@ showcase types on the Oric through the daemon, like someone using it.
   (the time in big colour digits for n seconds, 15 to 25; the Oric has no clock: the
   program asks for the time, the showcase types it, field by field, waiting for each
   input field to open, shown as an inverse-video cell). Digits drawn row by row: a
-  string of attributes per pattern of 3 dots, written by `PRINT`; a second lasts
-  `DELAY 16` plus ~0.68 s of drawing, measured in Oricutron: ~2 s late per minute. At
+  string of attributes per pattern of 3 dots, written by `PRINT`; the seconds follow
+  the 50 Hz counter (`TIMER`), from the moment the last field is typed: the drawing,
+  slower while the remote console runs, does not make the time late; if it takes more
+  than a second, the display skips a second. At
   start-up, the showcase notes those that are missing (`DIR *.GRX`, and `DIR *.SPR` for
   EDSPRITE); the first scene that uses one writes it in EDIT, in front of everyone:
   text pasted in chunks of 128 characters (the daemon does not read the screen again

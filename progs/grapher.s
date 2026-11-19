@@ -17,7 +17,7 @@
 ;  = <> < <= > >= (1 si vrai, 0 sinon) ; & | (bit à bit).
 ;  Fonctions : RND(n) (0 à n-1), ABS(n), POINT(x,y) (1 si allumé),
 ;  INKEY (touche, 0 si aucune ; n'attend pas, sans délai de répétition),
-;  LEN(A$).
+;  LEN(A$), TIMER (compteur 50 Hz, 16 bits).
 ;  Tableaux   DIM A(n) A(c,l) A$(n) A$(c,l) : entiers, octets ($), indices
 ;             0 à n-1, deux dimensions en (colonne, ligne) : l lignes de c ;
 ;             A(i) A(c,l) M$(c,l) éléments ; A$, M$(l) chaînes
@@ -485,8 +485,11 @@ fik2    cmp #6
         bne fik3
         jmp f_fnd               ; FOUND (fil.inc)
 fik3    cmp #7
-        bne fik4
+        bne fik5
         jmp f_tile
+fik5    cmp #8
+        bne fik4
+        jmp f_timer
 fik4    jmp f_inkey
 f_rnd   jsr arg1
         lda ev+1
@@ -588,6 +591,13 @@ f_scrn  jsr x_open              ; SCRN(col,lig) : octet de la case
         sta ev+1
         rts
 fs_lim  jmp e_lim
+f_timer ldx SYS_TICKS+1         ; TIMER : compteur 50 Hz, relu si une
+        lda SYS_TICKS           ;   interruption l'a changé entre les
+        cpx SYS_TICKS+1         ;   deux octets
+        bne f_timer
+        sta ev
+        stx ev+1
+        rts
 f_inkey lda pkey                ; touche gardée par le test d'ESC
         ldx #0
         stx pkey

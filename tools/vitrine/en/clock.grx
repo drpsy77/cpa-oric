@@ -9,7 +9,6 @@ LORES
 DIM G$(51) P$(7,8) Q$(4,8)
 G$ = "75557262277174771317557117471774757712227575775717"
 T = $1
-Z = 16               ; DELAY per second (drawing takes ~0.68 s: measured)
 B = 20               ; blue paper
 FOR K 0 7
   W = 4
@@ -37,6 +36,7 @@ LOCATE 15 2
 INPUT M
 LOCATE 18 2
 INPUT SE
+U = TIMER            ; the typed time: start of the 50 Hz counter
 LOCATE 0 2
 SPC 40 B
 LOCATE 11 2
@@ -46,7 +46,18 @@ PRINT "The Oric is running live"
 CALL HHMM
 REPEAT T
   CALL SEC
-  DELAY Z
+  U = U+50             ; the next second, on the counter
+  WHILE TIMER-U < 0
+  NEXT
+  CALL TIC
+  WHILE TIMER-U > 49   ; drawing longer than a second: catch up
+    U = U+50
+    CALL TIC
+  NEXT
+NEXT
+END
+
+SUB TIC              ; one more second
   SE = SE+1
   IF SE > 59
     SE = 0
@@ -57,8 +68,7 @@ REPEAT T
     ENDIF
     CALL HHMM
   ENDIF
-NEXT
-END
+ENDSUB
 
 SUB HHMM
   V = H/10

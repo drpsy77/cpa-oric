@@ -658,8 +658,10 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   n'a pas d'horloge : le programme demande l'heure, la vitrine la tape case par case,
   en attendant que chaque saisie soit ouverte, case en vidéo inverse). Chiffres
   dessinés par rangées : une chaîne d'attributs par motif de 3 points, écrite par
-  `PRINT` ; une seconde dure `DELAY 16` plus ~0,68 s de dessin, mesuré dans Oricutron :
-  ~2 s de retard par minute. Au démarrage, la vitrine note ceux qui manquent
+  `PRINT` ; les secondes suivent le compteur 50 Hz (`TIMER`), à partir de l'instant où
+  la dernière case est tapée : le dessin, plus lent pendant la console à distance, ne
+  retarde pas l'heure ; s'il dépasse une seconde, l'affichage saute une seconde.
+  Au démarrage, la vitrine note ceux qui manquent
   (`DIR *.GRX`, et `DIR *.SPR` pour EDSPRITE) ; la première scène qui s'en sert les écrit
   dans EDIT, à la vue de tous : texte collé par morceaux de 128 caractères (le démon
   ne relit pas l'écran pendant un envoi : la page resterait figée tout le collage), `^S`,

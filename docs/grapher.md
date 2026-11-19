@@ -75,6 +75,7 @@ README.TXT (sur la disquette) en donnent un résumé (`tools/gen_readme_txt.py`)
 | `POINT(x,y)` | 1 si le point de l'image est allumé (HIRES ou SPLIT) |
 | `SCRN(col,lig)` | octet d'une case de l'écran texte (LORES) |
 | `INKEY` | touche, 0 si aucune ; n'attend pas ; sans délai de répétition (§ 8) |
+| `TIMER` | compteur 50 Hz du système (§ 8) |
 | `FOUND` | 1 si le dernier `LOAD` ou `BLOAD` a trouvé son fichier, 0 sinon (§ 10) |
 | `LEN(A$)` | longueur d'une chaîne (§ 9) |
 
@@ -372,6 +373,20 @@ Exemple complet : `CARTE.GRX` (§ 14).
 | `GET V` | attend une touche et range son code dans V ; suit le délai et la cadence de répétition du clavier (menu Clavier) |
 | `WAIT` | attend une touche, sans la garder |
 | `DELAY n` | attend n cinquantièmes de seconde, sans regarder le clavier |
+| `TIMER` | fonction : le compteur 50 Hz du système, qui avance d'un tous les cinquantièmes de seconde, sur 16 bits (il repasse par 0 au bout de 22 minutes environ, et sa valeur devient négative à mi-chemin) ; seule la différence de deux lectures compte |
+
+**Garder le rythme du temps réel.** `DELAY` attend un temps fixe, auquel s'ajoute celui du
+dessin, qui varie. Pour une horloge ou un jeu dont le rythme ne doit pas dériver, on vise
+un instant du compteur plutôt qu'une durée : `TIMER-U` reste juste quand le compteur repasse
+par 0, tant que l'écart est de moins de 655 secondes.
+
+    U = TIMER
+    REPEAT 60
+      ...                       ; dessin, quelle que soit sa durée
+      U = U+50                  ; une seconde plus tard
+      WHILE TIMER-U < 0
+      NEXT
+    NEXT
 
 Codes des flèches : 8 gauche, 9 droite, 10 bas, 11 haut ; avec SHIFT 240 à 243, avec CTRL
 244 à 247 (même ordre). CTRL + lettre : 1 à 26, sauf CTRL-H à CTRL-K : 28 à 31. Une touche tapée pendant

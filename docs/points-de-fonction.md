@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 33 | 8 | 9 | **71** | 18 | **89** |
-| GRAPHER + GRXASM | 35 | 22 | 135 | 34 | 18 | **244** | 63 | **307** |
+| GRAPHER + GRXASM | 35 | 22 | 135 | 34 | 21 | **247** | 63 | **310** |
 | LOGO | 28 | 0 | 123 | 12 | 33 | **196** | 44 | **240** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 5 | 38 | 18 | 9 | **98** | 21 | **119** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *175* | *52* | *457* | *110* | *111* | ***905*** | *235* | ***1140*** |
+| *Applications* | *175* | *52* | *457* | *110* | *114* | ***908*** | *235* | ***1143*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **234** | **82** | **709** | **376** | **216** | **1617** | **380** | **1997** |
+| **Total** | **234** | **82** | **709** | **376** | **219** | **1620** | **380** | **2000** |
 
-Points ajustés (indicatif, § 9) : 1 617 × 1,05 ≈ 1 698.
+Points ajustés (indicatif, § 9) : 1 620 × 1,05 ≈ 1 701.
 
-Nombre de fonctions comptées : 33 ILF, 16 EIF, 225 EI, 92 EO, 72 EQ.
+Nombre de fonctions comptées : 33 ILF, 16 EIF, 225 EI, 92 EO, 73 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -417,6 +417,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | GRA.T56 | HSHOW : sprite dans l'image (HIRES, SPLIT) | EI | 2 | 6 | M | 4 |
 | GRA.T57 | HHIDE | EI | 1 | 1 | F | 3 |
 | GRA.T58 | PAINT (remplissage, selon le crayon) | EI | 1 | 2 | F | 3 |
+| GRA.T59 | TIMER (compteur 50 Hz) | EQ | 0 | 1 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -873,9 +874,9 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 680 | 11 % | 38 280 | 33 | 105 |
+| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 681 | 11 % | 38 285 | 33 | 105 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
-| GRAPHER + GRXASM | 23 | 14 756 | 1 252 | 467 | 0 | 8 % | 36 369 | 60 | 149 |
+| GRAPHER + GRXASM | 23 | 14 783 | 1 255 | 468 | 0 | 8 % | 36 432 | 60 | 147 |
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
@@ -885,8 +886,8 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 201 | 13 457 | 1 829 | 1 057 | 0 | 12 % | — | 58 | — |
-| **Total** | 403 | 81 895 | 7 398 | 3 533 | 2 608 | 8 % | 166 559 | 51 | 103 |
+| Outillage PC | 202 | 13 465 | 1 830 | 1 057 | 0 | 12 % | — | 58 | — |
+| **Total** | 404 | 81 930 | 7 402 | 3 534 | 2 609 | 8 % | 166 627 | 51 | 103 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
@@ -894,26 +895,26 @@ Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, 
 |---|---:|---:|---:|---:|
 | Système et commandes | 1 724 | 85 | 4,7 | 125 |
 | EDIT | 94 | 19 | 1,3 | 14 |
-| GRAPHER + GRXASM | 1 055 | 73 | 4,3 | 45 |
+| GRAPHER + GRXASM | 1 068 | 73 | 4,3 | 45 |
 | LOGO | 350 | 65 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
-| EDSPRITE | 171 | 13 | 2,0 | 7 |
+| EDSPRITE | 171 | 13 | 2,0 | 8 |
 | VOIR | 78 | — | 4,1 | 13 |
 | USB | 80 | 13 | 0,8 | 28 |
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 174 |
-| Transverse (projet) | 2 526 | — | — | 139 |
-| Traduction anglaise (docs/en) | 3 120 | — | — | 70 |
-| **Total** | 9 936 | 326 | 6,1 | 301 |
+| Outillage PC | 367 | — | 1,6 | 175 |
+| Transverse (projet) | 2 532 | — | — | 140 |
+| Traduction anglaise (docs/en) | 3 133 | — | — | 71 |
+| **Total** | 9 968 | 326 | 6,2 | 303 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 301 commits du 2026-10-04 au 2026-11-16.
+Historique : 303 commits du 2026-10-04 au 2026-11-16.
 
-Réutilisation : 58 199 lignes de code écrites dans `progs/`, 68 824 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 58 226 lignes de code écrites dans `progs/`, 68 841 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -991,6 +992,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-05 | rappel automatique | 0.9 | 1 592 | 370 | 1 962 | 264 | console à distance : rappel automatique par le pilote (silence de 10 s, fonction 117 op 4), touche de l'Oric signalée au démon (la vitrine s'arrête) ; vitrine commentée (`/commentaire`) |
 | 2026-11-07 | sprites dans l'image | 0.9 | 1 599 | 373 | 1 972 | 271 | GRAPHER et GRXASM : `HSHOW`, `HHIDE` (sprites des `.SPR` dans l'image HIRES ou SPLIT, décor gardé) |
 | 2026-11-16 | souris | 0.9 | 1 617 | 380 | 1 997 | 301 | souris USB du LOCI : bibliothèque `mou_inc.s` (`test_mou.py`) ; EDSPRITE à la souris (tracé, gomme, masque, liste, défilement, vitesse gardée dans `0:CPA.MOU`) ; Oricutron de test : XREG, `ORIC_MOUSE` |
+| 2026-11-19 | TIMER | 0.9 | 1 620 | 380 | 2 000 | 304 | GRAPHER et GRXASM : fonction `TIMER` (compteur 50 Hz) ; HORLOGE de la vitrine calée sur elle |
 
 ## 11. Comparaisons
 

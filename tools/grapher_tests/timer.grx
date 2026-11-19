@@ -1,0 +1,9 @@
+; TIMER : compteur 50 Hz ; DELAY n le fait avancer de n au moins
+T = TIMER
+DELAY 10
+D = TIMER-T
+PRINT D>9 & D<13
+T = TIMER
+DELAY 50
+D = TIMER-T
+PRINT D>49 & D<53

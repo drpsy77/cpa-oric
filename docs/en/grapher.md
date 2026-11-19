@@ -78,6 +78,7 @@ README.TXT (on the disk) give a summary (`tools/gen_readme_txt.py`).
 | `POINT(x,y)` | 1 if the point of the picture is lit (HIRES or SPLIT) |
 | `SCRN(col,lin)` | byte of a cell of the text screen (LORES) |
 | `INKEY` | key, 0 if none; does not wait; no repeat delay (§ 8) |
+| `TIMER` | the system's 50 Hz counter (§ 8) |
 | `FOUND` | 1 if the last `LOAD` or `BLOAD` found its file, 0 otherwise (§ 10) |
 | `LEN(A$)` | length of a string (§ 9) |
 
@@ -368,6 +369,20 @@ Complete example: `MAP.GRX` (§ 14).
 | `GET V` | waits for a key and stores its code in V; follows the keyboard's repeat delay and rate (Clavier menu) |
 | `WAIT` | waits for a key, without keeping it |
 | `DELAY n` | waits n fiftieths of a second, without looking at the keyboard |
+| `TIMER` | function: the system's 50 Hz counter, which goes up by one every fiftieth of a second, on 16 bits (it goes back through 0 after about 22 minutes, and its value turns negative halfway); only the difference of two readings counts |
+
+**Keeping pace with real time.** `DELAY` waits a fixed time, to which the drawing time is
+added, and it varies. For a clock or a game whose pace must not drift, aim at an instant of
+the counter rather than a duration: `TIMER-U` stays right when the counter goes back through
+0, as long as the gap is under 655 seconds.
+
+    U = TIMER
+    REPEAT 60
+      ...                       ; drawing, however long it takes
+      U = U+50                  ; one second later
+      WHILE TIMER-U < 0
+      NEXT
+    NEXT
 
 Arrow codes: 8 left, 9 right, 10 down, 11 up; with SHIFT 240 to 243, with CTRL 244 to 247
 (same order). CTRL + letter: 1 to 26, except CTRL-H to CTRL-K: 28 to 31. A key typed while the

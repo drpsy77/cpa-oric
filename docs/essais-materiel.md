@@ -544,6 +544,12 @@ tortue » ; `docs/grapher.md` § 6) :
   avec `cpa-en.dsk` ; sur un téléphone, il passe sous la ligne d'état ; une frappe sur
   la page locale affiche « Un visiteur a pris le clavier ».
 
+- **Horloge de la vitrine à l'heure** (`TIMER` de GRAPHER, `docs/console-distance.md`
+  § 9.5) : sur la machine de la vitrine, avec la nouvelle disquette, effacer
+  `HORLOGE.GRX` (et `CLOCK.GRX` sur l'anglaise) pour que la vitrine les retape ; pendant
+  une scène `heure`, les secondes avancent d'une à la fois au rythme d'une montre, et
+  l'heure affichée à la fin de la scène est encore celle de la montre (à 1 s près).
+
 - **Raspberry Pi Zero, console à distance** (`docs/console-distance.md` § 9.2) : avant le
   démon, avec `tools/faux_demon.py` (mire) sur le Pi Zero ou le Mac, puis
   `tools/remote_tk.py --plein-ecran --sans-boutons --demon http://...` sur le Pi Zero :

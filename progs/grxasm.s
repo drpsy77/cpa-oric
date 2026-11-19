@@ -1030,8 +1030,11 @@ fink    cmp #6
         ldy #>s_ffnd
         jmp dyn
 fink1   cmp #7
-        bne fink2
+        bne fink3
         jmp k_ftile
+fink3   cmp #8
+        bne fink2
+        jmp k_timer
 fink2   lda #<s_inkey
         ldy #>s_inkey
         jmp dyn
@@ -3384,6 +3387,7 @@ s_rnd   .asc "jsr g_rnd",0
 s_abs   .asc "jsr g_abs",0
 s_point .asc "jsr g_point",0
 s_inkey .asc "jsr g_inkey",0
+s_timer .asc "jsr g_timer",0
 s_ffnd  .asc "jsr f_fnd",0
 s_ffnm  .asc "jsr g_fnm",0
 s_fgo   .asc "jsr f_go",0
@@ -3609,6 +3613,10 @@ k_shide jsr k_byte
 ; ---------------------------------------------------------------------
 ; Tuiles traduites (appels à SPR.INC)
 ; ---------------------------------------------------------------------
+; TIMER : jsr g_timer (GRX.INC)
+k_timer lda #<s_timer
+        ldy #>s_timer
+        jmp k_oi
 ; TILE(x,y) : comme SCRN (g_et = x, g_ev = y), puis t_get
 k_ftile jsr k_spr
         jsr x_open

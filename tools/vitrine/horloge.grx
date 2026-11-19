@@ -5,12 +5,12 @@
 ; Un chiffre : 5 rangees de 3 points ; G$ donne le motif de chaque
 ; rangee (0-7, bit 2 a gauche). P$ (gros, 2 cases par point) et Q$
 ; (petit) : une chaine d'attributs de papier par motif, ecrite d'un
-; coup par PRINT.
+; coup par PRINT. Les secondes suivent le compteur 50 Hz (TIMER) :
+; un dessin lent ne retarde pas l'heure.
 LORES
 DIM G$(51) P$(7,8) Q$(4,8)
 G$ = "75557262277174771317557117471774757712227575775717"
 T = $1
-Z = 16               ; DELAY par seconde (le dessin prend ~0,68 s : mesure)
 B = 20               ; papier bleu
 FOR K 0 7
   W = 4
@@ -38,6 +38,7 @@ LOCATE 15 2
 INPUT M
 LOCATE 18 2
 INPUT SE
+U = TIMER            ; l'heure tapee : depart du compteur 50 Hz
 LOCATE 0 2
 SPC 40 B
 LOCATE 9 2
@@ -47,7 +48,18 @@ PRINT "L'Oric tourne en direct"
 CALL HHMM
 REPEAT T
   CALL SEC
-  DELAY Z
+  U = U+50             ; la seconde suivante, sur le compteur
+  WHILE TIMER-U < 0
+  NEXT
+  CALL TIC
+  WHILE TIMER-U > 49   ; dessin de plus d'une seconde : on rattrape
+    U = U+50
+    CALL TIC
+  NEXT
+NEXT
+END
+
+SUB TIC              ; une seconde de plus
   SE = SE+1
   IF SE > 59
     SE = 0
@@ -58,8 +70,7 @@ REPEAT T
     ENDIF
     CALL HHMM
   ENDIF
-NEXT
-END
+ENDSUB
 
 SUB HHMM
   V = H/10

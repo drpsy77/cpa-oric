@@ -815,6 +815,19 @@ g_scrn
 ;   ne s'arrête jamais sur ESC)
 g_wait  jmp g_getkey
 
+; g_timer : compteur 50 Hz -> g_ev (relu si une interruption l'a changé
+;   entre les deux octets)
+g_timer
+.(
+r       ldx SYS_TICKS+1
+        lda SYS_TICKS
+        cpx SYS_TICKS+1
+        bne r
+        sta g_ev
+        stx g_ev+1
+        rts
+.)
+
 ; g_delay : g_ev cinquantièmes de seconde
 g_delay
 .(

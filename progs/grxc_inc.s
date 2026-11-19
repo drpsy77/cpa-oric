@@ -799,7 +799,7 @@ bad     jmp e_expr
 .)
 
 ; find_fn : kw parmi les fonctions -> A = numéro (0 RND, 1 ABS, 2 POINT,
-;   3 INKEY) ; erreur sinon
+;   3 INKEY... 8 TIMER) ; erreur sinon
 find_fn
 .(
         ldy #0
@@ -849,7 +849,7 @@ x_comma jsr ws
         rts
 x_bad   jmp e_expr
 
-fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,"FOUND ",6,"TILE ",7,0
+fnames  .asc "RND ",0,"ABS ",1,"POINT ",2,"INKEY ",3,"SCRN ",4,"LEN ",5,"FOUND ",6,"TILE ",7,"TIMER ",8,0
 
 ; mul16 : ev <- et * ev (16 bits bas)
 mul16
