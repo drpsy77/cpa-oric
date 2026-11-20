@@ -52,7 +52,7 @@ du banc à réparer d'abord).
    - Gros programme envisagé : un **rogue-like** (sprites, niveaux tirés au hasard, une
      dizaine de monstres, armes, butin). Estimation : 500 à 550 lignes, 12 à 15 Ko de
      `.GRX` ; tables des monstres et des objets dans des fichiers de données (`LOAD`),
-     ~3 Ko de tableaux. Trop juste en interprété (~17 Ko pour texte et tableaux), à l'aise
+     ~3 Ko de tableaux. Trop juste en interprété (~15 Ko pour texte et tableaux), à l'aise
      traduit : `.COM` de 20 à 23 Ko, ~15 Ko de tableaux libres, `.ASM` de ~130 Ko pendant
      l'assemblage. Bon cas d'essai pour la limite de 20 Ko et pour `RUN` : la génération
      d'un niveau, programme à part, écrit le niveau dans des fichiers de données que le

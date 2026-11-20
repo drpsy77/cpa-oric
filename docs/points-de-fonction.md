@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 33 | 8 | 9 | **71** | 18 | **89** |
-| GRAPHER + GRXASM | 35 | 22 | 135 | 34 | 21 | **247** | 63 | **310** |
+| GRAPHER + GRXASM | 35 | 22 | 135 | 34 | 21 | **247** | 66 | **313** |
 | LOGO | 28 | 0 | 123 | 12 | 33 | **196** | 44 | **240** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -25,10 +25,10 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 10 | 38 | 28 | 12 | **116** | 27 | **143** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *175* | *57* | *457* | *120* | *117* | ***926*** | *241* | ***1167*** |
+| *Applications* | *175* | *57* | *457* | *120* | *117* | ***926*** | *244* | ***1170*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **234** | **87** | **709** | **386** | **222** | **1638** | **386** | **2024** |
+| **Total** | **234** | **87** | **709** | **386** | **222** | **1638** | **389** | **2027** |
 
 Points ajustés (indicatif, § 9) : 1 638 × 1,05 ≈ 1 720.
 
@@ -440,6 +440,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | GRA.A17 | GRXASM : bibliothèques précompilées (`GRX.LIB` : besoins et noms lus, ligne `#lib`), repli sur les `.INC` | `grxasm.s` | 1 |
 | GRA.A19 | Remplissage par segments de ligne (Heckbert) : pile de segments avec sens, débordements renvoyés, octet entier d'un coup, attributs épargnés ; partagé par GRAPHER, LOGO et `HIRES.INC` | `pnt_inc.s` | 3 |
 | GRA.A18 | Sprites dans l'image : décor gardé par emplacement (tampons réservés au premier affichage), octets recomposés ligne par ligne, attributs épargnés, retrait commun avec le texte | `spr.inc` | 3 |
+| GRA.A20 | GRXASM : boucles et conditions en ligne (pas constant : test en bas, compteur d'un octet si le corps n'écrit pas la variable ; comparaisons sur les opérandes, suites de `&` et de `|` en branchements) | `grxasm.s` | 3 |
 
 ### 4.3 LOGO
 
@@ -882,7 +883,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 694 | 11 % | 38 389 | 33 | 105 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
-| GRAPHER + GRXASM | 23 | 14 783 | 1 255 | 468 | 0 | 8 % | 36 432 | 60 | 147 |
+| GRAPHER + GRXASM | 23 | 15 677 | 1 307 | 481 | 0 | 8 % | 38 435 | 63 | 156 |
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
@@ -892,35 +893,35 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 4 | 2 427 | 135 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 206 | 14 023 | 1 917 | 1 130 | 0 | 12 % | — | 60 | — |
-| **Total** | 416 | 85 887 | 7 731 | 3 714 | 2 622 | 8 % | 175 278 | 52 | 107 |
+| Outillage PC | 208 | 14 638 | 1 935 | 1 130 | 0 | 12 % | — | 63 | — |
+| **Total** | 418 | 87 396 | 7 801 | 3 727 | 2 622 | 8 % | 177 281 | 53 | 108 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 804 | 87 | 4,9 | 127 |
+| Système et commandes | 1 804 | 87 | 4,9 | 128 |
 | EDIT | 94 | 19 | 1,3 | 14 |
-| GRAPHER + GRXASM | 1 068 | 73 | 4,3 | 46 |
+| GRAPHER + GRXASM | 1 106 | 73 | 4,5 | 46 |
 | LOGO | 350 | 65 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 171 | 13 | 2,0 | 8 |
 | VOIR | 78 | — | 4,1 | 13 |
-| USB | 80 | 13 | 0,7 | 29 |
+| USB | 80 | 13 | 0,7 | 30 |
 | ASM | 63 | 11 | 7,0 | 7 |
-| DEBUG | 40 | 12 | 0,5 | 2 |
+| DEBUG | 40 | 12 | 0,5 | 3 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 177 |
-| Transverse (projet) | 2 717 | — | — | 143 |
-| Traduction anglaise (docs/en) | 3 205 | — | — | 73 |
-| **Total** | 10 305 | 328 | 6,3 | 306 |
+| Outillage PC | 367 | — | 1,6 | 178 |
+| Transverse (projet) | 2 719 | — | — | 144 |
+| Traduction anglaise (docs/en) | 3 240 | — | — | 74 |
+| **Total** | 10 380 | 328 | 6,3 | 307 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 306 commits du 2026-10-04 au 2026-11-19.
+Historique : 307 commits du 2026-10-04 au 2026-11-20.
 
-Réutilisation : 61 545 lignes de code écrites dans `progs/`, 72 716 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 62 439 lignes de code écrites dans `progs/`, 73 610 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -1001,6 +1002,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-19 | TIMER | 0.9 | 1 620 | 380 | 2 000 | 304 | GRAPHER et GRXASM : fonction `TIMER` (compteur 50 Hz) ; HORLOGE de la vitrine calée sur elle |
 | 2026-11-19 | UNTAP | 0.9 | 1 628 | 383 | 2 011 | 306 | `UNTAP.COM` et `tools/untap.py` : blocs d'un `.TAP`, BASIC rendu en texte (vérifié par recodage), code en `.BIN` ; MKTAP : notation `{hh}` ; tokeniseur partagé (`bcr_inc.s`) ; `test_untap.py` |
 | 2026-11-20 | DIS | 0.9 | 1 638 | 386 | 2 024 | 307 | `DIS.COM` : code machine vers un source qu'ASM réassemble à l'identique (code suivi, étiquettes, noms d'`ATMOS.SYM`) ; tables partagées avec DEBUG (`dis_inc.s`) ; `test_dis.py` (tous les `.COM`, la ROM 1.1) |
+| 2026-11-20 | boucles en ligne | 0.9 | 1 638 | 389 | 2 027 | 308 | GRXASM : `FOR` et `REPEAT` de pas ou de compte constant et conditions de `IF` et `WHILE` traduits en ligne, sans `g_forok`, `g_forstep` ni `g_cmp` (un banc de 10 000 tours : 10,8 fois moins d'instructions) ; tests `boucles` et `cond` ; fond de la démonstration de la vitrine par table de couleurs |
 
 ## 11. Comparaisons
 

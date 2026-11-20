@@ -61,12 +61,12 @@ multiple de 2 048) :
 
 - tampons stockés dans le fichier, à sortir après la fin du programme : DEBUG (122), EDIT
   (842), HEX (432), XDO (512) ;
-- GRAPHER (19 251 octets, dont 252 de pile du remplissage `PAINT`) prend 10 blocs, 1 229
+- GRAPHER (19 281 octets, dont 252 de pile du remplissage `PAINT`) prend 10 blocs, 1 199
   octets libres dans le dernier (il en prenait 9 avant `PAINT`, à 257 octets près) ; piste
   de place : messages d'erreur par numéro, ~40 octets ; la pile du remplissage pourrait
-  sortir du fichier (`h_free`). GRXASM (17 118) prend 9 blocs, 1 314
-  octets libres dans le dernier (17 046 en anglais ; le texte d'un `.GRX` à traduire va de
-  `$51A4` à `$9CE0`, ~19,2 Ko : 738 octets de moins depuis la lecture de `GRX.LIB`) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
+  sortir du fichier (`h_free`). GRXASM (19 154) prend 10 blocs, 1 326
+  octets libres dans le dernier (19 082 en anglais ; le texte d'un `.GRX` à traduire va de
+  `$5A16` à `$9CE0`, ~16,7 Ko : les boucles et les conditions en ligne en ont pris 2,1 Ko) ; ORIC.INC (9,3 Ko sur la disquette) prend 5 blocs ;
   GRX.INC (12 492 octets sur la disquette, CR LF, marques `;@` et messages compris) prend 7
   blocs, 1 844 octets libres dans le dernier ; GRX.LIB (32 174, 32 115 en anglais) prend
   16 blocs, 594 octets libres dans le dernier. HELP (13 113) prend 7 blocs, 1 223 octets libres dans le dernier (12 931 en anglais, 7
@@ -88,7 +88,7 @@ multiple de 2 048) :
 - blocs de 1 Ko : écartés (ce ne serait plus le format de CP/M 2.2,
   `docs/etude-stockage.md`).
 
-**Mémoire de GRAPHER interprété** : environ 17 Ko pour le texte, les tableaux et une
+**Mémoire de GRAPHER interprété** : environ 15 Ko pour le texte, les tableaux et une
 animation (`docs/grapher.md` § 13) ; `CUBE.ANI` et `BALLE.ANI` ne se jouent qu'en traduit.
 Chaque octet de plus dans GRAPHER.COM en retire un.
 

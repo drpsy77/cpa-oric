@@ -633,9 +633,31 @@ r       rts
 
 ; o_store : « sta dest » (A/Y = début de l'instruction : « sta »)
 o_ins_sym
+.(
         sta osa
         sty osa+1
-        jsr o_tab
+        lda ksym                ; une variable écrite (sta, inc, dec), ou
+        bne nw                  ;   son adresse prise (lda #<) : f_dirty
+        ldy #0
+        lda (osa),y
+        cmp #"i"
+        beq w
+        cmp #"d"
+        beq w
+        cmp #"s"
+        bne c4
+        iny
+        lda (osa),y
+        cmp #"t"
+        beq w
+        bne nw
+c4      ldy #4
+        lda (osa),y
+        cmp #"#"
+        bne nw
+w       jsr f_dirty
+nw      jsr o_tab
+.)
         lda osa
         ldy osa+1
         jsr os
@@ -3012,13 +3034,50 @@ n       lda knb
         rts
 .)
 
+; REPEAT : compte constant, en ligne (cs_v = 1 : compte de 1 à 255, un
+;   octet de Bn ; 2 : sur 16 bits), le test en bas de la boucle ; compte
+;   calculé : g_rept (cs_v = 0)
 k_repeat
+.(
         lda #T_REP
         jsr k_newblk
         jsr k_newloop
         jsr k_pexpr
         jsr endline
-        jsr dest_blk
+        lda kc
+        beq dyn
+        lda kv+1
+        bmi none
+        ora kv
+        beq none
+        ldy csp
+        ldx #1
+        lda kv+1
+        beq one
+        inx
+one     txa
+        sta cs_v-1,y
+        cpx #2
+        beq w16
+        lda kv                  ; un octet : lda #n / sta Bn
+        sta osv
+        lda #<s_ldai
+        ldy #>s_ldai
+        jsr oimm
+        lda #0
+        jsr fv_sta
+        jmp lab
+none    lda #"E"                ; zéro ou moins : le corps est sauté
+        jsr o_jmp
+        ldy csp
+        lda #1
+        sta cs_v-1,y
+        bne lab
+w16     jsr dest_blk
+        jsr o_st16
+lab     lda #"T"
+        jmp o_label
+dyn     jsr dest_blk
         jsr o_st16
         lda #"T"
         jsr o_label
@@ -3031,7 +3090,14 @@ k_repeat
         jsr oi
         lda #"E"
         jmp o_jmp
+.)
 
+; FOR : pas constant, la boucle est en ligne, le test en bas (k_next).
+;   cs_v = 1 : arrivée constante ; 2 : compteur d'un octet ; 3 : arrivée
+;   calculée, gardée dans Bn ; 4 : arrivée constante au bout des entiers
+;   (32767 par pas de 1, -32768 par pas de -1 : débordement à voir).
+;   À l'entrée : départ et arrivée constants comparés ici, sinon une
+;   comparaison. Pas calculé : bloc Bn, g_forok et g_forstep (cs_v = 0)
 k_for
 .(
         jsr getvar
@@ -3041,29 +3107,30 @@ k_for
         sta fvar+1
         lda #T_FOR
         jsr k_newblk
-        jsr k_newloop
         jsr k_pexpr             ; départ -> variable
-        txa                     ; (position dans la ligne)
-        pha
+        stx fx
+        lda kc
+        sta fsc
+        lda kv
+        sta fsv
+        lda kv+1
+        sta fsv+1
         jsr fv_dest
         jsr o_st16
-        jsr fv_dest             ; adresse de la variable -> Bn+4
-        lda #<s_ldalo
-        ldy #>s_ldalo
-        jsr o_ins_sym
-        lda #4
-        jsr fv_sta
-        jsr fv_dest
-        lda #<s_ldahi
-        ldy #>s_ldahi
-        jsr o_ins_sym
-        lda #5
-        jsr fv_sta
-        pla
-        tax
-        jsr k_pexpr             ; arrivée -> Bn
+        ldx fx
+        jsr k_pexpr             ; arrivée
+        stx fx
+        lda kv
+        sta fev
+        lda kv+1
+        sta fev+1
+        lda kc
+        sta fec
+        bne ac
+        jsr f_loop              ; calculée : -> Bn
         jsr dest_blk
         jsr o_st16
+ac      ldx fx
         lda #1                  ; pas : 1 par défaut
         sta kc
         sta kv
@@ -3083,10 +3150,37 @@ k_for
         ldy #>m_step
         jmp error
 step    jsr endline
-        jsr dest_blk            ; pas -> Bn+2
+        lda kc
+        beq rout
+        jmp inl
+rout    lda fec                 ; par les routines : pas -> Bn+2
+        beq s1
+        jsr f_loop
+s1      jsr dest_blk
         lda #2
         sta koff
         jsr o_st16
+        lda fec                 ; arrivée constante -> Bn
+        beq s2
+        sta kc
+        lda fev
+        sta kv
+        lda fev+1
+        sta kv+1
+        jsr dest_blk
+        jsr o_st16
+s2      jsr fv_dest             ; adresse de la variable -> Bn+4
+        lda #<s_ldalo
+        ldy #>s_ldalo
+        jsr o_ins_sym
+        lda #4
+        jsr fv_sta
+        jsr fv_dest
+        lda #<s_ldahi
+        ldy #>s_ldahi
+        jsr o_ins_sym
+        lda #5
+        jsr fv_sta
         lda #"T"
         jsr o_label
         jsr o_ab
@@ -3098,6 +3192,281 @@ step    jsr endline
         jsr oi
         lda #"E"
         jmp o_jmp
+inl     ldy csp                 ; en ligne
+        dey
+        lda fvar
+        sta cs_fv,y
+        lda fvar+1
+        sta cs_fc,y
+        lda fev
+        sta cs_pl,y
+        lda fev+1
+        sta cs_ph,y
+        lda kv
+        sta cs_sl,y
+        lda kv+1
+        sta cs_sh,y
+        ldx #3
+        lda fec
+        beq mode                ; arrivée calculée (dans Bn)
+        ldx #1
+        lda kv                  ; pas de 1 jusqu'à 32767, de -1 jusqu'à
+        eor kv+1                ;   -32768 ?
+        cmp #1
+        bne nx1
+        lda fev
+        cmp #$FF
+        bne mode
+        lda fev+1
+        cmp #$7F
+        bne mode
+        ldx #4
+nx1     cmp #0
+        bne mode
+        lda kv
+        cmp #$FF
+        bne mode
+        lda fev
+        bne mode
+        lda fev+1
+        cmp #$80
+        bne mode
+        ldx #4
+mode    stx fm
+        txa
+        sta cs_v,y
+        jsr f_desc
+        lda fec
+        beq dyn
+        lda fsc
+        beq dyn
+        lda fsv                 ; départ constant : déjà au-delà de
+        sta ev                  ;   l'arrivée, le corps est sauté
+        sta et
+        lda fsv+1
+        sta ev+1
+        sta et+1
+        lda kv+1
+        bmi dn
+        lda fev                 ; pas > 0 : arrivée < départ
+        sta et
+        lda fev+1
+        sta et+1
+        jmp tst
+dn      lda fev                 ; pas < 0 : départ < arrivée
+        sta ev
+        lda fev+1
+        sta ev+1
+tst     lda #$83
+        jsr binop
+        lda ev
+        beq in
+        lda #"E"
+        jsr o_jmp
+        jmp lab
+in      lda kv                  ; un octet : pas de 1, de 0-254 à 0-254
+        cmp #1
+        bne lab
+        lda kv+1
+        ora fsv+1
+        ora fev+1
+        bne lab
+        lda fev
+        cmp #255
+        beq lab
+        lda #2
+        sta fm
+        bne lab
+dyn     lda kv+1                ; départ calculé : pas > 0, arrivée -
+        eor #$80                ;   variable ; pas < 0, variable - arrivée
+        asl
+        jsr o_scmp
+        lda #6                  ; bpl *+5
+        jsr o_br5
+        lda #"E"
+        jsr o_jmp
+lab     ldy csp
+        lda fm
+        sta cs_v-1,y
+        lda #"T"
+        jmp o_label
+.)
+
+; f_loop : la boucle du sommet reçoit un bloc Bn
+f_loop  ldy csp
+        dey
+        jmp k_newloop
+
+; f_desc : opérandes de la boucle FOR en ligne (bloc Y) : qa = sa
+;   variable, qb = son arrivée (Y gardé)
+f_desc  lda #2
+        sta qd
+        lda cs_fv,y
+        sta qd+1
+        lda cs_fc,y
+        sta qd+2
+        lda cs_v,y              ; arrivée : constante, ou Bn (cs_v = 3)
+        cmp #3
+        beq fd1
+        lda #3
+        .byt $2C
+fd1     lda #4
+        sta qd+3
+        lda cs_pl,y
+        sta qd+4
+        lda cs_ph,y
+        sta qd+5
+        rts
+
+; f_dirty : la variable kvar/kvc est écrite, ou son adresse prise : une
+;   boucle FOR en cours sur elle ne compte plus sur un octet.
+;   f_dall : toutes (appel d'un sous-programme)
+f_dall  lda #1
+        .byt $2C
+f_dirty lda #0
+.(
+        sta fdm
+        ldy csp
+l       dey
+        bmi r
+        lda cs_t,y
+        cmp #T_FOR
+        bne l
+        lda cs_v,y
+        cmp #2
+        bne l
+        lda fdm
+        bne d
+        lda cs_fv,y
+        cmp kvar
+        bne l
+        lda cs_fc,y
+        cmp kvc
+        bne l
+d       lda #1
+        sta cs_v,y
+        bne l
+r       rts
+.)
+
+; o_q : « instruction opérande » ; A/Y = l'instruction (« lda »), X = 0
+;   (opérande qa) ou 3 (qb), qh = 0 : octet bas, 1 : octet haut.
+;   Opérande : nature (0 g_ev, 1 g_et, 2 variable, 3 constante, 4 bloc
+;   Bn de la boucle kb), puis la lettre et le second caractère, ou la
+;   valeur
+o_q
+.(
+        sta osa
+        sty osa+1
+        stx qx
+        jsr o_tab
+        lda osa
+        ldy osa+1
+        jsr os
+        ldx qx
+        lda qd,x
+        cmp #3
+        beq imm
+        cmp #2
+        beq var
+        cmp #4
+        beq blk
+        cmp #1
+        beq t
+        lda #<s_gev
+        ldy #>s_gev
+        bne fix
+t       lda #<s_etn
+        ldy #>s_etn
+fix     jsr dest_fix
+        jmp sym
+blk     jsr dest_blk
+        jmp sym
+var     ldy qd+2,x
+        lda qd+1,x
+        pha
+        tya
+        tax
+        pla
+        jsr dest_var
+sym     lda qh
+        sta koff
+        jsr o_sym
+        jmp ocrlf
+imm     lda #"#"
+        jsr oc
+        txa
+        clc
+        adc qh
+        tax
+        lda qd+1,x
+        jsr ohex
+        jmp ocrlf
+.)
+
+; o_q2 : deux lignes sur l'octet qh : « lda » du premier opérande (X),
+;   puis l'instruction A/Y sur l'autre
+o_q2
+.(
+        pha
+        tya
+        pha
+        stx qs
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_q
+        pla
+        tay
+        lda qs
+        eor #3
+        tax
+        pla
+        jmp o_q
+.)
+
+; o_scmp : comparaison signée de qa et qb. C=0 : qa - qb ; C=1 : qb - qa.
+;   À l'exécution, N = 1 si la différence est négative
+o_scmp
+.(
+        lda #0
+        sta qh
+        bcc first
+        lda #3
+first   pha
+        tax
+        lda #<s_cmpo
+        ldy #>s_cmpo
+        jsr o_q2
+        inc qh
+        pla
+        tax
+        lda #<s_sbco
+        ldy #>s_sbco
+        jsr o_q2
+        lda #<s_bvc
+        ldy #>s_bvc
+        jmp os
+.)
+
+; o_br5 : « bxx *+5 » ; A = 0 beq, 2 bne, 4 bmi, 6 bpl (A eor 2 : le
+;   branchement contraire)
+o_br5
+.(
+        pha
+        jsr o_tab
+        lda #"b"
+        jsr oc
+        pla
+        tax
+        lda cc,x
+        jsr oc
+        lda cc+1,x
+        jsr oc
+        lda #<s_x5
+        ldy #>s_x5
+        jsr os
+        jmp ocrlf
+cc      .asc "eqnemipl"
 .)
 
 ; fv_dest : destination = variable du FOR (fvar)
@@ -3115,23 +3484,433 @@ fv_sta  pha
         jmp o_ins_sym
 
 k_while
-.(
         lda #T_WHILE
         jsr k_newblk
         lda #"T"
         jsr o_label
+        lda #"E"
+
+; k_cond : condition d'un IF ou d'un WHILE, jusqu'à la fin de la ligne ;
+;   A = suffixe de l'étiquette où aller si elle est fausse. Traduite en
+;   branchements : chaque terme (k_cterm) saute dès qu'il décide, sans
+;   fabriquer de 0 ou 1. Suite de « | » : un terme vrai va au corps
+;   (étiquette B) ; suite de « & » entre comparaisons : un terme faux
+;   sort. Le reste (kc_scan) est calculé comme une valeur
+k_cond
+.(
+        sta kcf
+        jsr skipsp
+        beq epar
+        cmp #";"
+        beq epar
+        stx ex
+        jsr kc_scan
+        bcc fast
+        ldx ex                  ; calculée comme une valeur
         jsr k_lexpr
         lda kc
         beq dyn
         lda kv
         ora kv+1
-        bne r                   ; WHILE vrai : rien à tester
-        lda #"E"
+        bne rr                  ; vraie : rien à tester
+        lda kcf
         jmp o_jmp
-dyn     lda #"E"
+dyn     lda kcf
         jmp o_skipz
+epar    jmp e_param
+rr      rts
+fast    lda #0
+        sta vsp
+        sta kcb
+        lda #1
+        sta edep
+term    jsr k_cterm
+        jsr ws
+        jsr gch
+        ldx #0
+        ldy kcm
+        beq last
+        cmp kcm
+        bne last
+        inc ex
+        inx
+last    stx kcmo                 ; 1 : un autre terme suit
+        txa
+        beq tf
+        lda kcm
+        cmp #"|"
+        bne tf
+        lda kc                  ; « | », pas le dernier : vrai -> corps
+        beq d1
+        lda kv
+        ora kv+1
+        beq cnx
+        bne tb
+d1      lda kbt
+        eor #2
+        jsr o_br5
+tb      lda #"B"
+        jsr o_jmp
+        inc kcb
+        bne cnx
+tf      lda kc                  ; faux -> sortie
+        beq d2
+        lda kv
+        ora kv+1
+        bne cnx
+        beq te
+d2      lda kbt
+        jsr o_br5
+te      lda kcf
+        jsr o_jmp
+cnx     lda kcmo
+        bne term
+        ldx ex
+        lda lbuf,x
+        beq ok
+        cmp #" "
+        beq ok
+        cmp #";"
+        beq ok
+        jmp e_expr
+ok      jsr endline
+        lda kcb
+        beq r
+        lda #"B"
+        jmp o_label
 r       rts
 .)
+
+; kc_scan : la condition (en ex) se traduit-elle en branchements ? C=0 :
+;   oui, kcm = 0 (un terme), « & » ou « | » (une suite du même opérateur,
+;   hors parenthèses). C=1 : non (opérateurs mêlés ; « & » avec un terme
+;   sans comparaison, où il agit bit à bit ; RND ou INKEY dans une suite,
+;   qu'un terme sauté n'appellerait pas)
+kc_scan
+.(
+        lda #0
+        sta kcm
+        sta kcd                 ; parenthèses ouvertes
+        sta kcq                 ; dans une chaîne
+        sta kcr                 ; le terme a une comparaison
+        sta kcw                 ; refus
+        sta kcn                 ; un terme sans comparaison
+        sta kcs                 ; RND, INKEY
+        ldy ex
+l       lda lbuf,y
+        bne l1
+        jmp end
+l1      cmp #34
+        bne n0
+        lda kcq
+        eor #1
+        sta kcq
+        bpl nx
+n0      ldx kcq
+        bne nx
+        cmp #";"
+        beq end
+        cmp #"("
+        bne n2
+        inc kcd
+n2      cmp #")"
+        bne n3
+        dec kcd
+n3      ldx kcd
+        bne fn
+        cmp #"="
+        beq rel
+        cmp #"<"
+        beq rel
+        cmp #">"
+        bne n4
+rel     sta kcr
+        bne nx
+n4      cmp #"&"
+        beq op
+        cmp #"|"
+        bne fn
+op      ldx kcr
+        bne o1
+        inc kcn
+o1      ldx #0
+        stx kcr
+        ldx kcm
+        bne o2
+        sta kcm
+o2      cmp kcm
+        beq nx
+        inc kcw
+        bne nx
+fn      cmp #"R"
+        bne f2
+        lda lbuf+1,y
+        cmp #"N"
+        bne nx
+        lda lbuf+2,y
+        cmp #"D"
+        bne nx
+        beq se
+f2      cmp #"I"
+        bne nx
+        lda lbuf+1,y
+        cmp #"N"
+        bne nx
+        lda lbuf+2,y
+        cmp #"K"
+        bne nx
+se      inc kcs
+nx      iny
+        beq end
+        jmp l
+end     lda kcr
+        bne e1
+        inc kcn
+e1      lda kcw
+        bne gen
+        lda kcm
+        beq ok
+        lda kcs
+        bne gen
+        lda kcm
+        cmp #"&"
+        bne ok
+        lda kcn
+        bne gen
+ok      clc
+        rts
+gen     sec
+        rts
+.)
+
+; kv_rel : en lbuf (X), une variable simple (A, AB, A1) suivie d'un
+;   opérateur de comparaison ? -> C=0
+kv_rel
+.(
+        lda lbuf,x
+        jsr isalpha
+        bcs no
+        inx
+        lda lbuf,x
+        jsr isalpha
+        bcc two
+        jsr isdig
+        bcs one
+two     inx
+one     lda lbuf,x
+        cmp #" "
+        bne c
+        inx
+        bne one
+c       cmp #"="
+        beq yes
+        cmp #"<"
+        beq yes
+        cmp #">"
+        beq yes
+no      sec
+        rts
+yes     clc
+        rts
+.)
+
+; k_cterm : un terme de la condition. kc = 1 : constante kv ; sinon les
+;   indicateurs sont prêts, kbt = le branchement pris quand le terme est
+;   vrai (o_br5). Une comparaison se fait sur ses opérandes là où ils
+;   sont (qa, qb) : variable seule à gauche, constante, g_ev, g_et
+k_cterm
+.(
+        jsr is_str
+        bcs ns
+        jsr k_cmp               ; chaînes : 0 ou 1
+        jmp truth
+ns      jsr ws
+        ldx ex
+        jsr kv_rel
+        bcs gen
+        ldx ex                  ; variable seule à gauche : pas chargée
+        jsr getvar
+        stx ex
+        lda #2
+        sta qd
+        lda vix
+        sta qd+1
+        lda vc
+        sta qd+2
+        jsr relop
+        pha
+        jsr ws
+        jsr k_sum
+        jmp right
+gen     jsr k_sum
+        jsr relop
+        bcc rl
+        jmp truth
+rl      pha
+        lda kc
+        bne lc
+        pla                     ; gauche calculée, dans g_ev
+        pha
+        jsr k_left
+        jsr ws
+        jsr k_sum
+        pla
+        sta kop
+        dec vsp
+        ldy vsp
+        lda vs_f,y
+        cmp #2
+        beq reg
+        jsr k_mat               ; empilée : g_et = gauche, g_ev = droite
+        lda #<s_pop
+        ldy #>s_pop
+        jsr oi
+        lda #1
+        sta qd
+        bne rd
+reg     lda #0                  ; droite simple : constante, ou dans g_et
+        sta kdst
+        sta qd
+        lda kc
+        bne rc
+        lda #1
+        sta qd+3
+        bne cmpq
+lc      lda #3                  ; gauche constante
+        sta qd
+        lda kv
+        sta qd+1
+        lda kv+1
+        sta qd+2
+        jsr ws
+        jsr k_sum
+right   pla
+        sta kop
+        lda kc
+        beq rd
+        lda qd
+        cmp #3
+        beq fold
+rc      lda #3                  ; droite constante
+        sta qd+3
+        lda kv
+        sta qd+4
+        lda kv+1
+        sta qd+5
+        bne cmpq
+        beq cmpq
+rd      lda #0                  ; droite dans g_ev
+        sta qd+3
+cmpq    jsr o_cmpq
+        lda #0
+        sta kc
+        rts
+fold    lda qd+1                ; deux constantes : calcul ici
+        sta et
+        lda qd+2
+        sta et+1
+        lda kv
+        sta ev
+        lda kv+1
+        sta ev+1
+        lda kop
+        jsr binop
+        lda ev
+        sta kv
+        lda ev+1
+        sta kv+1
+        rts
+truth   lda kc                  ; une valeur : vraie si elle n'est pas nulle
+        bne r
+        lda #2
+        sta kbt
+        lda kz
+        bne r
+        lda #<s_ldaev
+        ldy #>s_ldaev
+        jsr oi
+        lda #<s_gev
+        ldy #>s_gev
+        jsr dest_fix
+        inc koff
+        lda #<s_ora
+        ldy #>s_ora
+        jsr o_ins_sym
+r       rts
+.)
+
+; o_cmpq : comparaison kop de qa et qb ; kbt = branchement du vrai.
+;   = et <> : Z ; < et >= : qa - qb, signe ; > et <= : qb - qa, signe
+o_cmpq
+.(
+        lda kop
+        and #$7F
+        tax
+        lda bt-1,x
+        sta kbt
+        cpx #3
+        bcc eq
+        lda od-3,x
+        lsr
+        jmp o_scmp
+eq      lda qd                  ; constante à gauche : échangée
+        cmp #3
+        bne e1
+        ldx #2
+sw      lda qd,x
+        ldy qd+3,x
+        sta qd+3,x
+        tya
+        sta qd,x
+        dex
+        bpl sw
+e1      lda qd+3
+        cmp #3
+        bne g
+        ldy #0                  ; constante d'un octet (l'autre nul) :
+        lda qd+5                ;   lda V / eor #n / ora V+1
+        beq s
+        lda qd+4
+        bne g
+        iny
+s       sty qh
+        ldx #0
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_q
+        ldx qh
+        lda qd+4,x
+        beq z
+        ldx #3
+        lda #<s_eor
+        ldy #>s_eor
+        jsr o_q
+z       lda qh
+        eor #1
+        sta qh
+        ldx #0
+        lda #<s_ora
+        ldy #>s_ora
+        jmp o_q
+g       lda #0                  ; lda / eor / sta g_mt / lda / eor / ora g_mt
+        sta qh
+        jsr ge
+        lda #<s_stmt
+        ldy #>s_stmt
+        jsr oi
+        inc qh
+        jsr ge
+        lda #<s_ormt
+        ldy #>s_ormt
+        jmp oi
+ge      ldx #0
+        lda #<s_eor
+        ldy #>s_eor
+        jmp o_q2
+bt      .byt 0,2,4,6,4,6
+od      .byt 0,1,1,0
+.)
+
 
 k_next
 .(
@@ -3145,8 +3924,13 @@ k_next
         lda #<m_nofor
         ldy #>m_nofor
         jmp error
-ok      cmp #T_FOR                  ; (pas de test d'ESC dans les boucles)
+ok      cmp #T_REP                  ; (pas de test d'ESC dans les boucles)
+        bne nrep
+        jmp rpt
+nrep    cmp #T_FOR
         bne back
+        lda cs_v,y
+        bne inl
         jsr o_ab
         lda #<s_fstep
         ldy #>s_fstep
@@ -3156,6 +3940,156 @@ ok      cmp #T_FOR                  ; (pas de test d'ESC dans les boucles)
         jsr oi
 back    lda #"T"
         jsr o_jmp
+        jmp fin
+; FOR en ligne. Un octet (cs_v = 2 : variable ni écrite ni passée par
+;   adresse dans le corps, aucun sous-programme appelé) :
+;   inc V / lda V / cmp #arrivée+1 / bcs *+5
+inl     sty fx
+        jsr f_desc
+        lda cs_v,y
+        cmp #2
+        bne w16
+        inc qd+4
+        lda #0
+        sta qh
+        tax
+        lda #<s_inc
+        ldy #>s_inc
+        jsr o_q
+        ldx #0
+        lda #<s_cmpo
+        ldy #>s_cmpo
+        jsr o_q2
+        lda #<s_bcs
+        ldy #>s_bcs
+        jsr oi
+        jmp back
+; 16 bits : variable += pas (pas de 1 ou -1 : inc, dec, sauf cs_v = 4 ;
+;   sinon bvs : débordement, fin), puis comparaison signée avec
+;   l'arrivée
+w16     pha
+        lda cs_sl,y
+        sta et
+        lda cs_sh,y
+        sta et+1
+        lda #0
+        sta qh
+        pla
+        cmp #4
+        beq add
+        lda et
+        cmp #1
+        bne nup
+        lda et+1
+        bne add
+        ldx #0                  ; +1 : inc V / bne *+5 / inc V+1
+        lda #<s_inc
+        ldy #>s_inc
+        jsr o_q
+        lda #2
+        jsr o_br5
+        inc qh
+        ldx #0
+        lda #<s_inc
+        ldy #>s_inc
+        jsr o_q
+        jmp cmpa
+nup     cmp #$FF
+        bne add
+        lda et+1
+        cmp #$FF
+        bne add
+        ldx #0                  ; -1 : lda V / bne *+5 / dec V+1 / dec V
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_q
+        lda #2
+        jsr o_br5
+        inc qh
+        ldx #0
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_q
+        dec qh
+        ldx #0
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_q
+        jmp cmpa
+add     lda #3                  ; clc / lda V / adc #pas / sta V ...
+        sta qd+3
+        lda et
+        sta qd+4
+        lda et+1
+        sta qd+5
+        lda #<s_clc
+        ldy #>s_clc
+        jsr oi
+        jsr addb
+        inc qh
+        jsr addb
+        jsr o_tab               ; bvs LnE
+        lda #<s_bvs
+        ldy #>s_bvs
+        jsr os
+        lda #"E"
+        sta ksuf
+        lda #"L"
+        jsr o_lname
+        jsr ocrlf
+        ldy fx
+        jsr f_desc
+cmpa    lda et+1                ; pas > 0 : arrivée - variable ; pas < 0 :
+        eor #$80                ;   variable - arrivée ; négatif : fin
+        asl
+        jsr o_scmp
+        lda #4                  ; bmi *+5
+        jsr o_br5
+        jmp back
+addb    ldx #0
+        lda #<s_adc
+        ldy #>s_adc
+        jsr o_q2
+        ldx #0
+        lda #<s_sta
+        ldy #>s_sta
+        jmp o_q
+; REPEAT : compte calculé, retour au test du haut ; constant, en ligne
+rpt     lda cs_v,y
+        bne ri
+        jmp back
+ri      cmp #2
+        beq r16
+        jsr dest_blk            ; dec Bn / beq *+5
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_ins_sym
+        jmp rtst
+r16     jsr dest_blk            ; lda Bn / bne *+5 / dec Bn+1 / dec Bn /
+        lda #<s_lda             ;   lda Bn / ora Bn+1 / beq *+5
+        ldy #>s_lda
+        jsr o_ins_sym
+        lda #2
+        jsr o_br5
+        inc koff
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_ins_sym
+        dec koff
+        lda #<s_dec
+        ldy #>s_dec
+        jsr o_ins_sym
+        lda #<s_lda
+        ldy #>s_lda
+        jsr o_ins_sym
+        inc koff
+        lda #<s_ora
+        ldy #>s_ora
+        jsr o_ins_sym
+rtst    lda #0
+        jsr o_br5
+        jmp back
+fin
         lda #"E"
         jsr o_label
         dec csp
@@ -3163,21 +4097,10 @@ back    lda #"T"
 .)
 
 k_if
-.(
         lda #T_IF
         jsr k_newblk
-        jsr k_lexpr
-        lda kc
-        beq dyn
-        lda kv
-        ora kv+1
-        bne r
         lda #"X"
-        jmp o_jmp
-dyn     lda #"X"
-        jmp o_skipz
-r       rts
-.)
+        jmp k_cond
 
 k_else
 .(
@@ -3263,6 +4186,7 @@ bad     lda #<m_noret
 
 k_call
         jsr sub_find            ; vérifie que SUB NOM existe
+        jsr f_dall
         jsr o_tab
         lda #<s_jsr
         ldy #>s_jsr
@@ -3347,6 +4271,15 @@ s_p     .asc "P_",0
 s_tst   .asc " lda g_ev",13,10," ora g_ev+1",13,10
 s_bne5  .asc " bne *+5",13,10,0
 s_bcc   .asc "bcc *+5",0
+s_cmpo  .asc "cmp ",0
+s_sbco  .asc "sbc ",0
+s_ora   .asc "ora ",0
+s_bvs   .asc "bvs ",0
+s_eor   .asc "eor ",0
+s_stmt  .asc "sta g_mt",0
+s_ormt  .asc "ora g_mt",0
+s_x5    .asc " *+5",0
+s_bvc   .asc " bvc *+4",13,10," eor #$80",13,10,0
 s_bcs   .asc "bcs *+5",0
 s_rts   .asc "rts",0
 s_byt   .asc ".byt ",0
@@ -5888,13 +6821,39 @@ ofcb    = kdst+1        ; NOM.ASM
 NBUF    = ofcb+36-bufs
 cs_t    = ofcb+36       ; pile de contrôle : type
 cs_v    = cs_t+NCS      ;   IF : 1 après ELSE
-cs_pl   = cs_v+NCS      ;   ligne de reprise
+cs_pl   = cs_v+NCS      ;   FOR en ligne : arrivée
 cs_ph   = cs_pl+NCS
 cs_al   = cs_ph+NCS     ;   compte (REPEAT) ou arrivée (FOR)
 cs_ah   = cs_al+NCS
 cs_bl   = cs_ah+NCS     ;   pas (FOR)
 cs_bh   = cs_bl+NCS
-vs_lo   = cs_bh+NCS     ; pile des valeurs
+cs_fv   = cs_bh+NCS     ;   FOR en ligne : variable (lettre, second
+cs_fc   = cs_fv+NCS     ;     caractère)
+cs_sl   = cs_fc+NCS     ;   et pas
+cs_sh   = cs_sl+NCS
+fx      = cs_sh+NCS       ; FOR, NEXT : position dans la ligne, bloc
+fsc     = fx+1          ; FOR : départ constant ? sa valeur (2 octets)
+fsv     = fsc+1
+fec     = fsv+2         ;   arrivée constante ? sa valeur (2 octets)
+fev     = fec+1
+fm      = fev+2         ;   boucle en ligne : 1, ou 2 (un octet)
+qd      = fm+1          ; o_q : opérandes qa et qb (3 octets chacun)
+qh      = qd+6          ;   octet (0 bas, 1 haut)
+qx      = qh+1
+qs      = qx+1
+fdm     = qs+1          ; f_dirty : 1 toutes les boucles
+kcf     = fdm+1         ; k_cond : suffixe de l'étiquette du faux
+kcm     = kcf+1         ;   opérateur de la suite (0, & ou |)
+kcb     = kcm+1         ;   étiquette B (corps) utile
+kcmo    = kcb+1         ;   un autre terme suit
+kbt     = kcmo+1         ;   branchement du vrai (o_br5)
+kcd     = kbt+1         ; kc_scan : parenthèses, chaîne, comparaison,
+kcq     = kcd+1         ;   refus, terme sans comparaison, RND ou INKEY
+kcr     = kcq+1
+kcw     = kcr+1
+kcn     = kcw+1
+kcs     = kcn+1
+vs_lo   = kcs+1         ; pile des valeurs
 vs_hi   = vs_lo+NVS
 vs_f    = vs_hi+NVS     ; gauche constante ?
 kvt     = vs_f+NVS      ; dest_var, o_vars, k_simple : travail (2 octets)

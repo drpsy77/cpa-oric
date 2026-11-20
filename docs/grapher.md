@@ -686,8 +686,25 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
     après lui : `K = 9`, `X - Y`, `N + 1`) va directement dans `g_et`, sans passer par la
     pile des valeurs ; l'opération est faite à l'envers (`<` devient `>`, `X - 2` devient
     `X + (-2)`, `X - Y` appelle `g_rsub`). `/` et `%` passent toujours par la pile ;
-  - `IF` et `WHILE` testent directement le résultat d'une comparaison, d'un `&` ou d'un `|`
-    (drapeau Z rendu par `g_cmp`, `g_and`, `g_or`) ;
+  - la condition d'un `IF` ou d'un `WHILE` est traduite en branchements : une comparaison
+    se fait en ligne sur ses opérandes là où ils sont, sans fabriquer de 0 ou 1 ni appeler
+    `g_cmp` (`IF L<8` : `lda V_L / cmp #$08 / lda V_L+1 / sbc #$00`, puis le branchement ;
+    `IF K = 5` : `lda V_K / eor #$05 / ora V_K+1`). Dans une suite de `|`, un terme vrai va
+    droit au corps (étiquette `L3B`) ; dans une suite de `&` entre comparaisons, un terme
+    faux sort. Restent calculés comme une valeur (`g_cmp`, `g_and`, `g_or`, drapeau Z) :
+    `&` et `|` mêlés, une comparaison entre parenthèses, un `&` dont un terme n'est pas une
+    comparaison (il agit bit à bit : `IF A & 4`), une suite où figure `RND` ou `INKEY` (un
+    terme sauté ne les appellerait pas), et une comparaison hors d'une condition
+    (`V = A < B`) ;
+  - `FOR` de pas constant : la boucle est en ligne, le test en bas, sans `g_forok` ni
+    `g_forstep`. De 0-254 à 0-254 par pas de 1, bornes constantes : compteur d'un octet
+    (`inc V_I / lda V_I / cmp #$0A`), si le corps n'écrit pas la variable, ne passe pas
+    son adresse et n'appelle aucun sous-programme. Sinon 16 bits : `inc` ou `dec` pour un
+    pas de 1 ou -1, addition pour les autres, puis une comparaison signée avec l'arrivée
+    (constante, ou gardée dans `Bn` si elle est calculée). Départ et arrivée constants sont
+    comparés à la traduction. Pas calculé : `g_forok` et `g_forstep` ;
+  - `REPEAT` de compte constant : `dec Bn / beq` (1 à 255), 16 bits au-delà ; compte
+    calculé : `g_rept` ;
   - `V = V + 1` et `V = V - 1` (rien d'autre sur la ligne) deviennent `inc` et `dec` ;
   - une constante dont les deux octets sont égaux (`0`, `-1`, `257`) est chargée une fois.
 - Les parties constantes des expressions sont calculées pendant la traduction (`120+8` donne
@@ -704,7 +721,10 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   - Plus vérifié du tout : un paramètre calculé hors de 0-255 (seul son octet bas compte),
     une colonne ou une ligne hors de l'écran, une commande du LORES hors du LORES, les
     indices et les tableaux, une chaîne trop longue (coupée à la capacité), une division par
-    zéro (le résultat n'a pas de sens), un pas calculé nul (la boucle ne finit pas), ESC (une
+    zéro (le résultat n'a pas de sens), un pas calculé nul (la boucle ne finit pas), une
+    boucle de pas 1 ou -1 menée au bout des entiers par une arrivée calculée (32767,
+    -32768) ou par le corps, qui y porte la variable (elle ne finit pas : en interprété, le
+    débordement l'arrête ; une arrivée constante au bout des entiers est traitée), ESC (une
     touche comme une autre, § 8).
   - Un paramètre qui est une variable simple se lit en une instruction (`lda V_L`, son
     octet bas).
@@ -754,12 +774,13 @@ Un `ENDIF` oublié après un `IF` vrai n'est pas signalé : le reste s'exécute 
   Pour CARTE, `NOM.ASM` fait 46 Ko : `/C` ne laisse que `NOM.COM` (8 Ko). Ils sont,
   avec GRXASM, sur la disquette complète, la disquette Assembleur et la disquette
   Animations (pas sur la disquette Logo, qui n'a pas ASM).
-- Taille d'un `.COM` traduit : 1,4 Ko pour `ARDOISE`, 1,7 Ko pour `DESSIN`, 2,2 Ko pour
-  `MOTIFS`, 3,9 Ko pour `SERPENT`, 6,0 Ko pour `PUZZLE` (`JEU.GRX`), 6,1 Ko pour
-  `SPRITES` (les contrôles retirés en ont ôté 4 à 15 %, puis les vérifications de
-  l'interpréteur sorties des bibliothèques jusqu'à 4 % de plus : 221 octets pour
-  `PUZZLE`). `NOM.ASM` est plus long
-  (10 Ko pour `DESSIN`, 34 Ko pour `SPRITES`) : il faut la place sur la disquette pendant
+- Taille d'un `.COM` traduit : 1,2 Ko pour `ARDOISE`, 1,7 Ko pour `DESSIN`, 1,9 Ko pour
+  `MOTIFS`, 3,6 Ko pour `SERPENT`, 5,5 Ko pour `PUZZLE` (`JEU.GRX`), 5,3 Ko pour
+  `SPRITES` (les contrôles retirés en ont ôté 4 à 15 %, les vérifications de
+  l'interpréteur sorties des bibliothèques jusqu'à 4 % de plus, les boucles et les
+  conditions en ligne 15 à 27 % de la part du programme : 667 octets pour `PUZZLE`).
+  `NOM.ASM` est plus long
+  (10 Ko pour `DESSIN`, 30 Ko pour `SPRITES`) : il faut la place sur la disquette pendant
   la traduction. ASM met moins d'une minute pour `MOTIFS`.
 
 ### 12.1 Pour un Oric seul (`/O`)
@@ -814,39 +835,41 @@ Oricutron, `-t NOM.TAP`.
 
 ## 13. Mémoire, vitesse, limites
 
-- **Mémoire** (interprété) : GRAPHER.COM (18 183 octets) en `$0500`, puis les tables de
+- **Mémoire** (interprété) : GRAPHER.COM (19 281 octets) en `$0500`, puis les tables de
   `hires.inc`, les tampons et les variables. Le texte du `.GRX` vient ensuite et s'arrête au plus tard en
   `$9D60`. Les tableaux sont réservés sous `$9D60`, vers le bas, jusqu'à la fin du texte. Une
   animation ou une image `.HIZ` se charge après le texte, sans jamais recouvrir les tableaux.
   Les descripteurs des tableaux occupent `$9D60-$9EFF`. `SPRITES n` réserve sous les tableaux
   5 octets par emplacement et 192 octets pour les deux tas, le premier `HSHOW` 128 octets
   par emplacement ; `TILESET`, (larg × haut + 1) pages (§ 7.3). La zone libre pour le texte, les tableaux et une animation fait environ
-  16,5 Ko (texte à partir de `$5C70`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
+  15,2 Ko (texte à partir de `$60BA`) : `VAISSEAU.ANI` (12,5 Ko) s'y joue, pas `CUBE.ANI`
   ni `BALLE.ANI` (18 et 21 Ko), qui demandent la traduction.
 - **Mémoire** (traduit) : le programme en `$0500` (`$0503` pour un Oric seul, § 12.1),
   puis les tables de `hires.inc`. Les tableaux sont réservés sous `$9D60` comme en
   interprété : les tableaux fixes (§ 12) au lancement, dans l'ordre des `DIM`, puis les
   autres à leur `DIM`.
-- **Tailles d'un programme traduit** (mesure des onze exemples, `files/*.grx` ; part du
+- **Tailles d'un programme traduit** (mesure des treize exemples, `files/*.grx` ; part du
   programme séparée de celle des bibliothèques) :
 
-  | | Par octet de `.GRX` | Par ligne de `.GRX` | CARTE (96 lignes, 2,1 Ko) |
+  | | Par octet de `.GRX` | Par ligne de `.GRX` | CARTE (104 lignes, 2,1 Ko) |
   |---|---:|---:|---:|
-  | `NOM.ASM`, programme | 6,4 à 7,0 octets | ~10 lignes, ~140 octets | 14,2 Ko |
-  | `NOM.ASM`, bibliothèques | — | — | 32,0 Ko |
-  | `NOM.COM`, programme | 1,15 à 1,35 octet | ~25 octets | 2,6 Ko |
-  | `NOM.COM`, bibliothèques | — | — | 5,8 Ko |
+  | `NOM.ASM`, programme | 5,1 à 5,7 octets | ~7 lignes, ~95 octets | 11,8 Ko |
+  | `NOM.ASM`, bibliothèques | — | — | 29,5 Ko |
+  | `NOM.COM`, programme | 0,95 à 1,05 octet | ~16 octets | 2,1 Ko |
+  | `NOM.COM`, bibliothèques | — | — | 5,3 Ko |
 
-  Le compilé fait donc à peu près le `.GRX` en clair, plus les routines de bibliothèque
-  utilisées : 0,8 Ko (ARDOISE) à 5,8 Ko (CARTE) dans les exemples. Le `.ASM`
-  intermédiaire fait environ 6,5 fois le `.GRX`, plus le texte des routines recopiées (5
+  (Valeurs les plus courantes ; extrêmes : 0,4 octet de `.COM` par octet de `.GRX` pour
+  un programme très commenté, 1,5 pour `PUZZLE`.) Le compilé fait donc à peu près le `.GRX` en clair, plus
+  les routines de bibliothèque
+  utilisées : 0,8 Ko (ARDOISE) à 5,3 Ko (CARTE) dans les exemples. Le `.ASM`
+  intermédiaire fait environ 5,5 fois le `.GRX`, plus le texte des routines recopiées (5
   à 32 Ko ; les six bibliothèques font 69 Ko sur la disquette, aucun programme ne les
-  prend toutes). Un `.GRX` ne dépasse pas ~17 Ko en interprété (texte et tableaux
-  ensemble) ni ~20 Ko pour GRXASM (texte de `$4E6F` à `$9CE0`). Pire cas pour un `.GRX`
-  de 17 Ko : `.ASM` de 145 à 175 Ko et `.COM` d'environ 30 Ko, présents ensemble pendant
-  l'assemblage, soit ~200 Ko sur la disquette de projet (658 Ko) ; `/C` n'y laisse ensuite
+  prend toutes). Un `.GRX` ne dépasse pas ~15 Ko en interprété (texte et tableaux
+  ensemble) ni ~16,7 Ko pour GRXASM (texte de `$5A16` à `$9CE0`). Pire cas pour un `.GRX`
+  de 16,7 Ko : `.ASM` de 125 à 160 Ko et `.COM` d'environ 25 Ko, présents ensemble pendant
+  l'assemblage, soit ~185 Ko sur la disquette de projet (658 Ko) ; `/C` n'y laisse ensuite
   que le `.COM`. La limite qui compte est la mémoire : le `.COM` et ses tableaux tiennent
-  entre `$0500` et `$9D60` (~38 Ko) ; 30 Ko de code ne laissent que ~8 Ko de tableaux.
+  entre `$0500` et `$9D60` (~38 Ko) ; 25 Ko de code laissent ~13 Ko de tableaux.
 - **Vitesse** : 150 à quelques centaines de lignes par seconde en interprété (un ciel de 400
   étoiles, `PLOT 1+RND(238) 1+RND(198)` : 5 s ; traduit : 0,6 s). Un sprite de 1 × 2 cases
   déplacé par `SSHOW` : 2,3 ms dans un programme traduit (environ 1,1 ms par case : retrait
@@ -911,7 +934,27 @@ lettre, un bit par second caractère) et les réserve à la fin de `NOM.ASM` (`o
 `.word 0`). Un bloc de boucle `Bn` a 6 octets : arrivée, pas, puis l'adresse de la variable,
 écrite à l'entrée du `FOR` ; `g_forok` et `g_forstep` la lisent là. Les boucles ont leur
 propre numéro (`knb`, `k_newloop`, gardé dans `cs_bl`/`cs_bh`), distinct de celui des blocs
-(`kn`, étiquettes `L`) : seuls les `FOR` et `REPEAT` ont un `Bn`.
+(`kn`, étiquettes `L`) : seuls les `REPEAT` et les `FOR` d'arrivée ou de pas calculés ont
+un `Bn`.
+
+**Boucles en ligne** (GRXASM) : `k_for` garde dans la pile de contrôle la variable
+(`cs_fv`, `cs_fc`), l'arrivée (`cs_pl`, `cs_ph`), le pas (`cs_sl`, `cs_sh`) et la forme
+(`cs_v` : 0 par les routines, 1 arrivée constante, 2 compteur d'un octet, 3 arrivée dans
+`Bn`, 4 arrivée constante au bout des entiers, où l'addition garde son test de
+débordement) ; `k_next` écrit le pas et le test. `o_ins_sym` signale à `f_dirty` toute
+écriture d'une variable (`sta`, `inc`, `dec`) et toute prise de son adresse (`lda #<`),
+`k_call` tout appel (`f_dall`) : une boucle en cours sur cette variable repasse de 2 à 1.
+Les lignes sont écrites par `o_q` sur deux opérandes `qa` et `qb` (nature dans `qd` :
+`g_ev`, `g_et`, variable, constante, `Bn`) ; `o_scmp` écrit une comparaison signée,
+`o_br5` un branchement par-dessus un `jmp`.
+
+**Conditions traduites** (`k_cond`, pour `IF` et `WHILE`) : `kc_scan` lit la ligne et
+choisit les branchements (un terme, une suite de `|`, une suite de `&` entre
+comparaisons) ou le calcul d'une valeur (`k_lexpr`, puis `o_skipz`). `k_cterm` traduit un
+terme : une variable seule à gauche d'une comparaison n'est pas chargée (`kv_rel`), une
+constante reste une constante, le reste passe par `g_ev` (et `g_et`, ou la pile, comme
+dans `k_apply`) ; `o_cmpq` écrit la comparaison et rend dans `kbt` le branchement pris
+quand elle est vraie.
 
 **Expressions traduites** : la gauche d'une opération reste en constante (`vs_f` = 1), passe
 par `g_push` (`vs_f` = 0), ou reste dans `g_ev` quand `k_simple` voit, en lisant la suite de

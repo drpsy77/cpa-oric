@@ -670,8 +670,24 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
     it: `K = 9`, `X - Y`, `N + 1`) goes straight into `g_et`, without going through the value
     stack; the operation is done the other way round (`<` becomes `>`, `X - 2` becomes
     `X + (-2)`, `X - Y` calls `g_rsub`). `/` and `%` always go through the stack;
-  - `IF` and `WHILE` test the result of a comparison, an `&` or an `|` directly (Z flag
-    returned by `g_cmp`, `g_and`, `g_or`);
+  - the condition of an `IF` or a `WHILE` is translated into branches: a comparison is done
+    inline on its operands where they are, without building a 0 or 1 or calling `g_cmp`
+    (`IF L<8`: `lda V_L / cmp #$08 / lda V_L+1 / sbc #$00`, then the branch; `IF K = 5`:
+    `lda V_K / eor #$05 / ora V_K+1`). In a chain of `|`, a true term goes straight to the
+    body (label `L3B`); in a chain of `&` between comparisons, a false term leaves. Still
+    computed as a value (`g_cmp`, `g_and`, `g_or`, Z flag): mixed `&` and `|`, a comparison
+    in parentheses, an `&` with a term that is not a comparison (it works bit by bit:
+    `IF A & 4`), a chain containing `RND` or `INKEY` (a skipped term would not call them),
+    and a comparison outside a condition (`V = A < B`);
+  - `FOR` with a constant step: the loop is inline, tested at the bottom, without `g_forok`
+    or `g_forstep`. From 0-254 to 0-254 by steps of 1, constant bounds: a one-byte counter
+    (`inc V_I / lda V_I / cmp #$0A`), if the body does not write the variable, does not
+    pass its address and calls no subroutine. Otherwise 16 bits: `inc` or `dec` for a step
+    of 1 or -1, an addition for the others, then a signed comparison with the limit
+    (constant, or kept in `Bn` when computed). Constant start and limit are compared at
+    translation. Computed step: `g_forok` and `g_forstep`;
+  - `REPEAT` with a constant count: `dec Bn / beq` (1 to 255), 16 bits beyond; computed
+    count: `g_rept`;
   - `V = V + 1` and `V = V - 1` (nothing else on the line) become `inc` and `dec`;
   - a constant whose two bytes are equal (`0`, `-1`, `257`) is loaded once.
 - The constant parts of expressions are computed during translation (`120+8` gives `128`); a
@@ -688,7 +704,10 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   - No longer checked at all: a computed parameter outside 0-255 (only its low byte counts), a
     column or a line off the screen, a LORES command outside LORES, indices and arrays, a
     string too long (cut at the capacity), a division by zero (the result is meaningless), a
-    computed zero step (the loop never ends), ESC (a key like any other, § 8).
+    computed zero step (the loop never ends), a loop by steps of 1 or -1 taken to the end
+    of the integers by a computed limit (32767, -32768) or by the body, which puts the
+    variable there (it never ends: when interpreted, the overflow stops it; a constant
+    limit at the end of the integers is handled), ESC (a key like any other, § 8).
   - A parameter that is a simple variable is read in one instruction (`lda V_L`, its low
     byte).
 - An array must be declared by a `DIM` placed higher up in the file (translation reads the file
@@ -733,10 +752,11 @@ An `ENDIF` forgotten after a true `IF` is not reported: the rest runs normally.
   (which does not know `#lib`). For MAP, `NAME.ASM` is 46 KB: `/C` only leaves
   `NAME.COM` (8 KB). They are, with GRXASM, on the complete disk, the Assembler disk and the
   Animations disk (not on the Logo disk, which has no ASM).
-- Size of a translated `.COM`: 1.4 KB for `SKETCH`, 1.7 KB for `DRAWING`, 2.2 KB for `PATTERNS`,
-  3.9 KB for `SNAKE`, 6.0 KB for `PUZZLE`, 6.1 KB for `SPRITES` (removing the checks took 4
-  to 15% off, then taking the interpreter's checks out of the libraries up to 4% more: 221
-  bytes for `PUZZLE`). `NAME.ASM` is longer (10 KB for `DRAWING`, 34 KB for `SPRITES`): the
+- Size of a translated `.COM`: 1.2 KB for `SKETCH`, 1.7 KB for `DRAWING`, 1.9 KB for `PATTERNS`,
+  3.6 KB for `SNAKE`, 5.5 KB for `PUZZLE`, 5.3 KB for `SPRITES` (removing the checks took 4
+  to 15% off, taking the interpreter's checks out of the libraries up to 4% more, inline
+  loops and conditions 15 to 27% of the program's part: 667 bytes for `PUZZLE`).
+  `NAME.ASM` is longer (10 KB for `DRAWING`, 30 KB for `SPRITES`): the
   room is needed on the disk during translation. ASM takes less than a minute for
   `PATTERNS`.
 
@@ -789,38 +809,40 @@ the LOCI's USB key, tape mounted from the LOCI's menu; in Oricutron, `-t NAME.TA
 
 ## 13. Memory, speed, limits
 
-- **Memory** (interpreted): GRAPHER.COM (18,183 bytes) at `$0500`, then the tables of
+- **Memory** (interpreted): GRAPHER.COM (19,281 bytes) at `$0500`, then the tables of
   `hires.inc`, the buffers and the variables. The text of the `.GRX` comes next and ends at
   `$9D60` at the latest. Arrays are reserved below `$9D60`, downwards, as far as the end of
   the text. An animation or a `.HIZ` picture is loaded after the text, never covering the
   arrays. The array descriptors take `$9D60-$9EFF`. `SPRITES n` reserves, below the arrays, 5
   bytes per slot and 192 bytes for the two pools, the first `HSHOW` 128 bytes per slot;
   `TILESET`, (wid × hgt + 1) pages (§ 7.3).
-  The free area for the text, the arrays and an animation is about 16.5 KB (text from
-  `$5C70`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
+  The free area for the text, the arrays and an animation is about 15.2 KB (text from
+  `$60BA`): `SHIP.ANI` (12.5 KB) plays there, not `CUBE.ANI` or `BALL.ANI` (18 and
   21 KB), which need translation.
 - **Memory** (translated): the program at `$0500` (`$0503` for a bare Oric, § 12.1), then
   the tables of `hires.inc`. Arrays are reserved below `$9D60` as when interpreted: fixed
   arrays (§ 12) at start, in the order of the `DIM`s, then the others at their `DIM`.
-- **Sizes of a translated program** (measured on the eleven examples, `files/*.grx`; the
+- **Sizes of a translated program** (measured on the thirteen examples, `files/*.grx`; the
   program's part separated from the libraries'):
 
-  | | Per byte of `.GRX` | Per line of `.GRX` | MAP (96 lines, 2.1 KB) |
+  | | Per byte of `.GRX` | Per line of `.GRX` | MAP (104 lines, 2.1 KB) |
   |---|---:|---:|---:|
-  | `NAME.ASM`, program | 6.4 to 7.0 bytes | ~10 lines, ~140 bytes | 14.2 KB |
-  | `NAME.ASM`, libraries | — | — | 32.0 KB |
-  | `NAME.COM`, program | 1.15 to 1.35 bytes | ~25 bytes | 2.6 KB |
-  | `NAME.COM`, libraries | — | — | 5.8 KB |
+  | `NAME.ASM`, program | 5.1 to 5.7 bytes | ~7 lines, ~95 bytes | 11.8 KB |
+  | `NAME.ASM`, libraries | — | — | 29.5 KB |
+  | `NAME.COM`, program | 0.95 to 1.05 bytes | ~16 bytes | 2.1 KB |
+  | `NAME.COM`, libraries | — | — | 5.3 KB |
 
-  The compiled program is thus roughly the `.GRX` in clear, plus the library routines it
-  uses: 0.8 KB (SKETCH) to 5.8 KB (MAP) in the examples. The intermediate `.ASM` is about
-  6.5 times the `.GRX`, plus the text of the copied routines (5 to 32 KB; the six libraries
-  are 69 KB on the disk, no program takes them all). A `.GRX` does not exceed ~17 KB
-  interpreted (text and arrays together) nor ~20 KB for GRXASM (text from `$4E6F` to
-  `$9CE0`). Worst case for a 17 KB `.GRX`: a 145 to 175 KB `.ASM` and a ~30 KB `.COM`, both
-  present during assembly, so ~200 KB on the project disk (658 KB); `/C` then leaves only
+  (The most common values; extremes: 0.4 bytes of `.COM` per byte of `.GRX` for a heavily
+  commented program, 1.5 for `PUZZLE`.) The compiled program is thus roughly the `.GRX` in clear, plus the
+  library routines it
+  uses: 0.8 KB (SKETCH) to 5.3 KB (MAP) in the examples. The intermediate `.ASM` is about
+  5.5 times the `.GRX`, plus the text of the copied routines (5 to 32 KB; the six libraries
+  are 69 KB on the disk, no program takes them all). A `.GRX` does not exceed ~15 KB
+  interpreted (text and arrays together) nor ~16.7 KB for GRXASM (text from `$5A16` to
+  `$9CE0`). Worst case for a 16.7 KB `.GRX`: a 125 to 160 KB `.ASM` and a ~25 KB `.COM`, both
+  present during assembly, so ~185 KB on the project disk (658 KB); `/C` then leaves only
   the `.COM`. The limit that matters is memory: the `.COM` and its arrays fit between
-  `$0500` and `$9D60` (~38 KB); 30 KB of code leave only ~8 KB of arrays.
+  `$0500` and `$9D60` (~38 KB); 25 KB of code leave ~13 KB of arrays.
 - **Speed**: 150 to a few hundred lines per second interpreted (a sky of 400 stars,
   `PLOT 1+RND(238) 1+RND(198)`: 5 s; translated: 0.6 s). A sprite of 1 × 2 cells moved with
   `SSHOW`: 2.3 ms in a translated program (about 1.1 ms per cell: removal then display). The
@@ -884,7 +906,25 @@ translator writes `V_` then the name (`o_sym`); it notes the two-character varia
 `NAME.ASM` (`o_vars`, `.word 0`). A `Bn` loop block is 6 bytes: limit, step, then the address
 of the variable, written on entering the `FOR`; `g_forok` and `g_forstep` read it there. Loops
 have their own number (`knb`, `k_newloop`, kept in `cs_bl`/`cs_bh`), distinct from that of
-blocks (`kn`, labels `L`): only `FOR` and `REPEAT` have a `Bn`.
+blocks (`kn`, labels `L`): only `REPEAT` and a `FOR` with a computed limit or step have a
+`Bn`.
+
+**Inline loops** (GRXASM): `k_for` keeps in the control stack the variable (`cs_fv`,
+`cs_fc`), the limit (`cs_pl`, `cs_ph`), the step (`cs_sl`, `cs_sh`) and the form (`cs_v`: 0
+through the routines, 1 constant limit, 2 one-byte counter, 3 limit in `Bn`, 4 constant
+limit at the end of the integers, where the addition keeps its overflow test); `k_next`
+writes the step and the test. `o_ins_sym` reports to `f_dirty` any write to a variable
+(`sta`, `inc`, `dec`) and any use of its address (`lda #<`), `k_call` any call (`f_dall`):
+a loop in progress on that variable goes back from 2 to 1. The lines are written by `o_q`
+on two operands `qa` and `qb` (kind in `qd`: `g_ev`, `g_et`, variable, constant, `Bn`);
+`o_scmp` writes a signed comparison, `o_br5` a branch over a `jmp`.
+
+**Translated conditions** (`k_cond`, for `IF` and `WHILE`): `kc_scan` reads the line and
+picks branches (one term, a chain of `|`, a chain of `&` between comparisons) or the
+computation of a value (`k_lexpr`, then `o_skipz`). `k_cterm` translates a term: a lone
+variable on the left of a comparison is not loaded (`kv_rel`), a constant stays a constant,
+the rest goes through `g_ev` (and `g_et`, or the stack, as in `k_apply`); `o_cmpq` writes
+the comparison and returns in `kbt` the branch taken when it is true.
 
 **Translated expressions**: the left side of an operation stays a constant (`vs_f` = 1), goes
 through `g_push` (`vs_f` = 0), or stays in `g_ev` when `k_simple` sees, reading the rest of

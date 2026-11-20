@@ -1,0 +1,416 @@
+; conditions de IF et WHILE traduites en branchements par GRXASM :
+; memes resultats qu'en interprete. P ecrit 1 (vrai) ou 0 (faux)
+DIM T(4) S$(8) U$(8)
+A = 5
+B = -3
+C = 300
+D = 5
+T(1) = 5
+S$ = "ABC"
+U$ = "ABD"
+; variable et constante
+IF A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A <> 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A < 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A <= 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A > 4
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A >= 6
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF B < 0
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF B > -4
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF B = -3
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C = 300
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C = 44
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C = 256
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C > 255
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C <> 0
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF B = 0
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; deux variables, constante a gauche, expressions
+IF A = D
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A <> B
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF B < A
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A <= B
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 5 = A
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 4 < A
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 300 <= C
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 3 > 2
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 3 = 2
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A+1 = 6
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A+1 > D
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A*2 < C-291
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A < B*B-4
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A*B = (C-285)*-1
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF T(1) = A
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A >= T(1)
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF S$(1) = 66
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF ABS(B) > 2
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; au bout des entiers
+E = 32767
+F = -32767-1
+IF E > F
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF F < E
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF F >= 1
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF E <= -1
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF E = 32767
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; valeurs seules
+IF A
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A-5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF C-44
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 0
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF (A = 5)
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; suites de | et de &
+IF A = 1 | A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 | B = 9
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 1 | B = 9 | C = 300
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 1 | B = 9 | C = 3
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & B = -3
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & B = 9
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 1 & B = -3
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A > 0 & B < 0 & C > 299
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A > 0 & B < 0 & C > 300
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A | B
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A-5 | 0
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A-5 | C
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 1 | A = 9
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 0 | A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 1 = 1 & A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF 1 = 2 & A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; & bit a bit, operateurs meles, parentheses : calcules
+IF A & 4
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A & 2
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & 6
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & 3
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 1 | B = -3 & C = 1
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & B = 1 | C = 300
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF (A = 5) & (B = -3)
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF (A = 1 | B = -3) & C = 300
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 5 & (B = 1 | C = 300)
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; chaines
+IF S$ = "ABC"
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF S$ = U$
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF S$ < U$ & A = 5
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF S$ = "A|B" | A = 1
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+IF A = 1 | S$ = "ABC"   ; un commentaire & | =
+  PRINT 1
+ELSE
+  PRINT 0
+ENDIF
+; WHILE
+N = 0
+WHILE N < 5
+  N = N + 1
+NEXT
+PRINT N
+N = 10
+WHILE N > 3 & N <> 6
+  N = N - 1
+NEXT
+PRINT N
+N = 0
+WHILE N = 0 | N = 1 | N = 2
+  N = N + 1
+NEXT
+PRINT N
+N = 3
+WHILE N
+  N = N - 1
+NEXT
+PRINT N
+WHILE 0
+  PRINT 999
+NEXT
+N = 0
+WHILE 1
+  N = N + 1
+  IF N >= 4
+    END
+  ENDIF
+  PRINT N
+NEXT
