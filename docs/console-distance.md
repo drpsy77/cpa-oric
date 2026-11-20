@@ -675,7 +675,7 @@ vitrine tape sur l'Oric par le démon, comme quelqu'un qui s'en servirait.
   lancé), où USBDIR le montre ; enfin `ERA DEMO.*`, à qui la vitrine ne répond `O` que si les fichiers montrés
   sont ceux de l'atelier. Une fois sur deux, traduction, assemblage et lancement passent
   par `DO FAIRE DEMO` (`MAKE` en anglais), script tapé dans EDIT s'il manque, et gardé.
-  Le fond (340 paires de cases calculées une à une) montre l'écart : la vitrine mesure
+  Le fond (340 paires de cases, dont la couleur est lue dans une table de 41 couleurs calculée au début) montre l'écart : la vitrine mesure
   le dessin, de l'écran pris par le programme à la ligne écrite après lui, et le
   commentaire donne les deux durées (~30 s interprété, 2 à 3 s traduit, dans Oricutron
   pendant la console à distance, qui prend sa part du processeur ; ~12 s interprété

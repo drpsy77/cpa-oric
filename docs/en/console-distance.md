@@ -674,7 +674,7 @@ showcase types on the Oric through the daemon, like someone using it.
   never run), where USBDIR shows it; lastly `ERA DEMO.*`, which the showcase answers `Y` only if the files
   shown are the workshop's. One time out of two, translation, assembly and run go
   through `DO MAKE DEMO` (`FAIRE` in French), a script typed in EDIT if missing, and
-  kept. The background (340 pairs of cells computed one by one) shows the gap: the
+  kept. The background (340 pairs of cells, whose colour is read from a table of 41 colours computed first) shows the gap: the
   showcase times the drawing, from the screen taken by the program to the line written
   after it, and the comment gives both times (~30 s interpreted, 2 to 3 s translated,
   in Oricutron during the remote console, which takes its share of the processor;

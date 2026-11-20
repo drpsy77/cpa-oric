@@ -2,21 +2,27 @@
 ; program, interpreted by GRAPHER, then translated by GRXASM,
 ; assembled by ASM and run (DEMO.COM), lastly put on tape.
 ;   GRAPHER DEMO
-; The background, a colour diamond computed by pairs of cells
-; (340 sums), shows the speed gap; the scrolling is paced by DELAY:
-; same speed in both versions, which the web page can follow.
+; The background, a colour diamond: 41 colours computed once (table
+; C$), then 340 pairs of cells read from the table. It shows the speed
+; gap; the scrolling is paced by DELAY: same speed in both versions,
+; which the web page can follow.
 LORES
-DIM G$(36)
+DIM G$(36) C$(41)
 N = 5
+FOR A 0 40
+  C$(A) = 17+A/3%7
+NEXT
 FOR L 0 27
+  LOCATE 0 L
   IF L<8 | L>18
     Y = ABS(L-14)*3/2
-    LOCATE 0 L
-    FOR J 0 19
-      SPC 2 (17+(ABS(2*J-19)+Y)/3%7)
+    FOR A (Y+19) (Y+1) -2
+      SPC 2 C$(A)
+    NEXT
+    FOR A (Y+1) (Y+19) 2
+      SPC 2 C$(A)
     NEXT
   ELSE
-    LOCATE 0 L
     SPC 40 16
   ENDIF
 NEXT
