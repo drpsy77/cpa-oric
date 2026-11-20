@@ -137,6 +137,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, puis CLOAD sous BASIC 1.1
     python3 tools/test_bas.py        # .BAS : codage de mktap.py == ROM 1.1 (6502 simulé)
     python3 tools/test_untap.py      # UNTAP.COM == tools/untap.py, aller-retour BASIC par mktap.py
+    python3 tools/test_dis.py        # DIS.COM : source réassemblé (xa, ASM.COM) == fichier, .COM et ROM 1.1
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     tools/test_remote.sh             # console à distance : pilote, REMOTE, remote.py (~6 min)
@@ -165,6 +166,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | `fp_inc.s` | en plus : `python3 tools/test_fp.py` |
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s`, `progs/bcr_inc.s` | en plus : `tools/test_mktap.sh` (lance aussi `tools/test_bas.py`) et `python3 tools/test_untap.py` |
 | UNTAP.COM, `tools/untap.py` | en plus : `python3 tools/test_untap.py` (~3 min) |
+| DIS.COM, `progs/dis_inc.s`, `progs/asm_tab.s`, `tools/atmos_sym.txt` | en plus : `python3 tools/test_dis.py` (~10 min ; noms de `.COM` en argument pour un essai ciblé) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, une bibliothèque des programmes traduits | en plus : `tools/test_lib.sh` (~30 min ; noms en argument pour un essai ciblé) |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | en plus : `tools/test_xfer.sh` (~4 min) ; pour TERM, essai Oricutron en boucle (`serial = 'loopback'`) |

@@ -1,0 +1,243 @@
+# ATMOS.SYM (tools/mksym.py) : noms des adresses de l'Oric Atmos pour DIS
+# (et pour DEBUG). Une ligne : adresse en hexa, nom ; « = » après le nom :
+# constante (registre), sinon point d'entrée (étiquette).
+# ROM 1.1 : noms du fichier basic11b.sym d'Oricutron (doublons retirés).
+# Page zéro et page 2 du BASIC : pas encore (docs/oric-basic.md § 8).
+# Registres du VIA 6522
+0300 VIA_ORB =
+0301 VIA_ORA =
+0302 VIA_DDRB =
+0303 VIA_DDRA =
+0304 VIA_T1CL =
+0305 VIA_T1CH =
+0306 VIA_T1LL =
+0307 VIA_T1LH =
+0308 VIA_T2CL =
+0309 VIA_T2CH =
+030A VIA_SR =
+030B VIA_ACR =
+030C VIA_PCR =
+030D VIA_IFR =
+030E VIA_IER =
+030F VIA_ORAN =
+# ROM 1.1
+C006 JumpTab
+C0EA Keywords
+C2A8 ErrorMsgs
+C3C6 FindForVar
+C3F4 VarAlloc
+C444 FreeMemCheck
+C47C PrintError
+C4A8 BackToBASIC
+C4D3 InsDelLine
+C4E0 DeleteLine
+C524 InsertLine
+C55F SetLineLinkPtrs
+C592 GetLine
+C5E8 ReadKey
+C5FA TokeniseLine
+C692 EDIT
+C6B3 FindLine
+C6EE NEW
+C70D CLEAR
+C748 LIST
+C7FD LLIST
+C809 LPRINT
+C816 SetPrinter
+C82F SetScreen
+C855 FOR
+C8C1 DoNextLine
+C915 DoStatement
+C952 RESTORE
+C971 STOP
+C973 END
+C9A0 CONT
+C9BD RUN
+C9C8 GOSUB
+C9E5 GOTO
+CA12 RETURN
+CA3C DATA
+CA4E FindEndOfStatement
+CA51 FindEOL
+CA70 IF
+CA99 REM
+CAC2 ON
+CAE2 Txt2Int
+CB1C LET
+CBAB PRINT
+CBF0 NewLine
+CC59 SetCursor
+CCB0 PrintString
+CCCE CLS
+CD16 TRON
+CD19 TROFF
+CD46 GET
+CD55 INPUT
+CD89 READ
+CE98 NEXT
+CF03 GetExpr
+CF17 EvalExpr
+CFAC DoOper
+D000 GetItem
+D03C NOT
+D059 EvalBracket
+D07C GetVarVal
+D113 Compare
+D17E DIM
+D188 GetVarFromText
+D361 DimArray
+D3EB GetArrayElement
+D47E FRE
+D4A6 POS
+D4BA DEF
+D593 STR
+D5A3 SetupString
+D5B5 GetString
+D650 GarbageCollect
+D730 CopyString
+D767 StrCat
+D816 CHR
+D82A LEFT
+D856 RIGHT
+D861 MID
+D8A6 LEN
+D8B5 ASC
+D8C5 GetByteExpr
+D922 FP2Int
+D938 PEEK
+D94F POKE
+D958 WAIT
+D967 DOKE
+D983 DEEK
+D993 Byte2Hex
+D9B5 HEX
+D9DE LORES
+DA0C RowCalc
+DA3F SCRN
+DA51 PLOT
+DAA1 UNTIL
+DAAB REPEAT
+DADA KEY
+DAF6 TxtTest
+DB92 Normalise
+DBB9 AddMantissas
+DCAF LN
+DD51 UnpackFPA
+DDA7 FPAMult10
+DDC3 FPADiv10
+DDD4 LOG
+DE77 PI
+DEF4 RoundFPA
+DF0B FALSE
+DF0F TRUE
+DF13 GetSign
+DF21 SGN
+DF49 ABS
+DF4C CompareFPA
+DF8C FPA2Int
+DFBD INT
+DFE7 GetNumber
+E076 AddToFPA
+E0C5 PrintInt
+E22E SQR
+E27C ExpData
+E2AA EXP
+E313 SeriesEval
+E34F RND
+E38B COS
+E392 SIN
+E3DB TAN
+E407 TrigData
+E43F ATN
+E46F ATNData
+E4AC TapeSync
+E4E0 GetTapeData
+E4F2 VERIFY
+E56C IncTapeCount
+E57D PrintSearching
+E585 PrintSaving
+E58C PrintFName
+E594 PrintFound
+E5A4 PrintLoading
+E5AB PrintVerifying
+E5B6 PrintMsg
+E5EA ClrStatus
+E5F5 ClrTapeStatus
+E607 WriteFileHeader
+E65E PutTapeByte
+E6C9 GetTapeByte
+E735 SyncTape
+E75A WriteLeader
+E76A SetupTape
+E7B2 GetTapeParams
+E85B CLOAD
+E909 CSAVE
+E946 CALL
+E987 STORE
+E9D1 RECALL
+EAF0 HiresTest
+EB78 CheckKbd
+EBCE HIMEM
+EBE7 GRAB
+EC0C RELEASE
+EC21 TEXT
+EC33 HIRES
+EC45 POINT
+ECCC StartBASIC
+EDC4 CopyMem
+EDE0 SetupTimer
+EE1A StopTimer
+EE22 IRQ
+EE8C ResetTimer
+EE9D GetTimer
+EEAB SetTimer
+EEC9 Delay
+EEE8 WritePixel
+EEF8 DrawLine
+F0C8 CURSET
+F0FD CURMOV
+F110 DRAW
+F11D PATTERN
+F12D CHAR
+F204 PAPER
+F210 INK
+F268 FILL
+F37F CIRCLE
+F495 ReadKbd
+F4EF Key2ASCII
+F523 FindKey
+F561 ReadKbdCol
+F590 WriteToAY
+F5C1 PrintChar
+F602 ControlChr
+F71A ClearLine
+F77C Char2Scr
+F7E4 PrintA
+F816 AltChars
+F865 PrintStatus
+F88F Reset
+F8AF BASICStart
+F8B5 BASICRestart
+F920 HiresMode
+F967 LoresMode
+F9AA ResetVIA
+F9C9 SetupText
+FA14 RamTest
+FA9F PING
+FAA7 PingData
+FAB5 SHOOT
+FABD ShootData
+FACB EXPLODE
+FAD3 ExplodeData
+FAE1 ZAP
+FB06 ZapData
+FB14 KeyClickH
+FB1C KeyClickHData
+FB2A KeyClickL
+FB32 KeyClickLData
+FB40 SOUND
+FBD0 PLAY
+FC18 MUSIC
+FC5E MusicData
+FC78 CharSet
+FF78 KeyCodeTab

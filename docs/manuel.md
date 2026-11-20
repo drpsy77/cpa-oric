@@ -72,6 +72,8 @@ Autres programmes de la disquette :
   données ou programme BASIC écrit dans EDIT (voir « Publier pour l'Oric sous BASIC »).
 - `UNTAP.COM NOM [n|*]` : les blocs d'un `.TAP`, programme BASIC rendu en texte, code en
   `.BIN` (voir « Lire une cassette : UNTAP »).
+- `DIS.COM NOM [adr] [/E adr ...]` : désassembleur, code machine vers un source qu'ASM
+  réassemble à l'identique (voir « Désassembler : DIS »).
 - `TERM.COM [hote] [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série » et « Les hôtes : HOSTS »).
 - `XFER.COM R|E fic [nom] [/T] [@hote]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
@@ -272,10 +274,10 @@ tous les fichiers.
 rubriques. Tout y est **protégé** (R/O) : un `ERA *.*` ou un nom complété par ESC ne peut
 rien effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis
 la copier. `DIR` y montre les applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER,
-GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, UNTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) et
-README.TXT ; CPA.BNK (des parties du système chargées quand elles servent, ci-dessous), les
+GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, UNTAP, DIS, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT)
+et README.TXT ; CPA.BNK (des parties du système chargées quand elles servent, ci-dessous), les
 commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
-MEM, POKE, GO, le script USBCD.BAT, les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
+MEM, POKE, GO, le script USBCD.BAT, ATMOS.SYM (les noms de la ROM pour DIS), les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
 `DIRS` les montre.
 
 SYS ne change pas le nom : `HELP.COM` marqué SYS reste `HELP.COM` et se lance toujours
@@ -304,9 +306,9 @@ Les deux fichiers sont modifiables et visibles ; effacer `AUTO.BAT` supprime l'a
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 | `build/cpa-logo.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, FLECHES.LOG |
-| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes.dsk` (écrire) | EDIT | | |
 
 Sur toutes les quatre, en plus : AUTO.BAT, ACCUEIL.TXT (l'accueil).
@@ -736,6 +738,42 @@ fichiers écrits vont sur le même lecteur.
 - `bloc N incomplet` : le fichier finit avant le bloc ; ce qui est là est extrait.
 - Lancer un `.TAP`, plutôt : `USBMOUNT JEU.TAP /B` (voir « Échange de fichiers avec la clé USB du LOCI »).
 - Sur le PC, `tools/untap.py` fait la même chose (mêmes arguments).
+- Le code machine extrait se lit avec DIS (ci-dessous).
+
+### Désassembler : DIS
+
+`DIS` fait d'un fichier de code machine un source `NOM.ASM` qu'ASM réassemble en un fichier
+identique : on le lit et le modifie dans EDIT, puis `ASM NOM` refait le code. Il sert aux
+blocs extraits par UNTAP comme à tout fichier de code (un `.COM`, une image de ROM).
+
+    A>DIS JEU2.BIN 9800
+    JEU2.BIN 9800-9F7F
+    JEU2.ASM ecrit
+    A>DIS JEU2.BIN 9800 /E 9A10 9C00
+
+- L'adresse (en hexadécimal) est celle du chargement, donnée par UNTAP ; `$0500` par défaut,
+  celle d'un `.COM`. Le type `.BIN` est pris par défaut.
+- DIS suit le programme depuis son début (et les points d'entrée donnés après `/E`, 8 au
+  plus) : les sauts, les appels, les deux suites de chaque branchement. Ce qu'il atteint est
+  écrit en instructions, le reste en données : `.asc "..."` pour du texte, `.dsb n,$hh` pour
+  une suite d'octets égaux, `.byt` sinon.
+- Étiquettes `L9A10` sur les cibles des sauts, les adresses du fichier et les points
+  d'entrée ; `L9A10+1` pour un octet au milieu d'une instruction (code qui se modifie
+  lui-même).
+- Les adresses de la ROM 1.1 et du VIA prennent leur nom (`jsr PrintChar`, `sta VIA_ORB`),
+  déclaré en tête du source (ou en étiquette, si on désassemble la ROM elle-même) ; les noms sont dans `ATMOS.SYM`, sur la disquette (cherché sur
+  le lecteur du fichier, puis en A:). Pas pour un `.COM` : sous CP/A, la ROM est cachée.
+- Ce que DIS ne peut pas deviner reste en données : code atteint seulement par une table de
+  sauts, un `JMP (adr)` ou un `RTS` utilisé comme saut. On le retrouve avec `/E`, ou on
+  corrige le source à la main. Une instruction dans laquelle commence une autre (le `BIT`
+  qui saute un octet) et une instruction absolue sur la page zéro (qu'ASM écrirait plus
+  courte) sont écrites en `.byt`, l'instruction en commentaire : le fichier réassemblé reste
+  identique.
+- Le source est gros (environ 6 fois le code : 50 Ko pour un bloc de 8 Ko, 120 Ko pour la
+  ROM) : prévoir la place sur la disquette. `NOM.ASM` est remplacé s'il existe. Compter de
+  l'ordre de 20 s pour 8 Ko, une minute pour la ROM.
+- Faire tourner sous CP/A un programme de la cassette demande du travail à la main (il attend
+  la ROM et la page zéro du BASIC) : voir `docs/oric-basic.md` § 5.3.
 
 ## Terminal série : TERM
 

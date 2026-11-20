@@ -5,7 +5,7 @@ des programmes en langage machine chargés par `CLOAD`, et, au bout du chemin, u
 GRAPHER qui tourne sur n'importe quel Atmos (cassette ou LOCI). Dans l'autre sens, que les
 vieux programmes de l'Oric, presque tous conservés en `.TAP`, se reprennent sous CP/A. Quatre
 étages : la sortie `.TAP` (faite), GRXASM vers un Oric seul (fait), la lecture des `.TAP`
-sous CP/A (UNTAP fait, DIS décidé), puis une boîte à outils pour le BASIC (plus tard).
+sous CP/A (UNTAP et DIS faits), puis une boîte à outils pour le BASIC (plus tard).
 
 ## 1. Ce qui est établi (Oricutron, ROM BASIC 1.1)
 
@@ -171,7 +171,7 @@ Mesuré : 1,2 Ko dans `SERPENT` et `DEFILE`, 1,3 Ko dans `CARTE` (fichiers lus).
 routines utiles sont recopiées (`tools/mark_inc.py`, annotations `;>` et `;&`) : un jeu sans
 `INPUT` dans la console n'emporte pas `o_rdl`.
 
-## 5. Lire un `.TAP` sous CP/A : UNTAP (fait), DIS (décidé, pas encore fait)
+## 5. Lire un `.TAP` sous CP/A : UNTAP et DIS (faits)
 
 La plupart des vieux programmes de l'Oric existent en `.TAP`. Les lancer passe par la ROM
 (§ 2, « Lancer un `.TAP` ») ; les **lire** se fait sous CP/A, sans ROM ni LOCI : un programme
@@ -244,31 +244,67 @@ d'emploi : `docs/manuel.md`, « Lire une cassette : UNTAP ».
   contrôle et de 128 et plus compris, recodés par `mktap.py`) ; `tools/test_mktap.sh`
   compare MKTAP.COM à `mktap.py` sur la notation.
 
-### 5.2 DIS : du code machine vers un source
+### 5.2 DIS : du code machine vers un source (fait)
+
+`DIS.COM` (`progs/dis.s`, 5 126 octets). Mode d'emploi : `docs/manuel.md`, « Désassembler : DIS ».
 
     DIS NOM.BIN 9800          désassemble, point d'entrée au début
     DIS NOM.BIN 9800 /E 9A10  points d'entrée en plus (8 au plus)
     DIS PROG.COM              un .COM de CP/A (en $0500 par défaut)
 
 DIS écrit `NOM.ASM`, un source qu'**ASM réassemble en un fichier identique** à celui de
-départ : c'est sa règle, et ce que les essais vérifient. Il sert aux `.TAP` comme à tout
-fichier de code (`.COM` de CP/A, image de la ROM, police).
+départ (fin du dernier enregistrement comprise) : c'est sa règle, et ce que les essais
+vérifient. Il sert aux `.TAP` comme à tout fichier de code (`.COM` de CP/A, image de la ROM).
 
-- **Code ou données** : en partant des points d'entrée (le début, le démarrage automatique,
-  ceux de `/E`), DIS suit les sauts, les appels et les deux suites de chaque branchement ;
-  ce qu'il atteint est du code, le reste des données, écrites en `.byt` (en `.asc` pour une
-  suite d'au moins 4 caractères imprimables). Une instruction coupée par une donnée, un
-  code d'opération non documenté : `.byt`. Le reste se corrige à la main dans EDIT (tables
-  de sauts, `RTS` utilisé comme saut, code modifié par lui-même), puis se réassemble.
-- **Étiquettes** : `Lxxxx` sur chaque cible d'un saut, d'un branchement ou d'une adresse
-  absolue qui tombe dans le fichier ; `*=` à l'adresse de chargement. Hors du fichier, les
-  adresses connues sont nommées par une table de symboles : celle de la ROM 1.1 (points
-  d'entrée, page zéro et page 2 du BASIC, registres du VIA), livrée sur la disquette dans le
-  format `.SYM` d'ASM (`ATMOS.SYM`), ce qui la rend utile aussi à DEBUG ; les noms qu'elle
-  donne sont déclarés en tête du source (`nom = $xxxx`), pour qu'il s'assemble seul.
-- **Taille** : un bit par octet du fichier pour « code » et un pour « étiquette » : 12 Ko
-  pour un bloc de 48 Ko ; le source s'écrit au fil de la seconde passe, sans le garder en
-  mémoire. Tables d'instructions : `progs/asm_tab.s`, celles d'ASM et de DEBUG.
+- **Code ou données** : en partant des points d'entrée (le début, ceux de `/E`, les vecteurs
+  `$FFFA-$FFFF` quand le fichier les contient), DIS suit les instructions, les sauts, les
+  appels et les deux suites de chaque branchement ; `JMP (adr)`, `RTS`, `RTI`, `BRK`, un code
+  non documenté ou la fin du fichier arrêtent la suite. Ce qu'il atteint est du code, le
+  reste des données : `.asc` pour au moins 4 caractères imprimables (sans `"` ; 20 par ligne,
+  la suite d'une chaîne pleine reste en `.asc`), `.dsb n,$hh` pour au moins 8 octets égaux,
+  `.byt` sinon (6 par ligne). Le démarrage automatique d'un `.TAP` est le début du bloc :
+  pas d'option à part.
+- **Écrit en `.byt`**, l'instruction en commentaire : une instruction dans laquelle commence
+  une autre (code qui se chevauche, `BIT` qui saute un octet) ; une instruction absolue dont
+  l'adresse tient sur un octet quand la forme page zéro existe (ASM, comme xa, choisirait la
+  page zéro) ; un branchement dont la cible sort de `$0000-$FFFF`. Une instruction coupée par
+  la fin du fichier, un code non documenté : données.
+- **Étiquettes** `Lxxxx` (en colonne 1, l'instruction en colonne 9) : cibles des sauts, des
+  branchements et des adresses absolues qui tombent dans le fichier, points d'entrée de `/E`
+  et des vecteurs ; une adresse au milieu
+  d'une instruction s'écrit `Lxxxx+1` ou `+2`, l'étiquette sur l'instruction (code modifié par
+  lui-même). Jamais d'étiquette pour un opérande page zéro (une étiquette définie plus loin
+  ferait choisir la forme absolue). `*=` à l'adresse de chargement.
+- **Noms** : une adresse égale à un nom d'`ATMOS.SYM` prend ce nom : comme étiquette quand
+  elle tombe dans le fichier (la ROM désassemblée : `StartBASIC cld`, `jsr SetScreen` ; un
+  nom de 8 caractères ou plus est suivi d'une seule espace), sinon déclaré en tête du source
+  (`PrintChar = $F5C1`), pour qu'il s'assemble seul. Pas de nom pour un opérande page zéro
+  qui tombe dans le fichier (chargé en page zéro). `ATMOS.SYM`
+  (`tools/atmos_sym.txt`, au format `.SYM` d'ASM par `tools/mksym.py`, 2,6 Ko) : les 16
+  registres du VIA et 220 points d'entrée de la ROM 1.1, noms du fichier `basic11b.sym`
+  d'Oricutron (doublons retirés). Cherché sur le lecteur du fichier, puis en A: ; absent :
+  adresses en hexadécimal (message). Pas lu pour un `.COM` (la ROM y est cachée : `$C006`
+  serait `JumpTab` au lieu du BIOS).
+- **Mémoire** : trois bits par octet du fichier (début d'instruction ; intérieur d'une
+  instruction, qui sert aussi de liste « à suivre » pendant le suivi ; étiquette), soit
+  3 Ko pour 8 Ko, 18 Ko pour 48 Ko ; puis un cache d'enregistrements de 128 octets lus par la
+  lecture directe (fonction 33), en puissance de 2 (256 au plus) jusqu'au haut de la TPA. Le
+  fichier n'a pas à tenir en mémoire (511 enregistrements au plus, sans dépasser `$FFFF`).
+  Le source s'écrit au fil de la dernière passe ; il fait environ 6 fois le fichier (EDIT,
+  8,7 Ko : 51 Ko ; la ROM, 16 Ko : 117 Ko).
+- **Durée** (mesurée dans le 6502 simulé, en instructions) : EDIT 4,9 millions, la ROM
+  14,7 millions, soit de l'ordre de 20 s et d'une minute sur l'Oric, écriture du disque en plus
+  (à confirmer).
+- **Passes** : suivi (balayages de la liste « à suivre » jusqu'à ce qu'elle soit vide),
+  chevauchements, étiquettes et noms utilisés, écriture.
+- **Tables** : celles d'ASM (`progs/asm_tab.s`) et de DEBUG (`progs/dis_inc.s` : modes,
+  longueurs, table code → mnémonique), partagées ; mnémoniques écrits en minuscules.
+- **Essais** : `tools/test_dis.py` (DIS.COM dans le 6502 simulé ; le source réassemblé par
+  xa, et par ASM.COM pour quelques-uns, redonne le fichier) sur tous les `.COM` de CP/A, la
+  ROM 1.1 entière (en `$C000`, vecteurs compris) et des cas fabriqués (absolu sur la page
+  zéro, `BIT` qui saute un octet, `Lxxxx+1`, branchement hors du fichier et hors de
+  `$0000-$FFFF`, codes non documentés, `/E`, guillemets et `;` dans le texte, fichier en
+  `$0000`, instruction coupée par la fin).
 
 ### 5.3 Vers un `.COM` : au cas par cas
 
@@ -287,7 +323,8 @@ demandent ce travail à la main. Une couche qui imiterait la ROM sous CP/A n'est
 - Aller-retour BASIC : les 3 000 lignes tirées au hasard de `tools/test_bas.py`, codées par la
   ROM, rendues en texte par UNTAP, recodées par MKTAP : mêmes octets ; puis des `.TAP` de
   programmes connus.
-- DIS → ASM → mêmes octets, sur tous les `.COM` de CP/A et sur la ROM 1.1 entière.
+- DIS → ASM → mêmes octets, sur tous les `.COM` de CP/A et sur la ROM 1.1 entière (fait :
+  `tools/test_dis.py`).
 
 ## 6. Plus tard : boîte à outils pour le BASIC
 
@@ -322,9 +359,9 @@ au BASIC les opérations rapides de GRAPHER par la commande `!` :
 
 ## 8. Questions ouvertes
 
-- DIS (§ 5.2) : contenu de `ATMOS.SYM` (combien de noms de la ROM : quelques dizaines de
-  points d'entrée utiles, ou tous) ; `UNTAP JEU 2 /D`, qui passerait le bloc à DIS (par
-  CHAIN), si DIS reste un programme à part.
+- DIS (§ 5.2) : noms de la page zéro et de la page 2 du BASIC dans `ATMOS.SYM` (il faut une
+  source sûre) ; `ATMOS.SYM` lu aussi par DEBUG ; une table `CPA.SYM` (BDOS, page 2 de
+  CP/A) pour les `.COM` ; `UNTAP JEU 2 /D`, qui passerait le bloc à DIS (par CHAIN).
 - Boîte à outils (§ 6) : nom et syntaxe des commandes (`!PASTE ...` ou `!P ...`), un seul
   module ou plusieurs selon la place ; adresse du module (sous `HIMEM`, ou `$9800-$9FFF`
   quand le programme reste en mode texte).

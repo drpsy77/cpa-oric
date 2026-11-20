@@ -80,6 +80,9 @@ for p in $(ls progs/*.s | grep -v -e _tab.s -e _inc.s); do
   (cd progs && $XA -I msg/fr -o ../build/progs/$n.COM -e ../build/progs/$n.err $(basename "$p"))
   (cd progs && $XA -I msg/en -I msg/fr -o ../build/progs-en/$n.COM -e ../build/progs-en/$n.err $(basename "$p"))
 done
+# ATMOS.SYM : noms de la ROM 1.1 et du VIA pour DIS (tools/atmos_sym.txt)
+python3 tools/mksym.py build/progs/ATMOS.SYM > /dev/null
+cp build/progs/ATMOS.SYM build/progs-en/ATMOS.SYM
 
 # sources d'exemple pour ASM.COM ; leur version anglaise (files/en/hello.asm,
 # gtest.asm : commentaires et message traduits) donne les .COM de
@@ -144,7 +147,7 @@ ASM_EX="$P/HELLO.COM $P/GTEST.COM build/src/HELLO.ASM build/src/GTEST.ASM"
 # DIR montre les applications, et un nouveau programme y apparaît de lui-même.
 # DUN.SPR (modifiable) : des tuiles pour EDSPRITE (vitrine de la console à
 # distance, tools/vitrine.py).
-SYS_CACHES="$P/CPA.BNK $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
+SYS_CACHES="$P/CPA.BNK $P/ATMOS.SYM $P/TYPE.COM $P/ERA.COM $P/REN.COM $P/SET.COM $P/STAT.COM $P/COPY.COM
   $P/FORMAT.COM $P/DISKCOPY.COM $P/XDO.COM $P/MEM.COM $P/POKE.COM $P/GO.COM files/usbcd.bat"
 SYS_AILLEURS="$P/LOGO.COM $P/LOGOTR.COM $P/HELLO.COM $P/GTEST.COM"
 SYS_VISIBLES=""
@@ -174,14 +177,14 @@ theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
 # fabriquées par tools/anim_demos.py et gardées dans files/anim/ (pas de
 # Pillow ici) ; DEMO enchaîne tout
 theme anim anim "$P/VOIR.COM $P/VSYNC.COM" \
-  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $INCS" \
+  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $INCS" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 # Logo : la plateforme LOGO seule
 theme logo logo "$P/LOGO.COM $P/LOGOTR.COM" "$P/VOIR.COM" \
   "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log"
 # Exemples : ceux de GRAPHER et d'ASM, visibles ; leurs outils cachés
 theme exemples examples "" \
-  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
+  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
   "$GRX_EX $ASM_EX"
 # Notes : écrire du texte (et l'envoyer)
 theme notes notes "" "$P/VOIR.COM" ""

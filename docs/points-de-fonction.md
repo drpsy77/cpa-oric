@@ -22,17 +22,17 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
 | EDSPRITE | 14 | 5 | 51 | 8 | 6 | **84** | 21 | **105** |
 | VOIR | 0 | 10 | 3 | 0 | 6 | **19** | 12 | **31** |
-| USB | 28 | 5 | 38 | 23 | 12 | **106** | 24 | **130** |
+| USB | 28 | 10 | 38 | 28 | 12 | **116** | 27 | **143** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *175* | *52* | *457* | *115* | *117* | ***916*** | *238* | ***1154*** |
+| *Applications* | *175* | *57* | *457* | *120* | *117* | ***926*** | *241* | ***1167*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **234** | **82** | **709** | **381** | **222** | **1628** | **383** | **2011** |
+| **Total** | **234** | **87** | **709** | **386** | **222** | **1638** | **386** | **2024** |
 
-Points ajustés (indicatif, § 9) : 1 628 × 1,05 ≈ 1 709.
+Points ajustés (indicatif, § 9) : 1 638 × 1,05 ≈ 1 720.
 
-Nombre de fonctions comptées : 33 ILF, 16 EIF, 225 EI, 93 EO, 74 EQ.
+Nombre de fonctions comptées : 33 ILF, 17 EIF, 225 EI, 94 EO, 74 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -596,7 +596,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | VOIR.A03 | HIRES.INC : segment et cercle | `hires.inc` | 3 |
 | VOIR.A04 | HIRES.INC : écran texte au programme (LORES), texte, attributs, chargement et sauvegarde | `hires.inc` | 1 |
 
-### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, XFER, REMOTE, MKTAP, UNTAP)
+### 4.7 USB, série et cassette (EXPORT, IMPORT, USBDIR, TERM, XFER, REMOTE, MKTAP, UNTAP, DIS)
 
 | Id | Fonction | Type | RET/FTR | DET | Cplx | PF |
 |---|---|---|---:|---:|---|---:|
@@ -605,6 +605,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | USB.D03 | Répertoire courant de CP/A (`0:CPA.CWD` : chemin, description du support ; corrigé si la clé est renumérotée) | ILF | 1 | 2 | F | 7 |
 | USB.D04 | Configuration du menu du LOCI en XRAM (lecteurs montés, noms des images, réglages de démarrage) | ILF | 2 | 9 | F | 7 |
 | USB.D05 | `HOSTS` (nom, adresse, port, mode telnet), écrit dans EDIT ou sur le Mac | EIF | 1 | 4 | F | 5 |
+| USB.D06 | `ATMOS.SYM` : noms de la ROM 1.1 et du VIA (valeur, genre, nom), lus par DIS | EIF | 1 | 3 | F | 5 |
 | USB.T01 | EXPORT (un fichier ou des jokers, dossier, `^Z` retirés, `.DSK` refusé) | EI | 2 | 6 | M | 4 |
 | USB.T02 | IMPORT (nom en 8.3, `/T`, `^Z` ajoutés, jokers : un seul fichier) | EI | 2 | 6 | M | 4 |
 | USB.T03 | USBDIR : liste (tailles, dossiers, modèle à jokers ; chemin et nombre à la fin) | EQ | 1 | 4 | F | 3 |
@@ -624,6 +625,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | USB.T17 | REMOTE : appel et activation de la console à distance, `/N`, `OFF` (raccrocher), état | EI | 2 | 5 | M | 4 |
 | USB.T18 | UNTAP : liste des blocs d'un `.TAP` (synchronisation, rebut sauté, nom vide ou illisible, type, adresses, `/R`, bloc coupé) | EQ | 1 | 7 | F | 3 |
 | USB.T19 | UNTAP : extraction d'un bloc ou de tous (BASIC rendu en texte, notation `{hh}`, lignes vérifiées par recodage, reste du bloc en `.BIN`, code en `.BIN`, noms vides ou en double, ROM 1.0) | EO | 2 | 10 | M | 5 |
+| USB.T20 | DIS : code machine vers un source qu'ASM réassemble à l'identique (adresse de chargement, `/E`, vecteurs ; code suivi, données en `.asc`, `.dsb`, `.byt` ; étiquettes, `Lxxxx+n`, noms d'`ATMOS.SYM` déclarés ou en étiquette ; `.byt` pour l'absolu sur la page zéro et le code qui se chevauche) | EO | 2 | 12 | M | 5 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -639,6 +641,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | USB.A10 | Codage BASIC de la ROM 1.1 suivi pas à pas (`TokeniseLine`, `Txt2Int`), table des mots-clés, liens des lignes | `mktap.s` | 3 |
 | USB.A11 | Dialogue Hayes : lignes du modem reconnues à leurs deux premières lettres (écho sauté), échappement `+++` encadré de silences, délais au compteur 50 Hz ; ligne de commande vidée et réponses en retard jetées avant `AT` | `acia_inc.s` | 1 |
 | USB.A12 | Programme BASIC rendu en texte comme `LIST`, avec le découpage du codage (chaîne, `DATA`, `REM`) ; chaque ligne recodée par la routine de MKTAP (`bcr_inc.s`) et comparée ; notation `{hh}` | `untap.s`, `bcr_inc.s` | 3 |
+| USB.A13 | Désassemblage réassemblable : suivi du code par une carte « à suivre » balayée (sans pile), instructions qui se chevauchent, cible au milieu d'une instruction, formes qu'ASM choisirait autrement (page zéro), cache d'enregistrements à correspondance directe (le fichier n'a pas à tenir en mémoire) | `dis.s` | 3 |
 
 ### 4.8 ASM
 
@@ -877,7 +880,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 687 | 11 % | 38 338 | 33 | 105 |
+| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 694 | 11 % | 38 389 | 33 | 105 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
 | GRAPHER + GRXASM | 23 | 14 783 | 1 255 | 468 | 0 | 8 % | 36 432 | 60 | 147 |
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
@@ -885,18 +888,18 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
 | EDSPRITE | 4 | 5 018 | 299 | 146 | 0 | 6 % | 10 460 | 60 | 125 |
 | VOIR | 7 | 1 481 | 191 | 65 | 0 | 11 % | 3 353 | 78 | 176 |
-| USB | 37 | 7 961 | 810 | 306 | 0 | 9 % | 16 888 | 75 | 159 |
+| USB | 40 | 10 011 | 942 | 368 | 0 | 9 % | 22 014 | 86 | 190 |
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
-| DEBUG | 3 | 2 426 | 129 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
+| DEBUG | 4 | 2 427 | 135 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 204 | 13 846 | 1 882 | 1 106 | 0 | 12 % | — | 60 | — |
-| **Total** | 410 | 83 659 | 7 558 | 3 628 | 2 615 | 8 % | 170 101 | 51 | 104 |
+| Outillage PC | 206 | 14 023 | 1 917 | 1 130 | 0 | 12 % | — | 60 | — |
+| **Total** | 416 | 85 887 | 7 731 | 3 714 | 2 622 | 8 % | 175 278 | 52 | 107 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 766 | 86 | 4,8 | 126 |
+| Système et commandes | 1 804 | 87 | 4,9 | 127 |
 | EDIT | 94 | 19 | 1,3 | 14 |
 | GRAPHER + GRXASM | 1 068 | 73 | 4,3 | 46 |
 | LOGO | 350 | 65 | 1,8 | 26 |
@@ -904,20 +907,20 @@ Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, 
 | HEX | 34 | 9 | 1,8 | 4 |
 | EDSPRITE | 171 | 13 | 2,0 | 8 |
 | VOIR | 78 | — | 4,1 | 13 |
-| USB | 80 | 13 | 0,8 | 28 |
+| USB | 80 | 13 | 0,7 | 29 |
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 2 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 176 |
-| Transverse (projet) | 2 652 | — | — | 142 |
-| Traduction anglaise (docs/en) | 3 172 | — | — | 72 |
-| **Total** | 10 169 | 327 | 6,2 | 305 |
+| Outillage PC | 367 | — | 1,6 | 177 |
+| Transverse (projet) | 2 717 | — | — | 143 |
+| Traduction anglaise (docs/en) | 3 205 | — | — | 73 |
+| **Total** | 10 305 | 328 | 6,3 | 306 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 305 commits du 2026-10-04 au 2026-11-19.
+Historique : 306 commits du 2026-10-04 au 2026-11-19.
 
-Réutilisation : 59 530 lignes de code écrites dans `progs/`, 70 481 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 61 545 lignes de code écrites dans `progs/`, 72 716 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -997,6 +1000,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-16 | souris | 0.9 | 1 617 | 380 | 1 997 | 301 | souris USB du LOCI : bibliothèque `mou_inc.s` (`test_mou.py`) ; EDSPRITE à la souris (tracé, gomme, masque, liste, défilement, vitesse gardée dans `0:CPA.MOU`) ; Oricutron de test : XREG, `ORIC_MOUSE` |
 | 2026-11-19 | TIMER | 0.9 | 1 620 | 380 | 2 000 | 304 | GRAPHER et GRXASM : fonction `TIMER` (compteur 50 Hz) ; HORLOGE de la vitrine calée sur elle |
 | 2026-11-19 | UNTAP | 0.9 | 1 628 | 383 | 2 011 | 306 | `UNTAP.COM` et `tools/untap.py` : blocs d'un `.TAP`, BASIC rendu en texte (vérifié par recodage), code en `.BIN` ; MKTAP : notation `{hh}` ; tokeniseur partagé (`bcr_inc.s`) ; `test_untap.py` |
+| 2026-11-20 | DIS | 0.9 | 1 638 | 386 | 2 024 | 307 | `DIS.COM` : code machine vers un source qu'ASM réassemble à l'identique (code suivi, étiquettes, noms d'`ATMOS.SYM`) ; tables partagées avec DEBUG (`dis_inc.s`) ; `test_dis.py` (tous les `.COM`, la ROM 1.1) |
 
 ## 11. Comparaisons
 

@@ -57,9 +57,9 @@ COMPOSANTS = [
               "progs/msg/*/loci.msg", "progs/term.s", "progs/msg/*/term.msg", "progs/acia_inc.s", "progs/msg/*/acia.msg",
               "progs/xfer.s", "progs/msg/*/xfer.msg", "progs/remote.s", "progs/msg/*/remote.msg",
               "progs/mktap.s", "progs/bas_tab.s", "progs/msg/*/mktap.msg", "progs/bcr_inc.s",
-              "progs/untap.s", "progs/msg/*/untap.msg"]),
+              "progs/untap.s", "progs/msg/*/untap.msg", "progs/dis.s", "progs/msg/*/dis.msg"]),
     ("ASM",  ["progs/asm.s", "progs/asm_tab.s", "progs/msg/*/asm.msg"]),
-    ("DBG",  ["progs/debug.s", "progs/msg/*/debug.msg"]),
+    ("DBG",  ["progs/debug.s", "progs/dis_inc.s", "progs/msg/*/debug.msg"]),
     ("EX",   ["progs/hello.s", "progs/gtest.s", "files/*.grx", "files/*.log", "files/*.bat",
               "files/*.spr", "files/anim/*", "files/JEU.GRX", "files/en/*.asm"]),
     ("OUT",  ["build.sh", "tools/*.py", "tools/*.sh", "tools/*.patch", "tools/*.s",
@@ -84,7 +84,7 @@ ORDRE = [c for _, l in GROUPES for c in l]
 # programmes .COM de chaque composant (octets)
 COMS = {"SYS": [n.upper() for n in SYS_COM if n != "helptab"], "EDIT": ["EDIT"],
         "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"], "EDS": ["EDSPRITE"],
-        "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR", "MKTAP", "UNTAP"], "ASM": ["ASM"],
+        "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR", "MKTAP", "UNTAP", "DIS"], "ASM": ["ASM"],
         "DBG": ["DEBUG"], "EX": ["HELLO", "GTEST"]}
 
 # documentation : fichier -> composant ; manuel.md est découpé par section (## ...)

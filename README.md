@@ -68,7 +68,9 @@ them in an archive), or build them with `./build.sh`.
   which makes a `.TAP` tape that any Oric loads under BASIC with `CLOAD""` (machine code, data,
   or a BASIC program typed in EDIT and encoded exactly as the Oric's ROM would), and
   **UNTAP**, which does the reverse: the blocks of a `.TAP` tape, an old BASIC program turned
-  into text for EDIT (which MKTAP encodes back identically), the code as `.BIN`.
+  into text for EDIT (which MKTAP encodes back identically), the code as `.BIN`; and **DIS**,
+  the disassembler: machine code (a tape block, a `.COM`, the ROM) becomes a source that ASM
+  reassembles identically, with the ROM's addresses named.
 - **LOGO** in English and in French (turtle, decimals, words and lists, sound; `LOGOTR`
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the

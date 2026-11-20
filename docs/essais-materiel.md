@@ -329,6 +329,17 @@ clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
   doit tourner comme l'original.
 - Durée sur un gros programme (un `.TAP` de 30 Ko) : dire si elle gêne.
 
+**DIS** (essayé dans le 6502 simulé : tous les `.COM` de CP/A et la ROM 1.1 se réassemblent à
+l'identique) :
+
+- Le code d'un vrai `.TAP` : `UNTAP JEU *`, puis `DIS JEU2.BIN 9800` (l'adresse donnée par
+  UNTAP), `ASM JEU2` et comparer (`HEX`, ou sur le PC) : `JEU2.COM` doit égaler `JEU2.BIN`.
+  Lire `JEU2.ASM` dans EDIT : noms de la ROM (`jsr PrintChar`), données en `.asc`, et ce qui
+  est resté en `.byt` faute d'être atteint (à retrouver par `/E`).
+- Durée : un bloc de 8 Ko, puis la ROM entière (`DIS BASIC.ROM C000`, 16 Ko) : dire si elle
+  gêne (estimée à 20 s et une minute d'après le 6502 simulé).
+- Place : le source d'un bloc de 8 Ko (environ 50 Ko) sur la disquette de travail.
+
 **MKTAP** (essayé seulement dans Oricutron, ROM BASIC 1.1) :
 
 - Sur `cpa-exemples.dsk` : `ASM HELLO` n'est pas fait pour le BASIC (il appelle le BDOS) ; écrire

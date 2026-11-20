@@ -76,6 +76,8 @@ Other programs on the disk:
   or a BASIC program written in EDIT (see "Publishing for the Oric under BASIC").
 - `UNTAP.COM NAME [n|*]`: the blocks of a `.TAP`, BASIC program as text, code as `.BIN` (see
   "Reading a tape: UNTAP").
+- `DIS.COM NAME [adr] [/E adr ...]`: disassembler, machine code to a source that ASM
+  reassembles identically (see "Disassembling: DIS").
 - `TERM.COM [host] [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal" and "Hosts: HOSTS").
 - `XFER.COM R|S file [name] [/T] [@host]`: receives or sends a file over the modem (see "File transfer").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
@@ -264,10 +266,11 @@ byte 9 of the FCB = R/O, of byte 10 = SYS). `STAT *.*` shows the attributes of a
 Everything on it is **read-only** (R/O): an `ERA *.*` or a name completed with ESC cannot
 erase anything. To replace a command with a new version: `SET COPY.COM RW`, then copy it.
 `DIR` shows the applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER, GRXASM, EDSPRITE,
-ASM, DEBUG, MKTAP, UNTAP, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT; CPA.BNK
+ASM, DEBUG, MKTAP, UNTAP, DIS, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT) and README.TXT;
+CPA.BNK
 (parts of the system loaded when they are used, below), the basic
 commands (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO), MEM, POKE, GO, the script
-USBCD.BAT, the eight libraries (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) and EDIT.CFG (changeable) are **hidden** (SYS): `DIRS` shows them.
+USBCD.BAT, ATMOS.SYM (the ROM names for DIS), the eight libraries (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) and EDIT.CFG (changeable) are **hidden** (SYS): `DIRS` shows them.
 
 SYS does not change the name: `HELP.COM` marked SYS stays `HELP.COM` and still runs (a file
 renamed `.SYS` would no longer be a command: the CCP only starts `.COM` and `.BAT` files).
@@ -296,9 +299,9 @@ the commands to start with on that disk. Both files can be changed and are visib
 
 | Image | Visible (read-only) | Also, hidden | Changeable examples |
 |---|---|---|---|
-| `build/cpa-anim-en.dsk` (the demonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, the eight libraries | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim-en.dsk` (the demonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, the eight libraries | CUBE.ANI, BALL.ANI, SHIP.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 | `build/cpa-logo-en.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, PLOTSQR.LOG, PLOTSIN.LOG, PLOTSINX.LOG, ARROWS.LOG |
-| `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-examples-en.dsk` (GRAPHER and ASM examples) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, ASM, DEBUG, HEX, MEM, POKE, GO, the eight libraries | DRAWING.GRX, TITLE.GRX, PATTERNS.GRX, SKETCH.GRX, ARROWS.GRX, SNAKE.GRX, SCORES.GRX, SPRITES.GRX, HERO.SPR, MAP.GRX, TILES.SPR, ROAD.GRX, ROTSCROL.GRX, PUZZLE.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes-en.dsk` (writing) | EDIT | | |
 
 On all four, as well: AUTO.BAT, WELCOME.TXT (the welcome screen).
@@ -710,6 +713,40 @@ copied onto the disk (`IMPORT GAME.TAP`, or CMDER); the files written go to the 
 - `block N incomplete`: the file ends before the block does; what is there is extracted.
 - To run a `.TAP` instead: `USBMOUNT GAME.TAP /B` (see "File exchange with the LOCI's USB stick").
 - On the PC, `tools/untap.py` does the same (same arguments).
+- The extracted machine code is read with DIS (below).
+
+### Disassembling: DIS
+
+`DIS` turns a machine code file into a source `NAME.ASM` that ASM reassembles into an
+identical file: you read and change it in EDIT, then `ASM NAME` rebuilds the code. It works on
+the blocks extracted by UNTAP as on any code file (a `.COM`, a ROM image).
+
+    A>DIS GAME2.BIN 9800
+    GAME2.BIN 9800-9F7F
+    GAME2.ASM written
+    A>DIS GAME2.BIN 9800 /E 9A10 9C00
+
+- The address (in hexadecimal) is the load address, given by UNTAP; `$0500` by default, that
+  of a `.COM`. The type `.BIN` is the default.
+- DIS follows the program from its start (and from the entry points given after `/E`, 8 at
+  most): jumps, calls, both paths of each branch. What it reaches is written as
+  instructions, the rest as data: `.asc "..."` for text, `.dsb n,$hh` for a run of equal
+  bytes, `.byt` otherwise.
+- Labels `L9A10` on jump targets, on the file's addresses and on entry points; `L9A10+1` for
+  a byte in the middle of an instruction (self-modifying code).
+- The addresses of ROM 1.1 and of the VIA get their name (`jsr PrintChar`, `sta VIA_ORB`),
+  declared at the top of the source (or as a label, when disassembling the ROM itself); the
+  names are in `ATMOS.SYM`, on the disk (looked for on
+  the file's drive, then on A:). Not for a `.COM`: under CP/A, the ROM is hidden.
+- What DIS cannot guess stays as data: code reached only through a jump table, a
+  `JMP (adr)` or an `RTS` used as a jump. Find it with `/E`, or fix the source by hand. An
+  instruction inside which another one starts (the `BIT` that skips a byte) and an absolute
+  instruction on page zero (which ASM would write shorter) are written as `.byt`, with the
+  instruction as a comment: the reassembled file stays identical.
+- The source is big (about 6 times the code: 50 KB for an 8 KB block, 120 KB for the ROM):
+  keep room on the disk. `NAME.ASM` is replaced if it exists. Count about 20 s for 8 KB, a minute for the ROM.
+- Running a tape program under CP/A takes work by hand (it expects the ROM and the BASIC's
+  page zero): see `docs/oric-basic.md` § 5.3.
 
 ## Serial terminal: TERM
 

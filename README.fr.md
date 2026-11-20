@@ -69,7 +69,9 @@ une archive), ou se construisent par `./build.sh`.
   qui fait une cassette `.TAP` que tout Oric charge sous BASIC par `CLOAD""` (code machine,
   données, ou programme BASIC tapé dans EDIT et codé exactement comme le ferait la ROM), et
   **UNTAP**, qui fait l'inverse : les blocs d'une cassette `.TAP`, un vieux programme BASIC
-  rendu en texte pour EDIT (que MKTAP recode à l'identique), le code en `.BIN`.
+  rendu en texte pour EDIT (que MKTAP recode à l'identique), le code en `.BIN` ; et **DIS**,
+  le désassembleur : du code machine (un bloc de cassette, un `.COM`, la ROM) devient un
+  source qu'ASM réassemble à l'identique, les adresses de la ROM nommées.
 - **LOGO** en français et en anglais (tortue, décimaux, mots et listes, son ; `LOGOTR`
   traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que

@@ -72,10 +72,12 @@ du banc à réparer d'abord).
    - Exemples de fichiers de données : un niveau écrit dans EDIT (`LOAD`), un écran titre
      (`BLOAD SCREEN`).
 3. **Publier vers l'Oric de base** (`MKTAP`, `GRXASM /O`, `.BAS` : `docs/oric-basic.md`)
-   - **Lire les `.TAP` sous CP/A** (`docs/oric-basic.md` § 5) : UNTAP est fait (blocs ;
-     BASIC rendu en texte pour EDIT, que MKTAP recode ; code en `.BIN`). Reste DIS (code
-     machine vers un source qu'ASM réassemble à l'identique, noms de la ROM 1.1 dans
-     `ATMOS.SYM`), à faire ensuite. Lancer un `.TAP` :
+   - **Lire les `.TAP` sous CP/A** (`docs/oric-basic.md` § 5) : fait. UNTAP (blocs ; BASIC
+     rendu en texte pour EDIT, que MKTAP recode ; code en `.BIN`) et DIS (code machine vers
+     un source qu'ASM réassemble à l'identique, noms de la ROM 1.1 dans `ATMOS.SYM`). À
+     essayer sur de vrais `.TAP` (`docs/essais-materiel.md`). Pistes : noms de la page zéro
+     et de la page 2 du BASIC, `ATMOS.SYM` lu par DEBUG (`docs/oric-basic.md` § 8). Lancer
+     un `.TAP` :
      `USBMOUNT JEU.TAP /B` (le LOCI émulé de Phosphoric ne redémarre pas en BASIC :
      signalé).
    - Décidé, pas encore fait : SPLIT dans `ORIC.INC`, le son quand GRAPHER en aura.
