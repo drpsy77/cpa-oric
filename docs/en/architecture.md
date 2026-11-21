@@ -139,6 +139,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
     tools/test_mktap.sh              # MKTAP.COM == tools/mktap.py, then CLOAD under BASIC 1.1
     python3 tools/test_bas.py        # .BAS: mktap.py encoding == ROM 1.1 (simulated 6502)
     python3 tools/test_untap.py      # UNTAP.COM == tools/untap.py, BASIC round trip through mktap.py
+    python3 tools/test_grxpack.py    # GRXPACK.COM == tools/grxpack.py; compact program == original (GRXASM, GRAPHER)
     python3 tools/test_dis.py        # DIS.COM: reassembled source (xa, ASM.COM) == file, .COMs and ROM 1.1
     tools/test_oric.sh               # GRXASM /O, ASM /T: refusals, .TAP under BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM and xfer_server.py in Oricutron (simulated modem)
@@ -167,6 +168,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | `fp_inc.s` | in addition: `python3 tools/test_fp.py` |
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s`, `progs/bcr_inc.s` | in addition: `tools/test_mktap.sh` (also runs `tools/test_bas.py`) and `python3 tools/test_untap.py` |
 | UNTAP.COM, `tools/untap.py` | in addition: `python3 tools/test_untap.py` (~3 min) |
+| GRXPACK.COM, `tools/grxpack.py`, or the way GRAPHER and GRXASM read a line (spaces, `;`, a command with free text) | in addition: `python3 tools/test_grxpack.py` (long: each program is translated twice; `cas` or names as arguments for a targeted run) |
 | DIS.COM, `progs/dis_inc.s`, `progs/asm_tab.s`, `tools/atmos_sym.txt` | in addition: `python3 tools/test_dis.py` (~10 min; `.COM` names as arguments for a targeted run) |
 | ASM.COM (`/T` option) | in addition: `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, a library of translated programs | in addition: `tools/test_lib.sh` (~30 min; names as arguments for a targeted run) |
@@ -174,6 +176,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | `src/serial.s`, REMOTE.COM, `tools/remote.py`, function 117, PUNCH, READER | in addition: `tools/test_remote.sh` (~6 min) and `tools/test_xfer.sh` |
 | GRAPHER.COM, GRXASM.COM (`grx*_inc.s`, `arr.inc`, `fil.inc`, `spr.inc`), `hires.inc`, `oric.inc` | in addition: `tools/test_grapher.sh` (and `LANGUE=en` if a message changes), `tools/test_inc.sh`, `tools/test_oric.sh`, Oricutron trial of the `.GRX` examples (drawing) |
 | EDIT (opening, saving), `fil.inc`, `src/fs.s`, `src/disk.s` | in addition: `python3 tools/test_fichiers.py` (~10 min; `--vite` for a looser sweep); for `src/disk.s`, also `python3 tools/test_fdc.py` |
+| `progs/mou_inc.s` (LOCI mouse) | in addition: `python3 tools/test_mou.py` (a few seconds) |
 | VOIR.COM, `hires.inc` (`h_unz`), `anim.inc`, `lzhir.py` | in addition: `python3 tools/test_anim.py` (pictures and animations in the simulated 6502) |
 | Before a release commit, or on request | everything |
 

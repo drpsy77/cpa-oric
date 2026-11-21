@@ -179,6 +179,8 @@ def main():
                     gfx(adr)    #   (CLS, MODE, PEN, PLOT, LINE, BOX, FBOX)
                 elif x == 116:
                     pass        # son : rien
+                elif x == 25:
+                    m.a = 0     # lecteur courant : A:
                 else:
                     print('BDOS ?', x); break
                 m.p = (m.p & ~0x82) | (0x80 if m.a & 0x80 else 0) | (0 if m.a else 0x02)  # N, Z

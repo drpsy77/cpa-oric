@@ -885,6 +885,50 @@ Oricutron, `-t NOM.TAP`.
   lettre), deux dimensions au plus, ni
   concaténation ni conversion de chaînes.
 
+### 13.1 Compacter un programme : GRXPACK
+
+En interprété, tout le texte du `.GRX` est en mémoire, commentaires, lignes vides et retrait
+compris, et chaque ligne exécutée est d'abord recopiée en entier, commentaire compris.
+`GRXPACK` écrit une copie du programme sans ce qui ne sert pas à l'exécuter ; la source
+commentée reste le fichier de travail. Un programme traduit n'y gagne rien (le `.COM` ne
+contient ni commentaires ni espaces) : GRXPACK sert aux programmes qui restent interprétés,
+ceux qui prennent des paramètres `$1`-`$9` par exemple.
+
+| Commande | Effet |
+|---|---|
+| `GRXPACK SOURCE DEST` | écrit `DEST.GRX` (lecteur facultatif, type `.GRX` par défaut), le programme compact de `SOURCE.GRX` ; `DEST` est obligatoire et doit être un autre fichier (`DEST doit etre un autre fichier`) ; un ancien `DEST.GRX` est remplacé |
+| `GRXPACK SOURCE /L n` | montre la ligne de `SOURCE.GRX` qui a donné la ligne `n` du programme compact : son numéro, puis son texte |
+
+- **Retiré** : les commentaires ; les lignes vides ou faites d'un commentaire ; le retrait ;
+  les espaces de fin de ligne et ceux qui en suivent un autre ; dans un calcul où GRAPHER
+  les ignore (toute la ligne pour une affectation, `LET`, `IF`, `WHILE`, `PRINT` et
+  `PRINTV` ; ailleurs, entre parenthèses), les espaces qui touchent un opérateur, une
+  virgule ou l'intérieur d'une parenthèse, sauf contre un guillemet : `X = A + B ; somme`
+  devient `X=A+B`, `LINE X 0 (239 - X) 199` devient `LINE X 0 (239-X) 199`.
+- **Gardé tel quel** : le texte entre guillemets ; celui d'`ECHO`, `ECHOV` et `GTEXT` (un
+  `;` y est du texte, les espaces de fin aussi ; après `ECHO "texte"`, ce qui suit le
+  guillemet final est retiré, GRAPHER ne le lit pas) ; le `;` final de `PRINT`
+  (`PRINT X ;; reste` devient `PRINT X ;`) ; les espaces qui séparent des paramètres ; la
+  casse ; les fins de ligne (CR, LF ou CR LF, comme dans la source). Rien n'est renommé ni
+  déplacé.
+- **Numéros de ligne** : une erreur de GRAPHER ou de GRXASM (`L 37 PLOT : ...`, § 11) compte
+  les lignes du fichier exécuté. Pour un programme compact, `GRXPACK SOURCE /L 37` donne la
+  ligne de la source (`Ligne 37 : ligne 52 de la source`, puis son texte), tant que la
+  source n'a pas changé depuis le compactage ; au-delà de la dernière ligne :
+  `Pas de ligne de ce numero`.
+- **Bilan** affiché : `Lu : 104 lignes, 2250 octets`, `Ecrit : 96 lignes, 1112 octets`
+  (CARTE). Les treize exemples livrés perdent 45 % de leur texte (21 % pour JEU, 70 % pour
+  ROTSCROL). Vitesse en interprété (6502 simulé, en instructions) : une boucle de 200 tours
+  commentée à chaque ligne va 1,7 fois plus vite ; un programme peu commenté gagne 5 à 10 %.
+- **Limites** : une ligne de plus de 255 caractères arrête tout (`Ligne trop longue : n`,
+  rien n'est écrit ; GRAPHER en refuse déjà plus de 126). Le fichier est lu et écrit par
+  enregistrements : sa taille n'est pas limitée par la mémoire. Le résultat est écrit dans
+  `DEST.$$$`, renommé à la fin : disque plein, rien n'est écrit
+  (`Disque plein : rien n'est ecrit`) ; `DEST.GRX` protégé, le résultat reste dans
+  `DEST.$$$`.
+- `tools/grxpack.py` fait le même travail sur le PC (`grxpack.py SOURCE.GRX DEST.GRX`,
+  `grxpack.py SOURCE.GRX -l n`).
+
 ## 14. Exemples livrés
 
 | Fichier | Contenu |
@@ -909,6 +953,7 @@ Oricutron, `-t NOM.TAP`.
 |---|---|
 | `progs/grapher.s` | interpréteur (`GRAPHER.COM`) ; `/A` : CHAIN vers GRXASM |
 | `progs/grxasm.s` | traducteur (`GRXASM.COM`) |
+| `progs/grxpack.s` | compacteur (`GRXPACK.COM`, § 13.1) : une ligne à la fois, de l'enregistrement lu à l'enregistrement écrit ; il ne connaît que les mots dont la ligne se lit autrement (`ECHO`, `ECHOV`, `GTEXT`, `PRINT`, `PRINTV`, `IF`, `WHILE`, `LET`) ; jumeau sur le PC : `tools/grxpack.py` |
 | `progs/grxd_inc.s`, `progs/grxc_inc.s` | communs aux deux : constantes et page zéro ; lecture du `.GRX` et des lignes, paramètres, table des noms de commandes (les fréquentes en tête), analyse des noms, nombres et fonctions, calcul des constantes, sous-programmes, erreurs. Chaque programme a sa table `cadr` d'adresses des commandes, dans l'ordre de la table des noms, et ses propres affectations (`x_asg`, `x_aasg`), `ANIM` (`an_val`, `an_none`), `ndim_s`, `to_text`, `o_drop` et tampons |
 | `progs/grx.inc` (`GRX.INC`) | bibliothèque d'exécution des programmes traduits |
 | `progs/msg/fr/`, `progs/msg/en/` | messages, mêmes étiquettes dans les deux langues : `grapher.msg`, `grxasm.msg` (et les commentaires du `.ASM` produit), `grxc.msg` (communs), un par bibliothèque (`grx.msg`, `arr.msg`, `fil.msg`, `spr.msg`, `anim.msg`). GRAPHER, GRXASM et VOIR les incluent à part (ASM n'a qu'un niveau d'inclusion) ; dans la bibliothèque, une ligne `;#msg nom.msg` marque leur place, et `tools/strip_inc.py` les y recopie dans la langue de la disquette (`build/src`, `build/src-en`). `g_m_el` : longueur du préfixe d'erreur de `GRX.INC`, que `FIL.INC` saute |
@@ -1227,6 +1272,13 @@ Tests : `tools/test_grapher.sh` vérifie le CHAIN de `/A`, puis exécute chaque 
 (GRAPHER) puis traduit (GRXASM), dans le 6502
 simulé (`tools/run_com.py`, sans émulateur), et compare au résultat attendu (`.ref`, `.kref`,
 saisies dans `NOM.in`). Puis essai Oricutron des exemples.
+`python3 tools/test_grxpack.py` (GRXPACK, 6502 simulé ; long : chaque programme est traduit
+deux fois) : les règles une à une et des fichiers aux limites (`cas`) ; puis, pour chaque
+cas de `test_grapher.sh`, chaque exemple livré et ceux de la vitrine, GRXPACK.COM écrit le
+même fichier que `tools/grxpack.py`, `/L` rend la bonne ligne, le programme compact traduit
+par GRXASM donne le même `.COM` octet par octet (au texte près qui suit le guillemet final
+d'un `ECHO`, que GRXASM recopie sans qu'il soit jamais affiché), et interprété il affiche ce
+qu'attend le `.ref` (au numéro de ligne près).
 
 ## 16. Décidé, pas encore fait
 

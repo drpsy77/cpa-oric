@@ -172,19 +172,19 @@ theme() {   # theme NOM NOM_EN "visibles" "cachés en plus" "exemples"
   disque build/cpa-$1.dsk build/cpa-$2-en.dsk --ro --sys $BASE $4 --rw files/edit.cfg files/hosts \
     --ro --dir $P/EDIT.COM $3 --rw files/auto.bat files/accueil/$1/accueil.txt $5
 }
-# Animations : VOIR et VSYNC visibles, GRAPHER, GRXASM, ASM et les
+# Animations : VOIR et VSYNC visibles, GRAPHER, GRXASM, GRXPACK, ASM et les
 # bibliothèques cachés (GRXASM ANIMS refait le programme) ; animations
 # fabriquées par tools/anim_demos.py et gardées dans files/anim/ (pas de
 # Pillow ici) ; DEMO enchaîne tout
 theme anim anim "$P/VOIR.COM $P/VSYNC.COM" \
-  "$P/GRAPHER.COM $P/GRXASM.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $INCS" \
+  "$P/GRAPHER.COM $P/GRXASM.COM $P/GRXPACK.COM $P/ASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $INCS" \
   "files/anim/CUBE.ANI files/anim/BALLE.ANI files/anim/VAISSEAU.ANI files/anim/LOGO.HIZ files/anims.grx files/demo.bat"
 # Logo : la plateforme LOGO seule
 theme logo logo "$P/LOGO.COM $P/LOGOTR.COM" "$P/VOIR.COM" \
   "files/demo.log files/eliza.log files/eliza2.log files/tracarre.log files/trasinus.log files/trasinxx.log files/fleches.log"
 # Exemples : ceux de GRAPHER et d'ASM, visibles ; leurs outils cachés
 theme exemples examples "" \
-  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
+  "$P/VOIR.COM $P/GRAPHER.COM $P/GRXASM.COM $P/GRXPACK.COM $P/EDSPRITE.COM $P/MKTAP.COM $P/UNTAP.COM $P/DIS.COM $P/ATMOS.SYM $P/ASM.COM $P/DEBUG.COM $P/HEX.COM $P/MEM.COM $P/POKE.COM $P/GO.COM $INCS" \
   "$GRX_EX $ASM_EX"
 # Notes : écrire du texte (et l'envoyer)
 theme notes notes "" "$P/VOIR.COM" ""

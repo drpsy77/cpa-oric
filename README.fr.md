@@ -76,7 +76,8 @@ une archive), ou se construisent par `./build.sh`.
   traduit un programme de l'une à l'autre) et **GRAPHER**, un petit
   langage de dessin et de jeux (sprites en mode texte, cartes de tuiles plus grandes que
   l'écran, défilement compris), interprété ou traduit en
-  assembleur, avec **EDSPRITE**, un éditeur plein écran de ses sprites et caractères.
+  assembleur, avec **EDSPRITE**, un éditeur plein écran de ses sprites et caractères ;
+  `GRXPACK` retire commentaires et espaces inutiles d'un programme qui reste interprété.
   `GRXASM JEU /O` fait d'un jeu traduit un `.TAP` qui tourne sur tout Oric, sans CP/A
   (`CLOAD""`) : des exemples prêts dans `build/tap/`.
 - Images HIRES compressées et animations plein écran (VOIR).

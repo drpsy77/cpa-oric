@@ -61,7 +61,9 @@ Autres programmes de la disquette :
 - `GRAPHER.COM NOM`, le petit langage de dessin des fichiers `.GRX` (exécuté), et
   `GRXASM.COM NOM` (ou `GRAPHER NOM /A`), qui le traduit en assembleur (en recopiant les routines utiles de `GRX.INC`, `HIRES.INC`...), avec ses exemples (`docs/grapher.md` § 14) ;
   `GRXASM NOM /O` en fait un `.TAP` pour un Oric seul, sans CP/A (socle `ORIC.INC`,
-  `docs/grapher.md` § 12.1) ; et
+  `docs/grapher.md` § 12.1) ; `GRXPACK.COM SOURCE DEST`, qui écrit le programme sans
+  commentaires ni espaces inutiles, pour ceux qui restent interprétés (`docs/grapher.md`
+  § 13.1) ; et
   `VOIR.COM NOM`, qui affiche une image (`docs/grapher.md`, « HIRES plein écran »).
 - `ASM.COM NOM`, l'assembleur 6502, avec les sources d'exemple `HELLO.ASM`, `GTEST.ASM`,
   `CPA.INC` et `HIRES.INC`.
@@ -274,7 +276,7 @@ tous les fichiers.
 rubriques. Tout y est **protégé** (R/O) : un `ERA *.*` ou un nom complété par ESC ne peut
 rien effacer. Pour remplacer une commande par une nouvelle version : `SET COPY.COM RW`, puis
 la copier. `DIR` y montre les applications (HELP, CMDER, EDIT, HEX, VOIR, VSYNC, GRAPHER,
-GRXASM, EDSPRITE, ASM, DEBUG, MKTAP, UNTAP, DIS, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT)
+GRXASM, GRXPACK, EDSPRITE, ASM, DEBUG, MKTAP, UNTAP, DIS, TERM, XFER, EXPORT, IMPORT, USBDIR, USBMOUNT)
 et README.TXT ; CPA.BNK (des parties du système chargées quand elles servent, ci-dessous), les
 commandes de base (TYPE, ERA, REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO),
 MEM, POKE, GO, le script USBCD.BAT, ATMOS.SYM (les noms de la ROM pour DIS), les huit bibliothèques (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) et EDIT.CFG (modifiable) y sont **cachés** (SYS) :
@@ -306,9 +308,9 @@ Les deux fichiers sont modifiables et visibles ; effacer `AUTO.BAT` supprime l'a
 
 | Image | Visibles (protégés) | En plus, cachés | Exemples modifiables |
 |---|---|---|---|
-| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, ASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
+| `build/cpa-anim.dsk` (la démonstration) | EDIT, VOIR, VSYNC | GRAPHER, GRXASM, GRXPACK, ASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, les huit bibliothèques | CUBE.ANI, BALLE.ANI, VAISSEAU.ANI, LOGO.HIZ, ANIMS.GRX, DEMO.BAT |
 | `build/cpa-logo.dsk` (LOGO) | EDIT, LOGO, LOGOTR | | DEMO.LOG, ELIZA.LOG, ELIZA2.LOG, TRACARRE.LOG, TRASINUS.LOG, TRASINXX.LOG, FLECHES.LOG |
-| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
+| `build/cpa-exemples.dsk` (exemples de GRAPHER et d'ASM) | EDIT | GRAPHER, GRXASM, GRXPACK, EDSPRITE, MKTAP, UNTAP, DIS, ATMOS.SYM, ASM, DEBUG, HEX, MEM, POKE, GO, les huit bibliothèques | DESSIN.GRX, ECRAN.GRX, MOTIFS.GRX, ARDOISE.GRX, FLECHES.GRX, SERPENT.GRX, SCORES.GRX, SPRITES.GRX, HEROS.SPR, CARTE.GRX, TUILES.SPR, DEFILE.GRX, ROTSCROL.GRX, JEU.GRX, HELLO, GTEST (`.ASM`, `.COM`) |
 | `build/cpa-notes.dsk` (écrire) | EDIT | | |
 
 Sur toutes les quatre, en plus : AUTO.BAT, ACCUEIL.TXT (l'accueil).

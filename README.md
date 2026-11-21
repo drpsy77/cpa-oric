@@ -75,7 +75,8 @@ them in an archive), or build them with `./build.sh`.
   translates a program from one to the other) and **GRAPHER**, a small
   language for drawings and games (text-mode sprites, tile maps larger than the
   screen, scrolling), interpreted or translated into assembly, with **EDSPRITE**, a
-  full-screen editor for its sprites and characters. `GRXASM GAME /O` makes a translated
+  full-screen editor for its sprites and characters; `GRXPACK` strips comments and
+  useless spaces from a program that stays interpreted. `GRXASM GAME /O` makes a translated
   game a `.TAP` that runs on any Oric without CP/A (`CLOAD""`): ready-made examples in
   `build/tap/`.
 - Compressed HIRES pictures and full-screen animations (VOIR).

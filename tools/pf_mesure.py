@@ -41,9 +41,9 @@ COMPOSANTS = [
     ("SYS",  ["src/*", "boot/*", "progs/cpa.inc"] + ["progs/%s.s" % n for n in SYS_COM]
              + ["progs/msg/*/%s.msg" % n for n in SYS_COM]),
     ("EDIT", ["progs/edit.s", "progs/edit_tab.s", "progs/msg/*/edit.msg"]),
-    ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
+    ("GRA",  ["progs/grapher.s", "progs/grxasm.s", "progs/grxpack.s", "progs/grxd_inc.s", "progs/grxc_inc.s",
               "progs/grx.inc", "progs/arr.inc", "progs/fil.inc", "progs/spr.inc", "progs/oric.inc"]
-             + ["progs/msg/*/%s.msg" % n for n in "grapher grxasm grxc grx arr fil spr".split()]),
+             + ["progs/msg/*/%s.msg" % n for n in "grapher grxasm grxpack grxc grx arr fil spr".split()]),
     ("LOGO", ["progs/logo.s", "progs/logo_tab.s", "progs/fp_inc.s", "progs/ltxt_inc.s",
               "progs/logotr.s", "progs/lgtr_tab.s"]
              + ["progs/msg/*/%s.msg" % n for n in ("logo", "logovoc", "logotr")]),
@@ -83,7 +83,7 @@ ORDRE = [c for _, l in GROUPES for c in l]
 
 # programmes .COM de chaque composant (octets)
 COMS = {"SYS": [n.upper() for n in SYS_COM if n != "helptab"], "EDIT": ["EDIT"],
-        "GRA": ["GRAPHER", "GRXASM"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"], "EDS": ["EDSPRITE"],
+        "GRA": ["GRAPHER", "GRXASM", "GRXPACK"], "LOGO": ["LOGO"], "CMD": ["CMDER"], "HEX": ["HEX"], "EDS": ["EDSPRITE"],
         "VOIR": ["VOIR"], "USB": ["EXPORT", "IMPORT", "USBDIR", "MKTAP", "UNTAP", "DIS"], "ASM": ["ASM"],
         "DBG": ["DEBUG"], "EX": ["HELLO", "GTEST"]}
 

@@ -16,7 +16,7 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Système et commandes | 45 | 5 | 186 | 52 | 78 | **366** | 75 | **441** |
 | EDIT | 21 | 0 | 33 | 8 | 9 | **71** | 18 | **89** |
-| GRAPHER + GRXASM | 35 | 22 | 135 | 34 | 21 | **247** | 66 | **313** |
+| GRAPHER + GRXASM | 35 | 22 | 135 | 39 | 24 | **255** | 67 | **322** |
 | LOGO | 28 | 0 | 123 | 12 | 33 | **196** | 44 | **240** |
 | CMDER | 21 | 0 | 40 | 17 | 12 | **90** | 23 | **113** |
 | HEX | 7 | 0 | 6 | 0 | 6 | **19** | 5 | **24** |
@@ -25,14 +25,14 @@ Comparaison avec CP/M 2.2 et applications de CP/M qui manquent à CP/A : § 11.
 | USB | 28 | 10 | 38 | 28 | 12 | **116** | 27 | **143** |
 | ASM | 0 | 5 | 0 | 4 | 0 | **9** | 15 | **24** |
 | DEBUG | 21 | 5 | 28 | 9 | 12 | **75** | 13 | **88** |
-| *Applications* | *175* | *57* | *457* | *120* | *117* | ***926*** | *244* | ***1170*** |
+| *Applications* | *175* | *57* | *457* | *125* | *120* | ***934*** | *245* | ***1179*** |
 | Exemples | 7 | 10 | 27 | 64 | 6 | **114** | 17 | **131** |
 | Outillage PC | 7 | 15 | 39 | 150 | 21 | **232** | 53 | **285** |
-| **Total** | **234** | **87** | **709** | **386** | **222** | **1638** | **389** | **2027** |
+| **Total** | **234** | **87** | **709** | **391** | **225** | **1646** | **390** | **2036** |
 
-Points ajustés (indicatif, § 9) : 1 638 × 1,05 ≈ 1 720.
+Points ajustés (indicatif, § 9) : 1 646 × 1,05 ≈ 1 728.
 
-Nombre de fonctions comptées : 33 ILF, 17 EIF, 225 EI, 94 EO, 74 EQ.
+Nombre de fonctions comptées : 33 ILF, 17 EIF, 225 EI, 95 EO, 75 EQ.
 <!-- synthese:fin -->
 
 Lecture (comptage de référence) :
@@ -418,6 +418,8 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | GRA.T57 | HHIDE | EI | 1 | 1 | F | 3 |
 | GRA.T58 | PAINT (remplissage, selon le crayon) | EI | 1 | 2 | F | 3 |
 | GRA.T59 | TIMER (compteur 50 Hz) | EQ | 0 | 1 | F | 3 |
+| GRA.T60 | GRXPACK : écrire le programme compact (`DEST.GRX`), bilan des lignes et des octets | EO | 2 | 7 | M | 5 |
+| GRA.T61 | `GRXPACK SOURCE /L n` : ligne de la source d'une ligne du programme compact | EQ | 1 | 4 | F | 3 |
 
 | Id | Algorithme | Où | Points |
 |---|---|---|---:|
@@ -441,6 +443,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | GRA.A19 | Remplissage par segments de ligne (Heckbert) : pile de segments avec sens, débordements renvoyés, octet entier d'un coup, attributs épargnés ; partagé par GRAPHER, LOGO et `HIRES.INC` | `pnt_inc.s` | 3 |
 | GRA.A18 | Sprites dans l'image : décor gardé par emplacement (tampons réservés au premier affichage), octets recomposés ligne par ligne, attributs épargnés, retrait commun avec le texte | `spr.inc` | 3 |
 | GRA.A20 | GRXASM : boucles et conditions en ligne (pas constant : test en bas, compteur d'un octet si le corps n'écrit pas la variable ; comparaisons sur les opérandes, suites de `&` et de `|` en branchements) | `grxasm.s` | 3 |
+| GRA.A21 | GRXPACK : espaces inutiles selon la ligne (calcul, paramètres, texte libre), commentaire ou `;` final de `PRINT` | `grxpack.s` | 1 |
 
 ### 4.3 LOGO
 
@@ -881,9 +884,9 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 694 | 11 % | 38 389 | 33 | 105 |
+| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 717 | 11 % | 38 569 | 33 | 105 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
-| GRAPHER + GRXASM | 23 | 15 677 | 1 307 | 481 | 0 | 8 % | 38 435 | 63 | 156 |
+| GRAPHER + GRXASM | 26 | 16 563 | 1 367 | 510 | 0 | 8 % | 40 466 | 65 | 159 |
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
 | CMDER | 3 | 7 299 | 368 | 225 | 0 | 5 % | 18 025 | 81 | 200 |
 | HEX | 3 | 1 621 | 96 | 63 | 0 | 6 % | 3 840 | 85 | 202 |
@@ -893,16 +896,16 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 4 | 2 427 | 135 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 208 | 14 638 | 1 935 | 1 130 | 0 | 12 % | — | 63 | — |
-| **Total** | 418 | 87 396 | 7 801 | 3 727 | 2 622 | 8 % | 177 281 | 53 | 108 |
+| Outillage PC | 210 | 15 029 | 1 985 | 1 166 | 0 | 12 % | — | 65 | — |
+| **Total** | 423 | 88 673 | 7 911 | 3 792 | 2 645 | 8 % | 179 492 | 54 | 109 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 804 | 87 | 4,9 | 128 |
+| Système et commandes | 1 808 | 88 | 4,9 | 128 |
 | EDIT | 94 | 19 | 1,3 | 14 |
-| GRAPHER + GRXASM | 1 106 | 73 | 4,5 | 46 |
+| GRAPHER + GRXASM | 1 156 | 75 | 4,5 | 47 |
 | LOGO | 350 | 65 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
 | HEX | 34 | 9 | 1,8 | 4 |
@@ -912,16 +915,16 @@ Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, 
 | ASM | 63 | 11 | 7,0 | 7 |
 | DEBUG | 40 | 12 | 0,5 | 3 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 178 |
-| Transverse (projet) | 2 719 | — | — | 144 |
-| Traduction anglaise (docs/en) | 3 240 | — | — | 74 |
-| **Total** | 10 380 | 328 | 6,3 | 307 |
+| Outillage PC | 367 | — | 1,6 | 179 |
+| Transverse (projet) | 2 734 | — | — | 145 |
+| Traduction anglaise (docs/en) | 3 292 | — | — | 75 |
+| **Total** | 10 501 | 331 | 6,4 | 309 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 307 commits du 2026-10-04 au 2026-11-20.
+Historique : 309 commits du 2026-10-04 au 2026-11-20.
 
-Réutilisation : 62 439 lignes de code écrites dans `progs/`, 73 610 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 63 285 lignes de code écrites dans `progs/`, 74 557 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité
@@ -1003,6 +1006,7 @@ Total 40 : facteur 0,65 + 0,01 × 40 = **1,05**.
 | 2026-11-19 | UNTAP | 0.9 | 1 628 | 383 | 2 011 | 306 | `UNTAP.COM` et `tools/untap.py` : blocs d'un `.TAP`, BASIC rendu en texte (vérifié par recodage), code en `.BIN` ; MKTAP : notation `{hh}` ; tokeniseur partagé (`bcr_inc.s`) ; `test_untap.py` |
 | 2026-11-20 | DIS | 0.9 | 1 638 | 386 | 2 024 | 307 | `DIS.COM` : code machine vers un source qu'ASM réassemble à l'identique (code suivi, étiquettes, noms d'`ATMOS.SYM`) ; tables partagées avec DEBUG (`dis_inc.s`) ; `test_dis.py` (tous les `.COM`, la ROM 1.1) |
 | 2026-11-20 | boucles en ligne | 0.9 | 1 638 | 389 | 2 027 | 308 | GRXASM : `FOR` et `REPEAT` de pas ou de compte constant et conditions de `IF` et `WHILE` traduits en ligne, sans `g_forok`, `g_forstep` ni `g_cmp` (un banc de 10 000 tours : 10,8 fois moins d'instructions) ; tests `boucles` et `cond` ; fond de la démonstration de la vitrine par table de couleurs |
+| 2026-11-20 | GRXPACK | 0.9 | 1 646 | 390 | 2 036 | 310 | `GRXPACK.COM` et `tools/grxpack.py` : programme `.GRX` compact pour l'interprété (commentaires, lignes vides, espaces inutiles), `/L n` pour retrouver la ligne de la source ; `test_grxpack.py` (même fichier que la référence, même `.COM` une fois traduit, même sortie interprétée) |
 
 ## 11. Comparaisons
 

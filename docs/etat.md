@@ -57,7 +57,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 13 222 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 13 402 | aide par rubriques (textes compressés) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
@@ -79,20 +79,21 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 | LOGO | 20 005 | Logo (français, ou anglais sur les disquettes anglaises : 19 779) : tortue, décimaux, listes, son, écran texte, remplissage (`REMPLIS`), sauvegarde de données (`SAUVEDONNEES`) | `logo.md` |
 | LOGOTR | 4 408 | traduit les primitives d'un `.LOG` d'une langue à l'autre | `logo.md` |
 | GRAPHER, GRXASM | 19 281, 19 154 | langage de dessin et de jeux (`.GRX`) : interpréteur, traducteur en assembleur (`/C` : jusqu'au `.COM` ; `/O` : `.TAP` pour un Oric seul, sans CP/A ni BASIC, sur le socle `ORIC.INC` ; aucun contrôle à l'exécution, boucles et conditions en ligne, tableaux à adresse fixe, seules routines utiles des bibliothèques, prises précompilées dans `GRX.LIB` quand elle est là) ; fichiers de données, sprites (`.SPR`) en mode texte et dans l'image ; rectangles (copie d'un tableau vers l'écran, défilement, rotation), écriture verticale ; cartes de tuiles (`TILESET`, `TMAP`, `TILE`, dessins par `TFONT`) ; tableaux à deux dimensions en (colonne, ligne), comme l'écran ; `PRINT` à plusieurs éléments ; remplissage (`PAINT`, `progs/pnt_inc.s`, partagé avec LOGO et `HIRES.INC`) | `grapher.md` |
+| GRXPACK | 2 031 | compacte un `.GRX` pour l'interprété : sans commentaires, lignes vides ni espaces inutiles, rien d'autre de changé ; `/L n` retrouve la ligne de la source d'une ligne du programme compact (numéro d'une erreur) ; marge de 17 octets sous le bloc de 2 Ko | `grapher.md` § 13.1 |
 | VOIR, VSYNC | 3 353, 744 | images, animations ; calage du top sur le balayage | `manuel.md` |
 | HELLO, GTEST | 88, 156 | exemples d'assembleur | — |
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-330 Ko libres), `cpa-anim.dsk` (la démonstration, 286 Ko libres), `cpa-logo.dsk` (LOGO seul,
+328 Ko libres), `cpa-anim.dsk` (la démonstration, 284 Ko libres), `cpa-logo.dsk` (LOGO seul,
 506 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 292 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
+d'ASM, 290 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; les quatre disquettes d'usage s'ouvrent sur un
 accueil (`AUTO.BAT`, `ACCUEIL.TXT` : l'invite, ESC, FUNCT, HELP, puis quoi taper) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
 `cpa-examples-en.dsk`... `cpa-project-en.dsk`) ; contenu dans `docs/manuel.md`.
 
-**Mesure** : 1 638 points de fonction IFPUG et 389 points d'algorithmes ; détail, lignes,
+**Mesure** : 1 646 points de fonction IFPUG et 390 points d'algorithmes ; détail, lignes,
 octets et documentation dans `docs/points-de-fonction.md`.
 
 **Sur le vrai matériel** : versions anglaise et française essayées en entier sur Oric

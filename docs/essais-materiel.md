@@ -392,6 +392,15 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 `cpa-exemples.dsk` (puis anim, logo, notes, et une anglaise) : l'accueil s'affiche en entier,
 sans pause, et l'invite `A>` revient dessous.
 
+**GRXPACK** (`docs/grapher.md` § 13.1 ; sur une **copie** de `cpa-exemples.dsk`) :
+
+- `GRXPACK CARTE PETIT` : `Lu : 104 lignes, 2250 octets`, `Ecrit : 96 lignes, 1112 octets` ;
+  `GRAPHER PETIT` se comporte comme `GRAPHER CARTE` ; `GRXPACK CARTE /L 20` :
+  `Ligne 20 : ligne 26 de la source`, puis `NEXT` ;
+- `GRXPACK CARTE CARTE` et `GRXPACK CARTE A:CARTE` : refusés
+  (`DEST doit etre un autre fichier`), `CARTE.GRX` intact ;
+- avec deux lecteurs : `GRXPACK CARTE B:PETIT`, puis `GRAPHER B:PETIT`.
+
 **Fin de fichier et ajout** (`src/fs.s`, `docs/revue.md` § 1 ; sur une **copie** de disquette) :
 
 - un fichier de 16 384 octets exactement (`PUT` ou EDIT), lu en entier par `TYPE`, `COPY`
