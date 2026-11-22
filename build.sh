@@ -71,6 +71,10 @@ $XA -o ../build/boot.bin -e ../build/boot.err boot.s
 cd ..
 [ "$(wc -c < build/boot.bin)" -eq 768 ] || { echo "boot.bin doit faire 768 octets"; exit 1; }
 
+# aide : toute commande a sa page dans HELP, et les textes de HELP.COM
+# (helptab.msg) sont à jour (sinon : python3 tools/gen_readme_txt.py)
+python3 tools/gen_readme_txt.py --verifie > /dev/null || exit 1
+
 # programmes : messages en français (progs/msg/fr) dans build/progs ; en
 # anglais dans build/progs-en (progs/msg/en, sinon le français : programmes
 # pas encore traduits)

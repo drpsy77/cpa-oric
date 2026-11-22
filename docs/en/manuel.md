@@ -8,7 +8,7 @@ User guide for CP/A: commands, programs, programming. GRAPHER and LOGO have thei
 own reference (`grapher.md`, `logo.md`), and so do CMDER and EDSPRITE (`cmder.md`,
 `edsprite.md`). Interface contract
 (BIOS table, BDOS functions, memory map): `docs/architecture.md` (in French). On the Oric,
-`HELP` gives a summary of each command.
+`HELP` followed by a command gives its summary (`HELP COPY`); `HELP` alone: the list of pages.
 
 ## CCP commands
 
@@ -41,7 +41,7 @@ Transient commands (`.COM` files on the disk) that complete the CCP:
 
 | Command | Effect |
 |---|---|
-| `HELP [topic]` | help: built-in commands, then `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEMORY` (memory map), `HELP KEYS`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`, `HELP EDSPRITE`; on `cpa.dsk`, in French (`HELP TOUCHES`, `HELP MEMOIRE`...) |
+| `HELP [word [word]]` | help, by word. `HELP` alone: the list of pages. `HELP COPY`, `HELP DIS`: the page of the command, with those of the same group; likewise for a topic (`HELP KEYS`, `HELP USB`, `HELP TAP`, `HELP MEM`: memory map). `HELP GRAPHER PLOT`, `HELP LOGO REPEAT`: the page of a GRAPHER or LOGO word; `HELP GRAPHER` and `HELP LOGO` give the principles and the list of words. The start of a word is enough (`HELP ED`). A word that is not in the list where it is looked for (`HELP PLOT`, `HELP LOGO XYZ`): `Unknown word in this context`, then the current page. On `cpa.dsk`, in French (`HELP TOUCHES`, `HELP LOGO REPETE`...) |
 | `CMDER [d:][afn]` | full-screen file manager: list you can sort and filter, marking, View, Copy, Move, Rename, Erase, Attributes; copying with a single drive (`cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | file attributes (no option: shows them) |
 | `STAT [d:][afn]` | size of each file: 128-byte records, 2 KB blocks, bytes, attributes (`R` read-only, `S` system); no parameter: free space on the disk |
@@ -79,7 +79,7 @@ Other programs on the disk:
 - `UNTAP.COM NAME [n|*]`: the blocks of a `.TAP`, BASIC program as text, code as `.BIN` (see
   "Reading a tape: UNTAP").
 - `DIS.COM NAME [adr] [/E adr ...]`: disassembler, machine code to a source that ASM
-  reassembles identically (see "Disassembling: DIS").
+  reassembles identically (see "The disassembler DIS").
 - `TERM.COM [host] [/E] [/L]`: serial terminal, for the LOCI's WiFi modem (see "Serial terminal" and "Hosts: HOSTS").
 - `XFER.COM R|S file [name] [/T] [@host]`: receives or sends a file over the modem (see "File transfer").
 - `FORMAT.COM X: [/Q]`: formats a disk (see "Drives A: to D:").
@@ -715,40 +715,7 @@ copied onto the disk (`IMPORT GAME.TAP`, or CMDER); the files written go to the 
 - `block N incomplete`: the file ends before the block does; what is there is extracted.
 - To run a `.TAP` instead: `USBMOUNT GAME.TAP /B` (see "File exchange with the LOCI's USB stick").
 - On the PC, `tools/untap.py` does the same (same arguments).
-- The extracted machine code is read with DIS (below).
-
-### Disassembling: DIS
-
-`DIS` turns a machine code file into a source `NAME.ASM` that ASM reassembles into an
-identical file: you read and change it in EDIT, then `ASM NAME` rebuilds the code. It works on
-the blocks extracted by UNTAP as on any code file (a `.COM`, a ROM image).
-
-    A>DIS GAME2.BIN 9800
-    GAME2.BIN 9800-9F7F
-    GAME2.ASM written
-    A>DIS GAME2.BIN 9800 /E 9A10 9C00
-
-- The address (in hexadecimal) is the load address, given by UNTAP; `$0500` by default, that
-  of a `.COM`. The type `.BIN` is the default.
-- DIS follows the program from its start (and from the entry points given after `/E`, 8 at
-  most): jumps, calls, both paths of each branch. What it reaches is written as
-  instructions, the rest as data: `.asc "..."` for text, `.dsb n,$hh` for a run of equal
-  bytes, `.byt` otherwise.
-- Labels `L9A10` on jump targets, on the file's addresses and on entry points; `L9A10+1` for
-  a byte in the middle of an instruction (self-modifying code).
-- The addresses of ROM 1.1 and of the VIA get their name (`jsr PrintChar`, `sta VIA_ORB`),
-  declared at the top of the source (or as a label, when disassembling the ROM itself); the
-  names are in `ATMOS.SYM`, on the disk (looked for on
-  the file's drive, then on A:). Not for a `.COM`: under CP/A, the ROM is hidden.
-- What DIS cannot guess stays as data: code reached only through a jump table, a
-  `JMP (adr)` or an `RTS` used as a jump. Find it with `/E`, or fix the source by hand. An
-  instruction inside which another one starts (the `BIT` that skips a byte) and an absolute
-  instruction on page zero (which ASM would write shorter) are written as `.byt`, with the
-  instruction as a comment: the reassembled file stays identical.
-- The source is big (about 6 times the code: 50 KB for an 8 KB block, 120 KB for the ROM):
-  keep room on the disk. `NAME.ASM` is replaced if it exists. Count about 20 s for 8 KB, a minute for the ROM.
-- Running a tape program under CP/A takes work by hand (it expects the ROM and the BASIC's
-  page zero): see `docs/oric-basic.md` § 5.3.
+- The extracted machine code is read with DIS (see "The disassembler DIS").
 
 ## Serial terminal: TERM
 
@@ -1482,6 +1449,47 @@ the system) and WBOOT (the end of the program). A `JSR` to the system (`JSR BDOS
 always run in one go. The debugger keeps the program's stack and works below it. Its zero page
 variables (`$D0-$DF`) are swapped with the program's at each stop.
 
+## The disassembler DIS
+
+`DIS` turns a machine code file into a source `NAME.ASM` that ASM reassembles into an
+identical file: you read and change it in EDIT, then `ASM NAME` rebuilds the code. It works on
+any code file: a `.COM`, a ROM image, a block extracted from a `.TAP` by UNTAP.
+
+    A>DIS GAME2.BIN 9800
+    GAME2.BIN 9800-9F7F
+    GAME2.ASM written
+    A>DIS GAME2.BIN 9800 /E 9A10 9C00
+
+- The address (in hexadecimal) is the load address, given by UNTAP; `$0500` by default, that
+  of a `.COM`. The type `.BIN` is the default. Without the right address, the program's
+  addresses get no label.
+- The entry point of a block started by a BASIC loader is that of its `CALL`, read in the
+  `.BAS` written by UNTAP (`40 TEXT:CALL#2E00`); give it with `/E` when it is not the start
+  of the block: `DIS WIMPY3.BIN 2DFF /E 2E00`. A source made only of `.byt` comes from
+  that (a block often starts with one extra byte, an `RTS` for instance).
+- DIS follows the program from its start (and from the entry points given after `/E`, 8 at
+  most): jumps, calls, both paths of each branch. What it reaches is written as
+  instructions, the rest as data: `.asc "..."` for text, `.dsb n,$hh` for a run of equal
+  bytes, `.byt` otherwise.
+- Labels `L9A10` on jump targets, on the file's addresses and on entry points; `L9A10+1` for
+  a byte in the middle of an instruction (self-modifying code).
+- The addresses of ROM 1.1 and of the VIA get their name (`jsr PrintChar`, `sta VIA_ORB`),
+  declared at the top of the source (or as a label, when disassembling the ROM itself); the
+  names are in `ATMOS.SYM`, on the disk (looked for on
+  the file's drive, then on A:). Not for a `.COM`: under CP/A, the ROM is hidden.
+- What DIS cannot guess stays as data: code reached only through a jump table, a
+  `JMP (adr)` or an `RTS` used as a jump. Find it with `/E`, or fix the source by hand. An
+  instruction inside which another one starts (the `BIT` that skips a byte) and an absolute
+  instruction on page zero (which ASM would write shorter) are written as `.byt`, with the
+  instruction as a comment: the reassembled file stays identical.
+- The source is big (about 6 times the code: 50 KB for an 8 KB block, 120 KB for the ROM):
+  keep room on the disk. `NAME.ASM` is replaced if it exists. Count about 20 s for 8 KB, a minute for the ROM.
+- DIS suits a block of a few KB. A whole game (over 20 KB, jump tables) gives a source too
+  big for EDIT and needs more than 8 entry points: that work is done on the PC
+  (`docs/oric-basic.md` § 5.5).
+- Running a tape program under CP/A takes work by hand (it expects the ROM and the BASIC's
+  page zero): see `docs/oric-basic.md` § 5.3.
+
 ## Writing a .COM program
 
 A `.COM` is code assembled for `$0500`. The CCP loads it at that address and calls it with
@@ -1675,8 +1683,12 @@ What is useful before changing a program. The system: `docs/systeme.md` (in Fren
 - **POKE, GO** fit in `$0500-$05FF`; POKE decodes everything before writing, from the zero page
   (`$D0-$DD`).
 - **STAT** computes the free space from the directory (no function 27).
-- **HELP** and README.TXT are produced by `tools/gen_readme_txt.py`, one list per language
-  (HELP texts compressed with LZSS).
+- **HELP** and README.TXT are produced by `tools/gen_readme_txt.py`, one list of pages per
+  language. HELP is an index: the general words (every command has one, otherwise the
+  generator stops) lead to a page; GRAPHER and LOGO each have their vocabulary, looked up
+  after their name, so that two vocabularies may share words. A page aims at two screens
+  (three for CMDER). The pages are LZSS-compressed in batches of 18 KB; `help.s` decodes
+  only the batch of the requested page (`tools/test_help.py`).
 
 ## Known limits
 

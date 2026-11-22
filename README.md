@@ -19,7 +19,7 @@ and boot, or run it in Oricutron (see below). The disk opens on a welcome
 screen that shows what to type. At the `A>` prompt:
 
     DIR               what's on the disk
-    HELP              help topics
+    HELP              help pages (HELP COPY: the page of a command)
     GRAPHER MAP       explore a random island of tiles (arrows, Q to quit)
     GRXASM SNAKE      translate the snake game into assembly...
     ASM SNAKE         ...assemble it on the Oric...
@@ -178,7 +178,8 @@ controller, the LOCI and Oricutron (one `-d` per drive:
 hardware than Oricutron's. The application only puts a disk in `A:`;
 `tools/build_clk_mac.sh` builds a four-drive version on a Mac (with Xcode).
 
-On the Oric, `HELP` gives help on each command (`HELP` alone: the list of topics).
+On the Oric, `HELP` followed by a command gives its help (`HELP COPY`, `HELP GRAPHER PLOT`;
+`HELP` alone: the list of pages).
 
 ## Licence
 

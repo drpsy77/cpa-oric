@@ -246,7 +246,7 @@ d'emploi : `docs/manuel.md`, « Lire une cassette : UNTAP ».
 
 ### 5.2 DIS : du code machine vers un source (fait)
 
-`DIS.COM` (`progs/dis.s`, 5 126 octets). Mode d'emploi : `docs/manuel.md`, « Désassembler : DIS ».
+`DIS.COM` (`progs/dis.s`, 5 126 octets). Mode d'emploi : `docs/manuel.md`, « Le désassembleur DIS ».
 
     DIS NOM.BIN 9800          désassemble, point d'entrée au début
     DIS NOM.BIN 9800 /E 9A10  points d'entrée en plus (8 au plus)
@@ -325,6 +325,63 @@ demandent ce travail à la main. Une couche qui imiterait la ROM sous CP/A n'est
   programmes connus.
 - DIS → ASM → mêmes octets, sur tous les `.COM` de CP/A et sur la ROM 1.1 entière (fait :
   `tools/test_dis.py`).
+
+### 5.5 Un jeu entier : l'essai de Mr Wimpy
+
+Mr Wimpy (Ocean, 1984 ; `.TAP` de 31 Ko) a servi d'essai de UNTAP et de DIS sur un vrai jeu,
+dans le 6502 simulé. Le `.TAP` n'est pas dans le dépôt.
+
+    A>UNTAP WIMPY
+      1 WIMPY.1          BAS 0501-054F /R
+      2 WIMPY.2          BIN 9FFF-BF67 /R
+      3 WIMPY.3          BIN 2DFF-87C3 /R
+    A>UNTAP WIMPY *
+    A>TYPE WIMPY1.BAS
+    ...
+    30 POKE #26C,7:HIRES:CLOAD"WIMPY.2":CLOAD"WIMPY.3"
+    40 TEXT:CALL#2E00
+    A>DIS WIMPY3.BIN 2DFF /E 2E00
+
+- **Manière de faire** : l'adresse du bloc est celle que UNTAP affiche (`2DFF`) ; le point
+  d'entrée est celui du `CALL` du chargeur BASIC (`/E 2E00`), qu'on lit dans `WIMPY1.BAS`.
+  Les deux sont nécessaires :
+  - sans l'adresse, DIS écrit `*= $0500` : les adresses absolues du programme tombent hors
+    du fichier et ne reçoivent aucune étiquette ;
+  - sans `/E`, tout reste en `.byt` : le bloc commence un octet avant le code, par un `RTS`
+    (le démarrage automatique du bloc rend la main au BASIC, qui fait le `CALL`), et DIS,
+    parti du début, s'arrête sur ce `RTS`.
+- **Résultat** : 2 955 instructions suivies (6,2 Ko de code sur 22 981 octets), 591
+  étiquettes, noms du VIA et de la ROM ; `WIMPY3.ASM` fait 154 Ko (6 760 lignes). Réassemblé
+  par xa et par ASM.COM (601 symboles, 25,6 millions d'instructions, de l'ordre de deux
+  minutes sur l'Oric) : fichier identique.
+- **Ce qui manque** :
+  - *Tables de sauts.* Le jeu saute par `JMP ($003D)` et `JMP ($378A)` : 4 tables
+    d'adresses (`$3687`, `$369F`, `$36B9`, `$4936`) et un vecteur posé par deux `LDA #`
+    (`$2FA5`), soit 18 points d'entrée de plus, quand `/E` en prend 8. Avec eux, le code
+    atteint 7,1 Ko ; le reste est fait de textes, de tables et de 11,5 Ko de dessins
+    (`$5A8C-$87C3`).
+  - *Tables écrites en données.* Une table d'adresses sort en `.byt` ou en `.asc` (celle de
+    `$4936` : `.byt $07`, `.asc "JSJyI"`). Le source se réassemble à l'identique, mais
+    devient faux dès qu'une instruction est insérée avant les routines visées.
+  - *Taille.* 154 Ko ne s'ouvrent pas dans EDIT ; les dessins en `.byt` (6 octets par
+    ligne) en font la moitié.
+  - *Ce qu'aucun désassembleur ne devine* : une adresse chargée en deux moitiés
+    (`lda #$A5`, `lda #$2F`) se corrige à la main ; une valeur qui ressemble à une adresse
+    du fichier n'en est pas toujours une (`$7D00` est ici une durée du compteur du VIA).
+- **Conclusion** : DIS.COM convient à un bloc de quelques Ko (une routine, un chargeur, un
+  module), lu dans EDIT. Désassembler un jeu entier sur l'Oric n'est pas réaliste : ce
+  travail se fait sur le PC, et le `.TAP` modifié se refait par xa ou par `ASM /T`.
+- **Évolution à faire, sur le PC** (un `tools/dis.py`, pas dans DIS.COM) :
+  - tables d'adresses déclarées (adresse, nombre d'entrées ; octets bas et hauts ensemble
+    ou en deux tables) : cibles suivies, table écrite en `.word Lxxxx` ;
+  - points d'entrée sans limite, lus avec les tables dans un fichier de description du
+    programme, qu'on complète à mesure qu'on le comprend (noms des routines et des
+    variables, zones de données, commentaires) ;
+  - tables d'adresses candidates signalées (un `LDA tbl,X` suivi d'un `LDA tbl+1,X` dont
+    les valeurs tombent dans le fichier) ;
+  - source découpé (code, textes, dessins) ; dessins en lignes plus denses, ou laissés
+    dans un fichier binaire ;
+  - contrôle gardé : le source réassemblé par xa redonne le fichier.
 
 ## 6. Plus tard : boîte à outils pour le BASIC
 

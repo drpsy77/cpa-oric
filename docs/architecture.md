@@ -139,6 +139,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/test_untap.py      # UNTAP.COM == tools/untap.py, aller-retour BASIC par mktap.py
     python3 tools/test_dis.py        # DIS.COM : source réassemblé (xa, ASM.COM) == fichier, .COM et ROM 1.1
     python3 tools/test_grxpack.py    # GRXPACK.COM == tools/grxpack.py ; programme compact == original (GRXASM, GRAPHER)
+    python3 tools/test_help.py       # HELP.COM : chaque mot mène à sa page (fr, en ; 6502 simulé)
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM et xfer_server.py dans Oricutron (modem simulé)
     tools/test_remote.sh             # console à distance : pilote, REMOTE, remote.py (~6 min)
@@ -168,6 +169,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | MKTAP.COM, `tools/mktap.py`, `progs/bas_tab.s`, `progs/bcr_inc.s` | en plus : `tools/test_mktap.sh` (lance aussi `tools/test_bas.py`) et `python3 tools/test_untap.py` |
 | UNTAP.COM, `tools/untap.py` | en plus : `python3 tools/test_untap.py` (~3 min) |
 | GRXPACK.COM, `tools/grxpack.py`, ou la lecture d'une ligne par GRAPHER et GRXASM (espaces, `;`, commande au texte libre) | en plus : `python3 tools/test_grxpack.py` (long : chaque programme est traduit deux fois ; `cas` ou des noms en argument pour un essai ciblé) |
+| HELP.COM, `tools/gen_readme_txt.py` (aide), une commande ajoutée | en plus : `python3 tools/gen_readme_txt.py`, puis `python3 tools/test_help.py` (~2 min ; `--tout` : tous les mots) |
 | DIS.COM, `progs/dis_inc.s`, `progs/asm_tab.s`, `tools/atmos_sym.txt` | en plus : `python3 tools/test_dis.py` (~10 min ; noms de `.COM` en argument pour un essai ciblé) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, une bibliothèque des programmes traduits | en plus : `tools/test_lib.sh` (~30 min ; noms en argument pour un essai ciblé) |
@@ -248,7 +250,12 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 - Aide : `tools/gen_readme_txt.py` produit à la fois README.TXT (notation et renvoi à HELP :
   `files/readme.txt`, `files/en/readme.txt`) et les textes de HELP.COM (`helptab.msg` dans
   `progs/msg/fr` et `progs/msg/en`, compressés en LZSS, décodés par `help.s`), à partir d'une
-  liste par langue (mêmes rubriques, même nombre de lignes : vérifié).
+  liste de pages par langue (mêmes pages, même nombre de lignes : vérifié). **Toute commande
+  nouvelle (interne, `.COM`, script livré) reçoit son mot dans HELP**, dans la page de son
+  groupe : le générateur s'arrête sinon, et `build.sh` refuse une aide qui n'est pas à jour
+  (`gen_readme_txt.py --verifie`). Une page vise deux écrans (50 lignes) ; au-delà, elle est
+  signalée. Un mot de GRAPHER ou de LOGO appartient au vocabulaire de son programme
+  (`HELP GRAPHER PLOT`), jamais aux mots généraux.
 - Bibliothèques sur la disquette (CPA.INC, HIRES.INC, GRX.INC, ANIM.INC, ARR.INC, FIL.INC, SPR.INC, ORIC.INC) : copies sans
   commentaires faites par `tools/strip_inc.py` ; la documentation reste dans `progs/*.inc`.
   Leurs messages sont dans `progs/msg/fr` et `progs/msg/en` (`arr.msg`...) : dans la

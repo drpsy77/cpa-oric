@@ -7,9 +7,6 @@ fic           | nom de fichier,
 adr bb        | hexa : 0500 A9
 [...]         | facultatif
 
-Aide : HELP (commandes internes)
-et HELP suivi d'un sujet :
-  TOUCHES PROGRAMMES EDIT HEX
-  LOGO ASM DEBUG MEMOIRE
-  USB GRAPHER CMDER EDSPRITE
-  (4 lettres suffisent)
+Aide : HELP (la liste des pages)
+HELP COPY, HELP DIS... : la page
+d'une commande (debut du mot admis)

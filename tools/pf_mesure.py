@@ -97,9 +97,8 @@ DOCS = {"architecture.md": "SYS", "systeme.md": "SYS", "memoire-pages-2-3.md": "
 MANUEL = [("Échange de fichiers", "USB"), ("HIRES plein", "VOIR"), ("L'éditeur de texte", "EDIT"),
           ("L'éditeur hexa", "HEX"), ("L'assembleur", "ASM"), ("Le débogueur", "DBG"),
           ("Outils", "OUT")]          # les autres sections : SYS
-AIDE = {"CP/A": "SYS", "TOUCHES": "SYS", "COMMANDES": "SYS", "PROGRAMMES": "SYS",
-        "MEMOIRE": "SYS", "USB": "USB", "GRAPHER": "GRA", "EDIT": "EDIT", "CMDER": "CMD", "EDSPRITE": "EDS",
-        "HEX": "HEX", "LOGO": "LOGO", "ASM": "ASM", "DEBUG": "DBG"}
+AIDE = {"USB": "USB", "GRAPHER": "GRA", "EDIT": "EDIT", "CMDER": "CMD", "EDSPRITE": "EDS",
+        "HEX": "HEX", "LOGO": "LOGO", "ASM": "ASM", "DEBUG": "DBG"}     # pages de HELP ; les autres : SYS
 
 POIDS = {"ILF": (7, 10, 15), "EIF": (5, 7, 10), "EI": (3, 4, 6), "EO": (4, 5, 7), "EQ": (3, 4, 6)}
 FACTEUR = 1.05    # facteur d'ajustement, § 9 du document
@@ -229,18 +228,11 @@ def documentation():
         if l.strip():
             add(cur, 1)
     aide = {}
-    cur = None
-    for l in open(os.path.join(RACINE, "tools", "gen_readme_txt.py"), encoding="utf-8"):
-        m = re.match(r' \("([^"]+)", \[', l)
-        if m:
-            mot = m.group(1).split()[0].rstrip(":")
-            cur = AIDE.get(mot, "SYS")
-        elif l.startswith(" ]),"):
-            cur = None
-        elif cur and l.startswith("  (\""):
-            aide[cur] = aide.get(cur, 0) + 1
-        elif l.startswith("]"):
-            break
+    sys.path.insert(0, os.path.join(RACINE, "tools"))
+    import gen_readme_txt               # pages de HELP : (nom, titre, mots, lignes, sous-pages)
+    for nom, titre, mots, lignes, sous in gen_readme_txt.PAGES:
+        c = AIDE.get(nom, "SYS")
+        aide[c] = aide.get(c, 0) + len(lignes) + sum(len(x[4]) for x in sous)
     return lig, aide
 
 

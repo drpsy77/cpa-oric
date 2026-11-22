@@ -20,7 +20,7 @@ et démarrez, ou lancez-le dans Oricutron (voir plus bas). La disquette s'ouvre 
 accueil qui montre quoi taper. Au prompt `A>` :
 
     DIR               ce qu'il y a sur la disquette
-    HELP              les rubriques d'aide
+    HELP              les pages d'aide (HELP COPY : celle d'une commande)
     GRAPHER CARTE     une île de tuiles tirée au hasard (flèches, Q pour finir)
     GRXASM SERPENT    traduit le jeu du serpent en assembleur...
     ASM SERPENT       ...l'assemble sur l'Oric...
@@ -180,7 +180,8 @@ contrôleur Microdisc, le LOCI et Oricutron (un `-d` par lecteur :
 proche du matériel qu'Oricutron. L'application ne met une disquette que dans `A:` ;
 `tools/build_clk_mac.sh` construit sur un Mac (avec Xcode) une version à quatre lecteurs.
 
-Sur l'Oric, `HELP` donne l'aide de chaque commande (`HELP` seul : la liste des rubriques).
+Sur l'Oric, `HELP` suivi d'une commande donne son aide (`HELP COPY`, `HELP GRAPHER PLOT` ;
+`HELP` seul : la liste des pages).
 
 ## Licence
 

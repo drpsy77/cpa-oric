@@ -4,7 +4,8 @@ Mode d'emploi de CP/A : commandes, programmes, programmation. GRAPHER et LOGO
 ont leur propre référence (`docs/grapher.md`, `docs/logo.md`), CMDER et EDSPRITE aussi
 (`docs/cmder.md`, `docs/edsprite.md`).
 Contrat d'interface (table BIOS, fonctions du BDOS, carte mémoire) : `docs/architecture.md`.
-Sur l'Oric, `HELP` donne un résumé de chaque commande.
+Sur l'Oric, `HELP` suivi d'une commande en donne le résumé (`HELP COPY`) ; `HELP` seul : la
+liste des pages.
 
 ## Commandes du CCP
 
@@ -37,7 +38,7 @@ Commandes transitoires (fichiers `.COM` sur la disquette) qui complètent le CCP
 
 | Commande | Effet |
 |---|---|
-| `HELP [sujet]` | aide : commandes internes, puis `HELP EDIT`, `HELP HEX`, `HELP LOGO`, `HELP ASM`, `HELP DEBUG`, `HELP MEM` (carte mémoire), `HELP TOUCHES`, `HELP PROG`, `HELP CMDER`, `HELP USB`, `HELP GRAPHER`, `HELP EDSPRITE` ; sur `cpa-en.dsk`, en anglais (`HELP KEYS`, `HELP MEMORY`...) |
+| `HELP [mot [mot]]` | aide, par mot. `HELP` seul : la liste des pages. `HELP COPY`, `HELP DIS` : la page de la commande, avec celles du même groupe ; de même pour un sujet (`HELP TOUCHES`, `HELP USB`, `HELP TAP`, `HELP MEM` : carte mémoire). `HELP GRAPHER PLOT`, `HELP LOGO REPETE` : la page d'un mot de GRAPHER ou de LOGO ; `HELP GRAPHER` et `HELP LOGO` donnent les principes et la liste des mots. Le début d'un mot suffit (`HELP ED`). Un mot qui n'est pas dans la liste où on le cherche (`HELP PLOT`, `HELP LOGO XYZ`) : `Mot inconnu dans ce contexte`, puis la page où l'on en est. Sur `cpa-en.dsk`, en anglais (`HELP KEYS`, `HELP LOGO REPEAT`...) |
 | `CMDER [d:][afn]` | gestionnaire de fichiers plein écran : liste triable et filtrable, marquage, Voir, Copier, Déplacer, Renommer, Effacer, Attributs ; copie avec un seul lecteur (`docs/cmder.md`) |
 | `SET afn [RO\|RW\|SYS\|DIR]` | attributs des fichiers (sans option : les affiche) |
 | `STAT [d:][afn]` | taille de chaque fichier : enregistrements de 128 octets, blocs de 2 Ko, octets, attributs (`R` protégé, `S` système) ; sans paramètre : place libre sur le disque |
@@ -75,7 +76,7 @@ Autres programmes de la disquette :
 - `UNTAP.COM NOM [n|*]` : les blocs d'un `.TAP`, programme BASIC rendu en texte, code en
   `.BIN` (voir « Lire une cassette : UNTAP »).
 - `DIS.COM NOM [adr] [/E adr ...]` : désassembleur, code machine vers un source qu'ASM
-  réassemble à l'identique (voir « Désassembler : DIS »).
+  réassemble à l'identique (voir « Le désassembleur DIS »).
 - `TERM.COM [hote] [/E] [/L]` : terminal série, pour le modem WiFi du LOCI (voir « Terminal série » et « Les hôtes : HOSTS »).
 - `XFER.COM R|E fic [nom] [/T] [@hote]` : réception ou envoi d'un fichier par le modem (voir « Transfert de fichiers »).
 - `FORMAT.COM X: [/Q]` : formatage d'une disquette (voir « Lecteurs A: à D: »).
@@ -740,42 +741,7 @@ fichiers écrits vont sur le même lecteur.
 - `bloc N incomplet` : le fichier finit avant le bloc ; ce qui est là est extrait.
 - Lancer un `.TAP`, plutôt : `USBMOUNT JEU.TAP /B` (voir « Échange de fichiers avec la clé USB du LOCI »).
 - Sur le PC, `tools/untap.py` fait la même chose (mêmes arguments).
-- Le code machine extrait se lit avec DIS (ci-dessous).
-
-### Désassembler : DIS
-
-`DIS` fait d'un fichier de code machine un source `NOM.ASM` qu'ASM réassemble en un fichier
-identique : on le lit et le modifie dans EDIT, puis `ASM NOM` refait le code. Il sert aux
-blocs extraits par UNTAP comme à tout fichier de code (un `.COM`, une image de ROM).
-
-    A>DIS JEU2.BIN 9800
-    JEU2.BIN 9800-9F7F
-    JEU2.ASM ecrit
-    A>DIS JEU2.BIN 9800 /E 9A10 9C00
-
-- L'adresse (en hexadécimal) est celle du chargement, donnée par UNTAP ; `$0500` par défaut,
-  celle d'un `.COM`. Le type `.BIN` est pris par défaut.
-- DIS suit le programme depuis son début (et les points d'entrée donnés après `/E`, 8 au
-  plus) : les sauts, les appels, les deux suites de chaque branchement. Ce qu'il atteint est
-  écrit en instructions, le reste en données : `.asc "..."` pour du texte, `.dsb n,$hh` pour
-  une suite d'octets égaux, `.byt` sinon.
-- Étiquettes `L9A10` sur les cibles des sauts, les adresses du fichier et les points
-  d'entrée ; `L9A10+1` pour un octet au milieu d'une instruction (code qui se modifie
-  lui-même).
-- Les adresses de la ROM 1.1 et du VIA prennent leur nom (`jsr PrintChar`, `sta VIA_ORB`),
-  déclaré en tête du source (ou en étiquette, si on désassemble la ROM elle-même) ; les noms sont dans `ATMOS.SYM`, sur la disquette (cherché sur
-  le lecteur du fichier, puis en A:). Pas pour un `.COM` : sous CP/A, la ROM est cachée.
-- Ce que DIS ne peut pas deviner reste en données : code atteint seulement par une table de
-  sauts, un `JMP (adr)` ou un `RTS` utilisé comme saut. On le retrouve avec `/E`, ou on
-  corrige le source à la main. Une instruction dans laquelle commence une autre (le `BIT`
-  qui saute un octet) et une instruction absolue sur la page zéro (qu'ASM écrirait plus
-  courte) sont écrites en `.byt`, l'instruction en commentaire : le fichier réassemblé reste
-  identique.
-- Le source est gros (environ 6 fois le code : 50 Ko pour un bloc de 8 Ko, 120 Ko pour la
-  ROM) : prévoir la place sur la disquette. `NOM.ASM` est remplacé s'il existe. Compter de
-  l'ordre de 20 s pour 8 Ko, une minute pour la ROM.
-- Faire tourner sous CP/A un programme de la cassette demande du travail à la main (il attend
-  la ROM et la page zéro du BASIC) : voir `docs/oric-basic.md` § 5.3.
+- Le code machine extrait se lit avec DIS (voir « Le désassembleur DIS »).
 
 ## Terminal série : TERM
 
@@ -1528,6 +1494,49 @@ système (`JSR BDOS`, BIOS) est toujours exécuté d'un coup. Le débogueur gard
 programme et travaille en dessous. Ses variables de page zéro (`$D0-$DF`) sont échangées avec
 celles du programme à chaque arrêt.
 
+## Le désassembleur DIS
+
+`DIS` fait d'un fichier de code machine un source `NOM.ASM` qu'ASM réassemble en un fichier
+identique : on le lit et le modifie dans EDIT, puis `ASM NOM` refait le code. Il sert à tout
+fichier de code : un `.COM`, une image de ROM, un bloc extrait d'un `.TAP` par UNTAP.
+
+    A>DIS JEU2.BIN 9800
+    JEU2.BIN 9800-9F7F
+    JEU2.ASM ecrit
+    A>DIS JEU2.BIN 9800 /E 9A10 9C00
+
+- L'adresse (en hexadécimal) est celle du chargement, donnée par UNTAP ; `$0500` par défaut,
+  celle d'un `.COM`. Le type `.BIN` est pris par défaut. Sans la bonne adresse, les adresses
+  du programme ne reçoivent pas d'étiquette.
+- Le point d'entrée d'un bloc lancé par un chargeur BASIC est celui de son `CALL`, qu'on lit
+  dans le `.BAS` écrit par UNTAP (`40 TEXT:CALL#2E00`) ; il se donne par `/E` quand ce n'est
+  pas le début du bloc : `DIS WIMPY3.BIN 2DFF /E 2E00`. Un source tout en `.byt` vient de
+  là (un bloc commence souvent par un octet de plus, un `RTS` par exemple).
+- DIS suit le programme depuis son début (et les points d'entrée donnés après `/E`, 8 au
+  plus) : les sauts, les appels, les deux suites de chaque branchement. Ce qu'il atteint est
+  écrit en instructions, le reste en données : `.asc "..."` pour du texte, `.dsb n,$hh` pour
+  une suite d'octets égaux, `.byt` sinon.
+- Étiquettes `L9A10` sur les cibles des sauts, les adresses du fichier et les points
+  d'entrée ; `L9A10+1` pour un octet au milieu d'une instruction (code qui se modifie
+  lui-même).
+- Les adresses de la ROM 1.1 et du VIA prennent leur nom (`jsr PrintChar`, `sta VIA_ORB`),
+  déclaré en tête du source (ou en étiquette, si on désassemble la ROM elle-même) ; les noms sont dans `ATMOS.SYM`, sur la disquette (cherché sur
+  le lecteur du fichier, puis en A:). Pas pour un `.COM` : sous CP/A, la ROM est cachée.
+- Ce que DIS ne peut pas deviner reste en données : code atteint seulement par une table de
+  sauts, un `JMP (adr)` ou un `RTS` utilisé comme saut. On le retrouve avec `/E`, ou on
+  corrige le source à la main. Une instruction dans laquelle commence une autre (le `BIT`
+  qui saute un octet) et une instruction absolue sur la page zéro (qu'ASM écrirait plus
+  courte) sont écrites en `.byt`, l'instruction en commentaire : le fichier réassemblé reste
+  identique.
+- Le source est gros (environ 6 fois le code : 50 Ko pour un bloc de 8 Ko, 120 Ko pour la
+  ROM) : prévoir la place sur la disquette. `NOM.ASM` est remplacé s'il existe. Compter de
+  l'ordre de 20 s pour 8 Ko, une minute pour la ROM.
+- DIS convient à un bloc de quelques Ko. Un jeu entier (plus de 20 Ko, des tables de sauts)
+  donne un source trop gros pour EDIT et demande plus de 8 points d'entrée : ce travail se
+  fait sur le PC (`docs/oric-basic.md` § 5.5).
+- Faire tourner sous CP/A un programme de la cassette demande du travail à la main (il attend
+  la ROM et la page zéro du BASIC) : voir `docs/oric-basic.md` § 5.3.
+
 ## Écrire un programme .COM
 
 Un `.COM` est du code assemblé pour `$0500`. Le CCP le charge à cette adresse et l'appelle par `JSR`. Un programme doit rester sous
@@ -1724,8 +1733,12 @@ Ce qui sert avant de modifier un programme. Le système : `docs/systeme.md`.
 - **POKE, GO** tiennent en `$0500-$05FF` ; POKE décode tout avant d'écrire, depuis la page
   zéro (`$D0-$DD`).
 - **STAT** calcule la place libre d'après le répertoire (pas de fonction 27).
-- **HELP** et README.TXT sont produits par `tools/gen_readme_txt.py`, une liste par langue
-  (textes de HELP compressés en LZSS).
+- **HELP** et README.TXT sont produits par `tools/gen_readme_txt.py`, une liste de pages par
+  langue. HELP est un index : les mots généraux (toute commande a le sien, sinon le
+  générateur s'arrête) mènent à une page ; GRAPHER et LOGO ont chacun leur vocabulaire, cherché
+  après leur nom, si bien que deux vocabulaires peuvent avoir les mêmes mots. Une page vise
+  deux écrans (trois pour CMDER). Les pages sont compressées en LZSS par lots de 18 Ko ;
+  `help.s` ne décode que le lot de la page demandée (`tools/test_help.py`).
 
 ## Limites connues
 

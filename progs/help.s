@@ -1,15 +1,21 @@
 ; =====================================================================
 ;  HELP.COM — aide de CP/A
 ;
-;  HELP          commandes internes et liste des sujets
-;  HELP sujet    TOUCHES PROGRAMMES EDIT HEX LOGO ASM DEBUG MEMOIRE
-;                USB GRAPHER CMDER (en anglais : KEYS PROGRAMS EDIT HEX
-;                LOGO ASM DEBUG MEMORY USB GRAPHER CMDER)
-;                (les premières lettres suffisent)
-;  Les textes viennent de tools/gen_readme_txt.py (helptab.msg, dans
-;  progs/msg/fr et progs/msg/en), comme README.TXT. Ils sont compressés (LZSS, format de tools/lzhir.py) :
-;  unz les décode dans le tampon buf, qui suit le programme, du début
-;  jusqu'à la fin de la rubrique demandée.
+;  HELP              la liste des pages
+;  HELP mot          la page du mot : une commande (HELP COPY, HELP DIS)
+;                    ou un sujet (HELP TOUCHES, HELP USB)
+;  HELP GRAPHER mot  la page d'un mot du vocabulaire de GRAPHER (HELP
+;  HELP LOGO mot     GRAPHER PLOT), de LOGO (HELP LOGO REPETE)
+;  Le mot entier est cherché d'abord, puis le premier mot de la table
+;  qui commence ainsi (HELP ED : EDIT). Un mot absent de la table où on
+;  le cherche (mots généraux, ou vocabulaire de la page du premier mot) :
+;  « Mot inconnu dans ce contexte », puis la page où l'on en est.
+;  Les textes et les tables des mots viennent de
+;  tools/gen_readme_txt.py (helptab.msg, dans progs/msg/fr et
+;  progs/msg/en), comme README.TXT. Les textes sont compressés par lots
+;  de pages (LZSS, format de tools/lzhir.py) : unz décode le lot de la
+;  page dans le tampon buf, qui suit le programme, du début du lot
+;  jusqu'à la fin de la page demandée.
 ; =====================================================================
 
 #include "cpa.inc"
@@ -24,57 +30,48 @@ cpy_p   = $1A           ; source d'une copie
 dist    = $1C
 flg     = $1E           ; drapeaux du groupe de 8 jetons
 cnt     = $1F
-stop    = $20           ; fin de la rubrique dans buf
+stop    = $20           ; fin de la page dans buf
+pass    = $22           ; 0 : mot entier, 1 : début du mot
+wp      = $23           ; mot cherché
+k0      = $25           ; début de la table des mots
 
         *= $0500
 start
 .(
-        ldx #0                  ; longueur du mot (nom de FCB1)
-len     lda FCB1+1,x
-        cmp #" "
-        beq lend
-        inx
-        cpx #8
-        bne len
-lend    stx wlen
         lda #0
         sta idx
-        cpx #0
-        beq show                ; pas de sujet : texte par défaut
+        lda #<FCB1+1            ; premier mot : les mots généraux
+        ldy #>FCB1+1
+        jsr word
+        beq show                ; pas de mot : la liste des pages
         lda #<help_keys
-        sta key
-        lda #>help_keys
-        sta key+1
-next    inc idx
-        ldy #0
-        lda (key),y
-        beq unknown             ; fin de la table
-cmp1    lda (key),y             ; compare jusqu'à la fin de la clé ou du mot
-        beq found
-        cpy wlen
-        beq found
-        cmp FCB1+1,y
-        bne skip
-        iny
-        bne cmp1
-skip    ldy #0                  ; clé suivante
-sk      lda (key),y
-        beq sk2
-        iny
-        bne sk
-sk2     iny
-        tya
-        clc
-        adc key
-        sta key
-        bcc next
-        inc key+1
-        bne next
+        ldy #>help_keys
+        jsr find
+        bcs unknown
+        sta idx
+        lda #<FCB2+1            ; second mot : le vocabulaire de la page
+        ldy #>FCB2+1
+        jsr word
+        beq show
+        ldx #0
+ctx     lda help_ctx,x
+        bmi unknown             ; la page n'a pas de vocabulaire
+        cmp idx
+        beq voc
+        inx
+        inx
+        inx
+        bne ctx
+voc     lda help_ctx+2,x
+        tay
+        lda help_ctx+1,x
+        jsr find
+        bcs unknown
+        sta idx
+        bcc show
 unknown lda #<m_unknown
         ldy #>m_unknown
         jsr puts
-        lda #0
-        sta idx
 show    lda idx
         asl
         tax
@@ -85,6 +82,13 @@ show    lda idx
         lda help_ends+1,x
         adc #>buf
         sta stop+1
+        clc                     ; données compressées du lot de la page
+        lda help_src,x
+        adc #<hz_data
+        sta src
+        lda help_src+1,x
+        adc #>hz_data
+        sta src+1
         jsr unz
         lda idx
         asl
@@ -98,7 +102,82 @@ show    lda idx
         tay
         pla
         jmp puts
-found   jmp show
+.)
+
+; word : A/Y = nom d'un FCB -> wp, wlen = sa longueur (jusqu'à un espace
+;   ou un « ? », 8 au plus) ; Z=1 s'il est vide
+word
+.(
+        sta wp
+        sty wp+1
+        ldy #0
+len     lda (wp),y
+        cmp #"!"                ; espace (ou 0 : FCB pas rempli)
+        bcc lend
+        cmp #"?"
+        beq lend
+        iny
+        cpy #8
+        bne len
+lend    sty wlen
+        cpy #0
+        rts
+.)
+
+; find : cherche le mot (wp, wlen) dans la table A/Y (lettres, puis $80 +
+;   page ; 0 à la fin) -> C=0, A = page ; C=1 : absent. Deux passes : le
+;   mot entier, puis le premier mot de la table qui commence ainsi.
+find
+.(
+        sta k0
+        sty k0+1
+        lda #0
+        sta pass
+again   lda k0
+        sta key
+        lda k0+1
+        sta key+1
+next    ldy #0
+        lda (key),y
+        beq endtab              ; fin de la table
+cmp1    lda (key),y
+        bmi kend                ; fin de la clé
+        cpy wlen
+        beq wend                ; fin du mot avant celle de la clé
+        cmp (wp),y
+        bne skip
+        iny
+        bne cmp1
+kend    cpy wlen                ; clé finie : le mot aussi ?
+        beq hit
+        bne skip
+wend    lda pass                ; début d'une clé : à la 2e passe
+        beq skip
+fend    iny
+        lda (key),y
+        bpl fend
+hit     lda (key),y             ; $80 + numéro de la page
+        and #$7F
+        clc
+        rts
+skip    lda (key),y             ; clé suivante, après l'octet de fin
+        bmi sk2
+        iny
+        bne skip
+sk2     iny
+        tya
+        clc
+        adc key
+        sta key
+        bcc next
+        inc key+1
+        bne next
+endtab  lda pass
+        bne fail
+        inc pass
+        bne again
+fail    sec
+        rts
 .)
 
 puts
@@ -117,17 +196,13 @@ loop    ldy #0
 done    rts
 .)
 
-; unz : décode hz_data dans buf jusqu'à stop (au moins).
+; unz : décode le lot (src) dans buf jusqu'à stop (au moins).
 ; Groupes de 8 jetons précédés d'un octet de drapeaux lu à partir du bit 0 :
 ; 1 = littéral (1 octet), 0 = copie (distance 16 bits, longueur), source =
 ; position en cours moins la distance. Une copie peut dépasser stop :
 ; sans effet, la place après le texte est libre.
 unz
 .(
-        lda #<hz_data
-        sta src
-        lda #>hz_data
-        sta src+1
         lda #<buf
         sta dst
         lda #>buf
@@ -203,4 +278,4 @@ r       rts
 
 #include "helptab.msg"         ; textes et clés, en français ou en anglais (progs/msg/fr, en)
 
-buf                             ; texte décodé (jusqu'à ~19 Ko, bien sous la TPA)
+buf                             ; texte décodé : un lot (18 Ko au plus), sous $A000

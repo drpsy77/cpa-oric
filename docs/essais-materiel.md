@@ -333,7 +333,8 @@ clavier ; simon redémarré : tunnel, démon et vitrine repartent seuls.
 l'identique) :
 
 - Le code d'un vrai `.TAP` : `UNTAP JEU *`, puis `DIS JEU2.BIN 9800` (l'adresse donnée par
-  UNTAP), `ASM JEU2` et comparer (`HEX`, ou sur le PC) : `JEU2.COM` doit égaler `JEU2.BIN`.
+  UNTAP ; `/E` et l'adresse du `CALL` du chargeur BASIC quand le code ne commence pas au
+  début du bloc, `docs/oric-basic.md` § 5.5), `ASM JEU2` et comparer (`HEX`, ou sur le PC) : `JEU2.COM` doit égaler `JEU2.BIN`.
   Lire `JEU2.ASM` dans EDIT : noms de la ROM (`jsr PrintChar`), données en `.asc`, et ce qui
   est resté en `.byt` faute d'être atteint (à retrouver par `/E`).
 - Durée : un bloc de 8 Ko, puis la ROM entière (`DIS BASIC.ROM C000`, 16 Ko) : dire si elle
@@ -391,6 +392,18 @@ ci-dessous « Vérifié » ; le reste essayé seulement dans Oricutron, ROM BASI
 **Accueil des disquettes d'usage** (`AUTO.BAT`, `ACCUEIL.TXT`) : démarrer à froid sur
 `cpa-exemples.dsk` (puis anim, logo, notes, et une anglaise) : l'accueil s'affiche en entier,
 sans pause, et l'invite `A>` revient dessous.
+
+**HELP par mot** (essayé dans le 6502 simulé, `tools/test_help.py`, et dans Oricutron) :
+
+- `HELP` : la liste des pages, en deux écrans, l'invite revient sans seconde pause ;
+- `HELP DIS`, `HELP COPY`, `HELP SAVE`, `HELP UNTAP` : la page du groupe de la commande ;
+  `HELP ED` : EDIT ; menu Système, carte mémoire (`HELP MEM`) ;
+- `HELP GRAPHER` : principes, puis la liste des mots ; `HELP GRAPHER SCROLH`, `HELP LOGO
+  REPETE`, `HELP LOGO TOUCHE?` : la page du mot ;
+- `HELP SCROLH`, `HELP LOGO XYZ` : `Mot inconnu dans ce contexte`, puis la liste des pages
+  ou la page de LOGO ;
+- `HELP CMDER` : trois écrans ; dire si la lecture en est gênante ;
+- durée avant l'affichage d'une page du second lot (`HELP LOGO SON`) : dire si elle gêne.
 
 **GRXPACK** (`docs/grapher.md` § 13.1 ; sur une **copie** de `cpa-exemples.dsk`) :
 

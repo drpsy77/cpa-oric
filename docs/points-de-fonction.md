@@ -171,7 +171,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | SYS.T15 | Lancer un programme ou un script par son nom (recherche sur les lecteurs) | EI | 2 | 6 | M | 4 |
 | SYS.T16 | Changer de lecteur courant (`B:`, menu Lecteur suivant) | EI | 2 | 3 | F | 3 |
 | SYS.T17 | VER : version | EQ | 0 | 1 | F | 3 |
-| SYS.T18 | HELP [sujet] : aide par rubriques | EQ | 0 | 2 | F | 3 |
+| SYS.T18 | HELP [mot [mot]] : aide par mot (mots généraux, vocabulaires de GRAPHER et de LOGO) | EQ | 0 | 2 | F | 3 |
 | SYS.T19 | CLS : effacer l'écran | EI | 1 | 1 | F | 3 |
 | SYS.T20 | PAPER, INK : couleurs de la console | EI | 1 | 2 | F | 3 |
 | SYS.T21 | PAGE ON/OFF : pause en fin d'écran | EI | 1 | 1 | F | 3 |
@@ -301,7 +301,7 @@ REN, SET, STAT, COPY, FORMAT, DISKCOPY, XDO, HELP, MEM, POKE, GO, VSYNC.
 | SYS.A22 | FORMAT : image de piste du WD1793, entrelacement 2:1, relecture | `format.s` | 3 |
 | SYS.A23 | DISKCOPY : tranches, blocs cités par le répertoire, un seul lecteur | `diskcopy.s` | 3 |
 | SYS.A24 | XDO : fusion du script appelé et de la fin de l'appelant dans `$$$.BAT` | `xdo.s` | 3 |
-| SYS.A25 | HELP : décompression LZSS d'une rubrique | `help.s` | 3 |
+| SYS.A25 | HELP : décompression LZSS du lot d'une page | `help.s` | 3 |
 | SYS.A26 | STAT : place libre d'après le répertoire | `stat.s` | 1 |
 | SYS.A27 | VSYNC : calage du timer de l'IRQ sur le balayage vidéo | `vsync.s` | 3 |
 | SYS.A28 | ERA, REN, SET, TYPE, MEM, POKE, GO : contrôles, décodage des paramètres | `progs/` | 1 |
@@ -884,7 +884,7 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 <!-- mesures:debut -->
 | Composant | Fichiers | Code | Commentaires | Vides | Générées | % comment. | Octets produits | Code / PF | Octets / PF |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Système et commandes | 70 | 12 024 | 1 476 | 569 | 1 717 | 11 % | 38 569 | 33 | 105 |
+| Système et commandes | 70 | 12 086 | 1 487 | 571 | 2 193 | 11 % | 42 933 | 33 | 117 |
 | EDIT | 4 | 3 535 | 195 | 127 | 5 | 5 % | 8 704 | 50 | 123 |
 | GRAPHER + GRXASM | 26 | 16 563 | 1 367 | 510 | 0 | 8 % | 40 466 | 65 | 159 |
 | LOGO | 12 | 9 450 | 627 | 319 | 853 | 6 % | 20 005 | 48 | 102 |
@@ -896,35 +896,35 @@ Programmes qui tournent sur le Mac ou sous Linux : construction, images, tests.
 | ASM | 4 | 3 041 | 153 | 86 | 70 | 5 % | 7 322 | 338 | 814 |
 | DEBUG | 4 | 2 427 | 135 | 87 | 0 | 5 % | 6 490 | 32 | 87 |
 | Exemples | 36 | 1 174 | 77 | 61 | 0 | 6 % | 244 | 10 | 2 |
-| Outillage PC | 210 | 15 029 | 1 985 | 1 166 | 0 | 12 % | — | 65 | — |
-| **Total** | 423 | 88 673 | 7 911 | 3 792 | 2 645 | 8 % | 179 492 | 54 | 109 |
+| Outillage PC | 211 | 15 322 | 2 040 | 1 201 | 0 | 12 % | — | 66 | — |
+| **Total** | 424 | 89 028 | 7 977 | 3 829 | 3 121 | 8 % | 183 856 | 54 | 112 |
 
 Octets du système : code résident 13 334 (`$C000-$F416`), page `$FF00` 240, chargeur d'amorçage 768 ; le reste : les commandes `.COM` du système. Exemples : HELLO et GTEST seulement (les `.GRX` et `.LOG` sont interprétés) ; données binaires des exemples (`.ANI`, `.HIZ`, `.SPR`, `.GIF`) : 71 815 octets.
 
 | Composant | Documentation (lignes) | Aide de HELP (entrées) | Doc / PF | Commits |
 |---|---:|---:|---:|---:|
-| Système et commandes | 1 808 | 88 | 4,9 | 128 |
+| Système et commandes | 1 828 | 88 | 5,0 | 129 |
 | EDIT | 94 | 19 | 1,3 | 14 |
-| GRAPHER + GRXASM | 1 156 | 75 | 4,5 | 47 |
-| LOGO | 350 | 65 | 1,8 | 26 |
+| GRAPHER + GRXASM | 1 157 | 75 | 4,5 | 48 |
+| LOGO | 350 | 67 | 1,8 | 26 |
 | CMDER | 234 | 26 | 2,6 | 19 |
-| HEX | 34 | 9 | 1,8 | 4 |
+| HEX | 34 | 10 | 1,8 | 4 |
 | EDSPRITE | 171 | 13 | 2,0 | 8 |
 | VOIR | 78 | — | 4,1 | 13 |
 | USB | 80 | 13 | 0,7 | 30 |
-| ASM | 63 | 11 | 7,0 | 7 |
-| DEBUG | 40 | 12 | 0,5 | 3 |
+| ASM | 63 | 17 | 7,0 | 7 |
+| DEBUG | 40 | 17 | 0,5 | 3 |
 | Exemples | 0 | — | 0,0 | 30 |
-| Outillage PC | 367 | — | 1,6 | 179 |
-| Transverse (projet) | 2 734 | — | — | 145 |
-| Traduction anglaise (docs/en) | 3 292 | — | — | 75 |
-| **Total** | 10 501 | 331 | 6,4 | 309 |
+| Outillage PC | 368 | — | 1,6 | 180 |
+| Transverse (projet) | 2 801 | — | — | 146 |
+| Traduction anglaise (docs/en) | 3 305 | — | — | 76 |
+| **Total** | 10 603 | 345 | 6,4 | 310 |
 
 Lignes de documentation : lignes non vides de `docs/*.md` (`manuel.md` réparti par section), `README.md`, `CLAUDE.md` ; aide de HELP : entrées de `tools/gen_readme_txt.py`. Un commit compte pour chaque composant qu'il touche (la colonne ne s'additionne pas).
 
-Historique : 309 commits du 2026-10-04 au 2026-11-20.
+Historique : 310 commits du 2026-10-04 au 2026-11-21.
 
-Réutilisation : 63 285 lignes de code écrites dans `progs/`, 74 557 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
+Réutilisation : 63 347 lignes de code écrites dans `progs/`, 74 619 lignes assemblées dans les `.COM` (bibliothèques incluses comptées dans chaque programme qui les inclut) : taux 1,18 (sans compter les bibliothèques que GRXASM recopie dans les programmes traduits).
 <!-- mesures:fin -->
 
 ## 8. Qualité

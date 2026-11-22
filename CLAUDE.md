@@ -44,6 +44,7 @@ après `./build.sh`, `git status` montre si une image a changé.
     python3 tools/test_untap.py                          # UNTAP (.TAP lus), aller-retour BASIC par MKTAP
     python3 tools/test_dis.py                            # DIS : source réassemblé == fichier (.COM, ROM 1.1)
     python3 tools/test_grxpack.py [cas|NOM...]           # GRXPACK == grxpack.py, programme compact == original (long)
+    python3 tools/test_help.py [--tout]                  # HELP : chaque mot mène à sa page (fr, en)
     python3 tools/test_fp.py                             # décimaux de LOGO
     tools/test_logo.sh                                   # LOGO (long : ~20 min sur le Pi)
     DSK=build/cpa.dsk ORIC_KEYS_AT=400 tools/run_test.sh $'DIR\n' 900 /tmp/t

@@ -57,7 +57,7 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 | Programme | Octets | Rôle | Documentation |
 |---|---:|---|---|
-| HELP | 13 402 | aide par rubriques (textes compressés) | `manuel.md` |
+| HELP | 17 766 | aide par mot (17 534 en anglais) : `HELP COPY`, `HELP DIS` montrent la page du groupe de la commande ; `HELP GRAPHER PLOT`, `HELP LOGO REPETE` celle d'un mot du vocabulaire de GRAPHER ou de LOGO ; 28 pages de deux écrans au plus (trois pour CMDER), compressées ; toute commande y a son mot (contrôlé par `build.sh`) | `manuel.md` |
 | TYPE, ERA, REN, SET, STAT, COPY | 177 à 1 033 | fichiers | `manuel.md` |
 | FORMAT, DISKCOPY | 1 828, 1 694 | disquettes, avec un seul lecteur | `manuel.md` |
 | CMDER | 18 025 | gestionnaire de fichiers plein écran, deux colonnes, clé USB (supports, répertoires seuls, renommer, effacer, dupliquer, monter ; nom des disquettes dans les en-têtes) ; fixe le répertoire courant de la clé | `cmder.md` |
@@ -85,9 +85,9 @@ Détail du fonctionnement interne : `docs/systeme.md`. Mode d'emploi : `docs/man
 
 Disquettes, une par usage, chacune amorçable et munie de ses outils (un seul lecteur
 suffit) : `cpa.dsk` (système : tous les programmes sauf LOGO, toute l'aide, aucun exemple ;
-328 Ko libres), `cpa-anim.dsk` (la démonstration, 284 Ko libres), `cpa-logo.dsk` (LOGO seul,
-506 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
-d'ASM, 290 Ko libres), `cpa-notes.dsk` (écrire, 554 Ko libres) ; `CPA.BNK` (2 560 octets,
+324 Ko libres), `cpa-anim.dsk` (la démonstration, 280 Ko libres), `cpa-logo.dsk` (LOGO seul,
+502 Ko libres, pour la plateforme LOGO à venir), `cpa-exemples.dsk` (exemples de GRAPHER et
+d'ASM, 286 Ko libres), `cpa-notes.dsk` (écrire, 550 Ko libres) ; `CPA.BNK` (2 560 octets,
 caché) sur chacune, et `cpa-projet.dsk` (vierge,
 sans système : le travail en B:, 658 Ko) ; les quatre disquettes d'usage s'ouvrent sur un
 accueil (`AUTO.BAT`, `ACCUEIL.TXT` : l'invite, ESC, FUNCT, HELP, puis quoi taper) ; chacune a sa jumelle anglaise (`cpa-en.dsk`,
