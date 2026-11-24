@@ -138,6 +138,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
     python3 tools/test_bas.py        # .BAS : codage de mktap.py == ROM 1.1 (6502 simulé)
     python3 tools/test_untap.py      # UNTAP.COM == tools/untap.py, aller-retour BASIC par mktap.py
     python3 tools/test_dis.py        # DIS.COM : source réassemblé (xa, ASM.COM) == fichier, .COM et ROM 1.1
+    python3 tools/test_dis65.py      # dis65.py (PC) : source réassemblé == fichier ; tables : source décalé == original décalé
     python3 tools/test_grxpack.py    # GRXPACK.COM == tools/grxpack.py ; programme compact == original (GRXASM, GRAPHER)
     python3 tools/test_help.py       # HELP.COM : chaque mot mène à sa page (fr, en ; 6502 simulé)
     tools/test_oric.sh               # GRXASM /O, ASM /T : refus, .TAP sous BASIC 1.1 (build/tap/)
@@ -171,6 +172,7 @@ Détail complet (outils, scénarios, installation sur Raspberry Pi) : `docs/atel
 | GRXPACK.COM, `tools/grxpack.py`, ou la lecture d'une ligne par GRAPHER et GRXASM (espaces, `;`, commande au texte libre) | en plus : `python3 tools/test_grxpack.py` (long : chaque programme est traduit deux fois ; `cas` ou des noms en argument pour un essai ciblé) |
 | HELP.COM, `tools/gen_readme_txt.py` (aide), une commande ajoutée | en plus : `python3 tools/gen_readme_txt.py`, puis `python3 tools/test_help.py` (~2 min ; `--tout` : tous les mots) |
 | DIS.COM, `progs/dis_inc.s`, `progs/asm_tab.s`, `tools/atmos_sym.txt` | en plus : `python3 tools/test_dis.py` (~10 min ; noms de `.COM` en argument pour un essai ciblé) |
+| `tools/dis65.py` | `python3 tools/test_dis65.py` (~10 s) |
 | ASM.COM (option `/T`) | en plus : `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, une bibliothèque des programmes traduits | en plus : `tools/test_lib.sh` (~30 min ; noms en argument pour un essai ciblé) |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | en plus : `tools/test_xfer.sh` (~4 min) ; pour TERM, essai Oricutron en boucle (`serial = 'loopback'`) |

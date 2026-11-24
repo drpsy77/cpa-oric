@@ -43,6 +43,7 @@ après `./build.sh`, `git status` montre si une image a changé.
     python3 tools/test_mou.py                            # souris du LOCI (mou_inc.s, 6502 simulé)
     python3 tools/test_untap.py                          # UNTAP (.TAP lus), aller-retour BASIC par MKTAP
     python3 tools/test_dis.py                            # DIS : source réassemblé == fichier (.COM, ROM 1.1)
+    python3 tools/test_dis65.py                          # dis65.py (PC) : source réassemblé == fichier, tables d'adresses
     python3 tools/test_grxpack.py [cas|NOM...]           # GRXPACK == grxpack.py, programme compact == original (long)
     python3 tools/test_help.py [--tout]                  # HELP : chaque mot mène à sa page (fr, en)
     python3 tools/test_fp.py                             # décimaux de LOGO

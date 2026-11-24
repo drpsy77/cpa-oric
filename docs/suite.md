@@ -77,9 +77,9 @@ du banc à réparer d'abord).
      un source qu'ASM réassemble à l'identique, noms de la ROM 1.1 dans `ATMOS.SYM`). À
      essayer sur de vrais `.TAP` (`docs/essais-materiel.md`). Essayé sur un jeu entier
      (Mr Wimpy, `docs/oric-basic.md` § 5.5) : DIS.COM convient à un bloc de quelques Ko ;
-     un jeu entier se désassemble sur le PC. **À faire : `tools/dis.py`** (tables
-     d'adresses écrites en `.word`, points d'entrée sans limite, fichier de description du
-     programme, source découpé). Pistes : noms de la page zéro
+     un jeu entier se désassemble sur le PC par `tools/dis65.py` (fichier de description
+     du programme : tables d'adresses écrites en `.word`, points d'entrée sans limite,
+     noms, source découpé ; `docs/oric-basic.md` § 5.6). Pistes : noms de la page zéro
      et de la page 2 du BASIC, `ATMOS.SYM` lu par DEBUG (`docs/oric-basic.md` § 8). Lancer
      un `.TAP` :
      `USBMOUNT JEU.TAP /B` (le LOCI émulé de Phosphoric ne redémarre pas en BASIC :

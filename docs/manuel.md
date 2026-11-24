@@ -1533,7 +1533,7 @@ fichier de code : un `.COM`, une image de ROM, un bloc extrait d'un `.TAP` par U
   l'ordre de 20 s pour 8 Ko, une minute pour la ROM.
 - DIS convient à un bloc de quelques Ko. Un jeu entier (plus de 20 Ko, des tables de sauts)
   donne un source trop gros pour EDIT et demande plus de 8 points d'entrée : ce travail se
-  fait sur le PC (`docs/oric-basic.md` § 5.5).
+  fait sur le PC, par `tools/dis65.py` (`docs/oric-basic.md` § 5.6).
 - Faire tourner sous CP/A un programme de la cassette demande du travail à la main (il attend
   la ROM et la page zéro du BASIC) : voir `docs/oric-basic.md` § 5.3.
 

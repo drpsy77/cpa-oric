@@ -371,17 +371,99 @@ dans le 6502 simulé. Le `.TAP` n'est pas dans le dépôt.
 - **Conclusion** : DIS.COM convient à un bloc de quelques Ko (une routine, un chargeur, un
   module), lu dans EDIT. Désassembler un jeu entier sur l'Oric n'est pas réaliste : ce
   travail se fait sur le PC, et le `.TAP` modifié se refait par xa ou par `ASM /T`.
-- **Évolution à faire, sur le PC** (un `tools/dis.py`, pas dans DIS.COM) :
-  - tables d'adresses déclarées (adresse, nombre d'entrées ; octets bas et hauts ensemble
-    ou en deux tables) : cibles suivies, table écrite en `.word Lxxxx` ;
-  - points d'entrée sans limite, lus avec les tables dans un fichier de description du
-    programme, qu'on complète à mesure qu'on le comprend (noms des routines et des
-    variables, zones de données, commentaires) ;
-  - tables d'adresses candidates signalées (un `LDA tbl,X` suivi d'un `LDA tbl+1,X` dont
-    les valeurs tombent dans le fichier) ;
-  - source découpé (code, textes, dessins) ; dessins en lignes plus denses, ou laissés
-    dans un fichier binaire ;
-  - contrôle gardé : le source réassemblé par xa redonne le fichier.
+- **Sur le PC** : `tools/dis65.py` (§ 5.6) comble ces manques. Avec les 4 tables et le
+  vecteur, qu'il propose lui-même, le code suivi passe de 6,2 à 7,1 Ko (3 402
+  instructions) ; le source fait 73 Ko, les dessins 53 Ko dans un fichier à part.
+
+### 5.6 DIS65 : un programme entier, sur le PC (fait)
+
+`tools/dis65.py` désassemble un programme d'après un **fichier de description** qu'on
+complète à mesure qu'on comprend le programme ; on relance, le source est refait. Rien ne
+se corrige à la main dans le source : une correction est une ligne de la description. Le
+source suit les règles de DIS (§ 5.2) et se contrôle de la même façon : réassemblé par xa
+(`tools/xa`, ou `$XA`), il redonne le fichier.
+
+    python3 tools/dis65.py wimpy.tap 3 2E00     écrit wimpy3.dis (bloc 3, entrée en 2E00),
+                                                puis wimpy3.s
+    python3 tools/dis65.py wimpy3.dis           refait wimpy3.s après une retouche
+    python3 tools/dis65.py JEU3.BIN 2DFF 2E00   même chose depuis un .BIN d'UNTAP
+
+`-n` : pas de contrôle par xa ; `-q` : pas de liste des candidats. Les fichiers sont écrits
+à côté de la description, dont ils prennent le nom.
+
+**La description** : une déclaration par ligne, adresses en hexadécimal, `;` ouvre un
+commentaire.
+
+    file  "Mr Wimpy.tap" 3       le bloc 3 d'un .TAP (adresse lue dans le bloc)
+    file  WIMPY3.BIN 2DFF 87C3   ou un fichier, son adresse, sa dernière adresse (les ^Z
+                                 de fin d'un .BIN d'UNTAP sont ainsi laissés)
+    entry 2E00 Start             point d'entrée, avec ou sans nom
+    table 3687 4                 4 adresses de routines : .word Lxxxx, routines suivies
+    table2 5000 5010 8           octets bas en 5000, hauts en 5010 : .byt <Lxxxx, .byt >Lxxxx
+    rtstable 3700 4              adresses diminuées de 1 (saut par RTS) : .word Lxxxx-1
+    rtstable2 5000 5010 8
+    pointers 36D1 12 Texts       adresses de données : .word Lxxxx, non suivies
+    pointers2 3620 361D 3
+    data  5A8C-87C3 gfx          données, jamais du code ; nommée : dans wimpy3_gfx.s
+    text  5038-5045              texte : .asc
+    name  378A GameVec           nom d'une adresse
+    lo    2E00 2FA5              l'instruction en 2E00 charge l'octet bas de 2FA5
+    hi    2E05 2FA5              celle en 2E05, l'octet haut
+    rem   4936 quatre directions commentaire écrit devant cette adresse
+    symbols FICHIER | none       noms connus
+
+- **Points d'entrée** : sans limite. Sans aucun `entry`, le début du fichier ; dès qu'il y
+  en a un, le début n'en est plus un (un bloc commence souvent par un octet de plus). Les
+  vecteurs `$FFFA-$FFFF`, quand le fichier les contient, sont une table.
+- **Tables d'adresses** : chaque entrée s'écrit avec l'étiquette de sa cible, qui reste
+  juste quand le code bouge. `table` et `rtstable` font de leurs cibles des points
+  d'entrée ; `pointers` non. Une entrée hors du fichier s'écrit en hexadécimal (signalée
+  pour une table de routines).
+- **Adresses chargées en deux moitiés** : `lo` et `hi` donnent `lda #<Game` et
+  `lda #>Game` (toute instruction immédiate). Une déclaration qui ne correspond pas à
+  l'octet du fichier est refusée avec un message, le source reste identique.
+- **Zones** : `data` s'écrit en `.byt` de 16 octets par ligne (`.dsb` pour 8 octets égaux
+  ou plus), sans recherche de texte ; avec un nom, dans un fichier à part que le source
+  principal inclut (`#include`). `text` s'écrit en `.asc` dès le premier caractère. Le
+  code suivi s'arrête devant une zone déclarée (message) : c'est la manière de traiter
+  un `JSR` suivi de ses paramètres, la suite se donnant par `entry`. Hors de ces zones,
+  les données s'écrivent comme dans DIS (`.byt` de 8 octets, `.asc` de 40 caractères).
+- **Noms** : un nom (de `entry`, d'une table, de `text`, de `data`, de `name`) remplace
+  `Lxxxx` ; l'adresse est alors rappelée en commentaire, pour retrouver l'endroit dans la
+  description. Une adresse hors du fichier nommée par `name` est déclarée en tête
+  (`Jump = $3D` : un opérande page zéro garde sa forme courte). `symbols` : fichier au
+  format de `tools/atmos_sym.txt`, qui est pris par défaut (ROM 1.1 et VIA ; aucun pour
+  un `.COM`).
+- **Candidats** : après le source, dis65 propose des lignes à vérifier puis à copier dans
+  la description :
+  - `lda T,x` / `sta V` / `lda T+1,x` / `sta V+1` : une table de mots, ou deux tables
+    d'octets quand les adresses lues ne se suivent pas ; `table` quand `V` sert à sauter
+    (`JMP (V)`, opérande d'un `JMP` ou d'un `JSR` modifié, vecteur de la page 2),
+    `pointers` sinon. Le nombre d'entrées s'arrête à la première qui ne vise plus le
+    fichier, qui est du code, ou qu'une autre instruction lit ;
+  - `lda T,x` / `pha` / `lda U,x` / `pha` : `rtstable` ;
+  - `lda #` / `sta V` / `lda #` / `sta V+1` dont la valeur tombe dans le fichier :
+    `lo`, `hi`, et `entry` quand `V` sert à sauter (jamais vers le VIA : `$7D00` rangé
+    dans son compteur est une durée) ;
+  - `lda #` / `ldy #` (ou `ldx #`) avant un `JSR` : `lo`, `hi` (pointeur passé à une
+    routine).
+  Une table déclarée fait suivre du code nouveau, qui peut donner d'autres candidats :
+  on relance jusqu'à ce qu'il n'en reste plus d'utile.
+- **Autres messages** : les suites arrêtées par un code non documenté (un point d'entrée
+  faux, ou des données derrière un `JSR`).
+- **Nom du fichier** : `dis65.py`, pas `dis.py`, qui cacherait le module `dis` de Python
+  aux autres outils du dossier.
+- **Essais** : `tools/test_dis65.py`. Fichiers entiers sans description (les `.COM` de
+  CP/A, la ROM 1.1, les cas tordus de `test_dis.py`) : xa redonne le fichier. Un
+  programme fabriqué qui réunit les cas ci-dessus : les candidats proposés, copiés dans
+  la description, suffisent à ce que le source **décalé d'un octet** (une instruction
+  insérée en tête) soit égal à l'original décalé de même, et le source sans description
+  ne l'est pas. Tous les mots-clés, un bloc lu dans un `.TAP`, les erreurs de
+  description.
+
+**Pas fait** : dessins laissés dans un fichier binaire (ASM n'a pas de directive pour
+l'inclure) ; tables dont les entrées ne sont pas des adresses seules (adresse suivie
+d'un paramètre).
 
 ## 6. Plus tard : boîte à outils pour le BASIC
 

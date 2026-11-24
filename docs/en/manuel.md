@@ -1485,8 +1485,8 @@ any code file: a `.COM`, a ROM image, a block extracted from a `.TAP` by UNTAP.
 - The source is big (about 6 times the code: 50 KB for an 8 KB block, 120 KB for the ROM):
   keep room on the disk. `NAME.ASM` is replaced if it exists. Count about 20 s for 8 KB, a minute for the ROM.
 - DIS suits a block of a few KB. A whole game (over 20 KB, jump tables) gives a source too
-  big for EDIT and needs more than 8 entry points: that work is done on the PC
-  (`docs/oric-basic.md` § 5.5).
+  big for EDIT and needs more than 8 entry points: that work is done on the PC, with
+  `tools/dis65.py` (`docs/oric-basic.md` § 5.6).
 - Running a tape program under CP/A takes work by hand (it expects the ROM and the BASIC's
   page zero): see `docs/oric-basic.md` § 5.3.
 

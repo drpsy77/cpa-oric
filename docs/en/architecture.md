@@ -142,6 +142,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
     python3 tools/test_grxpack.py    # GRXPACK.COM == tools/grxpack.py; compact program == original (GRXASM, GRAPHER)
     python3 tools/test_help.py       # HELP.COM: each word leads to its page (fr, en; simulated 6502)
     python3 tools/test_dis.py        # DIS.COM: reassembled source (xa, ASM.COM) == file, .COMs and ROM 1.1
+    python3 tools/test_dis65.py      # dis65.py (PC): reassembled source == file; tables: shifted source == shifted original
     tools/test_oric.sh               # GRXASM /O, ASM /T: refusals, .TAP under BASIC 1.1 (build/tap/)
     tools/test_xfer.sh               # XFER.COM and xfer_server.py in Oricutron (simulated modem)
     tools/test_remote.sh             # remote console: driver, REMOTE, remote.py (~6 min)
@@ -172,6 +173,7 @@ Full details (tools, scenarios, installation on a Raspberry Pi): `docs/atelier.m
 | GRXPACK.COM, `tools/grxpack.py`, or the way GRAPHER and GRXASM read a line (spaces, `;`, a command with free text) | in addition: `python3 tools/test_grxpack.py` (long: each program is translated twice; `cas` or names as arguments for a targeted run) |
 | HELP.COM, `tools/gen_readme_txt.py` (help), a command added | in addition: `python3 tools/gen_readme_txt.py`, then `python3 tools/test_help.py` (~2 min; `--tout`: all the words) |
 | DIS.COM, `progs/dis_inc.s`, `progs/asm_tab.s`, `tools/atmos_sym.txt` | in addition: `python3 tools/test_dis.py` (~10 min; `.COM` names as arguments for a targeted run) |
+| `tools/dis65.py` | `python3 tools/test_dis65.py` (~10 s) |
 | ASM.COM (`/T` option) | in addition: `tools/test_oric.sh` |
 | ASM.COM (`#lib`), GRXASM.COM (`kb_lib`), `tools/mk_lib.py`, a library of translated programs | in addition: `tools/test_lib.sh` (~30 min; names as arguments for a targeted run) |
 | XFER.COM, TERM.COM, `acia_inc.s`, `tools/xfer_server.py` | in addition: `tools/test_xfer.sh` (~4 min); for TERM, Oricutron trial in loopback (`serial = 'loopback'`) |
