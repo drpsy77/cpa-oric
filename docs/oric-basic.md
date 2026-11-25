@@ -407,11 +407,15 @@ commentaire.
     rtstable2 5000 5010 8
     pointers 36D1 12 Texts       adresses de données : .word Lxxxx, non suivies
     pointers2 3620 361D 3
-    data  5A8C-87C3 gfx          données, jamais du code ; nommée : dans wimpy3_gfx.s
+    data  5A8C-87C3 Shapes >gfx  données, jamais du code ; nom facultatif ; >gfx : écrites
+                                 à part, dans wimpy3_gfx.s
     text  5038-5045              texte : .asc
+    inline 0E4B                  chaque JSR $0E4B est suivi d'un texte fini par 00 (ou par
+                                 l'octet donné ensuite) ; le code reprend après
     name  378A GameVec           nom d'une adresse
     lo    2E00 2FA5              l'instruction en 2E00 charge l'octet bas de 2FA5
     hi    2E05 2FA5              celle en 2E05, l'octet haut
+    lo    12C7 1370 -1           octet bas de 1370 - 1 : adresse de retour empilée
     rem   4936 quatre directions commentaire écrit devant cette adresse
     symbols FICHIER | none       noms connus
 
@@ -423,14 +427,24 @@ commentaire.
   d'entrée ; `pointers` non. Une entrée hors du fichier s'écrit en hexadécimal (signalée
   pour une table de routines).
 - **Adresses chargées en deux moitiés** : `lo` et `hi` donnent `lda #<Game` et
-  `lda #>Game` (toute instruction immédiate). Une déclaration qui ne correspond pas à
-  l'octet du fichier est refusée avec un message, le source reste identique.
+  `lda #>Game` (toute instruction immédiate). Suivies de `-1`, elles donnent
+  `lda #<Game-1` : l'adresse de retour qu'un programme empile pour qu'un `RTS` mène à
+  `Game` (l'étiquette est sur la routine visée, pas sur l'octet d'avant). Une déclaration
+  qui ne correspond pas à l'octet du fichier est refusée avec un message, le source reste
+  identique.
 - **Zones** : `data` s'écrit en `.byt` de 16 octets par ligne (`.dsb` pour 8 octets égaux
-  ou plus), sans recherche de texte ; avec un nom, dans un fichier à part que le source
-  principal inclut (`#include`). `text` s'écrit en `.asc` dès le premier caractère. Le
-  code suivi s'arrête devant une zone déclarée (message) : c'est la manière de traiter
-  un `JSR` suivi de ses paramètres, la suite se donnant par `entry`. Hors de ces zones,
-  les données s'écrivent comme dans DIS (`.byt` de 8 octets, `.asc` de 40 caractères).
+  ou plus), sans recherche de texte ; suivie de `>nom`, dans un fichier à part que le
+  source principal inclut (`#include`), une zone par fichier. `text` s'écrit en `.asc`
+  dès le premier caractère. Le nom d'une zone est une étiquette, pour l'une comme pour
+  l'autre. Le code suivi s'arrête devant une zone déclarée (message) : c'est la manière
+  de traiter un `JSR` suivi de paramètres quelconques, la suite se donnant par `entry`.
+  Hors de ces zones, les données s'écrivent comme dans DIS (`.byt` de 8 octets, `.asc`
+  de 40 caractères).
+- **Texte derrière un `JSR`** : `inline ADR` déclare une routine qui affiche le texte
+  placé après son appel. Derrière chaque `JSR ADR` suivi, les octets jusqu'à l'octet de
+  fin compris sont un texte, et le code reprend juste après, sans `text` ni `entry` par
+  appel. Un appel déjà couvert par une zone déclarée à la main est laissé tel quel ; un
+  texte sans octet de fin, ou qui rencontre une zone ou du code, est signalé.
 - **Noms** : un nom (de `entry`, d'une table, de `text`, de `data`, de `name`) remplace
   `Lxxxx` ; l'adresse est alors rappelée en commentaire, pour retrouver l'endroit dans la
   description. Une adresse hors du fichier nommée par `name` est déclarée en tête
@@ -449,7 +463,11 @@ commentaire.
     `lo`, `hi`, et `entry` quand `V` sert à sauter (jamais vers le VIA : `$7D00` rangé
     dans son compteur est une durée) ;
   - `lda #` / `ldy #` (ou `ldx #`) avant un `JSR` ou un `JMP` : `lo`, `hi` (pointeur passé
-    à une routine ; la cible peut être dans une zone `data` ou `text` déclarée).
+    à une routine ; la cible peut être dans une zone `data` ou `text` déclarée) ;
+  - `lda #` / `pha` / `lda #` / `pha` dont la valeur plus 1 est une routine du fichier :
+    `hi … -1`, `lo … -1`, et `entry` (adresse de retour empilée) ;
+  - une suite arrêtée par un code non documenté juste derrière un `JSR` : `inline` sur la
+    routine appelée.
   Une table déclarée fait suivre du code nouveau, qui peut donner d'autres candidats :
   on relance jusqu'à ce qu'il n'en reste plus d'utile.
 - **Autres messages** : les suites arrêtées par un code non documenté (un point d'entrée
@@ -463,7 +481,9 @@ commentaire.
   la description, suffisent à ce que le source **décalé d'un octet** (une instruction
   insérée en tête) soit égal à l'original décalé de même, et le source sans description
   ne l'est pas. Tous les mots-clés, un bloc lu dans un `.TAP`, les erreurs de
-  description, un texte derrière un `JSR`.
+  description, un texte derrière un `JSR`. `inline`, `lo`/`hi … -1` et une zone `data`
+  nommée : proposés, déclarés, et le source décalé reste égal à l'original décalé (cible
+  en `$7100`, dont l'octet haut change quand on retire 1).
 
 **Pas fait** : dessins laissés dans un fichier binaire (ASM n'a pas de directive pour
 l'inclure) ; tables dont les entrées ne sont pas des adresses seules (adresse suivie

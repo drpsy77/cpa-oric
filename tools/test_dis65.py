@@ -14,6 +14,8 @@ juste quand on le modifie.
    avec la même insertion (toutes les adresses sont devenues des étiquettes).
 3. Tous les mots-clés sur ce programme (noms, zones data et text, rem, fichier
    à part), un bloc lu dans un .TAP, et les erreurs de description.
+4. Texte derrière un JSR (inline), adresse de retour empilée (lo/hi ... -1),
+   zone data nommée : proposés, déclarés, et le source décalé reste juste.
 """
 import os
 import shutil
@@ -223,7 +225,7 @@ table2 %(tlo)04X %(thi)04X 2 Lows
 rtstable2 %(rlo)04X %(rhi)04X 2
 pointers %(ptab)04X 2 Texts
 text  %(msg)04X-%(msgfin)04X
-data  %(gfx)04X-%(fin)04X Gfx
+data  %(gfx)04X-%(fin)04X Gfx >gfx
 rem   %(disp)04X saut par RTS ; les adresses sont diminuées de 1
 rem   %(disp)04X (deuxième ligne)
 """ % t)
@@ -296,6 +298,60 @@ msg     .asc "OK",0
         and "lo 7006 700E" in sortie and "avant JMP" in sortie,
         "texte derrière un JSR, pointeur avant un JMP vers une zone text, nom jamais utilisé",
         sortie)
+
+    # inline (texte derrière chaque JSR vers une routine), adresse de retour
+    # empilée (lo/hi ... -1, cible en $xx00), zone data nommée sans fichier à part
+    INL = """        *= $70E0
+start   jsr print
+        .byt $22,$41,$22,0
+        jsr print
+        .byt $22,$42,0
+        lda #>(suite-1)
+        pha
+        lda #<(suite-1)
+        pha
+        jmp print
+tab     .byt 1,2,3,4
+        .dsb 6,$55
+suite   rts
+print   rts
+"""
+    open(os.path.join(d, "ro.s"), "w").write(INL)
+    xa(d, "ro.s", "r.bin")
+    open(os.path.join(d, "r.dis"), "w").write("file r.bin 70E0\nentry 70E0\n")
+    rc, sortie = dis65(d, "r.dis")
+    dit(rc == 0 and "inline 7101" in sortie and "derrière un JSR $7101" in sortie,
+        "inline proposé : suite arrêtée juste derrière un JSR", sortie)
+    open(os.path.join(d, "r.dis"), "a").write("inline 7101\n")
+    rc, sortie = dis65(d, "r.dis")
+    dit(rc == 0 and "fichier identique" in sortie and "non documenté" not in sortie
+        and "attention" not in sortie and "entry 7100" in sortie
+        and "hi 70ED 7100 -1" in sortie and "lo 70F0 7100 -1" in sortie,
+        "inline : le code reprend après le texte ; adresse de retour empilée proposée", sortie)
+    open(os.path.join(d, "r.dis"), "a").write(
+        "entry 7100 Suite\nhi 70ED 7100 -1\nlo 70F0 7100 -1\ndata 70F6-70F9 Tab\n"
+        "name 7101 Print\n")
+    rc, sortie = dis65(d, "r.dis")
+    src = open(os.path.join(d, "r.s"), encoding="utf-8").read()
+    attendus = ["lda #>Suite-1", "lda #<Suite-1", "Tab     .byt $01,$02,$03,$04", '.asc "A"',
+                "jsr Print", "Suite   rts"]
+    absents = [a for a in attendus if a not in src]
+    dit(rc == 0 and "fichier identique" in sortie and "attention" not in sortie
+        and "candidats" not in sortie and not absents and "#include" not in src,
+        "lo/hi -1 écrits Nom-1, zone data nommée dans le source principal",
+        sortie + "".join("  absent du source : %s\n" % a for a in absents))
+    open(os.path.join(d, "r1.s"), "w", encoding="utf-8").write(inserer(src))
+    open(os.path.join(d, "ro1.s"), "w").write(inserer(INL))
+    dit(xa(d, "r1.s", "r1.bin") == xa(d, "ro1.s", "ro1.bin") != None,
+        "ce source décalé d'un octet : égal à l'original décalé (retour en $7101, haut changé)")
+    for texte, message in (
+            ("file r.bin 70E0\nlo 70F0 7100 +1\n", "seul « -1 »"),
+            ("file r.bin 70E0\ndata 70F6-70F7 >a\ndata 70F9-70F9 >a\n", "deux zones séparées"),
+            ("file r.bin 70E0\ntext 70F6-70F9 T >a\n", "paramètre"),
+            ("file r.bin 70E0\ninline 7101 100\n", "octet de fin")):
+        open(os.path.join(d, "err.dis"), "w").write(texte)
+        rc, sortie = dis65(d, "err.dis")
+        dit(rc != 0 and message in sortie, "erreur signalée : " + message, sortie)
 
 
 def main():

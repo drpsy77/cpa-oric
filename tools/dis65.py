@@ -6,7 +6,7 @@
   dis65.py JEU.TAP BLOC [ENTREE...]      puis désassemble
   options : -n  pas de contrôle par xa ; -q  pas de liste des candidats
 
-Écrit JEU.s (et JEU_nom.s pour chaque zone « data » nommée), à côté de la
+Écrit JEU.s (et JEU_nom.s pour chaque zone « data » suivie de >nom), à côté de la
 description : un source que xa réassemble en un fichier identique, ce qui est
 contrôlé (xa : $XA, sinon à côté de dis65.py, sinon celui du PATH). La
 description se complète à mesure qu'on comprend le programme ; on relance, le
@@ -22,12 +22,16 @@ ouvre un commentaire :
   rtstable2 5000 5010 8 [Nom]
   pointers 4F40 6 [Nom]        adresses de données : .word Lxxxx, non suivies
   pointers2 5020 5030 8 [Nom]
-  data  5A8C-87C3 [nom]        données (jamais du code), 16 octets par ligne ;
-                               avec un nom : écrites à part, dans JEU_nom.s
+  data  5A8C-87C3 [Nom] [>gfx] données (jamais du code), 16 octets par ligne ;
+                               >gfx : écrites à part, dans JEU_gfx.s
   text  4F00-4F3F [Nom]        texte : .asc
+  inline 0E4B [FF]             chaque JSR $0E4B est suivi d'un texte fini par
+                               l'octet FF (défaut 00) ; le code reprend après
   name  378A Nom               nom d'une adresse (étiquette, ou constante en tête)
   lo    2E00 2FA5              l'instruction en 2E00 charge l'octet bas de 2FA5 :
   hi    2E05 2FA5              lda #<L2FA5 ; en 2E05 l'octet haut : lda #>L2FA5
+  lo    12C7 1370 -1           octet bas de 1370 - 1 (adresse de retour empilée,
+  hi    12C4 1370 -1           le RTS y ajoute 1) : lda #<L1370-1
   rem   2FA5 texte             commentaire écrit devant cette adresse
   symbols FICHIER | none       noms connus (défaut : atmos_sym.txt, ROM 1.1 et
                                VIA ; aucun pour un .COM)
@@ -91,9 +95,10 @@ MODELE = """; %s : description de %s pour dis65.py
 ; (dis65.py sans argument : liste des mots-clés ; adresses en hexadécimal)
 ;   entry ADR [Nom]            table ADR N [Nom]       table2 BAS HAUT N [Nom]
 ;   pointers ADR N [Nom]       pointers2 BAS HAUT N    rtstable ADR N [Nom]
-;   rtstable2 BAS HAUT N       data DEB-FIN [nom]      text DEB-FIN [Nom]
+;   rtstable2 BAS HAUT N       data DEB-FIN [Nom] [>fichier]   text DEB-FIN [Nom]
 ;   name ADR Nom               rem ADR texte           symbols FICHIER | none
-;   lo ADR CIBLE / hi ADR CIBLE (lda #<Lxxxx / lda #>Lxxxx)
+;   lo ADR CIBLE [-1] / hi ADR CIBLE [-1] (lda #<Lxxxx / lda #>Lxxxx)
+;   inline ADR [FIN]           (texte fini par l'octet FIN derrière chaque JSR ADR)
 %s
 """
 
@@ -134,10 +139,11 @@ class Desc:
         self.base = 0
         self.entrees = []           # adresses
         self.tables = []            # (mot-clé, bas, haut ou None, n)
-        self.zones = []             # ("data" | "text", début, fin, nom)
+        self.zones = []             # ("data" | "text", début, fin, nom, fichier à part)
+        self.inlines = {}           # routine -> octet qui finit le texte derrière son JSR
         self.noms = {}              # adresse -> nom
         self.rems = {}              # adresse -> [textes]
-        self.lohi = {}              # adresse de l'instruction -> ("<" | ">", cible)
+        self.lohi = {}              # adresse de l'instruction -> ("<" | ">", cible, 0 | 1)
         self.sym = None             # None : défaut ; "" : aucun ; sinon chemin
         for no, ligne in enumerate(open(chemin, encoding="utf-8"), 1):
             try:
@@ -199,23 +205,40 @@ class Desc:
             if len(p) > 2 + deux:
                 self.nommer(bas, p[2 + deux])
         elif cle in ("data", "text"):
-            arg(1, 1)
+            arg(1, 2 if cle == "data" else 1)
             ab = p[0].split("-")
             if len(ab) != 2:
                 raise Erreur("zone attendue : DEBUT-FIN")
             a, b = hexa(ab[0]), hexa(ab[1])
             if b < a:
                 raise Erreur("zone à l'envers : " + p[0])
-            nom = p[1] if len(p) > 1 else None
-            self.zones.append((cle, a, b, nom))
+            nom = fic = None
+            for q in p[1:]:
+                if q.startswith(">"):
+                    if cle != "data" or not re.match(r"[A-Za-z0-9_]+$", q[1:]):
+                        raise Erreur("fichier à part : data DEBUT-FIN [Nom] >nom")
+                    fic = q[1:]
+                elif nom or fic:
+                    raise Erreur("%s : un nom, puis >fichier" % cle)
+                else:
+                    nom = q
+            self.zones.append((cle, a, b, nom, fic))
             if nom:
                 self.nommer(a, nom)
+        elif cle == "inline":
+            arg(1, 1)
+            fin = hexa(p[1]) if len(p) > 1 else 0
+            if fin > 0xFF:
+                raise Erreur("inline : octet de fin de $00 à $FF")
+            self.inlines[hexa(p[0])] = fin
         elif cle == "name":
             arg(2)
             self.nommer(hexa(p[0]), p[1])
         elif cle in ("lo", "hi"):
-            arg(2)
-            self.lohi[hexa(p[0])] = ("<" if cle == "lo" else ">", hexa(p[1]))
+            arg(2, 1)
+            if len(p) > 2 and p[2] != "-1":
+                raise Erreur("%s : seul « -1 » peut suivre la cible" % cle)
+            self.lohi[hexa(p[0])] = ("<" if cle == "lo" else ">", hexa(p[1]), len(p) - 2)
         elif cle == "symbols":
             arg(1)
             self.sym = "" if p[0].lower() == "none" else os.path.join(self.dossier, p[0])
@@ -293,8 +316,8 @@ class Dis:
 
     def poser_zones(self):
         d = self.d
-        for cle, a, b, nom in d.zones:
-            z = (cle, nom if cle == "data" else None)
+        for cle, a, b, nom, fic in d.zones:
+            z = (cle, fic)
             for x in range(a, b + 1):
                 self.prendre(x, z, "%s %04X-%04X" % (cle, a, b))
         tables = list(d.tables)
@@ -364,6 +387,31 @@ class Dis:
                 if mn in FIN:
                     break
                 a += n
+                if mn == "jsr" and opv in d.inlines:
+                    a = self.texte_inline(a, opv)
+                    if a is None:
+                        break
+
+    def texte_inline(self, a, t):
+        """texte derrière un JSR vers une routine « inline » -> adresse qui le suit"""
+        o = a - self.base
+        e = self.mem.find(bytes([self.d.inlines[t]]), o)
+        if self.inf(a) and self.zone[o]:
+            return None                         # déclaré à la main (text ou data, entry)
+        quoi = "inline %04X : le texte derrière le JSR en $%04X" % (t, a - 3)
+        if e < 0:
+            self.avis.append("%s n'a pas d'octet de fin ($%02X)" % (quoi, self.d.inlines[t]))
+            return None
+        if any(self.zone[o:e + 1]):
+            self.avis.append("%s rencontre une zone déclarée" % quoi)
+            return None
+        if any(self.base + k in self.inst for k in range(o, e + 1)):
+            self.avis.append("%s est aussi suivi comme du code" % quoi)
+            return None
+        z = ("text", None)
+        for k in range(o, e + 1):
+            self.zone[k] = z
+        return self.base + e + 1
 
     def decouper(self):
         """Une instruction dans laquelle en commence une autre s'arrête là."""
@@ -410,12 +458,13 @@ class Dis:
 
     def etiqueter(self):
         d = self.d
-        for a, (c, t) in list(d.lohi.items()):
+        for a, (c, t, moins) in list(d.lohi.items()):
             i = self.inst.get(a)
-            v = t & 0xFF if c == "<" else t >> 8
+            v = t - moins & 0xFFFF
+            v = v & 0xFF if c == "<" else v >> 8
             if i is None or i[1] != IMM or self.enbyt(a) or i[2] != v:
-                self.avis.append("%s %04X %04X : pas une instruction immédiate de valeur $%02X"
-                                 % ("lo" if c == "<" else "hi", a, t, v))
+                self.avis.append("%s %04X %04X%s : pas une instruction immédiate de valeur $%02X"
+                                 % ("lo" if c == "<" else "hi", a, t, " -1" if moins else "", v))
                 del d.lohi[a]
         lab = set()
         for a in self.inst:
@@ -482,8 +531,8 @@ class Dis:
             return ""
         if mode == IMM:
             if not litt and a in self.d.lohi:
-                c, t = self.d.lohi[a]
-                return " #%s%s" % (c, self.ref(t))
+                c, t, moins = self.d.lohi[a]
+                return " #%s%s%s" % (c, self.ref(t), "-1" if moins else "")
             return " #$%02X" % opv
         if mode == REL:
             t = self.cible(a)
@@ -561,6 +610,8 @@ class Dis:
                 cur_nom = zf
                 if zf:
                     f = "%s_%s.s" % (base_nom, zf.lower())
+                    if f in [x for x, _ in fichiers]:
+                        raise Erreur("data >%s : deux zones séparées pour un même fichier" % zf)
                     cur = ["; %s : $%04X, inclus par %s.s" % (f, a, base_nom)]
                     fichiers.append((f, cur))
                     corps.append('#include "%s"' % f)
@@ -668,6 +719,15 @@ class Dis:
                     and i[1][1] in (ZP, ABS) and i[3][1] in (ZP, ABS)
                     and abs(i[1][2] - i[3][2]) == 1):
                 if (i[0][0] == i[2][0] == "lda" and i[1][0] == i[3][0] == "pha"
+                        and i[0][1] == i[2][1] == IMM and ch[0] not in self.d.lohi
+                        and ch[2] not in self.d.lohi):
+                    t = (i[0][2] << 8 | i[2][2]) + 1 & 0xFFFF     # haut empilé d'abord
+                    if routine(t):
+                        l = [] if t in self.inst else ["entry %04X" % t]
+                        out[ch[0]] = l + ["hi %04X %04X -1" % (ch[0], t),
+                                          "lo %04X %04X -1   ; empilé en $%04X : retour par RTS ?"
+                                          % (ch[2], t, ch[0])]
+                if (i[0][0] == i[2][0] == "lda" and i[1][0] == i[3][0] == "pha"
                         and i[0][1] == i[2][1] and i[0][1] in (ABX, ABY)):
                     haut, bas = i[0][2], i[2][2]          # l'octet haut est empilé d'abord
                     self.table_candidate(out, ch[0], bas, haut, "rtstable", vus,
@@ -699,6 +759,14 @@ class Dis:
                                      "lu en $%04X, rangé en $%04X%s"
                                      % (ch[0], v, " : " + but if but else ""))
         lignes = []
+        derriere = {}
+        for a in self.arrets:
+            j = self.inst.get(a - 3)
+            if j and j[0] == "jsr" and j[2] not in self.d.inlines:
+                derriere[j[2]] = derriere.get(j[2], 0) + 1
+        for t, n in sorted(derriere.items()):
+            lignes.append("%-24s; suite arrêtée juste derrière un JSR $%04X (%d fois) : "
+                          "texte qui le suit ?" % ("inline %04X" % t, t, n))
         for a in sorted(out):
             for l in out[a]:
                 t, _, c = l.partition(";")
