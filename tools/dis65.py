@@ -8,9 +8,10 @@
 
 Écrit JEU.s (et JEU_nom.s pour chaque zone « data » nommée), à côté de la
 description : un source que xa réassemble en un fichier identique, ce qui est
-contrôlé (tools/xa, ou $XA). La description se complète à mesure qu'on
-comprend le programme ; on relance, le source est refait. Une ligne par
-déclaration, adresses en hexadécimal, « ; » ouvre un commentaire :
+contrôlé (xa : $XA, sinon à côté de dis65.py, sinon celui du PATH). La
+description se complète à mesure qu'on comprend le programme ; on relance, le
+source est refait. Une ligne par déclaration, adresses en hexadécimal, « ; »
+ouvre un commentaire :
 
   file  NOM.BIN 2DFF [87C3]    fichier, adresse de chargement [dernière adresse]
   file  "JEU.TAP" 3            ou le bloc 3 d'un .TAP (adresse lue dans le bloc)
@@ -36,6 +37,7 @@ Règles du source : celles de DIS.COM (docs/oric-basic.md § 5.2) ; référence 
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -85,11 +87,12 @@ VECT = {0x0245: "IRQ (ROM 1.1)", 0x0248: "NMI (ROM 1.1)", 0x0229: "IRQ (ROM 1.0)
 TABLES = {"table": (0, 1, 0), "table2": (1, 1, 0), "rtstable": (0, 1, 1),
           "rtstable2": (1, 1, 1), "pointers": (0, 0, 0), "pointers2": (1, 0, 0)}
 NOM = re.compile(r"[A-Za-z_][A-Za-z0-9_]*$")
-MODELE = """; %s : description de %s pour tools/dis65.py
-; (python3 tools/dis65.py : liste des mots-clés ; adresses en hexadécimal)
+MODELE = """; %s : description de %s pour dis65.py
+; (dis65.py sans argument : liste des mots-clés ; adresses en hexadécimal)
 ;   entry ADR [Nom]            table ADR N [Nom]       table2 BAS HAUT N [Nom]
-;   pointers ADR N [Nom]       rtstable ADR N [Nom]    data DEB-FIN [nom]
-;   text DEB-FIN [Nom]         name ADR Nom            rem ADR texte
+;   pointers ADR N [Nom]       pointers2 BAS HAUT N    rtstable ADR N [Nom]
+;   rtstable2 BAS HAUT N       data DEB-FIN [nom]      text DEB-FIN [Nom]
+;   name ADR Nom               rem ADR texte           symbols FICHIER | none
 ;   lo ADR CIBLE / hi ADR CIBLE (lda #<Lxxxx / lda #>Lxxxx)
 %s
 """
@@ -338,6 +341,9 @@ class Dis:
             a = a_suivre.pop()
             while self.inf(a) and not a in self.inst:
                 o = a - base
+                if self.zone[o]:
+                    self.avis.append("le code suivi entre dans une zone déclarée en $%04X" % a)
+                    break
                 op = OPC.get(mem[o])
                 if op is None:
                     self.arrets.append(a)
@@ -591,7 +597,7 @@ class Dis:
                 a = b
         d = self.d
         tete = ["; %s.s : %s, $%04X-$%04X" % (base_nom, d.fichier, self.base, self.fin - 1),
-                "; écrit par tools/dis65.py d'après %s : c'est elle qu'on complète" % d.nomdis, ""]
+                "; écrit par dis65.py d'après %s : c'est elle qu'on complète" % d.nomdis, ""]
         for x in sorted(self.ext_vus):
             n = self.nom_ext[x]
             tete.append("%s= $%0*X" % ("%-8s" % n if len(n) < 8 else n + " ",
@@ -599,6 +605,9 @@ class Dis:
         if self.ext_vus:
             tete.append("")
         tete += ["        *= $%04X" % self.base, ""]
+        for x, n in sorted(d.noms.items()):
+            if not self.inf(x) and x not in self.ext_vus:
+                self.avis.append("name %04X %s : hors du fichier et jamais utilisé" % (x, n))
         return [(base_nom + ".s", tete + corps)] + fichiers
 
     # ---- tables et pointeurs candidats ------------------------------------
@@ -611,6 +620,13 @@ class Dis:
         def libre(x):
             return self.inf(x) and self.zone[x - self.base] is None \
                 and not self.code[x - self.base]
+
+        def donnee(x):
+            """cible possible d'un pointeur : dans le fichier, pas du code ni une table"""
+            if not self.inf(x) or self.code[x - self.base]:
+                return False
+            z = self.zone[x - self.base]
+            return z is None or z[0] in ("data", "text")
 
         def vers_code(v):
             """l'adresse rangée en v, v+1 sert-elle à sauter ?"""
@@ -636,14 +652,15 @@ class Dis:
             if len(ch) < 3:
                 continue
             i = [normales[c] for c in ch]
-            # lda #bas : ldy #haut : jsr (convention de la ROM : A, Y)
-            if i[0][1] == IMM and i[1][1] == IMM and i[0][0] == "lda" and i[2][0] == "jsr" \
+            # lda #bas : ldy #haut : jsr ou jmp (convention de la ROM : A, Y)
+            if i[0][1] == IMM and i[1][1] == IMM and i[0][0] == "lda" \
+                    and i[2][0] in ("jsr", "jmp") and i[2][1] == ABS \
                     and i[1][0] in ("ldy", "ldx") and ch[0] not in self.d.lohi:
                 t = i[0][2] | i[1][2] << 8
-                if libre(t):
+                if donnee(t):
                     out[ch[0]] = ["lo %04X %04X" % (ch[0], t),
-                                  "hi %04X %04X      ; A et %s avant JSR $%04X : pointeur ?"
-                                  % (ch[1], t, i[1][0][2].upper(), i[2][2])]
+                                  "hi %04X %04X      ; A et %s avant %s $%04X : pointeur ?"
+                                  % (ch[1], t, i[1][0][2].upper(), i[2][0].upper(), i[2][2])]
             if len(ch) < 4:
                 continue
             paire = {"lda": "sta", "ldx": "stx", "ldy": "sty"}
@@ -669,7 +686,7 @@ class Dis:
                 l = []
                 if but and routine(t) and t not in self.inst:
                     l.append("entry %04X          ; rangé en $%04X : %s" % (t, v, but))
-                elif not but and not libre(t):
+                elif not but and not donnee(t):
                     continue
                 l += ["lo %04X %04X" % (ch[bas], t),
                       "hi %04X %04X      ; rangé en $%04X%s"
@@ -733,7 +750,7 @@ def controle(xa, dossier, source, mem, base):
 
 
 def trouver_xa():
-    for x in (os.environ.get("XA"), os.path.join(R, "xa")):
+    for x in (os.environ.get("XA"), os.path.join(R, "xa"), shutil.which("xa")):
         if x and os.path.isfile(x):
             return os.path.abspath(x)
     return None
@@ -749,7 +766,7 @@ def nouvelle(args):
         base = "%s%s" % (re.sub(r"[^a-z0-9]+", "_", base).strip("_")[:16], args[1])
     desc = os.path.join(os.path.dirname(chemin) or ".", base + ".dis")
     if os.path.exists(desc):
-        raise Erreur("%s existe déjà : python3 tools/dis65.py %s" % (desc, desc))
+        raise Erreur("%s existe déjà : dis65.py %s" % (desc, desc))
     nom = os.path.basename(chemin)
     l = ["file  %s %s" % ('"%s"' % nom if re.search(r"[\s;]", nom) else nom, args[1])]
     l += ["entry %04X" % hexa(e) for e in args[2:]]
@@ -794,7 +811,7 @@ def main():
             bon, msg = controle(xa, d.dossier, fichiers[0][0], bytes(dis.mem), dis.base)
             print(msg)
         else:
-            print("xa absent (tools/build_xa.sh) : pas de contrôle")
+            print("xa absent ($XA, à côté de dis65.py ou dans le PATH) : pas de contrôle")
     if not muet:
         c = dis.candidats()
         if c:

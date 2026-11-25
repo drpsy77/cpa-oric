@@ -275,6 +275,28 @@ rem   %(disp)04X (deuxième ligne)
     dit(rc == 0 and sortie.count("attention") >= 3 and "fichier identique" in sortie,
         "déclarations fausses signalées, source toujours identique", sortie)
 
+    # texte derrière un JSR, pointeur chargé avant un JMP, nom jamais utilisé
+    open(os.path.join(d, "q.s"), "w").write("""        *= $7000
+        jsr print
+        .byt $3C,$41,$00
+        lda #<msg
+        ldy #>msg
+        jmp print
+print   rts
+msg     .asc "OK",0
+""")
+    xa(d, "q.s", "q.bin")
+    open(os.path.join(d, "q.dis"), "w").write(
+        "file q.bin 7000\ntext 7003-7005\nentry 7000\nentry 7006\ntext 700E-7010\n"
+        "name 9E18 Jamais\n")
+    rc, sortie = dis65(d, "q.dis")
+    dit(rc == 0 and "fichier identique" in sortie
+        and "entre dans une zone déclarée en $7003" in sortie and "non documenté" not in sortie
+        and "name 9E18 Jamais : hors du fichier et jamais utilisé" in sortie
+        and "lo 7006 700E" in sortie and "avant JMP" in sortie,
+        "texte derrière un JSR, pointeur avant un JMP vers une zone text, nom jamais utilisé",
+        sortie)
+
 
 def main():
     if not os.path.isfile(XA):

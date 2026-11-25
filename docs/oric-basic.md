@@ -373,7 +373,10 @@ dans le 6502 simulé. Le `.TAP` n'est pas dans le dépôt.
   travail se fait sur le PC, et le `.TAP` modifié se refait par xa ou par `ASM /T`.
 - **Sur le PC** : `tools/dis65.py` (§ 5.6) comble ces manques. Avec les 4 tables et le
   vecteur, qu'il propose lui-même, le code suivi passe de 6,2 à 7,1 Ko (3 402
-  instructions) ; le source fait 73 Ko, les dessins 53 Ko dans un fichier à part.
+  instructions). Avec une description complète (332 noms et tables, toutes les routines
+  appelées nommées), le source fait 86 Ko, les dessins 54 Ko dans un fichier à part ; le
+  jeu décalé d'un octet (un `nop` devant l'entrée) se comporte comme l'original dans
+  Oricutron sur le menu, le premier tableau et le début du second.
 
 ### 5.6 DIS65 : un programme entier, sur le PC (fait)
 
@@ -381,7 +384,7 @@ dans le 6502 simulé. Le `.TAP` n'est pas dans le dépôt.
 complète à mesure qu'on comprend le programme ; on relance, le source est refait. Rien ne
 se corrige à la main dans le source : une correction est une ligne de la description. Le
 source suit les règles de DIS (§ 5.2) et se contrôle de la même façon : réassemblé par xa
-(`tools/xa`, ou `$XA`), il redonne le fichier.
+(`$XA`, sinon `tools/xa`, sinon le `xa` du `PATH`), il redonne le fichier.
 
     python3 tools/dis65.py wimpy.tap 3 2E00     écrit wimpy3.dis (bloc 3, entrée en 2E00),
                                                 puis wimpy3.s
@@ -445,12 +448,13 @@ commentaire.
   - `lda #` / `sta V` / `lda #` / `sta V+1` dont la valeur tombe dans le fichier :
     `lo`, `hi`, et `entry` quand `V` sert à sauter (jamais vers le VIA : `$7D00` rangé
     dans son compteur est une durée) ;
-  - `lda #` / `ldy #` (ou `ldx #`) avant un `JSR` : `lo`, `hi` (pointeur passé à une
-    routine).
+  - `lda #` / `ldy #` (ou `ldx #`) avant un `JSR` ou un `JMP` : `lo`, `hi` (pointeur passé
+    à une routine ; la cible peut être dans une zone `data` ou `text` déclarée).
   Une table déclarée fait suivre du code nouveau, qui peut donner d'autres candidats :
   on relance jusqu'à ce qu'il n'en reste plus d'utile.
 - **Autres messages** : les suites arrêtées par un code non documenté (un point d'entrée
-  faux, ou des données derrière un `JSR`).
+  faux, ou des données derrière un `JSR` qu'aucune zone ne déclare) ; un `name` hors du
+  fichier qu'aucune instruction ne vise (nom faux, ou adresse construite autrement).
 - **Nom du fichier** : `dis65.py`, pas `dis.py`, qui cacherait le module `dis` de Python
   aux autres outils du dossier.
 - **Essais** : `tools/test_dis65.py`. Fichiers entiers sans description (les `.COM` de
@@ -459,7 +463,7 @@ commentaire.
   la description, suffisent à ce que le source **décalé d'un octet** (une instruction
   insérée en tête) soit égal à l'original décalé de même, et le source sans description
   ne l'est pas. Tous les mots-clés, un bloc lu dans un `.TAP`, les erreurs de
-  description.
+  description, un texte derrière un `JSR`.
 
 **Pas fait** : dessins laissés dans un fichier binaire (ASM n'a pas de directive pour
 l'inclure) ; tables dont les entrées ne sont pas des adresses seules (adresse suivie
